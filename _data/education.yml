@@ -1,13 +1,18 @@
 # Degree
-- degree: Bachelor of Arts, Human Rights
-  uni: Yale University
-  year: 2004 &mdash; 2008
+- degree: PhD in Civil Engineering
+  uni: University of Illinois, Urbana-Champaign
+  year: 2023 &mdash; Today
+ # summary: If you had any meaningful roles at college, feel free to write about them here
+
+- degree: MSc in Civil Engineering
+  uni: University of Illinois, Urbana-Champaign
+  year: 2021 &mdash; 2023
   awards:
     - award: Summa Cumme Laude graduate
-  summary: If you had any meaningful roles at college, feel free to write about them here
+ # summary: If you had any meaningful roles at college, feel free to write about them here
 
-- degree: High School Diploma
-  uni: Springfield High School
-  year: 2004
-  award: Most likely to succeed
-  summary: You can choose to have either a single or multiple awards
+- degree: BS in Civil Engineering
+  uni: Universidad Nacional Mayor de San Marcos (UNMSM)
+  year: 2011 &mdash; 2016
+  award: Highest-Ranked Student 
+ # summary: You can choose to have either a single or multiple awards
