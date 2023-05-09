@@ -18,12 +18,12 @@ resume_contact_email:           "johannc2@illinois.edu"
 
 # the next two items are used for schema itemprops in _layouts/resume.html
 resume_contact_telephone:       "(217) 953-1311"
-resume_contact_address:         "617 N Lincoln Ave, Urbana"
+resume_contact_address:         "617 N Lincoln Ave, Urbana, IL"
 
-resume_header_contact_info:     "617 N Lincoln Ave, Urbana • (217) 953-1311 • johannc2@illinois.edu"
+resume_header_contact_info:     "617 N Lincoln Ave, Urbana, IL • (217) 953-1311 • johannc2@illinois.edu"
 display_header_contact_info:    "true"
 
-resume_header_intro: "<p>MSc in Civil Engineering, Fulbright Scholar. Currently, PhD Student at the University of Illinois at Urbana-Champaign. Research Assistant at the Illinois Center for Transportation (ICT). </p>"
+resume_header_intro: "<p> I hold BS and MSc degrees in Civil Engineering, and I am a recipient of the Fulbright Scholarship. Currently, I am pursuing a PhD program at the University of Illinois, Urbana-Champaign where I serve as a Research Assistant at the Illinois Center for Transportation (ICT). My research focuses on Pavement Mechanics, involving FEM, Numerical Modeling and Infrastructure Design.</p>
 
 # use "yes" to display the email contact button,
 # "no" to display an "I'm not looking for work" message,
