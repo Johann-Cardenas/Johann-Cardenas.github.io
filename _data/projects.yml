@@ -1,16 +1,16 @@
 # Projects
 # uncomment the urls if you wish to display them, and add your own URL
 
-# jazznotes.io
-- project: jazznotes.io
-  role: Founder & Primary Developer
-  duration: 2012 &mdash; Present
+# Electric Trucks
+- project: R27-252 Impact of Commercial Electric Vehicles on Flexible Pavement Performance
+  role: Research Assistant
+  duration: 2022 &mdash; Present
   # url: "#"
-  description: Jazz Notes is an open source node/ember app that helps you keep track of your music compositions and new ideas.
+  description: The main objective of the study is to assess the impact of electric trucks on flexible pavements, focusing on potential changes in IDOT pavement design (asphalt mixture and structure) and management.
 
-# Springfield Community Outreach Group
-- project: Springfield Community Outreach Group
-  role: Co-Founder & Organizer
-  duration: 2007 &mdash; Present
+# FAA Project
+- project: Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis
+  role: Research Assistant
+  duration: 2021 &mdash; Present
   # url: "#"
-  description: SCOG is a local monthly meetup in Springfield where we share opportunities to volunteer in the community and organize support for families and neighborhoods in need of assistance that the community can provide.
+  description: This project aims to combine field data from various sections to develop more generalized prediction models. In addition to field tests, FAA has developed wide-ranging data sets based on in-house accelerated pavement testing (APT). The research team will also explore the APT data sets and investigate possible data fusion techniques to combine APT with in-situ data sets, which include response data obtained from actual airfield instrumentation.
