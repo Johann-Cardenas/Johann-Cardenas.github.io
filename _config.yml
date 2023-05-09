@@ -11,7 +11,7 @@ sass:
 # Resume settings
 resume_avatar:                  "true"
 resume_name:                    "Johann J. Cárdenas"
-resume_title:                   "VP of Global Communications"
+resume_title:                   "Civil/Transportation Engineer"
 
 # used for the contact button in _layouts/resume.html
 resume_contact_email:           "johannc2@illinois.edu"
@@ -23,7 +23,7 @@ resume_contact_address:         "617 N Lincoln Ave, Urbana, IL"
 resume_header_contact_info:     "617 N Lincoln Ave, Urbana, IL • (217) 953-1311 • johannc2@illinois.edu"
 display_header_contact_info:    "true"
 
-resume_header_intro: "<p>I hold BS and MSc degrees in Civil Engineering, and I am a recipient of the Fulbright Scholarship. Currently, I am pursuing a PhD program at the University of Illinois, Urbana-Champaign where I serve as a Research Assistant at the Illinois Center for Transportation (ICT). My research focuses on Pavement Mechanics, involving FEM, Numerical Modeling and Infrastructure Design</p>"
+resume_header_intro: "<p>I hold both a BS and MSc degree in Civil Engineering, and have received the prestigious Fulbright Scholarship. Currently, I am pursuing a PhD program at the University of Illinois, Urbana-Champaign where I serve as a Research Assistant at the Illinois Center for Transportation (ICT). My research primarily focuses on Pavement Mechanics, encompassing the use of FEM and Numerical Modeling to enhance and advance infrastructure design.</p>"
 
 # use "yes" to display the email contact button,
 # "no" to display an "I'm not looking for work" message,
