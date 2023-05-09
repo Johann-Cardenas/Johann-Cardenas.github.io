@@ -1,15 +1,37 @@
 # Associations
 # comment out the urls if you do not wish to display them
 
-- organization: PETA
-  role: Volunteer
-  year: 2001 &mdash; 2010
-  url: https://www.peta.org/
-  summary: Organized fund drives and participated in fundraising events for the benefit of PETA's local Springfield operations.
+- organization: Fulbright Student Association at UIUC
+  role: President
+  year: 2022 &mdash; 2023
+  url: https://publish.illinois.edu/fulbrightstudentassociation/
+  summary: Organized networking, academic and social events for the benefit of the Fulbright Scholars at the University of Illinois, Urbana-Champaign and the comunity.
 
+  - organization: ASCE T&DI Graduate Student Association
+  role: Internal Communications Chair
+  year: 2022 &mdash; 2023
+  url: https://publish.illinois.edu/uiuc-tdi-gso/
+  summary: Oversaw and coordinated internal communication strategies, and built engagement among members enhancing the organizational performance.
 
-- organization: Yale Amnesty International
-  role: Communications coordinator
-  year: 2002 &mdash; 2004
-  url: http://campuspress.yale.edu/amnesty/
-  summary: During my junion and senior years at Yale, I was actively involved in Yale Amnesty International where I helped facilitate our student organization communications through website maintenance, writing for our campus publication, and graphic design of related materials.
+  - organization: ASCE T&DI Graduate Student Association
+  role: Membership Director
+  year: 2021 &mdash; 2022
+  url: https://publish.illinois.edu/uiuc-tdi-gso/
+  summary: Oversaw recruitment, retention and engagement of members. Managed member databases and records and proposed retention programs to ensure existing members remain active.
+
+  - organization: Peruvian Student Association at UIUC
+  role: Communications DIrector
+  year: 2022 &mdash; 2023
+  url: https://illinois.campuslabs.com/engage/organization/peruvianstudentassociation
+  summary: Developed engagement strategies to involve the Champaign-Urbana community in cultural activities to spread the Peruvian traditions.
+
+- organization: Project Management Institute (PMI)
+  role: Member
+  year: 2020 &mdash; 2021
+  url: https://www.pmi.org/
+
+  - organization: Peruvian Association of Engineers
+  role: Member
+  year: 2020 &mdash; Present
+  url: https://www.cip.org.pe/
+  
