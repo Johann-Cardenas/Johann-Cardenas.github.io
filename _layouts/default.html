@@ -1,21 +1,13 @@
-<!DOCTYPE html>
-
+<!doctype html>
 <html>
-
-{% include head.html %}
-
-<body>
-
-  {% include navbar.html %}
-
-  {{ content }}
-
-  {% include footer.html %}
-
-  {% include scripts.html %}
-
-  {% include google-analytics.html %}
-
-</body>
-
+  {% include head.html %}
+  <body>
+    <div class="container">
+      {% include header.html %}
+      <div class="content-wrapper">
+        {{ content }}
+      </div>
+      {% include footer.html %}
+    </div>
+  </body>
 </html>
