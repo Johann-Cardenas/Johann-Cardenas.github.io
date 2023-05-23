@@ -1,122 +1,46 @@
-/*
-  Reset some basic elements
-*/
-
-body, h1, h2, h3, h4, h5, h6,
-p, blockquote, pre, hr,
-dl, dd, ol, ul, figure {
-  margin: 0;
-  padding: 0;
+// Base styles
+// ---------------------------------------/
+* {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
-/*
-  Basic styling
-*/
-
-/* Headings */
-h1, h2, h3, h4, h5, h6 {
-  margin-bottom: .5rem;
-  font-weight: bold;
-  line-height: 1.25;
-  text-rendering: optimizeLegibility;
+html {
+  background: $white;
 }
 
-h1 {
-  font-size: 2rem;
-}
-h2 {
-  margin-top: 1rem;
-  font-size: 1.5rem;
-}
-h3 {
-  margin-top: 1.5rem;
-  font-size: 1.25rem;
-}
-h4, h5, h6 {
-  margin-top: 1rem;
-  font-size: 1rem;
-}
-
-/* Body */
-body {
-  font-family: $base-font-family;
-}
-body img {
-  align: middle;
-  margin: 5px auto auto auto;
-  display: block;
-  max-width: 600px;
-}
-
-p {
-  display: block;
-  margin-top: 1em;
-  margin-bottom: 1em;
-  margin-left: 0;
-  margin-right: 0;
-  line-height: 1.65;
-  font-family: $body-font-family;
-}
-
-/* Lists */
-ul, ol, dl {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  margin-left: 1.5rem;
-  font-family: $body-font-family;
-}
-
-ol li {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  margin-left: 1.5rem;
-}
-
-li {
-  margin-bottom: 1rem;
-}
-
-dt {
-  font-weight: bold;
-}
-dd {
-  margin-bottom: .5rem;
-}
-
-/*
-  Links
-*/
-
-a {
-  color: $brand-color;
-  text-decoration: none;
-}
-
-/*
-  Blockquote
-*/
-
-blockquote {
-  margin: 10px 20px 10px;
-  padding: 0px 15px;
-  border-left: 0.25em solid #ccc;
-  color: #999;
+body{
+  @include serif;
+  color: $text_color;
+  font-size: 16px;
   line-height: 1.5;
 }
 
-/**
- * Tables
- */
-table {
-  border-collapse: collapse;
-  margin-bottom: 30px;
-  width: 100%;
+.wrapper:before,
+.wrapper:after { content:""; display:table; }
+.wrapper:after { clear: both; }
+.wrapper {
+  max-width: 728px;
+  padding: 0 24px;
+  margin: 0 auto;
+  zoom: 1;
 }
 
-table, th, td {
-  border: 1px solid black;
+// clearfix (now called group,
+// via http://css-tricks.com/snippets/css/clear-fix/)
+.group:before,
+.group:after { content:""; display:table; }
+.group:after { clear:both; }
+.group { zoom:1; /* For IE 6/7 (trigger hasLayout) */ }
+
+::-moz-selection {
+    background: rgba(51,51,51,.8);
+    color: #fff;
+    text-shadow: none;
 }
-th, td {
-  padding: 15px;
-  text-align: left;
+::selection {
+    background: rgba(51,51,51,.8);
+    color: #fff;
+    text-shadow: none;
 }
