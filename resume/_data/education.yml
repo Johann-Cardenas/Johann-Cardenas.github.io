@@ -1,0 +1,19 @@
+# Degree
+- degree: PhD in Civil Engineering
+  uni: University of Illinois, Urbana-Champaign
+  year: 2023 &mdash; Present
+ # summary: If you had any meaningful roles at college, feel free to write about them here
+
+- degree: MSc in Civil Engineering
+  uni: University of Illinois, Urbana-Champaign
+  year: 2021 &mdash; 2023
+  awards:
+    - award: GPA = 4.00
+ # summary: If you had any meaningful roles at college, feel free to write about them here
+
+- degree: BS in Civil Engineering
+  uni: Universidad Nacional Mayor de San Marcos (UNMSM)
+  year: 2011 &mdash; 2016
+  awards:
+    - award: Summa Cumme Laude graduate
+ # summary: You can choose to have either a single or multiple awards
