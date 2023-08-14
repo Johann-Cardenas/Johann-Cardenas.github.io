@@ -2066,7 +2066,13 @@ input, select, textarea {
 
 	#header {
 		position: relative;
-		background: #ffffff;
+		/* background: #ffffff; */
+		
+		background: #ffffff url("../../assets/css/images/background02.png");
+		background-position: center center;
+		background-size: auto 100%;
+		background-repeat: no-repeat;
+
 		border-bottom: solid 1px #ccc;
 		padding: 5em 0 4em 0;
 		text-align: center;
