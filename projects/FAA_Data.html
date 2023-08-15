@@ -9,7 +9,7 @@
 		<link rel="stylesheet" href="../assets/css/main.css" />
 	</head>
 
-	<body class="EV_Trucks is-preload">
+	<body class="FAA_Data is-preload">
 		<div id="page-wrapper">
 
 			<!-- Header -->
@@ -53,38 +53,38 @@
 									<article class="box post">
 										<!-- <a href="#" class="image featured"><img src="../images/Projects_Banner.jpg" alt="" /></a> -->
 										<header style="text-align: center;">
-											<h2 style="line-height: 1.0;">ICT R27-252: Impact of Commercial Electric Vehicles on Flexible Pavement Performance</h2>
-											<p><strong>Principal Investigator(s):</strong> <a href="https://scholar.google.com/citations?user=7lK4oQYAAAAJ">Angeli Jayme</a>, 
-													  <a href="https://scholar.google.com/citations?user=o7o7Vr0AAAAJ">Jaime Hernandez</a>  <br>
-												<strong>Courtesy Advising:</strong> <a href="https://scholar.google.com/citations?user=XcWBRgEAAAAJ">Imad L. Al-Qadi</a>
+											<h2 style="line-height: 1.0;">Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis </h2>
+											<p>
+												<strong>Principal Investigator:</strong> <a href="https://scholar.google.com/citations?user=XcWBRgEAAAAJ">Imad L. Al-Qadi</a>
 											</p>
 										</header>
 
 										<p>
-											ICT-R27-252 is being conducted in cooperation with the Illinois Center for Transportation (ICT), the Illinois Department of Transportation (IDOT), 
-											and the U.S. Department of Transportation, Federal Highway Administration (FHWA).
+											ICT-R27-XXX is being conducted in cooperation with the Illinois Center for Transportation (ICT), 
+											and the U.S. Department of Transportation, Federal Aviation Administration (FAA).
 										</p>
 							
 										<h3 style="line-height: 1.5;">Objective</h3>
 										<p>
-											This project aims to better understand how electric commercial vehicles like semitrucks will affect asphalt pavements.
-											Electric semitrucks will carry additional weight from large baterry packs and will have increased capacity for torque and potentially different weight distributions.
-											The research team will get a head start on the weight distributions and torque capabilities of these new vehicles and will conduct large-scale testing
-											and numerical modeling to determine the effects on flexible pavements to identify solutions to potential pavement distress and damage. This project will help Illinois Department of Transportation (IDOT) become ready for the electrification
-											of the commercial fleet, helping save time and money once electric commercial vehicles are in operation.
+											This project aims to combine field data from various sections to develop more generalized prediction models.
+											In addition to field tests, FAA has developed wide-ranging data sets based on in-house accelerated pavement testing (APT).
+											The research team is exploring the APT data sets and investigating possible data fusion techniques to combine APT with in-situ 
+											data sets, which include response data obtained from actual airfield instrumentation. The combination incorporates various
+											material properties, climatic conditions, and gear loadings. Such data fusion techniques will allow the development of
+											general prediction models that may eventually be used in lieu of airfield pavement mechanistic analysis approaches.
 										</p>
 
 										<h3 style="line-height: 1.5;">Project Deliverables</h3>
 										<p>
-											The expected outcomes of this project are: <strong> i) Modifications to Chapter 53 of the  Bureau of Design and Environment (BDE) Manual, </strong> and
-											<strong> ii) Modification to policies for corridors identified for commercial electric vehicles (design, preservation and maintenace).</strong>
+											The expected outcomes of this project are: <strong> i) Development of a database combining APT and airfield instrument responses , </strong> and
+											<strong> ii) Development of an airfield pavement response prediction model based on a state-of-the-art ML/Artificial Intelligence approach.</strong>
 											The research approach follows the next major tasks: 
 											<ul>
-												<li><strong>Task 01: </strong>Review Effect of Torque and Axle Load on Flexible Pavement System</li>
-												<li><strong>Task 02: </strong>Evaluate Impact of Torque and Weight of Electric Trucks on Contact Stresses</li>
-												<li><strong>Task 03: </strong>Optimize IDOT HMA Pavements and Conduct Numerical Analyisis of Flexible Pavements</li>
-												<li><strong>Task 04: </strong>Develop Guidelines for Potential Modifications of IDOT Pavement Design and Pavement Type Selection</li>
-												<li><strong>Task 05: </strong>Assess Impact on Life-Cycle Cost and Recommend Pavement Management, Desing, and Maintenance Modifications/li>
+												<li><strong>Task 01: </strong>Exploration of Databases</li>
+												<li><strong>Task 02: </strong>Data Fusion</li>
+												<li><strong>Task 03: </strong>Experiment Design and Data Preprocessing</li>
+												<li><strong>Task 04: </strong>Predictive Model Development</li>
+												<li><strong>Task 05: </strong>Tool Integration</li>
 												<li><strong>Task 06: </strong>Prepare Final Report</li>
 											</ul>
 										</p>
@@ -93,11 +93,21 @@
 										<h3 style="line-height: 1.5;">Progress</h3>
 										<p>
 											<ul>
-												<li><strong>Task 01: </strong>Completed the literature review.</li>
-												<li><strong>Task 02: </strong>Prepared tire-pavement contact stress database, considering various loading and rolling conditions.
-													In addition, generated new contact stresses under different EV weight and torque level combinations using finite element modeling.</li>
-												<li><strong>Task 03: </strong>Selected the pavement sections and identified pavement materials within ICT database as candidate material inputs.</li>
+												<li><strong>Task 01: </strong>Completed the exploration of databases. Unfortunately, most of the information was found to not be reliable.</li>
+												<li><strong>Task 02: </strong>Completed Data Fusion. Reviewed datasets were compiled after pre-processing the databases. It was decided that synthetic data is needed
+																				to strengthen the prediction model. Selected datasets were used to calibrate a state-of-the-art FEM arfield pavement model. </li>
+												<li><strong>Task 03: </strong>Partially Completed Experiment Design and Data Preprocessing. Based on the tested sections, numerical simulations are being conducted to 
+																				generate synthetic data. The strain, stress and displacement fields are being extracted for each simulation. </li>
+												<li><strong>Task 04: </strong>Partially Completed Predictive Model Development. A physics-informed Machine Learning algorithm has been selected for this purpose.
+																				The algorithm is currently being trained using highway pavement cases, to later extend the training including the airfiled pavement synthetic data. </li>
+
 											</ul>
+										</p>
+
+										<p> Instead of predicting the maximum field responses from the output of the simulations, the approach will be to utilize the node responses throughout the domain to predict
+											the displacement/strain/stress field under a given set of conditions. Because the loading history plays an impactful rol on flexible pavement behavior, each time step of 
+											the simulations constitute a rich source of information. <strong>Fig. 1</strong> illustrates the response of a flexible pavement to a wheel loading.
+											From the deformed configuration, we can extract the nodal responses to train the ML algorithm.
 										</p>
 
 										<div class="row">
@@ -107,9 +117,9 @@
 											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
 												<figure>
 													<div>
-														<img src="../images/RP1.1.png" alt="" style="width: 100%;" />
+														<img src="../images/RP02.1.jpg" alt="" style="width: 100%;" />
 													</div>
-													<figcaption><h1>Fig 1. Load Distribution Scenarios</h1></figcaption>
+													<figcaption><h1>Fig 1. Flexible Pavement Response to Wheel Loadings</h1></figcaption>
 												</figure>
 											</div>
 
@@ -118,18 +128,48 @@
 
 										</div>
 										<br>
+
+										<p>Because an FEM aircraft tire model has not been yet developed, the contact-stress distribution has been predicted adjusting the geometry of a truck tire, which was readily available 
+											and has been previously developed, calibrated and validated by ICT researchers. Simulations are being conducted using a decoupled model, where the tire-pavement contact stress is found
+											by solving the contact problem independently from the pavement response. Once the contact stress distribution becomes a known variable, the pavement response can be found by solving 
+											a dynamic analysis problem. <strong>Fig. 2</strong> illustrates the components of the numerical simulation.
+										</p>
 										
-							
+										<div class="row">
+											<div class="col-3 col-6-medium col-12-small">
+											</div>
+
+											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+												<figure>
+													<div>
+														<img src="../images/RP02.2.jpg" alt="" style="width: 90%;" />
+													</div>
+													<figcaption><h1>Fig 2. Components of Airfield Pavement Numerical Simulation </h1></figcaption>
+												</figure>
+											</div>
+
+											<div class="col-3 col-6-medium col-12-small">
+											</div>
+
+										</div>
+										<br>
+
+
+
+
+
 										<h3 style="line-height: 1.5;">Preliminar Findings</h3>
 											<p>
-
 												<ul>
-													<li>Based on the comparison of resulting contact forces and the kernel density estimation that captures the stress distribution, 
-														the load increase has a much greater impact than the change in speed for both ICEV and EV.</li>
-													<li>Analysis at a 6% slip ratio significantly affects the longitudinal contact forces and proved that careful consideration of the rolling condition 
-														must be part of any analysis aiming to quantify HD-EVs pavement damage.</li>
+													<li> Only selected datasets coming from the pressure cells and strain gauges of Construction Cycle 7 (CC7) were found reliable to calibrate
+														the FEM arfield pavement model.</li>
+													<li> Due to the configuration of the aircraft loading (spacing), simulating only half of the gear configuration led to significant differences in the response of thick
+														 pavement structures when compared to the full configuration. Therefore, the latter is being simulated. This in turn, led to a need for optimizing the FEM model.
+														 <a href="https://scholar.google.com/citations?user=7lK4oQYAAAAJ">Angeli Jayme</a>, lead of the FEM team of this project, is currently working on the development
+														 of what we call the "Load Pass Approach", while I am focusing on running the simulations and extracting the nodal responses. </li>
+														 </li>
+													</thead>.</li>
 												</ul>
-
 											</p>
 
 										<header>
