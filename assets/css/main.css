@@ -2179,7 +2179,6 @@ input, select, textarea {
 /* Banner */
 
 	#banner {
-		/* background: #CCE8F4 url("../../images/Home_Banner.jpg"); */
 		background: #ffffff00 url("../../images/Home_Banner02.png");
 		background-position: center center;
 		background-size: auto 100%;
@@ -2193,15 +2192,17 @@ input, select, textarea {
 		#banner header {
 			background-color: rgba(34, 30, 31, 0.98);
 			display: inline-block;
-			padding: 2.5em 5em;
-			border-radius: 5px;
+			position: relative;
+			bottom: -6.95em;
+			padding: 0.25em 1.00em;
+			border-radius: 15px;
 		}
 
 			#banner header h2 {
 				color: #fff;
 				font-weight: 700;
-				font-size: 2.5em;
-				margin: 0 0 0.65em 0;
+				font-size: 1.00em;
+				margin: 0 0 0.10em 0;
 			}
 
 			#banner header p {
@@ -2209,7 +2210,7 @@ input, select, textarea {
 				padding: 0;
 				font-style: normal;
 				margin: 0;
-				font-size: 1.5em;
+				font-size: 1.0em;
 			}
 
 /* Intro */
@@ -2781,8 +2782,8 @@ input, select, textarea {
 				}
 
 				.box.post h2 {
-					font-size: 1.5em;
-					line-height: 1.5em;
+					font-size: 1.0em;
+					line-height: 1.0em;
 				}
 
 				.box.post header > p {
