@@ -23,7 +23,9 @@
 		<meta property="og:image:height" content="627">
 		<meta property="og:url" content="https://johann-cardenas.github.io/blog/Datathon2024.html">
 		<meta property="og:site_name" content="The Transporter">
-
+		<meta property="article:published_time" content="2024-04-01T12:00:00+00:00">
+		<meta property="og:author" content="Johann J Cárdenas">
+	
 		<!-- Twitter Card -->
 		<meta name="twitter:card" content="summary_large_image">
 		<meta name="twitter:site" content="@Transporter_PE">
@@ -81,39 +83,40 @@
 										<!-- <a href="#" class="image featured"><img src="../images/Projects_Banner.jpg" alt="" /></a> -->
 										<header style="text-align: center;">
 											<h2 style="line-height: 1.0;"> Illinois Statistics Datathon 2024 </h2>
-											<p><strong> On the Move: Highlights from the 102nd Annual Meeting </strong></p>
+											<p><strong> Beyond Numbers: Synchrony’s IVR Quest for Insight </strong></p>
 										</header>
 										
 										<div class="row">
 											
 											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
 											<p>
-												ICT-R27-252 is being conducted in cooperation with the Illinois Center for Transportation (ICT), the Illinois Department of Transportation (IDOT), 
-												and the U.S. Department of Transportation, Federal Highway Administration (FHWA). 
-												ICT-R27-252 is being conducted in cooperation with the Illinois Center for Transportation (ICT), the Illinois Department of Transportation (IDOT), 
-												and the U.S. Department of Transportation, Federal Highway Administration (FHWA). 
-												ICT-R27-252 is being conducted in cooperation with the Illinois Center for Transportation (ICT), the Illinois Department of Transportation (IDOT), 
-												and the U.S. Department of Transportation, Federal Highway Administration (FHWA). 
+												The Illinois Department of Statistics partnerted with Synchrony Financial to host the 8th annual Illinois Statistics Datathon in March 2024.
+												Synchrony’ challenge was to identify improvement opportunities in their Interactive Voice Response (IVR) system based on a extensive dataset of customer interactions.
+												The IVR system is a technology that allows customers to interact with a computer-operated phone system to access information and perform tasks without human assistance.
+												Synchrony estimates that over 20 million customers call into the IVR each month with a 78% resolution rate. Even a 1% improvement in the resolution rate would save 200,000
+												agent/floor calls per month. The goal of the Datathon was to uncover patterns within the IVR system that could lead to a better customer experience and operational efficiency.
+												They requested to put emphasis on calls that the IVR could not handle.
+
 											</p>
 											</div>
 
 											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
 												<figure>
 													<div>
-														<img src="../images/E04_01.png" alt="" style="width: 100%;" />
+														<img src="../images/E08_01.png" alt="" style="width: 100%;" />
 													</div>
-													<figcaption><h1>Fig 1. Load Distribution Scenarios</h1></figcaption>
-													<p>A brief text about the image</p>
+													<figcaption><h1>Fig 1. Exploratory Data Analysis</h1></figcaption>
+													<p>Sankey diagramas provided a clear visualization of users interactions.</p>
 												</figure>
 											</div>
 
 										</div>
 
 
-										<h3 style="line-height: 1.5; text-align: justify;">Sub-Section 1</h3>
+										<h3 style="line-height: 1.5; text-align: justify;">Exploratory Data Analysis</h3>
 										<p style="text-align: justify;">
-											This project aims to better understand how electric commercial vehicles like semitrucks will affect asphalt pavements.
-											Electric semitrucks will carry additional weight from large baterry packs and will have increased capacity for torque and potentially different weight distributions.
+											Upon initial exploration of the data, it was clear for the team that we needed to allocate most of the time to establish a solid correlation between the attributes to find out 
+											what were the root causes behind floord calls. Synchrony claimed their prediction model was highly reliable, and therefore exploring ML approaches to improve their model was not a priority.
 										</p>
 
 										<div class="row">
@@ -121,74 +124,55 @@
 											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
 												<figure>
 													<div>
-														<img src="../images/E04_04.png" alt="" style="width: 100%;" />
+														<img src="../images/E08_02.png" alt="" style="width: 100%;" />
 													</div>
-													<figcaption><h1>Fig 1. Load Distribution Scenarios</h1></figcaption>
-													<p>A brief text about the image</p>
+													<figcaption><h1>Fig 2. In-Depth Analysis</h1></figcaption>
+													<p>A linear regression model provided insights on the influence of every attribute</p>
 												</figure>
 											</div>
 											
 											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
 											<p>
-												ICT-R27-252 is being conducted in cooperation with the Illinois Center for Transportation (ICT), the Illinois Department of Transportation (IDOT), 
-												and the U.S. Department of Transportation, Federal Highway Administration (FHWA). 
-												ICT-R27-252 is being conducted in cooperation with the Illinois Center for Transportation (ICT), the Illinois Department of Transportation (IDOT), 
-												and the U.S. Department of Transportation, Federal Highway Administration (FHWA). 
-												ICT-R27-252 is being conducted in cooperation with the Illinois Center for Transportation (ICT), the Illinois Department of Transportation (IDOT), 
-												and the U.S. Department of Transportation, Federal Highway Administration (FHWA). 
+												It was identified that 20% of all calls going through the IVR system were being transferred. The team evidenced an issue with the call labeling system, which would assign by default
+												that of the last interaction with the customer. This was causing the system to misclassify the nature of the call, leading to a high number of floor calls. 
+												To address this issue, the top reasons for calling (those that covered 90% of the total calls) were identified and a new labeling system was proposed.
+												It was also noted that the time a customer would spend on the IVR system was directly related to the number of transfers.
+												The dataset contained almost 2 million calls, with columns containing information through different dates. Using a correlation matrix and a contingency table, the team was able to identify
+												the most related attributes to the number of transfers. The team also used a linear regression model to understand the influence of each attribute on the number of transfers.
 											</p>
 											</div>
 
 										</div>
 
 
-										<h3 style="line-height: 1.5; text-align: justify;">Sub-Section 2</h3>
+										<h3 style="line-height: 1.5; text-align: justify;">Recommendations</h3>
 										<p style="text-align: justify;">
-											This project aims to better understand how electric commercial vehicles like semitrucks will affect asphalt pavements.
-											Electric semitrucks will carry additional weight from large baterry packs and will have increased capacity for torque and potentially different weight distributions.
-											The research team will get a head start on the weight distributions and torque capabilities of these new vehicles and will conduct large-scale testing
-											and numerical modeling to determine the effects on flexible pavements to identify solutions to potential pavement distress and damage. This project will help Illinois Department of Transportation (IDOT) become ready for the electrification
-											of the commercial fleet, helping save time and money once electric commercial vehicles are in operation.
+											Because more than 8% of the resolved queries were customers calling multiple times, the team recommended to implement a system that would recognize the customer's phone number to bypass initial
+											autentication steps. However, Synchrony's team raised concerns about privacy issues. Instead, it was proposed to add features to enable more operations through the IVR system, such as 
+											auto-pay enrollment, e-bill enrollment, and use cases regarding card activation status checks. A new labeling system was recommended to improve the classification of calls, and remove bias 
+											from the prediction model. The system needs to be able to identify inmediately if it can actually provide a solution to the customer's query. If not, it should avoid navigating the IVR and floor the 
+											call. As long as the reason behind the flooring is identified, Synchrony will have data to keep upgrading the IVR system.
+
 										</p>
 
 										<div class="row">
 					
 											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
 												<p>
-													ICT-R27-252 is being conducted in cooperation with the Illinois Center for Transportation (ICT), the Illinois Department of Transportation (IDOT), 
-													and the U.S. Department of Transportation, Federal Highway Administration (FHWA). 
-													ICT-R27-252 is being conducted in cooperation with the Illinois Center for Transportation (ICT), the Illinois Department of Transportation (IDOT), 
-													and the U.S. Department of Transportation, Federal Highway Administration (FHWA). 
-													ICT-R27-252 is being conducted in cooperation with the Illinois Center for Transportation (ICT), the Illinois Department of Transportation (IDOT), 
-													and the U.S. Department of Transportation, Federal Highway Administration (FHWA). 
-												</p>
+													Having started on Friday night, we started wrapping up the results on Sunday afternoon. Thank God Seon Mi was on our team. Her ease to deliver the results in a clear and concise manner was key to our success.
+													We ranked 4th out of 345 teams. It was my first experience on a Datathon and I was thrilled to have been part of it. Thirty-six hours of intense work, but it was worth it. Kudos to Farid for assembling the crew, 
+													and to Divyansh for introducing us to visualizations I never used before. I am looking forward to the next Datathon.
 											</div>
 
 											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
-												<figure>
-													<div>
-														<img src="../images/E04_03.png" alt="" style="width: 100%;" />
-													</div>
-													<figcaption><h1>Fig 2. Load Distribution Scenarios</h1></figcaption>
-													<p>A brief text about the image</p>
-												</figure>
+												<iframe width="100%" height="315" src="https://www.youtube.com/watch?v=bMIHdDgau74&ab_channel=HAENA%ED%95%B4%EB%82%98" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 											</div>
 
 										</div>
-
-										
-										<h3 style="line-height: 1.5; text-align: justify;">Sub-Section 3</h3>
-										<p style="text-align: justify;">
-											This project aims to better understand how electric commercial vehicles like semitrucks will affect asphalt pavements.
-											Electric semitrucks will carry additional weight from large baterry packs and will have increased capacity for torque and potentially different weight distributions.
-											The research team will get a head start on the weight distributions and torque capabilities of these new vehicles and will conduct large-scale testing
-											and numerical modeling to determine the effects on flexible pavements to identify solutions to potential pavement distress and damage. This project will help Illinois Department of Transportation (IDOT) become ready for the electrification
-											of the commercial fleet, helping save time and money once electric commercial vehicles are in operation.
-										</p>
 							
 
 										<header>
-											<p style="text-align: right;">Last updated on August 14th, 2023</p>
+											<p style="text-align: right;">Last updated on April 1st, 2024</p>
 										</header>
 
 									</article>
