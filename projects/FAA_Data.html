@@ -1,0 +1,411 @@
+<!DOCTYPE HTML>
+<!--
+-->
+<html>
+	<head>
+		<title>Johann J Cárdenas | Projects</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+
+		<!-- Favicon -->
+		<link rel="icon" type="image/png" href="https://johann-cardenas.github.io/images/Favicon.ico">
+
+		<link rel="stylesheet" href="../assets/css/main.css" />
+	</head>
+
+	<body class="FAA_Data is-preload">
+		<div id="page-wrapper">
+
+			<!-- Header -->
+				<section id="header">
+
+					<!-- Logo -->
+						<h1><a href="../index.html">The Transporter</a></h1>
+
+					<!-- Nav -->
+						<nav id="nav">
+							<ul>
+								<li><a href="../index.html">Home</a></li>
+
+								<li class="current">
+									<a href="../Projects.html">Projects</a>
+										<ul>
+											<li><a href="../projects/EV_Trucks.html">Impact of Electric HD Vehicles</a></li> 
+											<li><a href="../projects/FAA_Data.html">ML-based Model for Airfield Pavements</a></li> 
+											<li><a href="../projects/MS_Thesis.html">Impact of DWL on Flexible Pavements</a></li>
+										</ul>
+								</li>
+
+								<li><a href="../Resume.html">Resume</a></li>
+
+								<li><a href="../Blog.html">Blog</a></li>
+
+								<li><a href="../Contact.html">Contact</a></li>
+
+							</ul>
+						</nav>
+
+				</section>
+
+			<!-- Main -->
+				<section id="main">
+					<div class="container">
+						<!-- <div class="row"> -->
+							<div class="col-8 col-12-medium">
+
+								<!-- Content -->
+									<article class="box post">
+										<!-- <a href="#" class="image featured"><img src="../images/Projects_Banner.jpg" alt="" /></a> -->
+										<header style="text-align: center;">
+											<h2 style="line-height: 1.0;">Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis </h2>
+											<p>
+												<strong>Principal Investigator:</strong> <a href="https://scholar.google.com/citations?user=XcWBRgEAAAAJ">Imad L. Al-Qadi</a>
+											</p>
+										</header>
+
+										<p style="text-align: justify;">
+											ICT-R27-XXX is being conducted in cooperation with the Illinois Center for Transportation (ICT), 
+											and the U.S. Department of Transportation, Federal Aviation Administration (FAA).
+										</p>
+							
+										<h3 style="line-height: 1.5;">Objective</h3>
+										<p style="text-align: justify;">
+											This project aims to combine field data from various sections to develop more generalized prediction models.
+											In addition to field tests, FAA has developed wide-ranging data sets based on in-house accelerated pavement testing (APT).
+											The research team is exploring the APT data sets and investigating possible data fusion techniques to combine APT with in-situ 
+											data sets, which include response data obtained from actual airfield instrumentation. The combination incorporates various
+											material properties, climatic conditions, and gear loadings. Such data fusion techniques will allow the development of
+											general prediction models that may eventually be used in lieu of airfield pavement mechanistic analysis approaches.
+										</p>
+
+										<h3 style="line-height: 1.5;">Project Deliverables</h3>
+										<p style="text-align: justify;">
+											The expected outcomes of this project are: <strong> i) Development of a database combining APT and airfield instrument responses , </strong> and
+											<strong> ii) Development of an airfield pavement response prediction model based on a state-of-the-art ML/Artificial Intelligence approach.</strong>
+											The research approach follows the next major tasks: 
+											<ul style="text-align: justify;">
+												<li><strong>Task 01: </strong>Exploration of Databases</li>
+												<li><strong>Task 02: </strong>Data Fusion</li>
+												<li><strong>Task 03: </strong>Experiment Design and Data Preprocessing</li>
+												<li><strong>Task 04: </strong>Predictive Model Development</li>
+												<li><strong>Task 05: </strong>Tool Integration</li>
+												<li><strong>Task 06: </strong>Prepare Final Report</li>
+											</ul>
+										</p>
+
+
+										<h3 style="line-height: 1.5;">Progress</h3>
+										<p style="text-align: justify;">
+											<ul style="text-align: justify;">
+												<li><strong>Task 01: </strong>Completed the exploration of databases. Unfortunately, most of the information was found to not be reliable.</li>
+												<li><strong>Task 02: </strong>Completed Data Fusion. Reviewed datasets were compiled after pre-processing the databases. It was decided that synthetic data is needed
+																				to strengthen the prediction model. Selected datasets were used to calibrate a state-of-the-art FEM arfield pavement model. </li>
+												<li><strong>Task 03: </strong>Partially Completed Experiment Design and Data Preprocessing. Based on the tested sections, numerical simulations are being conducted to 
+																				generate synthetic data. The strain, stress and displacement fields are being extracted for each simulation. </li>
+												<li><strong>Task 04: </strong>Partially Completed Predictive Model Development. A physics-informed Machine Learning algorithm has been selected for this purpose.
+																				The algorithm is currently being trained using highway pavement cases, to later extend the training including the airfiled pavement synthetic data. </li>
+
+											</ul>
+										</p>
+
+										<p style="text-align: justify;"> 
+											Instead of predicting the maximum field responses from the output of the simulations, the approach will be to utilize the node responses throughout the domain to predict
+											the displacement/strain/stress field under a given set of conditions. Because the loading history plays an impactful rol on flexible pavement behavior, each time step of 
+											the simulations constitute a rich source of information. <strong>Fig. 1</strong> illustrates the response of a flexible pavement to a wheel loading.
+											From the deformed configuration, we can extract the nodal responses to train the ML algorithm.
+										</p>
+
+										<div class="row">
+											<div class="col-3 col-6-medium col-12-small">
+											</div>
+
+											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+												<figure>
+													<div>
+														<img src="../images/RP02.1.jpg" alt="" style="width: 100%;" />
+													</div>
+													<figcaption><h1>Fig 1. Flexible Pavement Response to Wheel Loadings</h1></figcaption>
+												</figure>
+											</div>
+
+											<div class="col-3 col-6-medium col-12-small">
+											</div>
+
+										</div>
+										<br>
+
+										<p style="text-align: justify;">
+											Because an FEM aircraft tire model has not been yet developed, the contact-stress distribution has been predicted adjusting the geometry of a truck tire, which was readily available 
+											and has been previously developed, calibrated and validated by ICT researchers. Simulations are being conducted using a decoupled model, where the tire-pavement contact stress is found
+											by solving the contact problem independently from the pavement response. Once the contact stress distribution becomes a known variable, the pavement response can be found by solving 
+											a dynamic analysis problem. <strong>Fig. 2</strong> illustrates the components of the numerical simulation.
+										</p>
+										
+										<div class="row">
+											<div class="col-3 col-6-medium col-12-small">
+											</div>
+
+											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+												<figure>
+													<div>
+														<img src="../images/RP02.2.jpg" alt="" style="width: 90%;" />
+													</div>
+													<figcaption><h1>Fig 2. Components of Airfield Pavement Numerical Simulation </h1></figcaption>
+												</figure>
+											</div>
+
+											<div class="col-3 col-6-medium col-12-small">
+											</div>
+
+										</div>
+										<br>
+
+										<h3 style="line-height: 1.5;">Preliminar Findings</h3>
+											<p style="text-align: justify;">
+												<ul style="text-align: justify;">
+													<li> Only selected datasets coming from the pressure cells and strain gauges of Construction Cycle 7 (CC7) were found reliable to calibrate
+														the FEM arfield pavement model.</li>
+													<li> Due to the configuration of the aircraft loading (spacing), simulating only half of the gear configuration led to significant differences in the response of thick
+														 pavement structures when compared to the full configuration. Therefore, the latter is being simulated. This in turn, led to a need for optimizing the FEM model.
+														 <a href="https://scholar.google.com/citations?user=7lK4oQYAAAAJ">Angeli Jayme</a>, lead of the FEM team of this project, is currently working on the development
+														 of what we call the "Load Pass Approach", while I am focusing on running the simulations and extracting the nodal responses. </li>
+														 </li>
+													</thead>.</li>
+												</ul>
+											</p>
+
+										<header>
+											<p style="text-align: right;">Last updated on August 14th, 2023</p>
+										</header>
+
+									</article>
+
+
+									<article class="box post">
+										<div class="row">
+
+											<div class="col-4 col-6-medium col-12-small">
+												<section class="box">
+													<a href="../projects/EV_Trucks.html" class="image featured"><img src="../images/pic02.jpg" alt="" /></a>
+													<header>
+														<h3 style="text-align: center;">Impact of Commercial Electric Vehicles on Flexible Pavement Performance</h3>
+													</header>
+													<p style="text-align: justify;">The project aims to assess the impact of electric trucks on flexible pavements, focusing on the effect of higher wheel torque levels delivered by electric engines. The final deliverable will evaluate potential changes in IDOT pavement design guidelines.</p>
+													<footer>
+														<ul class="actions">
+															<li><a href="../projects/EV_Trucks.html" class="button icon solid fa-file-alt">Read More</a></li>
+														</ul>
+													</footer>
+												</section>
+											</div>
+											<div class="col-4 col-6-medium col-12-small">
+												<section class="box">
+													<a href="../projects/FAA_Data.html" class="image featured"><img src="../images/pic03.jpg" alt="" /></a>
+													<header>
+														<h3 style="text-align: center;">Building ML‑based Prediction Models for Computationally Efficient Airfield Pavement Analysis</h3>
+													</header>
+													<p style="text-align: justify;">The project focuses on combining field and synthetic data to develop and calibrate generalized prediction models for airfield pavement analysis, using advanced FEM modeling and physics-informed Machine Learning algorithms.</p>
+													<footer>
+														<ul class="actions">
+															<li><a href="../projects/FAA_Data.html" class="button icon solid fa-file-alt">Read More</a></li>
+														</ul>
+													</footer>
+												</section>
+											</div>
+
+											<div class="col-4 col-6-medium col-12-small">
+												<section class="box">
+													<a href="../projects/MS_Thesis.html" class="image featured"><img src="../images/pic04.jpg" alt="" /></a>
+													<header>
+														<h3 style="text-align: center;">Impact of Dynamic Wheel Loading on Pavement Responses for Non-Free-Rolling Conditions</h3>
+													</header>
+													<p style="text-align: justify;">MS Thesis. Building on the work carried out by the Illinois Center of Transportation (ICT), a reviewed generalframework to incoporate roughness-induced Dynamic Wheel Loading on pavement analysis was developed.</p>
+													<footer>
+														<ul class="actions">
+															<li><a href="../projects/MS_Thesis.html" class="button icon solid fa-file-alt">Read More</a></li>
+														</ul>
+													</footer>
+												</section>
+											</div>
+
+										</div>
+
+									</article>
+
+							</div>
+							
+							<!-- <div class="col-4 col-12-medium"> -->
+								<!-- Sidebar -->
+									<!-- <section class="box">
+										<a href="#" class="image featured"><img src="images/pic09.jpg" alt="" /></a>
+										<header>
+											<h3>Sed etiam lorem nulla</h3>
+										</header>
+										<p>Lorem ipsum dolor sit amet sit veroeros sed amet blandit consequat veroeros lorem blandit  adipiscing et feugiat phasellus tempus dolore ipsum lorem dolore.</p>
+										<footer>
+											<a href="#" class="button alt">Magna sed taciti</a>
+										</footer>
+									</section>
+									<section class="box">
+										<header>
+											<h3>Feugiat consequat</h3>
+										</header>
+										<p>Veroeros sed amet blandit consequat veroeros lorem blandit adipiscing et feugiat sed lorem consequat feugiat lorem dolore.</p>
+										<ul class="divided">
+											<li><a href="#">Sed et blandit consequat sed</a></li>
+											<li><a href="#">Hendrerit tortor vitae sapien dolore</a></li>
+											<li><a href="#">Sapien id suscipit magna sed felis</a></li>
+											<li><a href="#">Aptent taciti sociosqu ad litora</a></li>
+										</ul>
+										<footer>
+											<a href="#" class="button alt">Ipsum consequat</a>
+										</footer>
+									</section> -->
+							<!-- </div> -->
+
+						<!-- </div> -->
+
+					</div>
+				</section>
+
+			<!-- Footer -->
+				<section id="footer">
+					<div class="container">
+						<div class="row">
+							<div class="col-8 col-12-medium">
+								<section>
+									<header>
+										<h2>Important Dates</h2>
+									</header>
+									<ul class="dates">
+										<li>
+											<span class="date">Aug <strong>1</strong></span>
+											<h3><a href="https://trb.secure-platform.com/a/page/TRBPaperReview">
+											TRB 2024: Submission Deadline</a></h3>
+											<p> Two papers derived from my MS Thesis and one from our progress in the R27-252 project are under preparation
+												for submission to the next Transportation Research Board Annual Meeting. </p>
+										</li>
+										<li>
+											<span class="date">Aug <strong>11</strong></span>
+											<h3><a href="https://isap2024.etsmtl.ca/contact/">
+											ISAP 2024: Submission Deadline</a></h3>
+											<p> A summary of the MS Thesis will be submitted for presentation only.</p>
+										</li>
+										<li>
+											<span class="date">Aug <strong>21</strong></span>
+											<h3><a href="https://registrar.illinois.edu/academic-calendars/fall-2023-academic-calendar/">
+											Fall 2023: First Day of Classes</a></h3>
+											<p>Registered for CS 450 Numerical Analysis and CS 441 Applied Machine Learning.</p>
+										</li>
+										<li>
+											<span class="date">Nov <strong>30</strong></span>
+											<h3><a href="https://cee.illinois.edu/academics/graduate-programs/grad-handbook/doctoral-candidate-qualification-procedures-each">
+											PhD Qualification Exam</a></h3>
+											<p>Date to be confirmed by the committee.</p>
+										</li>
+									</ul>
+									</ul>
+								</section>
+
+							</div>
+							<div class="col-4 col-12-medium">
+								<section>
+									<header>
+										<h2>Becoming a Grad Student</h2>
+									</header>
+									<a href="../blog/Fulbright.html" class="image featured"><img src="../images/pic09.jpg" alt="" /></a>
+									<p style="text-align: justify;">
+										After being awarded a <strong>Fulbright</strong> scholarship in 2020, I received guidance and support from
+										<a href="https://www.fulbright.pe/">Fulbright Peru</a> and landed at the <a href="https://illinois.edu/">University of Illinois</a> in the Fall of 2021 to pursue an MS in Civil Engineering. 
+										I joined the <a href="https://ict.illinois.edu/">Illinois Center for Transportation</a> shortly after, and became a PhD student in 2023.
+									</p>
+									<footer>
+										<ul class="actions">
+											<li><a href="../blog/Fulbright.html" class="button">Read More</a></li>
+										</ul>
+									</footer>
+								</section>
+							</div>
+							<div class="col-4 col-6-medium col-12-small">
+								<section>
+									<header>
+										<h2>Content</h2>
+									</header>
+									<ul class="divided">
+										<li><a href="../Projects.html">Research Projects</a></li>
+										<li><a href="../Resume.html">Resume</a></li>
+										<li><a href="../Blog.html">Blog</a></li>
+										<li><a href="../Contact.html">Contact</a></li>
+									</ul>
+								</section>
+							</div>
+							<div class="col-4 col-6-medium col-12-small">
+								<section>
+									<header>
+										<h2>Afilliations</h2>
+									</header>
+									<ul class="divided">
+										<li><a href="https://illinois.edu/">University of Illinois, Urbana-Champaign</a></li>
+										<li><a href="https://unmsm.edu.pe/">Universidad Nacional Mayor de San Marcos</a></li>
+										<li><a href="https://www.fulbright.pe/">The Fulbright Program (Peru Commision)</a></li>
+									</ul>
+								</section>
+							</div>
+							<div class="col-4 col-12-medium">
+								<section>
+									<header>
+										<h2>Connect with me:</h2>
+									</header>
+									<ul class="social">
+										<li><a class="icon brands fa-twitter-square" href="https://twitter.com/Transporter_PE"><span class="label">Twitter</span></a></li>
+										<li><a class="icon brands fa-medium" href="https://medium.com/@johann.cardenas"><span class="label">Medium</span></a></li>
+										<li><a class="icon brands fa-linkedin-in" href="https://www.linkedin.com/in/johanncardenas/"><span class="label">LinkedIn</span></a></li>
+										<li><a class="icon brands fa-github" href="https://github.com/Johann-Cardenas"><span class="label">GitHub</span></a></li>
+										<li><a class="icon brands fa-stack-overflow" href="https://stackoverflow.com/users/22317429/johann-j-cardenas"><span class="label">Stack Overflow</span></a></li>
+									</ul>
+									<ul class="contact">
+										<li>
+											<h3>Address</h3>
+											<p>
+												Illinois Center for Transportation <br />
+												1611 Titan Drive <br />
+												Rantoul, IL 61866
+											</p>
+										</li>
+										<li>
+											<h3>Mail</h3>
+											<p><a href="#">johannc2@illinois.edu</a></p>
+										</li>
+										<li>
+											<h3>Phone</h3>
+											<p>(217) 953-1311</p>
+										</li>
+									</ul>
+								</section>
+							</div>
+							<div class="col-12">
+
+								<!-- Copyright -->
+									<div id="copyright">
+										<ul class="links">
+											<li>&copy; 2023. All rights reserved.</li><li>See more : <a href="https://ict.illinois.edu/">Illinois Center for Transportation</a></li>
+										</ul>
+									</div>
+
+							</div>
+						</div>
+					</div>
+				</section>
+
+		</div>
+
+		<!-- Scripts -->
+			<script src="../assets/js/jquery.min.js"></script>
+			<script src="../assets/js/jquery.dropotron.min.js"></script>
+			<script src="../assets/js/browser.min.js"></script>
+			<script src="../assets/js/breakpoints.min.js"></script>
+			<script src="../assets/js/util.js"></script>
+			<script src="../assets/js/main.js"></script>
+
+	</body>
+</html>
