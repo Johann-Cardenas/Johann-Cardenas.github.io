@@ -1,5 +1,5 @@
 # My Website
-Here are my HTML, CSS and JS files to build my first website (static:
+Here are my HTML, CSS and JS files to build my first static website:
 
 > [!IMPORTANT]
 > Although I am pleased to share my codes with the broader community for education, research and development purposes, I do not take any responsibility for the results obtained. You are fully responsible for your results.
@@ -10,7 +10,6 @@ Here are my HTML, CSS and JS files to build my first website (static:
 
 ## Requirements
 > [!NOTE]
-> - **Abaqus 2021** or later version. Older output database files need to be upgraded first. 
 > - **Python 3** or later version. You might need to install additional packages to run the scripts.
 
 ## Repository Structure
@@ -62,3 +61,41 @@ The model parameters can be modified to meet specific needs (curve shape, gradie
 	Other:
 		jQuery (jquery.com)
 		Responsive Tools (github.com/ajlkn/responsive-tools)
+
+ ## Acknowledgements
+
+ - [Illinois Campus Cluster](https://campuscluster.illinois.edu/)
+ - [Advanced Cyberinfrastructure Coordination Ecosystem: Services & Support](https://access-ci.org/)
+ - [Illinois Center for Transportation](https://ict.illinois.edu/)
+
+## Contributing
+
+Contributions are always welcome!
+
+See `contributing.md` for ways to get started.
+
+Please adhere to this project's `code of conduct`.
+
+## Licensing
+
+[![MIT License](https://img.shields.io/badge/License-Illinois-green.svg)](https://opensource.org/licenses/) <br>
+[![AGPL License](https://img.shields.io/badge/License-ICT-blue.svg)](https://opensource.org/licenses/) <br>
+[![GPLv3 License](https://img.shields.io/badge/License-Mechanics%20v1-yellow.svg)](https://opensource.org/licenses/)
+
+```powershell
+This software is not free and not released into the public domain.
+
+Permission is granted to any person to copy, modify, publish, use, compile, sell or distribute this
+software, whether in source code form or as a compiled binary, for any purpose—commercial or non
+commercial—and by any means. However, if you do so, regardless if the license your project uses,
+the author of this project reserves the right to freely copy and use code from your project in
+any form, including source code, compiled binaries, or any derived works.
+
+Disclaimer:
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+IN NO EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT, OR OTHERWHISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR 
+OTHER DEALINGS IN THE SOFTWARE.
+
+``` 
