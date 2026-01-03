@@ -1614,7 +1614,7 @@ input, select, textarea {
 		cursor: pointer;
 		border: 0;
 		border-radius: 5px;
-		background: #18a9a8;
+		background: #252122;
 		color: #fff !important;
 		font-weight: 700;
 		outline: 0;
@@ -1632,7 +1632,7 @@ input, select, textarea {
 		input[type="reset"]:hover,
 		button:hover,
 		.button:hover {
-			background: #18a9a8;
+			background: #353132;
 		}
 
 		input[type="button"]:active,
@@ -1640,7 +1640,7 @@ input, select, textarea {
 		input[type="reset"]:active,
 		button:active,
 		.button:active {
-			background: #18a9a8;
+			background: #151112;
 		}
 
 		input[type="button"].alt,
@@ -2652,7 +2652,16 @@ input, select, textarea {
 					border-top: solid 1px rgba(255, 255, 255, 0.05);
 					padding: 0 1em 0 1em;
 					font-style: italic;
+					-moz-transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+					-webkit-transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+					-ms-transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+					transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 				}
+
+					#navPanel .link:hover {
+						background-color: rgba(255, 255, 255, 0.1);
+						color: #fff;
+					}
 
 					#navPanel .link:first-child {
 						border-top: 0;

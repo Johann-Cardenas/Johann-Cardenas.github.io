@@ -208,7 +208,6 @@
                     <footer>
                         <ul class="actions">
                             <li><a href="${basePath}${post.url}" class="button icon solid fa-file-alt">${post.buttonText}</a></li>
-                            <li><a href="#" class="button alt icon solid fa-comment">${post.comments} comment${post.comments !== 1 ? 's' : ''}</a></li>
                         </ul>
                     </footer>
                 </section>
@@ -227,7 +226,7 @@
                     <p style="text-align: justify;">${project.excerpt}</p>
                     <footer>
                         <ul class="actions">
-                            <li><a href="${basePath}${project.url}" class="button icon solid fa-file-alt">Read More</a></li>
+                            <li><a href="${basePath}${project.url}" class="button icon solid fa-file-alt">Continue Reading</a></li>
                         </ul>
                     </footer>
                 </section>
