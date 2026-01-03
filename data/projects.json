@@ -1,0 +1,35 @@
+{
+  "projects": [
+    {
+      "id": "ev-trucks",
+      "title": "Impact of Commercial Electric Vehicles on Flexible Pavement Performance",
+      "shortTitle": "Impact of Electric HD Vehicles",
+      "image": "images/pic02.jpg",
+      "url": "projects/EV_Trucks.html",
+      "excerpt": "The project aims to assess the impact of electric trucks on flexible pavements, focusing on the effect of higher wheel torque levels delivered by electric engines. The final deliverable will evaluate potential changes in IDOT pavement design guidelines.",
+      "pis": ["Angeli Jayme", "Jaime Hernandez"],
+      "advisor": "Imad L. Al-Qadi"
+    },
+    {
+      "id": "faa-data",
+      "title": "Building ML‑based Prediction Models for Computationally Efficient Airfield Pavement Analysis",
+      "shortTitle": "ML-based Model for Airfield Pavements",
+      "image": "images/pic03.jpg",
+      "url": "projects/FAA_Data.html",
+      "excerpt": "The project focuses on combining field and synthetic data to develop and calibrate generalized prediction models for airfield pavement analysis, using advanced FEM modeling and physics-informed Machine Learning algorithms.",
+      "pis": ["Imad L. Al-Qadi"],
+      "advisor": null
+    },
+    {
+      "id": "ms-thesis",
+      "title": "Impact of Dynamic Wheel Loading on Pavement Responses for Non-Free-Rolling Conditions",
+      "shortTitle": "Impact of DWL on Flexible Pavements",
+      "image": "images/pic04.jpg",
+      "url": "projects/MS_Thesis.html",
+      "excerpt": "MS Thesis. Building on the work carried out by the Illinois Center of Transportation, a reviewed framework to incoporate roughness-induced Dynamic Wheel Loading on pavement analysis was developed.",
+      "pis": [],
+      "advisor": null
+    }
+  ]
+}
+

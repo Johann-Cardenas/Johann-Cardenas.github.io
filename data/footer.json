@@ -1,0 +1,75 @@
+{
+  "importantDates": [
+    {
+      "month": "Aug",
+      "day": 1,
+      "title": "TRB 2024: Submission Deadline",
+      "url": "https://trb.secure-platform.com/a/page/TRBPaperReview",
+      "description": "Two papers derived from my MS Thesis and one from our progress in the R27-252 project are under preparation for submission to the next Transportation Research Board Annual Meeting."
+    },
+    {
+      "month": "Aug",
+      "day": 11,
+      "title": "ISAP 2024: Submission Deadline",
+      "url": "https://isap2024.etsmtl.ca/contact/",
+      "description": "A summary of the MS Thesis will be submitted for presentation only."
+    },
+    {
+      "month": "Aug",
+      "day": 21,
+      "title": "Fall 2023: First Day of Classes",
+      "url": "https://registrar.illinois.edu/academic-calendars/fall-2023-academic-calendar/",
+      "description": "Registered for CS 450 Numerical Analysis and CS 441 Applied Machine Learning."
+    },
+    {
+      "month": "Nov",
+      "day": 30,
+      "title": "PhD Qualification Exam",
+      "url": "https://cee.illinois.edu/academics/graduate-programs/grad-handbook/doctoral-candidate-qualification-procedures-each",
+      "description": "Date to be confirmed by the committee."
+    }
+  ],
+  "gradStudent": {
+    "title": "Becoming a Grad Student",
+    "image": "images/pic09.jpg",
+    "text": "After being awarded a <strong>Fulbright</strong> scholarship in 2020, I received guidance and support from <a href=\"https://www.fulbright.pe/\">Fulbright Peru</a> and landed at the <a href=\"https://illinois.edu/\">University of Illinois</a> in the Fall of 2021 to pursue an MS in Civil Engineering. I joined the <a href=\"https://ict.illinois.edu/\">Illinois Center for Transportation</a> shortly after, and became a PhD student in 2023.",
+    "linkUrl": "blog/Fulbright.html",
+    "linkText": "Read More"
+  },
+  "contentLinks": [
+    {"name": "Research Projects", "url": "Projects.html"},
+    {"name": "Resume", "url": "Resume.html"},
+    {"name": "Blog", "url": "Blog.html"},
+    {"name": "Contact", "url": "Contact.html"}
+  ],
+  "affiliations": [
+    {"name": "University of Illinois, Urbana-Champaign", "url": "https://illinois.edu/"},
+    {"name": "Universidad Nacional Mayor de San Marcos", "url": "https://unmsm.edu.pe/"},
+    {"name": "The Fulbright Program (Peru Commision)", "url": "https://www.fulbright.pe/"}
+  ],
+  "socialLinks": [
+    {"platform": "Twitter", "url": "https://twitter.com/Transporter_PE", "icon": "fa-twitter-square", "label": "Twitter"},
+    {"platform": "Medium", "url": "https://medium.com/@johann.cardenas", "icon": "fa-medium", "label": "Medium"},
+    {"platform": "LinkedIn", "url": "https://www.linkedin.com/in/johanncardenas/", "icon": "fa-linkedin-in", "label": "LinkedIn"},
+    {"platform": "GitHub", "url": "https://github.com/Johann-Cardenas", "icon": "fa-github", "label": "GitHub"},
+    {"platform": "Stack Overflow", "url": "https://stackoverflow.com/users/22317429/johann-j-cardenas", "icon": "fa-stack-overflow", "label": "Stack Overflow"}
+  ],
+  "contact": {
+    "address": {
+      "organization": "Illinois Center for Transportation",
+      "street": "1611 Titan Drive",
+      "city": "Rantoul, IL 61866"
+    },
+    "email": "johannc2@illinois.edu",
+    "phone": "(217) 953-1311"
+  },
+  "copyright": {
+    "year": 2023,
+    "text": "All rights reserved.",
+    "link": {
+      "text": "Illinois Center for Transportation",
+      "url": "https://ict.illinois.edu/"
+    }
+  }
+}
+

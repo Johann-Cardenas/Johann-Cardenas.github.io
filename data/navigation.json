@@ -1,0 +1,53 @@
+{
+  "logo": {
+    "text": "The Transporter",
+    "url": "index.html"
+  },
+  "menu": [
+    {
+      "name": "Home",
+      "url": "index.html",
+      "type": "page"
+    },
+    {
+      "name": "Projects",
+      "url": "Projects.html",
+      "type": "dropdown",
+      "children": [
+        {
+          "name": "Impact of Electric HD Vehicles",
+          "url": "projects/EV_Trucks.html"
+        },
+        {
+          "name": "ML-based Model for Airfield Pavements",
+          "url": "projects/FAA_Data.html"
+        },
+        {
+          "name": "Impact of DWL on Flexible Pavements",
+          "url": "projects/MS_Thesis.html"
+        }
+      ]
+    },
+    {
+      "name": "Publications",
+      "url": "Publications.html",
+      "type": "page"
+    },
+    {
+      "name": "Resume",
+      "url": "Resume.html",
+      "type": "page"
+    },
+    {
+      "name": "Blog",
+      "url": "Blog.html",
+      "type": "page"
+    },
+    {
+      "name": "Contact",
+      "url": "Contact.html",
+      "type": "page"
+    }
+  ]
+}
+
