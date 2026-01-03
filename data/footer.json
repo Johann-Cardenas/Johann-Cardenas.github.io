@@ -1,32 +1,39 @@
 {
   "importantDates": [
     {
-      "month": "Aug",
-      "day": 1,
-      "title": "TRB 2024: Submission Deadline",
-      "url": "https://trb.secure-platform.com/a/page/TRBPaperReview",
-      "description": "Two papers derived from my MS Thesis and one from our progress in the R27-252 project are under preparation for submission to the next Transportation Research Board Annual Meeting."
+      "month": "Apr",
+      "day": 15,
+      "title": "ACRP GRA Interim Meeting #2",
+      "url": "https://www.nationalacademies.org/news/eight-winners-selected-for-the-trb-airport-cooperative-research-program-graduate-research-awards-2",
+      "description": "Time has been set. Progress will be reviewed in the meeting."
     },
     {
-      "month": "Aug",
-      "day": 11,
-      "title": "ISAP 2024: Submission Deadline",
-      "url": "https://isap2024.etsmtl.ca/contact/",
-      "description": "A summary of the MS Thesis will be submitted for presentation only."
+      "month": "Feb",
+      "day": 4,
+      "title": "ACRP GRA Interim Meeting #1",
+      "url": "https://www.nationalacademies.org/news/eight-winners-selected-for-the-trb-airport-cooperative-research-program-graduate-research-awards-2",
+      "description": "Time has been set. Progress will be reviewed in the meeting."
     },
     {
-      "month": "Aug",
-      "day": 21,
-      "title": "Fall 2023: First Day of Classes",
-      "url": "https://registrar.illinois.edu/academic-calendars/fall-2023-academic-calendar/",
-      "description": "Registered for CS 450 Numerical Analysis and CS 441 Applied Machine Learning."
-    },
-    {
-      "month": "Nov",
+      "month": "Jan",
       "day": 30,
-      "title": "PhD Qualification Exam",
+      "title": "PhD Preliminary Exam",
       "url": "https://cee.illinois.edu/academics/graduate-programs/grad-handbook/doctoral-candidate-qualification-procedures-each",
       "description": "Date to be confirmed by the committee."
+    },
+    {
+      "month": "Jan",
+      "day": 20,
+      "title": "Spring 2026: First Day of Classes",
+      "url": "https://registrar.illinois.edu/faculty-staff/calendars/academic-calendars/academic-calendars-archive/spring-academic-calendar-26/",
+      "description": "Class requirement is finally completed! No more classes to take."
+    },
+    {
+      "month": "Jan",
+      "day": 11,
+      "title": "2026 TRB Annual Meeting",
+      "url": "https://www.nationalacademies.org/events/886/schedule",
+      "description": "Two poster presentations were submitted for the 2026 TRB Annual Meeting."
     }
   ],
   "gradStudent": {
@@ -38,9 +45,10 @@
   },
   "contentLinks": [
     {"name": "Research Projects", "url": "Projects.html"},
+    {"name": "Publications", "url": "Publications.html"},
     {"name": "Resume", "url": "Resume.html"},
     {"name": "Blog", "url": "Blog.html"},
-    {"name": "Contact", "url": "Contact.html"}
+    {"name": "News", "url": "News.html"}
   ],
   "affiliations": [
     {"name": "University of Illinois, Urbana-Champaign", "url": "https://illinois.edu/"},
@@ -64,7 +72,7 @@
     "phone": "(217) 953-1311"
   },
   "copyright": {
-    "year": 2023,
+    "year": 2026,
     "text": "All rights reserved.",
     "link": {
       "text": "Illinois Center for Transportation",

@@ -10,6 +10,9 @@
 		<!-- Favicon -->
 		<link rel="icon" type="image/png" href="https://johann-cardenas.github.io/images/Favicon.ico">
 
+		<!-- Preload critical banner image -->
+		<link rel="preload" as="image" href="images/Blog_Banner.jpg" fetchpriority="high" />
+
 		<link rel="stylesheet" href="assets/css/main.css" />
 	</head>
 	<body class="Blog is-preload">
@@ -28,7 +31,7 @@
 
 								<!-- Content -->
 									<article class="box post">
-										<a href="#" class="image featured"><img src="images/Blog_Banner.jpg" alt="" /></a>
+										<a href="#" class="image featured"><img src="images/Blog_Banner.jpg" alt="" fetchpriority="high" /></a>
 										<header>
 											<h2>Welcome to Asphaltemia!</h2>
 											<p>Musings on Bendable Roads: A Flexible Perspective</p>

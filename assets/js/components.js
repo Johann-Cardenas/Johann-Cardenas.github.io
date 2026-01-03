@@ -104,7 +104,7 @@
                                 <header>
                                     <h2>${footerData.gradStudent.title}</h2>
                                 </header>
-                                <a href="${basePath}${footerData.gradStudent.linkUrl}" class="image featured"><img src="${basePath}${footerData.gradStudent.image}" alt="" /></a>
+                                <a href="${basePath}${footerData.gradStudent.linkUrl}" class="image featured"><img src="${basePath}${footerData.gradStudent.image}" alt="" loading="lazy" fetchpriority="low" /></a>
                                 <p style="text-align: justify;">${footerData.gradStudent.text}</p>
                                 <footer>
                                     <ul class="actions">
@@ -199,7 +199,7 @@
         return `
             <div class="col-6 col-12-small">
                 <section class="box">
-                    <a href="${basePath}${post.url}" class="image featured"><img src="${imageBasePath}${post.image}" alt="" /></a>
+                    <a href="${basePath}${post.url}" class="image featured"><img src="${imageBasePath}${post.image}" alt="" loading="lazy" fetchpriority="low" /></a>
                     <header>
                         <h3>${post.title}</h3>
                         <p>Posted on ${post.dateDisplay}</p>
@@ -220,7 +220,7 @@
         return `
             <div class="col-4 col-6-medium col-12-small">
                 <section class="box">
-                    <a href="${basePath}${project.url}" class="image featured"><img src="${imageBasePath}${project.image}" alt="" /></a>
+                    <a href="${basePath}${project.url}" class="image featured"><img src="${imageBasePath}${project.image}" alt="" loading="lazy" fetchpriority="low" /></a>
                     <header>
                         <h3 style="text-align: center;">${project.title}</h3>
                     </header>
@@ -308,6 +308,54 @@
         return generateProjects(projectsData, '', imageBasePath, true);
     }
 
+    // Generate news item card HTML
+    function generateNewsCard(newsItem, imageBasePath = '') {
+        // Only show image if provided
+        const imageSection = newsItem.image 
+            ? `<a href="${newsItem.url}" target="_blank" rel="noopener noreferrer" class="image featured"><img src="${imageBasePath}${newsItem.image}" alt="" loading="lazy" fetchpriority="low" /></a>`
+            : '';
+        
+        return `
+            <div class="col-12">
+                <section class="box">
+                    ${imageSection}
+                    <div class="row aln-middle">
+                        <div class="col-9 col-12-medium">
+                            <header>
+                                <h3>${newsItem.title}</h3>
+                                <p>${newsItem.source} • ${newsItem.dateDisplay}</p>
+                            </header>
+                            <p style="text-align: justify;">${newsItem.excerpt}</p>
+                        </div>
+                        <div class="col-3 col-12-medium" style="display: flex; justify-content: center; align-items: center;">
+                            <ul class="actions" style="margin: 0;">
+                                <li><a href="${newsItem.url}" target="_blank" rel="noopener noreferrer" class="button icon solid fa-external-link-alt">Read Article</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </div>`;
+    }
+
+    // Generate all news items HTML
+    function generateAllNews(newsData, imageBasePath = '') {
+        if (!newsData || !newsData.items) return '';
+
+        if (newsData.items.length === 0) return '';
+
+        let html = `
+            <div class="row gtr-0">`;
+
+        newsData.items.forEach(item => {
+            html += generateNewsCard(item, imageBasePath);
+        });
+
+        html += `
+            </div>`;
+
+        return html;
+    }
+
     // Initialize components
     async function initComponents() {
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -368,6 +416,16 @@
                 allProjectsElement.outerHTML = generateAllProjects(projectsData, imageBasePath);
             }
         }
+
+        // Load all news items (for News.html)
+        const allNewsElement = document.getElementById('all-news-placeholder');
+        if (allNewsElement) {
+            const newsData = await loadJSON(`${basePath}data/news.json`);
+            const imageBasePath = basePath || '';
+            if (newsData) {
+                allNewsElement.outerHTML = generateAllNews(newsData, imageBasePath);
+            }
+        }
     }
 
     // Wait for DOM to be ready
@@ -381,6 +439,7 @@
     window.ComponentLoader = {
         generateBlogCard: generateBlogCard,
         generateProjectCard: generateProjectCard,
+        generateNewsCard: generateNewsCard,
         loadJSON: loadJSON,
         getBasePath: getBasePath
     };
