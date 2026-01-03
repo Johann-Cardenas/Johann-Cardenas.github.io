@@ -2068,7 +2068,7 @@ input, select, textarea {
 		position: relative;
 		/* background: #ffffff; */
 		
-		background: #ffffff url("../../assets/css/images/background02.png");
+		background: #ffffff url("../../assets/css/images/bg.png");
 		background-position: center center;
 		background-size: auto 100%;
 		background-repeat: no-repeat;

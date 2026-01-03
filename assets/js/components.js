@@ -358,16 +358,30 @@
 
     // Rebuild mobile navigation panel after dynamic nav loading
     function rebuildMobileNav() {
-        // Check if jQuery and the navList plugin are available
-        if (typeof jQuery !== 'undefined' && jQuery.fn.navList) {
-            var $nav = jQuery('#nav');
-            var $navPanel = jQuery('#navPanel');
+        var attempts = 0;
+        var maxAttempts = 20; // Try for up to 2 seconds (20 * 100ms)
+        
+        var checkInterval = setInterval(function() {
+            attempts++;
             
-            if ($nav.length && $navPanel.length) {
-                // Clear existing nav content and rebuild
-                $navPanel.find('nav').html($nav.navList());
+            // Check if jQuery, navList plugin, and navPanel are all available
+            if (typeof jQuery !== 'undefined' && jQuery.fn.navList) {
+                var $nav = jQuery('#nav');
+                var $navPanel = jQuery('#navPanel');
+                
+                if ($nav.length && $navPanel.length && $nav.find('li').length > 0) {
+                    // Clear existing nav content and rebuild
+                    $navPanel.find('nav').html($nav.navList());
+                    clearInterval(checkInterval);
+                    return;
+                }
             }
-        }
+            
+            // Stop trying after max attempts
+            if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+            }
+        }, 100); // Check every 100ms
     }
 
     // Initialize components
