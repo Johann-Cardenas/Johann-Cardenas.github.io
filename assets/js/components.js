@@ -104,7 +104,7 @@
                                 <header>
                                     <h2>${footerData.gradStudent.title}</h2>
                                 </header>
-                                <a href="${basePath}${footerData.gradStudent.linkUrl}" class="image featured"><img src="${basePath}${footerData.gradStudent.image}" alt="" loading="lazy" fetchpriority="low" /></a>
+                                <a href="${basePath}${footerData.gradStudent.linkUrl}" class="image featured"><img src="${basePath}${footerData.gradStudent.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" /></a>
                                 <p style="text-align: justify;">${footerData.gradStudent.text}</p>
                                 <footer>
                                     <ul class="actions">
@@ -199,7 +199,7 @@
         return `
             <div class="col-6 col-12-small">
                 <section class="box">
-                    <a href="${basePath}${post.url}" class="image featured"><img src="${imageBasePath}${post.image}" alt="" loading="lazy" fetchpriority="low" /></a>
+                    <a href="${basePath}${post.url}" class="image featured"><img src="${imageBasePath}${post.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" /></a>
                     <header>
                         <h3>${post.title}</h3>
                         <p>Posted on ${post.dateDisplay}</p>
@@ -220,7 +220,7 @@
         return `
             <div class="col-4 col-6-medium col-12-small">
                 <section class="box">
-                    <a href="${basePath}${project.url}" class="image featured"><img src="${imageBasePath}${project.image}" alt="" loading="lazy" fetchpriority="low" /></a>
+                    <a href="${basePath}${project.url}" class="image featured"><img src="${imageBasePath}${project.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" /></a>
                     <header>
                         <h3 style="text-align: center;">${project.title}</h3>
                     </header>
@@ -312,7 +312,7 @@
     function generateNewsCard(newsItem, imageBasePath = '') {
         // Only show image if provided
         const imageSection = newsItem.image 
-            ? `<a href="${newsItem.url}" target="_blank" rel="noopener noreferrer" class="image featured"><img src="${imageBasePath}${newsItem.image}" alt="" loading="lazy" fetchpriority="low" /></a>`
+            ? `<a href="${newsItem.url}" target="_blank" rel="noopener noreferrer" class="image featured"><img src="${imageBasePath}${newsItem.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" /></a>`
             : '';
         
         return `
@@ -356,6 +356,20 @@
         return html;
     }
 
+    // Rebuild mobile navigation panel after dynamic nav loading
+    function rebuildMobileNav() {
+        // Check if jQuery and the navList plugin are available
+        if (typeof jQuery !== 'undefined' && jQuery.fn.navList) {
+            var $nav = jQuery('#nav');
+            var $navPanel = jQuery('#navPanel');
+            
+            if ($nav.length && $navPanel.length) {
+                // Clear existing nav content and rebuild
+                $navPanel.find('nav').html($nav.navList());
+            }
+        }
+    }
+
     // Initialize components
     async function initComponents() {
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -368,6 +382,9 @@
             // Replace the placeholder with navigation HTML (h1 + nav)
             const navHTML = generateNavigation(navData, currentPage);
             navElement.outerHTML = navHTML;
+            
+            // Rebuild mobile nav panel after navigation is loaded
+            rebuildMobileNav();
         }
 
         // Load footer
