@@ -15,11 +15,11 @@
       "type": "dropdown",
       "children": [
         {
-          "name": "Impact of Electric HD Vehicles",
+          "name": "Impact of HDEVs on Flexible Pavements",
           "url": "projects/EV_Trucks.html"
         },
         {
-          "name": "ML-Based Model for Airfield Pavements",
+          "name": "ML-Based Models for Airfield Pavements",
           "url": "projects/FAA_Data.html"
         },
         {
