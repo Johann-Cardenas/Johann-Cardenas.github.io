@@ -3,7 +3,7 @@
 -->
 <html>
 	<head>
-		<title>Johann J Cárdenas | Projects</title>
+		<title>Johann J Cardenas | Projects</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 
@@ -31,125 +31,270 @@
 									<article class="box post">
 										<!-- <a href="#" class="image featured"><img src="../images/Projects_Banner.jpg" alt="" /></a> -->
 										<header style="text-align: center;">
-											<h2 style="line-height: 1.0;">Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis </h2>
+											<h2 style="line-height: 1.0;">ICT R27-203: Building Machine-Learning-Based Prediction Models for Computationally Efficient Airfield Pavement Analysis </h2>
 											<p>
 												<strong>Principal Investigator:</strong> <a href="https://scholar.google.com/citations?user=XcWBRgEAAAAJ">Imad L. Al-Qadi</a>
 											</p>
 										</header>
 
-										<p style="text-align: justify;">
-											ICT-R27-XXX is being conducted in cooperation with the Illinois Center for Transportation (ICT), 
-											and the U.S. Department of Transportation, Federal Aviation Administration (FAA).
+										<p style="text-align: justify; margin-bottom: 1.00rem;">
+											ICT R27-203 was conducted in cooperation with the Illinois Center for Transportation (ICT), 
+											and the U.S. Department of Transportation, Federal Aviation Administration (FAA). The final technical report of the 
+											project is still under review by the FAA and is expected to be published soon. The content below is based on such report. 
+											Please reference as follows if you wish to cite this work:
 										</p>
+
+										<div style="border-left: 4px solid #18a9a8; background: #f7fafc; padding: 0.9rem 1rem; border-radius: 8px; margin: 1rem 0;">
+											<strong>Al-Qadi, I., Jayme, A., Zhou, Q., Cardenas J., Singh, A. and Liu, F. (2025)</strong> Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis. Volume II. <em>ICT-R27-203</em>. Illinois Center for Transportation. Accepted <strong>[Under Review]</strong>.
+										</div>
 							
-										<h3 style="line-height: 1.5;">Objective</h3>
-										<p style="text-align: justify;">
-											This project aims to combine field data from various sections to develop more generalized prediction models.
-											In addition to field tests, FAA has developed wide-ranging data sets based on in-house accelerated pavement testing (APT).
-											The research team is exploring the APT data sets and investigating possible data fusion techniques to combine APT with in-situ 
-											data sets, which include response data obtained from actual airfield instrumentation. The combination incorporates various
-											material properties, climatic conditions, and gear loadings. Such data fusion techniques will allow the development of
-											general prediction models that may eventually be used in lieu of airfield pavement mechanistic analysis approaches.
+										<h3 style="line-height: 1.5;">Project Objectives</h3>
+										<p style="text-align: justify; margin-bottom: 0.50rem;">
+											To address the limitations of current airfield pavement analysis tools, this project aimed to leverage 
+											advanced numerical modeling and physics-informed machine learning (PIML) techniques. It specifically focused on using 
+											graph neural networks (GNNs), chose for their structural similarity to the finite element (FE) mesh, to predict airfield 
+											pavement structural responses. The objectives include the following:
 										</p>
 
-										<h3 style="line-height: 1.5;">Project Deliverables</h3>
-										<p style="text-align: justify;">
-											The expected outcomes of this project are: <strong> i) Development of a database combining APT and airfield instrument responses , </strong> and
-											<strong> ii) Development of an airfield pavement response prediction model based on a state-of-the-art ML/Artificial Intelligence approach.</strong>
-											The research approach follows the next major tasks: 
-											<ul style="text-align: justify;">
-												<li><strong>Task 01: </strong>Exploration of Databases</li>
-												<li><strong>Task 02: </strong>Data Fusion</li>
-												<li><strong>Task 03: </strong>Experiment Design and Data Preprocessing</li>
-												<li><strong>Task 04: </strong>Predictive Model Development</li>
-												<li><strong>Task 05: </strong>Tool Integration</li>
-												<li><strong>Task 06: </strong>Prepare Final Report</li>
-											</ul>
+										<ul style="margin-top: 0; padding-left: 1.5rem; margin-bottom: 1.00rem;">
+											<li>Developing a tailored 3-D FE airfield pavement model that incorporates the complexities 
+												of heavy aircraft tire-airfield pavement interaction and validating the model's predictions 
+												using results from accelerated pavement testing (APT).</li>
+											<li>Creating a unified dataset for flexible airfield pavement responses by conducting FE 
+												simulations for selected cases to assess the influence of parameters such as layer 
+												thickness, material characterization, gear configuration, and load magnitude on critical responses.</li>
+											<li>Developing a GNN-based PIML model to predict full-scale highway pavement structural 
+												responses using the response data from 3-D highway pavement FE analyses.</li>
+											<li>Developing a model to predict structural responses of airfield pavements, combining the 
+												numerical matrix results from airfield pavement cases with transfer learning from the 
+												highway pavement PIML model.</li>
+										</ul>
+
+
+
+										<h3 style="line-height: 1.5;">Practical Value</h3>
+										<p style="text-align: justify; margin-bottom: 0.50rem;">
+											Accurate response prediction is not restricted to academic purposes in airfield engineering as it 
+											directly supports decisions on layer thickness, material selection, and performance expectations 
+											under evolving aircraft fleets. The FAA design process depends on critical responses as inputs, 
+											and when such responses are biased, the design could risk early distress and increased maintenance 
+											costs or lead to greater upfront construction costs due to overdesign. Additionally, improved 
+											response prediction is valuable for interpreting large-scale test results and extend such results 
+											beyond the specific sections and loading cases tested.
+										</p>
+										<p style="text-align: justify; margin-bottom: 0.50rem;">
+											From the perspective of a practitioner, the goal is not to replace FAARFIELD with a sophisticated 
+											FE modeling workflow for every project. FAARFIELD is effective because it is efficient and 
+											standardized for pavement design. The pratical path is to use validated numerical modeling to 
+											strengthen simplified analytical methodologies and then embed it into the existing design 
+											workflow through either calibrated adjustment factors, response libraries, or reduced-order models 
+											that preserve mechanistic prediction while remaining fast enough for routine iterative use.
+										</p>
+										<p style="text-align: justify; margin-bottom: 1.00rem;">
+											In that sense, advanced FE modeling is proposed as the backend engine of existing airfield flexible 
+											pavement design tools to i) improve reliability in response prediction for new gear types and higher 
+											tire inflation pressures, ii) guide calibration of response-based distress models, and iii) support 
+											integration strategies where mechanistic results inform existing FAA platforms instead of competing with them.
 										</p>
 
 
-										<h3 style="line-height: 1.5;">Progress</h3>
-										<p style="text-align: justify;">
-											<ul style="text-align: justify;">
-												<li><strong>Task 01: </strong>Completed the exploration of databases. Unfortunately, most of the information was found to not be reliable.</li>
-												<li><strong>Task 02: </strong>Completed Data Fusion. Reviewed datasets were compiled after pre-processing the databases. It was decided that synthetic data is needed
-																				to strengthen the prediction model. Selected datasets were used to calibrate a state-of-the-art FEM arfield pavement model. </li>
-												<li><strong>Task 03: </strong>Partially Completed Experiment Design and Data Preprocessing. Based on the tested sections, numerical simulations are being conducted to 
-																				generate synthetic data. The strain, stress and displacement fields are being extracted for each simulation. </li>
-												<li><strong>Task 04: </strong>Partially Completed Predictive Model Development. A physics-informed Machine Learning algorithm has been selected for this purpose.
-																				The algorithm is currently being trained using highway pavement cases, to later extend the training including the airfiled pavement synthetic data. </li>
-
-											</ul>
-										</p>
-
-										<p style="text-align: justify;"> 
-											Instead of predicting the maximum field responses from the output of the simulations, the approach will be to utilize the node responses throughout the domain to predict
-											the displacement/strain/stress field under a given set of conditions. Because the loading history plays an impactful rol on flexible pavement behavior, each time step of 
-											the simulations constitute a rich source of information. <strong>Fig. 1</strong> illustrates the response of a flexible pavement to a wheel loading.
-											From the deformed configuration, we can extract the nodal responses to train the ML algorithm.
+										<h3 style="line-height: 1.5;">Methodology</h3>
+										<p style="text-align: justify;margin-bottom: 1.25rem;">
+											The research team adapted a previously validated FE model, originally designed for highway pavements, 
+											to account for the unique loading patterns aircraft impose on airfield pavements (see <strong>Figure 1</strong>). However, expanding 
+											the model to cover larger analysis domains significantly increased runtimes, especially for 3D 
+											configurations under full-gear loading, rendering them impractical.
 										</p>
 
 										<div class="row">
-											<div class="col-3 col-6-medium col-12-small">
-											</div>
-
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
-												<figure>
-													<div>
-														<img src="../images/RP02.1.jpg" alt="" style="width: 100%;" loading="lazy" />
-													</div>
-													<figcaption><h1>Fig 1. Flexible Pavement Response to Wheel Loadings</h1></figcaption>
-												</figure>
-											</div>
-
-											<div class="col-3 col-6-medium col-12-small">
-											</div>
-
+										<div class="col-12" style="display:flex; justify-content:center;">
+											<figure style="margin:0; text-align:center; width:clamp(320px, 50vw, 950px);">
+											<img src="../images/RP02_01.jpg"
+												alt="First figure description"
+												style="display:block; width:100%; height:auto; margin:0 auto;"
+												loading="lazy" />
+											<figcaption><h1>Fig 1. Highway and Airfield FE Pavement Models </h1></figcaption>
+											</figure>
+										</div>
 										</div>
 										<br>
 
-										<p style="text-align: justify;">
-											Because an FEM aircraft tire model has not been yet developed, the contact-stress distribution has been predicted adjusting the geometry of a truck tire, which was readily available 
-											and has been previously developed, calibrated and validated by ICT researchers. Simulations are being conducted using a decoupled model, where the tire-pavement contact stress is found
-											by solving the contact problem independently from the pavement response. Once the contact stress distribution becomes a known variable, the pavement response can be found by solving 
-											a dynamic analysis problem. <strong>Fig. 2</strong> illustrates the components of the numerical simulation.
+										<p style="text-align: justify;margin-bottom: 1.25rem;">
+											To address the runtime issues, a new loading approach, namely Load Pass Approach (LPA) was developed, 
+											and effectively reduced the size of the analysis domain (see <strong>Figure 2</strong> and <strong>Figure 3</strong>). This approach 
+											significantly decreased runtime without compromising the accuracy of the predictions. The airfield pavement 
+											model was further validated using the results of large-scale testing provided by the FAA. Specifically, the 
+											data from Construction Cycle 7, including the instrumentation response, pavement section geometry, material 
+											characterization, tire inflation pressure, and loading configurations were used for the validation process and 
+											for designing the numerical matrix.
 										</p>
 										
 										<div class="row">
-											<div class="col-3 col-6-medium col-12-small">
-											</div>
-
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
-												<figure>
-													<div>
-														<img src="../images/RP02.2.jpg" alt="" style="width: 90%;" loading="lazy" />
-													</div>
-													<figcaption><h1>Fig 2. Components of Airfield Pavement Numerical Simulation </h1></figcaption>
-												</figure>
-											</div>
-
-											<div class="col-3 col-6-medium col-12-small">
-											</div>
-
+										<div class="col-12" style="display:flex; justify-content:center;">
+											<figure style="margin:0; text-align:center; width:clamp(320px, 50vw, 950px);">
+											<img src="../images/RP02_02.jpg"
+												alt="Second figure description"
+												style="display:block; width:100%; height:auto; margin:0 auto;"
+												loading="lazy" />
+											<figcaption><h1>Fig 2. Conventional Load Approach Logic</h1></figcaption>
+											</figure>
+										</div>
+										</div>
+										<br>
+											
+										<div class="row">
+										<div class="col-12" style="display:flex; justify-content:center;">
+											<figure style="margin:0; text-align:center; width:clamp(320px, 50vw, 950px);">
+											<img src="../images/RP02_03.jpg"
+												alt="Third figure description"
+												style="display:block; width:100%; height:auto; margin:0 auto;"
+												loading="lazy" />
+											<figcaption><h1>Fig 3. Load Pass Aproach (LPA) Logic </h1></figcaption>
+											</figure>
+										</div>
 										</div>
 										<br>
 
-										<h3 style="line-height: 1.5;">Preliminar Findings</h3>
-											<p style="text-align: justify;">
-												<ul style="text-align: justify;">
-													<li> Only selected datasets coming from the pressure cells and strain gauges of Construction Cycle 7 (CC7) were found reliable to calibrate
-														the FEM arfield pavement model.</li>
-													<li> Due to the configuration of the aircraft loading (spacing), simulating only half of the gear configuration led to significant differences in the response of thick
-														 pavement structures when compared to the full configuration. Therefore, the latter is being simulated. This in turn, led to a need for optimizing the FEM model.
-														 <a href="https://scholar.google.com/citations?user=7lK4oQYAAAAJ">Angeli Jayme</a>, lead of the FEM team of this project, is currently working on the development
-														 of what we call the "Load Pass Approach", while I am focusing on running the simulations and extracting the nodal responses. </li>
-														 </li>
-													</thead>.</li>
-												</ul>
-											</p>
+										<p style="text-align: justify;margin-bottom: 1.25rem;">
+											Despite the benefits of incorporating the LPA, conducting airfield pavement 
+											simulations was still computationally demanding, limiting the study to a selection of 23 cases. 
+											The cases could be categorized by the axle configuration, including eight D, eight 2D and seve 
+											3D gear configuration cases. Of these, 18 cases used the configuration of the South Section (see <strong>Figure 4</strong>), 
+											allowing the analysis of parameters such as axle loading, asphalt concrete (AC) characterization, 
+											and axle configuration. The remaning five cases used different configurations tested in the North 
+											Section (see <strong>Figure 5</strong>), facilitating the isolation of layer thickness effects on airfield pavement responses. Strain, 
+											stress, and displacement data were extracted for every node within the model at each timestep, creating 
+											an extensive dataset. This allows for outputs to be accessed from any location within the pavement domain.
+										</p>	
+										
+										<div class="row">
+										<div class="col-12" style="display:flex; justify-content:center;">
+											<figure style="margin:0; text-align:center; width:clamp(320px, 50vw, 950px);">
+											<img src="../images/RP02_04.jpg"
+												alt="Fourth figure description"
+												style="display:block; width:50%; height:auto; margin:0 auto;"
+												loading="lazy" />
+											<figcaption><h1>Fig 4. South Section Pavement Structure</h1></figcaption>
+											</figure>
+										</div>
+										</div>
+										<br>
+
+										<div class="row">
+										<div class="col-12" style="display:flex; justify-content:center;">
+											<figure style="margin:0; text-align:center; width:clamp(320px, 50vw, 950px);">
+											<img src="../images/RP02_05.jpg"
+												alt="Fifth figure description"
+												style="display:block; width:100%; height:auto; margin:0 auto;"
+												loading="lazy" />
+											<figcaption><h1>Fig 5. North Section Pavement Structure</h1></figcaption>
+											</figure>
+										</div>
+										</div>
+										<br>
+
+										<p style="text-align: justify; margin-bottom: 1.25rem;">
+											Although the cases selected yielded rich datasets, the number of simulations was insufficient to 
+											ensure robust predictions in data-driven models. To overcome this limitation, the research team 
+											leveraged the benefits of transfer learning. Despite the differences in domain size and loading 
+											configurations between the highway and airfield pavement models, it was assumed that the 
+											interaction among factors and the response distribution patterns were similar. Consequently, 
+											insights obtained from highway pavement simulations could enhance the accuracy of predictions 
+											for airfield pavement scenarios, given thelimited size of the airfield case datasets. Initially, 
+											a database was established (see <strong>Figure 6</strong>), collecting 3-D FE simulations of flexible 
+											highway pavements from the Illinois Center for Transportation (ICT) spannig the past two decades. This 
+											databse provided a useful baseline for the graph neural network (GNN), documenting structural responses 
+											such as stress, strain, and displacement across various loading phases and locations within varying pavement 
+											structures. These responses were influenced by many factors, including loading conditions, the tire-pavement 
+											contact, pavement layer configuration, material characterization, and environmental variables such as temperature.
+										</p>
+
+										<div class="row">
+										<div class="col-12" style="display:flex; justify-content:center;">
+											<figure style="margin:0; text-align:center; width:clamp(320px, 50vw, 950px);">
+											<img src="../images/RP02_06.jpg"
+												alt="Sixth figure description"
+												style="display:block; width:100%; height:auto; margin:0 auto;"
+												loading="lazy" />
+											<figcaption><h1>Fig 6. Summary of ICT FE Simulation Database</h1></figcaption>
+											</figure>
+										</div>
+										</div>
+										<br>
+										
+										<p style="text-align: justify; margin-bottom: 1.25rem;">
+											Building upon the highway pavement FE database, a GNN was constructed to predict the 
+											highway pavement structural response at each loading step. Unlike traditional data-driven 
+											models, this GNN uses a graph representation of pavement FE nodes, merging physics-based 
+											insights into the ML framework. The model enable the simulation of structural behavior under 
+											continuous tire loading, maintaining high accuracy while avoiding substantial increase in 
+											computational time. Recognizing the similarities between highway and airfield pavements, the 
+											GNN model, having been pre-trained on highway pavement datasets, was subsequently adapted to predict 
+											structural responses for airfield pavements under varied loading scenarios (D and 3D gear loading) 
+											via transfer learning. A selected number of 16 simulations conducted using the airfield pavement FE 
+											model was used to train the GNN model, while seven simulations were used for testing.
+										</p>
+						
+										<h3 style="line-height: 1.5;">Findings</h3>
+										<p style="text-align: justify; margin-bottom: 0.50rem;">
+											The key findings of this project are:
+										</p>
+
+										<ul style="margin-top: 0; padding-left: 1.5rem; margin-bottom: 1.00rem;">
+											<li>Full gear loading configurations, including D, 2D or 3D, are essential ofr accurate 3-D 
+												FE analysis of airfield pavement structures, given the importance of aircraft gear dual 
+												spacing as a model feature.</li>
+											<li>Axel magnitude was found to be the governing factor affecting critical responses.</li>
+											<li>The critical tensile strain at the bottom of the AC layer can be found either in the 
+												longitudinal and the transverse directions, so both must be verified.</li>
+											<li>The runtime of airfield pavement simulations can be significantly reduced by using the 
+												Load Pass Approach (LPA).</li>
+											<li>The assembly of 817 flexible highway pavement 3-D FE simulations into a database 
+												enabled a visualization of tire-pavement interactions and the varying structural responses 
+												at different loading steps and structural depths.</li>
+											<li>The GNN model demonstrated an advantage over traditional data-drive models by 
+												effectively using a graph representation of pavement finite element (FE nodes).</li>
+											<li>The message-passing component of the pre-trained GNN model was used and kept static 
+												during training because its function closely mirrors the mechanistic analysis integral to 
+												FE analysis.</li>
+											<li>To manage the larger graph sizes associated with airfield pavements, two model 
+												adaptation strategies were investigated: model scaling and graph pooling. Both models 
+												achieved acceptable testing errors.</li>
+											<li>While the model scaling approach may lead to higher prediction errors in the base layer 
+												due to overfitting, the graph pooling approach tends to introduce greater errors in the 
+												subbase and subgrade layers.</li>
+										</ul>
+
+										<h3 style="line-height: 1.5;">Conclusions</h3>
+										<p style="text-align: justify; margin-bottom: 0.50rem;">
+											The major conclusions of this project are as follows:
+										</p>	
+										
+										<ol style="list-style-type: decimal; margin-top:0; padding-left:1.5rem; margin-bottom:0.25rem;">
+											<li>Analysis and visualization of FAA NAPTF data for construction cycles 1, 3, 5, and 7 provided 
+												insights into the behavior of pavement structures under aircraft loading.</li>
+											<li>Despite the additional complexities of airfield pavements, the relationship between load, 
+												thickness, material properties, and critical responses followed a similar patter as those of 
+												highway pavements.</li>
+											<li>Overlooking the complexities of the aircraft-airfield pavement interaction during the 
+												analysis could greatly underpredict critical pavement responses. The FE airfield 
+												pavement model developed for this study accurately predicted pavement responses and 
+												could be used to generate an extensive database for any desired loading setup, pavement 
+												layer configuration, environmental condition, and material selection. Numerical analysis 
+											    could help extend the results of large-scale testing, provided that the data are used to 
+											    validate the FE model prior to conducting simulations.</li>
+											<li>Data-driven models such as physics-informed machine learning algorithms could be used 
+												to overcome computationally intensive processes while keeping the accuracy of the 
+												results given by a mechanistic analysis. By blending physics-based insights with ML 
+												learning, the GNN model exhibited superior predictive accuracy compared to traditional 
+												data-driven models, achieving remarkable MSE values. Hyperparameter tuning is vital in 
+											    optimizing the GNN model for performance and computational efficiency. Adapting a 
+											    pre-trained GNN model enabled the successful application of highway pavement analysis 
+											    patterns to airfield pavements through transfer learning.</li>
+										</ol>
 
 										<header>
-											<p style="text-align: right;">Last updated on August 14th, 2023</p>
+											<p style="text-align: right;">Last updated on January 4th, 2026</p>
 										</header>
 
 									</article>
