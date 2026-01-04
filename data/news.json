@@ -7,7 +7,9 @@
       "dateDisplay": "Oct 31, 2025",
       "source": "National Academies of Sciences, Engineering, and Medicine",
       "url": "https://www.nationalacademies.org/news/eight-winners-selected-for-the-trb-airport-cooperative-research-program-graduate-research-awards-2",
-      "excerpt": "Congratulations Johann Cardenas! His research project titled 'Mechanistic Overload Permitting Approach for Flexible Airfield Pavements via Deterministic Damage Factors' makes him an ACRP Graduate Research Award winner."
+      "excerpt": "Congratulations Johann Cardenas! His research project titled 'Mechanistic Overload Permitting Approach for Flexible Airfield Pavements via Deterministic Damage Factors' makes him an ACRP Graduate Research Award winner.",
+      "image": "images/news/acrp-award.jpg",
+      "tags": ["Award", "Featured"]
     },
     {
       "id": "fulbright-scholarship",
@@ -16,7 +18,9 @@
       "dateDisplay": "Mar 31, 2025",
       "source": "Fulbright Association",
       "url": "https://fulbright.org/2025/03/26/a-peruvians-journey-of-growth-and-discovery-johann-cardenas-peru-2021/",
-      "excerpt": "Johann Cardenas, Fulbright Foreign Student Program Fellow from Peru, shares his journey during his time in the United States."
+      "excerpt": "Johann Cardenas, Fulbright Foreign Student Program Fellow from Peru, shares his journey during his time in the United States.",
+      "image": "images/news/fulbright.jpg",
+      "tags": ["Featured"]
     },
     {
       "id": "ict-faa-ai",
@@ -25,7 +29,9 @@
       "dateDisplay": "Jan 21, 2025",
       "source": "Illinois Center for Transportation",
       "url": "https://ict.illinois.edu/news/newsletters/more-newsletters/february-2025/trb-2025",
-      "excerpt": "TRB presentation highlights from the Illinois Center for Transportation, featuring research presentations and contributions from ICT researchers at the 2025 Transportation Research Board Annual Meeting"
+      "excerpt": "TRB presentation highlights from the Illinois Center for Transportation, featuring research presentations and contributions from ICT researchers at the 2025 Transportation Research Board Annual Meeting",
+      "image": "images/news/trb-2025.jpg",
+      "tags": ["Presentation"]
     },
     {
       "id": "trb-presentation-list",
@@ -34,7 +40,9 @@
       "dateDisplay": "Feb 2024",
       "source": "Illinois Center for Transportation",
       "url": "https://ict.illinois.edu/news/newsletters/more-newsletters/february-2024/trb-presentation-list",
-      "excerpt": "TRB presentation highlights from the Illinois Center for Transportation, featuring research presentations and contributions from ICT researchers at the 2024 Transportation Research Board Annual Meeting."
+      "excerpt": "TRB presentation highlights from the Illinois Center for Transportation, featuring research presentations and contributions from ICT researchers at the 2024 Transportation Research Board Annual Meeting.",
+      "image": "images/news/trb-2024.jpg",
+      "tags": ["Presentation"]
     },
     {
       "id": "ict-faa-ai-old",
@@ -43,7 +51,9 @@
       "dateDisplay": "Jul 29, 2022",
       "source": "Illinois Center for Transportation",
       "url": "https://ict.illinois.edu/news/newsletters/more-newsletters/ict-faa-harness-ai-to-take-airport-pavements-to-new-heights",
-      "excerpt": "University of Illinois Urbana-Champaign Department of Civil and Environmental Engineering researchers visited the Federal Aviation Administration's William J. Hughes Technical Center in Atlantic City, New Jersey."
+      "excerpt": "University of Illinois Urbana-Champaign Department of Civil and Environmental Engineering researchers visited the Federal Aviation Administration's William J. Hughes Technical Center in Atlantic City, New Jersey.",
+      "image": "images/news/faa-visit.jpg",
+      "tags": ["Research"]
     }
   ]
 }
