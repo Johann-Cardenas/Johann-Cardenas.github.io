@@ -35,6 +35,43 @@
 		<meta name="twitter:image" content="https://johann-cardenas.github.io/images/blog/Blog09_Preview.png">
 
 		<link rel="stylesheet" href="../assets/css/main.css" />
+		<style>
+			/* Blog card hover effect */
+			.blog-card {
+				transition: transform 0.2s ease, box-shadow 0.2s ease;
+			}
+			.blog-card:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+			}
+			.blog-card h3 a {
+				color: inherit;
+				transition: color 0.2s ease;
+			}
+			.blog-card h3 a:hover {
+				color: #18a9a8;
+			}
+			/* Reduce vertical spacing in blog card content */
+			.blog-card .image.featured {
+				margin-bottom: 1.5rem;
+			}
+			.blog-card header {
+				margin-bottom: 0.15rem !important;
+			}
+			.blog-card header h3 {
+				margin-bottom: 0.1rem !important;
+				line-height: 1.3;
+			}
+			.blog-card header p {
+				margin-bottom: 0.25rem !important;
+				line-height: 1.2;
+			}
+			.blog-card > p {
+				margin-top: 0.15rem !important;
+				margin-bottom: 0.5rem;
+				line-height: 1.4;
+			}
+		</style>
 
 	</head>
 

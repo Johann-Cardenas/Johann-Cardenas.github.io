@@ -198,18 +198,13 @@
     function generateBlogCard(post, imageBasePath = '') {
         return `
             <div class="col-6 col-12-small">
-                <section class="box">
-                    <a href="${basePath}${post.url}" class="image featured"><img src="${imageBasePath}${post.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" /></a>
+                <section class="box blog-card">
+                    <a href="${basePath}${post.url}" class="image featured"><img src="${imageBasePath}${post.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" style="border-radius: 8px;" /></a>
                     <header>
-                        <h3>${post.title}</h3>
+                        <h3><a href="${basePath}${post.url}" style="text-decoration: none;">${post.title}</a></h3>
                         <p>Posted on ${post.dateDisplay}</p>
                     </header>
                     <p style="text-align: justify;">${post.excerpt}</p>
-                    <footer>
-                        <ul class="actions">
-                            <li><a href="${basePath}${post.url}" class="button icon solid fa-file-alt">${post.buttonText}</a></li>
-                        </ul>
-                    </footer>
                 </section>
             </div>`;
     }
@@ -218,17 +213,12 @@
     function generateProjectCard(project, imageBasePath = '') {
         return `
             <div class="col-4 col-6-medium col-12-small">
-                <section class="box">
-                    <a href="${basePath}${project.url}" class="image featured"><img src="${imageBasePath}${project.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" /></a>
+                <section class="box project-card">
+                    <a href="${basePath}${project.url}" class="image featured"><img src="${imageBasePath}${project.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" style="border-radius: 8px;" /></a>
                     <header>
-                        <h3 style="text-align: center;">${project.title}</h3>
+                        <h3 style="text-align: center;"><a href="${basePath}${project.url}" style="text-decoration: none;">${project.title}</a></h3>
                     </header>
                     <p style="text-align: justify;">${project.excerpt}</p>
-                    <footer>
-                        <ul class="actions">
-                            <li><a href="${basePath}${project.url}" class="button icon solid fa-file-alt">Continue Reading</a></li>
-                        </ul>
-                    </footer>
                 </section>
             </div>`;
     }
