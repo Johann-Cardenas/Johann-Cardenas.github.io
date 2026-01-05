@@ -14,6 +14,24 @@
 		<link rel="preload" as="image" href="images/Resume_Banner.jpg" fetchpriority="high" />
 
 		<link rel="stylesheet" href="assets/css/main.css" />
+		<style>
+			/* Sidebar card hover effect */
+			.sidebar-card {
+				transition: transform 0.2s ease, box-shadow 0.2s ease;
+			}
+			.sidebar-card:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+			}
+			.sidebar-card h3 a {
+				color: inherit;
+				text-decoration: none;
+				transition: color 0.2s ease;
+			}
+			.sidebar-card h3 a:hover {
+				color: #18a9a8;
+			}
+		</style>
 	</head>
 	<body class="Resume is-preload">
 		<div id="page-wrapper">
@@ -30,33 +48,24 @@
 							<div class="col-4 col-12-medium">
 
 								<!-- Sidebar -->
-									<section class="box">
-										<a href="#" class="image featured"><img src="images/Side_01.jpg" alt="" loading="lazy" decoding="async" /></a>
+									<section class="box sidebar-card">
+										<a href="https://ict.illinois.edu/" class="image featured"><img src="images/Side_01.jpg" alt="" loading="lazy" decoding="async" /></a>
 										<header>
-											<h3>ICT: "Where Excellence and Transportation Meet" </h3>
+											<h3><a href="https://ict.illinois.edu/">ICT: "Where Excellence and Transportation Meet"</a></h3>
 										</header>
-										<p style="text-align: justify;"> I serve as a Graduate Research Assistant at the Illinois Center for Transportation (ICT) at the University of Illinois at Urbana-Champaign,
-											under the supervision of Dr. <a href="https://cee.illinois.edu/directory/profile/alqadi">Imad L. Al-Qadi</a>. ICT works in partnership with the Illinois Department of Transportation (IDOT) to
+										<p style="text-align: justify;"> I serve as a Graduate Research Assistant at the Illinois Center for Transportation (ICT) at the University of Illinois at Urbana-Champaign. 
+											ICT works in partnership with the Illinois Department of Transportation (IDOT) to
 											address the urgent and evolving transportation needs of the state, the country and the world.
 										</p>
-										<footer>
-											<a href="https://ict.illinois.edu/" class="button alt">Read More</a>
-										</footer>
 									</section>
-									<section class="box">
-										<a href="#" class="image featured"><img src="images/Side_02.jpg" alt="" loading="lazy" decoding="async" /></a>
+									<section class="box sidebar-card">
+										<a href="https://cee.illinois.edu/about/rankings-and-statistics" class="image featured"><img src="images/Side_02.jpg" alt="" loading="lazy" decoding="async" /></a>
 										<header>
-											<h3>CEE at Illinois</h3>
+											<h3><a href="https://cee.illinois.edu/about/rankings-and-statistics">CEE at Illinois</a></h3>
 										</header>
 										<p style="text-align: justify;"> The CEE Department consistently ranks among the most elite programs in the U.S. and worldwide for both undergraduate and graduate studies.
-											Particularly, the Transportation Engineering group within CEE at Illinois offers unequalled expertise in pavement and transportation systems engineering.
+											The Transportation Engineering group within CEE at Illinois offers unequalled expertise in pavement and transportation systems engineering.
 										</p>
-										<ul class="divided">
-											<!--<li><a href="https://ict.illinois.edu/">Illinois Center for Transportation</a></li>-->
-										</ul>
-										<footer>
-											<a href="https://cee.illinois.edu/about/rankings-and-statistics" class="button alt">Read More</a>
-										</footer>
 									</section>
 
 							</div>
@@ -129,13 +138,14 @@
 										<header class="cvhead">
 											<div class="header-line top"></div>
 											<div class="header-container">
-												<h3>Abstract</h3>
+												<h3>Biography</h3>
 												<ul class="social" style="font-size: 0.75em; margin: -0.75em 0em 0.50em 0em;">
-													<li><a class="icon brands fa-twitter-square" href="https://twitter.com/Transporter_PE"><span class="label">Twitter</span></a></li>
-													<li><a class="icon brands fa-medium" href="https://medium.com/@johann.cardenas"><span class="label">Medium</span></a></li>
 													<li><a class="icon brands fa-linkedin-in" href="https://www.linkedin.com/in/johanncardenas/"><span class="label">LinkedIn</span></a></li>
 													<li><a class="icon brands fa-github" href="https://github.com/Johann-Cardenas"><span class="label">GitHub</span></a></li>
+													<li><a class="icon solid fa-graduation-cap" href="https://scholar.google.com/citations?user=yBNtQBoAAAAJ" title="Google Scholar"><span class="label">Google Scholar</span></a></li>
+													<li><a class="icon brands fa-orcid" href="https://orcid.org/0000-0002-4695-7639" title="ORCID"><span class="label">ORCID</span></a></li>
 													<li><a class="icon brands fa-stack-overflow" href="https://stackoverflow.com/users/22317429/johann-j-cardenas"><span class="label">Stack Overflow</span></a></li>
+													<li><a class="icon brands fa-medium" href="https://medium.com/@johann.cardenas"><span class="label">Medium</span></a></li>
 												</ul>
 											</div>
 											<div class="header-line bottom" style="margin-bottom: 0;"></div>
@@ -152,9 +162,12 @@
 									</style>
 
 									<section style="margin-top: -1em;">
-										<p style="text-align: justify;"> PhD Student at the University of Illinois, Urbana-Champaign.
-											My research primarily focuses on Pavement Mechanics, encompassing the use of FEM and Numerical Modeling to advance transportation infrastructure design. 
-											My experience in the industry includes the design, planning, construction, maintenance, and operation of highway networks. Bringing leadership and a fresh mindset to the table.
+										<p style="text-align: justify;"> 
+											Cardenas is a doctoral student at the University of Illinois, Urbana-Champaign, working under Dr. <a href="https://cee.illinois.edu/directory/profile/alqadi">Imad L. Al-Qadi.</a>
+											He earned his bachelor's degree at the National University of San Marcos (Peru) and his master's from the University of Illinois, Urbana-Champaign sponsored by 
+											the Fulbright Foreign Student Scholarship Program. His research centers on advanced numerical modeling of flexible pavement structures, 
+											pavement mechanics and vehicle dynamics. Cardenas has participated in projects funded by agencies including the Illinois Department of Transportation (IDOT), 
+											and the Federal Aviation Administration (FAA), focusing on numerical and data-driven prediction models for flexible pavement responses.
 										</p>
 									</section>
 

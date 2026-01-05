@@ -11,6 +11,24 @@
 		<link rel="icon" type="image/png" href="https://johann-cardenas.github.io/images/Favicon.ico">
 
 		<link rel="stylesheet" href="assets/css/main.css" />
+		<style>
+			/* Sidebar card hover effect */
+			.sidebar-card {
+				transition: transform 0.2s ease, box-shadow 0.2s ease;
+			}
+			.sidebar-card:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+			}
+			.sidebar-card h3 a {
+				color: inherit;
+				text-decoration: none;
+				transition: color 0.2s ease;
+			}
+			.sidebar-card h3 a:hover {
+				color: #18a9a8;
+			}
+		</style>
 	</head>
 	<body class="Publications is-preload">
 		<div id="page-wrapper">
@@ -70,6 +88,7 @@
 									<section style="margin-top: 1.2em;">
 										<header>
 											<h3>Technical Reports</h3>
+											<hr /, style="margin-top: 0.3em; margin-bottom: 0.6em;" />
 										</header>
 										<ul style="text-align: justify; margin-left: 1em; margin-top: 0.3em;">
 											<li style="margin-bottom: 0.4em;"><strong>Jayme A., Hernandez J., Al-Qadi I., Cardenas J., Hafeez M., and Villamil W. (2025)</strong> Impact of Heavy Commercial Electric Vehicles on Flexible Pavements. <em>ICT Project R27-252</em>. Illinois Center for Transportation. <em>ISSN:0197-9191</em>. <a href="https://doi.org/10.36501/0197-9191/25-003">https://doi.org/10.36501/0197-9191/25-003</a>.</li>
@@ -81,8 +100,9 @@
 									<section style="margin-top: 1.2em;">
 										<header>
 											<h3>Journal Articles</h3>
+											<hr /, style="margin-top: 0.3em; margin-bottom: 0.6em;" />
 										</header>
-										<ul style="text-align: justify; margin-left: 1em; margin-top: 0.3em;">
+										<ul style="text-align: justify; margin-left: 1em; margin-top: 0.3em; ">
 											<li style="margin-bottom: 0.4em;"><strong>Hafeez M., Al-Qadi I., Cardenas J., Jayme, A. and Hernandez, J. (2026)</strong> Electric Truck Adoption: Infrastructure Energy Burden and Economic Impacts. <em>ASCE Journal of Transportation Engineering: Part B, Pavements</em>. Accepted <strong>[Under Review]</strong>.</li>
 											<li style="margin-bottom: 0.4em;"><strong>Cardenas J., Jayme, A., Hernandez, J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Record</em>. Accepted <strong>[Under Review]</strong>.</li>
 											<li style="margin-bottom: 0.4em;"><strong>Jayme, A., Cardenas J., Hernandez, J. and Al-Qadi I. (2026)</strong> Relative Flexible Pavement Distress due to Heavy-Duty Electric Trucks. <em>Transportation Research Record</em>, <em>0</em>(0) <a href="https://doi.org/10.1177/03611981251404350">https://doi.org/10.1177/03611981251404350</a></li>
@@ -98,6 +118,7 @@
 									<section style="margin-top: 1.2em;">
 										<header>
 											<h3>Presentations</h3>
+											<hr /, style="margin-top: 0.3em; margin-bottom: 0.6em;" />
 										</header>
 										<ul style="text-align: justify; margin-left: 1em; margin-top: 0.3em;">
 											<li style="margin-bottom: 0.4em;"><strong>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Board 2026</em>. Poster Session. Event Title: Accelerated Pavement Testing. Event Number: 4082. Date: Jan. 2026.</li>
@@ -123,34 +144,25 @@
 							<div class="col-4 col-12-medium">
 
 								<!-- Sidebar -->
-								<section class="box">
-									<a href="#" class="image featured"><img src="images/Side_01.jpg" alt="" loading="lazy" decoding="async" /></a>
+								<section class="box sidebar-card">
+									<a href="https://ict.illinois.edu/" class="image featured"><img src="images/Side_01.jpg" alt="" loading="lazy" decoding="async" /></a>
 									<header>
-										<h3>ICT: "Where Excellence and Transportation Meet" </h3>
+										<h3><a href="https://ict.illinois.edu/">ICT: "Where Excellence and Transportation Meet"</a></h3>
 									</header>
-									<p style="text-align: justify;"> I serve as a Graduate Research Assistant at the Illinois Center for Transportation (ICT) at the University of Illinois at Urbana-Champaign,
-										under the supervision of Dr. <a href="https://cee.illinois.edu/directory/profile/alqadi">Imad L. Al-Qadi</a>. ICT works in partnership with the Illinois Department of Transportation (IDOT) to
+									<p style="text-align: justify;"> I serve as a Graduate Research Assistant at the Illinois Center for Transportation (ICT) at the University of Illinois at Urbana-Champaign. 
+										ICT works in partnership with the Illinois Department of Transportation (IDOT) to
 										address the urgent and evolving transportation needs of the state, the country and the world.
 									</p>
-									<footer>
-										<a href="https://ict.illinois.edu/" class="button alt">Read More</a>
-									</footer>
 								</section>
 
-								<section class="box">
-									<a href="#" class="image featured"><img src="images/Side_02.jpg" alt="" loading="lazy" decoding="async" /></a>
+								<section class="box sidebar-card">
+									<a href="https://cee.illinois.edu/about/rankings-and-statistics" class="image featured"><img src="images/Side_02.jpg" alt="" loading="lazy" decoding="async" /></a>
 									<header>
-										<h3>CEE at Illinois</h3>
+										<h3><a href="https://cee.illinois.edu/about/rankings-and-statistics">CEE at Illinois</a></h3>
 									</header>
 									<p style="text-align: justify;"> The CEE Department consistently ranks among the most elite programs in the U.S. and worldwide for both undergraduate and graduate studies.
-										Particularly, the Transportation Engineering group within CEE at Illinois offers unequalled expertise in pavement and transportation systems engineering.
+										The Transportation Engineering group within CEE at Illinois offers unequalled expertise in pavement and transportation systems engineering.
 									</p>
-									<ul class="divided">
-										<!--<li><a href="https://ict.illinois.edu/">Illinois Center for Transportation</a></li>-->
-									</ul>
-									<footer>
-										<a href="https://cee.illinois.edu/about/rankings-and-statistics" class="button alt">Read More</a>
-									</footer>
 								</section>
 
 							</div>
