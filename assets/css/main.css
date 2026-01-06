@@ -2120,18 +2120,15 @@ input, select, textarea {
 
 	#header {
 		position: relative;
-		background: var(--bg-light) url("../../assets/css/images/bg.png");
-		background-position: center center;
-		background-size: auto 100%;
-		background-repeat: no-repeat;
-		border-bottom: solid 1px #e2e8f0;
-		padding: 5em 0em 1em 0;
+		background: var(--bg-dark);
+		border-bottom: solid 1px #1e293b;
+		padding: 2em 0em 0.5em 0;
 		text-align: center;
 		box-shadow: var(--shadow-sm);
 	}
 
 		#header h1 {
-			color: var(--text-primary);
+			color: #ffffff;
 			font-weight: 900;
 			font-size: 2.5em;
 			letter-spacing: -0.035em;
@@ -2160,7 +2157,7 @@ input, select, textarea {
 
 				#nav > ul > li > a {
 					border-radius: 8px;
-					color: var(--text-secondary);
+					color: #e6e7e6;
 					text-decoration: none;
 					padding: 0.6em 1.2em 0.6em 1.2em;
 					-moz-transition: all .25s ease-in-out;
@@ -2328,7 +2325,9 @@ input, select, textarea {
 
 	#main {
 		position: relative;
-		background: var(--bg-light) url("images/bg.png");
+		background-color: #ffffff;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Ccircle cx='2' cy='2' r='0.5' fill='%23e6e7e6'/%3E%3C/svg%3E");
+		background-size: 4px 4px;
 		padding: 4em 0 4em 0;
 	}
 
@@ -2338,14 +2337,14 @@ input, select, textarea {
 			top: 0;
 			left: 0;
 			width: 100%;
-			background: var(--bg-light) url("images/bg.png");
-			background-size: 100% 100%;
+			background: transparent;
 			z-index: 0;
-			opacity: 0.1;
 		}
 
 		#main .major h2 {
-			background: var(--bg-light) url("images/bg.png");
+			background-color: #ffffff;
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Ccircle cx='2' cy='2' r='0.5' fill='%23e6e7e6'/%3E%3C/svg%3E");
+			background-size: 4px 4px;
 		}
 
 /* Footer */
@@ -2922,7 +2921,7 @@ input, select, textarea {
 			}
 
 				#header h1 {
-					color: var(--text-primary);
+					color: #e6e7e6;
 					font-weight: 900;
 					font-size: 1.75em;
 					letter-spacing: -0.035em;
