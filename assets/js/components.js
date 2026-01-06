@@ -104,7 +104,7 @@
                                 <header>
                                     <h2>${footerData.gradStudent.title}</h2>
                                 </header>
-                                <a href="${basePath}${footerData.gradStudent.linkUrl}" class="image featured"><img src="${basePath}${footerData.gradStudent.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" /></a>
+                                <a href="${basePath}${footerData.gradStudent.linkUrl}" class="image featured" style="border-radius: 12px; overflow: hidden;"><img src="${basePath}${footerData.gradStudent.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" style="border-radius: 12px;" /></a>
                                 <p style="text-align: justify;">${footerData.gradStudent.text}</p>
                                 <footer>
                                     <ul class="actions">

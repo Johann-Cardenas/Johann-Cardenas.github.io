@@ -3185,7 +3185,8 @@ ul.social li a {
 }
 
 ul.social li a:hover {
-	transform: translateY(-4px) scale(1.1);
+	transform: translateY(-0px);
+	background: var(--accent-primary) !important;
 	box-shadow: var(--shadow-lg);
 }
 
