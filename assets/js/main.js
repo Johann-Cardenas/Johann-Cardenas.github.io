@@ -61,4 +61,148 @@
 					visibleClass: 'navPanel-visible'
 				});
 
+	// =====================================================
+	// SCROLL ANIMATIONS & MICRO-INTERACTIONS
+	// =====================================================
+
+	// Check if user prefers reduced motion
+	const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (!prefersReducedMotion) {
+		// Intersection Observer for scroll animations
+		const observerOptions = {
+			threshold: 0.1,
+			rootMargin: '0px 0px -50px 0px'
+		};
+
+		const animationObserver = new IntersectionObserver((entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					// Add stagger effect based on element index within its parent
+					const parent = entry.target.parentElement;
+					const siblings = parent ? Array.from(parent.children).filter(
+						child => child.classList.contains('animate-on-scroll')
+					) : [];
+					const index = siblings.indexOf(entry.target);
+					
+					setTimeout(() => {
+						entry.target.classList.add('visible');
+					}, index * 100); // 100ms stagger between siblings
+					
+					// Optionally unobserve after animation
+					animationObserver.unobserve(entry.target);
+				}
+			});
+		}, observerOptions);
+
+		// Initialize scroll animations on DOM ready
+		$(document).ready(function() {
+			// Elements to animate on scroll
+			const animateElements = [
+				'.box',
+				'.project-card',
+				'.blog-card',
+				'#main section',
+				'#intro section',
+				'ul.dates li',
+				'ul.divided li',
+				'.row > [class*="col-"]'
+			].join(', ');
+
+			$(animateElements).each(function(index) {
+				const $el = $(this);
+				// Don't animate elements that are already visible above the fold
+				const rect = this.getBoundingClientRect();
+				const isAboveFold = rect.top < window.innerHeight && rect.bottom > 0;
+				
+				if (!isAboveFold || rect.top > window.innerHeight * 0.5) {
+					$el.addClass('animate-on-scroll');
+					animationObserver.observe(this);
+				}
+			});
+		});
+
+		// Add hover sound effect class (visual feedback)
+		$('.button, ul.social li a').on('mouseenter', function() {
+			$(this).addClass('hover-active');
+		}).on('mouseleave', function() {
+			$(this).removeClass('hover-active');
+		});
+
+		// Smooth scroll for anchor links
+		$('a[href^="#"]').on('click', function(e) {
+			const target = $(this.getAttribute('href'));
+			if (target.length) {
+				e.preventDefault();
+				$('html, body').animate({
+					scrollTop: target.offset().top - 100
+				}, 600, 'swing');
+			}
+		});
+
+		// Add ripple effect to buttons
+		$('.button, input[type="button"], input[type="submit"], button').on('click', function(e) {
+			const $btn = $(this);
+			
+			// Remove any existing ripple
+			$btn.find('.ripple').remove();
+			
+			// Create ripple element
+			const $ripple = $('<span class="ripple"></span>');
+			$btn.append($ripple);
+			
+			// Position the ripple
+			const btnOffset = $btn.offset();
+			const x = e.pageX - btnOffset.left - $ripple.width() / 2;
+			const y = e.pageY - btnOffset.top - $ripple.height() / 2;
+			
+			$ripple.css({
+				left: x + 'px',
+				top: y + 'px'
+			}).addClass('animate');
+			
+			// Remove ripple after animation
+			setTimeout(function() {
+				$ripple.remove();
+			}, 600);
+		});
+	}
+
+	// Counter animation for statistics (if any exist)
+	function animateCounter($el, target, duration) {
+		const start = 0;
+		const increment = target / (duration / 16);
+		let current = start;
+		
+		const timer = setInterval(function() {
+			current += increment;
+			if (current >= target) {
+				$el.text(Math.round(target));
+				clearInterval(timer);
+			} else {
+				$el.text(Math.round(current));
+			}
+		}, 16);
+	}
+
+	// Lazy loading for images with fade-in effect
+	if ('IntersectionObserver' in window) {
+		const imageObserver = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					const img = entry.target;
+					if (img.dataset.src) {
+						img.src = img.dataset.src;
+						img.classList.add('loaded');
+						imageObserver.unobserve(img);
+					}
+				}
+			});
+		});
+
+		$('img[data-src]').each(function() {
+			imageObserver.observe(this);
+		});
+	}
+
 })(jQuery);

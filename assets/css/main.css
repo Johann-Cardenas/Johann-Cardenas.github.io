@@ -2979,3 +2979,333 @@ input, select, textarea {
 			}
 
 	}
+
+/* =====================================================
+   ANIMATIONS & MICRO-INTERACTIONS
+   ===================================================== */
+
+/* Keyframe Animations */
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes fadeInDown {
+	from {
+		opacity: 0;
+		transform: translateY(-30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes fadeInLeft {
+	from {
+		opacity: 0;
+		transform: translateX(-30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes fadeInRight {
+	from {
+		opacity: 0;
+		transform: translateX(30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes scaleIn {
+	from {
+		opacity: 0;
+		transform: scale(0.9);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes pulse {
+	0%, 100% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.05);
+	}
+}
+
+@keyframes shimmer {
+	0% {
+		background-position: -200% 0;
+	}
+	100% {
+		background-position: 200% 0;
+	}
+}
+
+/* Scroll Animation Classes */
+.animate-on-scroll {
+	opacity: 0;
+	transform: translateY(30px);
+	transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.animate-on-scroll.visible {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+/* Staggered animation delays */
+.animate-on-scroll.delay-1 { transition-delay: 0.1s; }
+.animate-on-scroll.delay-2 { transition-delay: 0.2s; }
+.animate-on-scroll.delay-3 { transition-delay: 0.3s; }
+.animate-on-scroll.delay-4 { transition-delay: 0.4s; }
+.animate-on-scroll.delay-5 { transition-delay: 0.5s; }
+
+/* Enhanced Card Hover Effects */
+.project-card,
+.blog-card,
+.box {
+	transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+				box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.project-card:hover,
+.blog-card:hover {
+	transform: translateY(-8px) scale(1.02);
+	box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 
+				0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Enhanced Button Animations */
+.button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+button {
+	position: relative;
+	overflow: hidden;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.button::before,
+input[type="button"]::before,
+input[type="submit"]::before,
+input[type="reset"]::before,
+button::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.2),
+		transparent
+	);
+	transition: left 0.5s ease;
+}
+
+.button:hover::before,
+input[type="button"]:hover::before,
+input[type="submit"]:hover::before,
+input[type="reset"]:hover::before,
+button:hover::before {
+	left: 100%;
+}
+
+/* Link hover underline animation */
+a:not(.button):not(.image):not(.icon) {
+	position: relative;
+	text-decoration: none;
+}
+
+a:not(.button):not(.image):not(.icon)::after {
+	content: '';
+	position: absolute;
+	width: 0;
+	height: 2px;
+	bottom: -2px;
+	left: 0;
+	background-color: var(--accent-primary);
+	transition: width 0.3s ease;
+}
+
+a:not(.button):not(.image):not(.icon):hover::after {
+	width: 100%;
+}
+
+/* Navigation link animations */
+#nav > ul > li > a {
+	position: relative;
+	overflow: hidden;
+}
+
+#nav > ul > li > a::after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	width: 0;
+	height: 2px;
+	background: var(--accent-primary);
+	transition: all 0.3s ease;
+	transform: translateX(-50%);
+}
+
+#nav > ul > li:hover > a::after,
+#nav > ul > li.active > a::after {
+	width: 80%;
+}
+
+#nav > ul > li.current > a::after {
+	display: none;
+}
+
+/* Social icon hover animations */
+ul.social li a {
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+ul.social li a:hover {
+	transform: translateY(-4px) scale(1.1);
+	box-shadow: var(--shadow-lg);
+}
+
+/* Featured icon pulse on hover */
+.icon.featured {
+	transition: transform 0.3s ease;
+}
+
+.icon.featured:hover {
+	animation: pulse 0.6s ease-in-out;
+}
+
+/* Form input focus animations */
+form input[type=text],
+form input[type=email],
+form input[type=password],
+form select,
+form textarea {
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+form input[type=text]:focus,
+form input[type=email]:focus,
+form input[type=password]:focus,
+form select:focus,
+form textarea:focus {
+	transform: translateY(-2px);
+}
+
+/* Date badge hover effect */
+ul.dates .date {
+	transition: all 0.3s ease;
+}
+
+ul.dates li:hover .date {
+	transform: scale(1.05);
+	box-shadow: var(--shadow-md);
+}
+
+/* Intro section animations */
+#intro .icon.featured {
+	animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+/* Loading shimmer effect for images */
+.image-loading {
+	background: linear-gradient(
+		90deg,
+		#f0f0f0 25%,
+		#e0e0e0 50%,
+		#f0f0f0 75%
+	);
+	background-size: 200% 100%;
+	animation: shimmer 1.5s infinite;
+}
+
+/* Lazy loaded images fade-in */
+img[data-src] {
+	opacity: 0;
+	transition: opacity 0.4s ease;
+}
+
+img[data-src].loaded {
+	opacity: 1;
+}
+
+/* Button ripple effect */
+.button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+button {
+	position: relative;
+	overflow: hidden;
+}
+
+.ripple {
+	position: absolute;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.4);
+	transform: scale(0);
+	pointer-events: none;
+	width: 100px;
+	height: 100px;
+}
+
+.ripple.animate {
+	animation: rippleEffect 0.6s ease-out;
+}
+
+@keyframes rippleEffect {
+	to {
+		transform: scale(4);
+		opacity: 0;
+	}
+}
+
+/* Hover active state visual feedback */
+.hover-active {
+	transform: scale(0.98);
+}
+
+/* Smooth scroll behavior */
+html {
+	scroll-behavior: smooth;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+	
+	.animate-on-scroll {
+		opacity: 1;
+		transform: none;
+	}
+}
