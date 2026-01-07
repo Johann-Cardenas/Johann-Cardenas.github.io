@@ -1651,6 +1651,24 @@ input, select, textarea {
 		}
 
 /* Button */
+.button.small {
+	background: #0f172a !important;
+	color: #fff !important;
+	border: none;
+}
+.button.small:hover {
+	background: #18a9a8 !important;
+	color: #fff !important;
+}
+.button.download, .button.downloadhere, .download-button {
+	background: #0f172a !important;
+	color: #fff !important;
+	border: none;
+}
+.button.download:hover, .button.downloadhere:hover, .download-button:hover {
+	background: #18a9a8 !important;
+	color: #fff !important;
+}
 
 	input[type="button"],
 	input[type="submit"],
@@ -2357,6 +2375,16 @@ input, select, textarea {
 		}
 
 /* Footer */
+
+/* Brand icon hover effect for all footers */
+#footer ul.social li a.icon.brands:hover {
+	background: #18a9a8 !important;
+	transition: background 0.2s;
+}
+#footer .button:hover {
+	background: #18a9a8 !important;
+	color: #fff !important;
+}
 
 
 	#footer {

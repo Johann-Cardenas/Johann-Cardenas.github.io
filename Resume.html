@@ -15,6 +15,27 @@
 
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<style>
+		/* Brand icon color logic for Resume.html only, matching Publications.html */
+		ul.social li a.icon.brands,
+		ul.social li a.icon.solid.fa-graduation-cap {
+			background: #666666 !important;
+			transition: background 0.2s;
+		}
+		ul.social li a.icon.brands:before,
+		ul.social li a.icon.solid.fa-graduation-cap:before {
+			color: #e5e7eb !important;
+			transition: color 0.2s;
+		}
+		ul.social li a.icon.brands:hover,
+		ul.social li a.icon.solid.fa-graduation-cap:hover {
+			background: #18a9a8 !important;
+		}
+		ul.social li a.icon.brands:hover:before,
+		ul.social li a.icon.solid.fa-graduation-cap:hover:before {
+			color: #fff !important;
+		}
+		</style>
+		<style>
 			/* Sidebar card hover effect */
 			.sidebar-card {
 				transition: transform 0.2s ease, box-shadow 0.2s ease;
