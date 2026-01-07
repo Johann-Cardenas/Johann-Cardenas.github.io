@@ -12,6 +12,16 @@
 
 		<link rel="stylesheet" href="../assets/css/main.css" />
 		<style>
+		/* Accent color for https hyperlinks in main content of FAA_Data.html (excluding project cards) */
+		article.box.post a[href^="https:"] {
+			color: #18a9a8 !important;
+			transition: color 0.2s, text-decoration 0.2s;
+			text-decoration: none;
+		}
+		article.box.post a[href^="https:"]:hover {
+			color: #14908f !important;
+			text-decoration: underline;
+		}
 			/* Project card hover effect */
 			.project-card {
 				transition: transform 0.2s ease, box-shadow 0.2s ease;
