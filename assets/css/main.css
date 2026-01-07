@@ -2177,8 +2177,8 @@ input, select, textarea {
 				}
 
 				#nav > ul > li:hover > a, #nav > ul > li.active > a {
-					background: #e2e8f0;
-					color: var(--text-primary);
+					background: #18a9a8 !important;
+					color: #fff !important;
 				}
 
 				#nav > ul > li.current > a {
