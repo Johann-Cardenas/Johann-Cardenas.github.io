@@ -2376,6 +2376,31 @@ input, select, textarea {
 
 /* Footer */
 
+/* Footer text hyperlink hover effect: accent color and animated underline (exclude buttons, brand icons, icons) */
+#footer a:not(.button):not(.icon):not(.brands) {
+	position: relative;
+	color: #c5c4c4;
+	text-decoration: none;
+	transition: color 0.2s;
+}
+#footer a:not(.button):not(.icon):not(.brands):hover {
+	color: var(--accent-primary) !important;
+}
+#footer a:not(.button):not(.icon):not(.brands)::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	bottom: -2px;
+	height: 2px;
+	width: 0;
+	background: var(--accent-primary);
+	border-radius: 1px;
+	transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+#footer a:not(.button):not(.icon):not(.brands):hover::after {
+	width: 100%;
+}
+
 /* Brand icon hover effect for all footers */
 #footer ul.social li a.icon.brands:hover {
 	background: #18a9a8 !important;
