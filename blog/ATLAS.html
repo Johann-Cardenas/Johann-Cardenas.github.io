@@ -3,6 +3,38 @@
 -->
 <html>
 	<head>
+			<style>
+				/* Info bar social icon hover color override */
+				.blog-infobar ul.social li a:hover,
+				.blog-infobar ul.social li a:focus {
+					background: #18a9a8 !important;
+					color: #fff !important;
+					box-shadow: none !important;
+				}
+			</style>
+		<style>
+			/* Info bar social icons smaller */
+			.blog-infobar ul.social li a {
+				width: 2.4em !important;
+				height: 2.4em !important;
+			}
+			.blog-infobar ul.social li a:before {
+				font-size: 1.40em !important;
+				line-height: 1.80em !important;
+				display: inline-block;
+				vertical-align: middle;
+				margin-top: 0.00em;
+			}
+			.blog-infobar .infotext {
+				font-size: 0.98em !important;
+			}
+		</style>
+		<style>
+			/* Share section social icon hover color */
+			.share-section ul.social li a:hover {
+				background: #18a9a8 !important;
+			}
+		</style>
 		<title>Johann J Cardenas | Blog</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
@@ -47,31 +79,18 @@
 				line-height: 1.4;
 			}
 		</style>
-
-		<!-- General Card -->
-		<meta property="og:type" content="website">
-		<meta property="og:title" content="The Transporter">
-		<meta property="og:description" content="The Reborn of Illinois Accelerated Pavement Tester.">
-		<meta property="og:image" content="https://johann-cardenas.github.io/images/Blog06_Preview.jpg">
-		<meta property="og:image:secure_url" content="https://johann-cardenas.github.io/images/blog/Blog06_Preview.jpg">
-		<meta property="og:image:alt" content="Preview Image">
-		<meta property="og:url" content="https://johann-cardenas.github.io/">
-
-		<!-- Twitter Card -->
-		<meta name="twitter:card" content="summary_large_image">
-		<meta name="twitter:title" content="The Transporter">
-		<meta name="twitter:description" content="The Reborn of Illinois Accelerated Pavement Tester.">
-		<meta name="twitter:image" content="https://johann-cardenas.github.io/images/blog/Blog06_Preview.jpg">
-
-		<!-- LinkedIn -->
-		<meta property="og:site_name" content="The Transporter">
+		<!-- Social Sharing: Open Graph (for LinkedIn, Facebook, etc.) -->
+		<meta property="og:type" content="article">
+		<meta property="og:title" content="The Reborn of the Illinois Accelerated Pavement Tester">
+		<meta property="og:description" content="The Upgrade of ATLAS to the I-APT">
 		<meta property="og:image" content="https://johann-cardenas.github.io/images/blog/Blog06_Preview.jpg">
-		<meta property="og:image:secure_url" content="https://johann-cardenas.github.io/images/blog/Blog06_Preview.jpg">
-		<meta property="og:image:alt" content="Preview Image">
-		<meta property="og:image:type" content="image/jpeg">
-		<meta property="og:image:width" content="1200">
-		<meta property="og:image:height" content="627">
-		<meta property="og:description" content="The Reborn of Illinois Accelerated Pavement Tester.">
+		<meta property="og:url" content="https://johann-cardenas.github.io/blog/ATLAS.html">
+
+		<!-- Twitter Card (optional, but recommended for Twitter) -->
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:title" content="The Reborn of the Illinois Accelerated Pavement Tester">
+		<meta name="twitter:description" content="The Upgrade of ATLAS to the I-APT">
+		<meta name="twitter:image" content="https://johann-cardenas.github.io/images/blog/Blog06_Preview.jpg">
 
 	</head>
 
@@ -96,6 +115,30 @@
 											<h2 style="line-height: 1.0;"> The Reborn of the Illinois Accelerated Pavement Tester </h2>
 											<p><strong> The Upgrade of ATLAS to the I-APT </strong></p>
 										</header>
+																		   <!-- Info Bar: Date, Reading Time, Socials -->
+																		   <div class="blog-infobar" style="display: flex; align-items: center; justify-content: space-between; margin: 1.5em 0 2em 0; gap: 1em;">
+																			   <div style="display: flex; align-items: center; gap: 2.5em;">
+																				   <span class="infotext" style="display: flex; align-items: center; gap: 0.5em; color: #222; font-size: 1.05em;">
+																					   <span class="icon solid fa-calendar-alt" style="color: #222; font-size: 1.1em;"></span>
+																					   <span>8/6/2023</span>
+																				   </span>
+																				   <span class="infotext" style="display: flex; align-items: center; gap: 0.5em; color: #222; font-size: 1.05em;">
+																					   <span class="icon solid fa-clock" style="color: #222; font-size: 1.1em;"></span>
+																					   <span>5 min read</span>
+																				   </span>
+																			   </div>
+																			   <ul class="social" style="margin: 0;">
+																				   <li>
+																					   <a href="https://www.facebook.com/sharer/sharer.php?u=https://johann-cardenas.github.io/blog/ATLAS.html" target="_blank" class="icon brands fa-facebook" title="Share on Facebook"></a>
+																				   </li>
+																				   <li>
+																					   <a href="https://twitter.com/intent/tweet?url=https://johann-cardenas.github.io/blog/ATLAS.html" target="_blank" class="icon brands fa-twitter" title="Share on Twitter"></a>
+																				   </li>
+																				   <li>
+																					   <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://johann-cardenas.github.io/blog/ATLAS.html" target="_blank" class="icon brands fa-linkedin" title="Share on LinkedIn"></a>
+																				   </li>
+																			   </ul>
+																		   </div>
 										
 										<div class="row">
 											
@@ -246,9 +289,23 @@
 
 										</div>
 
-										<header>
-											<p style="text-align: right;">Last updated on August 14th, 2023</p>
-										</header>
+										   <header>
+										   <hr style="margin-top: 2em; margin-bottom: 1em; border: none; border-top: 2px solid #bbb;">
+										   <div class="share-section" style="text-align: center;">
+											   <p style="font-weight: bold; letter-spacing: 0.15em; color: #222; font-size: 1.2em; margin-bottom: 0.5em;">SHARE THIS STORY</p>
+											   <ul class="social" style="display: inline-block; margin-bottom: 0.5em;">
+												   <li>
+													   <a href="https://www.facebook.com/sharer/sharer.php?u=https://johann-cardenas.github.io/blog/ATLAS.html" target="_blank" class="icon brands fa-facebook" title="Share on Facebook"></a>
+												   </li>
+												   <li>
+													   <a href="https://twitter.com/intent/tweet?url=https://johann-cardenas.github.io/blog/ATLAS.html" target="_blank" class="icon brands fa-twitter" title="Share on Twitter"></a>
+												   </li>
+												   <li>
+													   <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://johann-cardenas.github.io/blog/ATLAS.html" target="_blank" class="icon brands fa-linkedin" title="Share on LinkedIn"></a>
+												   </li>
+											   </ul>
+											   <p style="font-style: italic; color: #222; margin-top: 1em;">This entry was published on August 6th, 2023.</p>
+										   </div>
 
 									</article>
 
