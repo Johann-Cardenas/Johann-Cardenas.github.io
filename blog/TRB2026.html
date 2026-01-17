@@ -3,6 +3,38 @@
 -->
 <html>
 	<head>
+			<style>
+				/* Info bar social icon hover color override */
+				.blog-infobar ul.social li a:hover,
+				.blog-infobar ul.social li a:focus {
+					background: #18a9a8 !important;
+					color: #fff !important;
+					box-shadow: none !important;
+				}
+			</style>
+		<style>
+			/* Info bar social icons smaller */
+			.blog-infobar ul.social li a {
+				width: 2.4em !important;
+				height: 2.4em !important;
+			}
+			.blog-infobar ul.social li a:before {
+				font-size: 1.40em !important;
+				line-height: 1.80em !important;
+				display: inline-block;
+				vertical-align: middle;
+				margin-top: 0.00em;
+			}
+			.blog-infobar .infotext {
+				font-size: 0.98em !important;
+			}
+		</style>
+		<style>
+			/* Share section social icon hover color */
+			.share-section ul.social li a:hover {
+				background: #18a9a8 !important;
+			}
+		</style>
 		<title>Johann J Cardenas | Blog</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
@@ -95,7 +127,31 @@
 											<h2 style="line-height: 1.0;"> The Transportation Research Board Annual Meeting 2026 </h2>
 											<p><strong> On the Move: Highlights from the 105th Annual Meeting </strong></p>
 										</header>
-										
+																		   <!-- Info Bar: Date, Reading Time, Socials -->
+																		   <div class="blog-infobar" style="display: flex; align-items: center; justify-content: space-between; margin: 1.5em 0 2em 0; gap: 1em;">
+																			   <div style="display: flex; align-items: center; gap: 2.5em;">
+																				   <span class="infotext" style="display: flex; align-items: center; gap: 0.5em; color: #222; font-size: 1.05em;">
+																					   <span class="icon solid fa-calendar-alt" style="color: #222; font-size: 1.1em;"></span>
+																					   <span>1/17/2026</span>
+																				   </span>
+																				   <span class="infotext" style="display: flex; align-items: center; gap: 0.5em; color: #222; font-size: 1.05em;">
+																					   <span class="icon solid fa-clock" style="color: #222; font-size: 1.1em;"></span>
+																					   <span>5 min read</span>
+																				   </span>
+																			   </div>
+																			   <ul class="social" style="margin: 0;">
+																				   <li>
+																					   <a href="https://www.facebook.com/sharer/sharer.php?u=https://johann-cardenas.github.io/blog/TRB2026.html" target="_blank" class="icon brands fa-facebook" title="Share on Facebook"></a>
+																				   </li>
+																				   <li>
+																					   <a href="https://twitter.com/intent/tweet?url=https://johann-cardenas.github.io/blog/TRB2026.html&text=The%20Transportation%20Research%20Board%20Annual%20Meeting%202026" target="_blank" class="icon brands fa-twitter" title="Share on Twitter"></a>
+																				   </li>
+																				   <li>
+																					   <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://johann-cardenas.github.io/blog/TRB2026.html" target="_blank" class="icon brands fa-linkedin" title="Share on LinkedIn"></a>
+																				   </li>
+																			   </ul>
+																		   </div>
+
 										<p style="text-align: justify; margin-bottom: 0.5rem;">
 											We headed to Washington D.C., for the Transportation Research Board (TRB) 105th Annual Meeting from January 12-16, 2026. 
 											The TRBAM is a premier gathering of transportation professionals, researchers, and policymakers from around the world. 
@@ -310,10 +366,23 @@
 
 										</div>
 
-
-										<header>
-											<p style="text-align: right;">Last updated on January 16th, 2026</p>
-										</header>
+										   <header>
+										   <hr style="margin-top: 2em; margin-bottom: 1em; border: none; border-top: 2px solid #bbb;">
+										   <div class="share-section" style="text-align: center;">
+											   <p style="font-weight: bold; letter-spacing: 0.15em; color: #222; font-size: 1.2em; margin-bottom: 0.5em;">SHARE THIS STORY</p>
+											   <ul class="social" style="display: inline-block; margin-bottom: 0.5em;">
+												   <li>
+													   <a href="https://www.facebook.com/sharer/sharer.php?u=https://johann-cardenas.github.io/blog/Visit_FAA.html" target="_blank" class="icon brands fa-facebook" title="Share on Facebook"></a>
+												   </li>
+												   <li>
+													   <a href="https://twitter.com/intent/tweet?url=https://johann-cardenas.github.io/blog/Visit_FAA.html&text=A%20Visit%20to%20the%20William%20J.%20Hughes%20Technical%20Center" target="_blank" class="icon brands fa-twitter" title="Share on Twitter"></a>
+												   </li>
+												   <li>
+													   <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://johann-cardenas.github.io/blog/Visit_FAA.html" target="_blank" class="icon brands fa-linkedin" title="Share on LinkedIn"></a>
+												   </li>
+											   </ul>
+											   <p style="font-style: italic; color: #222; margin-top: 1em;">This entry was published on January 17th, 2026.</p>
+										   </div>
 
 									</article>
 
@@ -322,37 +391,6 @@
 
 							</div>
 							
-							<!-- <div class="col-4 col-12-medium"> -->
-								<!-- Sidebar -->
-									<!-- <section class="box">
-										<a href="#" class="image featured"><img src="images/pic09.jpg" alt="" /></a>
-										<header>
-											<h3>Sed etiam lorem nulla</h3>
-										</header>
-										<p>Lorem ipsum dolor sit amet sit veroeros sed amet blandit consequat veroeros lorem blandit  adipiscing et feugiat phasellus tempus dolore ipsum lorem dolore.</p>
-										<footer>
-											<a href="#" class="button alt">Magna sed taciti</a>
-										</footer>
-									</section>
-									<section class="box">
-										<header>
-											<h3>Feugiat consequat</h3>
-										</header>
-										<p>Veroeros sed amet blandit consequat veroeros lorem blandit adipiscing et feugiat sed lorem consequat feugiat lorem dolore.</p>
-										<ul class="divided">
-											<li><a href="#">Sed et blandit consequat sed</a></li>
-											<li><a href="#">Hendrerit tortor vitae sapien dolore</a></li>
-											<li><a href="#">Sapien id suscipit magna sed felis</a></li>
-											<li><a href="#">Aptent taciti sociosqu ad litora</a></li>
-										</ul>
-										<footer>
-											<a href="#" class="button alt">Ipsum consequat</a>
-										</footer>
-									</section> -->
-							<!-- </div> -->
-
-						<!-- </div> -->
-
 					</div>
 				</section>
 

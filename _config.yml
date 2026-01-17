@@ -1,0 +1,13 @@
+# Jekyll configuration to process blog/*.html files with Liquid
+
+# Add blog as a collection so Jekyll processes HTML files in /blog with Liquid
+collections:
+  blog:
+    output: true
+    permalink: /blog/:name.html
+
+# Include the blog directory in the list of directories to process
+include:
+  - blog
+
+# Other default config options can go here
