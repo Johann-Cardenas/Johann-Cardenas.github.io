@@ -1,3 +1,152 @@
+		<script>
+		// Dynamically load About Me section for modularity and responsiveness
+		document.addEventListener('DOMContentLoaded', function () {
+						var aboutMeDiv = document.getElementById('about-me-placeholder');
+						if (aboutMeDiv) {
+								fetch('about-me.html')
+									.then(response => response.text())
+									.then(html => {
+											aboutMeDiv.innerHTML = html;
+											// After loading, initialize the globe
+											setTimeout(function() {
+												var mapDiv = document.getElementById('about-me-map');
+												if (!mapDiv || typeof Globe !== 'function') return;
+												function getGlobeSize() {
+													return {
+														width: mapDiv.offsetWidth,
+														height: mapDiv.offsetHeight > 0 ? mapDiv.offsetHeight : 350
+													};
+												}
+												const cities = [
+													{ name: 'Montreal, Canada', lat: 45.5017, lng: -73.5673 },
+													{ name: 'Chicago, USA', lat: 41.8781, lng: -87.6298 },
+													{ name: 'San Francisco, USA', lat: 37.7749, lng: -122.4194 },
+													{ name: 'Mexico City, Mexico', lat: 19.4326, lng: -99.1332 },
+													{ name: 'Cartagena, Colombia', lat: 10.3910, lng: -75.4794 },
+													{ name: 'Lima, Peru', lat: -12.0464, lng: -77.0428 },
+													{ name: 'New York, USA', lat: 40.7128, lng: -74.0060 },
+													{ name: 'New Jersey, USA', lat: 40.0583, lng: -74.4057 },
+													{ name: 'San Diego, USA', lat: 32.7157, lng: -117.1611 },
+													{ name: 'Seattle, USA', lat: 47.6062, lng: -122.3321 },
+													{ name: 'Phoenix, USA', lat: 33.4484, lng: -112.0740 },
+													{ name: 'Merida, Mexico', lat: 20.9674, lng: -89.5926 },
+													{ name: 'Bogota, Colombia', lat: 4.7110, lng: -74.0721 },
+													{ name: 'Michigan, USA', lat: 44.3148, lng: -85.6024 },
+													{ name: 'Green River Valley, Kentucky', lat: 37.2682, lng: -87.1286 },
+													{ name: 'Panama City, Panama', lat: 8.9824, lng: -79.5199 },
+													{ name: 'Miami, USA', lat: 25.7617, lng: -80.1918 }
+												];
+												// Improved highlighting: larger, colored, glowing markers
+												const markerColors = ['#ffcc00', '#00bfff', '#ff4c4c', '#00ff99', '#ff66cc', '#ff9933', '#66ff66', '#3399ff', '#ff6666', '#b266ff', '#ffb366', '#66b3ff', '#ffb3b3', '#b3ffb3', '#b3b3ff'];
+												const pointsData = cities.map((city, i) => ({
+													lat: city.lat,
+													lng: city.lng,
+													size: 0.25,
+													color: markerColors[i % markerColors.length],
+													name: city.name
+												}));
+												// Add arc layers for specific directions only
+												function findCity(name) {
+													return cities.find(c => c.name === name);
+												}
+												const arcPairs = [
+													['Chicago, USA', 'Montreal, Canada'],
+													['Chicago, USA', 'Seattle, USA'],
+													['Chicago, USA', 'San Francisco, USA'],
+													['Seattle, USA', 'San Francisco, USA'],
+													['Chicago, USA', 'Panama City, Panama'],
+													['Panama City, Panama', 'Cartagena, Colombia'],
+													['Lima, Peru', 'Bogota, Colombia'],
+													['Bogota, Colombia', 'Chicago, USA'],
+													['Lima, Peru', 'Miami, USA'],
+													['Miami, USA', 'Chicago, USA'],
+													['Chicago, USA', 'Green River Valley, Kentucky'],
+													['Chicago, USA', 'Michigan, USA'],
+													['Chicago, USA', 'Mexico City, Mexico'],
+													['Chicago, USA', 'Merida, Mexico'],
+													['Merida, Mexico', 'Mexico City, Mexico'],
+													['Chicago, USA', 'Phoenix, USA'],
+													['Chicago, USA', 'San Diego, USA'],
+													['Chicago, USA', 'New Jersey, USA'],
+													['Chicago, USA', 'New York, USA']
+												];
+												const arcsData = arcPairs.map(([from, to]) => {
+													const start = findCity(from);
+													const end = findCity(to);
+													return start && end ? {
+														startLat: start.lat,
+														startLng: start.lng,
+														endLat: end.lat,
+														endLng: end.lng
+													} : null;
+												}).filter(Boolean);
+												// Remove only the globe canvas, not the legend
+												Array.from(mapDiv.children).forEach(child => {
+													if (child.tagName !== 'DIV' || child.id !== 'about-me-globe-legend') {
+														mapDiv.removeChild(child);
+													}
+												});
+												const { width, height } = getGlobeSize();
+												const earthImg = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
+												const bumpImg = 'https://unpkg.com/three-globe/example/img/earth-topology.png';
+												const bgImg = 'https://unpkg.com/three-globe/example/img/night-sky.png';
+												const globe = Globe()
+													.width(width)
+													.height(height)
+													.backgroundImageUrl(bgImg)
+													.globeImageUrl(earthImg)
+													.bumpImageUrl(bumpImg)
+													.showAtmosphere(true)
+													.atmosphereColor('#3a9cff')
+													.atmosphereAltitude(0.18)
+													.pointsData(pointsData)
+													.pointAltitude('size')
+													.pointColor('color')
+													.pointLabel('name')
+													.arcsData(arcsData)
+													.arcColor(() => 'rgba(255,255,255,0.55)')
+													.arcAltitude(0.18)
+													.arcStroke(0.7)
+													.arcDashLength(0.4)
+													.arcDashGap(0.15)
+													.arcDashInitialGap(() => Math.random())
+													.arcDashAnimateTime(3000)
+													(mapDiv);
+												// Force view to center on the USA
+												setTimeout(() => {
+													globe.pointOfView({ lat: 39.5, lng: -98.35, altitude: 2.0 }, 0);
+												}, 100);
+												// Add a legend inside the globe animation, bottom center (after canvas)
+												let legend = document.getElementById('about-me-globe-legend');
+												if (!legend) {
+													legend = document.createElement('div');
+													legend.id = 'about-me-globe-legend';
+													legend.style.position = 'absolute';
+													legend.style.left = '50%';
+													legend.style.bottom = '10px';
+													legend.style.transform = 'translateX(-50%)';
+													legend.style.fontSize = '0.85em';
+													legend.style.color = '#fff';
+													legend.style.fontWeight = '400';
+													legend.style.pointerEvents = 'none';
+													legend.style.textShadow = '0 1px 4px #000, 0 0 2px #000';
+													legend.innerHTML = 'Drag to explore. Hover over pins for details.';
+													mapDiv.style.position = 'relative';
+													mapDiv.appendChild(legend);
+												} else {
+													mapDiv.appendChild(legend);
+												}
+												window.addEventListener('resize', function() {
+													const { width, height } = getGlobeSize();
+													globe.width(width);
+													globe.height(height);
+												});
+											}, 0);
+									})
+									.catch(err => { aboutMeDiv.innerHTML = '<div style="color:red">Failed to load About Me section.</div>'; });
+						}
+		});
+		</script>
 <!DOCTYPE HTML>
 <!--
 -->
@@ -102,6 +251,9 @@
 			}
 		</style>
 	</head>
+		<!-- Globe.gl library -->
+		<script src="https://unpkg.com/three@0.150.1/build/three.min.js"></script>
+		<script src="https://unpkg.com/globe.gl@2.33.7/dist/globe.gl.min.js"></script>
 	<body class="homepage is-preload">
 		<div id="page-wrapper">
 
@@ -128,6 +280,11 @@
 				<section id="main">
 					<div class="container">
 						<div class="row">
+
+				<!-- About Me Section  -->
+				<!-- About Me Section Placeholder: included from about-me.html -->
+				<div id="about-me-placeholder"></div>
+
 							<div class="col-12">
 
 								<!-- Portfolio -->
@@ -138,6 +295,7 @@
 										<!-- All Projects Placeholder -->
 										<div id="all-projects-placeholder"></div>
 									</section>
+
 
 							</div>
 							<div class="col-12">
@@ -171,4 +329,60 @@
 			<script src="assets/js/main.js"></script>
 
 	</body>
+		<!-- Use local versions of three.min.js and globe.gl.min.js -->
+		<script src="assets/js/three.min.js"></script>
+		<script src="assets/js/globe.gl.min.js"></script>
+		<script>
+			window.addEventListener('DOMContentLoaded', function () {
+				const mapDiv = document.getElementById('about-me-map');
+				if (!mapDiv || typeof Globe !== 'function') return;
+				function getGlobeSize() {
+					return {
+						width: mapDiv.offsetWidth,
+						height: mapDiv.offsetHeight > 0 ? mapDiv.offsetHeight : 350
+					};
+				}
+				const cities = [
+					{ name: 'Montreal, Canada', lat: 45.5017, lng: -73.5673 },
+					{ name: 'Chicago, USA', lat: 41.8781, lng: -87.6298 },
+					{ name: 'San Francisco, USA', lat: 37.7749, lng: -122.4194 },
+					{ name: 'Mexico City, Mexico', lat: 19.4326, lng: -99.1332 },
+					{ name: 'Cartagena, Colombia', lat: 10.3910, lng: -75.4794 },
+					{ name: 'Lima, Peru', lat: -12.0464, lng: -77.0428 }
+				];
+				const pointsData = cities.map(city => ({
+					lat: city.lat,
+					lng: city.lng,
+					size: 0.7,
+					color: '#ffcc00',
+					name: city.name
+				}));
+				mapDiv.innerHTML = '';
+				const { width, height } = getGlobeSize();
+				// Use public domain textures from Globe.gl examples
+				const earthImg = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
+				const bumpImg = 'https://unpkg.com/three-globe/example/img/earth-topology.png';
+				const bgImg = 'https://unpkg.com/three-globe/example/img/night-sky.png';
+				const globe = Globe()
+					.width(width)
+					.height(height)
+					.backgroundImageUrl(bgImg)
+					.globeImageUrl(earthImg)
+					.bumpImageUrl(bumpImg)
+					.showAtmosphere(true)
+					.atmosphereColor('#3a9cff')
+					.atmosphereAltitude(0.18)
+					.pointOfView({ lat: 10, lng: -60, altitude: 2.2 })
+					.pointsData(pointsData)
+					.pointAltitude('size')
+					.pointColor('color')
+					.pointLabel('name')
+					(mapDiv);
+				window.addEventListener('resize', function() {
+					const { width, height } = getGlobeSize();
+					globe.width(width);
+					globe.height(height);
+				});
+			});
+		</script>
 </html>
