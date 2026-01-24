@@ -1,5 +1,16 @@
 {
   "items": [
+      {
+      "id": "trb-2026",
+      "title": "Illinois research takes center stage at TRB Annual Meeting",
+      "date": "2026-1-21",
+      "dateDisplay": "Jan 21, 2026",
+      "source": "Illinois Center for Transportation",
+      "url": "https://ict.illinois.edu/news/newsletters/more-newsletters/february-2026/2026-TRB-Annual-Meeting",
+      "excerpt": "University of Illinois, Urbana-Champaign faculty, staff and students delivered nearly 80 presentations during the meeting, contributing to workshops, lectern sessions and poster sessions throughout the week.",
+      "image": "images/news/trb-2026.jpg",
+      "tags": ["Presentation"]
+    },
     {
       "id": "trb-acrp-award",
       "title": "Eight Winners Selected for the TRB Airport Cooperative Research Program Graduate Research Awards",
@@ -11,16 +22,38 @@
       "image": "images/news/acrp-award.jpg",
       "tags": ["Award", "Featured"]
     },
+  {
+      "id": "idot-showcase-2025",
+      "title": "2025 IDOT-ICT Research Showcase highlights innovation and collaborations",
+      "date": "2025-10-16",
+      "dateDisplay": "Oct 16, 2025",
+      "source": "Illinois Center for Transportation",
+      "url": "https://ict.illinois.edu/news/newsletters/more-newsletters/nov-2025/idot-research-showcase",
+      "excerpt": "Illinois Center for Transportation and Illinois Department of Transportation hosted the IDOT-ICT Research Showcase on Wednesday, October 8, in Springfield, celebrating another year of partnership and progress in transportation research.",
+      "image": "images/news/idot-showcase-2025.jpg",
+      "tags": ["Presentation", "Featured"]
+    },
+  {
+      "id": "etrucks-2025",
+      "title": "Leading the charge: Preparing pavements for commercial electric trucks",
+      "date": "2025-06-16",
+      "dateDisplay": "Jun 16, 2025",
+      "source": "Illinois Center for Transportation",
+      "url": "https://ict.illinois.edu/news/leading-the-charge-preparing-pavements-for-commercial-electric-trucks",
+      "excerpt": "Commercial electric trucks promise to bring cost savings from lower fuel consumption as well as environmental benefits. But how may their heavier loads impact pavement?.",
+      "image": "images/news/etrucks-2025.jpg",
+      "tags": ["Featured"]
+    },
     {
       "id": "fulbright-scholarship",
       "title": "A Peruvian's Journey of Growth and Discovery - Johann Cardenas - Peru 2021",
       "date": "2025-03-26",
-      "dateDisplay": "Mar 31, 2025",
+      "dateDisplay": "Mar 26, 2025",
       "source": "Fulbright Association",
       "url": "https://fulbright.org/2025/03/26/a-peruvians-journey-of-growth-and-discovery-johann-cardenas-peru-2021/",
       "excerpt": "Johann Cardenas, Fulbright Foreign Student Program Fellow from Peru, shares his journey during his time in the United States.",
       "image": "images/news/fulbright.jpg",
-      "tags": ["Featured"]
+      "tags": ["Award","Featured"]
     },
     {
       "id": "ict-faa-ai",
@@ -35,9 +68,9 @@
     },
     {
       "id": "trb-presentation-list",
-      "title": "TRB Presentation List",
-      "date": "2024-02-01",
-      "dateDisplay": "Feb 2024",
+      "title": "TRB 2024 Presentation List",
+      "date": "2024-01-22",
+      "dateDisplay": "Jan 22, 2024",
       "source": "Illinois Center for Transportation",
       "url": "https://ict.illinois.edu/news/newsletters/more-newsletters/february-2024/trb-presentation-list",
       "excerpt": "TRB presentation highlights from the Illinois Center for Transportation, featuring research presentations and contributions from ICT researchers at the 2024 Transportation Research Board Annual Meeting.",
@@ -53,7 +86,7 @@
       "url": "https://ict.illinois.edu/news/newsletters/more-newsletters/ict-faa-harness-ai-to-take-airport-pavements-to-new-heights",
       "excerpt": "University of Illinois Urbana-Champaign Department of Civil and Environmental Engineering researchers visited the Federal Aviation Administration's William J. Hughes Technical Center in Atlantic City, New Jersey.",
       "image": "images/news/faa-visit.jpg",
-      "tags": ["Research"]
+      "tags": ["Research", "Featured"]
     }
   ]
 }

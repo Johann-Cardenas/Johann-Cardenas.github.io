@@ -34,7 +34,9 @@
 													{ name: 'Michigan, USA', lat: 44.3148, lng: -85.6024 },
 													{ name: 'Green River Valley, Kentucky', lat: 37.2682, lng: -87.1286 },
 													{ name: 'Panama City, Panama', lat: 8.9824, lng: -79.5199 },
-													{ name: 'Miami, USA', lat: 25.7617, lng: -80.1918 }
+													{ name: 'Miami, USA', lat: 25.7617, lng: -80.1918 },
+													{ name: 'Washington D.C.', lat: 38.9072, lng: -77.0369 },
+													{ name: 'Los Angeles, CA', lat: 34.0522, lng: -118.2437 }
 												];
 												// Improved highlighting: larger, colored, glowing markers
 												const markerColors = ['#ffcc00', '#00bfff', '#ff4c4c', '#00ff99', '#ff66cc', '#ff9933', '#66ff66', '#3399ff', '#ff6666', '#b266ff', '#ffb366', '#66b3ff', '#ffb3b3', '#b3ffb3', '#b3b3ff'];
@@ -68,7 +70,8 @@
 													['Chicago, USA', 'Phoenix, USA'],
 													['Chicago, USA', 'San Diego, USA'],
 													['Chicago, USA', 'New Jersey, USA'],
-													['Chicago, USA', 'New York, USA']
+													['Chicago, USA', 'New York, USA'],
+													['Chicago, USA', 'Washington D.C.']
 												];
 												const arcsData = arcPairs.map(([from, to]) => {
 													const start = findCity(from);
@@ -107,14 +110,14 @@
 													.arcColor(() => 'rgba(255,255,255,0.55)')
 													.arcAltitude(0.18)
 													.arcStroke(0.7)
-													.arcDashLength(0.4)
-													.arcDashGap(0.15)
+													.arcDashLength(0.15)
+													.arcDashGap(0.05)
 													.arcDashInitialGap(() => Math.random())
 													.arcDashAnimateTime(3000)
 													(mapDiv);
 												// Force view to center on the USA
 												setTimeout(() => {
-													globe.pointOfView({ lat: 39.5, lng: -98.35, altitude: 2.0 }, 0);
+													globe.pointOfView({ lat: 25.0, lng: -98.35, altitude: 2.0 }, 0);
 												}, 100);
 												// Add a legend inside the globe animation, bottom center (after canvas)
 												let legend = document.getElementById('about-me-globe-legend');
@@ -130,7 +133,7 @@
 													legend.style.fontWeight = '400';
 													legend.style.pointerEvents = 'none';
 													legend.style.textShadow = '0 1px 4px #000, 0 0 2px #000';
-													legend.innerHTML = 'Drag to explore. Hover over pins for details.';
+													legend.innerHTML = 'Drag to explore. Hover over for details.';
 													mapDiv.style.position = 'relative';
 													mapDiv.appendChild(legend);
 												} else {
