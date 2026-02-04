@@ -252,6 +252,43 @@
 				margin-bottom: 0.5rem;
 				line-height: 1.4;
 			}
+			/* Minimalist Visit Counter */
+			.visit-counter-minimal {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.6em;
+				padding: 0.6em 1.2em;
+				background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+				border-radius: 50px;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+				font-family: 'Source Sans Pro', sans-serif;
+				transition: transform 0.2s ease, box-shadow 0.2s ease;
+			}
+			.visit-counter-minimal:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 4px 12px rgba(24, 169, 168, 0.3);
+			}
+			.visit-counter-minimal .counter-dot {
+				width: 8px;
+				height: 8px;
+				background: var(--accent-primary);
+				border-radius: 50%;
+				animation: pulse 2s infinite;
+			}
+			@keyframes pulse {
+				0%, 100% { opacity: 1; }
+				50% { opacity: 0.5; }
+			}
+			.visit-counter-minimal .counter-text {
+				color: #94a3b8;
+				font-size: 0.85em;
+				font-weight: 400;
+			}
+			.visit-counter-minimal .counter-number {
+				color: var(--accent-primary);
+				font-weight: 700;
+				font-size: 0.95em;
+			}
 		</style>
 	</head>
 		<!-- Globe.gl library -->
@@ -316,6 +353,15 @@
 						</div>
 					</div>
 				</section>
+
+			<!-- Minimalist Visit Counter -->
+			<div style="text-align: center; margin: 2em 0;">
+				<div class="visit-counter-minimal">
+					<span class="counter-dot"></span>
+					<span class="counter-text">Site Visits</span>
+					<img src="https://komarev.com/ghpvc/?username=Johann-Cardenas&label=&color=18a9a8&style=flat" alt="visits" style="height: 18px; vertical-align: middle; border-radius: 3px;"/>
+				</div>
+			</div>
 
 			<!-- Footer -->
 				<div id="footer-placeholder"></div>
