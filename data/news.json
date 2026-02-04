@@ -1,5 +1,16 @@
 {
   "items": [
+       {
+      "id": "faa-2026",
+      "title": "AI prediction models take flight for airfield pavement",
+      "date": "2026-02-02",
+      "dateDisplay": "Feb 2, 2026",
+      "source": "Illinois Center for Transportation",
+      "url": "https://ict.illinois.edu/news/ai-prediction-models-take-flight-for-airfield-pavement",
+      "excerpt": "An Illinois Center for Transportation team, led by director Imad L. Al-Qadi, is working to predict the responses of airport pavement under different landing gear configurations more quickly and cost-effectively.",
+      "image": "images/news/faa-visit.jpg",
+      "tags": ["Research", "Featured"]
+    },   
       {
       "id": "trb-2026",
       "title": "Illinois research takes center stage at TRB Annual Meeting",
