@@ -36,14 +36,17 @@
 													{ name: 'Panama City, Panama', lat: 8.9824, lng: -79.5199 },
 													{ name: 'Miami, USA', lat: 25.7617, lng: -80.1918 },
 													{ name: 'Washington D.C.', lat: 38.9072, lng: -77.0369 },
-													{ name: 'Los Angeles, CA', lat: 34.0522, lng: -118.2437 }
+													{ name: 'Los Angeles, CA', lat: 34.0522, lng: -118.2437 },
+													{ name: 'Rome, Italy', lat: 41.9028, lng: 12.4964 },
+													{ name: 'Ljubljana, Slovenia', lat: 46.0569, lng: 14.5058 },
+													{ name: 'Santiago, Chile', lat: -33.4489, lng: -70.6693 }
 												];
 												// Improved highlighting: larger, colored, glowing markers
 												const markerColors = ['#ffcc00', '#00bfff', '#ff4c4c', '#00ff99', '#ff66cc', '#ff9933', '#66ff66', '#3399ff', '#ff6666', '#b266ff', '#ffb366', '#66b3ff', '#ffb3b3', '#b3ffb3', '#b3b3ff'];
 												const pointsData = cities.map((city, i) => ({
 													lat: city.lat,
 													lng: city.lng,
-													size: 0.25,
+													size: 0.15,
 													color: markerColors[i % markerColors.length],
 													name: city.name
 												}));
@@ -61,6 +64,7 @@
 													['Lima, Peru', 'Bogota, Colombia'],
 													['Bogota, Colombia', 'Chicago, USA'],
 													['Lima, Peru', 'Miami, USA'],
+													['Lima, Peru', 'Panama City, Panama'],
 													['Miami, USA', 'Chicago, USA'],
 													['Chicago, USA', 'Green River Valley, Kentucky'],
 													['Chicago, USA', 'Michigan, USA'],
@@ -71,7 +75,10 @@
 													['Chicago, USA', 'San Diego, USA'],
 													['Chicago, USA', 'New Jersey, USA'],
 													['Chicago, USA', 'New York, USA'],
-													['Chicago, USA', 'Washington D.C.']
+													['Chicago, USA', 'Washington D.C.'],
+													['Chicago, USA', 'Rome, Italy'],
+													['Rome, Italy', 'Ljubljana, Slovenia'],
+													['Lima, Peru', 'Santiago, Chile'],
 												];
 												const arcsData = arcPairs.map(([from, to]) => {
 													const start = findCity(from);
