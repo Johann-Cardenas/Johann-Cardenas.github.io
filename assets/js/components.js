@@ -36,7 +36,7 @@
     function generateNavigation(navData, currentPage) {
         if (!navData) return '';
 
-        const logo = navData.logo || { text: 'The Transporter', url: 'index.html' };
+        const logo = navData.logo || { text: 'Johann Cardenas', url: 'index.html' };
         let html = `
                 <h1><a href="${basePath}${logo.url}">${logo.text}</a></h1>
                 <nav id="nav">

@@ -3,6 +3,13 @@
 -->
 <html>
 	<head>
+		<!-- Theme initialization (prevents flash of wrong theme) -->
+		<script>
+			(function() {
+				var theme = localStorage.getItem('theme-preference') || 'light';
+				document.documentElement.setAttribute('data-theme', theme);
+			})();
+		</script>
 		<title>Johann J Cardenas | Resume</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
@@ -50,7 +57,11 @@
 				transition: color 0.2s ease;
 			}
 			.sidebar-card h3 a:hover {
-				color: #18a9a8;
+				color: var(--accent-primary, #18a9a8);
+			}
+			/* Dark mode: Biography header background */
+			[data-theme="dark"] .header-container h3 {
+				background-color: var(--bg-box, #1e293b) !important;
 			}
 		</style>
 
@@ -110,10 +121,12 @@
 								<article class="box post">
 									<a href="#" class="image featured"><img src="images/Resume_Banner.jpg" alt="" decoding="async" fetchpriority="high" /></a>
 
+									<!--
 										<div class="col-9 col-12-medium">
 											<h2 style="text-align: center;">Johann J. Cardenas</h2>
 											<p style="text-align: center;">MS in Civil Engineering, Fulbright Scholar</p>
 										</div>
+									-->
 
 									<section>
 										<style>
@@ -160,19 +173,16 @@
 										}
 										</style>
 
-									<section class="header-section">
+									<section class="header-section" style="margin-top: -1.5em;">
 										<header class="cvhead">
-											<div class="header-line top"></div>
-											<div class="header-container">
-												<h3>Biography</h3>
-												<ul class="social" style="font-size: 0.75em; margin: -0.75em 0em 0.50em 0em;">
+											<div style="display: flex; justify-content: center;">
+												<ul class="social" style="font-size: 0.85em; margin: 0;">
 													<li><a class="icon brands fa-linkedin-in" href="https://www.linkedin.com/in/johanncardenas/"><span class="label">LinkedIn</span></a></li>
 													<li><a class="icon brands fa-github" href="https://github.com/Johann-Cardenas"><span class="label">GitHub</span></a></li>
 													<li><a class="icon solid fa-graduation-cap" href="https://scholar.google.com/citations?user=yBNtQBoAAAAJ" title="Google Scholar"><span class="label">Google Scholar</span></a></li>
 													<li><a class="icon brands fa-orcid" href="https://orcid.org/0000-0002-4695-7639" title="ORCID"><span class="label">ORCID</span></a></li>
 												</ul>
 											</div>
-											<div class="header-line bottom" style="margin-bottom: 0;"></div>
 										</header>
 									</section>
 
@@ -220,6 +230,7 @@
 			<script src="assets/js/breakpoints.min.js"></script>
 			<script src="assets/js/util.js"></script>
 			<script src="assets/js/main.js"></script>
+			<script src="assets/js/theme-toggle.js"></script>
 
 	</body>
 </html>

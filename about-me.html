@@ -4,27 +4,45 @@
     <h2>About Me</h2>
   </header>
 
+  <style>
+    .about-me-section {
+      position: relative;
+      padding: 0.75em 0 0.75em 1.25em;
+      margin-bottom: 0.75em;
+    }
+    .about-me-section::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.5em;
+      bottom: 0.5em;
+      width: 3px;
+      background: var(--accent-primary, #18a9a8);
+      border-radius: 2px;
+    }
+  </style>
+
   <div class="row" style="display: flex; flex-wrap: wrap; align-items: stretch; justify-content: center;">
     <div class="col-6 col-12-medium" style="display: flex; flex-direction: column; justify-content: center;">
 
-      <div style="border-radius: 12px; border: 2px solid rgba(255,255,255,0.08); padding: 1.25em; margin-bottom: 0.00em; background: none;">
-        <h3 style="margin-bottom: 0.15em; display: flex; align-items: center;"><span class="fas fa-briefcase" style="margin-right: 0.5em; color: #222;"></span>Professional</h3>
+      <div class="about-me-section">
+        <h3 style="margin-bottom: 0.25em; display: flex; align-items: center;"><span class="fas fa-briefcase" style="margin-right: 0.5em; color: var(--accent-primary, #18a9a8);"></span>Professional</h3>
         <p style="margin: 0;max-width: 100%; text-align: justify; text-justify: inter-word">I am a PhD student at the University of Illinois, Urbana-Champaign, and a Graduate Research Assistant at the Illinois Center for Transportation.
           My professional background spans the private industry, with over 5 years of experience in highway construction and maintenance; and the academia, with over 4 years 
             of experience in research on transportation infrastructure.
         </p>
       </div>
 
-      <div style="border-radius: 12px; border: 2px solid rgba(255,255,255,0.08); padding: 1.25em; margin-bottom: 0.00em; background: none;">
-        <h3 style="margin-bottom: 0.15em; display: flex; align-items: center;"><span class="fas fa-globe-americas" style="margin-right: 0.5em; color: #222;"></span>Personal</h3>
+      <div class="about-me-section">
+        <h3 style="margin-bottom: 0.25em; display: flex; align-items: center;"><span class="fas fa-globe-americas" style="margin-right: 0.5em; color: var(--accent-primary, #18a9a8);"></span>Personal</h3>
         <p style="margin: 0;max-width: 100%; text-align: justify; text-justify: inter-word">Originally from Lima, Peru. I've lived in the USA since 2021, when I arrived to pursue my 
             graduate studies in Civil Engineering. I love exploring new cultures and cuisines, 
             watching sports and movies, endurance training, building side projects in web development, and spending time with my loved ones.
         </p>
       </div>
 
-      <div style="border-radius: 12px; border: 2px solid rgba(255,255,255,0.08); padding: 1.25em; background: none;">
-        <h3 style="margin-bottom: 0.75em; display: flex; align-items: center;"><span class="fas fa-star" style="margin-right: 0.5em; color: #222;"></span>Interests</h3>
+      <div class="about-me-section">
+        <h3 style="margin-bottom: 0.75em; display: flex; align-items: center;"><span class="fas fa-star" style="margin-right: 0.5em; color: var(--accent-primary, #18a9a8);"></span>Interests</h3>
         <div class="about-me-interests-pills">
           <span class="about-me-pill">Running</span>
           <span class="about-me-pill">Hiking</span>
@@ -45,7 +63,7 @@
         margin-top: 0.2em;
       }
       .about-me-pill {
-        background: #010331;
+        background: #0f172a;
         color: #fff;
         border-radius: 2em;
         padding: 0.35em 1.2em;
@@ -58,7 +76,7 @@
         display: inline-block;
       }
       .about-me-pill:hover {
-        background: #010331;
+        background: var(--accent-color, #18a9a8);
       }
     </style>
     </div>
@@ -66,7 +84,7 @@
       <div style="margin-bottom: 1em; text-align: center; width: 100%;">
         <span style="font-size: 1.1em; font-weight: 500; display: block; font-style: italic;">My travel record. A life story told in layovers.</span>
       </div>
-      <div id="about-me-map" style="width: 100%; aspect-ratio: 1.1/1; min-height: 320px; max-width: 600px; flex: 1 1 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.08); background: #222; margin: 0 auto;"></div>
+      <div id="about-me-map" style="width: 100%; aspect-ratio: 1.1/1; min-height: 320px; max-width: 600px; flex: 1 1 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.08); background: var(--bg-header, #222); margin: 0 auto;"></div>
     </div>
     
   <style>

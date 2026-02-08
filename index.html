@@ -162,6 +162,13 @@
 -->
 <html>
 	<head>
+		<!-- Theme initialization (prevents flash of wrong theme) -->
+		<script>
+			(function() {
+				var theme = localStorage.getItem('theme-preference') || 'light';
+				document.documentElement.setAttribute('data-theme', theme);
+			})();
+		</script>
 		<title>Johann J Cardenas</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
@@ -172,14 +179,14 @@
 
 		<!-- Social Sharing: Open Graph (for LinkedIn, Facebook, etc.) -->
 		<meta property="og:type" content="website">
-		<meta property="og:title" content="The Transporter">
+		<meta property="og:title" content="Johann Cardenas">
 		<meta property="og:description" content="This is Johann J. Cardenas. Explore the challenges of my PhD journey.">
 		<meta property="og:image" content="https://johann-cardenas.github.io/images/Link_Preview.jpg">
 		<meta property="og:url" content="https://johann-cardenas.github.io/">
 
 		<!-- Twitter Card (optional, but recommended for Twitter) -->
 		<meta name="twitter:card" content="summary_large_image">
-		<meta name="twitter:title" content="The Transporter">
+		<meta name="twitter:title" content="Johann Cardenas">
 		<meta name="twitter:description" content="This is Johann J. Cardenas. Explore the challenges of my PhD journey.">
 		<meta name="twitter:image" content="https://johann-cardenas.github.io/images/Link_Preview.jpg">
 
@@ -383,6 +390,7 @@
 			<script src="assets/js/breakpoints.min.js"></script>
 			<script src="assets/js/util.js"></script>
 			<script src="assets/js/main.js"></script>
+			<script src="assets/js/theme-toggle.js"></script>
 
 	</body>
 		<!-- Use local versions of three.min.js and globe.gl.min.js -->
