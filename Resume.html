@@ -171,9 +171,16 @@
 											margin: 0em 0em;
 											line-height: 0.75; /* Add this line to increase the line-height */
 										}
+
+										/* Mobile: add spacing between banner and social icons */
+										@media screen and (max-width: 980px) {
+											.header-section.cvhead-section {
+												margin-top: 0.5em !important;
+											}
+										}
 										</style>
 
-									<section class="header-section" style="margin-top: -1.5em;">
+									<section class="header-section cvhead-section" style="margin-top: -1.5em;">
 										<header class="cvhead">
 											<div style="display: flex; justify-content: center;">
 												<ul class="social" style="font-size: 0.85em; margin: 0;">

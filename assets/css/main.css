@@ -2667,18 +2667,6 @@ input, select, textarea {
 		padding: 4em 0;
 	}
 
-		#footer:before {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			background: var(--bg-box-alt) url("images/bg.png");
-			background-size: 100% 100%;
-			z-index: 0;
-			opacity: 0.5;
-		}
-
 		#footer a {
 			color: var(--text-footer);
 		}
@@ -3872,4 +3860,45 @@ html {
 
 [data-theme="dark"] .header-section .cvhead ul.social li a:hover {
 	background: var(--accent-primary) !important;
+}
+
+/* Project Callout Boxes */
+.callout-box {
+	border-left: 4px solid #18a9a8;
+	background: #f7fafc;
+	padding: 0.9rem 1rem;
+	border-radius: 8px;
+	margin: 1rem 0;
+}
+
+.callout-box ul {
+	text-align: justify;
+	margin-left: 1em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	padding-left: 1em;
+}
+
+.callout-box li {
+	margin-bottom: 0.4em;
+}
+
+/* Dark Mode - Callout Boxes */
+[data-theme="dark"] .callout-box {
+	background: #1e293b;
+	border-left-color: #22d3d1;
+}
+
+[data-theme="dark"] .callout-box,
+[data-theme="dark"] .callout-box strong,
+[data-theme="dark"] .callout-box em {
+	color: #e2e8f0;
+}
+
+[data-theme="dark"] .callout-box a {
+	color: #22d3d1;
+}
+
+[data-theme="dark"] .callout-box a:hover {
+	color: #5eead4;
 }
