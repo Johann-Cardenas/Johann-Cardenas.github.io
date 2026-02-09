@@ -3,7 +3,8 @@
 <head>
     <script>
         (function() {
-            var theme = localStorage.getItem('theme-preference') || 'light';
+            // Frontier app defaults to dark mode
+            var theme = localStorage.getItem('frontier-theme') || 'dark';
             document.documentElement.setAttribute('data-theme', theme);
         })();
     </script>
@@ -26,6 +27,8 @@
             --frontier-warning: #f59e0b;
             --frontier-danger: #ef4444;
             --frontier-info: #3b82f6;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
         [data-theme="light"] {
@@ -54,34 +57,255 @@
             --frontier-card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
         }
 
+        /* ==================== SMOOTH SCROLL & CUSTOM SCROLLBAR ==================== */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--frontier-bg-alt);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--frontier-primary), var(--frontier-primary-hover));
+            border-radius: 5px;
+            border: 2px solid var(--frontier-bg-alt);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--frontier-primary-hover), var(--frontier-secondary));
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: var(--frontier-bg-alt);
+        }
+
+        /* Firefox scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--frontier-primary) var(--frontier-bg-alt);
+        }
+
+        /* ==================== GLOBAL ANIMATIONS ==================== */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px var(--frontier-primary-glow), 0 0 10px transparent; }
+            50% { box-shadow: 0 0 20px var(--frontier-primary-glow), 0 0 40px var(--frontier-primary-glow); }
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(24, 169, 168, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(24, 169, 168, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(24, 169, 168, 0); }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+
+        @keyframes typewriter {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* ==================== GLASSMORPHISM UTILITIES ==================== */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .glass-strong {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        /* ==================== ENHANCED HOVER EFFECTS ==================== */
+        .hover-lift {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .hover-glow:hover {
+            box-shadow: 0 0 30px var(--frontier-primary-glow);
+        }
+
+        /* ==================== LOADING SPINNER ==================== */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--frontier-primary);
+            border-radius: 50%;
+            animation: rotate 0.8s linear infinite;
+        }
+
+        .spinner-small {
+            width: 20px;
+            height: 20px;
+            border-width: 2px;
+        }
+
+        .spinner-dual {
+            width: 40px;
+            height: 40px;
+            border: 3px solid transparent;
+            border-top-color: var(--frontier-primary);
+            border-bottom-color: var(--frontier-secondary);
+            border-radius: 50%;
+            animation: rotate 0.8s linear infinite;
+        }
+
+        /* ==================== GRADIENT TEXT ==================== */
+        .gradient-text {
+            background: linear-gradient(135deg, var(--frontier-primary), var(--frontier-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ==================== CARD SHADOWS ==================== */
+        .shadow-soft {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .shadow-medium {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .shadow-strong {
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ==================== FOCUS STATES FOR ACCESSIBILITY ==================== */
+        :focus-visible {
+            outline: 2px solid var(--frontier-primary);
+            outline-offset: 3px;
+        }
+
+        button:focus-visible,
+        .btn:focus-visible,
+        .module-tab:focus-visible {
+            outline: 2px solid var(--frontier-primary);
+            outline-offset: 3px;
+            box-shadow: 0 0 0 4px var(--frontier-primary-glow);
+        }
+
+        input:focus-visible,
+        select:focus-visible {
+            outline: none;
+            border-color: var(--frontier-primary);
+            box-shadow: 0 0 0 3px var(--frontier-primary-glow);
+        }
+
+        /* Skip to content link for screen readers */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--frontier-primary);
+            color: white;
+            padding: 8px 16px;
+            z-index: 100;
+            transition: top 0.3s ease;
+            border-radius: 0 0 8px 0;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
         * {
             box-sizing: border-box;
         }
 
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
         body {
             font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
-            margin: 0;
-            padding: 0;
+        }
+
+        /* Override main.css wrapper padding */
+        #wrapper, #main, .wrapper, main {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
         }
 
         /* ==================== APP CONTAINER ==================== */
         .frontier-app {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 1rem 2rem 2rem;
             background: var(--frontier-bg);
+            min-height: 100vh;
         }
 
         /* ==================== HEADER ==================== */
         .app-header {
-            text-align: center;
             margin-bottom: 2rem;
-            padding: 3rem 2rem;
-            background: linear-gradient(135deg, var(--frontier-bg-dark) 0%, #1e3a5f 100%);
-            border-radius: 20px;
+            background: linear-gradient(135deg, var(--frontier-bg-dark) 0%, #1e3a5f 50%, #0d2847 100%);
+            border-radius: 24px;
             color: white;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
         .app-header::before {
@@ -93,58 +317,236 @@
             bottom: 0;
             background: 
                 radial-gradient(circle at 20% 80%, var(--frontier-primary-glow) 0%, transparent 40%),
-                radial-gradient(circle at 80% 20%, rgba(213, 35, 73, 0.2) 0%, transparent 40%);
+                radial-gradient(circle at 80% 20%, rgba(213, 35, 73, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(24, 169, 168, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+            animation: headerGlow 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes headerGlow {
+            0% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        /* Animated particles in header */
+        .app-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 50px 120px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 100px 20px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 150px 80px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 200px 40px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(3px 3px at 250px 100px, var(--frontier-primary), transparent),
+                radial-gradient(2px 2px at 300px 50px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 350px 90px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(3px 3px at 400px 30px, var(--frontier-primary), transparent);
+            background-size: 450px 150px;
+            animation: particles 20s linear infinite;
             pointer-events: none;
         }
 
-        .app-header h1 {
-            font-size: 3rem;
-            margin: 0 0 0.5rem 0;
+        @keyframes particles {
+            0% { transform: translateX(0) translateY(0); }
+            100% { transform: translateX(-450px) translateY(0); }
+        }
+
+        .header-nav {
+            padding: 1rem 1.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
             z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-btn {
+            background: rgba(24, 169, 168, 0.2);
+            border: 1px solid rgba(24, 169, 168, 0.4);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-btn:hover {
+            background: rgba(24, 169, 168, 0.35);
+            border-color: rgba(24, 169, 168, 0.6);
+            transform: translateX(-3px);
+            box-shadow: 0 4px 15px rgba(24, 169, 168, 0.25);
+        }
+
+        .back-btn i {
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover i {
+            transform: translateX(-3px);
+        }
+
+        .header-content {
+            text-align: center;
+            padding: 1.5rem 2rem 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .app-header h1 {
+            font-size: 3.5rem;
+            margin: 0 0 0.75rem 0;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 1rem;
-            font-weight: 700;
+            font-weight: 800;
+            color: white !important;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+            animation: slideInUp 0.8s ease;
         }
 
         .app-header h1 i {
-            color: var(--frontier-primary);
-            font-size: 2.5rem;
+            color: var(--frontier-primary) !important;
+            font-size: 2.8rem;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px var(--frontier-primary-glow));
         }
 
         .app-header p {
-            font-size: 1.3rem;
-            opacity: 0.9;
+            font-size: 1.4rem;
+            opacity: 0.95;
             margin: 0;
-            position: relative;
-            z-index: 1;
+            color: white !important;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            animation: slideInUp 0.8s ease 0.1s both;
         }
 
-        .back-btn {
+        /* HPC Suggestions Callout */
+        .hpc-suggestions {
+            margin-top: 1.75rem;
+            padding: 1.75rem;
+            background: linear-gradient(135deg, rgba(24, 169, 168, 0.12) 0%, rgba(59, 130, 246, 0.12) 100%);
+            border: 1px solid rgba(24, 169, 168, 0.35);
+            border-radius: 16px;
+            display: none;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .hpc-suggestions::before {
+            content: '';
             position: absolute;
-            top: 1.5rem;
-            left: 1.5rem;
-            background: rgba(24, 169, 168, 0.2);
-            border: 1px solid rgba(24, 169, 168, 0.4);
-            color: white;
-            padding: 0.75rem 1.25rem;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1rem;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--frontier-primary), var(--frontier-info), var(--frontier-primary));
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+        }
+
+        .hpc-suggestions.visible {
+            display: block;
+            animation: fadeSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .hpc-suggestions-title {
+            color: var(--frontier-primary);
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin: 0 0 1.25rem 0;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            z-index: 10;
+            gap: 0.6rem;
         }
 
-        .back-btn:hover {
-            background: var(--frontier-primary);
-            border-color: var(--frontier-primary);
-            transform: translateX(-4px);
+        .hpc-suggestions-title i {
+            font-size: 1.25rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .suggestion-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .suggestion-list li {
+            padding: 0.85rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.85rem;
+            color: white;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .suggestion-list li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .suggestion-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .suggestion-list li i {
+            color: var(--frontier-accent);
+            margin-top: 0.15rem;
+            flex-shrink: 0;
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .suggestion-list li:hover i {
+            transform: scale(1.2);
+        }
+
+        .suggestion-list li.good {
+            border-left-color: var(--frontier-success);
+        }
+
+        .suggestion-list li.good i {
+            color: var(--frontier-success);
+        }
+
+        .suggestion-list li.warning {
+            border-left-color: var(--frontier-warning);
+        }
+
+        .suggestion-list li.warning i {
+            color: var(--frontier-warning);
+        }
+
+        .suggestion-list li.tip {
+            border-left-color: var(--frontier-info);
+        }
+
+        .suggestion-list li.tip i {
+            color: var(--frontier-info);
         }
 
         /* ==================== MODULE TABS ==================== */
@@ -154,6 +556,7 @@
             margin-bottom: 2rem;
             flex-wrap: wrap;
             justify-content: center;
+            animation: slideInUp 0.8s ease 0.2s both;
         }
 
         .module-tab {
@@ -161,78 +564,167 @@
             min-width: 280px;
             max-width: 400px;
             padding: 1.5rem;
-            border-radius: 16px;
+            border-radius: 20px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             display: flex;
             align-items: center;
             gap: 1rem;
             background: var(--frontier-bg-panel);
             border: 2px solid var(--frontier-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .module-tab:hover::before {
+            left: 100%;
         }
 
         .module-tab:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px var(--frontier-primary-glow);
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 20px 40px var(--frontier-primary-glow);
             border-color: var(--frontier-primary);
         }
 
         .module-tab.active {
             border-color: var(--frontier-primary);
-            box-shadow: 0 8px 25px var(--frontier-primary-glow);
-            background: linear-gradient(135deg, var(--frontier-bg-panel), rgba(24, 169, 168, 0.1));
+            box-shadow: 0 15px 35px var(--frontier-primary-glow);
+            background: linear-gradient(135deg, var(--frontier-bg-panel), rgba(24, 169, 168, 0.15));
+        }
+
+        .module-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--frontier-primary), var(--frontier-info));
         }
 
         .module-tab .icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
+            width: 65px;
+            height: 65px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.8rem;
             color: white;
             flex-shrink: 0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
         }
 
-        .module-tab:nth-child(1) .icon { background: linear-gradient(135deg, var(--frontier-primary), #0d7377); }
-        .module-tab:nth-child(2) .icon { background: linear-gradient(135deg, var(--frontier-secondary), #a01b3a); }
-        .module-tab:nth-child(3) .icon { background: linear-gradient(135deg, var(--frontier-accent), #d97706); }
+        .module-tab:hover .icon {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .module-tab:nth-child(1) .icon { 
+            background: linear-gradient(135deg, var(--frontier-primary), #0d7377); 
+            box-shadow: 0 8px 20px rgba(24, 169, 168, 0.3);
+        }
+        .module-tab:nth-child(2) .icon { 
+            background: linear-gradient(135deg, var(--frontier-secondary), #a01b3a); 
+            box-shadow: 0 8px 20px rgba(213, 35, 73, 0.3);
+        }
+        .module-tab:nth-child(3) .icon { 
+            background: linear-gradient(135deg, var(--frontier-accent), #d97706); 
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+        }
 
         .module-tab .info h3 {
-            margin: 0 0 0.25rem 0;
-            font-size: 1.15rem;
+            margin: 0 0 0.35rem 0;
+            font-size: 1.2rem;
             color: var(--frontier-text);
+            font-weight: 700;
+            transition: color 0.3s ease;
+        }
+
+        .module-tab:hover .info h3 {
+            color: var(--frontier-primary);
         }
 
         .module-tab .info p {
             margin: 0;
             font-size: 0.9rem;
             color: var(--frontier-text-secondary);
+            transition: color 0.3s ease;
         }
 
         /* ==================== MODULE CONTENT ==================== */
         .module-content {
             display: none;
-            animation: fadeIn 0.4s ease;
+            opacity: 0;
         }
 
         .module-content.active {
             display: block;
+            opacity: 1;
+            animation: moduleReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes moduleReveal {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px) scale(0.98); 
+                filter: blur(3px);
+            }
+            50% {
+                filter: blur(0);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+                filter: blur(0);
+            }
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         /* ==================== PANELS ==================== */
         .panel {
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 2rem;
             margin-bottom: 1.5rem;
             background: var(--frontier-bg-panel);
             border: 1px solid var(--frontier-border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--frontier-primary), var(--frontier-info), var(--frontier-primary));
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .panel:hover::before {
+            opacity: 1;
         }
 
         .panel h2 {
@@ -240,109 +732,170 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             color: var(--frontier-text);
+            font-weight: 700;
         }
 
         .panel h2 i {
             color: var(--frontier-primary);
+            transition: transform 0.3s ease;
+        }
+
+        .panel:hover h2 i {
+            transform: scale(1.1);
         }
 
         /* ==================== CONTROLS ==================== */
         .control-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.75rem;
         }
 
         .control-group label {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
             color: var(--frontier-text);
         }
 
         .control-group .value {
-            background: var(--frontier-primary);
+            background: linear-gradient(135deg, var(--frontier-primary), #0d7377);
             color: white;
-            padding: 0.25rem 0.75rem;
+            padding: 0.3rem 0.9rem;
             border-radius: 20px;
             font-size: 0.9rem;
-            font-weight: 600;
+            font-weight: 700;
+            box-shadow: 0 4px 10px var(--frontier-primary-glow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .control-group .value:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px var(--frontier-primary-glow);
         }
 
         input[type="range"] {
             width: 100%;
-            height: 8px;
-            border-radius: 4px;
+            height: 10px;
+            border-radius: 5px;
             background: var(--frontier-border-dark);
             outline: none;
             -webkit-appearance: none;
+            transition: background 0.3s ease;
+        }
+
+        input[type="range"]:hover {
+            background: var(--frontier-border);
         }
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 24px;
-            height: 24px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
-            background: var(--frontier-primary);
+            background: linear-gradient(135deg, var(--frontier-primary), #14908f);
             cursor: pointer;
-            box-shadow: 0 2px 8px var(--frontier-primary-glow);
-            transition: transform 0.2s;
+            box-shadow: 0 4px 15px var(--frontier-primary-glow);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+            border: 3px solid white;
         }
 
         input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.15);
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px var(--frontier-primary-glow);
+        }
+
+        input[type="range"]:active::-webkit-slider-thumb {
+            transform: scale(1.1);
         }
 
         /* ==================== BUTTONS ==================== */
         .btn {
             padding: 1rem 2rem;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 1.1rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
+            gap: 0.6rem;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             font-family: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn i {
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover i {
+            transform: scale(1.15);
         }
 
         .btn-primary {
             background: linear-gradient(135deg, var(--frontier-primary), #0d7377);
             color: white;
+            box-shadow: 0 8px 25px var(--frontier-primary-glow);
         }
 
         .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px var(--frontier-primary-glow);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 35px var(--frontier-primary-glow);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(-1px) scale(0.98);
         }
 
         .btn-primary:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
         }
 
         .btn-danger {
             background: linear-gradient(135deg, var(--frontier-danger), #dc2626);
             color: white;
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
         }
 
         .btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(239, 68, 68, 0.4);
         }
 
         .btn-secondary {
             background: var(--frontier-border-dark);
             color: var(--frontier-text);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .btn-secondary:hover {
             background: var(--frontier-text-muted);
+            transform: translateY(-2px);
         }
 
         .btn-group {
@@ -360,34 +913,55 @@
 
         @media (min-width: 1024px) {
             .workflow-container {
-                grid-template-columns: 320px 1fr;
+                grid-template-columns: 340px 1fr;
             }
         }
 
         /* Factory Visualization */
         .factory-viz {
-            background: var(--frontier-bg-dark);
-            border-radius: 16px;
+            background: linear-gradient(180deg, var(--frontier-bg-dark) 0%, #0a1628 100%);
+            border-radius: 20px;
             padding: 2rem;
             position: relative;
             overflow: hidden;
-            min-height: 500px;
+            min-height: 700px;
+            box-shadow: inset 0 2px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .factory-viz::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 50% 0%, rgba(24, 169, 168, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 100%, rgba(213, 35, 73, 0.05) 0%, transparent 50%);
+            pointer-events: none;
         }
 
         .factory-title {
             color: white;
-            font-size: 1rem;
+            font-size: 1.1rem;
             margin: 0 0 1.5rem 0;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            opacity: 0.8;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .factory-title i {
+            color: var(--frontier-primary);
         }
 
         /* Conveyor Belt System */
         .conveyor-system {
             position: relative;
-            height: 400px;
+            height: 500px;
+            margin-bottom: 1.5rem;
         }
 
         .conveyor-station {
@@ -395,53 +969,66 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .station-icon {
-            width: 70px;
-            height: 70px;
-            border-radius: 12px;
+            width: 75px;
+            height: 75px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem;
+            font-size: 1.9rem;
             color: white;
             position: relative;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             z-index: 2;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
 
         .station-icon.waiting {
-            background: #475569;
+            background: linear-gradient(135deg, #475569, #334155);
         }
 
         .station-icon.active {
             animation: stationPulse 1s ease infinite;
+            box-shadow: 0 0 30px var(--frontier-primary-glow);
         }
 
         .station-icon.completed {
-            background: var(--frontier-success) !important;
+            background: linear-gradient(135deg, var(--frontier-success), #059669) !important;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
         }
 
         @keyframes stationPulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(24, 169, 168, 0.4); }
-            50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(24, 169, 168, 0.2); }
+            0%, 100% { transform: scale(1); box-shadow: 0 0 10px var(--frontier-primary-glow); }
+            50% { transform: scale(1.08); box-shadow: 0 0 35px var(--frontier-primary-glow); }
         }
 
         .station-label {
             color: white;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            margin-top: 0.4rem;
+            margin-bottom: 0;
             text-align: center;
-            font-weight: 500;
-            max-width: 90px;
+            font-weight: 600;
+            max-width: 100px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            line-height: 1.2;
         }
 
         .station-status {
             color: var(--frontier-text-muted);
-            font-size: 0.75rem;
-            margin-top: 0.25rem;
+            font-size: 0.7rem;
+            margin-top: 0.15rem;
+            transition: all 0.3s ease;
+            line-height: 1;
+        }
+
+        .station-status.active {
+            color: var(--frontier-primary);
+            animation: blink 1s ease infinite;
         }
 
         /* Conveyor Belts (SVG paths) */
@@ -473,63 +1060,96 @@
         /* Job Package */
         .job-package {
             position: absolute;
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             background: linear-gradient(135deg, var(--frontier-primary), #0d7377);
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1rem;
-            box-shadow: 0 4px 15px rgba(24, 169, 168, 0.5);
+            font-size: 1.1rem;
+            box-shadow: 
+                0 8px 25px rgba(24, 169, 168, 0.5),
+                0 0 40px rgba(24, 169, 168, 0.3);
             z-index: 10;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.4s ease;
         }
 
         .job-package.visible {
             opacity: 1;
+            animation: packageGlow 1.5s ease infinite;
+        }
+
+        @keyframes packageGlow {
+            0%, 100% { box-shadow: 0 8px 25px rgba(24, 169, 168, 0.5), 0 0 40px rgba(24, 169, 168, 0.3); }
+            50% { box-shadow: 0 8px 35px rgba(24, 169, 168, 0.7), 0 0 60px rgba(24, 169, 168, 0.5); }
+        }
+
+        .job-package::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3), transparent);
+            pointer-events: none;
         }
 
         .job-package::after {
             content: '';
             position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 8px;
+            width: 150%;
+            height: 150%;
+            border-radius: 15px;
             background: inherit;
-            filter: blur(10px);
-            opacity: 0.5;
+            filter: blur(15px);
+            opacity: 0.4;
             z-index: -1;
         }
 
         /* Resource Meters */
         .resource-meters {
-            position: absolute;
-            bottom: 1rem;
-            left: 1rem;
-            right: 1rem;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 0.5rem;
+            gap: 0.75rem;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-top: 0.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .resource-meter {
-            background: rgba(255,255,255,0.05);
-            border-radius: 8px;
-            padding: 0.75rem;
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1rem;
             text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .resource-meter:hover {
+            background: rgba(255,255,255,0.12);
+            border-color: var(--frontier-primary-glow);
+            transform: translateY(-2px);
         }
 
         .meter-icon {
-            font-size: 1.2rem;
-            margin-bottom: 0.25rem;
+            font-size: 1.4rem;
+            margin-bottom: 0.4rem;
+            transition: transform 0.3s ease;
+        }
+
+        .resource-meter:hover .meter-icon {
+            transform: scale(1.2);
         }
 
         .meter-value {
             color: white;
-            font-size: 1rem;
+            font-size: 1.15rem;
             font-weight: 700;
         }
 
@@ -537,78 +1157,119 @@
             color: var(--frontier-text-muted);
             font-size: 0.7rem;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .meter-bar {
-            height: 4px;
-            background: #334155;
-            border-radius: 2px;
-            margin-top: 0.5rem;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-top: 0.6rem;
             overflow: hidden;
         }
 
         .meter-fill {
             height: 100%;
-            border-radius: 2px;
-            transition: width 0.5s ease;
+            border-radius: 3px;
+            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .meter-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s linear infinite;
         }
 
         /* Terminal Output */
         .terminal {
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
             font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             background: #0a0f1a;
             margin-top: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .terminal-header {
-            background: #1e293b;
-            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            padding: 0.85rem 1.25rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.6rem;
         }
 
         .terminal-header .dot {
-            width: 12px;
-            height: 12px;
+            width: 13px;
+            height: 13px;
             border-radius: 50%;
+            transition: transform 0.2s ease;
         }
 
-        .terminal-header .dot.red { background: #ef4444; }
-        .terminal-header .dot.yellow { background: #f59e0b; }
-        .terminal-header .dot.green { background: #10b981; }
+        .terminal-header .dot:hover {
+            transform: scale(1.2);
+        }
+
+        .terminal-header .dot.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .terminal-header .dot.yellow { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .terminal-header .dot.green { background: linear-gradient(135deg, #10b981, #059669); }
 
         .terminal-header span {
             margin-left: auto;
             color: #94a3b8;
             font-size: 0.75rem;
+            font-family: inherit;
         }
 
         .terminal-body {
-            padding: 1rem;
-            max-height: 200px;
+            padding: 1.25rem;
+            max-height: 220px;
             overflow-y: auto;
             color: #10b981;
+            scrollbar-width: thin;
+            scrollbar-color: var(--frontier-primary) transparent;
+        }
+
+        .terminal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .terminal-body::-webkit-scrollbar-thumb {
+            background: var(--frontier-primary);
+            border-radius: 3px;
         }
 
         .terminal-line {
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.35rem;
             opacity: 0;
-            animation: terminalFadeIn 0.3s forwards;
+            animation: terminalFadeIn 0.4s forwards;
+            line-height: 1.5;
         }
 
         @keyframes terminalFadeIn {
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        .terminal-line .prompt { color: var(--frontier-primary); }
-        .terminal-line .comment { color: #64748b; }
+        .terminal-line .prompt { color: var(--frontier-primary); font-weight: 600; }
+        .terminal-line .comment { color: #64748b; font-style: italic; }
         .terminal-line .success { color: var(--frontier-success); }
         .terminal-line .warning { color: var(--frontier-warning); }
         .terminal-line .error { color: var(--frontier-danger); }
+
+        /* Typing cursor effect */
+        .terminal-line.typing::after {
+            content: '▋';
+            animation: blink 0.8s step-end infinite;
+            color: var(--frontier-primary);
+        }
 
         /* Stats Grid */
         .stats-grid {
@@ -619,29 +1280,85 @@
         }
 
         .stat-card {
-            padding: 1rem;
-            border-radius: 12px;
+            padding: 1.25rem 1rem;
+            border-radius: 16px;
             text-align: center;
-            background: var(--frontier-bg-alt);
+            background: linear-gradient(180deg, var(--frontier-bg-alt) 0%, rgba(24, 169, 168, 0.03) 100%);
             border: 1px solid var(--frontier-border);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--frontier-primary), var(--frontier-secondary));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--frontier-primary-muted);
+            box-shadow: 0 10px 30px rgba(24, 169, 168, 0.15);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
         }
 
         .stat-card .stat-icon {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
+            font-size: 1.75rem;
+            margin-bottom: 0.75rem;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover .stat-icon {
+            transform: scale(1.1);
         }
 
         .stat-card .stat-value {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: 700;
             color: var(--frontier-text);
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.35rem;
+            background: linear-gradient(135deg, var(--frontier-text) 0%, var(--frontier-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .stat-card .stat-label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--frontier-text-muted);
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        /* Stat Card Variations */
+        .stat-card.success .stat-value {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-card.warning .stat-value {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-card.danger .stat-value {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         /* ==================== MODULE 2: SCALING - VISUAL WORKERS ==================== */
@@ -653,25 +1370,48 @@
 
         @media (min-width: 1024px) {
             .scaling-container {
-                grid-template-columns: 350px 1fr;
+                grid-template-columns: 360px 1fr;
             }
         }
 
         /* Worker Visualization */
         .worker-visualization {
-            background: var(--frontier-bg-dark);
-            border-radius: 16px;
+            background: linear-gradient(180deg, var(--frontier-bg-dark) 0%, #0a1628 100%);
+            border-radius: 20px;
             padding: 2rem;
-            min-height: 450px;
+            min-height: 740px;
+            box-shadow: inset 0 2px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .worker-visualization::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 50% 0%, rgba(213, 35, 73, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 100%, rgba(24, 169, 168, 0.05) 0%, transparent 50%);
+            pointer-events: none;
         }
 
         .worker-viz-title {
             color: white;
-            font-size: 1rem;
-            margin: 0 0 1rem 0;
+            font-size: 1.1rem;
+            margin: 0 0 1.25rem 0;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .worker-viz-title i {
+            color: var(--frontier-secondary);
         }
 
         .work-pile {
@@ -679,20 +1419,33 @@
             align-items: center;
             gap: 1.5rem;
             margin-bottom: 2rem;
-            padding: 1rem;
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
+            padding: 1.25rem;
+            background: rgba(255,255,255,0.06);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .work-pile:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--frontier-warning);
+            transform: translateX(5px);
         }
 
         .pile-icon {
-            font-size: 3rem;
+            font-size: 3.5rem;
             color: var(--frontier-warning);
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.4));
         }
 
         .pile-info h4 {
             color: white;
-            margin: 0 0 0.25rem 0;
-            font-size: 1.1rem;
+            margin: 0 0 0.35rem 0;
+            font-size: 1.15rem;
+            font-weight: 700;
         }
 
         .pile-info p {
@@ -703,155 +1456,252 @@
 
         .pile-count {
             margin-left: auto;
-            background: var(--frontier-warning);
+            background: linear-gradient(135deg, var(--frontier-warning), #d97706);
             color: #1a1a1a;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 1.2rem;
+            padding: 0.6rem 1.25rem;
+            border-radius: 25px;
+            font-weight: 800;
+            font-size: 1.3rem;
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+            transition: transform 0.3s ease;
+        }
+
+        .pile-count:hover {
+            transform: scale(1.1);
         }
 
         /* Workers Grid */
         .workers-container {
             margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
         }
 
         .workers-label {
             color: var(--frontier-text-muted);
-            font-size: 0.85rem;
-            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+            margin-bottom: 0.85rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            font-weight: 500;
         }
 
         .workers-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-            gap: 8px;
-            max-height: 200px;
+            grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+            gap: 10px;
+            max-height: 220px;
             overflow-y: auto;
-            padding: 0.5rem;
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
+            padding: 0.75rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--frontier-primary) transparent;
+        }
+
+        .workers-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .workers-grid::-webkit-scrollbar-thumb {
+            background: var(--frontier-primary);
+            border-radius: 3px;
         }
 
         .worker {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
+            font-size: 1.3rem;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             position: relative;
+            cursor: default;
         }
 
         .worker.idle {
-            background: #334155;
+            background: linear-gradient(135deg, #334155, #2d3a4d);
             color: #64748b;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .worker.idle:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #475569, #3f4f61);
         }
 
         .worker.working {
-            background: var(--frontier-primary);
+            background: linear-gradient(135deg, var(--frontier-primary), #0d7377);
             color: white;
-            animation: workerBusy 0.8s ease infinite;
+            animation: workerBusy 0.6s ease infinite;
+            box-shadow: 0 5px 20px rgba(24, 169, 168, 0.5);
+        }
+
+        .worker.working::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            border: 2px solid var(--frontier-primary);
+            animation: ripple 1.5s ease-out infinite;
         }
 
         .worker.overhead {
-            background: var(--frontier-danger);
+            background: linear-gradient(135deg, var(--frontier-danger), #dc2626);
             color: white;
-            opacity: 0.6;
+            opacity: 0.7;
+            animation: pulse 1s ease infinite;
         }
 
         @keyframes workerBusy {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.08) rotate(-2deg); }
+            75% { transform: scale(1.08) rotate(2deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Results Section */
+        .results-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .results-title {
+            color: var(--frontier-primary);
+            font-size: 1rem;
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
         }
 
         /* Scaling Metrics Display */
         .scaling-metrics {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-top: 1.5rem;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            .scaling-metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .metric-card {
             background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 1rem;
+            border-radius: 16px;
+            padding: 1.25rem;
             text-align: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid transparent;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            background: rgba(255,255,255,0.1);
+            border-color: var(--frontier-primary-glow);
         }
 
         .metric-card .metric-icon {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
+            font-size: 1.6rem;
+            margin-bottom: 0.6rem;
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover .metric-icon {
+            transform: scale(1.2);
         }
 
         .metric-card .metric-value {
-            font-size: 1.8rem;
-            font-weight: 700;
+            font-size: 2rem;
+            font-weight: 800;
             color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
         .metric-card .metric-label {
             font-size: 0.75rem;
             color: var(--frontier-text-muted);
             text-transform: uppercase;
-            margin-top: 0.25rem;
+            margin-top: 0.35rem;
+            letter-spacing: 0.5px;
         }
 
-        .metric-card.highlight .metric-value { color: var(--frontier-primary); }
-        .metric-card.warning .metric-value { color: var(--frontier-warning); }
-        .metric-card.success .metric-value { color: var(--frontier-success); }
-        .metric-card.danger .metric-value { color: var(--frontier-danger); }
+        .metric-card.highlight .metric-value { color: var(--frontier-primary); text-shadow: 0 0 20px var(--frontier-primary-glow); }
+        .metric-card.warning .metric-value { color: var(--frontier-warning); text-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
+        .metric-card.success .metric-value { color: var(--frontier-success); text-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+        .metric-card.danger .metric-value { color: var(--frontier-danger); text-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
 
         /* Efficiency Bar */
         .efficiency-display {
             margin-top: 1.5rem;
-            padding: 1rem;
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
+            padding: 1.25rem;
+            background: rgba(255,255,255,0.06);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .efficiency-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.85rem;
         }
 
         .efficiency-header span {
             color: var(--frontier-text-muted);
-            font-size: 0.85rem;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .efficiency-value {
             color: white;
-            font-weight: 700;
-            font-size: 1.1rem;
+            font-weight: 800;
+            font-size: 1.2rem;
         }
 
         .efficiency-bar {
-            height: 20px;
-            background: #334155;
-            border-radius: 10px;
+            height: 24px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
             overflow: hidden;
             position: relative;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
         }
 
         .efficiency-fill {
             height: 100%;
-            border-radius: 10px;
-            transition: all 0.5s ease;
+            border-radius: 12px;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
             position: relative;
+            overflow: hidden;
         }
 
-        .efficiency-fill.good { background: linear-gradient(90deg, var(--frontier-success), #14b8a6); }
-        .efficiency-fill.medium { background: linear-gradient(90deg, var(--frontier-warning), #fbbf24); }
-        .efficiency-fill.poor { background: linear-gradient(90deg, var(--frontier-danger), #f87171); }
+        .efficiency-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 2s linear infinite;
+        }
+
+        .efficiency-fill.good { background: linear-gradient(90deg, var(--frontier-success), #14b8a6, var(--frontier-success)); background-size: 200% 100%; }
+        .efficiency-fill.medium { background: linear-gradient(90deg, var(--frontier-warning), #fbbf24, var(--frontier-warning)); background-size: 200% 100%; }
+        .efficiency-fill.poor { background: linear-gradient(90deg, var(--frontier-danger), #f87171, var(--frontier-danger)); background-size: 200% 100%; }
 
         .efficiency-zones {
             position: absolute;
@@ -864,62 +1714,283 @@
 
         .efficiency-zone {
             flex: 1;
-            border-right: 1px dashed rgba(255,255,255,0.1);
+            border-right: 1px dashed rgba(255,255,255,0.15);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.6rem;
-            color: rgba(255,255,255,0.3);
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.4);
         }
+
+        /* Serial/Parallel Workflow Visualization */
+        .workflow-flow {
+            margin-top: 1.5rem;
+            padding: 1.75rem;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .workflow-flow-title {
+            color: white;
+            font-size: 1rem;
+            margin: 0 0 1.25rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-weight: 700;
+        }
+
+        .workflow-flow-title i {
+            color: var(--frontier-info);
+        }
+
+        .flow-diagram {
+            display: flex;
+            gap: 1.25rem;
+            align-items: stretch;
+            min-height: 160px;
+        }
+
+        .flow-section {
+            flex: 1;
+            padding: 1.25rem;
+            border-radius: 14px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .flow-section:hover {
+            transform: scale(1.02);
+        }
+
+        .flow-section.serial {
+            background: rgba(239, 68, 68, 0.12);
+            border: 2px solid rgba(239, 68, 68, 0.4);
+            flex: 0 0 auto;
+            min-width: 130px;
+            box-shadow: 0 5px 20px rgba(239, 68, 68, 0.15);
+        }
+
+        .flow-section.parallel {
+            background: rgba(16, 185, 129, 0.12);
+            border: 2px solid rgba(16, 185, 129, 0.4);
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.15);
+        }
+
+        .flow-section-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .flow-section.serial .flow-section-label {
+            color: var(--frontier-danger);
+        }
+
+        .flow-section.parallel .flow-section-label {
+            color: var(--frontier-success);
+        }
+
+        .flow-tasks {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            justify-content: center;
+        }
+
+        .flow-task {
+            height: 10px;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .flow-task.serial-task {
+            background: var(--frontier-danger);
+            width: 100%;
+        }
+
+        .flow-task.serial-task.processing {
+            animation: serialPulse 0.5s ease infinite;
+        }
+
+        @keyframes serialPulse {
+            0%, 100% { opacity: 1; transform: scaleX(1); }
+            50% { opacity: 0.7; transform: scaleX(0.95); }
+        }
+
+        .parallel-lanes {
+            display: grid;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .parallel-lane {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+        }
+
+        .parallel-task {
+            height: 10px;
+            flex: 1;
+            border-radius: 3px;
+            background: #334155;
+            transition: all 0.3s ease;
+        }
+
+        .parallel-task.active {
+            background: var(--frontier-success);
+        }
+
+        .parallel-task.processing {
+            background: var(--frontier-success);
+            animation: parallelPulse 0.4s ease infinite;
+        }
+
+        @keyframes parallelPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            flex-shrink: 0;
+        }
+
+        .flow-arrow i {
+            color: var(--frontier-text-muted);
+            font-size: 1.5rem;
+            animation: arrowPulse 1.5s ease infinite;
+        }
+
+        @keyframes arrowPulse {
+            0%, 100% { opacity: 0.4; transform: translateX(0); }
+            50% { opacity: 1; transform: translateX(5px); }
+        }
+
+        .flow-legend {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--frontier-text-muted);
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .legend-color.serial { background: var(--frontier-danger); }
+        .legend-color.parallel { background: var(--frontier-success); }
+        .legend-color.waiting { background: #334155; }
 
         /* Insight Card */
         .insight-card {
-            margin-top: 1.5rem;
-            padding: 1.25rem;
-            border-radius: 12px;
+            margin-top: 1.75rem;
+            padding: 1.5rem;
+            border-radius: 16px;
             display: flex;
             align-items: flex-start;
-            gap: 1rem;
-            background: rgba(24, 169, 168, 0.1);
-            border: 1px solid rgba(24, 169, 168, 0.3);
+            gap: 1.25rem;
+            background: linear-gradient(135deg, rgba(24, 169, 168, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%);
+            border: 1px solid rgba(24, 169, 168, 0.35);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .insight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--frontier-primary), var(--frontier-info));
+        }
+
+        .insight-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(24, 169, 168, 0.15);
+            background: linear-gradient(135deg, rgba(24, 169, 168, 0.18) 0%, rgba(59, 130, 246, 0.12) 100%);
         }
 
         .insight-card i {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             color: var(--frontier-primary);
             flex-shrink: 0;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 8px var(--frontier-primary-glow));
         }
 
         .insight-card p {
             margin: 0;
-            font-size: 0.95rem;
-            line-height: 1.6;
+            font-size: 1rem;
+            line-height: 1.7;
             color: var(--frontier-text);
+        }
+
+        .insight-card strong {
+            color: var(--frontier-primary);
         }
 
         /* Amdahl Limit Visual */
         .amdahl-visual {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 12px;
+            margin-top: 1.75rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.06) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .amdahl-visual:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(239, 68, 68, 0.15);
         }
 
         .amdahl-title {
             color: var(--frontier-danger);
-            font-weight: 600;
-            margin-bottom: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.6rem;
+            font-size: 1rem;
+        }
+
+        .amdahl-title i {
+            animation: pulse 2s ease infinite;
         }
 
         .amdahl-bar {
-            height: 30px;
-            border-radius: 8px;
+            height: 35px;
+            border-radius: 10px;
             display: flex;
             overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
         .amdahl-parallel {
@@ -959,75 +2030,131 @@
 
         @media (min-width: 1024px) {
             .cpugpu-container {
-                grid-template-columns: 350px 1fr;
+                grid-template-columns: 360px 1fr;
             }
         }
 
         /* Image Selection */
         .image-selection {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.75rem;
         }
 
         .image-selection-label {
             color: var(--frontier-text);
-            font-weight: 500;
-            margin-bottom: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
             display: block;
+            font-size: 1rem;
         }
 
         .image-options {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
+            gap: 0.85rem;
         }
 
         .image-option {
             aspect-ratio: 1;
-            border-radius: 12px;
+            border-radius: 14px;
             border: 3px solid var(--frontier-border);
             cursor: pointer;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             background: var(--frontier-bg-alt);
-            padding: 0.5rem;
+            padding: 0.6rem;
+        }
+
+        .image-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(24, 169, 168, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-option:hover::before {
+            opacity: 1;
         }
 
         .image-option:hover {
             border-color: var(--frontier-primary);
-            transform: translateY(-2px);
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 10px 30px var(--frontier-primary-glow);
         }
 
         .image-option.selected {
             border-color: var(--frontier-primary);
-            box-shadow: 0 0 15px var(--frontier-primary-glow);
+            box-shadow: 0 0 25px var(--frontier-primary-glow);
+            background: linear-gradient(135deg, var(--frontier-bg-alt), rgba(24, 169, 168, 0.1));
+        }
+
+        .image-option.selected::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 20px;
+            height: 20px;
+            background: var(--frontier-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            color: white;
+            animation: scaleIn 0.3s ease;
         }
 
         .image-option i {
-            font-size: 2rem;
+            font-size: 2.2rem;
             margin-bottom: 0.5rem;
             color: var(--frontier-text-secondary);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .image-option:hover i {
+            transform: scale(1.15);
+            color: var(--frontier-primary);
         }
 
         .image-option.selected i {
             color: var(--frontier-primary);
+            filter: drop-shadow(0 0 8px var(--frontier-primary-glow));
         }
 
         .image-option span {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: var(--frontier-text-muted);
             text-align: center;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+            transition: color 0.3s ease;
+        }
+
+        .image-option:hover span,
+        .image-option.selected span {
+            color: var(--frontier-text);
         }
 
         /* Render Comparison */
         .render-comparison {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
+            gap: 1.75rem;
         }
 
         @media (max-width: 768px) {
@@ -1037,35 +2164,59 @@
         }
 
         .render-panel {
-            border-radius: 16px;
+            border-radius: 20px;
             overflow: hidden;
             background: var(--frontier-bg-alt);
             border: 1px solid var(--frontier-border);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            transition: all 0.4s ease;
+        }
+
+        .render-panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
         }
 
         .render-header {
-            padding: 1rem;
+            padding: 1.25rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.75rem;
-            font-weight: 600;
-            font-size: 1.1rem;
+            gap: 0.85rem;
+            font-weight: 700;
+            font-size: 1.2rem;
             color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .render-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s linear infinite;
+        }
+
+        .render-header i {
+            font-size: 1.3rem;
         }
 
         .render-panel.cpu .render-header {
-            background: linear-gradient(135deg, var(--frontier-secondary), #a01b3a);
+            background: linear-gradient(135deg, var(--frontier-secondary), #a01b3a, #8b1530);
         }
 
         .render-panel.gpu .render-header {
-            background: linear-gradient(135deg, var(--frontier-success), #059669);
+            background: linear-gradient(135deg, var(--frontier-success), #059669, #047857);
         }
 
         .render-canvas-container {
             position: relative;
             aspect-ratio: 1;
-            background: #0a0f1a;
+            background: linear-gradient(135deg, #0a0f1a 0%, #0d1525 100%);
             overflow: hidden;
         }
 
@@ -1086,8 +2237,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.75);
             color: white;
+            backdrop-filter: blur(5px);
         }
 
         .render-overlay.hidden {
@@ -1095,26 +2247,58 @@
         }
 
         .render-overlay i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
+            font-size: 4rem;
+            margin-bottom: 1.25rem;
+            opacity: 0.6;
+            animation: float 3s ease-in-out infinite;
         }
 
         .render-overlay span {
-            font-size: 1rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* Render Progress */
+        .render-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .render-progress-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .render-panel.cpu .render-progress-fill {
+            background: linear-gradient(90deg, var(--frontier-secondary), #ff6b9d);
+        }
+
+        .render-panel.gpu .render-progress-fill {
+            background: linear-gradient(90deg, var(--frontier-success), #6ee7b7);
         }
 
         .render-stats {
-            padding: 1rem;
+            padding: 1.25rem;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
+            gap: 0.6rem;
             background: var(--frontier-bg-panel);
         }
 
         .render-stat {
             text-align: center;
-            padding: 0.5rem;
+            padding: 0.6rem;
+            transition: all 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .render-stat:hover {
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .render-stat .stat-value {
@@ -1178,6 +2362,528 @@
             font-size: 1rem;
             color: var(--frontier-text-secondary);
             margin-top: 0.5rem;
+        }
+
+        /* ==================== ANIMATION COMPARISON SECTION ==================== */
+        .animation-comparison-section {
+            margin-top: 2rem;
+        }
+
+        .animation-comparison-section h2 {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .animation-comparison-section h2 i {
+            color: var(--frontier-primary);
+        }
+
+        .animation-scenario {
+            background: linear-gradient(180deg, var(--frontier-bg-dark) 0%, #0a1628 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .animation-scenario::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--frontier-primary), var(--frontier-secondary), var(--frontier-accent));
+        }
+
+        .animation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .animation-header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .animation-header-controls .animation-buttons {
+            margin-top: 0;
+        }
+
+        .animation-header-controls .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .animation-title {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .animation-title i {
+            color: var(--frontier-accent);
+        }
+
+        .frame-count-selector {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .frame-count-selector label {
+            color: var(--frontier-text-muted);
+            font-size: 0.9rem;
+        }
+
+        .frame-count-selector select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .frame-count-selector select:hover {
+            border-color: var(--frontier-primary);
+        }
+
+        .frame-count-selector select option {
+            background: var(--frontier-bg-dark);
+            color: white;
+        }
+
+        /* Filmstrip Timeline */
+        .filmstrip-container {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .filmstrip-label {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filmstrip-label i {
+            font-size: 1.1rem;
+        }
+
+        .filmstrip-label.cpu i { color: var(--frontier-secondary); }
+        .filmstrip-label.gpu i { color: var(--frontier-success); }
+
+        .filmstrip {
+            display: flex;
+            gap: 4px;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .filmstrip::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: repeating-linear-gradient(
+                90deg,
+                rgba(255,255,255,0.3) 0px,
+                rgba(255,255,255,0.3) 8px,
+                transparent 8px,
+                transparent 16px
+            );
+            border-radius: 12px 12px 0 0;
+        }
+
+        .filmstrip::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: repeating-linear-gradient(
+                90deg,
+                rgba(255,255,255,0.3) 0px,
+                rgba(255,255,255,0.3) 8px,
+                transparent 8px,
+                transparent 16px
+            );
+            border-radius: 0 0 12px 12px;
+        }
+
+        .frame {
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .frame.rendering {
+            border-color: var(--frontier-accent);
+            background: rgba(245, 158, 11, 0.3);
+            color: var(--frontier-accent);
+            animation: frameRender 0.5s ease infinite;
+        }
+
+        .frame.complete {
+            border-color: var(--frontier-success);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(16, 185, 129, 0.2));
+            color: var(--frontier-success);
+        }
+
+        .frame.complete::after {
+            content: '✓';
+            position: absolute;
+            font-size: 1rem;
+        }
+
+        .frame.complete span {
+            display: none;
+        }
+
+        @keyframes frameRender {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(245, 158, 11, 0.8); }
+        }
+
+        /* Animation Preview Row */
+        .animation-preview-row {
+            margin-bottom: 1.5rem;
+        }
+
+        .animation-preview-card {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1.25rem 1.75rem;
+            background: linear-gradient(135deg, rgba(24, 169, 168, 0.15), rgba(213, 35, 73, 0.1));
+            border-radius: 16px;
+            border: 1px solid rgba(24, 169, 168, 0.3);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .preview-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--frontier-primary), var(--frontier-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            color: white;
+            flex-shrink: 0;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .preview-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .preview-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--frontier-text);
+            margin-bottom: 0.25rem;
+        }
+
+        .preview-title span {
+            color: var(--frontier-primary);
+        }
+
+        .preview-desc {
+            font-size: 0.9rem;
+            color: var(--frontier-text-muted);
+        }
+
+        .preview-arrow {
+            font-size: 1.5rem;
+            color: var(--frontier-primary);
+            animation: slideRight 1.5s ease-in-out infinite;
+        }
+
+        @keyframes slideRight {
+            0%, 100% { transform: translateX(0); opacity: 0.5; }
+            50% { transform: translateX(10px); opacity: 1; }
+        }
+
+        .preview-output {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 12px;
+            color: var(--frontier-accent);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .preview-output i {
+            font-size: 1.3rem;
+        }
+
+        @media (max-width: 768px) {
+            .animation-preview-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .preview-arrow {
+                transform: rotate(90deg);
+            }
+
+            @keyframes slideRight {
+                0%, 100% { transform: rotate(90deg) translateX(0); opacity: 0.5; }
+                50% { transform: rotate(90deg) translateX(10px); opacity: 1; }
+            }
+        }
+
+        /* Animation Stats Grid */
+        .animation-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .animation-stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .animation-stat-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--frontier-primary-glow);
+        }
+
+        .animation-stat-card.cpu {
+            border-left: 4px solid var(--frontier-secondary);
+        }
+
+        .animation-stat-card.gpu {
+            border-left: 4px solid var(--frontier-success);
+        }
+
+        .animation-stat-card.highlight {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(24, 169, 168, 0.15));
+            border: 2px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .animation-stat-card .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .animation-stat-card.cpu .stat-icon { color: var(--frontier-secondary); }
+        .animation-stat-card.gpu .stat-icon { color: var(--frontier-success); }
+        .animation-stat-card.highlight .stat-icon { color: var(--frontier-accent); }
+
+        .animation-stat-card .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+
+        .animation-stat-card.cpu .stat-value { color: var(--frontier-secondary); }
+        .animation-stat-card.gpu .stat-value { color: var(--frontier-success); }
+        .animation-stat-card.highlight .stat-value {
+            background: linear-gradient(135deg, var(--frontier-success), var(--frontier-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+        }
+
+        .animation-stat-card .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Timeline Visualization */
+        .timeline-viz {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+        }
+
+        .timeline-viz h4 {
+            color: white;
+            margin: 0 0 1rem 0;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .timeline-viz h4 i {
+            color: var(--frontier-primary);
+        }
+
+        .timeline-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .timeline-label {
+            width: 60px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .timeline-label.cpu { color: var(--frontier-secondary); }
+        .timeline-label.gpu { color: var(--frontier-success); }
+
+        .timeline-bar-container {
+            flex: 1;
+            height: 35px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .timeline-bar {
+            height: 100%;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+            transition: width 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timeline-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+            animation: shimmer 2s linear infinite;
+        }
+
+        .timeline-bar.cpu {
+            background: linear-gradient(90deg, var(--frontier-secondary), #ff6b9d);
+        }
+
+        .timeline-bar.gpu {
+            background: linear-gradient(90deg, var(--frontier-success), #6ee7b7);
+        }
+
+        .animation-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* Responsive Animation Section */
+        @media (max-width: 768px) {
+            .animation-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .animation-header-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .frame {
+                width: 40px;
+                height: 40px;
+                font-size: 0.6rem;
+            }
+
+            .animation-stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .animation-stat-card .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .animation-stat-card.highlight .stat-value {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .animation-header-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+
+            .animation-header-controls .animation-buttons {
+                justify-content: center;
+            }
+
+            .animation-stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .frame {
+                width: 35px;
+                height: 35px;
+            }
+
+            .timeline-label {
+                width: 45px;
+                font-size: 0.8rem;
+            }
         }
 
         /* Spinner */
@@ -1278,22 +2984,494 @@
             color: var(--frontier-text-muted);
         }
 
-        /* Responsive */
+        /* ==================== RESPONSIVE DESIGN ==================== */
+        
+        /* Tablet Portrait */
+        @media (max-width: 1024px) {
+            .workflow-container,
+            .scaling-container,
+            .cpugpu-container {
+                grid-template-columns: 1fr;
+            }
+
+            .factory-viz,
+            .worker-visualization {
+                min-height: auto;
+            }
+        }
+
+        /* Mobile Large */
         @media (max-width: 768px) {
             .frontier-app {
-                padding: 1rem;
+                padding: 0.75rem;
+            }
+
+            /* Header Mobile */
+            .app-header {
+                border-radius: 16px;
             }
 
             .app-header h1 {
-                font-size: 2rem;
+                font-size: 1.8rem;
+                gap: 0.6rem;
+            }
+
+            .app-header h1 i {
+                font-size: 1.6rem;
+            }
+
+            .app-header p {
+                font-size: 1rem;
+            }
+
+            .header-content {
+                padding: 2rem 1.25rem 2.5rem;
+            }
+
+            .header-nav {
+                padding: 0.75rem 1rem;
+            }
+
+            .back-btn {
+                padding: 0.5rem 0.9rem;
+                font-size: 0.85rem;
+            }
+
+            /* Module Tabs Mobile */
+            .module-tabs {
+                gap: 0.75rem;
             }
 
             .module-tab {
                 min-width: 100%;
+                padding: 1.25rem;
+                border-radius: 14px;
             }
 
+            .module-tab .icon {
+                width: 55px;
+                height: 55px;
+                font-size: 1.5rem;
+            }
+
+            .module-tab .info h3 {
+                font-size: 1.05rem;
+            }
+
+            .module-tab .info p {
+                font-size: 0.85rem;
+            }
+
+            /* Panels Mobile */
+            .panel {
+                padding: 1.25rem;
+                border-radius: 14px;
+            }
+
+            .panel h2 {
+                font-size: 1.2rem;
+            }
+
+            /* Controls Mobile */
+            .control-group .value {
+                padding: 0.2rem 0.6rem;
+                font-size: 0.8rem;
+            }
+
+            input[type="range"]::-webkit-slider-thumb {
+                width: 22px;
+                height: 22px;
+            }
+
+            /* Buttons Mobile */
+            .btn {
+                padding: 0.85rem 1.5rem;
+                font-size: 1rem;
+                border-radius: 12px;
+                width: 100%;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            /* Factory Viz Mobile */
+            .factory-viz {
+                padding: 1.25rem;
+                border-radius: 14px;
+            }
+
+            .conveyor-system {
+                height: 400px;
+            }
+
+            .station-icon {
+                width: 55px;
+                height: 55px;
+                font-size: 1.4rem;
+            }
+
+            .station-label {
+                font-size: 0.75rem;
+                max-width: 70px;
+                margin-top: 0.3rem;
+            }
+
+            .station-status {
+                font-size: 0.65rem;
+                margin-top: 0.1rem;
+            }
+
+            .job-package {
+                width: 35px;
+                height: 35px;
+                font-size: 0.9rem;
+            }
+
+            /* Resource Meters Mobile */
+            .resource-meters {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+                padding: 0.85rem;
+            }
+
+            .resource-meter {
+                padding: 0.75rem;
+            }
+
+            .meter-icon {
+                font-size: 1.1rem;
+            }
+
+            .meter-value {
+                font-size: 0.95rem;
+            }
+
+            .meter-label {
+                font-size: 0.6rem;
+            }
+
+            /* Terminal Mobile */
+            .terminal {
+                border-radius: 12px;
+            }
+
+            .terminal-body {
+                max-height: 160px;
+                font-size: 0.75rem;
+                padding: 1rem;
+            }
+
+            /* Worker Visualization Mobile */
+            .worker-visualization {
+                padding: 1.25rem;
+                border-radius: 14px;
+            }
+
+            .work-pile {
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .pile-icon {
+                font-size: 2.5rem;
+            }
+
+            .pile-info h4 {
+                font-size: 1rem;
+            }
+
+            .pile-count {
+                padding: 0.4rem 0.9rem;
+                font-size: 1.1rem;
+            }
+
+            .workers-grid {
+                max-height: 160px;
+                gap: 6px;
+            }
+
+            .worker {
+                width: 38px;
+                height: 38px;
+                font-size: 1.1rem;
+            }
+
+            /* Workflow Flow Mobile */
+            .workflow-flow {
+                padding: 1.25rem;
+            }
+
+            .flow-diagram {
+                flex-direction: column;
+                gap: 0.75rem;
+                min-height: auto;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+                width: 100%;
+                height: 35px;
+            }
+
+            .flow-section.serial {
+                min-width: auto;
+            }
+
+            .flow-section {
+                padding: 1rem;
+            }
+
+            .flow-legend {
+                flex-direction: column;
+                gap: 0.6rem;
+            }
+
+            /* Metrics Mobile */
+            .scaling-metrics {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.6rem;
+            }
+
+            .metric-card {
+                padding: 1rem;
+            }
+
+            .metric-card .metric-value {
+                font-size: 1.5rem;
+            }
+
+            .metric-card .metric-icon {
+                font-size: 1.3rem;
+            }
+
+            /* Efficiency Bar Mobile */
+            .efficiency-bar {
+                height: 20px;
+            }
+
+            /* HPC Suggestions Mobile */
+            .hpc-suggestions {
+                padding: 1rem;
+                margin-top: 1rem;
+            }
+
+            .hpc-suggestions-title {
+                font-size: 0.9rem;
+            }
+
+            .suggestion-list li {
+                font-size: 0.82rem;
+                padding: 0.6rem 0;
+            }
+
+            /* Image Options Grid Mobile */
+            .image-options {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.5rem;
+            }
+
+            .image-option {
+                padding: 0.4rem;
+                border-radius: 10px;
+            }
+
+            .image-option i {
+                font-size: 1.5rem;
+                margin-bottom: 0.3rem;
+            }
+
+            .image-option span {
+                font-size: 0.65rem;
+            }
+
+            .image-option.selected::after {
+                width: 16px;
+                height: 16px;
+                font-size: 0.5rem;
+                top: 4px;
+                right: 4px;
+            }
+
+            /* Render Comparison Mobile */
+            .render-comparison {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+
+            .render-panel {
+                border-radius: 14px;
+            }
+
+            .render-header {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+
+            .render-stats {
+                grid-template-columns: repeat(2, 1fr);
+                padding: 1rem;
+            }
+
+            .render-stat:last-child {
+                grid-column: span 2;
+            }
+
+            /* Processor Cards Mobile */
             .processor-comparison {
                 grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .processor-card {
+                padding: 1.25rem;
+            }
+
+            /* Insight Cards Mobile */
+            .insight-card {
+                padding: 1rem;
+                gap: 0.75rem;
+            }
+
+            .insight-card i {
+                font-size: 1.25rem;
+            }
+
+            .insight-card p {
+                font-size: 0.9rem;
+            }
+
+            /* Amdahl Visual Mobile */
+            .amdahl-bar {
+                height: 24px;
+            }
+
+            /* Stats Grid Mobile */
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+
+            .stat-card {
+                padding: 0.85rem;
+            }
+
+            .stat-card .stat-value {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Mobile Small */
+        @media (max-width: 480px) {
+            .frontier-app {
+                padding: 0.5rem;
+            }
+
+            .app-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .app-header h1 i {
+                font-size: 1.3rem;
+            }
+
+            .app-header p {
+                font-size: 0.9rem;
+            }
+
+            .header-content {
+                padding: 1.5rem 1rem 2rem;
+            }
+
+            .module-tab {
+                padding: 1rem;
+            }
+
+            .module-tab .icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.3rem;
+            }
+
+            .image-options {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .image-option i {
+                font-size: 1.25rem;
+            }
+
+            .scaling-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .resource-meters {
+                grid-template-columns: 1fr;
+            }
+
+            .conveyor-system {
+                height: 350px;
+            }
+
+            .station-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 1.2rem;
+            }
+
+            .station-label {
+                font-size: 0.7rem;
+                max-width: 60px;
+                margin-top: 0.25rem;
+            }
+
+            .station-status {
+                font-size: 0.6rem;
+                margin-top: 0.08rem;
+            }
+
+            .workers-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+
+            .worker {
+                width: 35px;
+                height: 35px;
+                font-size: 0.95rem;
+            }
+
+            .terminal-body {
+                font-size: 0.7rem;
+            }
+
+            /* Touch-friendly tap targets */
+            .btn {
+                min-height: 48px;
+            }
+
+            .module-tab {
+                min-height: 80px;
+            }
+        }
+
+        /* Disable animations for reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .module-tab,
+            .panel,
+            .image-option,
+            .render-panel {
+                border-width: 2px;
             }
         }
     </style>
@@ -1310,11 +3488,15 @@
             <div class="frontier-app">
                 <!-- App Header -->
                 <div class="app-header">
-                    <a href="../../E-Labs.html" class="back-btn">
-                        <i class="fas fa-arrow-left"></i> Back to E-Labs
-                    </a>
-                    <h1><i class="fas fa-server"></i> Frontier</h1>
-                    <p>A Hands-On High Performance Computing Intuition Engine</p>
+                    <div class="header-nav">
+                        <a href="../../E-Labs.html" class="back-btn">
+                            <i class="fas fa-arrow-left"></i> Back to E-Labs
+                        </a>
+                    </div>
+                    <div class="header-content">
+                        <h1><i class="fas fa-server"></i> Frontier</h1>
+                        <p>A Hands-On High Performance Computing Intuition Engine</p>
+                    </div>
                 </div>
 
                 <!-- Module Tabs -->
@@ -1428,7 +3610,7 @@
                                 
                                 <!-- Conveyor System -->
                                 <div class="conveyor-system" id="conveyor-system">
-                                    <svg class="conveyor-paths" id="conveyor-paths" viewBox="0 0 800 350" preserveAspectRatio="xMidYMid meet">
+                                    <svg class="conveyor-paths" id="conveyor-paths" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet">
                                         <!-- Paths will be drawn dynamically -->
                                     </svg>
                                     
@@ -1466,6 +3648,16 @@
                                         <div class="meter-label">Network</div>
                                         <div class="meter-bar"><div class="meter-fill" id="meter-network-fill" style="width: 0%; background: var(--frontier-secondary);"></div></div>
                                     </div>
+                                </div>
+
+                                <!-- HPC Suggestions Callout -->
+                                <div class="hpc-suggestions" id="hpc-suggestions">
+                                    <h4 class="hpc-suggestions-title">
+                                        <i class="fas fa-lightbulb"></i> Optimization Insights
+                                    </h4>
+                                    <ul class="suggestion-list" id="suggestion-list">
+                                        <!-- Suggestions added dynamically -->
+                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -1559,38 +3751,85 @@
                                     </div>
                                 </div>
 
-                                <!-- Metrics -->
-                                <div class="scaling-metrics" id="scaling-metrics">
-                                    <div class="metric-card highlight">
-                                        <div class="metric-icon"><i class="fas fa-tachometer-alt"></i></div>
-                                        <div class="metric-value" id="metric-speedup">1.0×</div>
-                                        <div class="metric-label">Speedup</div>
+                                <!-- Serial vs Parallel Workflow - MOVED UP -->
+                                <div class="workflow-flow" id="workflow-flow">
+                                    <p class="workflow-flow-title">
+                                        <i class="fas fa-project-diagram"></i> How Your Work Flows
+                                    </p>
+                                    <div class="flow-diagram">
+                                        <div class="flow-section serial">
+                                            <div class="flow-section-label">
+                                                <i class="fas fa-link"></i> Serial
+                                            </div>
+                                            <div class="flow-tasks" id="serial-flow-tasks">
+                                                <!-- Serial tasks added dynamically -->
+                                            </div>
+                                        </div>
+                                        <div class="flow-arrow">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </div>
+                                        <div class="flow-section parallel">
+                                            <div class="flow-section-label">
+                                                <i class="fas fa-code-branch"></i> Parallel
+                                            </div>
+                                            <div class="parallel-lanes" id="parallel-lanes">
+                                                <!-- Parallel lanes added dynamically -->
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="metric-card success">
-                                        <div class="metric-icon"><i class="fas fa-percentage"></i></div>
-                                        <div class="metric-value" id="metric-efficiency">100%</div>
-                                        <div class="metric-label">Efficiency</div>
-                                    </div>
-                                    <div class="metric-card warning">
-                                        <div class="metric-icon"><i class="fas fa-clock"></i></div>
-                                        <div class="metric-value" id="metric-time">--</div>
-                                        <div class="metric-label">Time</div>
-                                    </div>
-                                    <div class="metric-card danger">
-                                        <div class="metric-icon"><i class="fas fa-ban"></i></div>
-                                        <div class="metric-value" id="metric-limit">--</div>
-                                        <div class="metric-label">Max Possible</div>
+                                    <div class="flow-legend">
+                                        <div class="legend-item">
+                                            <div class="legend-color serial"></div>
+                                            <span>Must run one-by-one</span>
+                                        </div>
+                                        <div class="legend-item">
+                                            <div class="legend-color parallel"></div>
+                                            <span>Can run simultaneously</span>
+                                        </div>
+                                        <div class="legend-item">
+                                            <div class="legend-color waiting"></div>
+                                            <span>Waiting</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Efficiency Display -->
-                                <div class="efficiency-display">
-                                    <div class="efficiency-header">
-                                        <span><i class="fas fa-chart-bar"></i> Parallel Efficiency</span>
-                                        <span class="efficiency-value" id="efficiency-percent">100%</span>
+                                <!-- Results Section -->
+                                <div class="results-section">
+                                    <p class="results-title"><i class="fas fa-chart-line"></i> Results</p>
+                                    
+                                    <!-- Metrics -->
+                                    <div class="scaling-metrics" id="scaling-metrics">
+                                        <div class="metric-card highlight">
+                                            <div class="metric-icon"><i class="fas fa-tachometer-alt"></i></div>
+                                            <div class="metric-value" id="metric-speedup">1.0×</div>
+                                            <div class="metric-label">Speedup</div>
+                                        </div>
+                                        <div class="metric-card success">
+                                            <div class="metric-icon"><i class="fas fa-percentage"></i></div>
+                                            <div class="metric-value" id="metric-efficiency">100%</div>
+                                            <div class="metric-label">Efficiency</div>
+                                        </div>
+                                        <div class="metric-card warning">
+                                            <div class="metric-icon"><i class="fas fa-clock"></i></div>
+                                            <div class="metric-value" id="metric-time">--</div>
+                                            <div class="metric-label">Time</div>
+                                        </div>
+                                        <div class="metric-card danger">
+                                            <div class="metric-icon"><i class="fas fa-ban"></i></div>
+                                            <div class="metric-value" id="metric-limit">--</div>
+                                            <div class="metric-label">Max Possible</div>
+                                        </div>
                                     </div>
-                                    <div class="efficiency-bar">
-                                        <div class="efficiency-fill good" id="efficiency-fill" style="width: 100%;"></div>
+
+                                    <!-- Efficiency Display -->
+                                    <div class="efficiency-display">
+                                        <div class="efficiency-header">
+                                            <span><i class="fas fa-chart-bar"></i> Parallel Efficiency</span>
+                                            <span class="efficiency-value" id="efficiency-percent">100%</span>
+                                        </div>
+                                        <div class="efficiency-bar">
+                                            <div class="efficiency-fill good" id="efficiency-fill" style="width: 100%;"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1617,21 +3856,33 @@
                                         <i class="fas fa-snowflake"></i>
                                         <span>Fractal</span>
                                     </div>
-                                    <div class="image-option" data-image="landscape">
-                                        <i class="fas fa-mountain"></i>
-                                        <span>Terrain</span>
+                                    <div class="image-option" data-image="sphere3d">
+                                        <i class="fas fa-globe"></i>
+                                        <span>3D Sphere</span>
                                     </div>
-                                    <div class="image-option" data-image="retro">
-                                        <i class="fas fa-gamepad"></i>
-                                        <span>Retro Game</span>
+                                    <div class="image-option" data-image="raymarching">
+                                        <i class="fas fa-cube"></i>
+                                        <span>Raymarched</span>
                                     </div>
                                     <div class="image-option" data-image="galaxy">
                                         <i class="fas fa-star"></i>
                                         <span>Galaxy</span>
                                     </div>
-                                    <div class="image-option" data-image="art">
-                                        <i class="fas fa-palette"></i>
-                                        <span>Abstract</span>
+                                    <div class="image-option" data-image="ocean">
+                                        <i class="fas fa-water"></i>
+                                        <span>Ocean</span>
+                                    </div>
+                                    <div class="image-option" data-image="tunnel">
+                                        <i class="fas fa-circle-notch"></i>
+                                        <span>3D Tunnel</span>
+                                    </div>
+                                    <div class="image-option" data-image="terrain3d">
+                                        <i class="fas fa-mountain"></i>
+                                        <span>3D Terrain</span>
+                                    </div>
+                                    <div class="image-option" data-image="particles">
+                                        <i class="fas fa-atom"></i>
+                                        <span>Particles</span>
                                     </div>
                                 </div>
                             </div>
@@ -1764,9 +4015,131 @@
                             </div>
                         </div>
                     </div>
-                </div>
 
-            </div>
+                    <!-- Animation Comparison Section - Full Width -->
+                    <div class="panel animation-comparison-section" style="margin-top: 2rem;">
+                        <h2><i class="fas fa-film"></i> Now Imagine: Animating Your <span id="anim-image-name">Plasma</span></h2>
+                        <p style="color: var(--frontier-text-secondary); margin-bottom: 1.5rem;">
+                            You just rendered a single <strong><span id="anim-image-type">Plasma</span></strong> image. But what if you wanted to create an animated GIF or video? 
+                            Each frame requires the same computation. <strong>The CPU vs GPU gap becomes catastrophic.</strong>
+                        </p>
+
+                        <!-- Animation Preview showing selected image -->
+                        <div class="animation-preview-row">
+                            <div class="animation-preview-card">
+                                <div class="preview-icon" id="anim-preview-icon">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <div class="preview-info">
+                                    <div class="preview-title">Selected: <span id="anim-selected-type">Plasma</span></div>
+                                    <div class="preview-desc">Each frame = full recalculation of every pixel</div>
+                                </div>
+                                <div class="preview-arrow">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                                <div class="preview-output">
+                                    <i class="fas fa-film"></i>
+                                    <span id="anim-frame-preview">24 frames</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="animation-scenario">
+                            <div class="animation-header">
+                                <div class="animation-title">
+                                    <i class="fas fa-video"></i>
+                                    <span>Animated <span id="anim-title-type">Plasma</span> Render</span>
+                                </div>
+                                <div class="animation-header-controls">
+                                    <div class="frame-count-selector">
+                                        <label for="frame-count">Frames:</label>
+                                        <select id="frame-count">
+                                            <option value="12">12 frames (0.5s GIF)</option>
+                                            <option value="24" selected>24 frames (1s GIF)</option>
+                                            <option value="60">60 frames (2s video)</option>
+                                            <option value="120">120 frames (4s video)</option>
+                                        </select>
+                                    </div>
+                                    <div class="animation-buttons">
+                                        <button class="btn primary" id="start-animation-render">
+                                            <i class="fas fa-play"></i> Start
+                                        </button>
+                                        <button class="btn secondary" id="reset-animation-render">
+                                            <i class="fas fa-redo"></i> Reset
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CPU Filmstrip -->
+                            <div class="filmstrip-container">
+                                <div class="filmstrip-label cpu">
+                                    <i class="fas fa-microchip"></i> CPU - Sequential Processing (1 frame at a time)
+                                </div>
+                                <div class="filmstrip" id="cpu-filmstrip"></div>
+                            </div>
+
+                            <!-- GPU Filmstrip -->
+                            <div class="filmstrip-container">
+                                <div class="filmstrip-label gpu">
+                                    <i class="fas fa-bolt"></i> GPU - Parallel Processing (8 frames at once)
+                                </div>
+                                <div class="filmstrip" id="gpu-filmstrip"></div>
+                            </div>
+
+                            <!-- Timeline Visualization -->
+                            <div class="timeline-viz">
+                                <h4><i class="fas fa-clock"></i> Time Comparison</h4>
+                                <div class="timeline-row">
+                                    <div class="timeline-label cpu">CPU</div>
+                                    <div class="timeline-bar-container">
+                                        <div class="timeline-bar cpu" id="cpu-timeline-bar" style="width: 0%;">
+                                            <span id="cpu-timeline-text">0s</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="timeline-row">
+                                    <div class="timeline-label gpu">GPU</div>
+                                    <div class="timeline-bar-container">
+                                        <div class="timeline-bar gpu" id="gpu-timeline-bar" style="width: 0%;">
+                                            <span id="gpu-timeline-text">0s</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Animation Stats -->
+                            <div class="animation-stats-grid">
+                                <div class="animation-stat-card cpu">
+                                    <div class="stat-icon"><i class="fas fa-microchip"></i></div>
+                                    <div class="stat-value" id="anim-cpu-time">--</div>
+                                    <div class="stat-label">CPU Total Time</div>
+                                </div>
+                                <div class="animation-stat-card gpu">
+                                    <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+                                    <div class="stat-value" id="anim-gpu-time">--</div>
+                                    <div class="stat-label">GPU Total Time</div>
+                                </div>
+                                <div class="animation-stat-card highlight">
+                                    <div class="stat-icon"><i class="fas fa-rocket"></i></div>
+                                    <div class="stat-value" id="anim-speedup">--</div>
+                                    <div class="stat-label">Total Speedup</div>
+                                </div>
+                                <div class="animation-stat-card highlight">
+                                    <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+                                    <div class="stat-value" id="anim-time-saved">--</div>
+                                    <div class="stat-label">Time Saved</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Insight Card for Animation -->
+                        <div class="insight-card" id="animation-insight" style="display: none; margin-top: 1.5rem;">
+                            <i class="fas fa-exclamation-triangle" style="color: var(--frontier-accent);"></i>
+                            <p id="animation-insight-text"></p>
+                        </div>
+                    </div>
+                </div>
         </section>
 
         <!-- Footer -->
@@ -1782,6 +4155,24 @@
     <script src="../../assets/js/util.js"></script>
     <script src="../../assets/js/main.js"></script>
     <script src="../../assets/js/theme-toggle.js"></script>
+    <script>
+        // Override theme toggle for Frontier app - use separate storage key and default to dark
+        (function() {
+            const FRONTIER_STORAGE_KEY = 'frontier-theme';
+            
+            // Override the toggle button's click behavior
+            document.addEventListener('DOMContentLoaded', function() {
+                const toggleBtn = document.querySelector('.theme-toggle-btn, [data-theme-toggle]');
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', function() {
+                        const currentTheme = document.documentElement.getAttribute('data-theme');
+                        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                        localStorage.setItem(FRONTIER_STORAGE_KEY, newTheme);
+                    }, true); // Use capture to run before the default handler
+                }
+            });
+        })();
+    </script>
 
     <script>
         // ==================== GLOBAL UTILITIES ====================
@@ -1808,10 +4199,10 @@
             { id: 'queue', icon: 'fa-clock', label: 'Queue', color: '#f59e0b', x: 350, y: 30 },
             { id: 'schedule', icon: 'fa-calendar-check', label: 'Schedule', color: '#8b5cf6', x: 500, y: 30 },
             { id: 'allocate', icon: 'fa-server', label: 'Allocate', color: '#ec4899', x: 650, y: 30 },
-            { id: 'transfer', icon: 'fa-exchange-alt', label: 'Transfer', color: '#14b8a6', x: 650, y: 150 },
-            { id: 'execute', icon: 'fa-cogs', label: 'Execute', color: '#10b981', x: 350, y: 150 },
-            { id: 'collect', icon: 'fa-download', label: 'Collect', color: '#06b6d4', x: 50, y: 150 },
-            { id: 'complete', icon: 'fa-flag-checkered', label: 'Complete', color: '#22c55e', x: 50, y: 270 }
+            { id: 'transfer', icon: 'fa-exchange-alt', label: 'Transfer', color: '#14b8a6', x: 650, y: 180 },
+            { id: 'execute', icon: 'fa-cogs', label: 'Execute', color: '#10b981', x: 350, y: 180 },
+            { id: 'collect', icon: 'fa-download', label: 'Collect', color: '#06b6d4', x: 50, y: 180 },
+            { id: 'complete', icon: 'fa-flag-checkered', label: 'Complete', color: '#22c55e', x: 50, y: 330 }
         ];
 
         let workflowAborted = false;
@@ -1985,6 +4376,7 @@
             if (workflowAborted) {
                 addTerminalLine('Job aborted by user', 'error');
                 pkg.classList.remove('visible');
+                document.getElementById('hpc-suggestions').classList.remove('visible');
             } else {
                 // Show stats
                 document.getElementById('job-stats').style.display = 'grid';
@@ -1995,6 +4387,9 @@
                 document.getElementById('stat-runtime').textContent = runtime + 's';
                 document.getElementById('stat-efficiency').textContent = efficiency + '%';
                 document.getElementById('stat-cost').textContent = suCost + ' SU';
+                
+                // Generate and show suggestions
+                showHPCSuggestions(cores, memory, problemSize, parseFloat(efficiency), parseFloat(runtime), parseFloat(suCost));
             }
             
             btn.disabled = false;
@@ -2023,6 +4418,79 @@
             line.scrollIntoView({ behavior: 'smooth' });
         }
 
+        function showHPCSuggestions(cores, memory, problemSize, efficiency, runtime, suCost) {
+            const suggestions = [];
+            const sizes = ['Small', 'Medium', 'Large'];
+            const problemName = sizes[problemSize - 1];
+            
+            // Efficiency-based suggestions
+            if (efficiency < 70) {
+                suggestions.push({
+                    type: 'warning',
+                    icon: 'fa-exclamation-circle',
+                    text: `Efficiency is ${efficiency.toFixed(0)}%. Consider reducing cores to ${Math.ceil(cores * 0.6)} - you may get similar runtime at lower cost.`
+                });
+            } else if (efficiency > 85) {
+                suggestions.push({
+                    type: 'good',
+                    icon: 'fa-check-circle',
+                    text: `Great efficiency at ${efficiency.toFixed(0)}%! Your job is making good use of allocated resources.`
+                });
+            }
+            
+            // Core count suggestions
+            if (cores > 64 && problemSize < 3) {
+                suggestions.push({
+                    type: 'tip',
+                    icon: 'fa-lightbulb',
+                    text: `${cores} cores for a ${problemName} problem may be overkill. Try 32-64 cores first to find the sweet spot.`
+                });
+            }
+            
+            if (cores < 8 && problemSize === 3) {
+                suggestions.push({
+                    type: 'tip',
+                    icon: 'fa-rocket',
+                    text: `Large problems benefit from more parallelism. Consider increasing to 32+ cores for faster completion.`
+                });
+            }
+            
+            // Memory suggestions
+            if (memory > 256 && problemSize < 3) {
+                suggestions.push({
+                    type: 'warning',
+                    icon: 'fa-memory',
+                    text: `${memory}GB RAM allocated but likely not fully used. Right-sizing memory can reduce queue wait times.`
+                });
+            }
+            
+            // Cost suggestions
+            if (suCost > 5) {
+                suggestions.push({
+                    type: 'tip',
+                    icon: 'fa-coins',
+                    text: `Job costs ${suCost} SU. Consider running a smaller test first, then scale up once you've validated your approach.`
+                });
+            }
+            
+            // General best practices
+            if (suggestions.length < 2) {
+                suggestions.push({
+                    type: 'tip',
+                    icon: 'fa-info-circle',
+                    text: 'Pro tip: Always start with smaller resource requests and scale up. It\'s easier to get allocations for smaller jobs!'
+                });
+            }
+            
+            // Render suggestions
+            const list = document.getElementById('suggestion-list');
+            list.innerHTML = suggestions.map(s => 
+                `<li class="${s.type}"><i class="fas ${s.icon}"></i><span>${s.text}</span></li>`
+            ).join('');
+            
+            document.getElementById('hpc-suggestions').classList.add('visible');
+        }
+
         // Initialize factory on load
         initFactory();
 
@@ -2043,17 +4511,17 @@
         }
 
         // Slider updates
-        document.getElementById('work-units-slider').addEventListener('input', (e) => {
-            document.getElementById('work-units-value').textContent = e.target.value;
-            document.getElementById('pile-count').textContent = e.target.value;
-        });
-
         document.getElementById('workers-slider').addEventListener('input', (e) => {
             const count = parseInt(e.target.value);
             document.getElementById('workers-value').textContent = count;
             document.getElementById('active-workers').textContent = `0 / ${count} active`;
             initWorkersGrid(count);
             updateAmdahlLimit();
+            initWorkflowFlow(
+                parseInt(document.getElementById('work-units-slider').value),
+                count,
+                parseInt(document.getElementById('serial-slider').value) / 100
+            );
         });
 
         document.getElementById('serial-slider').addEventListener('input', (e) => {
@@ -2067,6 +4535,21 @@
             document.getElementById('amdahl-serial').textContent = serial + '%';
             
             updateAmdahlLimit();
+            initWorkflowFlow(
+                parseInt(document.getElementById('work-units-slider').value),
+                parseInt(document.getElementById('workers-slider').value),
+                serial / 100
+            );
+        });
+
+        document.getElementById('work-units-slider').addEventListener('input', (e) => {
+            document.getElementById('work-units-value').textContent = e.target.value;
+            document.getElementById('pile-count').textContent = e.target.value;
+            initWorkflowFlow(
+                parseInt(e.target.value),
+                parseInt(document.getElementById('workers-slider').value),
+                parseInt(document.getElementById('serial-slider').value) / 100
+            );
         });
 
         function updateAmdahlLimit() {
@@ -2091,6 +4574,7 @@
             // Reset
             document.getElementById('pile-count').textContent = workUnits;
             initWorkersGrid(workers);
+            initWorkflowFlow(workUnits, workers, serialFraction);
             
             // Calculate times
             const serialWork = Math.ceil(workUnits * serialFraction);
@@ -2099,6 +4583,7 @@
             const parallelTime = Math.ceil(parallelWork / workers) * 20;
             const totalTime = serialTime + parallelTime;
             const baseTime = workUnits * 20; // Time with 1 worker
+            const tasksPerLane = Math.ceil(parallelWork / workers);
             
             // Theoretical values
             const speedup = baseTime / totalTime;
@@ -2118,6 +4603,7 @@
                 document.getElementById('pile-count').textContent = remaining;
                 const pct = ((workUnits - remaining) / workUnits) * 100;
                 updateScalingMetrics(1, 100, pct * baseTime / 100);
+                animateSerialFlow(i, serialWork);
                 await sleep(15);
             }
             
@@ -2138,10 +4624,12 @@
             }
             
             // Process parallel work
+            let parallelProgress = 0;
             const unitsPerWorker = Math.ceil(parallelWork / workers);
             for (let i = 0; i < unitsPerWorker && remaining > 0; i++) {
                 const processed = Math.min(workers, remaining);
                 remaining -= processed;
+                parallelProgress += processed;
                 document.getElementById('pile-count').textContent = remaining;
                 
                 const elapsed = serialTime + (i + 1) * 20;
@@ -2149,8 +4637,12 @@
                 const currentEfficiency = (currentSpeedup / workers) * 100;
                 
                 updateScalingMetrics(currentSpeedup, currentEfficiency, elapsed);
+                animateParallelFlow(parallelProgress, parallelWork, workers, tasksPerLane);
                 await sleep(15);
             }
+            
+            // Complete the workflow flow visualization
+            completeWorkflowFlow();
             
             // Final state
             document.querySelectorAll('.worker').forEach(w => {
@@ -2197,9 +4689,113 @@
             document.getElementById('efficiency-fill').style.width = efficiency + '%';
         }
 
+        // Initialize and update workflow flow visualization
+        function initWorkflowFlow(workUnits, workers, serialFraction) {
+            const serialTasks = Math.ceil(workUnits * serialFraction);
+            const parallelTasks = workUnits - serialTasks;
+            const tasksPerLane = Math.ceil(parallelTasks / workers);
+            
+            // Create serial tasks container
+            const serialContainer = document.getElementById('serial-flow-tasks');
+            serialContainer.innerHTML = '';
+            const serialDisplayCount = Math.min(serialTasks, 8);
+            for (let i = 0; i < serialDisplayCount; i++) {
+                const task = document.createElement('div');
+                task.className = 'flow-task serial-task';
+                task.id = `serial-task-${i}`;
+                task.style.opacity = '0.3';
+                serialContainer.appendChild(task);
+            }
+            if (serialTasks > serialDisplayCount) {
+                const more = document.createElement('div');
+                more.className = 'flow-task serial-task';
+                more.style.opacity = '0.15';
+                more.style.height = '6px';
+                serialContainer.appendChild(more);
+            }
+            
+            // Create parallel lanes
+            const parallelContainer = document.getElementById('parallel-lanes');
+            parallelContainer.innerHTML = '';
+            const displayWorkers = Math.min(workers, 8);
+            parallelContainer.style.gridTemplateRows = `repeat(${displayWorkers}, 1fr)`;
+            
+            for (let w = 0; w < displayWorkers; w++) {
+                const lane = document.createElement('div');
+                lane.className = 'parallel-lane';
+                lane.id = `parallel-lane-${w}`;
+                
+                const displayTasks = Math.min(tasksPerLane, 10);
+                for (let t = 0; t < displayTasks; t++) {
+                    const task = document.createElement('div');
+                    task.className = 'parallel-task';
+                    task.id = `parallel-task-${w}-${t}`;
+                    lane.appendChild(task);
+                }
+                parallelContainer.appendChild(lane);
+            }
+        }
+
+        function animateSerialFlow(taskIndex, totalSerial) {
+            const displayCount = Math.min(totalSerial, 8);
+            const mappedIndex = Math.floor(taskIndex / totalSerial * displayCount);
+            
+            for (let i = 0; i < displayCount; i++) {
+                const task = document.getElementById(`serial-task-${i}`);
+                if (task) {
+                    if (i < mappedIndex) {
+                        task.style.opacity = '1';
+                        task.classList.remove('processing');
+                    } else if (i === mappedIndex) {
+                        task.style.opacity = '1';
+                        task.classList.add('processing');
+                    } else {
+                        task.style.opacity = '0.3';
+                        task.classList.remove('processing');
+                    }
+                }
+            }
+        }
+
+        function animateParallelFlow(taskIndex, parallelWork, workers, tasksPerLane) {
+            const displayWorkers = Math.min(workers, 8);
+            const displayTasks = Math.min(tasksPerLane, 10);
+            
+            for (let w = 0; w < displayWorkers; w++) {
+                const workerProgress = Math.floor(taskIndex / workers);
+                const mappedProgress = Math.floor(workerProgress / tasksPerLane * displayTasks);
+                
+                for (let t = 0; t < displayTasks; t++) {
+                    const task = document.getElementById(`parallel-task-${w}-${t}`);
+                    if (task) {
+                        if (t < mappedProgress) {
+                            task.classList.add('active');
+                            task.classList.remove('processing');
+                        } else if (t === mappedProgress) {
+                            task.classList.add('processing');
+                        } else {
+                            task.classList.remove('active', 'processing');
+                        }
+                    }
+                }
+            }
+        }
+
+        function completeWorkflowFlow() {
+            document.querySelectorAll('.serial-task').forEach(t => {
+                t.style.opacity = '1';
+                t.classList.remove('processing');
+            });
+            document.querySelectorAll('.parallel-task').forEach(t => {
+                t.classList.add('active');
+                t.classList.remove('processing');
+            });
+        }
+
         // Initialize
         initWorkersGrid(8);
         updateAmdahlLimit();
+        initWorkflowFlow(100, 8, 0.1);
 
         // ==================== MODULE 3: CPU vs GPU ====================
         const renderSizes = [32, 64, 128, 256, 512];
@@ -2216,11 +4812,35 @@
         }
 
         // Image selection
+        const imageDisplayNames = {
+            plasma: { name: 'Plasma', icon: 'fa-fire' },
+            mandelbrot: { name: 'Fractal', icon: 'fa-snowflake' },
+            raymarched: { name: '3D Spheres', icon: 'fa-cube' },
+            noise: { name: 'Perlin Noise', icon: 'fa-water' }
+        };
+
+        function updateAnimationSectionForImage(imageType) {
+            const displayInfo = imageDisplayNames[imageType] || { name: imageType, icon: 'fa-image' };
+            
+            // Update all animation section references
+            document.getElementById('anim-image-name').textContent = displayInfo.name;
+            document.getElementById('anim-image-type').textContent = displayInfo.name;
+            document.getElementById('anim-selected-type').textContent = displayInfo.name;
+            document.getElementById('anim-title-type').textContent = displayInfo.name;
+            
+            // Update the preview icon
+            const previewIcon = document.getElementById('anim-preview-icon');
+            previewIcon.innerHTML = `<i class="fas ${displayInfo.icon}"></i>`;
+        }
+
         document.querySelectorAll('.image-option').forEach(option => {
             option.addEventListener('click', () => {
                 document.querySelectorAll('.image-option').forEach(o => o.classList.remove('selected'));
                 option.classList.add('selected');
                 selectedImage = option.dataset.image;
+                
+                // Update animation section to reflect selected image
+                updateAnimationSectionForImage(selectedImage);
             });
         });
 
@@ -2256,27 +4876,73 @@
                 if (iter === 50) return { r: 0, g: 0, b: 0 };
                 return hslToRgb(iter / 50, 0.9, 0.5);
             },
-            landscape: (x, y, size) => {
-                const nx = x / size, ny = y / size;
-                const height = (Math.sin(nx * 8) * Math.cos(ny * 6) + 1) / 2;
-                if (height < 0.3) return { r: 30, g: 100, b: 180 }; // Water
-                if (height < 0.4) return { r: 230, g: 210, b: 160 }; // Sand
-                if (height < 0.7) return { r: 50, g: 150, b: 50 }; // Grass
-                if (height < 0.85) return { r: 100, g: 80, b: 60 }; // Mountain
-                return { r: 255, g: 255, b: 255 }; // Snow
+            sphere3d: (x, y, size) => {
+                // 3D sphere with lighting
+                const cx = size / 2, cy = size / 2;
+                const radius = size * 0.45;
+                const dx = x - cx, dy = y - cy;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist > radius) return { r: 5, g: 10, b: 25 }; // Background
+                
+                // Calculate z coordinate on sphere
+                const z = Math.sqrt(radius * radius - dist * dist);
+                // Normalize
+                const nx = dx / radius, ny = dy / radius, nz = z / radius;
+                // Light direction (top-right)
+                const lightX = 0.5, lightY = -0.5, lightZ = 0.7;
+                const lightLen = Math.sqrt(lightX*lightX + lightY*lightY + lightZ*lightZ);
+                const lx = lightX/lightLen, ly = lightY/lightLen, lz = lightZ/lightLen;
+                
+                // Diffuse lighting
+                const diffuse = Math.max(0, nx*lx + ny*ly + nz*lz);
+                // Specular highlight
+                const specular = Math.pow(Math.max(0, nz * lz + ny * ly + nx * lx), 32);
+                
+                const r = Math.floor(30 + diffuse * 150 + specular * 100);
+                const g = Math.floor(80 + diffuse * 120 + specular * 150);
+                const b = Math.floor(180 + diffuse * 50 + specular * 75);
+                
+                return { r: Math.min(255, r), g: Math.min(255, g), b: Math.min(255, b) };
             },
-            retro: (x, y, size) => {
-                const gridSize = 8;
-                const gx = Math.floor(x / gridSize);
-                const gy = Math.floor(y / gridSize);
-                const pattern = (gx + gy) % 4;
-                const colors = [
-                    { r: 255, g: 0, b: 128 },
-                    { r: 0, g: 255, b: 255 },
-                    { r: 255, g: 255, b: 0 },
-                    { r: 128, g: 0, b: 255 }
-                ];
-                return colors[pattern];
+            raymarching: (x, y, size) => {
+                // Simple raymarched scene with a box
+                const u = (x / size - 0.5) * 2;
+                const v = (y / size - 0.5) * 2;
+                
+                // Ray origin and direction
+                const ox = 0, oy = 0, oz = -3;
+                const len = Math.sqrt(u*u + v*v + 1);
+                const dx = u / len, dy = v / len, dz = 1 / len;
+                
+                // March the ray
+                let t = 0;
+                for (let i = 0; i < 50; i++) {
+                    const px = ox + t * dx, py = oy + t * dy, pz = oz + t * dz;
+                    // Box SDF (centered at origin, size 1)
+                    const qx = Math.abs(px) - 0.5;
+                    const qy = Math.abs(py) - 0.5;
+                    const qz = Math.abs(pz) - 0.5;
+                    const d = Math.max(qx, Math.max(qy, qz));
+                    
+                    if (d < 0.01) {
+                        // Hit! Color based on normal
+                        const nx = qx > qy && qx > qz ? 1 : 0;
+                        const ny = qy > qx && qy > qz ? 1 : 0;
+                        const brightness = 0.5 + 0.5 * (1 - t / 5);
+                        return {
+                            r: Math.floor((100 + nx * 100) * brightness),
+                            g: Math.floor((150 + ny * 50) * brightness),
+                            b: Math.floor(200 * brightness)
+                        };
+                    }
+                    t += Math.max(0.01, d);
+                    if (t > 10) break;
+                }
+                
+                // Sky gradient
+                const skyGrad = 0.5 + v * 0.3;
+                return { r: Math.floor(20 * skyGrad), g: Math.floor(30 * skyGrad), b: Math.floor(60 * skyGrad) };
             },
             galaxy: (x, y, size) => {
                 const cx = size / 2, cy = size / 2;
@@ -2288,16 +4954,117 @@
                 const r = Math.floor(brightness * 200 + Math.random() * 55);
                 const g = Math.floor(brightness * 150 + Math.random() * 50);
                 const b = Math.floor(brightness * 255);
-                // Add stars
                 if (Math.random() < 0.01) return { r: 255, g: 255, b: 255 };
                 return { r, g, b };
             },
-            art: (x, y, size) => {
+            ocean: (x, y, size) => {
                 const nx = x / size, ny = y / size;
-                const wave1 = Math.sin(nx * 15) * Math.cos(ny * 15);
-                const wave2 = Math.sin((nx + ny) * 10);
-                const pattern = (wave1 + wave2 + 2) / 4;
-                return hslToRgb((pattern * 120 + 200) / 360, 0.7, 0.5 + pattern * 0.2);
+                // Multiple wave layers for realistic ocean
+                const wave1 = Math.sin(nx * 20 + ny * 5) * 0.5;
+                const wave2 = Math.sin(nx * 8 - ny * 15) * 0.3;
+                const wave3 = Math.sin((nx + ny) * 30) * 0.2;
+                const height = (wave1 + wave2 + wave3 + 1) / 2;
+                
+                // Deep to shallow water gradient + foam
+                const depthFactor = 1 - ny * 0.3;
+                const foam = height > 0.7 ? (height - 0.7) * 3 : 0;
+                
+                const r = Math.floor(20 + foam * 200);
+                const g = Math.floor(80 + height * 60 + foam * 150);
+                const b = Math.floor(140 * depthFactor + height * 80 + foam * 100);
+                
+                return { r: Math.min(255, r), g: Math.min(255, g), b: Math.min(255, b) };
+            },
+            tunnel: (x, y, size) => {
+                // Infinite tunnel effect
+                const cx = size / 2, cy = size / 2;
+                const dx = x - cx, dy = y - cy;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx);
+                
+                if (dist < 1) return { r: 0, g: 0, b: 0 };
+                
+                // Depth based on distance from center (inverse)
+                const depth = 100 / dist;
+                
+                // Ring pattern
+                const rings = Math.floor(depth * 8) % 2;
+                // Segment pattern
+                const segments = Math.floor((angle + Math.PI) / (Math.PI / 8)) % 2;
+                
+                const pattern = (rings + segments) % 2;
+                const brightness = Math.min(1, depth / 3);
+                
+                if (pattern === 0) {
+                    return { r: Math.floor(180 * brightness), g: Math.floor(60 * brightness), b: Math.floor(200 * brightness) };
+                } else {
+                    return { r: Math.floor(40 * brightness), g: Math.floor(180 * brightness), b: Math.floor(200 * brightness) };
+                }
+            },
+            terrain3d: (x, y, size) => {
+                // 3D heightmap terrain with lighting
+                const nx = x / size, ny = y / size;
+                
+                // Generate height using multiple octaves
+                const h1 = Math.sin(nx * 6) * Math.cos(ny * 5) * 0.5;
+                const h2 = Math.sin(nx * 12 + 1) * Math.cos(ny * 10 + 2) * 0.25;
+                const h3 = Math.sin(nx * 24 + 3) * Math.cos(ny * 20 + 1) * 0.125;
+                const height = (h1 + h2 + h3 + 0.875) / 1.75;
+                
+                // Calculate approximate normal for lighting
+                const eps = 0.02;
+                const hL = Math.sin((nx - eps) * 6) * Math.cos(ny * 5) * 0.5;
+                const hR = Math.sin((nx + eps) * 6) * Math.cos(ny * 5) * 0.5;
+                const hU = Math.sin(nx * 6) * Math.cos((ny - eps) * 5) * 0.5;
+                const hD = Math.sin(nx * 6) * Math.cos((ny + eps) * 5) * 0.5;
+                
+                const slopeX = (hR - hL) / (2 * eps);
+                const slopeY = (hD - hU) / (2 * eps);
+                const shade = 0.5 + 0.5 * Math.max(0, (slopeX + slopeY) / 2);
+                
+                // Color by height
+                if (height < 0.25) {
+                    return { r: Math.floor(30 * shade), g: Math.floor(80 * shade), b: Math.floor(160 * shade) };
+                } else if (height < 0.35) {
+                    return { r: Math.floor(200 * shade), g: Math.floor(180 * shade), b: Math.floor(140 * shade) };
+                } else if (height < 0.65) {
+                    return { r: Math.floor(50 * shade), g: Math.floor(140 * shade), b: Math.floor(50 * shade) };
+                } else if (height < 0.85) {
+                    return { r: Math.floor(90 * shade), g: Math.floor(70 * shade), b: Math.floor(50 * shade) };
+                } else {
+                    return { r: Math.floor(255 * shade), g: Math.floor(255 * shade), b: Math.floor(255 * shade) };
+                }
+            },
+            particles: (x, y, size) => {
+                // Particle system effect
+                const numParticles = 50;
+                let brightness = 0;
+                let hue = 0;
+                
+                // Pseudo-random seeded particles
+                for (let i = 0; i < numParticles; i++) {
+                    const seed = i * 12345.6789;
+                    const px = (Math.sin(seed) * 0.5 + 0.5) * size;
+                    const py = (Math.cos(seed * 1.5) * 0.5 + 0.5) * size;
+                    const psize = 3 + Math.abs(Math.sin(seed * 2)) * 15;
+                    
+                    const dx = x - px, dy = y - py;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < psize) {
+                        const glow = 1 - dist / psize;
+                        brightness += glow * glow;
+                        hue += (i / numParticles) * glow;
+                    }
+                }
+                
+                if (brightness < 0.01) return { r: 5, g: 10, b: 20 };
+                
+                brightness = Math.min(1, brightness);
+                hue = (hue / brightness) % 1;
+                
+                const color = hslToRgb(hue, 0.8, 0.3 + brightness * 0.5);
+                return color;
             }
         };
 
@@ -2450,6 +5217,212 @@
                 overlay.classList.add('hidden');
             }
         }
+
+        // ==================== ANIMATION COMPARISON ====================
+        let animationRenderRunning = false;
+        let animationAborted = false;
+
+        // Initialize filmstrips
+        function initializeFilmstrips() {
+            const frameCount = parseInt(document.getElementById('frame-count').value);
+            const cpuFilmstrip = document.getElementById('cpu-filmstrip');
+            const gpuFilmstrip = document.getElementById('gpu-filmstrip');
+            
+            cpuFilmstrip.innerHTML = '';
+            gpuFilmstrip.innerHTML = '';
+            
+            for (let i = 1; i <= frameCount; i++) {
+                const cpuFrame = document.createElement('div');
+                cpuFrame.className = 'frame';
+                cpuFrame.innerHTML = `<span>${i}</span>`;
+                cpuFrame.id = `cpu-frame-${i}`;
+                cpuFilmstrip.appendChild(cpuFrame);
+                
+                const gpuFrame = document.createElement('div');
+                gpuFrame.className = 'frame';
+                gpuFrame.innerHTML = `<span>${i}</span>`;
+                gpuFrame.id = `gpu-frame-${i}`;
+                gpuFilmstrip.appendChild(gpuFrame);
+            }
+            
+            // Update frame count preview
+            document.getElementById('anim-frame-preview').textContent = `${frameCount} frames`;
+            
+            // Reset stats
+            document.getElementById('anim-cpu-time').textContent = '--';
+            document.getElementById('anim-gpu-time').textContent = '--';
+            document.getElementById('anim-speedup').textContent = '--';
+            document.getElementById('anim-time-saved').textContent = '--';
+            document.getElementById('cpu-timeline-bar').style.width = '0%';
+            document.getElementById('gpu-timeline-bar').style.width = '0%';
+            document.getElementById('cpu-timeline-text').textContent = '0s';
+            document.getElementById('gpu-timeline-text').textContent = '0s';
+            document.getElementById('animation-insight').style.display = 'none';
+            
+            // Make sure animation section shows correct image type
+            if (typeof selectedImage !== 'undefined' && typeof updateAnimationSectionForImage === 'function') {
+                updateAnimationSectionForImage(selectedImage);
+            }
+        }
+
+        // Frame count selector
+        document.getElementById('frame-count').addEventListener('change', initializeFilmstrips);
+
+        // Start animation render
+        document.getElementById('start-animation-render').addEventListener('click', async function() {
+            if (animationRenderRunning) return;
+            animationRenderRunning = true;
+            animationAborted = false;
+            
+            const frameCount = parseInt(document.getElementById('frame-count').value);
+            const cpuTimePerFrame = 2.5; // seconds
+            const gpuTimePerFrame = 0.15; // seconds
+            const gpuBatchSize = 8; // frames processed in parallel
+            
+            // Reset frames
+            for (let i = 1; i <= frameCount; i++) {
+                document.getElementById(`cpu-frame-${i}`).className = 'frame';
+                document.getElementById(`gpu-frame-${i}`).className = 'frame';
+            }
+            
+            // Simulate rendering in parallel
+            const cpuPromise = simulateCPURender(frameCount, cpuTimePerFrame);
+            const gpuPromise = simulateGPURender(frameCount, gpuTimePerFrame, gpuBatchSize);
+            
+            await Promise.all([cpuPromise, gpuPromise]);
+            
+            // Calculate final stats
+            if (!animationAborted) {
+                const cpuTotal = frameCount * cpuTimePerFrame;
+                const gpuBatches = Math.ceil(frameCount / gpuBatchSize);
+                const gpuTotal = gpuBatches * gpuTimePerFrame * gpuBatchSize / gpuBatchSize + (frameCount * gpuTimePerFrame * 0.1);
+                const gpuActual = gpuBatches * 0.5; // More realistic timing
+                
+                document.getElementById('anim-cpu-time').textContent = cpuTotal.toFixed(1) + 's';
+                document.getElementById('anim-gpu-time').textContent = gpuActual.toFixed(1) + 's';
+                document.getElementById('anim-speedup').textContent = (cpuTotal / gpuActual).toFixed(0) + 'x';
+                document.getElementById('anim-time-saved').textContent = formatTimeSaved(cpuTotal - gpuActual);
+                
+                // Show insight
+                showAnimationInsight(frameCount, cpuTotal, gpuActual);
+            }
+            
+            animationRenderRunning = false;
+        });
+
+        async function simulateCPURender(frameCount, timePerFrame) {
+            const simulatedTimeScale = 50; // Speed up simulation
+            const delayPerFrame = (timePerFrame * 1000) / simulatedTimeScale;
+            
+            let elapsed = 0;
+            for (let i = 1; i <= frameCount && !animationAborted; i++) {
+                const frame = document.getElementById(`cpu-frame-${i}`);
+                frame.className = 'frame rendering';
+                
+                await sleep(delayPerFrame);
+                
+                frame.className = 'frame complete';
+                elapsed += timePerFrame;
+                
+                // Update timeline
+                const cpuTotal = frameCount * timePerFrame;
+                const progress = (elapsed / cpuTotal) * 100;
+                document.getElementById('cpu-timeline-bar').style.width = progress + '%';
+                document.getElementById('cpu-timeline-text').textContent = elapsed.toFixed(1) + 's';
+            }
+        }
+
+        async function simulateGPURender(frameCount, timePerFrame, batchSize) {
+            const simulatedTimeScale = 50;
+            const delayPerBatch = (timePerFrame * batchSize * 1000) / simulatedTimeScale / 4; // GPU is faster
+            
+            let elapsed = 0;
+            let framesCompleted = 0;
+            const totalBatches = Math.ceil(frameCount / batchSize);
+            
+            for (let batch = 0; batch < totalBatches && !animationAborted; batch++) {
+                const startFrame = batch * batchSize + 1;
+                const endFrame = Math.min(startFrame + batchSize - 1, frameCount);
+                
+                // Mark batch as rendering
+                for (let i = startFrame; i <= endFrame; i++) {
+                    document.getElementById(`gpu-frame-${i}`).className = 'frame rendering';
+                }
+                
+                await sleep(delayPerBatch);
+                
+                // Mark batch as complete
+                for (let i = startFrame; i <= endFrame; i++) {
+                    document.getElementById(`gpu-frame-${i}`).className = 'frame complete';
+                    framesCompleted++;
+                }
+                
+                elapsed += 0.5; // Batch time
+                
+                // Update timeline (GPU finishes much faster)
+                const gpuTotal = totalBatches * 0.5;
+                const progress = Math.min((elapsed / gpuTotal) * 100, 100);
+                document.getElementById('gpu-timeline-bar').style.width = progress + '%';
+                document.getElementById('gpu-timeline-text').textContent = elapsed.toFixed(1) + 's';
+            }
+        }
+
+        function formatTimeSaved(seconds) {
+            if (seconds < 60) {
+                return seconds.toFixed(0) + 's';
+            } else if (seconds < 3600) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}m ${secs}s`;
+            } else {
+                const hours = Math.floor(seconds / 3600);
+                const mins = Math.floor((seconds % 3600) / 60);
+                return `${hours}h ${mins}m`;
+            }
+        }
+
+        function showAnimationInsight(frameCount, cpuTime, gpuTime) {
+            const insight = document.getElementById('animation-insight');
+            const text = document.getElementById('animation-insight-text');
+            const imageName = document.getElementById('anim-selected-type').textContent || 'image';
+            
+            let message = '';
+            if (frameCount <= 24) {
+                message = `For a simple ${frameCount}-frame animated ${imageName}, the CPU would take ${cpuTime.toFixed(0)} seconds while the GPU finishes in just ${gpuTime.toFixed(1)} seconds. `;
+                message += `Imagine rendering a full movie at 24fps — that's 86,400 frames for just one hour of content!`;
+            } else if (frameCount <= 60) {
+                message = `Rendering ${frameCount} ${imageName} frames shows the power of parallelism. The GPU processes ${Math.ceil(frameCount/8)} batches simultaneously, `;
+                message += `while the CPU trudges through one frame at a time. At movie scale (millions of frames), this difference means days vs hours.`;
+            } else {
+                message = `At ${frameCount} ${imageName} frames, the GPU's ${(cpuTime/gpuTime).toFixed(0)}x speedup saves ${formatTimeSaved(cpuTime - gpuTime)}. `;
+                message += `Professional animation studios render millions of frames — GPUs turn weeks of CPU time into overnight jobs. `;
+                message += `This is why Pixar and Disney invest heavily in GPU render farms!`;
+            }
+            
+            text.textContent = message;
+            insight.style.display = 'flex';
+        }
+
+        // Reset animation
+        document.getElementById('reset-animation-render').addEventListener('click', function() {
+            animationAborted = true;
+            animationRenderRunning = false;
+            initializeFilmstrips();
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFilmstrips();
+        });
+
+        // Also initialize when switching to the GPU tab
+        document.querySelectorAll('.module-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                if (this.dataset.module === 'cpugpu') {
+                    setTimeout(initializeFilmstrips, 100);
+                }
+            });
+        });
 
         function hslToRgb(h, s, l) {
             let r, g, b;
