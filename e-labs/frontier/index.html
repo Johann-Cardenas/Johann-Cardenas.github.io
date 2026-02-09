@@ -1,0 +1,2481 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <script>
+        (function() {
+            var theme = localStorage.getItem('theme-preference') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <title>Frontier | HPC Intuition Engine</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../../assets/css/main.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* ==================== THEME VARIABLES ==================== */
+        :root {
+            --frontier-primary: #18a9a8;
+            --frontier-primary-hover: #14908f;
+            --frontier-primary-glow: rgba(24, 169, 168, 0.3);
+            --frontier-secondary: #d52349;
+            --frontier-secondary-hover: #b91d3f;
+            --frontier-accent: #f59e0b;
+            --frontier-success: #10b981;
+            --frontier-warning: #f59e0b;
+            --frontier-danger: #ef4444;
+            --frontier-info: #3b82f6;
+        }
+
+        [data-theme="light"] {
+            --frontier-bg: #ffffff;
+            --frontier-bg-alt: #f8fafc;
+            --frontier-bg-panel: #f1f5f9;
+            --frontier-bg-dark: #0f172a;
+            --frontier-text: #1e293b;
+            --frontier-text-secondary: #64748b;
+            --frontier-text-muted: #94a3b8;
+            --frontier-border: #e2e8f0;
+            --frontier-border-dark: #cbd5e1;
+            --frontier-card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        [data-theme="dark"] {
+            --frontier-bg: #111827;
+            --frontier-bg-alt: #0f172a;
+            --frontier-bg-panel: #1e293b;
+            --frontier-bg-dark: #0f172a;
+            --frontier-text: #f1f5f9;
+            --frontier-text-secondary: #cbd5e1;
+            --frontier-text-muted: #94a3b8;
+            --frontier-border: #334155;
+            --frontier-border-dark: #475569;
+            --frontier-card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ==================== APP CONTAINER ==================== */
+        .frontier-app {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: var(--frontier-bg);
+        }
+
+        /* ==================== HEADER ==================== */
+        .app-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 3rem 2rem;
+            background: linear-gradient(135deg, var(--frontier-bg-dark) 0%, #1e3a5f 100%);
+            border-radius: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, var(--frontier-primary-glow) 0%, transparent 40%),
+                radial-gradient(circle at 80% 20%, rgba(213, 35, 73, 0.2) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        .app-header h1 {
+            font-size: 3rem;
+            margin: 0 0 0.5rem 0;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            font-weight: 700;
+        }
+
+        .app-header h1 i {
+            color: var(--frontier-primary);
+            font-size: 2.5rem;
+        }
+
+        .app-header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(24, 169, 168, 0.2);
+            border: 1px solid rgba(24, 169, 168, 0.4);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            z-index: 10;
+        }
+
+        .back-btn:hover {
+            background: var(--frontier-primary);
+            border-color: var(--frontier-primary);
+            transform: translateX(-4px);
+        }
+
+        /* ==================== MODULE TABS ==================== */
+        .module-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .module-tab {
+            flex: 1;
+            min-width: 280px;
+            max-width: 400px;
+            padding: 1.5rem;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--frontier-bg-panel);
+            border: 2px solid var(--frontier-border);
+        }
+
+        .module-tab:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px var(--frontier-primary-glow);
+            border-color: var(--frontier-primary);
+        }
+
+        .module-tab.active {
+            border-color: var(--frontier-primary);
+            box-shadow: 0 8px 25px var(--frontier-primary-glow);
+            background: linear-gradient(135deg, var(--frontier-bg-panel), rgba(24, 169, 168, 0.1));
+        }
+
+        .module-tab .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .module-tab:nth-child(1) .icon { background: linear-gradient(135deg, var(--frontier-primary), #0d7377); }
+        .module-tab:nth-child(2) .icon { background: linear-gradient(135deg, var(--frontier-secondary), #a01b3a); }
+        .module-tab:nth-child(3) .icon { background: linear-gradient(135deg, var(--frontier-accent), #d97706); }
+
+        .module-tab .info h3 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1.15rem;
+            color: var(--frontier-text);
+        }
+
+        .module-tab .info p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--frontier-text-secondary);
+        }
+
+        /* ==================== MODULE CONTENT ==================== */
+        .module-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .module-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== PANELS ==================== */
+        .panel {
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            background: var(--frontier-bg-panel);
+            border: 1px solid var(--frontier-border);
+        }
+
+        .panel h2 {
+            margin: 0 0 1.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.4rem;
+            color: var(--frontier-text);
+        }
+
+        .panel h2 i {
+            color: var(--frontier-primary);
+        }
+
+        /* ==================== CONTROLS ==================== */
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--frontier-text);
+        }
+
+        .control-group .value {
+            background: var(--frontier-primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--frontier-border-dark);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--frontier-primary);
+            cursor: pointer;
+            box-shadow: 0 2px 8px var(--frontier-primary-glow);
+            transition: transform 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        /* ==================== BUTTONS ==================== */
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--frontier-primary), #0d7377);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--frontier-primary-glow);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--frontier-danger), #dc2626);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--frontier-border-dark);
+            color: var(--frontier-text);
+        }
+
+        .btn-secondary:hover {
+            background: var(--frontier-text-muted);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* ==================== MODULE 1: HPC WORKFLOW - FACTORY STYLE ==================== */
+        .workflow-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .workflow-container {
+                grid-template-columns: 320px 1fr;
+            }
+        }
+
+        /* Factory Visualization */
+        .factory-viz {
+            background: var(--frontier-bg-dark);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            min-height: 500px;
+        }
+
+        .factory-title {
+            color: white;
+            font-size: 1rem;
+            margin: 0 0 1.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            opacity: 0.8;
+        }
+
+        /* Conveyor Belt System */
+        .conveyor-system {
+            position: relative;
+            height: 400px;
+        }
+
+        .conveyor-station {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .station-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            position: relative;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .station-icon.waiting {
+            background: #475569;
+        }
+
+        .station-icon.active {
+            animation: stationPulse 1s ease infinite;
+        }
+
+        .station-icon.completed {
+            background: var(--frontier-success) !important;
+        }
+
+        @keyframes stationPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(24, 169, 168, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(24, 169, 168, 0.2); }
+        }
+
+        .station-label {
+            color: white;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            text-align: center;
+            font-weight: 500;
+            max-width: 90px;
+        }
+
+        .station-status {
+            color: var(--frontier-text-muted);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Conveyor Belts (SVG paths) */
+        .conveyor-paths {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .conveyor-path {
+            fill: none;
+            stroke: #334155;
+            stroke-width: 8;
+            stroke-linecap: round;
+        }
+
+        .conveyor-path-active {
+            fill: none;
+            stroke: var(--frontier-primary);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+        }
+
+        /* Job Package */
+        .job-package {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--frontier-primary), #0d7377);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(24, 169, 168, 0.5);
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .job-package.visible {
+            opacity: 1;
+        }
+
+        .job-package::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            background: inherit;
+            filter: blur(10px);
+            opacity: 0.5;
+            z-index: -1;
+        }
+
+        /* Resource Meters */
+        .resource-meters {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            right: 1rem;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+        }
+
+        .resource-meter {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        .meter-icon {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .meter-value {
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .meter-label {
+            color: var(--frontier-text-muted);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .meter-bar {
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        /* Terminal Output */
+        .terminal {
+            border-radius: 12px;
+            overflow: hidden;
+            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+            font-size: 0.8rem;
+            background: #0a0f1a;
+            margin-top: 1.5rem;
+        }
+
+        .terminal-header {
+            background: #1e293b;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .terminal-header .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-header .dot.red { background: #ef4444; }
+        .terminal-header .dot.yellow { background: #f59e0b; }
+        .terminal-header .dot.green { background: #10b981; }
+
+        .terminal-header span {
+            margin-left: auto;
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+
+        .terminal-body {
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+            color: #10b981;
+        }
+
+        .terminal-line {
+            margin-bottom: 0.25rem;
+            opacity: 0;
+            animation: terminalFadeIn 0.3s forwards;
+        }
+
+        @keyframes terminalFadeIn {
+            to { opacity: 1; }
+        }
+
+        .terminal-line .prompt { color: var(--frontier-primary); }
+        .terminal-line .comment { color: #64748b; }
+        .terminal-line .success { color: var(--frontier-success); }
+        .terminal-line .warning { color: var(--frontier-warning); }
+        .terminal-line .error { color: var(--frontier-danger); }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            background: var(--frontier-bg-alt);
+            border: 1px solid var(--frontier-border);
+        }
+
+        .stat-card .stat-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .stat-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--frontier-text);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.75rem;
+            color: var(--frontier-text-muted);
+            text-transform: uppercase;
+        }
+
+        /* ==================== MODULE 2: SCALING - VISUAL WORKERS ==================== */
+        .scaling-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .scaling-container {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        /* Worker Visualization */
+        .worker-visualization {
+            background: var(--frontier-bg-dark);
+            border-radius: 16px;
+            padding: 2rem;
+            min-height: 450px;
+        }
+
+        .worker-viz-title {
+            color: white;
+            font-size: 1rem;
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .work-pile {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+
+        .pile-icon {
+            font-size: 3rem;
+            color: var(--frontier-warning);
+        }
+
+        .pile-info h4 {
+            color: white;
+            margin: 0 0 0.25rem 0;
+            font-size: 1.1rem;
+        }
+
+        .pile-info p {
+            color: var(--frontier-text-muted);
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .pile-count {
+            margin-left: auto;
+            background: var(--frontier-warning);
+            color: #1a1a1a;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        /* Workers Grid */
+        .workers-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .workers-label {
+            color: var(--frontier-text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .workers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 0.5rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+
+        .worker {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .worker.idle {
+            background: #334155;
+            color: #64748b;
+        }
+
+        .worker.working {
+            background: var(--frontier-primary);
+            color: white;
+            animation: workerBusy 0.8s ease infinite;
+        }
+
+        .worker.overhead {
+            background: var(--frontier-danger);
+            color: white;
+            opacity: 0.6;
+        }
+
+        @keyframes workerBusy {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Scaling Metrics Display */
+        .scaling-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .metric-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .metric-card .metric-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-card .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .metric-card .metric-label {
+            font-size: 0.75rem;
+            color: var(--frontier-text-muted);
+            text-transform: uppercase;
+            margin-top: 0.25rem;
+        }
+
+        .metric-card.highlight .metric-value { color: var(--frontier-primary); }
+        .metric-card.warning .metric-value { color: var(--frontier-warning); }
+        .metric-card.success .metric-value { color: var(--frontier-success); }
+        .metric-card.danger .metric-value { color: var(--frontier-danger); }
+
+        /* Efficiency Bar */
+        .efficiency-display {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+
+        .efficiency-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .efficiency-header span {
+            color: var(--frontier-text-muted);
+            font-size: 0.85rem;
+        }
+
+        .efficiency-value {
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .efficiency-bar {
+            height: 20px;
+            background: #334155;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .efficiency-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        .efficiency-fill.good { background: linear-gradient(90deg, var(--frontier-success), #14b8a6); }
+        .efficiency-fill.medium { background: linear-gradient(90deg, var(--frontier-warning), #fbbf24); }
+        .efficiency-fill.poor { background: linear-gradient(90deg, var(--frontier-danger), #f87171); }
+
+        .efficiency-zones {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+        }
+
+        .efficiency-zone {
+            flex: 1;
+            border-right: 1px dashed rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.3);
+        }
+
+        /* Insight Card */
+        .insight-card {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            background: rgba(24, 169, 168, 0.1);
+            border: 1px solid rgba(24, 169, 168, 0.3);
+        }
+
+        .insight-card i {
+            font-size: 1.5rem;
+            color: var(--frontier-primary);
+            flex-shrink: 0;
+        }
+
+        .insight-card p {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--frontier-text);
+        }
+
+        /* Amdahl Limit Visual */
+        .amdahl-visual {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+        }
+
+        .amdahl-title {
+            color: var(--frontier-danger);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .amdahl-bar {
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .amdahl-parallel {
+            background: var(--frontier-success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: width 0.5s ease;
+        }
+
+        .amdahl-serial {
+            background: var(--frontier-danger);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .amdahl-explanation {
+            color: var(--frontier-text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.75rem;
+            line-height: 1.5;
+        }
+
+        /* ==================== MODULE 3: CPU vs GPU ==================== */
+        .cpugpu-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .cpugpu-container {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        /* Image Selection */
+        .image-selection {
+            margin-bottom: 1.5rem;
+        }
+
+        .image-selection-label {
+            color: var(--frontier-text);
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .image-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+
+        .image-option {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            border: 3px solid var(--frontier-border);
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--frontier-bg-alt);
+            padding: 0.5rem;
+        }
+
+        .image-option:hover {
+            border-color: var(--frontier-primary);
+            transform: translateY(-2px);
+        }
+
+        .image-option.selected {
+            border-color: var(--frontier-primary);
+            box-shadow: 0 0 15px var(--frontier-primary-glow);
+        }
+
+        .image-option i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--frontier-text-secondary);
+        }
+
+        .image-option.selected i {
+            color: var(--frontier-primary);
+        }
+
+        .image-option span {
+            font-size: 0.7rem;
+            color: var(--frontier-text-muted);
+            text-align: center;
+        }
+
+        /* Render Comparison */
+        .render-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .render-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .render-panel {
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--frontier-bg-alt);
+            border: 1px solid var(--frontier-border);
+        }
+
+        .render-header {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: white;
+        }
+
+        .render-panel.cpu .render-header {
+            background: linear-gradient(135deg, var(--frontier-secondary), #a01b3a);
+        }
+
+        .render-panel.gpu .render-header {
+            background: linear-gradient(135deg, var(--frontier-success), #059669);
+        }
+
+        .render-canvas-container {
+            position: relative;
+            aspect-ratio: 1;
+            background: #0a0f1a;
+            overflow: hidden;
+        }
+
+        .render-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            image-rendering: pixelated;
+        }
+
+        .render-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.7);
+            color: white;
+        }
+
+        .render-overlay.hidden {
+            display: none;
+        }
+
+        .render-overlay i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .render-overlay span {
+            font-size: 1rem;
+        }
+
+        .render-stats {
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            background: var(--frontier-bg-panel);
+        }
+
+        .render-stat {
+            text-align: center;
+            padding: 0.5rem;
+        }
+
+        .render-stat .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .render-stat .stat-label {
+            font-size: 0.7rem;
+            color: var(--frontier-text-muted);
+            text-transform: uppercase;
+        }
+
+        .render-panel.cpu .render-stat .stat-value { color: var(--frontier-secondary); }
+        .render-panel.gpu .render-stat .stat-value { color: var(--frontier-success); }
+
+        /* Progress indicators for render */
+        .render-progress {
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .render-progress-fill {
+            height: 100%;
+            transition: width 0.1s linear;
+        }
+
+        .render-panel.cpu .render-progress-fill { background: var(--frontier-secondary); }
+        .render-panel.gpu .render-progress-fill { background: var(--frontier-success); }
+
+        /* Speed Comparison */
+        .speed-comparison {
+            margin-top: 1.5rem;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(24, 169, 168, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .speed-comparison h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.1rem;
+            color: var(--frontier-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .speedup-value {
+            font-size: 4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--frontier-success), var(--frontier-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .speedup-label {
+            font-size: 1rem;
+            color: var(--frontier-text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Why GPU section */
+        .why-gpu {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: var(--frontier-bg-alt);
+            border: 1px solid var(--frontier-border);
+        }
+
+        .why-gpu h4 {
+            margin: 0 0 1rem 0;
+            color: var(--frontier-text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .processor-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .processor-card {
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .processor-card.cpu-card {
+            background: rgba(213, 35, 73, 0.1);
+            border: 1px solid rgba(213, 35, 73, 0.3);
+        }
+
+        .processor-card.gpu-card {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .processor-card h5 {
+            margin: 0 0 0.75rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .processor-card.cpu-card h5 { color: var(--frontier-secondary); }
+        .processor-card.gpu-card h5 { color: var(--frontier-success); }
+
+        .core-viz {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .core {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .cpu-card .core {
+            background: var(--frontier-secondary);
+            width: 30px;
+            height: 30px;
+        }
+
+        .gpu-card .core {
+            background: var(--frontier-success);
+            width: 8px;
+            height: 8px;
+        }
+
+        .processor-card p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--frontier-text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .frontier-app {
+                padding: 1rem;
+            }
+
+            .app-header h1 {
+                font-size: 2rem;
+            }
+
+            .module-tab {
+                min-width: 100%;
+            }
+
+            .processor-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="Frontier is-preload">
+    <div id="page-wrapper">
+        <!-- Header -->
+        <section id="header">
+            <div id="nav-placeholder"></div>
+        </section>
+
+        <!-- Main App -->
+        <section id="main">
+            <div class="frontier-app">
+                <!-- App Header -->
+                <div class="app-header">
+                    <a href="../../E-Labs.html" class="back-btn">
+                        <i class="fas fa-arrow-left"></i> Back to E-Labs
+                    </a>
+                    <h1><i class="fas fa-server"></i> Frontier</h1>
+                    <p>A Hands-On High Performance Computing Intuition Engine</p>
+                </div>
+
+                <!-- Module Tabs -->
+                <div class="module-tabs">
+                    <div class="module-tab active" data-module="workflow">
+                        <div class="icon"><i class="fas fa-industry"></i></div>
+                        <div class="info">
+                            <h3>HPC Workflow</h3>
+                            <p>From Click to Results</p>
+                        </div>
+                    </div>
+                    <div class="module-tab" data-module="scaling">
+                        <div class="icon"><i class="fas fa-users-cog"></i></div>
+                        <div class="info">
+                            <h3>Scaling</h3>
+                            <p>Why Optimization Hits a Wall</p>
+                        </div>
+                    </div>
+                    <div class="module-tab" data-module="cpugpu">
+                        <div class="icon"><i class="fas fa-bolt"></i></div>
+                        <div class="info">
+                            <h3>CPU vs GPU</h3>
+                            <p>Parallel Processing Power</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== MODULE 1: HPC WORKFLOW ==================== -->
+                <div class="module-content active" id="module-workflow">
+                    <div class="workflow-container">
+                        <!-- Controls Panel -->
+                        <div class="panel">
+                            <h2><i class="fas fa-sliders-h"></i> Job Configuration</h2>
+                            
+                            <div class="control-group">
+                                <label>
+                                    <span><i class="fas fa-microchip"></i> CPU Cores</span>
+                                    <span class="value" id="cores-value">16</span>
+                                </label>
+                                <input type="range" id="cores-slider" min="1" max="128" value="16">
+                            </div>
+
+                            <div class="control-group">
+                                <label>
+                                    <span><i class="fas fa-memory"></i> Memory (GB)</span>
+                                    <span class="value" id="memory-value">64</span>
+                                </label>
+                                <input type="range" id="memory-slider" min="4" max="512" value="64" step="4">
+                            </div>
+
+                            <div class="control-group">
+                                <label>
+                                    <span><i class="fas fa-clock"></i> Walltime (hours)</span>
+                                    <span class="value" id="walltime-value">2</span>
+                                </label>
+                                <input type="range" id="walltime-slider" min="1" max="48" value="2">
+                            </div>
+
+                            <div class="control-group">
+                                <label>
+                                    <span><i class="fas fa-cube"></i> Problem Size</span>
+                                    <span class="value" id="problem-value">Medium</span>
+                                </label>
+                                <input type="range" id="problem-slider" min="1" max="3" value="2">
+                            </div>
+
+                            <div class="btn-group">
+                                <button class="btn btn-primary" id="submit-job" style="flex: 1;">
+                                    <i class="fas fa-play"></i> Submit Job
+                                </button>
+                                <button class="btn btn-danger" id="abort-job" style="display: none;">
+                                    <i class="fas fa-stop"></i> Abort
+                                </button>
+                            </div>
+
+                            <!-- Terminal Output -->
+                            <div class="terminal" id="job-terminal" style="display: none;">
+                                <div class="terminal-header">
+                                    <div class="dot red"></div>
+                                    <div class="dot yellow"></div>
+                                    <div class="dot green"></div>
+                                    <span>frontier-login01</span>
+                                </div>
+                                <div class="terminal-body" id="terminal-output"></div>
+                            </div>
+
+                            <!-- Stats -->
+                            <div class="stats-grid" id="job-stats" style="display: none;">
+                                <div class="stat-card">
+                                    <div class="stat-icon" style="color: var(--frontier-primary)"><i class="fas fa-stopwatch"></i></div>
+                                    <div class="stat-value" id="stat-runtime">--</div>
+                                    <div class="stat-label">Runtime</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon" style="color: var(--frontier-success)"><i class="fas fa-tachometer-alt"></i></div>
+                                    <div class="stat-value" id="stat-efficiency">--</div>
+                                    <div class="stat-label">Efficiency</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon" style="color: var(--frontier-warning)"><i class="fas fa-coins"></i></div>
+                                    <div class="stat-value" id="stat-cost">--</div>
+                                    <div class="stat-label">SU Cost</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Factory Visualization -->
+                        <div class="panel" style="padding: 0; overflow: hidden;">
+                            <div class="factory-viz" id="factory-viz">
+                                <p class="factory-title"><i class="fas fa-industry"></i> HPC Job Pipeline</p>
+                                
+                                <!-- Conveyor System -->
+                                <div class="conveyor-system" id="conveyor-system">
+                                    <svg class="conveyor-paths" id="conveyor-paths" viewBox="0 0 800 350" preserveAspectRatio="xMidYMid meet">
+                                        <!-- Paths will be drawn dynamically -->
+                                    </svg>
+                                    
+                                    <!-- Job Package (animated) -->
+                                    <div class="job-package" id="job-package">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                    
+                                    <!-- Stations will be added dynamically -->
+                                </div>
+
+                                <!-- Resource Meters -->
+                                <div class="resource-meters" id="resource-meters">
+                                    <div class="resource-meter">
+                                        <div class="meter-icon" style="color: var(--frontier-primary)"><i class="fas fa-microchip"></i></div>
+                                        <div class="meter-value" id="meter-cores">0</div>
+                                        <div class="meter-label">Cores</div>
+                                        <div class="meter-bar"><div class="meter-fill" id="meter-cores-fill" style="width: 0%; background: var(--frontier-primary);"></div></div>
+                                    </div>
+                                    <div class="resource-meter">
+                                        <div class="meter-icon" style="color: var(--frontier-success)"><i class="fas fa-memory"></i></div>
+                                        <div class="meter-value" id="meter-memory">0</div>
+                                        <div class="meter-label">Memory</div>
+                                        <div class="meter-bar"><div class="meter-fill" id="meter-memory-fill" style="width: 0%; background: var(--frontier-success);"></div></div>
+                                    </div>
+                                    <div class="resource-meter">
+                                        <div class="meter-icon" style="color: var(--frontier-warning)"><i class="fas fa-hdd"></i></div>
+                                        <div class="meter-value" id="meter-io">0</div>
+                                        <div class="meter-label">I/O</div>
+                                        <div class="meter-bar"><div class="meter-fill" id="meter-io-fill" style="width: 0%; background: var(--frontier-warning);"></div></div>
+                                    </div>
+                                    <div class="resource-meter">
+                                        <div class="meter-icon" style="color: var(--frontier-secondary)"><i class="fas fa-network-wired"></i></div>
+                                        <div class="meter-value" id="meter-network">0</div>
+                                        <div class="meter-label">Network</div>
+                                        <div class="meter-bar"><div class="meter-fill" id="meter-network-fill" style="width: 0%; background: var(--frontier-secondary);"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== MODULE 2: SCALING ==================== -->
+                <div class="module-content" id="module-scaling">
+                    <div class="scaling-container">
+                        <!-- Controls Panel -->
+                        <div class="panel">
+                            <h2><i class="fas fa-sliders-h"></i> Experiment Setup</h2>
+                            
+                            <div class="control-group">
+                                <label>
+                                    <span><i class="fas fa-boxes"></i> Work Units</span>
+                                    <span class="value" id="work-units-value">100</span>
+                                </label>
+                                <input type="range" id="work-units-slider" min="50" max="500" value="100" step="10">
+                            </div>
+
+                            <div class="control-group">
+                                <label>
+                                    <span><i class="fas fa-users"></i> Workers</span>
+                                    <span class="value" id="workers-value">8</span>
+                                </label>
+                                <input type="range" id="workers-slider" min="1" max="64" value="8">
+                            </div>
+
+                            <div class="control-group">
+                                <label>
+                                    <span><i class="fas fa-link"></i> Serial Portion</span>
+                                    <span class="value" id="serial-value">10%</span>
+                                </label>
+                                <input type="range" id="serial-slider" min="1" max="50" value="10">
+                            </div>
+
+                            <button class="btn btn-primary" id="run-scaling" style="width: 100%; margin-top: 0.5rem;">
+                                <i class="fas fa-play"></i> Run Experiment
+                            </button>
+
+                            <!-- Amdahl's Law Visual -->
+                            <div class="amdahl-visual" id="amdahl-visual">
+                                <div class="amdahl-title">
+                                    <i class="fas fa-exclamation-triangle"></i> Your Code Breakdown
+                                </div>
+                                <div class="amdahl-bar">
+                                    <div class="amdahl-parallel" id="amdahl-parallel" style="width: 90%;">
+                                        <i class="fas fa-bolt"></i> 90% Parallel
+                                    </div>
+                                    <div class="amdahl-serial" id="amdahl-serial" style="width: 10%;">
+                                        10%
+                                    </div>
+                                </div>
+                                <p class="amdahl-explanation" id="amdahl-explanation">
+                                    The <strong style="color: var(--frontier-danger);">serial portion</strong> cannot be parallelized. 
+                                    No matter how many workers you add, this part takes the same time!
+                                </p>
+                            </div>
+
+                            <!-- Insight -->
+                            <div class="insight-card" id="scaling-insight" style="display: none;">
+                                <i class="fas fa-lightbulb"></i>
+                                <p id="insight-text">Run an experiment to see insights.</p>
+                            </div>
+                        </div>
+
+                        <!-- Worker Visualization -->
+                        <div class="panel" style="padding: 0; overflow: hidden;">
+                            <div class="worker-visualization" id="worker-viz">
+                                <p class="worker-viz-title"><i class="fas fa-users-cog"></i> Live Scaling Simulation</p>
+                                
+                                <!-- Work Pile -->
+                                <div class="work-pile" id="work-pile">
+                                    <div class="pile-icon"><i class="fas fa-layer-group"></i></div>
+                                    <div class="pile-info">
+                                        <h4>Work Queue</h4>
+                                        <p>Tasks waiting to be processed</p>
+                                    </div>
+                                    <div class="pile-count" id="pile-count">100</div>
+                                </div>
+
+                                <!-- Workers -->
+                                <div class="workers-container">
+                                    <div class="workers-label">
+                                        <span><i class="fas fa-users"></i> Worker Pool</span>
+                                        <span id="active-workers">0 / 8 active</span>
+                                    </div>
+                                    <div class="workers-grid" id="workers-grid">
+                                        <!-- Workers added dynamically -->
+                                    </div>
+                                </div>
+
+                                <!-- Metrics -->
+                                <div class="scaling-metrics" id="scaling-metrics">
+                                    <div class="metric-card highlight">
+                                        <div class="metric-icon"><i class="fas fa-tachometer-alt"></i></div>
+                                        <div class="metric-value" id="metric-speedup">1.0×</div>
+                                        <div class="metric-label">Speedup</div>
+                                    </div>
+                                    <div class="metric-card success">
+                                        <div class="metric-icon"><i class="fas fa-percentage"></i></div>
+                                        <div class="metric-value" id="metric-efficiency">100%</div>
+                                        <div class="metric-label">Efficiency</div>
+                                    </div>
+                                    <div class="metric-card warning">
+                                        <div class="metric-icon"><i class="fas fa-clock"></i></div>
+                                        <div class="metric-value" id="metric-time">--</div>
+                                        <div class="metric-label">Time</div>
+                                    </div>
+                                    <div class="metric-card danger">
+                                        <div class="metric-icon"><i class="fas fa-ban"></i></div>
+                                        <div class="metric-value" id="metric-limit">--</div>
+                                        <div class="metric-label">Max Possible</div>
+                                    </div>
+                                </div>
+
+                                <!-- Efficiency Display -->
+                                <div class="efficiency-display">
+                                    <div class="efficiency-header">
+                                        <span><i class="fas fa-chart-bar"></i> Parallel Efficiency</span>
+                                        <span class="efficiency-value" id="efficiency-percent">100%</span>
+                                    </div>
+                                    <div class="efficiency-bar">
+                                        <div class="efficiency-fill good" id="efficiency-fill" style="width: 100%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== MODULE 3: CPU vs GPU ==================== -->
+                <div class="module-content" id="module-cpugpu">
+                    <div class="cpugpu-container">
+                        <!-- Controls Panel -->
+                        <div class="panel">
+                            <h2><i class="fas fa-sliders-h"></i> Render Settings</h2>
+                            
+                            <!-- Image Selection -->
+                            <div class="image-selection">
+                                <span class="image-selection-label"><i class="fas fa-image"></i> Choose Image to Render</span>
+                                <div class="image-options">
+                                    <div class="image-option selected" data-image="plasma">
+                                        <i class="fas fa-fire"></i>
+                                        <span>Plasma</span>
+                                    </div>
+                                    <div class="image-option" data-image="mandelbrot">
+                                        <i class="fas fa-snowflake"></i>
+                                        <span>Fractal</span>
+                                    </div>
+                                    <div class="image-option" data-image="landscape">
+                                        <i class="fas fa-mountain"></i>
+                                        <span>Terrain</span>
+                                    </div>
+                                    <div class="image-option" data-image="retro">
+                                        <i class="fas fa-gamepad"></i>
+                                        <span>Retro Game</span>
+                                    </div>
+                                    <div class="image-option" data-image="galaxy">
+                                        <i class="fas fa-star"></i>
+                                        <span>Galaxy</span>
+                                    </div>
+                                    <div class="image-option" data-image="art">
+                                        <i class="fas fa-palette"></i>
+                                        <span>Abstract</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label>
+                                    <span><i class="fas fa-th"></i> Resolution</span>
+                                    <span class="value" id="render-size-value">64×64</span>
+                                </label>
+                                <input type="range" id="render-size-slider" min="1" max="5" value="2">
+                            </div>
+
+                            <div class="btn-group" style="margin-top: 1rem;">
+                                <button class="btn btn-primary" id="start-render" style="flex: 1;">
+                                    <i class="fas fa-play"></i> Start Render
+                                </button>
+                                <button class="btn btn-danger" id="abort-render" style="display: none;">
+                                    <i class="fas fa-stop"></i> Abort
+                                </button>
+                            </div>
+
+                            <!-- Why GPU Section -->
+                            <div class="why-gpu">
+                                <h4><i class="fas fa-question-circle"></i> Why is GPU faster?</h4>
+                                <div class="processor-comparison">
+                                    <div class="processor-card cpu-card">
+                                        <h5><i class="fas fa-microchip"></i> CPU</h5>
+                                        <div class="core-viz">
+                                            <div class="core"></div>
+                                            <div class="core"></div>
+                                            <div class="core"></div>
+                                            <div class="core"></div>
+                                            <div class="core"></div>
+                                            <div class="core"></div>
+                                            <div class="core"></div>
+                                            <div class="core"></div>
+                                        </div>
+                                        <p>8 powerful cores<br>Sequential processing</p>
+                                    </div>
+                                    <div class="processor-card gpu-card">
+                                        <h5><i class="fas fa-bolt"></i> GPU</h5>
+                                        <div class="core-viz" id="gpu-cores-viz">
+                                            <!-- Many small cores -->
+                                        </div>
+                                        <p>1000s of simple cores<br>Massive parallelism</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Speed Comparison -->
+                            <div class="speed-comparison" id="speed-comparison" style="display: none;">
+                                <h3><i class="fas fa-trophy"></i> GPU Advantage</h3>
+                                <div class="speedup-value" id="gpu-speedup">--×</div>
+                                <div class="speedup-label">faster than CPU</div>
+                            </div>
+                        </div>
+
+                        <!-- Render Panel -->
+                        <div class="panel">
+                            <h2><i class="fas fa-images"></i> Live Render Comparison</h2>
+                            
+                            <div class="render-comparison">
+                                <!-- CPU Render -->
+                                <div class="render-panel cpu">
+                                    <div class="render-header">
+                                        <i class="fas fa-microchip"></i> CPU
+                                    </div>
+                                    <div class="render-progress">
+                                        <div class="render-progress-fill" id="cpu-progress" style="width: 0%;"></div>
+                                    </div>
+                                    <div class="render-canvas-container">
+                                        <canvas id="cpu-canvas" class="render-canvas"></canvas>
+                                        <div class="render-overlay" id="cpu-overlay">
+                                            <i class="fas fa-image"></i>
+                                            <span>Ready to render</span>
+                                        </div>
+                                    </div>
+                                    <div class="render-stats">
+                                        <div class="render-stat">
+                                            <div class="stat-value" id="cpu-time">0.00s</div>
+                                            <div class="stat-label">Time</div>
+                                        </div>
+                                        <div class="render-stat">
+                                            <div class="stat-value" id="cpu-progress-pct">0%</div>
+                                            <div class="stat-label">Progress</div>
+                                        </div>
+                                        <div class="render-stat">
+                                            <div class="stat-value" id="cpu-pixels">0</div>
+                                            <div class="stat-label">Pixels/s</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- GPU Render -->
+                                <div class="render-panel gpu">
+                                    <div class="render-header">
+                                        <i class="fas fa-bolt"></i> GPU
+                                    </div>
+                                    <div class="render-progress">
+                                        <div class="render-progress-fill" id="gpu-progress" style="width: 0%;"></div>
+                                    </div>
+                                    <div class="render-canvas-container">
+                                        <canvas id="gpu-canvas" class="render-canvas"></canvas>
+                                        <div class="render-overlay" id="gpu-overlay">
+                                            <i class="fas fa-image"></i>
+                                            <span>Ready to render</span>
+                                        </div>
+                                    </div>
+                                    <div class="render-stats">
+                                        <div class="render-stat">
+                                            <div class="stat-value" id="gpu-time">0.00s</div>
+                                            <div class="stat-label">Time</div>
+                                        </div>
+                                        <div class="render-stat">
+                                            <div class="stat-value" id="gpu-progress-pct">0%</div>
+                                            <div class="stat-label">Progress</div>
+                                        </div>
+                                        <div class="render-stat">
+                                            <div class="stat-value" id="gpu-pixels">0</div>
+                                            <div class="stat-label">Pixels/s</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Insight -->
+                            <div class="insight-card" id="gpu-insight" style="display: none;">
+                                <i class="fas fa-lightbulb"></i>
+                                <p id="gpu-insight-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <div id="footer-placeholder"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../../assets/js/components.js"></script>
+    <script src="../../assets/js/jquery.min.js"></script>
+    <script src="../../assets/js/jquery.dropotron.min.js"></script>
+    <script src="../../assets/js/browser.min.js"></script>
+    <script src="../../assets/js/breakpoints.min.js"></script>
+    <script src="../../assets/js/util.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/theme-toggle.js"></script>
+
+    <script>
+        // ==================== GLOBAL UTILITIES ====================
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // ==================== TAB NAVIGATION ====================
+        document.querySelectorAll('.module-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.module-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const moduleId = tab.dataset.module;
+                document.querySelectorAll('.module-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(`module-${moduleId}`).classList.add('active');
+            });
+        });
+
+        // ==================== MODULE 1: HPC WORKFLOW ====================
+        const workflowStations = [
+            { id: 'submit', icon: 'fa-paper-plane', label: 'Submit', color: '#18a9a8', x: 50, y: 30 },
+            { id: 'validate', icon: 'fa-check-circle', label: 'Validate', color: '#3b82f6', x: 200, y: 30 },
+            { id: 'queue', icon: 'fa-clock', label: 'Queue', color: '#f59e0b', x: 350, y: 30 },
+            { id: 'schedule', icon: 'fa-calendar-check', label: 'Schedule', color: '#8b5cf6', x: 500, y: 30 },
+            { id: 'allocate', icon: 'fa-server', label: 'Allocate', color: '#ec4899', x: 650, y: 30 },
+            { id: 'transfer', icon: 'fa-exchange-alt', label: 'Transfer', color: '#14b8a6', x: 650, y: 150 },
+            { id: 'execute', icon: 'fa-cogs', label: 'Execute', color: '#10b981', x: 350, y: 150 },
+            { id: 'collect', icon: 'fa-download', label: 'Collect', color: '#06b6d4', x: 50, y: 150 },
+            { id: 'complete', icon: 'fa-flag-checkered', label: 'Complete', color: '#22c55e', x: 50, y: 270 }
+        ];
+
+        let workflowAborted = false;
+        let workflowRunning = false;
+
+        // Initialize factory visualization
+        function initFactory() {
+            const container = document.getElementById('conveyor-system');
+            const svg = document.getElementById('conveyor-paths');
+            
+            // Clear existing stations
+            container.querySelectorAll('.conveyor-station').forEach(s => s.remove());
+            
+            // Create stations
+            workflowStations.forEach(station => {
+                const stationEl = document.createElement('div');
+                stationEl.className = 'conveyor-station';
+                stationEl.id = `station-${station.id}`;
+                stationEl.style.left = `${station.x}px`;
+                stationEl.style.top = `${station.y}px`;
+                
+                stationEl.innerHTML = `
+                    <div class="station-icon waiting" style="background: ${station.color};">
+                        <i class="fas ${station.icon}"></i>
+                    </div>
+                    <div class="station-label">${station.label}</div>
+                    <div class="station-status" id="status-${station.id}">Waiting</div>
+                `;
+                
+                container.appendChild(stationEl);
+            });
+            
+            // Draw conveyor paths
+            const paths = [
+                { from: 0, to: 1 }, { from: 1, to: 2 }, { from: 2, to: 3 }, { from: 3, to: 4 },
+                { from: 4, to: 5 }, { from: 5, to: 6 }, { from: 6, to: 7 }, { from: 7, to: 8 }
+            ];
+            
+            let pathsHTML = '';
+            paths.forEach((path, idx) => {
+                const from = workflowStations[path.from];
+                const to = workflowStations[path.to];
+                const x1 = from.x + 35;
+                const y1 = from.y + 35;
+                const x2 = to.x + 35;
+                const y2 = to.y + 35;
+                
+                pathsHTML += `
+                    <path class="conveyor-path" d="M${x1},${y1} L${x2},${y2}" />
+                    <path class="conveyor-path-active" id="path-${idx}" d="M${x1},${y1} L${x2},${y2}" />
+                `;
+            });
+            
+            svg.innerHTML = pathsHTML;
+        }
+
+        // Slider updates
+        document.getElementById('cores-slider').addEventListener('input', (e) => {
+            document.getElementById('cores-value').textContent = e.target.value;
+        });
+
+        document.getElementById('memory-slider').addEventListener('input', (e) => {
+            document.getElementById('memory-value').textContent = e.target.value;
+        });
+
+        document.getElementById('walltime-slider').addEventListener('input', (e) => {
+            document.getElementById('walltime-value').textContent = e.target.value;
+        });
+
+        document.getElementById('problem-slider').addEventListener('input', (e) => {
+            const sizes = ['Small', 'Medium', 'Large'];
+            document.getElementById('problem-value').textContent = sizes[e.target.value - 1];
+        });
+
+        // Abort job
+        document.getElementById('abort-job').addEventListener('click', () => {
+            workflowAborted = true;
+        });
+
+        // Submit job
+        document.getElementById('submit-job').addEventListener('click', async () => {
+            if (workflowRunning) return;
+            workflowRunning = true;
+            workflowAborted = false;
+            
+            const btn = document.getElementById('submit-job');
+            const abortBtn = document.getElementById('abort-job');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
+            abortBtn.style.display = 'flex';
+            
+            // Get values
+            const cores = parseInt(document.getElementById('cores-slider').value);
+            const memory = parseInt(document.getElementById('memory-slider').value);
+            const problemSize = parseInt(document.getElementById('problem-slider').value);
+            
+            // Reset visualization
+            initFactory();
+            document.getElementById('job-terminal').style.display = 'block';
+            document.getElementById('terminal-output').innerHTML = '';
+            document.getElementById('job-stats').style.display = 'none';
+            
+            const pkg = document.getElementById('job-package');
+            pkg.classList.add('visible');
+            
+            // Reset meters
+            updateMeter('cores', 0, 128);
+            updateMeter('memory', 0, 512);
+            updateMeter('io', 0, 100);
+            updateMeter('network', 0, 100);
+            
+            const stepsData = [
+                { station: 'submit', msg: 'Submitting job to scheduler...', delay: 500 },
+                { station: 'validate', msg: 'Validating job script...', delay: 400 },
+                { station: 'queue', msg: 'Job queued. Waiting for resources...', delay: 1500 },
+                { station: 'schedule', msg: 'Job scheduled for execution', delay: 600 },
+                { station: 'allocate', msg: `Allocating ${cores} cores and ${memory}GB RAM...`, delay: 800 },
+                { station: 'transfer', msg: 'Transferring input data to compute nodes...', delay: 700 },
+                { station: 'execute', msg: 'Executing computation...', delay: 2000, isExecution: true },
+                { station: 'collect', msg: 'Collecting output files...', delay: 600 },
+                { station: 'complete', msg: 'Job completed successfully!', delay: 300 }
+            ];
+            
+            for (let i = 0; i < stepsData.length; i++) {
+                if (workflowAborted) break;
+                
+                const step = stepsData[i];
+                const stationIdx = workflowStations.findIndex(s => s.id === step.station);
+                const station = workflowStations[stationIdx];
+                
+                // Animate package movement
+                await animatePackage(pkg, station.x + 15, station.y + 15);
+                
+                // Activate station
+                const stationIcon = document.querySelector(`#station-${step.station} .station-icon`);
+                stationIcon.classList.remove('waiting');
+                stationIcon.classList.add('active');
+                document.getElementById(`status-${step.station}`).textContent = 'Processing...';
+                
+                // Activate path
+                if (i > 0) {
+                    const pathEl = document.getElementById(`path-${i - 1}`);
+                    pathEl.style.strokeDashoffset = '0';
+                    pathEl.style.transition = 'stroke-dashoffset 0.5s ease';
+                }
+                
+                // Add terminal line
+                addTerminalLine(step.msg, step.station === 'complete' ? 'success' : '');
+                
+                // Update meters during execution
+                if (step.isExecution) {
+                    updateMeter('cores', cores, 128);
+                    updateMeter('memory', memory, 512);
+                    
+                    for (let p = 0; p <= 100 && !workflowAborted; p += 10) {
+                        updateMeter('io', 30 + Math.random() * 40, 100);
+                        updateMeter('network', 20 + Math.random() * 30, 100);
+                        addTerminalLine(`  Progress: ${p}%`, 'comment');
+                        await sleep(step.delay / 10);
+                    }
+                } else {
+                    await sleep(step.delay);
+                }
+                
+                // Complete station
+                stationIcon.classList.remove('active');
+                stationIcon.classList.add('completed');
+                document.getElementById(`status-${step.station}`).textContent = 'Done';
+            }
+            
+            if (workflowAborted) {
+                addTerminalLine('Job aborted by user', 'error');
+                pkg.classList.remove('visible');
+            } else {
+                // Show stats
+                document.getElementById('job-stats').style.display = 'grid';
+                const runtime = (5 + Math.random() * 3).toFixed(1);
+                const efficiency = Math.max(60, 100 - cores * 0.4 + Math.random() * 10).toFixed(0);
+                const suCost = (cores * parseFloat(runtime) / 60).toFixed(1);
+                
+                document.getElementById('stat-runtime').textContent = runtime + 's';
+                document.getElementById('stat-efficiency').textContent = efficiency + '%';
+                document.getElementById('stat-cost').textContent = suCost + ' SU';
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-play"></i> Submit Job';
+            abortBtn.style.display = 'none';
+            workflowRunning = false;
+        });
+
+        async function animatePackage(pkg, x, y) {
+            pkg.style.transition = 'left 0.4s ease, top 0.4s ease';
+            pkg.style.left = x + 'px';
+            pkg.style.top = y + 'px';
+            await sleep(400);
+        }
+
+        function updateMeter(type, value, max) {
+            document.getElementById(`meter-${type}`).textContent = Math.round(value);
+            document.getElementById(`meter-${type}-fill`).style.width = (value / max * 100) + '%';
+        }
+
+        function addTerminalLine(text, type = '') {
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            line.innerHTML = type ? `<span class="${type}">${text}</span>` : text;
+            document.getElementById('terminal-output').appendChild(line);
+            line.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize factory on load
+        initFactory();
+
+        // ==================== MODULE 2: SCALING ====================
+        let scalingRunning = false;
+
+        // Initialize workers grid
+        function initWorkersGrid(count) {
+            const grid = document.getElementById('workers-grid');
+            grid.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const worker = document.createElement('div');
+                worker.className = 'worker idle';
+                worker.id = `worker-${i}`;
+                worker.innerHTML = '<i class="fas fa-user"></i>';
+                grid.appendChild(worker);
+            }
+        }
+
+        // Slider updates
+        document.getElementById('work-units-slider').addEventListener('input', (e) => {
+            document.getElementById('work-units-value').textContent = e.target.value;
+            document.getElementById('pile-count').textContent = e.target.value;
+        });
+
+        document.getElementById('workers-slider').addEventListener('input', (e) => {
+            const count = parseInt(e.target.value);
+            document.getElementById('workers-value').textContent = count;
+            document.getElementById('active-workers').textContent = `0 / ${count} active`;
+            initWorkersGrid(count);
+            updateAmdahlLimit();
+        });
+
+        document.getElementById('serial-slider').addEventListener('input', (e) => {
+            const serial = parseInt(e.target.value);
+            document.getElementById('serial-value').textContent = serial + '%';
+            
+            // Update Amdahl visual
+            document.getElementById('amdahl-parallel').style.width = (100 - serial) + '%';
+            document.getElementById('amdahl-parallel').innerHTML = `<i class="fas fa-bolt"></i> ${100 - serial}% Parallel`;
+            document.getElementById('amdahl-serial').style.width = serial + '%';
+            document.getElementById('amdahl-serial').textContent = serial + '%';
+            
+            updateAmdahlLimit();
+        });
+
+        function updateAmdahlLimit() {
+            const serial = parseInt(document.getElementById('serial-slider').value) / 100;
+            const limit = 1 / serial;
+            document.getElementById('metric-limit').textContent = limit.toFixed(1) + '×';
+        }
+
+        // Run scaling experiment
+        document.getElementById('run-scaling').addEventListener('click', async () => {
+            if (scalingRunning) return;
+            scalingRunning = true;
+            
+            const btn = document.getElementById('run-scaling');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
+            
+            const workUnits = parseInt(document.getElementById('work-units-slider').value);
+            const workers = parseInt(document.getElementById('workers-slider').value);
+            const serialFraction = parseInt(document.getElementById('serial-slider').value) / 100;
+            
+            // Reset
+            document.getElementById('pile-count').textContent = workUnits;
+            initWorkersGrid(workers);
+            
+            // Calculate times
+            const serialWork = Math.ceil(workUnits * serialFraction);
+            const parallelWork = workUnits - serialWork;
+            const serialTime = serialWork * 20; // 20ms per unit
+            const parallelTime = Math.ceil(parallelWork / workers) * 20;
+            const totalTime = serialTime + parallelTime;
+            const baseTime = workUnits * 20; // Time with 1 worker
+            
+            // Theoretical values
+            const speedup = baseTime / totalTime;
+            const efficiency = (speedup / workers) * 100;
+            const amdahlLimit = 1 / serialFraction;
+            
+            // Animate serial portion first
+            let remaining = workUnits;
+            
+            document.getElementById('active-workers').textContent = `1 / ${workers} active (serial)`;
+            document.getElementById('worker-0').classList.remove('idle');
+            document.getElementById('worker-0').classList.add('working');
+            
+            // Process serial work
+            for (let i = 0; i < serialWork && remaining > 0; i++) {
+                remaining--;
+                document.getElementById('pile-count').textContent = remaining;
+                const pct = ((workUnits - remaining) / workUnits) * 100;
+                updateScalingMetrics(1, 100, pct * baseTime / 100);
+                await sleep(15);
+            }
+            
+            // Now parallel portion - all workers active
+            document.getElementById('active-workers').textContent = `${workers} / ${workers} active (parallel)`;
+            document.querySelectorAll('.worker').forEach(w => {
+                w.classList.remove('idle');
+                w.classList.add('working');
+            });
+            
+            // Mark overhead workers if efficiency is low
+            if (efficiency < 50) {
+                const overheadCount = Math.floor(workers * (1 - efficiency / 100));
+                for (let i = workers - overheadCount; i < workers; i++) {
+                    document.getElementById(`worker-${i}`).classList.remove('working');
+                    document.getElementById(`worker-${i}`).classList.add('overhead');
+                }
+            }
+            
+            // Process parallel work
+            const unitsPerWorker = Math.ceil(parallelWork / workers);
+            for (let i = 0; i < unitsPerWorker && remaining > 0; i++) {
+                const processed = Math.min(workers, remaining);
+                remaining -= processed;
+                document.getElementById('pile-count').textContent = remaining;
+                
+                const elapsed = serialTime + (i + 1) * 20;
+                const currentSpeedup = (baseTime * ((workUnits - remaining) / workUnits)) / elapsed;
+                const currentEfficiency = (currentSpeedup / workers) * 100;
+                
+                updateScalingMetrics(currentSpeedup, currentEfficiency, elapsed);
+                await sleep(15);
+            }
+            
+            // Final state
+            document.querySelectorAll('.worker').forEach(w => {
+                w.classList.remove('working', 'overhead');
+                w.classList.add('idle');
+            });
+            
+            document.getElementById('active-workers').textContent = `0 / ${workers} active`;
+            document.getElementById('metric-speedup').textContent = speedup.toFixed(1) + '×';
+            document.getElementById('metric-efficiency').textContent = efficiency.toFixed(0) + '%';
+            document.getElementById('metric-time').textContent = (totalTime / 1000).toFixed(2) + 's';
+            document.getElementById('metric-limit').textContent = amdahlLimit.toFixed(1) + '×';
+            
+            // Update efficiency bar
+            const effFill = document.getElementById('efficiency-fill');
+            effFill.style.width = efficiency + '%';
+            effFill.className = 'efficiency-fill ' + (efficiency > 70 ? 'good' : efficiency > 40 ? 'medium' : 'poor');
+            document.getElementById('efficiency-percent').textContent = efficiency.toFixed(0) + '%';
+            
+            // Show insight
+            const insight = document.getElementById('scaling-insight');
+            insight.style.display = 'flex';
+            
+            let insightText = '';
+            if (efficiency > 80) {
+                insightText = `Excellent efficiency! With ${workers} workers, you achieved ${speedup.toFixed(1)}× speedup. Your ${serialFraction * 100}% serial code isn't a bottleneck yet.`;
+            } else if (efficiency > 50) {
+                insightText = `Decent scaling, but ${(100 - efficiency).toFixed(0)}% of your computing power is wasted. The ${serialFraction * 100}% serial portion limits your maximum speedup to ${amdahlLimit.toFixed(1)}×.`;
+            } else {
+                insightText = `Poor scaling! Adding more workers beyond ${Math.ceil(workers * efficiency / 100)} doesn't help much. The ${serialFraction * 100}% serial code is your bottleneck. Focus on parallelizing that portion!`;
+            }
+            document.getElementById('insight-text').textContent = insightText;
+            
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-play"></i> Run Experiment';
+            scalingRunning = false;
+        });
+
+        function updateScalingMetrics(speedup, efficiency, time) {
+            document.getElementById('metric-speedup').textContent = speedup.toFixed(1) + '×';
+            document.getElementById('metric-efficiency').textContent = efficiency.toFixed(0) + '%';
+            document.getElementById('metric-time').textContent = (time / 1000).toFixed(2) + 's';
+            document.getElementById('efficiency-percent').textContent = efficiency.toFixed(0) + '%';
+            document.getElementById('efficiency-fill').style.width = efficiency + '%';
+        }
+
+        // Initialize
+        initWorkersGrid(8);
+        updateAmdahlLimit();
+
+        // ==================== MODULE 3: CPU vs GPU ====================
+        const renderSizes = [32, 64, 128, 256, 512];
+        let selectedImage = 'plasma';
+        let renderAborted = false;
+        let renderRunning = false;
+
+        // Generate GPU cores visualization
+        const gpuCoresViz = document.getElementById('gpu-cores-viz');
+        for (let i = 0; i < 80; i++) {
+            const core = document.createElement('div');
+            core.className = 'core';
+            gpuCoresViz.appendChild(core);
+        }
+
+        // Image selection
+        document.querySelectorAll('.image-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.image-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedImage = option.dataset.image;
+            });
+        });
+
+        // Size slider
+        document.getElementById('render-size-slider').addEventListener('input', (e) => {
+            const size = renderSizes[e.target.value - 1];
+            document.getElementById('render-size-value').textContent = `${size}×${size}`;
+        });
+
+        // Abort render
+        document.getElementById('abort-render').addEventListener('click', () => {
+            renderAborted = true;
+        });
+
+        // Image generators
+        const imageGenerators = {
+            plasma: (x, y, size, t) => {
+                const nx = x / size, ny = y / size;
+                let val = Math.sin(nx * 10 + t) + Math.sin(ny * 10 + t) + Math.sin((nx + ny) * 10);
+                val = (val + 3) / 6;
+                return hslToRgb((val * 360 + t * 50) % 360 / 360, 0.8, 0.5);
+            },
+            mandelbrot: (x, y, size) => {
+                const cx = (x / size - 0.7) * 3;
+                const cy = (y / size - 0.5) * 3;
+                let zx = 0, zy = 0, iter = 0;
+                while (zx * zx + zy * zy < 4 && iter < 50) {
+                    const tmp = zx * zx - zy * zy + cx;
+                    zy = 2 * zx * zy + cy;
+                    zx = tmp;
+                    iter++;
+                }
+                if (iter === 50) return { r: 0, g: 0, b: 0 };
+                return hslToRgb(iter / 50, 0.9, 0.5);
+            },
+            landscape: (x, y, size) => {
+                const nx = x / size, ny = y / size;
+                const height = (Math.sin(nx * 8) * Math.cos(ny * 6) + 1) / 2;
+                if (height < 0.3) return { r: 30, g: 100, b: 180 }; // Water
+                if (height < 0.4) return { r: 230, g: 210, b: 160 }; // Sand
+                if (height < 0.7) return { r: 50, g: 150, b: 50 }; // Grass
+                if (height < 0.85) return { r: 100, g: 80, b: 60 }; // Mountain
+                return { r: 255, g: 255, b: 255 }; // Snow
+            },
+            retro: (x, y, size) => {
+                const gridSize = 8;
+                const gx = Math.floor(x / gridSize);
+                const gy = Math.floor(y / gridSize);
+                const pattern = (gx + gy) % 4;
+                const colors = [
+                    { r: 255, g: 0, b: 128 },
+                    { r: 0, g: 255, b: 255 },
+                    { r: 255, g: 255, b: 0 },
+                    { r: 128, g: 0, b: 255 }
+                ];
+                return colors[pattern];
+            },
+            galaxy: (x, y, size) => {
+                const cx = size / 2, cy = size / 2;
+                const dx = x - cx, dy = y - cy;
+                const dist = Math.sqrt(dx * dx + dy * dy) / (size / 2);
+                const angle = Math.atan2(dy, dx);
+                const spiral = (angle + dist * 5) % (Math.PI * 2);
+                const brightness = Math.max(0, 1 - dist) * (0.5 + 0.5 * Math.sin(spiral * 3));
+                const r = Math.floor(brightness * 200 + Math.random() * 55);
+                const g = Math.floor(brightness * 150 + Math.random() * 50);
+                const b = Math.floor(brightness * 255);
+                // Add stars
+                if (Math.random() < 0.01) return { r: 255, g: 255, b: 255 };
+                return { r, g, b };
+            },
+            art: (x, y, size) => {
+                const nx = x / size, ny = y / size;
+                const wave1 = Math.sin(nx * 15) * Math.cos(ny * 15);
+                const wave2 = Math.sin((nx + ny) * 10);
+                const pattern = (wave1 + wave2 + 2) / 4;
+                return hslToRgb((pattern * 120 + 200) / 360, 0.7, 0.5 + pattern * 0.2);
+            }
+        };
+
+        // Start render
+        document.getElementById('start-render').addEventListener('click', async () => {
+            if (renderRunning) return;
+            renderRunning = true;
+            renderAborted = false;
+            
+            const btn = document.getElementById('start-render');
+            const abortBtn = document.getElementById('abort-render');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Rendering...';
+            abortBtn.style.display = 'flex';
+            
+            const sizeIndex = parseInt(document.getElementById('render-size-slider').value) - 1;
+            const size = renderSizes[sizeIndex];
+            const totalPixels = size * size;
+            
+            // Setup canvases
+            const cpuCanvas = document.getElementById('cpu-canvas');
+            const gpuCanvas = document.getElementById('gpu-canvas');
+            cpuCanvas.width = size;
+            cpuCanvas.height = size;
+            gpuCanvas.width = size;
+            gpuCanvas.height = size;
+            
+            const cpuCtx = cpuCanvas.getContext('2d');
+            const gpuCtx = gpuCanvas.getContext('2d');
+            cpuCtx.fillStyle = '#0a0f1a';
+            cpuCtx.fillRect(0, 0, size, size);
+            gpuCtx.fillStyle = '#0a0f1a';
+            gpuCtx.fillRect(0, 0, size, size);
+            
+            // Reset displays
+            document.getElementById('cpu-overlay').innerHTML = '<div class="spinner"></div><span>Rendering...</span>';
+            document.getElementById('gpu-overlay').innerHTML = '<div class="spinner"></div><span>Rendering...</span>';
+            document.getElementById('cpu-overlay').classList.remove('hidden');
+            document.getElementById('gpu-overlay').classList.remove('hidden');
+            document.getElementById('cpu-progress').style.width = '0%';
+            document.getElementById('gpu-progress').style.width = '0%';
+            document.getElementById('speed-comparison').style.display = 'none';
+            document.getElementById('gpu-insight').style.display = 'none';
+            
+            // Calculate times
+            const gpuSpeedup = 10 + sizeIndex * 8;
+            const cpuTotalTime = totalPixels * 0.3; // ms
+            const gpuTotalTime = cpuTotalTime / gpuSpeedup;
+            
+            // Start both renders
+            const cpuPromise = renderCPU(cpuCtx, size, cpuTotalTime);
+            const gpuPromise = renderGPU(gpuCtx, size, gpuTotalTime);
+            
+            await Promise.all([cpuPromise, gpuPromise]);
+            
+            if (!renderAborted) {
+                // Show results
+                document.getElementById('speed-comparison').style.display = 'block';
+                document.getElementById('gpu-speedup').textContent = gpuSpeedup.toFixed(0) + '×';
+                
+                document.getElementById('gpu-insight').style.display = 'flex';
+                document.getElementById('gpu-insight-text').textContent = 
+                    `The GPU rendered ${totalPixels.toLocaleString()} pixels ${gpuSpeedup.toFixed(0)}× faster! ` +
+                    `While the CPU processed pixels one-by-one, the GPU computed ${Math.min(totalPixels, 1024).toLocaleString()} pixels simultaneously. ` +
+                    `This is why GPUs excel at graphics, AI training, and scientific simulations!`;
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-play"></i> Start Render';
+            abortBtn.style.display = 'none';
+            renderRunning = false;
+        });
+
+        async function renderCPU(ctx, size, totalTime) {
+            const overlay = document.getElementById('cpu-overlay');
+            const totalPixels = size * size;
+            const pixelsPerFrame = Math.max(1, Math.floor(totalPixels / (totalTime / 33)));
+            
+            let rendered = 0;
+            const startTime = performance.now();
+            const generator = imageGenerators[selectedImage];
+            
+            while (rendered < totalPixels && !renderAborted) {
+                const batchEnd = Math.min(rendered + pixelsPerFrame, totalPixels);
+                
+                for (let i = rendered; i < batchEnd; i++) {
+                    const x = i % size;
+                    const y = Math.floor(i / size);
+                    const color = generator(x, y, size, 0);
+                    ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+                    ctx.fillRect(x, y, 1, 1);
+                }
+                
+                rendered = batchEnd;
+                const elapsed = performance.now() - startTime;
+                const progress = (rendered / totalPixels * 100);
+                const pixelsPerSec = Math.floor(rendered / (elapsed / 1000));
+                
+                document.getElementById('cpu-time').textContent = (elapsed / 1000).toFixed(2) + 's';
+                document.getElementById('cpu-progress-pct').textContent = progress.toFixed(0) + '%';
+                document.getElementById('cpu-pixels').textContent = pixelsPerSec.toLocaleString();
+                document.getElementById('cpu-progress').style.width = progress + '%';
+                
+                await sleep(33);
+            }
+            
+            if (!renderAborted) {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        async function renderGPU(ctx, size, totalTime) {
+            const overlay = document.getElementById('gpu-overlay');
+            const totalPixels = size * size;
+            const steps = 15;
+            const stepDelay = totalTime / steps;
+            const generator = imageGenerators[selectedImage];
+            
+            const startTime = performance.now();
+            
+            for (let step = 0; step < steps && !renderAborted; step++) {
+                const endPixel = Math.floor((step + 1) / steps * totalPixels);
+                
+                const imageData = ctx.createImageData(size, size);
+                for (let i = 0; i < endPixel; i++) {
+                    const x = i % size;
+                    const y = Math.floor(i / size);
+                    const color = generator(x, y, size, 0);
+                    const idx = i * 4;
+                    imageData.data[idx] = color.r;
+                    imageData.data[idx + 1] = color.g;
+                    imageData.data[idx + 2] = color.b;
+                    imageData.data[idx + 3] = 255;
+                }
+                ctx.putImageData(imageData, 0, 0);
+                
+                const elapsed = performance.now() - startTime;
+                const progress = ((step + 1) / steps * 100);
+                const pixelsPerSec = Math.floor(endPixel / (elapsed / 1000));
+                
+                document.getElementById('gpu-time').textContent = (elapsed / 1000).toFixed(2) + 's';
+                document.getElementById('gpu-progress-pct').textContent = progress.toFixed(0) + '%';
+                document.getElementById('gpu-pixels').textContent = pixelsPerSec.toLocaleString();
+                document.getElementById('gpu-progress').style.width = progress + '%';
+                
+                await sleep(stepDelay);
+            }
+            
+            if (!renderAborted) {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            return {
+                r: Math.round(r * 255),
+                g: Math.round(g * 255),
+                b: Math.round(b * 255)
+            };
+        }
+    </script>
+</body>
+</html>

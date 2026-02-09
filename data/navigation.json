@@ -51,6 +51,11 @@
       "name": "News",
       "url": "News.html",
       "type": "page"
+    },
+    {
+      "name": "E-Labs",
+      "url": "E-Labs.html",
+      "type": "page"
     }
   ]
 }

@@ -1,0 +1,312 @@
+<!DOCTYPE HTML>
+<!--
+-->
+<html>
+	<head>
+		<!-- Theme initialization (prevents flash of wrong theme) -->
+		<script>
+			(function() {
+				var theme = localStorage.getItem('theme-preference') || 'light';
+				document.documentElement.setAttribute('data-theme', theme);
+			})();
+		</script>
+		<title>Johann J Cardenas | E-Labs</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+
+		<!-- Favicon -->
+		<link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<style>
+			/* App card styles */
+			.apps-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+				gap: 2rem;
+				margin-top: 2rem;
+			}
+
+			.app-card {
+				background: var(--card-bg, #fff);
+				border-radius: 12px;
+				overflow: hidden;
+				box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+				transition: transform 0.3s ease, box-shadow 0.3s ease;
+				display: flex;
+				flex-direction: column;
+			}
+
+			.app-card:hover {
+				transform: translateY(-4px);
+				box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+			}
+
+			.app-card .image-container {
+				position: relative;
+				width: 100%;
+				height: 200px;
+				overflow: hidden;
+			}
+
+			.app-card .image-container img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				transition: transform 0.3s ease;
+			}
+
+			.app-card:hover .image-container img {
+				transform: scale(1.05);
+			}
+
+			.app-card .status-badge {
+				position: absolute;
+				top: 12px;
+				right: 12px;
+				background: rgba(24, 169, 168, 0.9);
+				color: #fff;
+				padding: 4px 12px;
+				border-radius: 20px;
+				font-size: 0.75rem;
+				font-weight: 600;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+			}
+
+			.app-card .status-badge.coming-soon {
+				background: rgba(255, 152, 0, 0.9);
+			}
+
+			.app-card .content {
+				padding: 1.5rem;
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+			}
+
+			.app-card h3 {
+				margin: 0 0 0.75rem 0;
+				font-size: 1.4rem;
+				color: var(--heading-color, #333);
+			}
+
+			.app-card .description {
+				color: var(--text-color, #666);
+				line-height: 1.6;
+				margin-bottom: 1.25rem;
+				flex: 1;
+				text-align: justify;
+			}
+
+			.app-card .tags {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+				margin-bottom: 1.25rem;
+			}
+
+			.app-card .tag {
+				background: var(--tag-bg, #f0f0f0);
+				color: var(--tag-color, #555);
+				padding: 4px 10px;
+				border-radius: 4px;
+				font-size: 0.8rem;
+			}
+
+			.app-card .launch-btn {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.5rem;
+				padding: 0.75rem 1.5rem;
+				background: linear-gradient(135deg, #18a9a8, #0d7377);
+				color: #fff;
+				border: none;
+				border-radius: 8px;
+				font-size: 1rem;
+				font-weight: 600;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				text-decoration: none;
+			}
+
+			.app-card .launch-btn:hover {
+				background: linear-gradient(135deg, #0d7377, #18a9a8);
+				transform: translateY(-2px);
+				box-shadow: 0 4px 12px rgba(24, 169, 168, 0.4);
+			}
+
+			.app-card .launch-btn.disabled {
+				background: #ccc;
+				cursor: not-allowed;
+				pointer-events: none;
+			}
+
+			/* Dark theme support */
+			[data-theme="dark"] .app-card {
+				--card-bg: #252525;
+				--heading-color: #ffffff;
+				--text-color: #d0d0d0;
+				--tag-bg: #3a3a3a;
+				--tag-color: #e0e0e0;
+				border: 1px solid #3a3a3a;
+			}
+
+			[data-theme="dark"] .app-card:hover {
+				box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+				border-color: #4a4a4a;
+			}
+
+			[data-theme="dark"] .app-card .launch-btn.disabled {
+				background: #404040;
+				color: #888;
+			}
+
+			[data-theme="dark"] .app-card .status-badge.coming-soon {
+				background: rgba(255, 170, 50, 0.95);
+				color: #1a1a1a;
+				font-weight: 700;
+			}
+
+			[data-theme="dark"] .section-intro p {
+				color: #c0c0c0;
+			}
+
+			[data-theme="dark"] .app-card .tag {
+				border: 1px solid #4a4a4a;
+			}
+
+			/* Section intro */
+			.section-intro {
+				text-align: center;
+				max-width: 800px;
+				margin: 0 auto 3rem auto;
+			}
+
+			.section-intro h2 {
+				font-size: 2rem;
+				margin-bottom: 1rem;
+			}
+
+			.section-intro p {
+				color: var(--text-color, #666);
+				line-height: 1.7;
+			}
+		</style>
+
+		<!-- Social Sharing: Open Graph -->
+		<meta property="og:type" content="website">
+		<meta property="og:title" content="E-Labs | Interactive Applications">
+		<meta property="og:description" content="Client-side interactive engineering applications and tools.">
+		<meta property="og:image" content="https://johann-cardenas.github.io/images/Link_Preview.jpg">
+		<meta property="og:url" content="https://johann-cardenas.github.io/E-Labs.html">
+
+		<!-- Twitter Card -->
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:title" content="E-Labs | Interactive Applications">
+		<meta name="twitter:description" content="Client-side interactive engineering applications and tools.">
+		<meta name="twitter:image" content="https://johann-cardenas.github.io/images/Link_Preview.jpg">
+
+	</head>
+	<body class="E-Labs is-preload">
+		<div id="page-wrapper">
+
+			<!-- Header -->
+				<section id="header">
+					<div id="nav-placeholder"></div>
+				</section>
+
+			<!-- Main -->
+				<section id="main">
+					<div class="container">
+						<div class="col-12">
+
+							<!-- Section Intro -->
+							<div class="section-intro">
+								<h2>Welcome Aboard!</h2>
+								<p>
+                                    <em>Ground Control to Major Tom:</em> This is a collection of client-side interactive applications designed
+									to provide hands-on engineering tools and intuitive learning experiences. 
+									These apps run entirely in your browser, requiring no server-side processing 
+									or installation. Enjoy the experience!
+								</p>
+							</div>
+
+							<!-- Apps Grid -->
+							<div class="apps-grid">
+
+								<!-- AirCrafter App Card -->
+								<div class="app-card">
+									<div class="image-container">
+										<img src="images/e-labs/E-Labs_Aircrafter.jpg" alt="AirCrafter Preview" />
+										<span class="status-badge coming-soon">Coming Soon</span>
+									</div>
+									<div class="content">
+										<h3>AirCrafter</h3>
+										<p class="description">
+											Interactive platform to analyze the influence of aircraft tire 
+											loading parameters on its contact stress distribution. Explore how different 
+											tire types, gear configurations, inflation pressures, and load conditions 
+                                            affect the three-dimensional components of the contact stress tensor.
+										</p>
+										<div class="tags">
+											<span class="tag">Aircraft</span>
+											<span class="tag">Tire Loading</span>
+											<span class="tag">Stress Analysis</span>
+											<span class="tag">Interactive</span>
+										</div>
+										<button class="launch-btn disabled">
+											<i class="fas fa-rocket"></i> Launch App
+										</button>
+									</div>
+								</div>
+
+								<!-- Frontier App Card -->
+								<div class="app-card">
+									<div class="image-container">
+										<img src="images/e-labs/E-Labs_Frontier.jpg" alt="Frontier Preview" />
+										<span class="status-badge">Live</span>
+									</div>
+									<div class="content">
+										<h3>Frontier</h3>
+										<p class="description">
+											A hands-on, user-friendly High Performance Computing intuition engine. 
+                                            Build understanding of parallel computing concepts, 
+											job scheduling, and distributed systems through interactive simulations.
+										</p>
+										<div class="tags">
+											<span class="tag">HPC</span>
+											<span class="tag">Parallel Computing</span>
+											<span class="tag">Education</span>
+											<span class="tag">Interactive</span>
+										</div>
+										<a href="e-labs/frontier/index.html" class="launch-btn">
+											<i class="fas fa-rocket"></i> Launch App
+										</a>
+									</div>
+								</div>
+
+							</div>
+
+						</div>
+					</div>
+				</section>
+
+			<!-- Footer -->
+				<div id="footer-placeholder"></div>
+
+		</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/components.js"></script>
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.dropotron.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+			<script src="assets/js/theme-toggle.js"></script>
+
+	</body>
+</html>
