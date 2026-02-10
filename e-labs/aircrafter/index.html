@@ -1,0 +1,1864 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <script>
+        (function() {
+            var theme = localStorage.getItem('aircrafter-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <title>AirCrafter | Contact Stress Engine</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../../assets/css/main.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* ==================== THEME VARIABLES ==================== */
+        :root {
+            --ac-primary: #0ea5e9;
+            --ac-primary-hover: #0284c7;
+            --ac-primary-glow: rgba(14, 165, 233, 0.3);
+            --ac-secondary: #f97316;
+            --ac-secondary-hover: #ea580c;
+            --ac-accent: #8b5cf6;
+            --ac-success: #10b981;
+            --ac-warning: #f59e0b;
+            --ac-danger: #ef4444;
+            --ac-info: #06b6d4;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="light"] {
+            --ac-bg: #ffffff;
+            --ac-bg-alt: #f8fafc;
+            --ac-bg-panel: #f1f5f9;
+            --ac-bg-dark: #0c1425;
+            --ac-text: #1e293b;
+            --ac-text-secondary: #64748b;
+            --ac-text-muted: #94a3b8;
+            --ac-border: #e2e8f0;
+            --ac-border-dark: #cbd5e1;
+            --ac-card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        [data-theme="dark"] {
+            --ac-bg: #0f172a;
+            --ac-bg-alt: #0c1425;
+            --ac-bg-panel: #1e293b;
+            --ac-bg-dark: #0c1425;
+            --ac-text: #f1f5f9;
+            --ac-text-secondary: #cbd5e1;
+            --ac-text-muted: #94a3b8;
+            --ac-border: #334155;
+            --ac-border-dark: #475569;
+            --ac-card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+        }
+
+        /* ==================== SCROLLBAR ==================== */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--ac-bg-alt); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--ac-primary), var(--ac-primary-hover));
+            border-radius: 5px; border: 2px solid var(--ac-bg-alt);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--ac-primary-hover), var(--ac-secondary));
+        }
+        * { scrollbar-width: thin; scrollbar-color: var(--ac-primary) var(--ac-bg-alt); }
+
+        /* ==================== ANIMATIONS ==================== */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px var(--ac-primary-glow), 0 0 10px transparent; }
+            50% { box-shadow: 0 0 20px var(--ac-primary-glow), 0 0 40px var(--ac-primary-glow); }
+        }
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(14, 165, 233, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+        }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes planePass {
+            0% { transform: translateX(-100%) translateY(0); opacity: 0; }
+            10% { opacity: 0.6; }
+            50% { transform: translateX(40vw) translateY(-10px); opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateX(120vw) translateY(0); opacity: 0; }
+        }
+
+        /* ==================== GLASSMORPHISM ==================== */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* ==================== HOVER EFFECTS ==================== */
+        .hover-lift {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ==================== GRADIENT TEXT ==================== */
+        .gradient-text {
+            background: linear-gradient(135deg, var(--ac-primary), var(--ac-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ==================== GLOBAL RESET ==================== */
+        * { box-sizing: border-box; }
+        html, body { margin: 0 !important; padding: 0 !important; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif; }
+        #wrapper, #main, .wrapper, main { padding-top: 0 !important; margin-top: 0 !important; }
+
+        /* ==================== APP CONTAINER ==================== */
+        .aircrafter-app {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 1rem 2rem 2rem;
+            background: var(--ac-bg);
+            min-height: 100vh;
+        }
+
+        /* ==================== HEADER ==================== */
+        .app-header {
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #0c1425 0%, #1a2744 50%, #0f2040 100%);
+            border-radius: 24px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .app-header::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(circle at 20% 80%, var(--ac-primary-glow) 0%, transparent 40%),
+                radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .app-header::after {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 80px 60px, rgba(255,255,255,0.15), transparent),
+                radial-gradient(2px 2px at 160px 40px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(3px 3px at 250px 80px, var(--ac-primary), transparent),
+                radial-gradient(2px 2px at 350px 50px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 50px 120px, rgba(255,255,255,0.15), transparent),
+                radial-gradient(3px 3px at 420px 30px, rgba(249,115,22,0.5), transparent);
+            background-size: 500px 160px;
+            animation: particles 25s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes particles {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-500px); }
+        }
+
+        .header-nav {
+            padding: 1rem 1.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative; z-index: 1;
+            backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .back-btn {
+            background: rgba(14, 165, 233, 0.2);
+            border: 1px solid rgba(14, 165, 233, 0.4);
+            color: white; padding: 0.6rem 1.2rem; border-radius: 10px;
+            cursor: pointer; font-size: 0.9rem;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-decoration: none; font-weight: 500;
+        }
+        .back-btn:hover {
+            background: rgba(14, 165, 233, 0.35);
+            border-color: rgba(14, 165, 233, 0.6);
+            transform: translateX(-3px);
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.25);
+        }
+        .back-btn i { transition: transform 0.3s ease; }
+        .back-btn:hover i { transform: translateX(-3px); }
+
+        .header-content {
+            padding: 2.5rem 2rem 2rem;
+            text-align: center; position: relative; z-index: 1;
+        }
+        .header-content h1 {
+            font-size: 2.8rem; font-weight: 800; margin: 0 0 0.5rem;
+            letter-spacing: -0.02em;
+            color: white;
+        }
+        .header-content h1 .highlight {
+            background: linear-gradient(135deg, var(--ac-primary), var(--ac-secondary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .header-content .subtitle {
+            font-size: 1.1rem; opacity: 0.8; margin: 0; font-weight: 300;
+            letter-spacing: 0.05em;
+        }
+        .header-content .plane-icon {
+            font-size: 1.6rem;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+            margin-right: 0.5rem;
+        }
+
+        /* ==================== MODULE TABS ==================== */
+        .module-tabs {
+            display: flex; gap: 0.5rem; margin-bottom: 1.5rem;
+            background: var(--ac-bg-panel); padding: 0.5rem; border-radius: 16px;
+            border: 1px solid var(--ac-border);
+        }
+        .module-tab {
+            flex: 1; padding: 0.9rem 1rem; border-radius: 12px;
+            background: transparent; border: none;
+            color: var(--ac-text-muted); font-weight: 600; font-size: 0.92rem;
+            cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+        .module-tab:hover { color: var(--ac-text); background: rgba(14, 165, 233, 0.08); }
+        .module-tab.active {
+            background: linear-gradient(135deg, var(--ac-primary), var(--ac-primary-hover));
+            color: white;
+            box-shadow: 0 4px 15px var(--ac-primary-glow);
+        }
+        .module-content { display: none; animation: fadeIn 0.4s ease; }
+        .module-content.active { display: block; }
+
+        /* ==================== PANEL ==================== */
+        .panel {
+            background: var(--ac-bg-panel);
+            border: 1px solid var(--ac-border);
+            border-radius: 16px; padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.3s ease;
+        }
+        .panel:hover { border-color: var(--ac-border-dark); }
+        .panel-title {
+            font-size: 1.1rem; font-weight: 700;
+            color: var(--ac-text); margin: 0 0 1rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .panel-title i { color: var(--ac-primary); }
+
+        /* ==================== SELECTION PANEL ==================== */
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .filter-group {
+            display: flex; flex-direction: column; gap: 0.4rem;
+        }
+        .filter-group label {
+            font-size: 0.82rem; font-weight: 600; color: var(--ac-text-secondary);
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .filter-group select,
+        .filter-group input[type="text"] {
+            padding: 0.65rem 0.85rem; border-radius: 10px;
+            border: 1px solid var(--ac-border);
+            background: var(--ac-bg);
+            color: var(--ac-text); font-size: 0.95rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        .filter-group select:focus,
+        .filter-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--ac-primary);
+            box-shadow: 0 0 0 3px var(--ac-primary-glow);
+        }
+
+        /* ==================== PARAMETER CARDS ==================== */
+        .params-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .param-card {
+            background: var(--ac-bg);
+            border: 1px solid var(--ac-border);
+            border-radius: 14px; padding: 1rem 1.2rem;
+            transition: all 0.3s ease;
+            position: relative; overflow: hidden;
+        }
+        .param-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--ac-primary), var(--ac-info));
+            opacity: 0.7;
+        }
+        .param-card:hover { border-color: var(--ac-primary); transform: translateY(-2px); }
+        .param-card .label {
+            font-size: 0.78rem; font-weight: 600;
+            color: var(--ac-text-muted); text-transform: uppercase;
+            letter-spacing: 0.05em; margin-bottom: 0.3rem;
+        }
+        .param-card .value {
+            font-size: 1.5rem; font-weight: 800;
+            color: var(--ac-text);
+            font-variant-numeric: tabular-nums;
+        }
+        .param-card .unit {
+            font-size: 0.8rem; font-weight: 400;
+            color: var(--ac-text-secondary); margin-left: 0.25rem;
+        }
+        .param-card input {
+            width: 100%; font-size: 1.3rem; font-weight: 700;
+            padding: 0.3rem 0.5rem; border-radius: 8px;
+            border: 1px solid var(--ac-border);
+            background: var(--ac-bg-alt); color: var(--ac-text);
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+        .param-card input:focus {
+            outline: none;
+            border-color: var(--ac-primary);
+            box-shadow: 0 0 0 3px var(--ac-primary-glow);
+        }
+        .param-card.modified::after {
+            content: '●';
+            position: absolute; top: 8px; right: 10px;
+            color: var(--ac-warning); font-size: 0.8rem;
+        }
+
+        /* ==================== RIB TABLE ==================== */
+        .rib-table-container {
+            overflow-x: auto; margin-top: 0.5rem;
+        }
+        .rib-table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            font-size: 0.88rem;
+        }
+        .rib-table th {
+            background: var(--ac-bg);
+            color: var(--ac-text-secondary);
+            padding: 0.6rem 0.8rem;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid var(--ac-border);
+            position: sticky; top: 0;
+        }
+        .rib-table td {
+            padding: 0.5rem 0.6rem; text-align: center;
+            border-bottom: 1px solid var(--ac-border);
+            color: var(--ac-text);
+        }
+        .rib-table td input {
+            width: 80px; text-align: center;
+            padding: 0.35rem 0.4rem; border-radius: 8px;
+            border: 1px solid var(--ac-border);
+            background: var(--ac-bg-alt); color: var(--ac-text);
+            font-size: 0.88rem; font-family: inherit;
+            transition: all 0.3s ease;
+        }
+        .rib-table td input:focus {
+            outline: none;
+            border-color: var(--ac-primary);
+            box-shadow: 0 0 0 2px var(--ac-primary-glow);
+        }
+        .rib-table td input.modified {
+            border-color: var(--ac-warning);
+            background: rgba(245, 158, 11, 0.08);
+        }
+        .rib-table tr:hover td { background: rgba(14, 165, 233, 0.04); }
+        .rib-header-cell {
+            font-weight: 700; color: var(--ac-primary) !important;
+            white-space: nowrap;
+        }
+
+        /* ==================== BUTTONS ==================== */
+        .btn {
+            padding: 0.7rem 1.4rem; border-radius: 10px;
+            font-weight: 600; font-size: 0.95rem; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: none; font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--ac-primary), var(--ac-primary-hover));
+            color: white;
+            box-shadow: 0 4px 15px var(--ac-primary-glow);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--ac-primary-glow);
+        }
+        .btn-secondary {
+            background: var(--ac-bg-panel);
+            border: 1px solid var(--ac-border);
+            color: var(--ac-text);
+        }
+        .btn-secondary:hover {
+            border-color: var(--ac-primary);
+            background: rgba(14, 165, 233, 0.08);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, var(--ac-warning), var(--ac-secondary));
+            color: white;
+        }
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+        }
+        .btn-group {
+            display: flex; gap: 0.75rem; margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* ==================== STATS GRID ==================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem; margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: var(--ac-bg-panel);
+            border: 1px solid var(--ac-border);
+            border-radius: 14px; padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover { border-color: var(--ac-primary); }
+        .stat-card .stat-icon {
+            font-size: 1.4rem; margin-bottom: 0.4rem;
+        }
+        .stat-card .stat-value {
+            font-size: 1.3rem; font-weight: 800;
+            color: var(--ac-text);
+            font-variant-numeric: tabular-nums;
+        }
+        .stat-card .stat-label {
+            font-size: 0.75rem; font-weight: 600;
+            color: var(--ac-text-muted);
+            text-transform: uppercase; letter-spacing: 0.05em;
+            margin-top: 0.2rem;
+        }
+
+        /* ==================== EQUILIBRIUM BADGE ==================== */
+        .eq-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem; border-radius: 10px;
+            font-weight: 700; font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        .eq-badge.pass {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--ac-success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .eq-badge.fail {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--ac-danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* ==================== CHART CONTAINERS ==================== */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        .charts-row.two-col {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .chart-panel {
+            background: var(--ac-bg-panel);
+            border: 1px solid var(--ac-border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+        .chart-panel:hover { border-color: var(--ac-border-dark); }
+        .chart-header {
+            padding: 0.8rem 1.2rem;
+            border-bottom: 1px solid var(--ac-border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .chart-title {
+            font-weight: 700; font-size: 0.95rem;
+            color: var(--ac-text);
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .chart-title i { color: var(--ac-primary); font-size: 0.9rem; }
+        .chart-body {
+            padding: 0.5rem;
+            min-height: 350px;
+        }
+        .chart-body-tall { min-height: 500px; }
+
+        /* ==================== CONTACT PATCH SVG ==================== */
+        .contact-patch-container {
+            display: flex; justify-content: center; align-items: center;
+            padding: 1rem; min-height: 200px;
+        }
+        #contact-patch-svg {
+            max-width: 100%; height: auto;
+        }
+
+        /* ==================== LOADING OVERLAY ==================== */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .loading-overlay.visible {
+            opacity: 1; pointer-events: all;
+        }
+        .loading-card {
+            background: var(--ac-bg-panel);
+            border: 1px solid var(--ac-border);
+            border-radius: 20px; padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+            animation: scaleIn 0.3s ease;
+        }
+        .spinner {
+            width: 44px; height: 44px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--ac-primary);
+            border-radius: 50%;
+            animation: rotate 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        .loading-text {
+            color: var(--ac-text); font-weight: 600;
+            font-size: 1rem;
+        }
+        .progress-container {
+            width: 100%; margin: 0.5rem 0 0.8rem;
+        }
+        .progress-bar-track {
+            width: 100%; height: 8px;
+            background: var(--ac-border);
+            border-radius: 4px; overflow: hidden;
+        }
+        .progress-bar-fill {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, var(--ac-primary), var(--ac-secondary));
+            border-radius: 4px;
+            transition: width 0.15s ease;
+        }
+        .progress-pct {
+            text-align: center; font-size: 0.8rem; margin-top: 0.4rem;
+            color: var(--ac-text-muted); font-weight: 600;
+        }
+
+        /* ==================== EMPTY STATE ==================== */
+        .empty-state {
+            text-align: center; padding: 3rem 1rem;
+            color: var(--ac-text-muted);
+        }
+        .empty-state i {
+            font-size: 3rem; margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+        .empty-state p { font-size: 1rem; margin: 0.5rem 0; }
+
+        /* ==================== ADVANCED SETTINGS ==================== */
+        .advanced-toggle {
+            display: flex; align-items: center; gap: 0.5rem;
+            cursor: pointer; color: var(--ac-text-muted);
+            font-size: 0.85rem; font-weight: 600;
+            margin-top: 1rem; transition: color 0.3s ease;
+            user-select: none;
+        }
+        .advanced-toggle:hover { color: var(--ac-primary); }
+        .advanced-toggle i { transition: transform 0.3s ease; }
+        .advanced-toggle.open i { transform: rotate(90deg); }
+        .advanced-body {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+        .advanced-body.open { max-height: 600px; }
+        .advanced-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.8rem; padding-top: 1rem;
+        }
+        .adv-input-group {
+            display: flex; flex-direction: column; gap: 0.3rem;
+        }
+        .adv-input-group label {
+            font-size: 0.75rem; font-weight: 600;
+            color: var(--ac-text-muted);
+        }
+        .adv-input-group input {
+            padding: 0.5rem 0.65rem; border-radius: 8px;
+            border: 1px solid var(--ac-border);
+            background: var(--ac-bg); color: var(--ac-text);
+            font-size: 0.88rem; font-family: inherit;
+        }
+        .adv-input-group input:focus {
+            outline: none; border-color: var(--ac-primary);
+            box-shadow: 0 0 0 2px var(--ac-primary-glow);
+        }
+
+        /* ==================== VIZ SUBTABS ==================== */
+        .viz-tabs {
+            display: flex; gap: 0.3rem; margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .viz-tab {
+            padding: 0.5rem 1rem; border-radius: 8px;
+            background: transparent; border: 1px solid var(--ac-border);
+            color: var(--ac-text-muted); cursor: pointer;
+            font-size: 0.85rem; font-weight: 600;
+            transition: all 0.3s ease; font-family: inherit;
+        }
+        .viz-tab:hover { border-color: var(--ac-primary); color: var(--ac-text); }
+        .viz-tab.active {
+            background: var(--ac-primary);
+            color: white; border-color: var(--ac-primary);
+        }
+        .viz-content { display: none; animation: fadeIn 0.3s ease; }
+        .viz-content.active { display: block; }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 1024px) {
+            .params-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-row.two-col { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .aircrafter-app { padding: 0.75rem 1rem 1.5rem; }
+            .header-content h1 { font-size: 2rem; }
+            .module-tabs { flex-wrap: wrap; }
+            .module-tab { font-size: 0.82rem; padding: 0.7rem 0.8rem; }
+            .params-grid { grid-template-columns: 1fr; }
+            .selection-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+            .header-content h1 { font-size: 1.6rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="page-wrapper">
+        <!-- Header -->
+        <section id="header">
+            <div id="nav-placeholder"></div>
+        </section>
+
+        <!-- Main -->
+        <section id="main">
+            <div class="aircrafter-app">
+
+                <!-- ===== APP HEADER ===== -->
+                <div class="app-header">
+                    <div class="header-nav">
+                        <a href="../../E-Labs.html" class="back-btn">
+                            <i class="fas fa-arrow-left"></i> E-Labs
+                        </a>
+                    </div>
+                    <div class="header-content">
+                        <h1>
+                            <span class="plane-icon"><i class="fas fa-plane"></i></span>
+                            Air<span class="highlight">Crafter</span>
+                        </h1>
+                        <p class="subtitle">Aircraft Tire Contact Stress Analysis Engine</p>
+                    </div>
+                </div>
+
+                <!-- ===== MODULE TABS ===== -->
+                <div class="module-tabs">
+                    <button class="module-tab active" data-module="config">
+                        <i class="fas fa-sliders-h"></i> Configuration
+                    </button>
+                    <button class="module-tab" data-module="stress3d">
+                        <i class="fas fa-cube"></i> 3D Stress Surfaces
+                    </button>
+                    <button class="module-tab" data-module="analysis">
+                        <i class="fas fa-chart-area"></i> Distribution Analysis
+                    </button>
+                </div>
+
+                <!-- ============================================= -->
+                <!-- TAB 1: CONFIGURATION                          -->
+                <!-- ============================================= -->
+                <div class="module-content active" id="module-config">
+
+                    <!-- Aircraft Selection -->
+                    <div class="panel">
+                        <div class="panel-title"><i class="fas fa-search"></i> Aircraft Selection</div>
+                        <div class="selection-grid">
+                            <div class="filter-group">
+                                <label>Manufacturer</label>
+                                <select id="filter-manufacturer">
+                                    <option value="all">All Manufacturers</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Aircraft Model</label>
+                                <select id="filter-aircraft">
+                                    <option value="">— Select Aircraft —</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Search</label>
+                                <input type="text" id="aircraft-search" placeholder="Type to filter..." />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Stats -->
+                    <div class="stats-grid" id="summary-stats" style="display:none;">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="color:var(--ac-primary)"><i class="fas fa-plane"></i></div>
+                            <div class="stat-value" id="stat-aircraft">—</div>
+                            <div class="stat-label">Aircraft</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="color:var(--ac-secondary)"><i class="fas fa-weight-hanging"></i></div>
+                            <div class="stat-value" id="stat-load">—</div>
+                            <div class="stat-label">Load (kN)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="color:var(--ac-info)"><i class="fas fa-gauge-high"></i></div>
+                            <div class="stat-value" id="stat-pressure">—</div>
+                            <div class="stat-label">Tire Pressure</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="color:var(--ac-accent)"><i class="fas fa-ruler-horizontal"></i></div>
+                            <div class="stat-value" id="stat-length">—</div>
+                            <div class="stat-label">Contact Length</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="color:var(--ac-success)"><i class="fas fa-layer-group"></i></div>
+                            <div class="stat-value" id="stat-ribs">—</div>
+                            <div class="stat-label">Ribs</div>
+                        </div>
+                        <div class="stat-card" id="eq-stat-card">
+                            <div class="stat-icon" style="color:var(--ac-warning)"><i class="fas fa-scale-balanced"></i></div>
+                            <div class="stat-value" id="stat-eq">—</div>
+                            <div class="stat-label">Equilibrium</div>
+                        </div>
+                    </div>
+
+                    <!-- Parameter Editor -->
+                    <div class="panel" id="param-panel" style="display:none;">
+                        <div class="panel-title">
+                            <i class="fas fa-edit"></i> Input Parameters
+                            <span style="flex:1"></span>
+                            <button class="btn btn-warning" id="btn-reset" style="padding:0.4rem 0.9rem; font-size:0.82rem;">
+                                <i class="fas fa-rotate-left"></i> Reset Defaults
+                            </button>
+                        </div>
+
+                        <!-- Scalar Parameters -->
+                        <div class="params-grid">
+                            <div class="param-card" id="card-P">
+                                <div class="label">P — Load</div>
+                                <input type="number" id="input-P" step="any" />
+                                <div style="margin-top:0.2rem"><span class="unit">N</span></div>
+                            </div>
+                            <div class="param-card" id="card-TiP">
+                                <div class="label">TiP — Tire Pressure</div>
+                                <input type="number" id="input-TiP" step="any" />
+                                <div style="margin-top:0.2rem"><span class="unit">MPa</span></div>
+                            </div>
+                            <div class="param-card" id="card-l">
+                                <div class="label">l — Contact Length</div>
+                                <input type="number" id="input-l" step="any" />
+                                <div style="margin-top:0.2rem"><span class="unit">mm</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Per-Rib Parameters -->
+                        <div class="panel-title" style="margin-top:0.5rem;"><i class="fas fa-table-cells"></i> Rib Parameters</div>
+                        <div class="rib-table-container">
+                            <table class="rib-table" id="rib-table">
+                                <thead><tr id="rib-table-header"></tr></thead>
+                                <tbody id="rib-table-body"></tbody>
+                            </table>
+                        </div>
+
+                        <!-- Advanced Settings -->
+                        <div class="advanced-toggle" id="adv-toggle">
+                            <i class="fas fa-chevron-right"></i> Advanced Settings
+                        </div>
+                        <div class="advanced-body" id="adv-body">
+                            <div class="advanced-grid">
+                                <div class="adv-input-group">
+                                    <label>SSY Factor</label>
+                                    <input type="number" id="adv-ssy" value="0.40" step="0.01" />
+                                </div>
+                                <div class="adv-input-group">
+                                    <label>Elements (xn)</label>
+                                    <input type="number" id="adv-xn" value="10" min="4" max="100" step="1" />
+                                </div>
+                                <div class="adv-input-group">
+                                    <label>Partitions/Rib (nnz)</label>
+                                    <input type="number" id="adv-nnz" value="2" min="1" max="4" step="1" />
+                                </div>
+                                <div class="adv-input-group">
+                                    <label>SSX Pos Peak (frac)</label>
+                                    <input type="number" id="adv-lsx-pos" value="0.20" step="0.01" />
+                                </div>
+                                <div class="adv-input-group">
+                                    <label>SSX Neg Peak (frac)</label>
+                                    <input type="number" id="adv-lsx-neg" value="0.85" step="0.01" />
+                                </div>
+                                <div class="adv-input-group">
+                                    <label>SSX Pos Mag</label>
+                                    <input type="number" id="adv-sx-posmag" value="0.20" step="0.01" />
+                                </div>
+                                <div class="adv-input-group">
+                                    <label>SSX Neg Mag</label>
+                                    <input type="number" id="adv-sx-negmag" value="-0.15" step="0.01" />
+                                </div>
+                                <div class="adv-input-group">
+                                    <label>Transition Point (skpb)</label>
+                                    <input type="number" id="adv-skpb" value="0.60" step="0.01" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Compute Button -->
+                        <div class="btn-group" style="margin-top:1.5rem;">
+                            <button class="btn btn-primary" id="btn-compute" style="flex:1;">
+                                <i class="fas fa-bolt"></i> Compute Stresses
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Contact Patch Schematic -->
+                    <div class="panel" id="patch-panel" style="display:none;">
+                        <div class="panel-title"><i class="fas fa-shoe-prints"></i> Tire Contact Patch</div>
+                        <div class="contact-patch-container">
+                            <svg id="contact-patch-svg" viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg"></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================= -->
+                <!-- TAB 2: 3D STRESS SURFACES                     -->
+                <!-- ============================================= -->
+                <div class="module-content" id="module-stress3d">
+                    <div id="stress3d-empty" class="empty-state">
+                        <i class="fas fa-cube"></i>
+                        <p><strong>No Data Yet</strong></p>
+                        <p>Select an aircraft and compute stresses first.</p>
+                    </div>
+                    <div id="stress3d-content" style="display:none;">
+                        <!-- SSZ Surface -->
+                        <div class="chart-panel" style="margin-bottom:1.5rem;">
+                            <div class="chart-header">
+                                <div class="chart-title"><i class="fas fa-arrow-down"></i> Vertical Contact Stress (σ<sub>z</sub>)</div>
+                            </div>
+                            <div class="chart-body chart-body-tall" id="chart-3d-ssz"></div>
+                        </div>
+                        <!-- SSX Surface -->
+                        <div class="chart-panel" style="margin-bottom:1.5rem;">
+                            <div class="chart-header">
+                                <div class="chart-title"><i class="fas fa-arrow-right"></i> Longitudinal Contact Stress (σ<sub>x</sub>)</div>
+                            </div>
+                            <div class="chart-body chart-body-tall" id="chart-3d-ssx"></div>
+                        </div>
+                        <!-- SSY Surface -->
+                        <div class="chart-panel">
+                            <div class="chart-header">
+                                <div class="chart-title"><i class="fas fa-arrows-left-right"></i> Transverse Contact Stress (σ<sub>y</sub>)</div>
+                            </div>
+                            <div class="chart-body chart-body-tall" id="chart-3d-ssy"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================= -->
+                <!-- TAB 3: DISTRIBUTION ANALYSIS                  -->
+                <!-- ============================================= -->
+                <div class="module-content" id="module-analysis">
+                    <div id="analysis-empty" class="empty-state">
+                        <i class="fas fa-chart-area"></i>
+                        <p><strong>No Data Yet</strong></p>
+                        <p>Select an aircraft and compute stresses first.</p>
+                    </div>
+                    <div id="analysis-content" style="display:none;">
+
+                        <!-- Viz Sub-tabs -->
+                        <div class="viz-tabs">
+                            <button class="viz-tab active" data-viz="heatmaps"><i class="fas fa-th"></i> Heatmaps</button>
+                            <button class="viz-tab" data-viz="ribcurves"><i class="fas fa-chart-line"></i> Per-Rib Curves</button>
+                            <button class="viz-tab" data-viz="ribprops"><i class="fas fa-chart-bar"></i> Rib Properties</button>
+                        </div>
+
+                        <!-- Heatmaps -->
+                        <div class="viz-content active" id="viz-heatmaps">
+                            <div class="chart-panel" style="margin-bottom:1.5rem;">
+                                <div class="chart-header">
+                                    <div class="chart-title"><i class="fas fa-th"></i> Vertical Stress Heatmap (σ<sub>z</sub>)</div>
+                                </div>
+                                <div class="chart-body" id="chart-hm-ssz"></div>
+                            </div>
+                            <div class="chart-panel" style="margin-bottom:1.5rem;">
+                                <div class="chart-header">
+                                    <div class="chart-title"><i class="fas fa-th"></i> Longitudinal Stress Heatmap (σ<sub>x</sub>)</div>
+                                </div>
+                                <div class="chart-body" id="chart-hm-ssx"></div>
+                            </div>
+                            <div class="chart-panel">
+                                <div class="chart-header">
+                                    <div class="chart-title"><i class="fas fa-th"></i> Transverse Stress Heatmap (σ<sub>y</sub>)</div>
+                                </div>
+                                <div class="chart-body" id="chart-hm-ssy"></div>
+                            </div>
+                        </div>
+
+                        <!-- Per-Rib Curves -->
+                        <div class="viz-content" id="viz-ribcurves">
+                            <div class="chart-panel" style="margin-bottom:1.5rem;">
+                                <div class="chart-header">
+                                    <div class="chart-title"><i class="fas fa-chart-line"></i> σ<sub>z</sub> Per-Rib Distribution</div>
+                                </div>
+                                <div class="chart-body chart-body-tall" id="chart-rib-ssz"></div>
+                            </div>
+                            <div class="chart-panel" style="margin-bottom:1.5rem;">
+                                <div class="chart-header">
+                                    <div class="chart-title"><i class="fas fa-chart-line"></i> σ<sub>x</sub> Per-Rib Distribution</div>
+                                </div>
+                                <div class="chart-body chart-body-tall" id="chart-rib-ssx"></div>
+                            </div>
+                            <div class="chart-panel">
+                                <div class="chart-header">
+                                    <div class="chart-title"><i class="fas fa-chart-line"></i> σ<sub>y</sub> Per-Rib Distribution</div>
+                                </div>
+                                <div class="chart-body chart-body-tall" id="chart-rib-ssy"></div>
+                            </div>
+                        </div>
+
+                        <!-- Rib Properties -->
+                        <div class="viz-content" id="viz-ribprops">
+                            <div class="charts-row two-col">
+                                <div class="chart-panel">
+                                    <div class="chart-header">
+                                        <div class="chart-title"><i class="fas fa-chart-bar"></i> Load Distribution Factor</div>
+                                    </div>
+                                    <div class="chart-body" id="chart-bar-load"></div>
+                                </div>
+                                <div class="chart-panel">
+                                    <div class="chart-header">
+                                        <div class="chart-title"><i class="fas fa-chart-bar"></i> Max Vertical Stress Factor</div>
+                                    </div>
+                                    <div class="chart-body" id="chart-bar-stress"></div>
+                                </div>
+                            </div>
+                            <div class="chart-panel" style="margin-top:1.5rem;">
+                                <div class="chart-header">
+                                    <div class="chart-title"><i class="fas fa-chart-bar"></i> Contact Width per Rib</div>
+                                </div>
+                                <div class="chart-body" id="chart-bar-width"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <div id="footer-placeholder"></div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-card">
+            <div class="spinner" id="loading-spinner"></div>
+            <div class="progress-container" id="progress-container" style="display:none;">
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" id="progress-bar-fill"></div>
+                </div>
+                <div class="progress-pct" id="progress-pct">0%</div>
+            </div>
+            <div class="loading-text" id="loading-text">Loading aircraft database...</div>
+        </div>
+    </div>
+
+    <!-- ===== EXTERNAL SCRIPTS ===== -->
+    <script src="../../assets/js/jquery.min.js"></script>
+    <script src="../../assets/js/jquery.dropotron.min.js"></script>
+    <script src="../../assets/js/browser.min.js"></script>
+    <script src="../../assets/js/breakpoints.min.js"></script>
+    <script src="../../assets/js/util.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/components.js"></script>
+    <script src="../../assets/js/theme-toggle.js"></script>
+
+    <!-- SheetJS for xlsx parsing -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <!-- Plotly for interactive charts -->
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <script>
+    // ================================================================
+    //  AIRCRAFTER — Contact Stress Analysis Engine
+    // ================================================================
+
+    // ==================== STATE ====================
+    let aircraftDB = [];            // Full dataset from xlsx
+    let currentRow = null;          // Selected aircraft raw data
+    let defaultParams = null;       // Default parameters for selected aircraft
+    let results = null;             // Computation results
+
+    // ==================== MANUFACTURER MAPPING ====================
+    function guessManufacturer(name) {
+        const n = name.toUpperCase();
+        if (/\bA3[0-9]{2}\b/.test(n) || /\bA2[0-9]{2}\b/.test(n)) return 'Airbus';
+        if (/\bB7[0-9]{2}\b/.test(n) || /\bB73[0-9]\b/.test(n) || /\bB78[0-9]\b/.test(n)) return 'Boeing';
+        if (/\bMD[\-]?[0-9]/.test(n)) return 'McDonnell Douglas';
+        if (/\bDC[\-]?[0-9]/.test(n)) return 'Douglas';
+        if (/\bCRJ/.test(n) || /\bCS[0-9]/.test(n)) return 'Bombardier';
+        if (/\bERJ|E1[0-9]{2}|E2[0-9]{2}/.test(n)) return 'Embraer';
+        if (/\bATR/.test(n)) return 'ATR';
+        if (/\bF[0-9]{2,3}\b/.test(n) && !/\bFA/.test(n)) return 'Fokker';
+        if (/\bQ[0-9]{3}/.test(n)) return 'De Havilland';
+        if (/\bC[\-]?1[0-9]{2}/.test(n)) return 'Lockheed';
+        if (/\b747|757|767|727|717|707/.test(n)) return 'Boeing';
+        return 'Other';
+    }
+
+    // ==================== DATA LOADING ====================
+    async function loadDatabase() {
+        showLoading('Loading aircraft database...');
+        try {
+            const resp = await fetch('./aircraft.xlsx');
+            if (!resp.ok) throw new Error('Failed to load aircraft.xlsx');
+            const buf = await resp.arrayBuffer();
+            const wb = XLSX.read(buf, { type: 'array' });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const raw = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+            aircraftDB = raw.map(r => ({
+                name: String(r['Airplane Name'] || '').trim(),
+                P: parseFloat(r['Load (N)']) || 0,
+                TiP: parseFloat(r['Tire Pressure (MPa)']) || 0,
+                l: parseFloat(r['Tire Contact Length (mm)']) || 0,
+                bi_raw: String(r['Ribs (mm)'] || ''),
+                al_raw: String(r['Load Factor'] || ''),
+                sig_raw: String(r['Stress Factor'] || ''),
+                manufacturer: guessManufacturer(String(r['Airplane Name'] || ''))
+            }));
+
+            populateFilters();
+            hideLoading();
+        } catch (err) {
+            hideLoading();
+            console.error(err);
+            alert('Error loading aircraft database:\n' + err.message +
+                  '\n\nMake sure aircraft.xlsx is in the same folder as this page.');
+        }
+    }
+
+    function parseList(s) {
+        return String(s).split(';').map(x => x.trim()).filter(x => x !== '').map(Number);
+    }
+
+    // ==================== FILTERS ====================
+    function populateFilters() {
+        const mfrs = [...new Set(aircraftDB.map(a => a.manufacturer))].sort();
+        const mfrSelect = document.getElementById('filter-manufacturer');
+        mfrSelect.innerHTML = '<option value="all">All Manufacturers</option>';
+        mfrs.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m; opt.textContent = m;
+            mfrSelect.appendChild(opt);
+        });
+        updateAircraftDropdown();
+    }
+
+    function updateAircraftDropdown() {
+        const mfr = document.getElementById('filter-manufacturer').value;
+        const search = document.getElementById('aircraft-search').value.toLowerCase();
+        const acSelect = document.getElementById('filter-aircraft');
+
+        let list = aircraftDB;
+        if (mfr !== 'all') list = list.filter(a => a.manufacturer === mfr);
+        if (search) list = list.filter(a => a.name.toLowerCase().includes(search));
+
+        acSelect.innerHTML = '<option value="">— Select Aircraft —</option>';
+        list.forEach(a => {
+            const opt = document.createElement('option');
+            opt.value = a.name;
+            opt.textContent = a.name;
+            acSelect.appendChild(opt);
+        });
+    }
+
+    // ==================== AIRCRAFT SELECTION ====================
+    function onAircraftSelect() {
+        const name = document.getElementById('filter-aircraft').value;
+        if (!name) return;
+        currentRow = aircraftDB.find(a => a.name === name);
+        if (!currentRow) return;
+
+        const bi = parseList(currentRow.bi_raw);
+        const al = parseList(currentRow.al_raw);
+        const sig = parseList(currentRow.sig_raw);
+
+        defaultParams = {
+            P: currentRow.P,
+            TiP: Math.round(currentRow.TiP * 1000) / 1000,
+            l: currentRow.l,
+            bi: [...bi],
+            al: [...al],
+            sigm_Tip: [...sig]
+        };
+
+        applyParams(defaultParams);
+
+        document.getElementById('summary-stats').style.display = '';
+        document.getElementById('param-panel').style.display = '';
+        document.getElementById('patch-panel').style.display = '';
+        updateSummaryCards();
+        drawContactPatch();
+
+        // Auto-compute on selection
+        computeAndRender();
+    }
+
+    function applyParams(p) {
+        document.getElementById('input-P').value = p.P;
+        document.getElementById('input-TiP').value = p.TiP;
+        document.getElementById('input-l').value = p.l;
+        buildRibTable(p.bi, p.al, p.sigm_Tip);
+        clearModifiedFlags();
+    }
+
+    function getCurrentParams() {
+        const P = parseFloat(document.getElementById('input-P').value) || 0;
+        const TiP = parseFloat(document.getElementById('input-TiP').value) || 0;
+        const l = parseFloat(document.getElementById('input-l').value) || 0;
+        const bi = [], al = [], sigm_Tip = [];
+        document.querySelectorAll('#rib-table .rib-bi').forEach(inp => bi.push(parseFloat(inp.value) || 0));
+        document.querySelectorAll('#rib-table .rib-al').forEach(inp => al.push(parseFloat(inp.value) || 0));
+        document.querySelectorAll('#rib-table .rib-sig').forEach(inp => sigm_Tip.push(parseFloat(inp.value) || 0));
+        return { P, TiP, l, bi, al, sigm_Tip };
+    }
+
+    function getAdvancedParams() {
+        const pf = (id, def) => { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? def : v; };
+        return {
+            ssy_factor: pf('adv-ssy', 0.40),
+            xn: parseInt(document.getElementById('adv-xn').value) || 10,
+            nnz: parseInt(document.getElementById('adv-nnz').value) || 2,
+            lsx_pospk: pf('adv-lsx-pos', 0.20),
+            lsx_negpk: pf('adv-lsx-neg', 0.85),
+            sx_posmag: pf('adv-sx-posmag', 0.20),
+            sx_negmag: pf('adv-sx-negmag', -0.15),
+            skpb: pf('adv-skpb', 0.60),
+        };
+    }
+
+    // ==================== RIB TABLE ====================
+    function buildRibTable(bi, al, sig) {
+        const numRibs = bi.length;
+        const thead = document.getElementById('rib-table-header');
+        const tbody = document.getElementById('rib-table-body');
+
+        // Header
+        let hdr = '<th>Parameter</th>';
+        for (let i = 0; i < numRibs; i++) hdr += `<th>Rib ${i + 1}</th>`;
+        thead.innerHTML = hdr;
+
+        // Body — 3 rows (bi, al, sigm_Tip)
+        const rows = [
+            { label: 'b<sub>i</sub> [mm]', cls: 'rib-bi', vals: bi },
+            { label: 'α<sub>l</sub>', cls: 'rib-al', vals: al },
+            { label: 'σ<sub>Tip</sub> [MPa]', cls: 'rib-sig', vals: sig }
+        ];
+
+        tbody.innerHTML = '';
+        rows.forEach(r => {
+            let tr = `<td class="rib-header-cell">${r.label}</td>`;
+            r.vals.forEach(v => {
+                tr += `<td><input type="number" class="${r.cls}" value="${v}" step="any" /></td>`;
+            });
+            const trEl = document.createElement('tr');
+            trEl.innerHTML = tr;
+            tbody.appendChild(trEl);
+        });
+    }
+
+    function clearModifiedFlags() {
+        document.querySelectorAll('.param-card').forEach(c => c.classList.remove('modified'));
+        document.querySelectorAll('.rib-table td input').forEach(i => i.classList.remove('modified'));
+    }
+
+    function checkModified() {
+        if (!defaultParams) return;
+        const cur = getCurrentParams();
+        ['P', 'TiP', 'l'].forEach(k => {
+            const card = document.getElementById('card-' + k);
+            if (Math.abs(cur[k] - defaultParams[k]) > 1e-9) card.classList.add('modified');
+            else card.classList.remove('modified');
+        });
+        document.querySelectorAll('.rib-bi').forEach((inp, i) => {
+            inp.classList.toggle('modified', Math.abs(parseFloat(inp.value) - defaultParams.bi[i]) > 1e-9);
+        });
+        document.querySelectorAll('.rib-al').forEach((inp, i) => {
+            inp.classList.toggle('modified', Math.abs(parseFloat(inp.value) - defaultParams.al[i]) > 1e-9);
+        });
+        document.querySelectorAll('.rib-sig').forEach((inp, i) => {
+            inp.classList.toggle('modified', Math.abs(parseFloat(inp.value) - defaultParams.sigm_Tip[i]) > 1e-9);
+        });
+    }
+
+    // ==================== SUMMARY CARDS ====================
+    function updateSummaryCards() {
+        if (!currentRow) return;
+        const p = getCurrentParams();
+        const shortName = currentRow.name.replace(/^ICT-/, '');
+        document.getElementById('stat-aircraft').textContent = shortName;
+        document.getElementById('stat-load').textContent = (p.P / 1000).toFixed(1);
+        document.getElementById('stat-pressure').textContent = p.TiP.toFixed(3) + ' MPa';
+        document.getElementById('stat-length').textContent = p.l.toFixed(1) + ' mm';
+        document.getElementById('stat-ribs').textContent = p.bi.length;
+    }
+
+    // ==================== CONTACT PATCH SVG ====================
+    function drawContactPatch() {
+        const p = getCurrentParams();
+        if (!p.bi.length) return;
+        const svg = document.getElementById('contact-patch-svg');
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textCol = isDark ? '#cbd5e1' : '#334155';
+        const lineCol = isDark ? '#64748b' : '#94a3b8';
+        const fillBase = isDark ? [14, 165, 233] : [14, 130, 200];
+
+        const totalW = p.bi.reduce((s, v) => s + v, 0);
+        const pad = 60;
+        const patchW = 380;
+        const patchH = 160;
+        const scaleX = patchW / p.l;
+        const scaleY = patchH / totalW;
+        const ox = pad;
+        const oy = pad;
+
+        let html = '';
+        // Contact area outline (rounded)
+        html += `<rect x="${ox}" y="${oy}" width="${patchW}" height="${patchH}" rx="10" ry="10"
+                   fill="none" stroke="${lineCol}" stroke-width="1.5" stroke-dasharray="6 3"/>`;
+
+        // Rib bands
+        let cumY = 0;
+        const maxAl = Math.max(...p.al);
+        p.bi.forEach((w, i) => {
+            const rh = w * scaleY;
+            const alpha = 0.25 + 0.6 * (p.al[i] / (maxAl || 1));
+            html += `<rect x="${ox}" y="${oy + cumY}" width="${patchW}" height="${rh}"
+                       fill="rgba(${fillBase.join(',')},${alpha.toFixed(2)})"
+                       stroke="${lineCol}" stroke-width="0.5"/>`;
+            html += `<text x="${ox + patchW + 8}" y="${oy + cumY + rh / 2 + 4}"
+                       font-size="11" fill="${textCol}" font-weight="600">Rib ${i + 1}</text>`;
+            html += `<text x="${ox + patchW + 8}" y="${oy + cumY + rh / 2 + 17}"
+                       font-size="9" fill="${lineCol}">${w} mm</text>`;
+            cumY += rh;
+        });
+
+        // Dimension: Contact Length
+        const ay = oy + patchH + 25;
+        html += `<line x1="${ox}" y1="${ay}" x2="${ox + patchW}" y2="${ay}" stroke="${textCol}" stroke-width="1" marker-start="url(#arrowL)" marker-end="url(#arrowR)"/>`;
+        html += `<text x="${ox + patchW / 2}" y="${ay + 16}" text-anchor="middle" font-size="11" fill="${textCol}" font-weight="600">${p.l} mm (Contact Length)</text>`;
+
+        // Dimension: Total Width
+        const ax = ox - 20;
+        html += `<line x1="${ax}" y1="${oy}" x2="${ax}" y2="${oy + patchH}" stroke="${textCol}" stroke-width="1" marker-start="url(#arrowU)" marker-end="url(#arrowD)"/>`;
+        html += `<text x="${ax - 4}" y="${oy + patchH / 2}" text-anchor="middle" font-size="11" fill="${textCol}" font-weight="600" transform="rotate(-90 ${ax - 4} ${oy + patchH / 2})">${totalW.toFixed(0)} mm</text>`;
+
+        // Arrow markers
+        const defs = `<defs>
+            <marker id="arrowR" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="${textCol}"/></marker>
+            <marker id="arrowL" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto"><path d="M6,0 L0,3 L6,6" fill="${textCol}"/></marker>
+            <marker id="arrowD" markerWidth="6" markerHeight="6" refX="3" refY="5" orient="auto"><path d="M0,0 L3,6 L6,0" fill="${textCol}"/></marker>
+            <marker id="arrowU" markerWidth="6" markerHeight="6" refX="3" refY="1" orient="auto"><path d="M0,6 L3,0 L6,6" fill="${textCol}"/></marker>
+        </defs>`;
+
+        svg.innerHTML = defs + html;
+    }
+
+    // ================================================================
+    //  STRESS CALCULATIONS
+    // ================================================================
+    function computeStresses() {
+        const p = getCurrentParams();
+        const adv = getAdvancedParams();
+        const { P, TiP, l, bi, al, sigm_Tip } = p;
+        const { ssy_factor, xn, nnz, lsx_pospk, lsx_negpk, sx_posmag, sx_negmag, skpb } = adv;
+        const numRibs = bi.length;
+        const l_elem = l / xn;
+
+        // Position arrays
+        const xloc = [], xnorm = [], xdist = [];
+        for (let i = 0; i <= xn; i++) {
+            xdist.push(l_elem * i);
+            xloc.push(l_elem * i - l / 2);
+            xnorm.push((l_elem * i - l / 2) / (l / 2));
+        }
+
+        // SSX transition
+        const ssx_idx = Math.min(Math.round(skpb * xdist.length), xdist.length - 1);
+        const ssx_cut = ssx_idx >= 0 ? xdist[ssx_idx] : (skpb * l);
+
+        // 1. VERTICAL (SSZ)
+        const SSZ = {};
+        for (let i = 0; i < numRibs; i++) {
+            const a = al[i], b = bi[i], s = sigm_Tip[i];
+            const denom = (l * b * s * TiP) / (a * P) - 1.0;
+            const n = Math.abs(1.0 / (2.0 * denom));
+            const coeff = (a * P) / (l * b);
+            const factor = 1.0 + 1.0 / (2.0 * n);
+            SSZ['Rib ' + (i + 1)] = xnorm.map(x => coeff * factor * (1 - Math.pow(x * x, n)));
+        }
+
+        // 2. LONGITUDINAL (SSX) — skewed parabola
+        const SSX = {};
+        const x1 = [0, skpb * l];
+        const x2 = [lsx_pospk * l, lsx_negpk * l];
+        const x3 = [skpb * l, l];
+        const y2 = [sx_posmag, sx_negmag];
+
+        const a3 = [0, 1].map(k => (x1[k] + x3[k] - 2 * x2[k]) / (x1[k] * x3[k] - x2[k] * x2[k]));
+        const a0 = [0, 1].map(k => (-x1[k] * x3[k] * (a3[k] * x2[k] - 1) * y2[k]) / ((x1[k] - x2[k]) * (x3[k] - x2[k])));
+        const a1 = [0, 1].map(k => ((x1[k] + x3[k]) * (a3[k] * x2[k] - 1) * y2[k]) / ((x1[k] - x2[k]) * (x3[k] - x2[k])));
+        const a2 = [0, 1].map(k => (y2[k] - a3[k] * x2[k] * y2[k]) / ((x1[k] - x2[k]) * (x3[k] - x2[k])));
+
+        for (let i = 0; i < numRibs; i++) {
+            const s = sigm_Tip[i];
+            SSX['Rib ' + (i + 1)] = xdist.map(x => {
+                const k = (x >= 0 && x <= ssx_cut) ? 0 : 1;
+                return TiP * s * ((a2[k] * x * x + a1[k] * x + a0[k]) / (1 - a3[k] * x));
+            });
+        }
+
+        // 3. TRANSVERSE (SSY)
+        const SSY = {};
+        for (let i = 0; i < numRibs; i++) {
+            SSY['Rib ' + (i + 1)] = SSZ['Rib ' + (i + 1)].map(v => ssy_factor * v);
+        }
+
+        // 4. AVERAGED VALUES
+        const axdist = [];
+        for (let j = 0; j < xn; j++) axdist.push((xdist[j] + xdist[j + 1]) / 2);
+
+        const asz = {}, asx = {}, asy = {};
+        for (let i = 0; i < numRibs; i++) {
+            const key = 'Rib ' + (i + 1);
+            asz[key] = []; asx[key] = []; asy[key] = [];
+            for (let j = 0; j < xn; j++) {
+                asz[key].push((SSZ[key][j] + SSZ[key][j + 1]) / 2);
+                asx[key].push((SSX[key][j] + SSX[key][j + 1]) / 2);
+                asy[key].push((SSY[key][j] + SSY[key][j + 1]) / 2);
+            }
+        }
+
+        // 5. EQUILIBRIUM CHECK
+        let Calc_Pz = 0;
+        const eqPerRib = [];
+        for (let i = 0; i < numRibs; i++) {
+            const key = 'Rib ' + (i + 1);
+            const sumSz = asz[key].reduce((s, v) => s + v, 0);
+            const eq = sumSz * l_elem * bi[i];
+            eqPerRib.push(eq);
+            Calc_Pz += eq;
+        }
+        const diff = 100 * (P - Calc_Pz) / P;
+        const eqPassed = Math.abs(diff) <= 2.5;
+
+        // Build matrices [numRibs x xn]
+        const sszMat = [], ssxMat = [], ssyMat = [];
+        for (let i = 0; i < numRibs; i++) {
+            const key = 'Rib ' + (i + 1);
+            sszMat.push(asz[key]);
+            ssxMat.push(asx[key]);
+            ssyMat.push(asy[key]);
+        }
+
+        return {
+            numRibs, bi, al, sigm_Tip,
+            P, TiP, l, xn, l_elem,
+            xdist, xloc, xnorm, axdist,
+            SSZ, SSX, SSY,
+            asz, asx, asy,
+            sszMat, ssxMat, ssyMat,
+            Calc_Pz, diff, eqPassed, eqPerRib,
+            nz: new Array(numRibs).fill(nnz)
+        };
+    }
+
+    // ================================================================
+    //  RENDERING — PLOTLY
+    // ================================================================
+    function getPlotlyTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        return {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: isDark ? 'rgba(30,41,59,0.5)' : 'rgba(248,250,252,0.5)',
+            font: { color: isDark ? '#e2e8f0' : '#334155', family: 'Source Sans Pro, sans-serif' },
+            scene: {
+                bgcolor: 'rgba(0,0,0,0)',
+                xaxis: { color: isDark ? '#94a3b8' : '#475569', gridcolor: isDark ? '#334155' : '#e2e8f0',
+                         showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.4)' : 'rgba(241,245,249,0.6)' },
+                yaxis: { color: isDark ? '#94a3b8' : '#475569', gridcolor: isDark ? '#334155' : '#e2e8f0',
+                         showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.4)' : 'rgba(241,245,249,0.6)' },
+                zaxis: { color: isDark ? '#94a3b8' : '#475569', gridcolor: isDark ? '#334155' : '#e2e8f0',
+                         showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.4)' : 'rgba(241,245,249,0.6)' },
+            },
+            xaxis: { gridcolor: isDark ? '#334155' : '#e2e8f0', zerolinecolor: isDark ? '#475569' : '#cbd5e1' },
+            yaxis: { gridcolor: isDark ? '#334155' : '#e2e8f0', zerolinecolor: isDark ? '#475569' : '#cbd5e1' },
+            margin: { l: 50, r: 30, t: 40, b: 50 },
+            colorway: ['#0ea5e9', '#f97316', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#f59e0b', '#ec4899']
+        };
+    }
+
+    const plotlyConfig = { responsive: true, displayModeBar: true, displaylogo: false,
+        modeBarButtonsToRemove: ['toImage', 'sendDataToCloud'] };
+
+    // ----- 3D SURFACES -----
+    function render3DSurface(containerId, matrix, axdist, ribCenters, ribLabels, opts) {
+        const theme = getPlotlyTheme();
+        const { title, colorscale, symmetric } = opts;
+
+        let cmin, cmax;
+        const flat = matrix.flat();
+        if (symmetric) {
+            const vmax = Math.max(...flat.map(Math.abs));
+            cmin = -vmax; cmax = vmax;
+        } else {
+            cmin = Math.min(...flat); cmax = Math.max(...flat);
+        }
+
+        const surface = {
+            type: 'surface',
+            x: axdist, y: ribCenters, z: matrix,
+            colorscale: colorscale,
+            cmin: cmin, cmax: cmax,
+            showscale: true,
+            colorbar: { title: { text: title + ' [MPa]', font: { size: 11 } }, thickness: 15, len: 0.7 },
+            contours: {
+                z: { show: true, usecolormap: true, highlightcolor: '#fff', project: { z: false } },
+                x: { show: false }, y: { show: false }
+            },
+            lighting: { ambient: 0.6, diffuse: 0.5, specular: 0.15, roughness: 0.5 },
+            hovertemplate: 'x: %{x:.1f} mm<br>y: %{y:.1f} mm<br>σ: %{z:.4f} MPa<extra></extra>'
+        };
+
+        const layout = {
+            ...theme,
+            scene: {
+                ...theme.scene,
+                xaxis: { ...theme.scene.xaxis, title: 'Contact Length [mm]' },
+                yaxis: { ...theme.scene.yaxis, title: 'Contact Width [mm]' },
+                zaxis: { ...theme.scene.zaxis, title: title + ' [MPa]' },
+                camera: { eye: { x: 1.6, y: -1.6, z: 1.0 } },
+                aspectratio: { x: 1.5, y: 1, z: 0.8 }
+            },
+            title: { text: opts.fullTitle || '', font: { size: 14 } },
+            margin: { l: 0, r: 0, t: 30, b: 0 }
+        };
+
+        Plotly.newPlot(containerId, [surface], layout, plotlyConfig);
+    }
+
+    // ----- HEATMAPS -----
+    function renderHeatmap(containerId, matrix, axdist, ribLabels, opts) {
+        const theme = getPlotlyTheme();
+        const { title, colorscale, symmetric } = opts;
+
+        let zmid = undefined, zmin, zmax;
+        const flat = matrix.flat();
+        if (symmetric) {
+            const vmax = Math.max(...flat.map(Math.abs));
+            zmin = -vmax; zmax = vmax; zmid = 0;
+        } else {
+            zmin = Math.min(...flat); zmax = Math.max(...flat);
+        }
+
+        const trace = {
+            type: 'heatmap',
+            x: axdist, y: ribLabels, z: matrix,
+            colorscale: colorscale,
+            zmin: zmin, zmax: zmax, zmid: zmid,
+            showscale: true,
+            colorbar: { title: { text: title + ' [MPa]', font: { size: 11 } }, thickness: 15 },
+            hovertemplate: 'x: %{x:.1f} mm<br>%{y}<br>σ: %{z:.4f} MPa<extra></extra>',
+            xgap: 1, ygap: 1
+        };
+
+        const layout = {
+            ...theme,
+            xaxis: { ...theme.xaxis, title: 'Contact Length [mm]' },
+            yaxis: { ...theme.yaxis, title: '', autorange: true },
+            margin: { l: 100, r: 30, t: 30, b: 60 }
+        };
+
+        Plotly.newPlot(containerId, [trace], layout, plotlyConfig);
+    }
+
+    // ----- PER-RIB LINE CHARTS -----
+    function renderRibCurves(containerId, theoryDict, avgDict, xTheory, axdist, ribLabels, opts) {
+        const theme = getPlotlyTheme();
+        const { title, symmetric } = opts;
+        const numRibs = ribLabels.length;
+        const colors = ['#0ea5e9', '#f97316', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#f59e0b', '#ec4899'];
+
+        const traces = [];
+        for (let i = 0; i < numRibs; i++) {
+            const key = 'Rib ' + (i + 1);
+            const col = colors[i % colors.length];
+
+            // Theory curve
+            traces.push({
+                type: 'scatter', mode: 'lines',
+                x: xTheory, y: theoryDict[key],
+                name: ribLabels[i] + ' (theory)',
+                line: { color: col, width: 2.5 },
+                legendgroup: key,
+                hovertemplate: 'x: %{x:.1f}<br>σ: %{y:.4f} MPa<extra>' + ribLabels[i] + '</extra>'
+            });
+            // Averaged scatter
+            traces.push({
+                type: 'scatter', mode: 'markers',
+                x: axdist, y: avgDict[key],
+                name: ribLabels[i] + ' (avg)',
+                marker: { color: col, size: 7, symbol: 'circle',
+                          line: { color: 'rgba(0,0,0,0.3)', width: 1 } },
+                legendgroup: key, showlegend: false,
+                hovertemplate: 'x: %{x:.1f}<br>σ: %{y:.4f} MPa<extra>' + ribLabels[i] + ' avg</extra>'
+            });
+        }
+
+        const layout = {
+            ...theme,
+            xaxis: { ...theme.xaxis, title: 'Contact Length [mm]' },
+            yaxis: { ...theme.yaxis, title: title + ' [MPa]' },
+            legend: { orientation: 'h', y: -0.18, x: 0.5, xanchor: 'center',
+                      font: { size: 11 } },
+            margin: { l: 65, r: 20, t: 30, b: 80 },
+            hovermode: 'closest'
+        };
+
+        if (symmetric) {
+            const allY = traces.flatMap(t => t.y || []);
+            const vmax = Math.max(...allY.map(Math.abs)) * 1.15;
+            layout.yaxis.range = [-vmax, vmax];
+            // Zero line
+            layout.shapes = [{ type: 'line', x0: 0, x1: 1, xref: 'paper',
+                y0: 0, y1: 0, line: { color: 'rgba(100,100,100,0.4)', width: 1, dash: 'dash' } }];
+        }
+
+        Plotly.newPlot(containerId, traces, layout, plotlyConfig);
+    }
+
+    // ----- BAR CHARTS -----
+    function renderBarChart(containerId, values, labels, opts) {
+        const theme = getPlotlyTheme();
+        const { title, color } = opts;
+
+        const trace = {
+            type: 'bar', orientation: 'h',
+            x: values, y: labels,
+            marker: {
+                color: values.map((_, i) => {
+                    const t = values.length > 1 ? i / (values.length - 1) : 0;
+                    return `rgba(14, 165, 233, ${0.4 + 0.6 * t})`;
+                }),
+                line: { color: 'rgba(14,165,233,0.6)', width: 1 }
+            },
+            hovertemplate: '%{y}: %{x:.4f}<extra></extra>'
+        };
+
+        if (color === 'orange') {
+            trace.marker.color = values.map((_, i) => {
+                const t = values.length > 1 ? i / (values.length - 1) : 0;
+                return `rgba(249, 115, 22, ${0.4 + 0.6 * t})`;
+            });
+            trace.marker.line.color = 'rgba(249,115,22,0.6)';
+        } else if (color === 'green') {
+            trace.marker.color = values.map((_, i) => {
+                const t = values.length > 1 ? i / (values.length - 1) : 0;
+                return `rgba(16, 185, 129, ${0.4 + 0.6 * t})`;
+            });
+            trace.marker.line.color = 'rgba(16,185,129,0.6)';
+        }
+
+        const layout = {
+            ...theme,
+            xaxis: { ...theme.xaxis, title: title },
+            yaxis: { ...theme.yaxis, autorange: 'reversed' },
+            margin: { l: 80, r: 20, t: 20, b: 50 }
+        };
+
+        Plotly.newPlot(containerId, [trace], layout, plotlyConfig);
+    }
+
+    // ================================================================
+    //  COMPUTE & RENDER ORCHESTRATOR
+    // ================================================================
+    function computeAndRender() {
+        if (!currentRow) return;
+        showLoading('Setting up stress computation...', true);
+
+        // Use staged timeouts so the progress bar updates visually
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                try {
+                    setProgress(10, 'Computing vertical stresses (σz)...');
+                    setTimeout(() => {
+                        try {
+                            results = computeStresses();
+                            setProgress(50, 'Checking equilibrium...');
+                            setTimeout(() => {
+                                try {
+                                    updateEquilibriumBadge();
+                                    updateSummaryCards();
+                                    setProgress(70, 'Rendering 3D surfaces and charts...');
+                                    setTimeout(() => {
+                                        try {
+                                            renderAllCharts();
+                                            setProgress(100, 'Complete!');
+                                            // Show content
+                                            document.getElementById('stress3d-empty').style.display = 'none';
+                                            document.getElementById('stress3d-content').style.display = '';
+                                            document.getElementById('analysis-empty').style.display = 'none';
+                                            document.getElementById('analysis-content').style.display = '';
+                                            setTimeout(() => hideLoading(), 300);
+                                        } catch (e) {
+                                            console.error('Rendering error:', e);
+                                            alert('Rendering error:\n' + e.message);
+                                            hideLoading();
+                                        }
+                                    }, 60);
+                                } catch (e) {
+                                    console.error('Post-compute error:', e);
+                                    alert('Post-compute error:\n' + e.message);
+                                    hideLoading();
+                                }
+                            }, 40);
+                        } catch (e) {
+                            console.error('Computation error:', e);
+                            alert('Computation error:\n' + e.message);
+                            hideLoading();
+                        }
+                    }, 60);
+                } catch (e) {
+                    console.error('Setup error:', e);
+                    hideLoading();
+                }
+            }, 30);
+        });
+    }
+
+    function updateEquilibriumBadge() {
+        if (!results) return;
+        const el = document.getElementById('stat-eq');
+        const card = document.getElementById('eq-stat-card');
+        const pct = Math.abs(results.diff).toFixed(2);
+        if (results.eqPassed) {
+            el.innerHTML = `<span class="eq-badge pass"><i class="fas fa-check-circle"></i> ${pct}%</span>`;
+            card.style.borderColor = 'rgba(16,185,129,0.4)';
+        } else {
+            el.innerHTML = `<span class="eq-badge fail"><i class="fas fa-times-circle"></i> ${pct}%</span>`;
+            card.style.borderColor = 'rgba(239,68,68,0.4)';
+        }
+    }
+
+    function renderAllCharts() {
+        if (!results) return;
+        const r = results;
+        const ribLabels = r.bi.map((w, i) => `Rib ${i + 1} (${w} mm)`);
+
+        // Y-centers for 3D surfaces
+        const cumW = [0];
+        r.bi.forEach(w => cumW.push(cumW[cumW.length - 1] + w));
+        const totalW = cumW[cumW.length - 1];
+        const ribCenters = r.bi.map((w, i) => cumW[i] + w / 2 - totalW / 2);
+
+        // 3D Surfaces
+        render3DSurface('chart-3d-ssz', r.sszMat, r.axdist, ribCenters, ribLabels,
+            { title: 'σz', fullTitle: currentRow.name + ' — Vertical σz', colorscale: 'YlOrRd', symmetric: false });
+        render3DSurface('chart-3d-ssx', r.ssxMat, r.axdist, ribCenters, ribLabels,
+            { title: 'σx', fullTitle: currentRow.name + ' — Longitudinal σx', colorscale: 'RdBu', symmetric: true });
+        render3DSurface('chart-3d-ssy', r.ssyMat, r.axdist, ribCenters, ribLabels,
+            { title: 'σy', fullTitle: currentRow.name + ' — Transverse σy', colorscale: 'YlOrRd', symmetric: false });
+
+        // Heatmaps
+        renderHeatmap('chart-hm-ssz', r.sszMat, r.axdist, ribLabels,
+            { title: 'σz', colorscale: 'YlOrRd', symmetric: false });
+        renderHeatmap('chart-hm-ssx', r.ssxMat, r.axdist, ribLabels,
+            { title: 'σx', colorscale: 'RdBu', symmetric: true });
+        renderHeatmap('chart-hm-ssy', r.ssyMat, r.axdist, ribLabels,
+            { title: 'σy', colorscale: 'YlOrRd', symmetric: false });
+
+        // Per-Rib Curves — use xdist for SSZ/SSY and xdist for SSX
+        renderRibCurves('chart-rib-ssz', r.SSZ, r.asz, r.xdist, r.axdist, ribLabels,
+            { title: 'σz', symmetric: false });
+        renderRibCurves('chart-rib-ssx', r.SSX, r.asx, r.xdist, r.axdist, ribLabels,
+            { title: 'σx', symmetric: true });
+        renderRibCurves('chart-rib-ssy', r.SSY, r.asy, r.xdist, r.axdist, ribLabels,
+            { title: 'σy', symmetric: false });
+
+        // Bar charts
+        const ribNames = r.bi.map((_, i) => `Rib ${i + 1}`);
+        renderBarChart('chart-bar-load', r.al, ribNames,
+            { title: 'Load Factor (αl)', color: 'orange' });
+        renderBarChart('chart-bar-stress', r.sigm_Tip, ribNames,
+            { title: 'Stress Factor (σTip) [MPa]', color: 'blue' });
+        renderBarChart('chart-bar-width', r.bi, ribNames,
+            { title: 'Width [mm]', color: 'green' });
+    }
+
+    // ==================== LOADING HELPERS ====================
+    function showLoading(msg, useProgress) {
+        document.getElementById('loading-text').textContent = msg || 'Loading...';
+        const spinner = document.getElementById('loading-spinner');
+        const progCont = document.getElementById('progress-container');
+        if (useProgress) {
+            spinner.style.display = 'none';
+            progCont.style.display = '';
+            setProgress(0);
+        } else {
+            spinner.style.display = '';
+            progCont.style.display = 'none';
+        }
+        document.getElementById('loading-overlay').classList.add('visible');
+    }
+    function hideLoading() {
+        document.getElementById('loading-overlay').classList.remove('visible');
+    }
+    function setProgress(pct, label) {
+        document.getElementById('progress-bar-fill').style.width = pct + '%';
+        document.getElementById('progress-pct').textContent = Math.round(pct) + '%';
+        if (label) document.getElementById('loading-text').textContent = label;
+    }
+
+    // ================================================================
+    //  EVENT LISTENERS
+    // ================================================================
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // --- Module Tabs ---
+        document.querySelectorAll('.module-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.module-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.module-content').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('module-' + this.dataset.module).classList.add('active');
+
+                // Trigger Plotly resize on tab switch
+                setTimeout(() => {
+                    window.dispatchEvent(new Event('resize'));
+                }, 100);
+            });
+        });
+
+        // --- Viz Sub-tabs ---
+        document.querySelectorAll('.viz-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.viz-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.viz-content').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('viz-' + this.dataset.viz).classList.add('active');
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+            });
+        });
+
+        // --- Manufacturer filter ---
+        document.getElementById('filter-manufacturer').addEventListener('change', updateAircraftDropdown);
+
+        // --- Search filter ---
+        document.getElementById('aircraft-search').addEventListener('input', updateAircraftDropdown);
+
+        // --- Aircraft selection ---
+        document.getElementById('filter-aircraft').addEventListener('change', onAircraftSelect);
+
+        // --- Reset defaults ---
+        document.getElementById('btn-reset').addEventListener('click', function() {
+            if (!defaultParams) return;
+            applyParams(defaultParams);
+            computeAndRender();
+        });
+
+        // --- Compute button ---
+        document.getElementById('btn-compute').addEventListener('click', function() {
+            checkModified();
+            computeAndRender();
+        });
+
+        // --- Advanced toggle ---
+        document.getElementById('adv-toggle').addEventListener('click', function() {
+            this.classList.toggle('open');
+            document.getElementById('adv-body').classList.toggle('open');
+        });
+
+        // --- Parameter modification detection ---
+        document.getElementById('param-panel').addEventListener('input', function() {
+            checkModified();
+            updateSummaryCards();
+            drawContactPatch();
+        });
+
+        // --- Theme override for AirCrafter ---
+        const toggleBtns = document.querySelectorAll('.theme-toggle, #theme-toggle');
+        toggleBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopImmediatePropagation();
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('aircrafter-theme', next);
+                // Re-render charts with new theme
+                if (results) {
+                    setTimeout(() => renderAllCharts(), 100);
+                }
+                drawContactPatch();
+            }, { capture: true });
+        });
+
+        // --- Load data ---
+        loadDatabase();
+    });
+    </script>
+</body>
+</html>
