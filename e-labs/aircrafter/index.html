@@ -28,6 +28,8 @@
             --ac-info: #06b6d4;
             --glass-bg: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.1);
+            --ac-radius: 14px;
+            --ac-gap: 0.75rem;
         }
 
         [data-theme="light"] {
@@ -57,14 +59,11 @@
         }
 
         /* ==================== SCROLLBAR ==================== */
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: var(--ac-bg-alt); border-radius: 5px; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--ac-bg-alt); }
         ::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, var(--ac-primary), var(--ac-primary-hover));
-            border-radius: 5px; border: 2px solid var(--ac-bg-alt);
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, var(--ac-primary-hover), var(--ac-secondary));
+            border-radius: 4px;
         }
         * { scrollbar-width: thin; scrollbar-color: var(--ac-primary) var(--ac-bg-alt); }
 
@@ -75,33 +74,62 @@
         }
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
+            50% { transform: translateY(-6px); }
         }
         @keyframes glow {
             0%, 100% { box-shadow: 0 0 5px var(--ac-primary-glow), 0 0 10px transparent; }
             50% { box-shadow: 0 0 20px var(--ac-primary-glow), 0 0 40px var(--ac-primary-glow); }
         }
         @keyframes slideInUp {
-            from { opacity: 0; transform: translateY(30px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.9); }
+            from { opacity: 0; transform: scale(0.92); }
             to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(14, 165, 233, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
         }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes planePass {
-            0% { transform: translateX(-100%) translateY(0); opacity: 0; }
-            10% { opacity: 0.6; }
-            50% { transform: translateX(40vw) translateY(-10px); opacity: 0.6; }
-            90% { opacity: 0.6; }
-            100% { transform: translateX(120vw) translateY(0); opacity: 0; }
+        @keyframes slideRight {
+            from { opacity: 0; transform: translateX(-15px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 12px rgba(14, 165, 233, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+        }
+        @keyframes countUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        @keyframes particles {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-500px); }
+        }
+        @keyframes ripple {
+            to { transform: scale(4); opacity: 0; }
+        }
+        @keyframes borderGlow {
+            0%, 100% { border-color: var(--ac-border); }
+            50% { border-color: var(--ac-primary); }
+        }
+        .stagger-1 { animation-delay: 0.05s; }
+        .stagger-2 { animation-delay: 0.10s; }
+        .stagger-3 { animation-delay: 0.15s; }
+        .stagger-4 { animation-delay: 0.20s; }
+        .stagger-5 { animation-delay: 0.25s; }
+        .stagger-6 { animation-delay: 0.30s; }
+        .animate-in {
+            animation: slideInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .count-animate {
+            animation: countUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
         /* ==================== GLASSMORPHISM ==================== */
@@ -117,16 +145,14 @@
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
         }
         .hover-lift:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
         }
 
         /* ==================== GRADIENT TEXT ==================== */
         .gradient-text {
             background: linear-gradient(135deg, var(--ac-primary), var(--ac-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
 
         /* ==================== GLOBAL RESET ==================== */
@@ -138,16 +164,16 @@
 
         /* ==================== APP CONTAINER ==================== */
         .aircrafter-app {
-            max-width: 1440px;
+            max-width: 1500px;
             margin: 0 auto;
-            padding: 1rem 2rem 2rem;
+            padding: 0.75rem 1.5rem 2rem;
             background: var(--ac-bg);
             min-height: 100vh;
         }
 
-        /* ==================== HEADER ==================== */
+        /* ==================== HEADER (Frontier-style centered) ==================== */
         .app-header {
-            margin-bottom: 2rem;
+            margin-bottom: 1.25rem;
             background: linear-gradient(135deg, #0c1425 0%, #1a2744 50%, #0f2040 100%);
             border-radius: 24px;
             color: white;
@@ -163,29 +189,25 @@
                 radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.15) 0%, transparent 40%),
                 radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.08) 0%, transparent 60%);
             pointer-events: none;
+            animation: headerGlow 8s ease-in-out infinite alternate;
         }
+        @keyframes headerGlow { 0% { opacity: 0.8; } 100% { opacity: 1; } }
         .app-header::after {
             content: '';
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background-image:
-                radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.2), transparent),
-                radial-gradient(2px 2px at 80px 60px, rgba(255,255,255,0.15), transparent),
-                radial-gradient(2px 2px at 160px 40px, rgba(255,255,255,0.2), transparent),
-                radial-gradient(3px 3px at 250px 80px, var(--ac-primary), transparent),
+                radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 80px 70px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 160px 40px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(3px 3px at 250px 100px, var(--ac-primary), transparent),
                 radial-gradient(2px 2px at 350px 50px, rgba(255,255,255,0.2), transparent),
-                radial-gradient(2px 2px at 50px 120px, rgba(255,255,255,0.15), transparent),
-                radial-gradient(3px 3px at 420px 30px, rgba(249,115,22,0.5), transparent);
-            background-size: 500px 160px;
-            animation: particles 25s linear infinite;
+                radial-gradient(3px 3px at 420px 30px, var(--ac-secondary), transparent);
+            background-size: 450px 150px;
+            animation: particles 20s linear infinite;
             pointer-events: none;
         }
-        @keyframes particles {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-500px); }
-        }
-
         .header-nav {
-            padding: 1rem 1.5rem;
+            padding: 0.85rem 1.5rem;
             background: rgba(0, 0, 0, 0.3);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: relative; z-index: 1;
@@ -195,8 +217,8 @@
         .back-btn {
             background: rgba(14, 165, 233, 0.2);
             border: 1px solid rgba(14, 165, 233, 0.4);
-            color: white; padding: 0.6rem 1.2rem; border-radius: 10px;
-            cursor: pointer; font-size: 0.9rem;
+            color: white; padding: 0.5rem 1rem; border-radius: 10px;
+            cursor: pointer; font-size: 0.88rem;
             display: inline-flex; align-items: center; gap: 0.5rem;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             text-decoration: none; font-weight: 500;
@@ -205,429 +227,393 @@
             background: rgba(14, 165, 233, 0.35);
             border-color: rgba(14, 165, 233, 0.6);
             transform: translateX(-3px);
-            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.25);
+            box-shadow: 0 4px 15px var(--ac-primary-glow);
         }
-        .back-btn i { transition: transform 0.3s ease; }
         .back-btn:hover i { transform: translateX(-3px); }
-
+        .back-btn i { transition: transform 0.3s ease; }
+        .header-badges {
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .header-badge {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 0.35rem 0.75rem; border-radius: 8px;
+            font-size: 0.78rem; font-weight: 600;
+            color: rgba(255,255,255,0.75);
+            letter-spacing: 0.03em;
+        }
+        .header-badge i { margin-right: 0.3rem; font-size: 0.72rem; }
         .header-content {
-            padding: 2.5rem 2rem 2rem;
-            text-align: center; position: relative; z-index: 1;
+            text-align: center;
+            padding: 1.5rem 2rem 1.75rem;
+            position: relative; z-index: 1;
         }
         .header-content h1 {
-            font-size: 2.8rem; font-weight: 800; margin: 0 0 0.5rem;
-            letter-spacing: -0.02em;
-            color: white;
+            font-size: 3rem; margin: 0 0 0.5rem; display: flex;
+            align-items: center; justify-content: center; gap: 0.8rem;
+            font-weight: 800; color: white !important;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+            animation: slideInUp 0.8s ease;
+        }
+        .header-content h1 .plane-icon {
+            color: var(--ac-primary) !important;
+            font-size: 2.2rem;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px var(--ac-primary-glow));
         }
         .header-content h1 .highlight {
             background: linear-gradient(135deg, var(--ac-primary), var(--ac-secondary));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-        .header-content .subtitle {
-            font-size: 1.1rem; opacity: 0.8; margin: 0; font-weight: 300;
-            letter-spacing: 0.05em;
-        }
-        .header-content .plane-icon {
-            font-size: 1.6rem;
-            display: inline-block;
-            animation: float 3s ease-in-out infinite;
-            margin-right: 0.5rem;
+        .header-content p {
+            font-size: 1.15rem; opacity: 0.9; margin: 0;
+            color: white !important; font-weight: 300;
+            letter-spacing: 0.5px;
+            animation: slideInUp 0.8s ease 0.1s both;
         }
 
         /* ==================== MODULE TABS ==================== */
         .module-tabs {
-            display: flex; gap: 0.5rem; margin-bottom: 1.5rem;
-            background: var(--ac-bg-panel); padding: 0.5rem; border-radius: 16px;
+            display: flex; gap: 0.3rem; margin-bottom: 1rem;
+            background: var(--ac-bg-panel); padding: 0.35rem; border-radius: 12px;
             border: 1px solid var(--ac-border);
         }
         .module-tab {
-            flex: 1; padding: 0.9rem 1rem; border-radius: 12px;
+            flex: 1; padding: 0.7rem 0.9rem; border-radius: 9px;
             background: transparent; border: none;
             color: var(--ac-text-muted); font-weight: 600; font-size: 0.92rem;
             cursor: pointer; transition: all 0.3s ease;
-            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+            position: relative; overflow: hidden;
         }
         .module-tab:hover { color: var(--ac-text); background: rgba(14, 165, 233, 0.08); }
         .module-tab.active {
             background: linear-gradient(135deg, var(--ac-primary), var(--ac-primary-hover));
             color: white;
-            box-shadow: 0 4px 15px var(--ac-primary-glow);
+            box-shadow: 0 4px 16px var(--ac-primary-glow);
+            transform: translateY(-1px);
         }
-        .module-content { display: none; animation: fadeIn 0.4s ease; }
+        .module-tab .tab-badge {
+            font-size: 0.65rem; background: rgba(255,255,255,0.2);
+            padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 700;
+        }
+        .module-tab.active .tab-badge { background: rgba(255,255,255,0.25); }
+        .module-content { display: none; animation: fadeIn 0.35s ease; }
         .module-content.active { display: block; }
 
-        /* ==================== PANEL ==================== */
+        /* ==================== PANEL (compact) ==================== */
         .panel {
             background: var(--ac-bg-panel);
             border: 1px solid var(--ac-border);
-            border-radius: 16px; padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            transition: border-color 0.3s ease;
+            border-radius: var(--ac-radius); padding: 1rem 1.1rem;
+            margin-bottom: var(--ac-gap);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
         }
-        .panel:hover { border-color: var(--ac-border-dark); }
+        .panel:hover {
+            border-color: var(--ac-border-dark);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
         .panel-title {
-            font-size: 1.1rem; font-weight: 700;
-            color: var(--ac-text); margin: 0 0 1rem;
-            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 1rem; font-weight: 700;
+            color: var(--ac-text); margin: 0 0 0.7rem;
+            display: flex; align-items: center; gap: 0.4rem;
         }
-        .panel-title i { color: var(--ac-primary); }
+        .panel-title i { color: var(--ac-primary); font-size: 0.85rem; }
 
-        /* ==================== SELECTION PANEL ==================== */
+        /* ==================== CONFIG LAYOUT (2-col) ==================== */
+        .config-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: var(--ac-gap);
+            align-items: start;
+        }
+        .config-left, .config-right {
+            display: flex; flex-direction: column; gap: var(--ac-gap);
+        }
+        .config-right { position: sticky; top: 1rem; }
+
+        /* ==================== SELECTION ==================== */
         .selection-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+            grid-template-columns: 1fr 1.5fr 1fr;
+            gap: 0.7rem;
         }
-        .filter-group {
-            display: flex; flex-direction: column; gap: 0.4rem;
-        }
+        .filter-group { display: flex; flex-direction: column; gap: 0.25rem; }
         .filter-group label {
-            font-size: 0.82rem; font-weight: 600; color: var(--ac-text-secondary);
-            text-transform: uppercase; letter-spacing: 0.05em;
+            font-size: 0.78rem; font-weight: 700; color: var(--ac-text-muted);
+            text-transform: uppercase; letter-spacing: 0.06em;
         }
         .filter-group select,
         .filter-group input[type="text"] {
-            padding: 0.65rem 0.85rem; border-radius: 10px;
+            padding: 0.55rem 0.75rem; border-radius: 8px;
             border: 1px solid var(--ac-border);
-            background: var(--ac-bg);
-            color: var(--ac-text); font-size: 0.95rem;
-            transition: all 0.3s ease;
-            font-family: inherit;
+            background: var(--ac-bg); color: var(--ac-text);
+            font-size: 0.95rem; transition: all 0.3s ease; font-family: inherit;
         }
         .filter-group select:focus,
         .filter-group input[type="text"]:focus {
-            outline: none;
-            border-color: var(--ac-primary);
-            box-shadow: 0 0 0 3px var(--ac-primary-glow);
+            outline: none; border-color: var(--ac-primary);
+            box-shadow: 0 0 0 3px var(--ac-primary-glow), 0 2px 8px rgba(14,165,233,0.1);
         }
 
-        /* ==================== PARAMETER CARDS ==================== */
+        /* ==================== INLINE STATS (compact badges) ==================== */
+        .inline-stats {
+            display: flex; flex-wrap: wrap; gap: 0.4rem;
+            margin-bottom: 0.5rem;
+        }
+        .mini-stat {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            background: var(--ac-bg); border: 1px solid var(--ac-border);
+            padding: 0.35rem 0.7rem; border-radius: 8px;
+            font-size: 0.85rem; transition: all 0.3s ease;
+        }
+        .mini-stat:hover {\n            border-color: var(--ac-primary);\n            background: rgba(14,165,233,0.06);\n        }
+        .mini-stat .ms-icon { font-size: 0.72rem; }
+        .mini-stat .ms-value { font-weight: 800; color: var(--ac-text); font-variant-numeric: tabular-nums; }
+        .mini-stat .ms-label { color: var(--ac-text-muted); font-weight: 500; }
+        .mini-stat.eq-pass { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.06); }
+        .mini-stat.eq-fail { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.06); }
+        .mini-stat.eq-pass .ms-value { color: var(--ac-success); }
+        .mini-stat.eq-fail .ms-value { color: var(--ac-danger); }
+
+        /* ==================== PARAMETER CARDS (compact) ==================== */
         .params-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 0.6rem; margin-bottom: 0.8rem;
         }
         .param-card {
-            background: var(--ac-bg);
-            border: 1px solid var(--ac-border);
-            border-radius: 14px; padding: 1rem 1.2rem;
-            transition: all 0.3s ease;
-            position: relative; overflow: hidden;
+            background: var(--ac-bg); border: 1px solid var(--ac-border);
+            border-radius: 10px; padding: 0.6rem 0.8rem;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
         }
         .param-card::before {
-            content: '';
-            position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(90deg, var(--ac-primary), var(--ac-info));
-            opacity: 0.7;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--ac-primary), var(--ac-info)); opacity: 0.6;
         }
-        .param-card:hover { border-color: var(--ac-primary); transform: translateY(-2px); }
+        .param-card:hover {
+            border-color: var(--ac-primary);
+            box-shadow: 0 4px 16px rgba(14,165,233,0.12);
+            transform: translateY(-1px);
+        }
         .param-card .label {
-            font-size: 0.78rem; font-weight: 600;
-            color: var(--ac-text-muted); text-transform: uppercase;
-            letter-spacing: 0.05em; margin-bottom: 0.3rem;
-        }
-        .param-card .value {
-            font-size: 1.5rem; font-weight: 800;
-            color: var(--ac-text);
-            font-variant-numeric: tabular-nums;
+            font-size: 0.78rem; font-weight: 700; color: var(--ac-text-muted);
+            text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.2rem;
         }
         .param-card .unit {
-            font-size: 0.8rem; font-weight: 400;
-            color: var(--ac-text-secondary); margin-left: 0.25rem;
+            font-size: 0.78rem; font-weight: 400; color: var(--ac-text-secondary);
         }
         .param-card input {
-            width: 100%; font-size: 1.3rem; font-weight: 700;
-            padding: 0.3rem 0.5rem; border-radius: 8px;
+            width: 100%; font-size: 1.15rem; font-weight: 700;
+            padding: 0.25rem 0.4rem; border-radius: 6px;
             border: 1px solid var(--ac-border);
             background: var(--ac-bg-alt); color: var(--ac-text);
-            font-family: inherit;
-            transition: border-color 0.3s ease;
+            font-family: inherit; transition: border-color 0.3s ease;
         }
         .param-card input:focus {
-            outline: none;
-            border-color: var(--ac-primary);
-            box-shadow: 0 0 0 3px var(--ac-primary-glow);
+            outline: none; border-color: var(--ac-primary);
+            box-shadow: 0 0 0 2px var(--ac-primary-glow);
         }
         .param-card.modified::after {
-            content: '●';
-            position: absolute; top: 8px; right: 10px;
-            color: var(--ac-warning); font-size: 0.8rem;
+            content: '●'; position: absolute; top: 6px; right: 8px;
+            color: var(--ac-warning); font-size: 0.7rem;
         }
 
-        /* ==================== RIB TABLE ==================== */
-        .rib-table-container {
-            overflow-x: auto; margin-top: 0.5rem;
-        }
+        /* ==================== RIB TABLE (compact) ==================== */
+        .rib-table-container { overflow-x: auto; }
         .rib-table {
             width: 100%; border-collapse: separate; border-spacing: 0;
             font-size: 0.88rem;
         }
         .rib-table th {
-            background: var(--ac-bg);
-            color: var(--ac-text-secondary);
-            padding: 0.6rem 0.8rem;
-            text-align: center;
-            font-weight: 700;
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            background: var(--ac-bg); color: var(--ac-text-secondary);
+            padding: 0.45rem 0.55rem; text-align: center;
+            font-weight: 700; font-size: 0.76rem;
+            text-transform: uppercase; letter-spacing: 0.04em;
             border-bottom: 2px solid var(--ac-border);
-            position: sticky; top: 0;
         }
         .rib-table td {
-            padding: 0.5rem 0.6rem; text-align: center;
+            padding: 0.3rem 0.4rem; text-align: center;
             border-bottom: 1px solid var(--ac-border);
-            color: var(--ac-text);
         }
         .rib-table td input {
-            width: 80px; text-align: center;
-            padding: 0.35rem 0.4rem; border-radius: 8px;
+            width: 72px; text-align: center;
+            padding: 0.25rem 0.3rem; border-radius: 6px;
             border: 1px solid var(--ac-border);
             background: var(--ac-bg-alt); color: var(--ac-text);
-            font-size: 0.88rem; font-family: inherit;
-            transition: all 0.3s ease;
+            font-size: 0.82rem; font-family: inherit; transition: all 0.3s ease;
         }
         .rib-table td input:focus {
-            outline: none;
-            border-color: var(--ac-primary);
+            outline: none; border-color: var(--ac-primary);
             box-shadow: 0 0 0 2px var(--ac-primary-glow);
         }
         .rib-table td input.modified {
-            border-color: var(--ac-warning);
-            background: rgba(245, 158, 11, 0.08);
+            border-color: var(--ac-warning); background: rgba(245, 158, 11, 0.08);
         }
-        .rib-table tr:hover td { background: rgba(14, 165, 233, 0.04); }
-        .rib-header-cell {
-            font-weight: 700; color: var(--ac-primary) !important;
-            white-space: nowrap;
-        }
+        .rib-table tr:hover td { background: rgba(14, 165, 233, 0.03); }
+        .rib-header-cell { font-weight: 700; color: var(--ac-primary) !important; white-space: nowrap; }
 
         /* ==================== BUTTONS ==================== */
         .btn {
-            padding: 0.7rem 1.4rem; border-radius: 10px;
+            padding: 0.6rem 1.2rem; border-radius: 10px;
             font-weight: 600; font-size: 0.95rem; cursor: pointer;
-            display: inline-flex; align-items: center; gap: 0.5rem;
+            display: inline-flex; align-items: center; gap: 0.4rem;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            border: none; font-family: inherit;
+            border: none; font-family: inherit; position: relative; overflow: hidden;
         }
         .btn-primary {
             background: linear-gradient(135deg, var(--ac-primary), var(--ac-primary-hover));
-            color: white;
-            box-shadow: 0 4px 15px var(--ac-primary-glow);
+            color: white; box-shadow: 0 4px 16px var(--ac-primary-glow);
         }
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px var(--ac-primary-glow);
-        }
-        .btn-secondary {
-            background: var(--ac-bg-panel);
-            border: 1px solid var(--ac-border);
-            color: var(--ac-text);
-        }
-        .btn-secondary:hover {
-            border-color: var(--ac-primary);
-            background: rgba(14, 165, 233, 0.08);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 28px var(--ac-primary-glow);
+            filter: brightness(1.08);
         }
         .btn-warning {
             background: linear-gradient(135deg, var(--ac-warning), var(--ac-secondary));
             color: white;
         }
-        .btn-warning:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+        .btn-warning:hover { transform: translateY(-1px); }
+        .btn-outline {
+            background: transparent; border: 1px solid var(--ac-border);
+            color: var(--ac-text-secondary);
         }
-        .btn-group {
-            display: flex; gap: 0.75rem; margin-top: 1rem;
-            flex-wrap: wrap;
+        .btn-outline:hover { border-color: var(--ac-primary); color: var(--ac-text); }
+        .btn-group { display: flex; gap: 0.5rem; }
+
+        /* Ripple effect */
+        .btn .ripple-effect {
+            position: absolute; border-radius: 50%; background: rgba(255,255,255,0.3);
+            transform: scale(0); animation: ripple 0.6s linear; pointer-events: none;
         }
 
-        /* ==================== STATS GRID ==================== */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 1rem; margin-bottom: 1.5rem;
+        /* ==================== RESULTS SUMMARY TABLE ==================== */
+        .results-table {
+            width: 100%; font-size: 0.85rem; border-collapse: collapse;
         }
-        .stat-card {
-            background: var(--ac-bg-panel);
-            border: 1px solid var(--ac-border);
-            border-radius: 14px; padding: 1rem;
-            text-align: center;
-            transition: all 0.3s ease;
+        .results-table th {
+            text-align: left; padding: 0.4rem 0.55rem;
+            color: var(--ac-text-muted); font-weight: 600;
+            font-size: 0.74rem; text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid var(--ac-border);
         }
-        .stat-card:hover { border-color: var(--ac-primary); }
-        .stat-card .stat-icon {
-            font-size: 1.4rem; margin-bottom: 0.4rem;
-        }
-        .stat-card .stat-value {
-            font-size: 1.3rem; font-weight: 800;
+        .results-table td {
+            padding: 0.3rem 0.5rem; border-bottom: 1px solid rgba(100,100,100,0.1);
             color: var(--ac-text);
-            font-variant-numeric: tabular-nums;
         }
-        .stat-card .stat-label {
-            font-size: 0.75rem; font-weight: 600;
-            color: var(--ac-text-muted);
-            text-transform: uppercase; letter-spacing: 0.05em;
-            margin-top: 0.2rem;
+        .results-table td.val {
+            font-weight: 700; font-variant-numeric: tabular-nums;
+            text-align: right;
         }
-
-        /* ==================== EQUILIBRIUM BADGE ==================== */
-        .eq-badge {
-            display: inline-flex; align-items: center; gap: 0.5rem;
-            padding: 0.5rem 1rem; border-radius: 10px;
-            font-weight: 700; font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-        .eq-badge.pass {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--ac-success);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-        .eq-badge.fail {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--ac-danger);
-            border: 1px solid rgba(239, 68, 68, 0.3);
+        .results-table .rib-row:hover td {
+            background: rgba(14,165,233,0.06);
+            transition: background 0.2s ease;
         }
 
         /* ==================== CHART CONTAINERS ==================== */
-        .charts-row {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-        .charts-row.two-col {
-            grid-template-columns: repeat(2, 1fr);
-        }
+        .charts-row { display: grid; grid-template-columns: 1fr; gap: var(--ac-gap); }
+        .charts-row.two-col { grid-template-columns: repeat(2, 1fr); }
+        .charts-row.three-col { grid-template-columns: repeat(3, 1fr); }
         .chart-panel {
-            background: var(--ac-bg-panel);
-            border: 1px solid var(--ac-border);
-            border-radius: 16px;
-            overflow: hidden;
+            background: var(--ac-bg-panel); border: 1px solid var(--ac-border);
+            border-radius: var(--ac-radius); overflow: hidden;
             transition: border-color 0.3s ease;
         }
         .chart-panel:hover { border-color: var(--ac-border-dark); }
         .chart-header {
-            padding: 0.8rem 1.2rem;
+            padding: 0.55rem 1rem;
             border-bottom: 1px solid var(--ac-border);
             display: flex; align-items: center; justify-content: space-between;
         }
         .chart-title {
-            font-weight: 700; font-size: 0.95rem;
-            color: var(--ac-text);
-            display: flex; align-items: center; gap: 0.5rem;
+            font-weight: 700; font-size: 0.92rem; color: var(--ac-text);
+            display: flex; align-items: center; gap: 0.4rem;
         }
-        .chart-title i { color: var(--ac-primary); font-size: 0.9rem; }
-        .chart-body {
-            padding: 0.5rem;
-            min-height: 350px;
+        .chart-title i { color: var(--ac-primary); font-size: 0.8rem; }
+        .chart-subtitle {
+            font-size: 0.76rem; color: var(--ac-text-muted); font-weight: 500;
         }
-        .chart-body-tall { min-height: 500px; }
+        .chart-body { padding: 0.3rem; min-height: 320px; }
+        .chart-body-tall { min-height: 440px; }
+        .chart-body-short { min-height: 260px; }
 
         /* ==================== CONTACT PATCH SVG ==================== */
         .contact-patch-container {
             display: flex; justify-content: center; align-items: center;
-            padding: 1rem; min-height: 200px;
+            padding: 0.5rem; min-height: 160px;
         }
-        #contact-patch-svg {
-            max-width: 100%; height: auto;
-        }
+        #contact-patch-svg { max-width: 100%; height: auto; }
 
         /* ==================== LOADING OVERLAY ==================== */
         .loading-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0, 0, 0, 0.6);
             display: flex; align-items: center; justify-content: center;
-            z-index: 9999;
-            backdrop-filter: blur(4px);
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.3s ease;
+            z-index: 9999; backdrop-filter: blur(4px);
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
-        .loading-overlay.visible {
-            opacity: 1; pointer-events: all;
-        }
+        .loading-overlay.visible { opacity: 1; pointer-events: all; }
         .loading-card {
-            background: var(--ac-bg-panel);
-            border: 1px solid var(--ac-border);
-            border-radius: 20px; padding: 2.5rem;
-            text-align: center;
+            background: var(--ac-bg-panel); border: 1px solid var(--ac-border);
+            border-radius: 16px; padding: 2rem 2.5rem; text-align: center;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
-            animation: scaleIn 0.3s ease;
+            animation: scaleIn 0.3s ease; min-width: 280px;
         }
         .spinner {
-            width: 44px; height: 44px;
+            width: 36px; height: 36px;
             border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top-color: var(--ac-primary);
-            border-radius: 50%;
-            animation: rotate 0.8s linear infinite;
-            margin: 0 auto 1rem;
+            border-top-color: var(--ac-primary); border-radius: 50%;
+            animation: rotate 0.8s linear infinite; margin: 0 auto 0.8rem;
         }
-        .loading-text {
-            color: var(--ac-text); font-weight: 600;
-            font-size: 1rem;
-        }
-        .progress-container {
-            width: 100%; margin: 0.5rem 0 0.8rem;
-        }
+        .loading-text { color: var(--ac-text); font-weight: 600; font-size: 0.95rem; }
+        .progress-container { width: 100%; margin: 0.4rem 0 0.6rem; }
         .progress-bar-track {
-            width: 100%; height: 8px;
-            background: var(--ac-border);
-            border-radius: 4px; overflow: hidden;
+            width: 100%; height: 6px; background: var(--ac-border);
+            border-radius: 3px; overflow: hidden;
         }
         .progress-bar-fill {
             width: 0%; height: 100%;
             background: linear-gradient(90deg, var(--ac-primary), var(--ac-secondary));
-            border-radius: 4px;
-            transition: width 0.15s ease;
+            border-radius: 3px; transition: width 0.15s ease;
         }
         .progress-pct {
-            text-align: center; font-size: 0.8rem; margin-top: 0.4rem;
+            text-align: center; font-size: 0.72rem; margin-top: 0.3rem;
             color: var(--ac-text-muted); font-weight: 600;
         }
 
         /* ==================== EMPTY STATE ==================== */
         .empty-state {
-            text-align: center; padding: 3rem 1rem;
-            color: var(--ac-text-muted);
+            text-align: center; padding: 2.5rem 1rem; color: var(--ac-text-muted);
         }
-        .empty-state i {
-            font-size: 3rem; margin-bottom: 1rem;
-            opacity: 0.4;
-        }
-        .empty-state p { font-size: 1rem; margin: 0.5rem 0; }
+        .empty-state i { font-size: 2.5rem; margin-bottom: 0.7rem; opacity: 0.35; }
+        .empty-state p { font-size: 0.95rem; margin: 0.3rem 0; }
 
         /* ==================== ADVANCED SETTINGS ==================== */
         .advanced-toggle {
-            display: flex; align-items: center; gap: 0.5rem;
+            display: flex; align-items: center; gap: 0.4rem;
             cursor: pointer; color: var(--ac-text-muted);
             font-size: 0.85rem; font-weight: 600;
-            margin-top: 1rem; transition: color 0.3s ease;
-            user-select: none;
+            margin-top: 0.6rem; transition: color 0.3s ease; user-select: none;
         }
         .advanced-toggle:hover { color: var(--ac-primary); }
-        .advanced-toggle i { transition: transform 0.3s ease; }
+        .advanced-toggle i { transition: transform 0.3s ease; font-size: 0.7rem; }
         .advanced-toggle.open i { transform: rotate(90deg); }
-        .advanced-body {
-            max-height: 0; overflow: hidden;
-            transition: max-height 0.4s ease;
-        }
-        .advanced-body.open { max-height: 600px; }
+        .advanced-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+        .advanced-body.open { max-height: 500px; }
         .advanced-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 0.8rem; padding-top: 1rem;
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem; padding-top: 0.6rem;
         }
-        .adv-input-group {
-            display: flex; flex-direction: column; gap: 0.3rem;
-        }
+        .adv-input-group { display: flex; flex-direction: column; gap: 0.15rem; }
         .adv-input-group label {
-            font-size: 0.75rem; font-weight: 600;
-            color: var(--ac-text-muted);
+            font-size: 0.68rem; font-weight: 600; color: var(--ac-text-muted);
         }
         .adv-input-group input {
-            padding: 0.5rem 0.65rem; border-radius: 8px;
+            padding: 0.35rem 0.5rem; border-radius: 6px;
             border: 1px solid var(--ac-border);
             background: var(--ac-bg); color: var(--ac-text);
-            font-size: 0.88rem; font-family: inherit;
+            font-size: 0.82rem; font-family: inherit;
         }
         .adv-input-group input:focus {
             outline: none; border-color: var(--ac-primary);
@@ -635,12 +621,9 @@
         }
 
         /* ==================== VIZ SUBTABS ==================== */
-        .viz-tabs {
-            display: flex; gap: 0.3rem; margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
+        .viz-tabs { display: flex; gap: 0.25rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
         .viz-tab {
-            padding: 0.5rem 1rem; border-radius: 8px;
+            padding: 0.45rem 0.85rem; border-radius: 7px;
             background: transparent; border: 1px solid var(--ac-border);
             color: var(--ac-text-muted); cursor: pointer;
             font-size: 0.85rem; font-weight: 600;
@@ -648,57 +631,91 @@
         }
         .viz-tab:hover { border-color: var(--ac-primary); color: var(--ac-text); }
         .viz-tab.active {
-            background: var(--ac-primary);
-            color: white; border-color: var(--ac-primary);
+            background: var(--ac-primary); color: white; border-color: var(--ac-primary);
         }
         .viz-content { display: none; animation: fadeIn 0.3s ease; }
         .viz-content.active { display: block; }
 
+        /* ==================== TOOLTIPS ==================== */
+        .tooltip-trigger { position: relative; cursor: help; }
+        .tooltip-trigger::after {
+            content: attr(data-tooltip);
+            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-4px);
+            background: var(--ac-bg-dark); color: #e2e8f0; padding: 0.3rem 0.6rem;
+            border-radius: 6px; font-size: 0.72rem; white-space: nowrap;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+            z-index: 100;
+        }
+        .tooltip-trigger:hover::after { opacity: 1; }
+
+        /* ==================== SUCCESS FLASH ==================== */
+        .success-flash {
+            position: fixed; top: 1rem; right: 1rem; z-index: 10000;
+            background: var(--ac-success); color: white;
+            padding: 0.6rem 1.2rem; border-radius: 10px;
+            font-weight: 600; font-size: 0.88rem;
+            display: flex; align-items: center; gap: 0.5rem;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            animation: slideRight 0.3s ease, fadeIn 0.3s ease;
+            transition: opacity 0.4s ease;
+        }
+
+        /* ==================== KEYBOARD SHORTCUT HINT ==================== */
+        .kbd-hint {
+            font-size: 0.65rem; color: var(--ac-text-muted);
+            background: var(--ac-bg); border: 1px solid var(--ac-border);
+            padding: 0.1rem 0.35rem; border-radius: 4px;
+            font-family: monospace; margin-left: 0.4rem;
+        }
+
         /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 1200px) {
+            .config-layout { grid-template-columns: 1fr; }
+            .config-right { position: static; }
+        }
         @media (max-width: 1024px) {
-            .params-grid { grid-template-columns: repeat(2, 1fr); }
+            .params-grid { grid-template-columns: repeat(3, 1fr); }
             .charts-row.two-col { grid-template-columns: 1fr; }
+            .charts-row.three-col { grid-template-columns: 1fr; }
+            .advanced-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 768px) {
-            .aircrafter-app { padding: 0.75rem 1rem 1.5rem; }
+            .aircrafter-app { padding: 0.5rem 0.75rem 1.5rem; }
             .header-content h1 { font-size: 2rem; }
+            .header-content p { font-size: 0.95rem; }
             .module-tabs { flex-wrap: wrap; }
-            .module-tab { font-size: 0.82rem; padding: 0.7rem 0.8rem; }
+            .module-tab { font-size: 0.78rem; padding: 0.55rem 0.6rem; }
             .params-grid { grid-template-columns: 1fr; }
             .selection-grid { grid-template-columns: 1fr; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (max-width: 480px) {
-            .header-content h1 { font-size: 1.6rem; }
-            .stats-grid { grid-template-columns: 1fr; }
+            .header-badge { display: none; }
         }
     </style>
 </head>
 
 <body>
     <div id="page-wrapper">
-        <!-- Header -->
-        <section id="header">
-            <div id="nav-placeholder"></div>
-        </section>
+        <section id="header"><div id="nav-placeholder"></div></section>
 
-        <!-- Main -->
         <section id="main">
             <div class="aircrafter-app">
 
-                <!-- ===== APP HEADER ===== -->
+                <!-- ===== HEADER ===== -->
                 <div class="app-header">
                     <div class="header-nav">
                         <a href="../../E-Labs.html" class="back-btn">
-                            <i class="fas fa-arrow-left"></i> E-Labs
+                            <i class="fas fa-arrow-left"></i> Back to E-Labs
                         </a>
+                        <div class="header-badges">
+                            <span class="header-badge"><i class="fas fa-database"></i> <span id="db-count">—</span> Aircraft</span>
+                            <span class="header-badge"><i class="fas fa-code-branch"></i> v2.0</span>
+                        </div>
                     </div>
                     <div class="header-content">
                         <h1>
                             <span class="plane-icon"><i class="fas fa-plane"></i></span>
                             Air<span class="highlight">Crafter</span>
                         </h1>
-                        <p class="subtitle">Aircraft Tire Contact Stress Analysis Engine</p>
+                        <p>Aircraft Tire Contact Stress Analysis Engine</p>
                     </div>
                 </div>
 
@@ -713,28 +730,26 @@
                     <button class="module-tab" data-module="analysis">
                         <i class="fas fa-chart-area"></i> Distribution Analysis
                     </button>
+                    <button class="module-tab" data-module="summary">
+                        <i class="fas fa-table-list"></i> Results Summary
+                    </button>
                 </div>
 
                 <!-- ============================================= -->
-                <!-- TAB 1: CONFIGURATION                          -->
+                <!-- TAB 1: CONFIGURATION (2-col layout)            -->
                 <!-- ============================================= -->
                 <div class="module-content active" id="module-config">
-
-                    <!-- Aircraft Selection -->
-                    <div class="panel">
+                    <!-- Aircraft Selection (full width) -->
+                    <div class="panel animate-in">
                         <div class="panel-title"><i class="fas fa-search"></i> Aircraft Selection</div>
                         <div class="selection-grid">
                             <div class="filter-group">
                                 <label>Manufacturer</label>
-                                <select id="filter-manufacturer">
-                                    <option value="all">All Manufacturers</option>
-                                </select>
+                                <select id="filter-manufacturer"><option value="all">All Manufacturers</option></select>
                             </div>
                             <div class="filter-group">
                                 <label>Aircraft Model</label>
-                                <select id="filter-aircraft">
-                                    <option value="">— Select Aircraft —</option>
-                                </select>
+                                <select id="filter-aircraft"><option value="">— Select Aircraft —</option></select>
                             </div>
                             <div class="filter-group">
                                 <label>Search</label>
@@ -743,132 +758,116 @@
                         </div>
                     </div>
 
-                    <!-- Summary Stats -->
-                    <div class="stats-grid" id="summary-stats" style="display:none;">
-                        <div class="stat-card">
-                            <div class="stat-icon" style="color:var(--ac-primary)"><i class="fas fa-plane"></i></div>
-                            <div class="stat-value" id="stat-aircraft">—</div>
-                            <div class="stat-label">Aircraft</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon" style="color:var(--ac-secondary)"><i class="fas fa-weight-hanging"></i></div>
-                            <div class="stat-value" id="stat-load">—</div>
-                            <div class="stat-label">Load (kN)</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon" style="color:var(--ac-info)"><i class="fas fa-gauge-high"></i></div>
-                            <div class="stat-value" id="stat-pressure">—</div>
-                            <div class="stat-label">Tire Pressure</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon" style="color:var(--ac-accent)"><i class="fas fa-ruler-horizontal"></i></div>
-                            <div class="stat-value" id="stat-length">—</div>
-                            <div class="stat-label">Contact Length</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon" style="color:var(--ac-success)"><i class="fas fa-layer-group"></i></div>
-                            <div class="stat-value" id="stat-ribs">—</div>
-                            <div class="stat-label">Ribs</div>
-                        </div>
-                        <div class="stat-card" id="eq-stat-card">
-                            <div class="stat-icon" style="color:var(--ac-warning)"><i class="fas fa-scale-balanced"></i></div>
-                            <div class="stat-value" id="stat-eq">—</div>
-                            <div class="stat-label">Equilibrium</div>
-                        </div>
-                    </div>
-
-                    <!-- Parameter Editor -->
-                    <div class="panel" id="param-panel" style="display:none;">
-                        <div class="panel-title">
-                            <i class="fas fa-edit"></i> Input Parameters
-                            <span style="flex:1"></span>
-                            <button class="btn btn-warning" id="btn-reset" style="padding:0.4rem 0.9rem; font-size:0.82rem;">
-                                <i class="fas fa-rotate-left"></i> Reset Defaults
-                            </button>
-                        </div>
-
-                        <!-- Scalar Parameters -->
-                        <div class="params-grid">
-                            <div class="param-card" id="card-P">
-                                <div class="label">P — Load</div>
-                                <input type="number" id="input-P" step="any" />
-                                <div style="margin-top:0.2rem"><span class="unit">N</span></div>
-                            </div>
-                            <div class="param-card" id="card-TiP">
-                                <div class="label">TiP — Tire Pressure</div>
-                                <input type="number" id="input-TiP" step="any" />
-                                <div style="margin-top:0.2rem"><span class="unit">MPa</span></div>
-                            </div>
-                            <div class="param-card" id="card-l">
-                                <div class="label">l — Contact Length</div>
-                                <input type="number" id="input-l" step="any" />
-                                <div style="margin-top:0.2rem"><span class="unit">mm</span></div>
-                            </div>
-                        </div>
-
-                        <!-- Per-Rib Parameters -->
-                        <div class="panel-title" style="margin-top:0.5rem;"><i class="fas fa-table-cells"></i> Rib Parameters</div>
-                        <div class="rib-table-container">
-                            <table class="rib-table" id="rib-table">
-                                <thead><tr id="rib-table-header"></tr></thead>
-                                <tbody id="rib-table-body"></tbody>
-                            </table>
-                        </div>
-
-                        <!-- Advanced Settings -->
-                        <div class="advanced-toggle" id="adv-toggle">
-                            <i class="fas fa-chevron-right"></i> Advanced Settings
-                        </div>
-                        <div class="advanced-body" id="adv-body">
-                            <div class="advanced-grid">
-                                <div class="adv-input-group">
-                                    <label>SSY Factor</label>
-                                    <input type="number" id="adv-ssy" value="0.40" step="0.01" />
+                    <div class="config-layout">
+                        <!-- LEFT: Parameters -->
+                        <div class="config-left">
+                            <div class="panel animate-in stagger-1" id="param-panel" style="display:none;">
+                                <div class="panel-title">
+                                    <i class="fas fa-edit"></i> Input Parameters
+                                    <span style="flex:1"></span>
+                                    <button class="btn btn-warning" id="btn-reset" style="padding:0.3rem 0.7rem; font-size:0.75rem;">
+                                        <i class="fas fa-rotate-left"></i> Reset
+                                    </button>
                                 </div>
-                                <div class="adv-input-group">
-                                    <label>Elements (xn)</label>
-                                    <input type="number" id="adv-xn" value="10" min="4" max="100" step="1" />
+                                <div class="params-grid">
+                                    <div class="param-card" id="card-P">
+                                        <div class="label">P — Load</div>
+                                        <input type="number" id="input-P" step="any" />
+                                        <div><span class="unit">N</span></div>
+                                    </div>
+                                    <div class="param-card" id="card-TiP">
+                                        <div class="label">TiP — Tire Pressure</div>
+                                        <input type="number" id="input-TiP" step="any" />
+                                        <div><span class="unit">MPa</span></div>
+                                    </div>
+                                    <div class="param-card" id="card-l">
+                                        <div class="label">l — Contact Length</div>
+                                        <input type="number" id="input-l" step="any" />
+                                        <div><span class="unit">mm</span></div>
+                                    </div>
                                 </div>
-                                <div class="adv-input-group">
-                                    <label>Partitions/Rib (nnz)</label>
-                                    <input type="number" id="adv-nnz" value="2" min="1" max="4" step="1" />
+                                <div class="panel-title" style="margin-top:0.3rem; font-size:0.85rem;">
+                                    <i class="fas fa-table-cells"></i> Rib Parameters
                                 </div>
-                                <div class="adv-input-group">
-                                    <label>SSX Pos Peak (frac)</label>
-                                    <input type="number" id="adv-lsx-pos" value="0.20" step="0.01" />
+                                <div class="rib-table-container">
+                                    <table class="rib-table" id="rib-table">
+                                        <thead><tr id="rib-table-header"></tr></thead>
+                                        <tbody id="rib-table-body"></tbody>
+                                    </table>
                                 </div>
-                                <div class="adv-input-group">
-                                    <label>SSX Neg Peak (frac)</label>
-                                    <input type="number" id="adv-lsx-neg" value="0.85" step="0.01" />
+                                <div class="advanced-toggle" id="adv-toggle">
+                                    <i class="fas fa-chevron-right"></i> Advanced Settings
                                 </div>
-                                <div class="adv-input-group">
-                                    <label>SSX Pos Mag</label>
-                                    <input type="number" id="adv-sx-posmag" value="0.20" step="0.01" />
+                                <div class="advanced-body" id="adv-body">
+                                    <div class="advanced-grid">
+                                        <div class="adv-input-group">
+                                            <label>SSY Factor</label>
+                                            <input type="number" id="adv-ssy" value="0.40" step="0.01" />
+                                        </div>
+                                        <div class="adv-input-group">
+                                            <label>Elements (xn)</label>
+                                            <input type="number" id="adv-xn" value="10" min="4" max="100" step="1" />
+                                        </div>
+                                        <div class="adv-input-group">
+                                            <label>Partitions (nnz)</label>
+                                            <input type="number" id="adv-nnz" value="2" min="1" max="4" step="1" />
+                                        </div>
+                                        <div class="adv-input-group">
+                                            <label>SSX Pos Peak</label>
+                                            <input type="number" id="adv-lsx-pos" value="0.20" step="0.01" />
+                                        </div>
+                                        <div class="adv-input-group">
+                                            <label>SSX Neg Peak</label>
+                                            <input type="number" id="adv-lsx-neg" value="0.85" step="0.01" />
+                                        </div>
+                                        <div class="adv-input-group">
+                                            <label>SSX Pos Mag</label>
+                                            <input type="number" id="adv-sx-posmag" value="0.20" step="0.01" />
+                                        </div>
+                                        <div class="adv-input-group">
+                                            <label>SSX Neg Mag</label>
+                                            <input type="number" id="adv-sx-negmag" value="-0.15" step="0.01" />
+                                        </div>
+                                        <div class="adv-input-group">
+                                            <label>Transition (skpb)</label>
+                                            <input type="number" id="adv-skpb" value="0.60" step="0.01" />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="adv-input-group">
-                                    <label>SSX Neg Mag</label>
-                                    <input type="number" id="adv-sx-negmag" value="-0.15" step="0.01" />
-                                </div>
-                                <div class="adv-input-group">
-                                    <label>Transition Point (skpb)</label>
-                                    <input type="number" id="adv-skpb" value="0.60" step="0.01" />
+                                <div class="btn-group" style="margin-top:0.8rem;">
+                                    <button class="btn btn-primary" id="btn-compute" style="flex:1;">
+                                        <i class="fas fa-bolt"></i> Compute Stresses
+                                        <span class="kbd-hint">Ctrl+Enter</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Compute Button -->
-                        <div class="btn-group" style="margin-top:1.5rem;">
-                            <button class="btn btn-primary" id="btn-compute" style="flex:1;">
-                                <i class="fas fa-bolt"></i> Compute Stresses
-                            </button>
-                        </div>
-                    </div>
+                        <!-- RIGHT: Stats + Contact Patch + Quick Results -->
+                        <div class="config-right">
+                            <div class="panel animate-in stagger-2" id="stats-panel" style="display:none;">
+                                <div class="panel-title"><i class="fas fa-tachometer-alt"></i> Quick Summary</div>
+                                <div class="inline-stats" id="inline-stats">
+                                    <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-primary)"><i class="fas fa-plane"></i></span> <span class="ms-value" id="stat-aircraft">—</span></div>
+                                    <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-secondary)"><i class="fas fa-weight-hanging"></i></span> <span class="ms-value" id="stat-load">—</span> <span class="ms-label">kN</span></div>
+                                    <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-info)"><i class="fas fa-gauge-high"></i></span> <span class="ms-value" id="stat-pressure">—</span></div>
+                                    <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-accent)"><i class="fas fa-ruler-horizontal"></i></span> <span class="ms-value" id="stat-length">—</span> <span class="ms-label">mm</span></div>
+                                    <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-success)"><i class="fas fa-layer-group"></i></span> <span class="ms-value" id="stat-ribs">—</span> <span class="ms-label">ribs</span></div>
+                                    <div class="mini-stat" id="eq-stat"><span class="ms-icon" style="color:var(--ac-warning)"><i class="fas fa-scale-balanced"></i></span> <span class="ms-value" id="stat-eq">—</span></div>
+                                </div>
+                            </div>
 
-                    <!-- Contact Patch Schematic -->
-                    <div class="panel" id="patch-panel" style="display:none;">
-                        <div class="panel-title"><i class="fas fa-shoe-prints"></i> Tire Contact Patch</div>
-                        <div class="contact-patch-container">
-                            <svg id="contact-patch-svg" viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg"></svg>
+                            <div class="panel animate-in stagger-3" id="patch-panel" style="display:none;">
+                                <div class="panel-title"><i class="fas fa-shoe-prints"></i> Contact Patch</div>
+                                <div class="contact-patch-container">
+                                    <svg id="contact-patch-svg" viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg"></svg>
+                                </div>
+                            </div>
+
+                            <div class="panel animate-in stagger-4" id="quick-results-panel" style="display:none;">
+                                <div class="panel-title"><i class="fas fa-clipboard-check"></i> Equilibrium Check</div>
+                                <div id="quick-results-body"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -883,26 +882,42 @@
                         <p>Select an aircraft and compute stresses first.</p>
                     </div>
                     <div id="stress3d-content" style="display:none;">
-                        <!-- SSZ Surface -->
-                        <div class="chart-panel" style="margin-bottom:1.5rem;">
-                            <div class="chart-header">
-                                <div class="chart-title"><i class="fas fa-arrow-down"></i> Vertical Contact Stress (σ<sub>z</sub>)</div>
-                            </div>
-                            <div class="chart-body chart-body-tall" id="chart-3d-ssz"></div>
+                        <div class="viz-tabs" id="surface-tabs">
+                            <button class="viz-tab active" data-surface="all"><i class="fas fa-layer-group"></i> All Surfaces</button>
+                            <button class="viz-tab" data-surface="ssz"><i class="fas fa-arrow-down"></i> σ<sub>z</sub> Vertical</button>
+                            <button class="viz-tab" data-surface="ssx"><i class="fas fa-arrow-right"></i> σ<sub>x</sub> Longitudinal</button>
+                            <button class="viz-tab" data-surface="ssy"><i class="fas fa-arrows-left-right"></i> σ<sub>y</sub> Transverse</button>
                         </div>
-                        <!-- SSX Surface -->
-                        <div class="chart-panel" style="margin-bottom:1.5rem;">
-                            <div class="chart-header">
-                                <div class="chart-title"><i class="fas fa-arrow-right"></i> Longitudinal Contact Stress (σ<sub>x</sub>)</div>
+                        <div id="surface-all">
+                            <div class="charts-row three-col">
+                                <div class="chart-panel">
+                                    <div class="chart-header">
+                                        <div><div class="chart-title"><i class="fas fa-arrow-down"></i> σ<sub>z</sub></div><div class="chart-subtitle">Vertical Contact Stress</div></div>
+                                    </div>
+                                    <div class="chart-body" id="chart-3d-ssz-sm"></div>
+                                </div>
+                                <div class="chart-panel">
+                                    <div class="chart-header">
+                                        <div><div class="chart-title"><i class="fas fa-arrow-right"></i> σ<sub>x</sub></div><div class="chart-subtitle">Longitudinal Contact Stress</div></div>
+                                    </div>
+                                    <div class="chart-body" id="chart-3d-ssx-sm"></div>
+                                </div>
+                                <div class="chart-panel">
+                                    <div class="chart-header">
+                                        <div><div class="chart-title"><i class="fas fa-arrows-left-right"></i> σ<sub>y</sub></div><div class="chart-subtitle">Transverse Contact Stress</div></div>
+                                    </div>
+                                    <div class="chart-body" id="chart-3d-ssy-sm"></div>
+                                </div>
                             </div>
-                            <div class="chart-body chart-body-tall" id="chart-3d-ssx"></div>
                         </div>
-                        <!-- SSY Surface -->
-                        <div class="chart-panel">
-                            <div class="chart-header">
-                                <div class="chart-title"><i class="fas fa-arrows-left-right"></i> Transverse Contact Stress (σ<sub>y</sub>)</div>
-                            </div>
-                            <div class="chart-body chart-body-tall" id="chart-3d-ssy"></div>
+                        <div id="surface-ssz" style="display:none;">
+                            <div class="chart-panel"><div class="chart-header"><div><div class="chart-title"><i class="fas fa-arrow-down"></i> Vertical Contact Stress (σ<sub>z</sub>)</div><div class="chart-subtitle" id="ssz-subtitle"></div></div></div><div class="chart-body chart-body-tall" id="chart-3d-ssz"></div></div>
+                        </div>
+                        <div id="surface-ssx" style="display:none;">
+                            <div class="chart-panel"><div class="chart-header"><div><div class="chart-title"><i class="fas fa-arrow-right"></i> Longitudinal Contact Stress (σ<sub>x</sub>)</div><div class="chart-subtitle" id="ssx-subtitle"></div></div></div><div class="chart-body chart-body-tall" id="chart-3d-ssx"></div></div>
+                        </div>
+                        <div id="surface-ssy" style="display:none;">
+                            <div class="chart-panel"><div class="chart-header"><div><div class="chart-title"><i class="fas fa-arrows-left-right"></i> Transverse Contact Stress (σ<sub>y</sub>)</div><div class="chart-subtitle" id="ssy-subtitle"></div></div></div><div class="chart-body chart-body-tall" id="chart-3d-ssy"></div></div>
                         </div>
                     </div>
                 </div>
@@ -917,79 +932,71 @@
                         <p>Select an aircraft and compute stresses first.</p>
                     </div>
                     <div id="analysis-content" style="display:none;">
-
-                        <!-- Viz Sub-tabs -->
                         <div class="viz-tabs">
-                            <button class="viz-tab active" data-viz="heatmaps"><i class="fas fa-th"></i> Heatmaps</button>
+                            <button class="viz-tab active" data-viz="combined"><i class="fas fa-layer-group"></i> Combined</button>
+                            <button class="viz-tab" data-viz="heatmaps"><i class="fas fa-th"></i> Heatmaps</button>
                             <button class="viz-tab" data-viz="ribcurves"><i class="fas fa-chart-line"></i> Per-Rib Curves</button>
                             <button class="viz-tab" data-viz="ribprops"><i class="fas fa-chart-bar"></i> Rib Properties</button>
                         </div>
-
-                        <!-- Heatmaps -->
-                        <div class="viz-content active" id="viz-heatmaps">
-                            <div class="chart-panel" style="margin-bottom:1.5rem;">
-                                <div class="chart-header">
-                                    <div class="chart-title"><i class="fas fa-th"></i> Vertical Stress Heatmap (σ<sub>z</sub>)</div>
-                                </div>
-                                <div class="chart-body" id="chart-hm-ssz"></div>
-                            </div>
-                            <div class="chart-panel" style="margin-bottom:1.5rem;">
-                                <div class="chart-header">
-                                    <div class="chart-title"><i class="fas fa-th"></i> Longitudinal Stress Heatmap (σ<sub>x</sub>)</div>
-                                </div>
-                                <div class="chart-body" id="chart-hm-ssx"></div>
-                            </div>
-                            <div class="chart-panel">
-                                <div class="chart-header">
-                                    <div class="chart-title"><i class="fas fa-th"></i> Transverse Stress Heatmap (σ<sub>y</sub>)</div>
-                                </div>
-                                <div class="chart-body" id="chart-hm-ssy"></div>
-                            </div>
-                        </div>
-
-                        <!-- Per-Rib Curves -->
-                        <div class="viz-content" id="viz-ribcurves">
-                            <div class="chart-panel" style="margin-bottom:1.5rem;">
-                                <div class="chart-header">
-                                    <div class="chart-title"><i class="fas fa-chart-line"></i> σ<sub>z</sub> Per-Rib Distribution</div>
-                                </div>
-                                <div class="chart-body chart-body-tall" id="chart-rib-ssz"></div>
-                            </div>
-                            <div class="chart-panel" style="margin-bottom:1.5rem;">
-                                <div class="chart-header">
-                                    <div class="chart-title"><i class="fas fa-chart-line"></i> σ<sub>x</sub> Per-Rib Distribution</div>
-                                </div>
-                                <div class="chart-body chart-body-tall" id="chart-rib-ssx"></div>
-                            </div>
-                            <div class="chart-panel">
-                                <div class="chart-header">
-                                    <div class="chart-title"><i class="fas fa-chart-line"></i> σ<sub>y</sub> Per-Rib Distribution</div>
-                                </div>
-                                <div class="chart-body chart-body-tall" id="chart-rib-ssy"></div>
-                            </div>
-                        </div>
-
-                        <!-- Rib Properties -->
-                        <div class="viz-content" id="viz-ribprops">
+                        <!-- Combined Stress Comparison -->
+                        <div class="viz-content active" id="viz-combined">
                             <div class="charts-row two-col">
                                 <div class="chart-panel">
-                                    <div class="chart-header">
-                                        <div class="chart-title"><i class="fas fa-chart-bar"></i> Load Distribution Factor</div>
-                                    </div>
-                                    <div class="chart-body" id="chart-bar-load"></div>
+                                    <div class="chart-header"><div><div class="chart-title"><i class="fas fa-layer-group"></i> All Stresses — Rib 1</div><div class="chart-subtitle">σz, σx, σy overlay</div></div></div>
+                                    <div class="chart-body" id="chart-combined-rib1"></div>
                                 </div>
                                 <div class="chart-panel">
-                                    <div class="chart-header">
-                                        <div class="chart-title"><i class="fas fa-chart-bar"></i> Max Vertical Stress Factor</div>
-                                    </div>
-                                    <div class="chart-body" id="chart-bar-stress"></div>
+                                    <div class="chart-header"><div><div class="chart-title"><i class="fas fa-chart-bar"></i> Peak Stresses per Rib</div><div class="chart-subtitle">Max |σz|, |σx|, |σy|</div></div></div>
+                                    <div class="chart-body" id="chart-peak-comparison"></div>
                                 </div>
                             </div>
-                            <div class="chart-panel" style="margin-top:1.5rem;">
-                                <div class="chart-header">
-                                    <div class="chart-title"><i class="fas fa-chart-bar"></i> Contact Width per Rib</div>
-                                </div>
-                                <div class="chart-body" id="chart-bar-width"></div>
+                        </div>
+                        <!-- Heatmaps -->
+                        <div class="viz-content" id="viz-heatmaps">
+                            <div class="charts-row three-col">
+                                <div class="chart-panel"><div class="chart-header"><div class="chart-title"><i class="fas fa-th"></i> σ<sub>z</sub> Heatmap</div></div><div class="chart-body chart-body-short" id="chart-hm-ssz"></div></div>
+                                <div class="chart-panel"><div class="chart-header"><div class="chart-title"><i class="fas fa-th"></i> σ<sub>x</sub> Heatmap</div></div><div class="chart-body chart-body-short" id="chart-hm-ssx"></div></div>
+                                <div class="chart-panel"><div class="chart-header"><div class="chart-title"><i class="fas fa-th"></i> σ<sub>y</sub> Heatmap</div></div><div class="chart-body chart-body-short" id="chart-hm-ssy"></div></div>
+                            </div>
+                        </div>
+                        <!-- Per-Rib Curves -->
+                        <div class="viz-content" id="viz-ribcurves">
+                            <div class="charts-row three-col">
+                                <div class="chart-panel"><div class="chart-header"><div><div class="chart-title"><i class="fas fa-chart-line"></i> σ<sub>z</sub></div><div class="chart-subtitle">Per-Rib Distribution</div></div></div><div class="chart-body" id="chart-rib-ssz"></div></div>
+                                <div class="chart-panel"><div class="chart-header"><div><div class="chart-title"><i class="fas fa-chart-line"></i> σ<sub>x</sub></div><div class="chart-subtitle">Per-Rib Distribution</div></div></div><div class="chart-body" id="chart-rib-ssx"></div></div>
+                                <div class="chart-panel"><div class="chart-header"><div><div class="chart-title"><i class="fas fa-chart-line"></i> σ<sub>y</sub></div><div class="chart-subtitle">Per-Rib Distribution</div></div></div><div class="chart-body" id="chart-rib-ssy"></div></div>
+                            </div>
+                        </div>
+                        <!-- Rib Properties -->
+                        <div class="viz-content" id="viz-ribprops">
+                            <div class="charts-row three-col">
+                                <div class="chart-panel"><div class="chart-header"><div class="chart-title"><i class="fas fa-chart-bar"></i> Load Factor</div></div><div class="chart-body chart-body-short" id="chart-bar-load"></div></div>
+                                <div class="chart-panel"><div class="chart-header"><div class="chart-title"><i class="fas fa-chart-bar"></i> Stress Factor</div></div><div class="chart-body chart-body-short" id="chart-bar-stress"></div></div>
+                                <div class="chart-panel"><div class="chart-header"><div class="chart-title"><i class="fas fa-chart-bar"></i> Contact Width</div></div><div class="chart-body chart-body-short" id="chart-bar-width"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================= -->
+                <!-- TAB 4: RESULTS SUMMARY                        -->
+                <!-- ============================================= -->
+                <div class="module-content" id="module-summary">
+                    <div id="summary-empty" class="empty-state">
+                        <i class="fas fa-table-list"></i>
+                        <p><strong>No Results Yet</strong></p>
+                        <p>Compute stresses to see the full results table.</p>
+                    </div>
+                    <div id="summary-content" style="display:none;">
+                        <div class="charts-row two-col">
+                            <div class="panel">
+                                <div class="panel-title"><i class="fas fa-table"></i> Stress Distribution Matrix</div>
+                                <div id="summary-matrix-body"></div>
+                            </div>
+                            <div class="panel">
+                                <div class="panel-title"><i class="fas fa-scale-balanced"></i> Equilibrium Verification</div>
+                                <div id="summary-eq-body"></div>
+                                <div class="chart-body chart-body-short" id="chart-eq-bar" style="margin-top:0.5rem;"></div>
                             </div>
                         </div>
                     </div>
@@ -997,8 +1004,6 @@
 
             </div>
         </section>
-
-        <!-- Footer -->
         <div id="footer-placeholder"></div>
     </div>
 
@@ -1007,9 +1012,7 @@
         <div class="loading-card">
             <div class="spinner" id="loading-spinner"></div>
             <div class="progress-container" id="progress-container" style="display:none;">
-                <div class="progress-bar-track">
-                    <div class="progress-bar-fill" id="progress-bar-fill"></div>
-                </div>
+                <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar-fill"></div></div>
                 <div class="progress-pct" id="progress-pct">0%</div>
             </div>
             <div class="loading-text" id="loading-text">Loading aircraft database...</div>
@@ -1025,28 +1028,26 @@
     <script src="../../assets/js/main.js"></script>
     <script src="../../assets/js/components.js"></script>
     <script src="../../assets/js/theme-toggle.js"></script>
-
-    <!-- SheetJS for xlsx parsing -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-    <!-- Plotly for interactive charts -->
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 
     <script>
     // ================================================================
-    //  AIRCRAFTER — Contact Stress Analysis Engine
+    //  AIRCRAFTER v2 — Contact Stress Analysis Engine
     // ================================================================
 
-    // ==================== STATE ====================
-    let aircraftDB = [];            // Full dataset from xlsx
-    let currentRow = null;          // Selected aircraft raw data
-    let defaultParams = null;       // Default parameters for selected aircraft
-    let results = null;             // Computation results
+    let aircraftDB = [];
+    let currentRow = null;
+    let defaultParams = null;
+    let results = null;
+
+    const COLORS = ['#0ea5e9','#f97316','#10b981','#8b5cf6','#ef4444','#06b6d4','#f59e0b','#ec4899'];
 
     // ==================== MANUFACTURER MAPPING ====================
     function guessManufacturer(name) {
         const n = name.toUpperCase();
         if (/\bA3[0-9]{2}\b/.test(n) || /\bA2[0-9]{2}\b/.test(n)) return 'Airbus';
-        if (/\bB7[0-9]{2}\b/.test(n) || /\bB73[0-9]\b/.test(n) || /\bB78[0-9]\b/.test(n)) return 'Boeing';
+        if (/\bB7[0-9]{2}\b/.test(n) || /\bB73[0-9]\b/.test(n) || /\bB78[0-9]\b/.test(n) || /\b747|757|767|727|717|707/.test(n)) return 'Boeing';
         if (/\bMD[\-]?[0-9]/.test(n)) return 'McDonnell Douglas';
         if (/\bDC[\-]?[0-9]/.test(n)) return 'Douglas';
         if (/\bCRJ/.test(n) || /\bCS[0-9]/.test(n)) return 'Bombardier';
@@ -1055,7 +1056,6 @@
         if (/\bF[0-9]{2,3}\b/.test(n) && !/\bFA/.test(n)) return 'Fokker';
         if (/\bQ[0-9]{3}/.test(n)) return 'De Havilland';
         if (/\bC[\-]?1[0-9]{2}/.test(n)) return 'Lockheed';
-        if (/\b747|757|767|727|717|707/.test(n)) return 'Boeing';
         return 'Other';
     }
 
@@ -1081,13 +1081,13 @@
                 manufacturer: guessManufacturer(String(r['Airplane Name'] || ''))
             }));
 
+            document.getElementById('db-count').textContent = aircraftDB.length;
             populateFilters();
             hideLoading();
         } catch (err) {
             hideLoading();
             console.error(err);
-            alert('Error loading aircraft database:\n' + err.message +
-                  '\n\nMake sure aircraft.xlsx is in the same folder as this page.');
+            alert('Error loading database:\n' + err.message);
         }
     }
 
@@ -1102,7 +1102,7 @@
         mfrSelect.innerHTML = '<option value="all">All Manufacturers</option>';
         mfrs.forEach(m => {
             const opt = document.createElement('option');
-            opt.value = m; opt.textContent = m;
+            opt.value = m; opt.textContent = m + ' (' + aircraftDB.filter(a => a.manufacturer === m).length + ')';
             mfrSelect.appendChild(opt);
         });
         updateAircraftDropdown();
@@ -1117,11 +1117,10 @@
         if (mfr !== 'all') list = list.filter(a => a.manufacturer === mfr);
         if (search) list = list.filter(a => a.name.toLowerCase().includes(search));
 
-        acSelect.innerHTML = '<option value="">— Select Aircraft —</option>';
+        acSelect.innerHTML = '<option value="">— Select Aircraft (' + list.length + ') —</option>';
         list.forEach(a => {
             const opt = document.createElement('option');
-            opt.value = a.name;
-            opt.textContent = a.name;
+            opt.value = a.name; opt.textContent = a.name;
             acSelect.appendChild(opt);
         });
     }
@@ -1141,20 +1140,16 @@
             P: currentRow.P,
             TiP: Math.round(currentRow.TiP * 1000) / 1000,
             l: currentRow.l,
-            bi: [...bi],
-            al: [...al],
-            sigm_Tip: [...sig]
+            bi: [...bi], al: [...al], sigm_Tip: [...sig]
         };
 
         applyParams(defaultParams);
 
-        document.getElementById('summary-stats').style.display = '';
         document.getElementById('param-panel').style.display = '';
+        document.getElementById('stats-panel').style.display = '';
         document.getElementById('patch-panel').style.display = '';
         updateSummaryCards();
         drawContactPatch();
-
-        // Auto-compute on selection
         computeAndRender();
     }
 
@@ -1196,25 +1191,18 @@
         const numRibs = bi.length;
         const thead = document.getElementById('rib-table-header');
         const tbody = document.getElementById('rib-table-body');
-
-        // Header
         let hdr = '<th>Parameter</th>';
         for (let i = 0; i < numRibs; i++) hdr += `<th>Rib ${i + 1}</th>`;
         thead.innerHTML = hdr;
-
-        // Body — 3 rows (bi, al, sigm_Tip)
         const rows = [
             { label: 'b<sub>i</sub> [mm]', cls: 'rib-bi', vals: bi },
             { label: 'α<sub>l</sub>', cls: 'rib-al', vals: al },
             { label: 'σ<sub>Tip</sub> [MPa]', cls: 'rib-sig', vals: sig }
         ];
-
         tbody.innerHTML = '';
         rows.forEach(r => {
             let tr = `<td class="rib-header-cell">${r.label}</td>`;
-            r.vals.forEach(v => {
-                tr += `<td><input type="number" class="${r.cls}" value="${v}" step="any" /></td>`;
-            });
+            r.vals.forEach(v => { tr += `<td><input type="number" class="${r.cls}" value="${v}" step="any" /></td>`; });
             const trEl = document.createElement('tr');
             trEl.innerHTML = tr;
             tbody.appendChild(trEl);
@@ -1245,16 +1233,25 @@
         });
     }
 
-    // ==================== SUMMARY CARDS ====================
+    // ==================== SUMMARY ====================
     function updateSummaryCards() {
         if (!currentRow) return;
         const p = getCurrentParams();
-        const shortName = currentRow.name.replace(/^ICT-/, '');
-        document.getElementById('stat-aircraft').textContent = shortName;
+        document.getElementById('stat-aircraft').textContent = currentRow.name.replace(/^ICT-/, '');
         document.getElementById('stat-load').textContent = (p.P / 1000).toFixed(1);
         document.getElementById('stat-pressure').textContent = p.TiP.toFixed(3) + ' MPa';
-        document.getElementById('stat-length').textContent = p.l.toFixed(1) + ' mm';
+        document.getElementById('stat-length').textContent = p.l.toFixed(1);
         document.getElementById('stat-ribs').textContent = p.bi.length;
+    }
+
+    function updateEquilibriumBadge() {
+        if (!results) return;
+        const el = document.getElementById('eq-stat');
+        const pct = Math.abs(results.diff).toFixed(2);
+        const icon = results.eqPassed ? 'check-circle' : 'times-circle';
+        const cls = results.eqPassed ? 'eq-pass' : 'eq-fail';
+        el.className = 'mini-stat ' + cls;
+        document.getElementById('stat-eq').innerHTML = `<i class="fas fa-${icon}"></i> ${pct}%`;
     }
 
     // ==================== CONTACT PATCH SVG ====================
@@ -1268,53 +1265,38 @@
         const fillBase = isDark ? [14, 165, 233] : [14, 130, 200];
 
         const totalW = p.bi.reduce((s, v) => s + v, 0);
-        const pad = 60;
-        const patchW = 380;
-        const patchH = 160;
-        const scaleX = patchW / p.l;
+        const pad = 55; const patchW = 360; const patchH = 140;
         const scaleY = patchH / totalW;
-        const ox = pad;
-        const oy = pad;
+        const ox = pad; const oy = pad;
 
         let html = '';
-        // Contact area outline (rounded)
-        html += `<rect x="${ox}" y="${oy}" width="${patchW}" height="${patchH}" rx="10" ry="10"
-                   fill="none" stroke="${lineCol}" stroke-width="1.5" stroke-dasharray="6 3"/>`;
+        html += `<rect x="${ox}" y="${oy}" width="${patchW}" height="${patchH}" rx="8" ry="8" fill="none" stroke="${lineCol}" stroke-width="1.5" stroke-dasharray="5 3"/>`;
 
-        // Rib bands
         let cumY = 0;
         const maxAl = Math.max(...p.al);
         p.bi.forEach((w, i) => {
             const rh = w * scaleY;
-            const alpha = 0.25 + 0.6 * (p.al[i] / (maxAl || 1));
-            html += `<rect x="${ox}" y="${oy + cumY}" width="${patchW}" height="${rh}"
-                       fill="rgba(${fillBase.join(',')},${alpha.toFixed(2)})"
-                       stroke="${lineCol}" stroke-width="0.5"/>`;
-            html += `<text x="${ox + patchW + 8}" y="${oy + cumY + rh / 2 + 4}"
-                       font-size="11" fill="${textCol}" font-weight="600">Rib ${i + 1}</text>`;
-            html += `<text x="${ox + patchW + 8}" y="${oy + cumY + rh / 2 + 17}"
-                       font-size="9" fill="${lineCol}">${w} mm</text>`;
+            const alpha = 0.2 + 0.6 * (p.al[i] / (maxAl || 1));
+            html += `<rect x="${ox}" y="${oy + cumY}" width="${patchW}" height="${rh}" fill="rgba(${fillBase.join(',')},${alpha.toFixed(2)})" stroke="${lineCol}" stroke-width="0.5"/>`;
+            html += `<text x="${ox + patchW + 6}" y="${oy + cumY + rh / 2 + 3}" font-size="10" fill="${textCol}" font-weight="600">Rib ${i + 1}</text>`;
+            html += `<text x="${ox + patchW + 6}" y="${oy + cumY + rh / 2 + 14}" font-size="8" fill="${lineCol}">${w} mm</text>`;
             cumY += rh;
         });
 
-        // Dimension: Contact Length
-        const ay = oy + patchH + 25;
+        const ay = oy + patchH + 20;
         html += `<line x1="${ox}" y1="${ay}" x2="${ox + patchW}" y2="${ay}" stroke="${textCol}" stroke-width="1" marker-start="url(#arrowL)" marker-end="url(#arrowR)"/>`;
-        html += `<text x="${ox + patchW / 2}" y="${ay + 16}" text-anchor="middle" font-size="11" fill="${textCol}" font-weight="600">${p.l} mm (Contact Length)</text>`;
+        html += `<text x="${ox + patchW / 2}" y="${ay + 14}" text-anchor="middle" font-size="10" fill="${textCol}" font-weight="600">${p.l} mm</text>`;
 
-        // Dimension: Total Width
-        const ax = ox - 20;
+        const ax = ox - 18;
         html += `<line x1="${ax}" y1="${oy}" x2="${ax}" y2="${oy + patchH}" stroke="${textCol}" stroke-width="1" marker-start="url(#arrowU)" marker-end="url(#arrowD)"/>`;
-        html += `<text x="${ax - 4}" y="${oy + patchH / 2}" text-anchor="middle" font-size="11" fill="${textCol}" font-weight="600" transform="rotate(-90 ${ax - 4} ${oy + patchH / 2})">${totalW.toFixed(0)} mm</text>`;
+        html += `<text x="${ax - 3}" y="${oy + patchH / 2}" text-anchor="middle" font-size="10" fill="${textCol}" font-weight="600" transform="rotate(-90 ${ax - 3} ${oy + patchH / 2})">${totalW.toFixed(0)} mm</text>`;
 
-        // Arrow markers
         const defs = `<defs>
-            <marker id="arrowR" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="${textCol}"/></marker>
-            <marker id="arrowL" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto"><path d="M6,0 L0,3 L6,6" fill="${textCol}"/></marker>
-            <marker id="arrowD" markerWidth="6" markerHeight="6" refX="3" refY="5" orient="auto"><path d="M0,0 L3,6 L6,0" fill="${textCol}"/></marker>
-            <marker id="arrowU" markerWidth="6" markerHeight="6" refX="3" refY="1" orient="auto"><path d="M0,6 L3,0 L6,6" fill="${textCol}"/></marker>
+            <marker id="arrowR" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="${textCol}"/></marker>
+            <marker id="arrowL" markerWidth="5" markerHeight="5" refX="1" refY="2.5" orient="auto"><path d="M5,0 L0,2.5 L5,5" fill="${textCol}"/></marker>
+            <marker id="arrowD" markerWidth="5" markerHeight="5" refX="2.5" refY="4" orient="auto"><path d="M0,0 L2.5,5 L5,0" fill="${textCol}"/></marker>
+            <marker id="arrowU" markerWidth="5" markerHeight="5" refX="2.5" refY="1" orient="auto"><path d="M0,5 L2.5,0 L5,5" fill="${textCol}"/></marker>
         </defs>`;
-
         svg.innerHTML = defs + html;
     }
 
@@ -1329,7 +1311,6 @@
         const numRibs = bi.length;
         const l_elem = l / xn;
 
-        // Position arrays
         const xloc = [], xnorm = [], xdist = [];
         for (let i = 0; i <= xn; i++) {
             xdist.push(l_elem * i);
@@ -1337,11 +1318,10 @@
             xnorm.push((l_elem * i - l / 2) / (l / 2));
         }
 
-        // SSX transition
         const ssx_idx = Math.min(Math.round(skpb * xdist.length), xdist.length - 1);
         const ssx_cut = ssx_idx >= 0 ? xdist[ssx_idx] : (skpb * l);
 
-        // 1. VERTICAL (SSZ)
+        // 1. VERTICAL (SSZ) — Generalized parabola
         const SSZ = {};
         for (let i = 0; i < numRibs; i++) {
             const a = al[i], b = bi[i], s = sigm_Tip[i];
@@ -1352,13 +1332,10 @@
             SSZ['Rib ' + (i + 1)] = xnorm.map(x => coeff * factor * (1 - Math.pow(x * x, n)));
         }
 
-        // 2. LONGITUDINAL (SSX) — skewed parabola
+        // 2. LONGITUDINAL (SSX) — Skewed rational parabola
         const SSX = {};
-        const x1 = [0, skpb * l];
-        const x2 = [lsx_pospk * l, lsx_negpk * l];
-        const x3 = [skpb * l, l];
-        const y2 = [sx_posmag, sx_negmag];
-
+        const x1 = [0, skpb * l], x2 = [lsx_pospk * l, lsx_negpk * l];
+        const x3 = [skpb * l, l], y2 = [sx_posmag, sx_negmag];
         const a3 = [0, 1].map(k => (x1[k] + x3[k] - 2 * x2[k]) / (x1[k] * x3[k] - x2[k] * x2[k]));
         const a0 = [0, 1].map(k => (-x1[k] * x3[k] * (a3[k] * x2[k] - 1) * y2[k]) / ((x1[k] - x2[k]) * (x3[k] - x2[k])));
         const a1 = [0, 1].map(k => ((x1[k] + x3[k]) * (a3[k] * x2[k] - 1) * y2[k]) / ((x1[k] - x2[k]) * (x3[k] - x2[k])));
@@ -1374,9 +1351,8 @@
 
         // 3. TRANSVERSE (SSY)
         const SSY = {};
-        for (let i = 0; i < numRibs; i++) {
+        for (let i = 0; i < numRibs; i++)
             SSY['Rib ' + (i + 1)] = SSZ['Rib ' + (i + 1)].map(v => ssy_factor * v);
-        }
 
         // 4. AVERAGED VALUES
         const axdist = [];
@@ -1406,21 +1382,16 @@
         const diff = 100 * (P - Calc_Pz) / P;
         const eqPassed = Math.abs(diff) <= 2.5;
 
-        // Build matrices [numRibs x xn]
         const sszMat = [], ssxMat = [], ssyMat = [];
         for (let i = 0; i < numRibs; i++) {
             const key = 'Rib ' + (i + 1);
-            sszMat.push(asz[key]);
-            ssxMat.push(asx[key]);
-            ssyMat.push(asy[key]);
+            sszMat.push(asz[key]); ssxMat.push(asx[key]); ssyMat.push(asy[key]);
         }
 
         return {
-            numRibs, bi, al, sigm_Tip,
-            P, TiP, l, xn, l_elem,
+            numRibs, bi, al, sigm_Tip, P, TiP, l, xn, l_elem,
             xdist, xloc, xnorm, axdist,
-            SSZ, SSX, SSY,
-            asz, asx, asy,
+            SSZ, SSX, SSY, asz, asx, asy,
             sszMat, ssxMat, ssyMat,
             Calc_Pz, diff, eqPassed, eqPerRib,
             nz: new Array(numRibs).fill(nnz)
@@ -1428,349 +1399,484 @@
     }
 
     // ================================================================
-    //  RENDERING — PLOTLY
+    //  PLOTLY THEME & CONFIG
     // ================================================================
     function getPlotlyTheme() {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         return {
             paper_bgcolor: 'rgba(0,0,0,0)',
-            plot_bgcolor: isDark ? 'rgba(30,41,59,0.5)' : 'rgba(248,250,252,0.5)',
-            font: { color: isDark ? '#e2e8f0' : '#334155', family: 'Source Sans Pro, sans-serif' },
+            plot_bgcolor: isDark ? 'rgba(30,41,59,0.4)' : 'rgba(248,250,252,0.4)',
+            font: { color: isDark ? '#e2e8f0' : '#334155', family: 'Source Sans Pro, sans-serif', size: 11 },
             scene: {
                 bgcolor: 'rgba(0,0,0,0)',
-                xaxis: { color: isDark ? '#94a3b8' : '#475569', gridcolor: isDark ? '#334155' : '#e2e8f0',
-                         showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.4)' : 'rgba(241,245,249,0.6)' },
-                yaxis: { color: isDark ? '#94a3b8' : '#475569', gridcolor: isDark ? '#334155' : '#e2e8f0',
-                         showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.4)' : 'rgba(241,245,249,0.6)' },
-                zaxis: { color: isDark ? '#94a3b8' : '#475569', gridcolor: isDark ? '#334155' : '#e2e8f0',
-                         showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.4)' : 'rgba(241,245,249,0.6)' },
+                xaxis: { color: isDark ? '#94a3b8' : '#475569', gridcolor: isDark ? '#334155' : '#e2e8f0', showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.3)' : 'rgba(241,245,249,0.5)' },
+                yaxis: { color: isDark ? '#94a3b8' : '#475569', gridcolor: isDark ? '#334155' : '#e2e8f0', showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.3)' : 'rgba(241,245,249,0.5)' },
+                zaxis: { color: isDark ? '#94a3b8' : '#475569', gridcolor: isDark ? '#334155' : '#e2e8f0', showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.3)' : 'rgba(241,245,249,0.5)' },
             },
-            xaxis: { gridcolor: isDark ? '#334155' : '#e2e8f0', zerolinecolor: isDark ? '#475569' : '#cbd5e1' },
-            yaxis: { gridcolor: isDark ? '#334155' : '#e2e8f0', zerolinecolor: isDark ? '#475569' : '#cbd5e1' },
-            margin: { l: 50, r: 30, t: 40, b: 50 },
-            colorway: ['#0ea5e9', '#f97316', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#f59e0b', '#ec4899']
+            xaxis: { gridcolor: isDark ? '#334155' : '#e2e8f0', zerolinecolor: isDark ? '#475569' : '#cbd5e1', linecolor: isDark ? '#475569' : '#cbd5e1', mirror: true, ticks: 'outside', showline: true },
+            yaxis: { gridcolor: isDark ? '#334155' : '#e2e8f0', zerolinecolor: isDark ? '#475569' : '#cbd5e1', linecolor: isDark ? '#475569' : '#cbd5e1', mirror: true, ticks: 'outside', showline: true },
+            colorway: COLORS,
+            margin: { l: 55, r: 25, t: 35, b: 50 },
         };
     }
-
     const plotlyConfig = { responsive: true, displayModeBar: true, displaylogo: false,
         modeBarButtonsToRemove: ['toImage', 'sendDataToCloud'] };
 
-    // ----- 3D SURFACES -----
+    // ================================================================
+    //  RENDERING — ENHANCED PLOTLY CHARTS
+    // ================================================================
+
     function render3DSurface(containerId, matrix, axdist, ribCenters, ribLabels, opts) {
         const theme = getPlotlyTheme();
-        const { title, colorscale, symmetric } = opts;
-
-        let cmin, cmax;
+        const { title, colorscale, symmetric, compact } = opts;
         const flat = matrix.flat();
-        if (symmetric) {
-            const vmax = Math.max(...flat.map(Math.abs));
-            cmin = -vmax; cmax = vmax;
-        } else {
-            cmin = Math.min(...flat); cmax = Math.max(...flat);
-        }
+        let cmin, cmax;
+        if (symmetric) { const vm = Math.max(...flat.map(Math.abs)); cmin = -vm; cmax = vm; }
+        else { cmin = Math.min(...flat); cmax = Math.max(...flat); }
 
         const surface = {
-            type: 'surface',
-            x: axdist, y: ribCenters, z: matrix,
-            colorscale: colorscale,
-            cmin: cmin, cmax: cmax,
-            showscale: true,
-            colorbar: { title: { text: title + ' [MPa]', font: { size: 11 } }, thickness: 15, len: 0.7 },
+            type: 'surface', x: axdist, y: ribCenters, z: matrix,
+            colorscale, cmin, cmax, showscale: !compact,
+            colorbar: compact ? {} : { title: { text: title + ' [MPa]', font: { size: 10 } }, thickness: 12, len: 0.65 },
             contours: {
-                z: { show: true, usecolormap: true, highlightcolor: '#fff', project: { z: false } },
+                z: { show: true, usecolormap: true, highlightcolor: '#fff', project: { z: true } },
                 x: { show: false }, y: { show: false }
             },
-            lighting: { ambient: 0.6, diffuse: 0.5, specular: 0.15, roughness: 0.5 },
+            lighting: { ambient: 0.55, diffuse: 0.5, specular: 0.2, roughness: 0.4, fresnel: 0.3 },
             hovertemplate: 'x: %{x:.1f} mm<br>y: %{y:.1f} mm<br>σ: %{z:.4f} MPa<extra></extra>'
         };
 
+        const m = compact ? { l: 0, r: 0, t: 10, b: 0 } : { l: 0, r: 0, t: 25, b: 0 };
         const layout = {
             ...theme,
             scene: {
                 ...theme.scene,
-                xaxis: { ...theme.scene.xaxis, title: 'Contact Length [mm]' },
-                yaxis: { ...theme.scene.yaxis, title: 'Contact Width [mm]' },
-                zaxis: { ...theme.scene.zaxis, title: title + ' [MPa]' },
-                camera: { eye: { x: 1.6, y: -1.6, z: 1.0 } },
-                aspectratio: { x: 1.5, y: 1, z: 0.8 }
+                xaxis: { ...theme.scene.xaxis, title: compact ? '' : 'Contact Length [mm]' },
+                yaxis: { ...theme.scene.yaxis, title: compact ? '' : 'Width [mm]' },
+                zaxis: { ...theme.scene.zaxis, title: compact ? '' : (title + ' [MPa]') },
+                camera: { eye: { x: 1.5, y: -1.5, z: 0.9 } },
+                aspectratio: { x: 1.4, y: 1, z: 0.7 }
             },
-            title: { text: opts.fullTitle || '', font: { size: 14 } },
-            margin: { l: 0, r: 0, t: 30, b: 0 }
+            title: compact ? '' : { text: opts.fullTitle || '', font: { size: 13 } },
+            margin: m
         };
-
         Plotly.newPlot(containerId, [surface], layout, plotlyConfig);
     }
 
-    // ----- HEATMAPS -----
     function renderHeatmap(containerId, matrix, axdist, ribLabels, opts) {
         const theme = getPlotlyTheme();
         const { title, colorscale, symmetric } = opts;
-
-        let zmid = undefined, zmin, zmax;
         const flat = matrix.flat();
-        if (symmetric) {
-            const vmax = Math.max(...flat.map(Math.abs));
-            zmin = -vmax; zmax = vmax; zmid = 0;
-        } else {
-            zmin = Math.min(...flat); zmax = Math.max(...flat);
-        }
+        let zmin, zmax, zmid;
+        if (symmetric) { const vm = Math.max(...flat.map(Math.abs)); zmin = -vm; zmax = vm; zmid = 0; }
+        else { zmin = Math.min(...flat); zmax = Math.max(...flat); }
+
+        // Add value annotations
+        const annotations = [];
+        matrix.forEach((row, ri) => {
+            row.forEach((val, ci) => {
+                annotations.push({
+                    x: axdist[ci], y: ribLabels[ri], text: val.toFixed(3),
+                    showarrow: false, font: { size: 8, color: Math.abs(val) > (zmax - zmin) * 0.6 + zmin ? 'white' : theme.font.color }
+                });
+            });
+        });
 
         const trace = {
-            type: 'heatmap',
-            x: axdist, y: ribLabels, z: matrix,
-            colorscale: colorscale,
-            zmin: zmin, zmax: zmax, zmid: zmid,
-            showscale: true,
-            colorbar: { title: { text: title + ' [MPa]', font: { size: 11 } }, thickness: 15 },
+            type: 'heatmap', x: axdist, y: ribLabels, z: matrix,
+            colorscale, zmin, zmax, zmid, showscale: true,
+            colorbar: { title: { text: title + ' [MPa]', font: { size: 9 } }, thickness: 10 },
             hovertemplate: 'x: %{x:.1f} mm<br>%{y}<br>σ: %{z:.4f} MPa<extra></extra>',
-            xgap: 1, ygap: 1
+            xgap: 2, ygap: 2
         };
-
         const layout = {
-            ...theme,
+            ...theme, annotations,
             xaxis: { ...theme.xaxis, title: 'Contact Length [mm]' },
             yaxis: { ...theme.yaxis, title: '', autorange: true },
-            margin: { l: 100, r: 30, t: 30, b: 60 }
+            margin: { l: 90, r: 25, t: 20, b: 50 }
         };
-
         Plotly.newPlot(containerId, [trace], layout, plotlyConfig);
     }
 
-    // ----- PER-RIB LINE CHARTS -----
     function renderRibCurves(containerId, theoryDict, avgDict, xTheory, axdist, ribLabels, opts) {
         const theme = getPlotlyTheme();
         const { title, symmetric } = opts;
         const numRibs = ribLabels.length;
-        const colors = ['#0ea5e9', '#f97316', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#f59e0b', '#ec4899'];
-
         const traces = [];
+
         for (let i = 0; i < numRibs; i++) {
             const key = 'Rib ' + (i + 1);
-            const col = colors[i % colors.length];
+            const col = COLORS[i % COLORS.length];
 
-            // Theory curve
+            // Filled area under theory curve
             traces.push({
-                type: 'scatter', mode: 'lines',
-                x: xTheory, y: theoryDict[key],
-                name: ribLabels[i] + ' (theory)',
-                line: { color: col, width: 2.5 },
+                type: 'scatter', mode: 'lines', x: xTheory, y: theoryDict[key],
+                name: ribLabels[i], line: { color: col, width: 2.5 },
+                fill: symmetric ? 'tozeroy' : 'tozeroy',
+                fillcolor: col.replace(')', ',0.08)').replace('rgb', 'rgba'),
                 legendgroup: key,
                 hovertemplate: 'x: %{x:.1f}<br>σ: %{y:.4f} MPa<extra>' + ribLabels[i] + '</extra>'
             });
-            // Averaged scatter
+            // Averaged scatter with connecting dashed line
             traces.push({
-                type: 'scatter', mode: 'markers',
-                x: axdist, y: avgDict[key],
-                name: ribLabels[i] + ' (avg)',
-                marker: { color: col, size: 7, symbol: 'circle',
-                          line: { color: 'rgba(0,0,0,0.3)', width: 1 } },
-                legendgroup: key, showlegend: false,
-                hovertemplate: 'x: %{x:.1f}<br>σ: %{y:.4f} MPa<extra>' + ribLabels[i] + ' avg</extra>'
+                type: 'scatter', mode: 'lines+markers', x: axdist, y: avgDict[key],
+                name: ribLabels[i] + ' avg', legendgroup: key, showlegend: false,
+                line: { color: col, width: 1, dash: 'dot' },
+                marker: { color: col, size: 5, symbol: 'diamond',
+                    line: { color: 'rgba(255,255,255,0.5)', width: 0.5 } },
+                hovertemplate: 'x: %{x:.1f}<br>σ<sub>avg</sub>: %{y:.4f} MPa<extra>' + ribLabels[i] + '</extra>'
             });
         }
 
+        // Add peak annotations
+        const annotations = [];
+        for (let i = 0; i < numRibs; i++) {
+            const key = 'Rib ' + (i + 1);
+            const vals = theoryDict[key];
+            const maxIdx = vals.indexOf(Math.max(...vals));
+            if (i === 0) { // Only annotate first rib's peak to avoid clutter
+                annotations.push({
+                    x: xTheory[maxIdx], y: vals[maxIdx],
+                    text: `Peak: ${vals[maxIdx].toFixed(3)}`,
+                    showarrow: true, arrowhead: 2, arrowsize: 0.8,
+                    ax: 0, ay: -28,
+                    font: { size: 9, color: COLORS[i], weight: 'bold' },
+                    bgcolor: theme.paper_bgcolor === 'rgba(0,0,0,0)' ? 'var(--ac-bg-panel)' : 'white',
+                    bordercolor: COLORS[i], borderwidth: 1, borderpad: 3
+                });
+            }
+        }
+
         const layout = {
-            ...theme,
+            ...theme, annotations,
             xaxis: { ...theme.xaxis, title: 'Contact Length [mm]' },
             yaxis: { ...theme.yaxis, title: title + ' [MPa]' },
-            legend: { orientation: 'h', y: -0.18, x: 0.5, xanchor: 'center',
-                      font: { size: 11 } },
-            margin: { l: 65, r: 20, t: 30, b: 80 },
-            hovermode: 'closest'
+            legend: { orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center', font: { size: 10 } },
+            margin: { l: 55, r: 15, t: 25, b: 65 },
+            hovermode: 'x unified'
         };
 
         if (symmetric) {
             const allY = traces.flatMap(t => t.y || []);
-            const vmax = Math.max(...allY.map(Math.abs)) * 1.15;
+            const vmax = Math.max(...allY.map(Math.abs)) * 1.2;
             layout.yaxis.range = [-vmax, vmax];
-            // Zero line
-            layout.shapes = [{ type: 'line', x0: 0, x1: 1, xref: 'paper',
-                y0: 0, y1: 0, line: { color: 'rgba(100,100,100,0.4)', width: 1, dash: 'dash' } }];
+            layout.shapes = [{ type: 'line', x0: 0, x1: 1, xref: 'paper', y0: 0, y1: 0,
+                line: { color: 'rgba(100,100,100,0.4)', width: 1, dash: 'dash' } }];
         }
-
         Plotly.newPlot(containerId, traces, layout, plotlyConfig);
     }
 
-    // ----- BAR CHARTS -----
     function renderBarChart(containerId, values, labels, opts) {
         const theme = getPlotlyTheme();
         const { title, color } = opts;
+        const colorMap = {
+            orange: [249, 115, 22], blue: [14, 165, 233], green: [16, 185, 129]
+        };
+        const rgb = colorMap[color] || colorMap.blue;
 
         const trace = {
-            type: 'bar', orientation: 'h',
-            x: values, y: labels,
+            type: 'bar', orientation: 'h', x: values, y: labels,
             marker: {
                 color: values.map((_, i) => {
                     const t = values.length > 1 ? i / (values.length - 1) : 0;
-                    return `rgba(14, 165, 233, ${0.4 + 0.6 * t})`;
+                    return `rgba(${rgb.join(',')},${(0.45 + 0.55 * t).toFixed(2)})`;
                 }),
-                line: { color: 'rgba(14,165,233,0.6)', width: 1 }
+                line: { color: `rgba(${rgb.join(',')},0.7)`, width: 1 }
             },
+            text: values.map(v => v.toFixed(4)),
+            textposition: 'outside', textfont: { size: 9 },
             hovertemplate: '%{y}: %{x:.4f}<extra></extra>'
         };
 
-        if (color === 'orange') {
-            trace.marker.color = values.map((_, i) => {
-                const t = values.length > 1 ? i / (values.length - 1) : 0;
-                return `rgba(249, 115, 22, ${0.4 + 0.6 * t})`;
-            });
-            trace.marker.line.color = 'rgba(249,115,22,0.6)';
-        } else if (color === 'green') {
-            trace.marker.color = values.map((_, i) => {
-                const t = values.length > 1 ? i / (values.length - 1) : 0;
-                return `rgba(16, 185, 129, ${0.4 + 0.6 * t})`;
-            });
-            trace.marker.line.color = 'rgba(16,185,129,0.6)';
-        }
-
         const layout = {
             ...theme,
-            xaxis: { ...theme.xaxis, title: title },
-            yaxis: { ...theme.yaxis, autorange: 'reversed' },
-            margin: { l: 80, r: 20, t: 20, b: 50 }
+            xaxis: { ...theme.xaxis, title },
+            yaxis: { ...theme.yaxis, autorange: true },
+            margin: { l: 55, r: 50, t: 15, b: 40 }
         };
+        Plotly.newPlot(containerId, [trace], layout, plotlyConfig);
+    }
 
+    // ---- COMBINED STRESS OVERLAY ----
+    function renderCombinedRib(containerId, r, ribIdx) {
+        const theme = getPlotlyTheme();
+        const key = 'Rib ' + (ribIdx + 1);
+        const traces = [
+            { type: 'scatter', mode: 'lines', x: r.xdist, y: r.SSZ[key], name: 'σz (Vertical)',
+                line: { color: '#ef4444', width: 2.5 }, fill: 'tozeroy', fillcolor: 'rgba(239,68,68,0.08)',
+                hovertemplate: 'σz: %{y:.4f} MPa<extra></extra>' },
+            { type: 'scatter', mode: 'lines', x: r.xdist, y: r.SSX[key], name: 'σx (Longitudinal)',
+                line: { color: '#0ea5e9', width: 2.5 }, fill: 'tozeroy', fillcolor: 'rgba(14,165,233,0.08)',
+                hovertemplate: 'σx: %{y:.4f} MPa<extra></extra>' },
+            { type: 'scatter', mode: 'lines', x: r.xdist, y: r.SSY[key], name: 'σy (Transverse)',
+                line: { color: '#10b981', width: 2.5, dash: 'dash' }, fill: 'tozeroy', fillcolor: 'rgba(16,185,129,0.06)',
+                hovertemplate: 'σy: %{y:.4f} MPa<extra></extra>' },
+        ];
+        const layout = {
+            ...theme,
+            xaxis: { ...theme.xaxis, title: 'Contact Length [mm]' },
+            yaxis: { ...theme.yaxis, title: 'Stress [MPa]' },
+            legend: { orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center', font: { size: 10 } },
+            margin: { l: 55, r: 15, t: 15, b: 65 }, hovermode: 'x unified',
+            shapes: [{ type: 'line', x0: 0, x1: 1, xref: 'paper', y0: 0, y1: 0,
+                line: { color: 'rgba(100,100,100,0.35)', width: 1, dash: 'dash' } }]
+        };
+        Plotly.newPlot(containerId, traces, layout, plotlyConfig);
+    }
+
+    function renderPeakComparison(containerId, r) {
+        const theme = getPlotlyTheme();
+        const ribNames = r.bi.map((_, i) => `Rib ${i + 1}`);
+        const peakZ = [], peakX = [], peakY = [];
+        for (let i = 0; i < r.numRibs; i++) {
+            const key = 'Rib ' + (i + 1);
+            peakZ.push(Math.max(...r.SSZ[key]));
+            peakX.push(Math.max(...r.SSX[key].map(Math.abs)));
+            peakY.push(Math.max(...r.SSY[key]));
+        }
+        const traces = [
+            { type: 'bar', name: 'Max σz', y: ribNames, x: peakZ, orientation: 'h',
+                marker: { color: 'rgba(239,68,68,0.7)', line: { color: '#ef4444', width: 1 } },
+                text: peakZ.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: 8 } },
+            { type: 'bar', name: 'Max |σx|', y: ribNames, x: peakX, orientation: 'h',
+                marker: { color: 'rgba(14,165,233,0.7)', line: { color: '#0ea5e9', width: 1 } },
+                text: peakX.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: 8 } },
+            { type: 'bar', name: 'Max σy', y: ribNames, x: peakY, orientation: 'h',
+                marker: { color: 'rgba(16,185,129,0.7)', line: { color: '#10b981', width: 1 } },
+                text: peakY.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: 8 } },
+        ];
+        const layout = {
+            ...theme, barmode: 'group',
+            xaxis: { ...theme.xaxis, title: 'Peak Stress [MPa]' },
+            yaxis: { ...theme.yaxis, autorange: true },
+            legend: { orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center', font: { size: 10 } },
+            margin: { l: 55, r: 50, t: 15, b: 65 }
+        };
+        Plotly.newPlot(containerId, traces, layout, plotlyConfig);
+    }
+
+    function renderEqBar(containerId, r) {
+        const theme = getPlotlyTheme();
+        const ribNames = r.bi.map((_, i) => `Rib ${i + 1}`);
+        const trace = {
+            type: 'bar', y: ribNames, x: r.eqPerRib, orientation: 'h',
+            marker: {
+                color: r.eqPerRib.map(v => v >= 0 ? 'rgba(16,185,129,0.6)' : 'rgba(239,68,68,0.6)'),
+                line: { color: r.eqPerRib.map(v => v >= 0 ? '#10b981' : '#ef4444'), width: 1 }
+            },
+            text: r.eqPerRib.map(v => (v / 1000).toFixed(2) + ' kN'),
+            textposition: 'outside', textfont: { size: 9 },
+            hovertemplate: '%{y}: %{x:.2f} N<extra></extra>'
+        };
+        // Add reference line at P/numRibs
+        const idealLoad = r.P / r.numRibs;
+        const layout = {
+            ...theme,
+            xaxis: { ...theme.xaxis, title: 'Load Contribution [N]' },
+            yaxis: { ...theme.yaxis, autorange: true },
+            margin: { l: 55, r: 55, t: 10, b: 40 },
+            shapes: [{ type: 'line', x0: idealLoad, x1: idealLoad, y0: -0.5, y1: r.numRibs - 0.5,
+                line: { color: 'rgba(245,158,11,0.6)', width: 1.5, dash: 'dash' } }],
+            annotations: [{ x: idealLoad, y: r.numRibs - 0.5, text: 'Ideal (' + (idealLoad / 1000).toFixed(1) + ' kN)',
+                showarrow: false, yshift: 12, font: { size: 8, color: '#f59e0b' } }]
+        };
         Plotly.newPlot(containerId, [trace], layout, plotlyConfig);
     }
 
     // ================================================================
-    //  COMPUTE & RENDER ORCHESTRATOR
+    //  RENDER ALL CHARTS
     // ================================================================
-    function computeAndRender() {
-        if (!currentRow) return;
-        showLoading('Setting up stress computation...', true);
+    let chartsNeedRerender = { stress3d: true, analysis: true, summary: true, config: true };
 
-        // Use staged timeouts so the progress bar updates visually
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                try {
-                    setProgress(10, 'Computing vertical stresses (σz)...');
-                    setTimeout(() => {
-                        try {
-                            results = computeStresses();
-                            setProgress(50, 'Checking equilibrium...');
-                            setTimeout(() => {
-                                try {
-                                    updateEquilibriumBadge();
-                                    updateSummaryCards();
-                                    setProgress(70, 'Rendering 3D surfaces and charts...');
-                                    setTimeout(() => {
-                                        try {
-                                            renderAllCharts();
-                                            setProgress(100, 'Complete!');
-                                            // Show content
-                                            document.getElementById('stress3d-empty').style.display = 'none';
-                                            document.getElementById('stress3d-content').style.display = '';
-                                            document.getElementById('analysis-empty').style.display = 'none';
-                                            document.getElementById('analysis-content').style.display = '';
-                                            setTimeout(() => hideLoading(), 300);
-                                        } catch (e) {
-                                            console.error('Rendering error:', e);
-                                            alert('Rendering error:\n' + e.message);
-                                            hideLoading();
-                                        }
-                                    }, 60);
-                                } catch (e) {
-                                    console.error('Post-compute error:', e);
-                                    alert('Post-compute error:\n' + e.message);
-                                    hideLoading();
-                                }
-                            }, 40);
-                        } catch (e) {
-                            console.error('Computation error:', e);
-                            alert('Computation error:\n' + e.message);
-                            hideLoading();
-                        }
-                    }, 60);
-                } catch (e) {
-                    console.error('Setup error:', e);
-                    hideLoading();
-                }
-            }, 30);
-        });
+    function getActiveModule() {
+        const active = document.querySelector('.module-tab.active');
+        return active ? active.dataset.module : 'config';
     }
 
-    function updateEquilibriumBadge() {
-        if (!results) return;
-        const el = document.getElementById('stat-eq');
-        const card = document.getElementById('eq-stat-card');
-        const pct = Math.abs(results.diff).toFixed(2);
-        if (results.eqPassed) {
-            el.innerHTML = `<span class="eq-badge pass"><i class="fas fa-check-circle"></i> ${pct}%</span>`;
-            card.style.borderColor = 'rgba(16,185,129,0.4)';
-        } else {
-            el.innerHTML = `<span class="eq-badge fail"><i class="fas fa-times-circle"></i> ${pct}%</span>`;
-            card.style.borderColor = 'rgba(239,68,68,0.4)';
-        }
-    }
-
-    function renderAllCharts() {
+    function renderChartsForModule(mod) {
         if (!results) return;
         const r = results;
         const ribLabels = r.bi.map((w, i) => `Rib ${i + 1} (${w} mm)`);
-
-        // Y-centers for 3D surfaces
+        const ribNames = r.bi.map((_, i) => `Rib ${i + 1}`);
         const cumW = [0];
         r.bi.forEach(w => cumW.push(cumW[cumW.length - 1] + w));
         const totalW = cumW[cumW.length - 1];
         const ribCenters = r.bi.map((w, i) => cumW[i] + w / 2 - totalW / 2);
 
-        // 3D Surfaces
-        render3DSurface('chart-3d-ssz', r.sszMat, r.axdist, ribCenters, ribLabels,
-            { title: 'σz', fullTitle: currentRow.name + ' — Vertical σz', colorscale: 'YlOrRd', symmetric: false });
-        render3DSurface('chart-3d-ssx', r.ssxMat, r.axdist, ribCenters, ribLabels,
-            { title: 'σx', fullTitle: currentRow.name + ' — Longitudinal σx', colorscale: 'RdBu', symmetric: true });
-        render3DSurface('chart-3d-ssy', r.ssyMat, r.axdist, ribCenters, ribLabels,
-            { title: 'σy', fullTitle: currentRow.name + ' — Transverse σy', colorscale: 'YlOrRd', symmetric: false });
-
-        // Heatmaps
-        renderHeatmap('chart-hm-ssz', r.sszMat, r.axdist, ribLabels,
-            { title: 'σz', colorscale: 'YlOrRd', symmetric: false });
-        renderHeatmap('chart-hm-ssx', r.ssxMat, r.axdist, ribLabels,
-            { title: 'σx', colorscale: 'RdBu', symmetric: true });
-        renderHeatmap('chart-hm-ssy', r.ssyMat, r.axdist, ribLabels,
-            { title: 'σy', colorscale: 'YlOrRd', symmetric: false });
-
-        // Per-Rib Curves — use xdist for SSZ/SSY and xdist for SSX
-        renderRibCurves('chart-rib-ssz', r.SSZ, r.asz, r.xdist, r.axdist, ribLabels,
-            { title: 'σz', symmetric: false });
-        renderRibCurves('chart-rib-ssx', r.SSX, r.asx, r.xdist, r.axdist, ribLabels,
-            { title: 'σx', symmetric: true });
-        renderRibCurves('chart-rib-ssy', r.SSY, r.asy, r.xdist, r.axdist, ribLabels,
-            { title: 'σy', symmetric: false });
-
-        // Bar charts
-        const ribNames = r.bi.map((_, i) => `Rib ${i + 1}`);
-        renderBarChart('chart-bar-load', r.al, ribNames,
-            { title: 'Load Factor (αl)', color: 'orange' });
-        renderBarChart('chart-bar-stress', r.sigm_Tip, ribNames,
-            { title: 'Stress Factor (σTip) [MPa]', color: 'blue' });
-        renderBarChart('chart-bar-width', r.bi, ribNames,
-            { title: 'Width [mm]', color: 'green' });
+        if (mod === 'config') {
+            // Small 3D tiles (overview) + quick results
+            render3DSurface('chart-3d-ssz-sm', r.sszMat, r.axdist, ribCenters, ribLabels,
+                { title: 'σz', colorscale: 'YlOrRd', symmetric: false, compact: true });
+            render3DSurface('chart-3d-ssx-sm', r.ssxMat, r.axdist, ribCenters, ribLabels,
+                { title: 'σx', colorscale: 'RdBu', symmetric: true, compact: true });
+            render3DSurface('chart-3d-ssy-sm', r.ssyMat, r.axdist, ribCenters, ribLabels,
+                { title: 'σy', colorscale: 'YlOrRd', symmetric: false, compact: true });
+            renderBarChart('chart-bar-load', r.al, ribNames, { title: 'Load Factor (αl)', color: 'orange' });
+            renderBarChart('chart-bar-stress', r.sigm_Tip, ribNames, { title: 'Stress Factor (σTip) [MPa]', color: 'blue' });
+            renderBarChart('chart-bar-width', r.bi, ribNames, { title: 'Width [mm]', color: 'green' });
+            buildQuickResults(r);
+            chartsNeedRerender.config = false;
+        }
+        if (mod === 'stress3d') {
+            render3DSurface('chart-3d-ssz', r.sszMat, r.axdist, ribCenters, ribLabels,
+                { title: 'σz', fullTitle: currentRow.name + ' — Vertical σz', colorscale: 'YlOrRd', symmetric: false });
+            render3DSurface('chart-3d-ssx', r.ssxMat, r.axdist, ribCenters, ribLabels,
+                { title: 'σx', fullTitle: currentRow.name + ' — Longitudinal σx', colorscale: 'RdBu', symmetric: true });
+            render3DSurface('chart-3d-ssy', r.ssyMat, r.axdist, ribCenters, ribLabels,
+                { title: 'σy', fullTitle: currentRow.name + ' — Transverse σy', colorscale: 'YlOrRd', symmetric: false });
+            const flat_sz = r.sszMat.flat(), flat_sx = r.ssxMat.flat(), flat_sy = r.ssyMat.flat();
+            document.getElementById('ssz-subtitle').textContent = `Range: ${Math.min(...flat_sz).toFixed(3)} to ${Math.max(...flat_sz).toFixed(3)} MPa`;
+            document.getElementById('ssx-subtitle').textContent = `Range: ${Math.min(...flat_sx).toFixed(3)} to ${Math.max(...flat_sx).toFixed(3)} MPa`;
+            document.getElementById('ssy-subtitle').textContent = `Range: ${Math.min(...flat_sy).toFixed(3)} to ${Math.max(...flat_sy).toFixed(3)} MPa`;
+            chartsNeedRerender.stress3d = false;
+        }
+        if (mod === 'analysis') {
+            renderHeatmap('chart-hm-ssz', r.sszMat, r.axdist, ribLabels, { title: 'σz', colorscale: 'YlOrRd', symmetric: false });
+            renderHeatmap('chart-hm-ssx', r.ssxMat, r.axdist, ribLabels, { title: 'σx', colorscale: 'RdBu', symmetric: true });
+            renderHeatmap('chart-hm-ssy', r.ssyMat, r.axdist, ribLabels, { title: 'σy', colorscale: 'YlOrRd', symmetric: false });
+            renderRibCurves('chart-rib-ssz', r.SSZ, r.asz, r.xdist, r.axdist, ribLabels, { title: 'σz', symmetric: false });
+            renderRibCurves('chart-rib-ssx', r.SSX, r.asx, r.xdist, r.axdist, ribLabels, { title: 'σx', symmetric: true });
+            renderRibCurves('chart-rib-ssy', r.SSY, r.asy, r.xdist, r.axdist, ribLabels, { title: 'σy', symmetric: false });
+            renderCombinedRib('chart-combined-rib1', r, 0);
+            renderPeakComparison('chart-peak-comparison', r);
+            renderEqBar('chart-eq-bar', r);
+            chartsNeedRerender.analysis = false;
+        }
+        if (mod === 'summary') {
+            buildSummaryTab(r);
+            chartsNeedRerender.summary = false;
+        }
     }
 
-    // ==================== LOADING HELPERS ====================
+    function renderAllCharts() {
+        if (!results) return;
+        Object.keys(chartsNeedRerender).forEach(k => chartsNeedRerender[k] = true);
+        renderChartsForModule(getActiveModule());
+    }
+
+    // ================================================================
+    //  QUICK RESULTS PANEL
+    // ================================================================
+    function buildQuickResults(r) {
+        const panel = document.getElementById('quick-results-panel');
+        panel.style.display = '';
+        const body = document.getElementById('quick-results-body');
+        const passIcon = r.eqPassed
+            ? '<span style="color:var(--ac-success);"><i class="fas fa-check-circle"></i> PASSED</span>'
+            : '<span style="color:var(--ac-danger);"><i class="fas fa-times-circle"></i> FAILED</span>';
+
+        let html = `
+            <table class="results-table">
+                <tr><td>Applied Load (P)</td><td class="val">${(r.P / 1000).toFixed(2)} kN</td></tr>
+                <tr><td>Calculated Load (P<sub>z</sub>)</td><td class="val">${(r.Calc_Pz / 1000).toFixed(2)} kN</td></tr>
+                <tr><td>Difference</td><td class="val">${r.diff.toFixed(3)} %</td></tr>
+                <tr><td>Status (≤ 2.5%)</td><td class="val">${passIcon}</td></tr>
+            </table>`;
+        body.innerHTML = html;
+    }
+
+    // ================================================================
+    //  SUMMARY TAB
+    // ================================================================
+    function buildSummaryTab(r) {
+        const ribNames = r.bi.map((_, i) => `Rib ${i + 1}`);
+
+        // Stress Distribution Matrix
+        let matHtml = '<table class="results-table"><thead><tr><th>Rib</th><th>Width</th><th>α<sub>l</sub></th><th>σ<sub>Tip</sub></th><th>Max σ<sub>z</sub></th><th>Max |σ<sub>x</sub>|</th><th>Max σ<sub>y</sub></th><th>Eq Load</th></tr></thead><tbody>';
+        for (let i = 0; i < r.numRibs; i++) {
+            const key = 'Rib ' + (i + 1);
+            const maxSz = Math.max(...r.SSZ[key]).toFixed(4);
+            const maxSx = Math.max(...r.SSX[key].map(Math.abs)).toFixed(4);
+            const maxSy = Math.max(...r.SSY[key]).toFixed(4);
+            matHtml += `<tr class="rib-row"><td>${ribNames[i]}</td><td class="val">${r.bi[i]}</td><td class="val">${r.al[i].toFixed(4)}</td><td class="val">${r.sigm_Tip[i].toFixed(4)}</td><td class="val" style="color:var(--ac-danger)">${maxSz}</td><td class="val" style="color:var(--ac-primary)">${maxSx}</td><td class="val" style="color:var(--ac-success)">${maxSy}</td><td class="val">${(r.eqPerRib[i] / 1000).toFixed(3)} kN</td></tr>`;
+        }
+        matHtml += '</tbody></table>';
+        document.getElementById('summary-matrix-body').innerHTML = matHtml;
+
+        // Equilibrium
+        const passIcon = r.eqPassed
+            ? '<span style="color:var(--ac-success);font-weight:700"><i class="fas fa-check-circle"></i> PASSED</span>'
+            : '<span style="color:var(--ac-danger);font-weight:700"><i class="fas fa-times-circle"></i> FAILED</span>';
+        document.getElementById('summary-eq-body').innerHTML = `
+            <table class="results-table">
+                <tr><td>Applied Load P</td><td class="val">${(r.P / 1000).toFixed(3)} kN</td></tr>
+                <tr><td>Computed P<sub>z</sub></td><td class="val">${(r.Calc_Pz / 1000).toFixed(3)} kN</td></tr>
+                <tr><td>Difference</td><td class="val">${r.diff.toFixed(4)} %</td></tr>
+                <tr><td>Tolerance (2.5%)</td><td class="val">${passIcon}</td></tr>
+            </table>`;
+    }
+
+    // ================================================================
+    //  COMPUTE ORCHESTRATOR
+    // ================================================================
+    function computeAndRender() {
+        if (!currentRow) return;
+        showLoading('Computing stress distributions...', true);
+
+        requestAnimationFrame(() => {
+            try {
+                setProgress(20, 'Computing stress distributions...');
+                results = computeStresses();
+                setProgress(50, 'Updating summaries...');
+                updateEquilibriumBadge();
+                updateSummaryCards();
+                setProgress(75, 'Rendering charts...');
+                Object.keys(chartsNeedRerender).forEach(k => chartsNeedRerender[k] = true);
+                renderChartsForModule(getActiveModule());
+                setProgress(100, 'Complete!');
+                ['stress3d-empty','analysis-empty','summary-empty'].forEach(id =>
+                    document.getElementById(id).style.display = 'none');
+                ['stress3d-content','analysis-content','summary-content'].forEach(id =>
+                    document.getElementById(id).style.display = '');
+                requestAnimationFrame(() => {
+                    hideLoading();
+                    showSuccessFlash();
+                });
+            } catch (e) {
+                console.error('Compute error:', e);
+                alert('Compute error: ' + e.message);
+                hideLoading();
+            }
+        });
+    }
+
+    // ==================== LOADING & FEEDBACK ====================
     function showLoading(msg, useProgress) {
         document.getElementById('loading-text').textContent = msg || 'Loading...';
         const spinner = document.getElementById('loading-spinner');
         const progCont = document.getElementById('progress-container');
-        if (useProgress) {
-            spinner.style.display = 'none';
-            progCont.style.display = '';
-            setProgress(0);
-        } else {
-            spinner.style.display = '';
-            progCont.style.display = 'none';
-        }
+        if (useProgress) { spinner.style.display = 'none'; progCont.style.display = ''; setProgress(0); }
+        else { spinner.style.display = ''; progCont.style.display = 'none'; }
         document.getElementById('loading-overlay').classList.add('visible');
     }
-    function hideLoading() {
-        document.getElementById('loading-overlay').classList.remove('visible');
-    }
+    function hideLoading() { document.getElementById('loading-overlay').classList.remove('visible'); }
     function setProgress(pct, label) {
         document.getElementById('progress-bar-fill').style.width = pct + '%';
         document.getElementById('progress-pct').textContent = Math.round(pct) + '%';
         if (label) document.getElementById('loading-text').textContent = label;
+    }
+
+    function showSuccessFlash() {
+        const flash = document.createElement('div');
+        flash.className = 'success-flash';
+        flash.innerHTML = '<i class="fas fa-check-circle"></i> Stresses computed successfully';
+        document.body.appendChild(flash);
+        setTimeout(() => { flash.style.opacity = '0'; }, 1800);
+        setTimeout(() => flash.remove(), 2200);
+    }
+
+    // Ripple effect for buttons
+    function addRipple(e) {
+        const btn = e.currentTarget;
+        const rect = btn.getBoundingClientRect();
+        const circle = document.createElement('span');
+        circle.className = 'ripple-effect';
+        const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+        circle.style.width = circle.style.height = diameter + 'px';
+        circle.style.left = (e.clientX - rect.left - diameter / 2) + 'px';
+        circle.style.top = (e.clientY - rect.top - diameter / 2) + 'px';
+        btn.appendChild(circle);
+        setTimeout(() => circle.remove(), 600);
     }
 
     // ================================================================
@@ -1778,68 +1884,89 @@
     // ================================================================
     document.addEventListener('DOMContentLoaded', function() {
 
-        // --- Module Tabs ---
+        // Module Tabs — with lazy chart rendering
         document.querySelectorAll('.module-tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 document.querySelectorAll('.module-tab').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.module-content').forEach(c => c.classList.remove('active'));
                 this.classList.add('active');
-                document.getElementById('module-' + this.dataset.module).classList.add('active');
-
-                // Trigger Plotly resize on tab switch
-                setTimeout(() => {
-                    window.dispatchEvent(new Event('resize'));
-                }, 100);
+                const mod = this.dataset.module;
+                document.getElementById('module-' + mod).classList.add('active');
+                // Lazy render: if this tab's charts need re-rendering, do it now
+                if (results && chartsNeedRerender[mod]) {
+                    requestAnimationFrame(() => renderChartsForModule(mod));
+                }
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 80);
             });
         });
 
-        // --- Viz Sub-tabs ---
-        document.querySelectorAll('.viz-tab').forEach(tab => {
+        // Viz Sub-tabs
+        document.querySelectorAll('.viz-tab[data-viz]').forEach(tab => {
             tab.addEventListener('click', function() {
-                document.querySelectorAll('.viz-tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.viz-content').forEach(c => c.classList.remove('active'));
+                const parent = this.closest('.module-content');
+                parent.querySelectorAll('.viz-tab[data-viz]').forEach(t => t.classList.remove('active'));
+                parent.querySelectorAll('.viz-content').forEach(c => c.classList.remove('active'));
                 this.classList.add('active');
-                document.getElementById('viz-' + this.dataset.viz).classList.add('active');
-                setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+                parent.querySelector('#viz-' + this.dataset.viz).classList.add('active');
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 120);
             });
         });
 
-        // --- Manufacturer filter ---
+        // Surface sub-tabs
+        document.querySelectorAll('#surface-tabs .viz-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('#surface-tabs .viz-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const which = this.dataset.surface;
+                ['all', 'ssz', 'ssx', 'ssy'].forEach(id => {
+                    document.getElementById('surface-' + id).style.display = (which === id) ? '' : 'none';
+                });
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 120);
+            });
+        });
+
+        // Filters
         document.getElementById('filter-manufacturer').addEventListener('change', updateAircraftDropdown);
-
-        // --- Search filter ---
         document.getElementById('aircraft-search').addEventListener('input', updateAircraftDropdown);
-
-        // --- Aircraft selection ---
         document.getElementById('filter-aircraft').addEventListener('change', onAircraftSelect);
 
-        // --- Reset defaults ---
+        // Reset & Compute
         document.getElementById('btn-reset').addEventListener('click', function() {
             if (!defaultParams) return;
             applyParams(defaultParams);
             computeAndRender();
         });
-
-        // --- Compute button ---
-        document.getElementById('btn-compute').addEventListener('click', function() {
+        document.getElementById('btn-compute').addEventListener('click', function(e) {
+            addRipple(e);
             checkModified();
             computeAndRender();
         });
 
-        // --- Advanced toggle ---
+        // Keyboard shortcut: Ctrl+Enter to compute
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                if (currentRow) {
+                    checkModified();
+                    computeAndRender();
+                }
+            }
+        });
+
+        // Advanced toggle
         document.getElementById('adv-toggle').addEventListener('click', function() {
             this.classList.toggle('open');
             document.getElementById('adv-body').classList.toggle('open');
         });
 
-        // --- Parameter modification detection ---
+        // Parameter modification detection
         document.getElementById('param-panel').addEventListener('input', function() {
             checkModified();
             updateSummaryCards();
             drawContactPatch();
         });
 
-        // --- Theme override for AirCrafter ---
+        // Theme toggle — optimized: use Plotly.relayout for color-only updates
         const toggleBtns = document.querySelectorAll('.theme-toggle, #theme-toggle');
         toggleBtns.forEach(btn => {
             btn.addEventListener('click', function(e) {
@@ -1848,15 +1975,32 @@
                 const next = current === 'dark' ? 'light' : 'dark';
                 document.documentElement.setAttribute('data-theme', next);
                 localStorage.setItem('aircrafter-theme', next);
-                // Re-render charts with new theme
                 if (results) {
-                    setTimeout(() => renderAllCharts(), 100);
+                    // Fast relayout: update theme colors on existing plots without full re-render
+                    const theme = getPlotlyTheme();
+                    document.querySelectorAll('.js-plotly-plot').forEach(el => {
+                        try {
+                            Plotly.relayout(el, {
+                                'paper_bgcolor': theme.paper_bgcolor,
+                                'plot_bgcolor': theme.plot_bgcolor,
+                                'font.color': theme.font.color,
+                                'xaxis.gridcolor': theme.xaxis ? theme.xaxis.gridcolor : undefined,
+                                'yaxis.gridcolor': theme.yaxis ? theme.yaxis.gridcolor : undefined,
+                                'xaxis.color': theme.font.color,
+                                'yaxis.color': theme.font.color
+                            });
+                        } catch (_) { /* skip non-initialized plots */ }
+                    });
                 }
                 drawContactPatch();
             }, { capture: true });
         });
 
-        // --- Load data ---
+        // Ripple on all primary buttons
+        document.querySelectorAll('.btn-primary').forEach(btn => {
+            btn.addEventListener('click', addRipple);
+        });
+
         loadDatabase();
     });
     </script>
