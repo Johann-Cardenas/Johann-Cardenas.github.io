@@ -506,11 +506,12 @@
             margin: 0 0 1.25rem 0;
             display: flex;
             align-items: center;
-            gap: 0.6rem;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .hpc-suggestions-title i {
-            font-size: 1.25rem;
+            font-size: 1.05rem;
             animation: float 3s ease-in-out infinite;
         }
 
@@ -521,22 +522,29 @@
         }
 
         .suggestion-list li {
-            padding: 0.85rem 1rem;
+            padding: 0.85rem 1.25rem;
             margin-bottom: 0.5rem;
             border-radius: 10px;
             display: flex;
-            align-items: flex-start;
-            gap: 0.85rem;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
             color: white;
             font-size: 0.95rem;
             background: rgba(255, 255, 255, 0.05);
             transition: all 0.3s ease;
             border-left: 3px solid transparent;
+            text-align: center;
+        }
+
+        .suggestion-list li span {
+            max-width: 42em;
+            line-height: 1.4;
         }
 
         .suggestion-list li:hover {
             background: rgba(255, 255, 255, 0.1);
-            transform: translateX(5px);
+            transform: translateY(-1px);
         }
 
         .suggestion-list li:last-child {
@@ -545,14 +553,13 @@
 
         .suggestion-list li i {
             color: var(--frontier-accent);
-            margin-top: 0.15rem;
             flex-shrink: 0;
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: transform 0.3s ease;
         }
 
         .suggestion-list li:hover i {
-            transform: scale(1.2);
+            transform: scale(1.08);
         }
 
         .suggestion-list li.good {
@@ -1074,14 +1081,14 @@
         .conveyor-path {
             fill: none;
             stroke: #334155;
-            stroke-width: 8;
+            stroke-width: 5;
             stroke-linecap: round;
         }
 
         .conveyor-path-active {
             fill: none;
             stroke: var(--frontier-primary);
-            stroke-width: 8;
+            stroke-width: 5;
             stroke-linecap: round;
             stroke-dasharray: 1000;
             stroke-dashoffset: 1000;
@@ -1153,48 +1160,76 @@
         }
 
         .resource-meter {
-            background: rgba(255,255,255,0.08);
-            border-radius: 12px;
-            padding: 1rem;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 1rem 1.15rem;
             transition: all 0.3s ease;
-            border: 1px solid transparent;
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         .resource-meter:hover {
-            background: rgba(255,255,255,0.12);
-            border-color: var(--frontier-primary-glow);
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255, 255, 255, 0.12);
             transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
         }
 
         .meter-icon {
-            font-size: 1.4rem;
-            margin-bottom: 0.4rem;
-            transition: transform 0.3s ease;
+            flex-shrink: 0;
+            width: 58px;
+            height: 58px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            background: rgba(255, 255, 255, 0.08);
+            transition: transform 0.3s ease, background 0.3s ease;
         }
 
         .resource-meter:hover .meter-icon {
-            transform: scale(1.2);
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .meter-content {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
         }
 
         .meter-value {
             color: white;
-            font-size: 1.15rem;
+            font-size: 1.35rem;
             font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
         }
 
         .meter-label {
             color: var(--frontier-text-muted);
             font-size: 0.7rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.06em;
+            margin-top: 0.15rem;
         }
 
+        .meter-content .meter-bar {
+            align-self: stretch;
+            width: 100%;
+        }
         .meter-bar {
             height: 5px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
-            margin-top: 0.6rem;
+            margin-top: 0.5rem;
             overflow: hidden;
         }
 
@@ -1214,6 +1249,16 @@
             bottom: 0;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
             animation: shimmer 2s linear infinite;
+        }
+
+        /* Left panel: terminal grows with content; no page scroll steal */
+        .workflow-container > .panel:first-child .terminal {
+            display: flex;
+            flex-direction: column;
+        }
+        .workflow-container > .panel:first-child .terminal-body {
+            flex: 0 0 auto;
+            height: auto;
         }
 
         /* Terminal Output */
@@ -1260,7 +1305,8 @@
 
         .terminal-body {
             padding: 1.25rem;
-            max-height: 220px;
+            min-height: 10rem;
+            max-height: 520px;
             overflow-y: auto;
             color: #10b981;
             scrollbar-width: thin;
@@ -1299,6 +1345,23 @@
             content: '▋';
             animation: blink 0.8s step-end infinite;
             color: var(--frontier-primary);
+        }
+
+        /* Workflow metrics block: Runtime/Efficiency/SU Cost above Cores/Memory/I-O/Network */
+        .workflow-metrics {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .workflow-metrics .stats-grid {
+            margin-top: 0;
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .workflow-metrics .resource-meters {
+            margin-top: 0;
         }
 
         /* Stats Grid */
@@ -2208,13 +2271,13 @@
         }
 
         .render-header {
-            padding: 1.25rem;
+            padding: 0.75rem 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.85rem;
+            gap: 0.6rem;
             font-weight: 700;
-            font-size: 1.2rem;
+            font-size: 1.05rem;
             color: white;
             position: relative;
             overflow: hidden;
@@ -2232,7 +2295,7 @@
         }
 
         .render-header i {
-            font-size: 1.3rem;
+            font-size: 1.1rem;
         }
 
         .render-panel.cpu .render-header {
@@ -2313,18 +2376,18 @@
         }
 
         .render-stats {
-            padding: 1.25rem;
+            padding: 0.9rem 1rem;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.6rem;
+            gap: 0.5rem 0.85rem;
             background: var(--frontier-bg-panel);
         }
 
         .render-stat {
             text-align: center;
-            padding: 0.6rem;
+            padding: 0.35rem 0.25rem;
             transition: all 0.3s ease;
-            border-radius: 10px;
+            border-radius: 8px;
         }
 
         .render-stat:hover {
@@ -2332,14 +2395,19 @@
         }
 
         .render-stat .stat-value {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.15rem;
         }
 
         .render-stat .stat-label {
             font-size: 0.7rem;
             color: var(--frontier-text-muted);
             text-transform: uppercase;
+            letter-spacing: 0.05em;
+            line-height: 1.25;
         }
 
         .render-panel.cpu .render-stat .stat-value { color: var(--frontier-secondary); }
@@ -2359,19 +2427,26 @@
         .render-panel.cpu .render-progress-fill { background: var(--frontier-secondary); }
         .render-panel.gpu .render-progress-fill { background: var(--frontier-success); }
 
-        /* Speed Comparison */
+        /* Speed Comparison: two cards side by side */
         .speed-comparison {
             margin-top: 1.5rem;
-            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        .speed-card {
+            padding: 1.5rem 1.25rem;
             border-radius: 16px;
             text-align: center;
             background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(24, 169, 168, 0.1));
             border: 1px solid rgba(16, 185, 129, 0.3);
+            overflow: visible;
         }
 
-        .speed-comparison h3 {
+        .speed-card h3 {
             margin: 0 0 1rem 0;
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: var(--frontier-text);
             display: flex;
             align-items: center;
@@ -2379,19 +2454,24 @@
             gap: 0.5rem;
         }
 
-        .speedup-value {
-            font-size: 4rem;
+        .speedup-value,
+        .speed-card .metric-value {
+            font-size: 2.5rem;
             font-weight: 700;
+            line-height: 1.15;
             background: linear-gradient(135deg, var(--frontier-success), var(--frontier-primary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            letter-spacing: -0.02em;
         }
 
-        .speedup-label {
-            font-size: 1rem;
+        .speedup-label,
+        .speed-card .metric-label {
+            font-size: 0.9rem;
             color: var(--frontier-text-secondary);
-            margin-top: 0.5rem;
+            margin-top: 0.35rem;
+            line-height: 1.3;
         }
 
         /* ==================== ANIMATION COMPARISON SECTION ==================== */
@@ -3145,7 +3225,7 @@
             }
 
             /* Factory Viz Mobile */
-                        @media (min-width: 769px) {
+                        @media (min-width: 769px) and (max-width: 1023px) {
                                                                                             .render-comparison-section {
                                                                                                 display: flex !important;
                                                                                                 flex-direction: row !important;
@@ -3693,6 +3773,169 @@
             }
         }
 
+        /* ==================== DESKTOP: HPC Job Pipeline diagram focus ==================== */
+        @media (min-width: 1024px) {
+            /* Center the diagram panel and content */
+            .workflow-container .panel:has(.factory-viz) {
+                display: flex;
+                justify-content: center;
+                padding: 0;
+                overflow: visible;
+            }
+            .factory-viz {
+                max-width: 1200px;
+                width: 100%;
+                margin-left: auto;
+                margin-right: auto;
+                padding: 2.5rem 2rem;
+            }
+            .factory-title {
+                font-size: 1.65rem;
+                text-align: center;
+                margin-bottom: 2rem;
+                justify-content: center;
+                font-weight: 700;
+            }
+            .factory-title i {
+                font-size: 1.45rem;
+            }
+            /* Center the conveyor diagram; match SVG viewBox width so path math aligns */
+            .conveyor-system {
+                width: 800px;
+                max-width: 100%;
+                margin-left: auto;
+                margin-right: auto;
+                height: 520px;
+                margin-bottom: 0.5rem;
+            }
+            .conveyor-station {
+                position: absolute;
+            }
+            .station-icon {
+                width: 88px;
+                height: 88px;
+                font-size: 2.25rem;
+            }
+            .station-label {
+                font-size: 1.2rem;
+                margin-top: 0.5rem;
+                max-width: 100px;
+                font-weight: 600;
+            }
+            .station-status {
+                font-size: 1rem;
+                margin-top: 0.25rem;
+            }
+            /* Tighter gap between pipeline and resource meters */
+            .factory-viz .resource-meters {
+                margin-top: 0.4rem;
+                padding: 1.5rem;
+                gap: 1.25rem;
+            }
+            .factory-viz .meter-icon {
+                width: 62px;
+                height: 62px;
+                font-size: 1.95rem;
+            }
+            .factory-viz .meter-label {
+                font-size: 0.8rem;
+            }
+            .factory-viz .meter-value {
+                font-size: 1.85rem;
+            }
+            /* Optimization Insights: best shape on desktop */
+            .factory-viz .hpc-suggestions-title {
+                font-size: 1.2rem;
+            }
+            .factory-viz .hpc-suggestions-title i {
+                font-size: 1.1rem;
+            }
+            .factory-viz .suggestion-list li {
+                font-size: 1rem;
+                padding: 0.9rem 1.5rem;
+            }
+            .factory-viz .suggestion-list li i {
+                font-size: 0.95rem;
+            }
+
+            /* Scaling module desktop: Serial and Parallel blocks side by side */
+            #module-scaling .flow-diagram {
+                flex-direction: row;
+                align-items: stretch;
+                gap: 1.25rem;
+                min-height: 200px;
+            }
+            #module-scaling .flow-arrow {
+                transform: none;
+                width: 44px;
+                flex-shrink: 0;
+            }
+            #module-scaling .flow-section {
+                flex: 1;
+                min-width: 0;
+            }
+            #module-scaling .flow-section.serial {
+                min-width: 140px;
+                flex: 0 1 28%;
+            }
+            #module-scaling .flow-section.parallel {
+                flex: 1 1 auto;
+            }
+
+            /* CPU vs GPU module desktop: larger fonts, balanced spacing */
+            #module-cpugpu .render-comparison {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1.25rem;
+                align-items: start;
+            }
+            #module-cpugpu .render-panel {
+                min-width: 0;
+            }
+            #module-cpugpu .render-header {
+                padding: 0.9rem 1.15rem;
+                font-size: 1.15rem;
+            }
+            #module-cpugpu .render-header i {
+                font-size: 1.2rem;
+            }
+            #module-cpugpu .render-stats {
+                padding: 1rem 1.2rem;
+                gap: 0.6rem 1rem;
+            }
+            #module-cpugpu .render-stat .stat-value {
+                font-size: 1.35rem;
+                margin-bottom: 0.2rem;
+            }
+            #module-cpugpu .render-stat .stat-label {
+                font-size: 0.82rem;
+            }
+            /* GPU Advantage & Time Savings cards: larger fonts, tighter gaps */
+            #module-cpugpu .speed-comparison {
+                margin-top: 1.25rem;
+                gap: 1.25rem;
+            }
+            #module-cpugpu .speed-card {
+                padding: 1.35rem 1.4rem;
+            }
+            #module-cpugpu .speed-card h3 {
+                font-size: 1.12rem;
+                margin-bottom: 0.75rem;
+            }
+            #module-cpugpu .speed-card h3 i {
+                font-size: 1.1rem;
+            }
+            #module-cpugpu .speedup-value,
+            #module-cpugpu .speed-card .metric-value {
+                font-size: 2.85rem;
+            }
+            #module-cpugpu .speedup-label,
+            #module-cpugpu .speed-card .metric-label {
+                font-size: 1rem;
+                margin-top: 0.3rem;
+            }
+        }
+
         /* Disable animations for reduced motion preference */
         @media (prefers-reduced-motion: reduce) {
             *,
@@ -3817,7 +4060,7 @@
                                 </button>
                             </div>
 
-                            <!-- Terminal Output -->
+                            <!-- Terminal Output (extends into space freed by moving stats to right panel) -->
                             <div class="terminal" id="job-terminal" style="display: none;">
                                 <div class="terminal-header">
                                     <div class="dot red"></div>
@@ -3826,25 +4069,6 @@
                                     <span>frontier-login01</span>
                                 </div>
                                 <div class="terminal-body" id="terminal-output"></div>
-                            </div>
-
-                            <!-- Stats -->
-                            <div class="stats-grid" id="job-stats" style="display: none;">
-                                <div class="stat-card">
-                                    <div class="stat-icon" style="color: var(--frontier-primary)"><i class="fas fa-stopwatch"></i></div>
-                                    <div class="stat-value" id="stat-runtime">--</div>
-                                    <div class="stat-label">Runtime</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-icon" style="color: var(--frontier-success)"><i class="fas fa-tachometer-alt"></i></div>
-                                    <div class="stat-value" id="stat-efficiency">--</div>
-                                    <div class="stat-label">Efficiency</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-icon" style="color: var(--frontier-warning)"><i class="fas fa-coins"></i></div>
-                                    <div class="stat-value" id="stat-cost">--</div>
-                                    <div class="stat-label">SU Cost</div>
-                                </div>
                             </div>
                         </div>
 
@@ -3867,31 +4091,58 @@
                                     <!-- Stations will be added dynamically -->
                                 </div>
 
-                                <!-- Resource Meters -->
-                                <div class="resource-meters" id="resource-meters">
-                                    <div class="resource-meter">
-                                        <div class="meter-icon" style="color: var(--frontier-primary)"><i class="fas fa-microchip"></i></div>
-                                        <div class="meter-value" id="meter-cores">0</div>
-                                        <div class="meter-label">Cores</div>
-                                        <div class="meter-bar"><div class="meter-fill" id="meter-cores-fill" style="width: 0%; background: var(--frontier-primary);"></div></div>
+                                <!-- Workflow metrics: Runtime/Efficiency/SU Cost + Cores/Memory/I-O/Network -->
+                                <div class="workflow-metrics">
+                                    <div class="stats-grid" id="job-stats" style="display: none;">
+                                        <div class="stat-card">
+                                            <div class="stat-icon" style="color: var(--frontier-primary)"><i class="fas fa-stopwatch"></i></div>
+                                            <div class="stat-value" id="stat-runtime">--</div>
+                                            <div class="stat-label">Runtime</div>
+                                        </div>
+                                        <div class="stat-card">
+                                            <div class="stat-icon" style="color: var(--frontier-success)"><i class="fas fa-tachometer-alt"></i></div>
+                                            <div class="stat-value" id="stat-efficiency">--</div>
+                                            <div class="stat-label">Efficiency</div>
+                                        </div>
+                                        <div class="stat-card">
+                                            <div class="stat-icon" style="color: var(--frontier-warning)"><i class="fas fa-coins"></i></div>
+                                            <div class="stat-value" id="stat-cost">--</div>
+                                            <div class="stat-label">SU Cost</div>
+                                        </div>
                                     </div>
-                                    <div class="resource-meter">
-                                        <div class="meter-icon" style="color: var(--frontier-success)"><i class="fas fa-memory"></i></div>
-                                        <div class="meter-value" id="meter-memory">0</div>
-                                        <div class="meter-label">Memory</div>
-                                        <div class="meter-bar"><div class="meter-fill" id="meter-memory-fill" style="width: 0%; background: var(--frontier-success);"></div></div>
-                                    </div>
-                                    <div class="resource-meter">
-                                        <div class="meter-icon" style="color: var(--frontier-warning)"><i class="fas fa-hdd"></i></div>
-                                        <div class="meter-value" id="meter-io">0</div>
-                                        <div class="meter-label">I/O</div>
-                                        <div class="meter-bar"><div class="meter-fill" id="meter-io-fill" style="width: 0%; background: var(--frontier-warning);"></div></div>
-                                    </div>
-                                    <div class="resource-meter">
-                                        <div class="meter-icon" style="color: var(--frontier-secondary)"><i class="fas fa-network-wired"></i></div>
-                                        <div class="meter-value" id="meter-network">0</div>
-                                        <div class="meter-label">Network</div>
-                                        <div class="meter-bar"><div class="meter-fill" id="meter-network-fill" style="width: 0%; background: var(--frontier-secondary);"></div></div>
+                                    <div class="resource-meters" id="resource-meters">
+                                        <div class="resource-meter">
+                                            <div class="meter-icon" style="color: var(--frontier-primary)"><i class="fas fa-microchip"></i></div>
+                                            <div class="meter-content">
+                                                <div class="meter-value" id="meter-cores">0</div>
+                                                <div class="meter-label">Cores</div>
+                                                <div class="meter-bar"><div class="meter-fill" id="meter-cores-fill" style="width: 0%; background: var(--frontier-primary);"></div></div>
+                                            </div>
+                                        </div>
+                                        <div class="resource-meter">
+                                            <div class="meter-icon" style="color: var(--frontier-success)"><i class="fas fa-memory"></i></div>
+                                            <div class="meter-content">
+                                                <div class="meter-value" id="meter-memory">0</div>
+                                                <div class="meter-label">Memory</div>
+                                                <div class="meter-bar"><div class="meter-fill" id="meter-memory-fill" style="width: 0%; background: var(--frontier-success);"></div></div>
+                                            </div>
+                                        </div>
+                                        <div class="resource-meter">
+                                            <div class="meter-icon" style="color: var(--frontier-warning)"><i class="fas fa-hdd"></i></div>
+                                            <div class="meter-content">
+                                                <div class="meter-value" id="meter-io">0</div>
+                                                <div class="meter-label">I/O</div>
+                                                <div class="meter-bar"><div class="meter-fill" id="meter-io-fill" style="width: 0%; background: var(--frontier-warning);"></div></div>
+                                            </div>
+                                        </div>
+                                        <div class="resource-meter">
+                                            <div class="meter-icon" style="color: var(--frontier-secondary)"><i class="fas fa-network-wired"></i></div>
+                                            <div class="meter-content">
+                                                <div class="meter-value" id="meter-network">0</div>
+                                                <div class="meter-label">Network</div>
+                                                <div class="meter-bar"><div class="meter-fill" id="meter-network-fill" style="width: 0%; background: var(--frontier-secondary);"></div></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -4176,13 +4427,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Speed Comparison -->
-                            <div class="speed-comparison" id="speed-comparison" style="display: none;">
-                                <h3><i class="fas fa-trophy"></i> GPU Advantage</h3>
-                                <div class="speedup-value" id="gpu-speedup">--×</div>
-                                <div class="speedup-label">faster than CPU</div>
-                            </div>
                         </div>
 
                         <!-- Render Panel -->
@@ -4250,6 +4494,20 @@
                                             <div class="stat-label">Pixels/s</div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- GPU Advantage & Time Savings: two cards below the render comparison -->
+                            <div class="speed-comparison" id="speed-comparison" style="display: none;">
+                                <div class="speed-card">
+                                    <h3><i class="fas fa-trophy"></i> GPU Advantage</h3>
+                                    <div class="speedup-value" id="gpu-speedup">--×</div>
+                                    <div class="speedup-label">faster than CPU</div>
+                                </div>
+                                <div class="speed-card">
+                                    <h3><i class="fas fa-clock"></i> GPU Time Savings</h3>
+                                    <div class="metric-value" id="gpu-time-saved">--</div>
+                                    <div class="metric-label">faster than CPU</div>
                                 </div>
                             </div>
 
@@ -4462,8 +4720,9 @@
             // Clear existing stations
             container.querySelectorAll('.conveyor-station').forEach(s => s.remove());
             
-            // Create stations
-            const iconSize = window.innerWidth > 768 ? 62 : 48;
+            // Create stations — match CSS breakpoints so path centers align with icon centers
+            const w = window.innerWidth;
+            const iconSize = w >= 1024 ? 88 : (w > 768 ? 62 : 48);
             workflowStations.forEach(station => {
                 const stationEl = document.createElement('div');
                 stationEl.className = 'conveyor-station';
@@ -4485,13 +4744,15 @@
                 { from: 4, to: 5 }, { from: 5, to: 6 }, { from: 6, to: 7 }, { from: 7, to: 8 }
             ];
             let pathsHTML = '';
+            // Offset line up so it aligns with visual center of icon (icons often sit slightly high in box)
+            const lineYOffset = -8;
             paths.forEach((path, idx) => {
                 const from = workflowStations[path.from];
                 const to = workflowStations[path.to];
                 const x1 = from.x + iconSize/2;
-                const y1 = from.y + iconSize/2;
+                const y1 = from.y + iconSize/2 + lineYOffset;
                 const x2 = to.x + iconSize/2;
-                const y2 = to.y + iconSize/2;
+                const y2 = to.y + iconSize/2 + lineYOffset;
                 pathsHTML += `
                     <path class="conveyor-path" d="M${x1},${y1} L${x2},${y2}" />
                     <path class="conveyor-path-active" id="path-${idx}" d="M${x1},${y1} L${x2},${y2}" />
@@ -4542,7 +4803,7 @@
             
             // Reset visualization
             initFactory();
-            document.getElementById('job-terminal').style.display = 'block';
+            document.getElementById('job-terminal').style.display = 'flex';
             document.getElementById('terminal-output').innerHTML = '';
             document.getElementById('job-stats').style.display = 'none';
             
@@ -4659,11 +4920,13 @@
         }
 
         function addTerminalLine(text, type = '') {
+            const output = document.getElementById('terminal-output');
             const line = document.createElement('div');
             line.className = 'terminal-line';
             line.innerHTML = type ? `<span class="${type}">${text}</span>` : text;
-            document.getElementById('terminal-output').appendChild(line);
-            line.scrollIntoView({ behavior: 'smooth' });
+            output.appendChild(line);
+            // Scroll only inside the terminal so the new line is visible; do not move the page (focus stays on HPC Job Pipeline)
+            output.scrollTop = output.scrollHeight;
         }
 
         function showHPCSuggestions(cores, memory, problemSize, efficiency, runtime, suCost) {
@@ -4737,6 +5000,8 @@
             ).join('');
             
             document.getElementById('hpc-suggestions').classList.add('visible');
+            // Keep focus on the diagram: scroll pipeline + insights into view, not the terminal
+            document.getElementById('factory-viz').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         // Initialize factory on load
@@ -4942,6 +5207,17 @@
             const serialTasks = Math.ceil(workUnits * serialFraction);
             const parallelTasks = workUnits - serialTasks;
             const tasksPerLane = Math.ceil(parallelTasks / workers);
+            
+            // Size Serial and Parallel blocks by Serial Portion (desktop: width ratio; mobile: height ratio)
+            const serialSection = document.getElementById('serial-flow-tasks').closest('.flow-section.serial');
+            const parallelSection = document.getElementById('parallel-lanes').closest('.flow-section.parallel');
+            if (serialSection && parallelSection) {
+                const s = Math.max(0.05, Math.min(0.95, serialFraction));
+                serialSection.style.flex = `${s} 1 0`;
+                serialSection.style.minWidth = '100px';
+                parallelSection.style.flex = `${1 - s} 1 0`;
+                parallelSection.style.minWidth = '100px';
+            }
             
             // Create serial tasks container
             const serialContainer = document.getElementById('serial-flow-tasks');
@@ -5370,8 +5646,12 @@
             
             if (!renderAborted) {
                 // Show results
-                document.getElementById('speed-comparison').style.display = 'block';
+                const timeSavedSec = (cpuTotalTime - gpuTotalTime) / 1000;
+                document.getElementById('speed-comparison').style.display = 'grid';
                 document.getElementById('gpu-speedup').textContent = gpuSpeedup.toFixed(0) + '×';
+                document.getElementById('gpu-time-saved').textContent = timeSavedSec >= 1
+                    ? timeSavedSec.toFixed(1) + 's'
+                    : (timeSavedSec * 1000).toFixed(0) + 'ms';
                 
                 document.getElementById('gpu-insight').style.display = 'flex';
                 document.getElementById('gpu-insight-text').textContent = 
