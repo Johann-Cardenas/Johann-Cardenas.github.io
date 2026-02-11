@@ -2939,11 +2939,9 @@ input, select, textarea {
 					pointer-events: auto;
 				}
 
-					#titleBar .toggle:before {
-						-moz-osx-font-smoothing: grayscale;
-						-webkit-font-smoothing: antialiased;
-						display: inline-block;
-						font-style: normal;
+			#titleBar .back-btn {
+				pointer-events: auto;
+			}
 						font-variant: normal;
 						text-rendering: auto;
 						line-height: 1;
@@ -3903,4 +3901,26 @@ html {
 
 [data-theme="dark"] .callout-box a:hover {
 	color: #5eead4;
+}
+
+/* Inner Pages — Tighten header-to-content gap (desktop only) */
+
+@media screen and (min-width: 981px) {
+
+	body.Projects #header,
+	body.Publications #header,
+	body.Resume #header,
+	body.Blog #header,
+	body.News #header {
+		margin-bottom: 0.5em;
+	}
+
+	body.Projects #main,
+	body.Publications #main,
+	body.Resume #main,
+	body.Blog #main,
+	body.News #main {
+		padding-top: 2em;
+	}
+
 }

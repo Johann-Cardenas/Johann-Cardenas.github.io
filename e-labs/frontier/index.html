@@ -3034,7 +3034,7 @@
         @media (max-width: 768px) {
             .frontier-app {
                 padding: 0.75rem;
-                padding-top: 2.75rem;
+                padding-top: 2.25rem;
             }
 
             /* Header Mobile */
@@ -3079,6 +3079,7 @@
                 display: inline-flex !important; align-items: center !important; gap: 0.4rem !important;
                 height: auto !important; line-height: normal !important;
                 text-decoration: none !important; font-weight: 500 !important;
+                white-space: nowrap !important;
             }
             #titleBar .back-btn i { font-size: 0.72rem; }
             #titleBar .back-btn:hover { transform: none !important; box-shadow: none !important; }
@@ -3144,10 +3145,199 @@
             }
 
             /* Factory Viz Mobile */
+                        @media (min-width: 769px) {
+                                                                                            .render-comparison-section {
+                                                                                                display: flex !important;
+                                                                                                flex-direction: row !important;
+                                                                                                gap: 2.5rem;
+                                                                                                align-items: flex-start;
+                                                                                            }
+                                                                                            .render-comparison-panel {
+                                                                                                flex: 1 1 0;
+                                                                                                min-width: 0;
+                                                                                            }
+                                                                            #factory-viz, #factory-viz * {
+                                                                                font-size: 2.2rem !important;
+                                                                                line-height: 1.18 !important;
+                                                                            }
+                                                            .conveyor-station {
+                                                                font-size: 2.8rem !important;
+                                                                margin: 1.5rem 0 !important;
+                                                                max-width: 420px !important;
+                                                            }
+                                                            .station-icon {
+                                                                width: 150px !important;
+                                                                height: 150px !important;
+                                                                font-size: 5rem !important;
+                                                            }
+                                                            .station-label {
+                                                                font-size: 2.8rem !important;
+                                                                margin-top: 1.1rem !important;
+                                                                font-weight: 900 !important;
+                                                                letter-spacing: 0.01em !important;
+                                                            }
+                                                            .station-status {
+                                                                font-size: 2.1rem !important;
+                                                                margin-top: 0.38rem !important;
+                                                            }
+                                            .resource-meters {
+                                                font-size: 1.7rem;
+                                            }
+                                            .resource-meter {
+                                                font-size: 1.4rem;
+                                                padding: 2.1rem 1.2rem 2.1rem 1.2rem;
+                                            }
+                                            .meter-icon {
+                                                font-size: 3.3rem;
+                                                margin-bottom: 1.1rem;
+                                            }
+                                            .meter-value {
+                                                font-size: 3.7rem;
+                                                font-weight: 800;
+                                                margin-bottom: 0.35rem;
+                                            }
+                                            .meter-label {
+                                                font-size: 1.55rem;
+                                                font-weight: 700;
+                                            }
+                            .job-package {
+                                position: absolute;
+                                left: unset;
+                                top: unset;
+                                width: 55px;
+                                height: 55px;
+                                margin: 0;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                background: rgba(24, 169, 168, 0.15);
+                                box-shadow: 0 0 16px 4px rgba(24, 169, 168, 0.18);
+                                filter: none;
+                                z-index: 10;
+                                transition: none;
+                            }
+                            .conveyor-system {
+                                position: relative;
+                                display: flex;
+                                flex-direction: row;
+                                flex-wrap: wrap;
+                                justify-content: center;
+                                align-items: flex-start;
+                                width: 100%;
+                                margin: 0 auto;
+                            }
+                            .conveyor-station {
+                                font-size: 2.1rem;
+                                margin: 1.3rem 0;
+                                max-width: 370px;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                            }
+                            .station-icon {
+                                width: 120px;
+                                height: 120px;
+                                font-size: 3.7rem;
+                            }
+                            .station-label {
+                                font-size: 2.2rem;
+                                margin-top: 0.7rem;
+                                font-weight: 900;
+                                letter-spacing: 0.01em;
+                            }
+                            .station-status {
+                                font-size: 1.6rem;
+                                margin-top: 0.28rem;
+                            }
+                            .resource-meters {
+                                font-size: 1.15rem;
+                            }
+                            .meter-value {
+                                font-size: 2.1rem;
+                            }
+                            .meter-label {
+                                font-size: 1.1rem;
+                            }
+                            .factory-viz {
+                                max-width: 1100px;
+                                margin: 0 auto;
+                            }
+                        }
             .factory-viz {
                 padding: 1.25rem;
                 border-radius: 14px;
             }
+
+                @media (max-width: 768px) {
+                    .conveyor-system {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        height: auto !important;
+                        min-height: 0 !important;
+                        padding: 0.5rem 0;
+                        position: relative;
+                    }
+                    .conveyor-station {
+                        position: static !important;
+                        margin: 1.2rem 0;
+                        width: 100%;
+                        max-width: 220px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        z-index: 1;
+                    }
+                    .factory-viz {
+                        padding-top: 0.5rem;
+                    }
+                    .factory-title {
+                        margin-bottom: 0.5rem;
+                    }
+                    .factory-highlight {
+                        border-radius: 16px;
+                        margin-top: 0;
+                        margin-bottom: 0;
+                        padding: 0.5rem 0;
+                        background: rgba(120,130,150,0.18);
+                        z-index: 0;
+                    }
+                    .conveyor-paths {
+                        display: none !important;
+                    }
+                    .station-icon {
+                        width: 48px;
+                        height: 48px;
+                        font-size: 1.2rem;
+                    }
+                    .station-label {
+                        font-size: 0.9rem;
+                        margin-top: 0.2rem;
+                    }
+                    .station-status {
+                        font-size: 0.8rem;
+                        margin-top: 0.1rem;
+                    }
+                        .job-package {
+                            position: absolute !important;
+                            left: -60px !important;
+                            width: 40px !important;
+                            height: 40px !important;
+                            margin: 0 !important;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            background: transparent !important;
+                            box-shadow: none !important;
+                            filter: none !important;
+                            z-index: 10;
+                            transition: top 0.4s cubic-bezier(.4,0,.2,1);
+                        }
+                        .conveyor-system {
+                            position: relative;
+                        }
+                        }
+                }
 
             .conveyor-system {
                 height: 400px;
@@ -3413,7 +3603,7 @@
         @media (max-width: 480px) {
             .frontier-app {
                 padding: 0.5rem;
-                padding-top: 2.75rem;
+                padding-top: 2.25rem;
             }
 
             .app-header h1 {
@@ -4273,45 +4463,40 @@
             container.querySelectorAll('.conveyor-station').forEach(s => s.remove());
             
             // Create stations
+            const iconSize = window.innerWidth > 768 ? 62 : 48;
             workflowStations.forEach(station => {
                 const stationEl = document.createElement('div');
                 stationEl.className = 'conveyor-station';
                 stationEl.id = `station-${station.id}`;
                 stationEl.style.left = `${station.x}px`;
                 stationEl.style.top = `${station.y}px`;
-                
                 stationEl.innerHTML = `
-                    <div class="station-icon waiting" style="background: ${station.color};">
+                    <div class="station-icon waiting" style="background: ${station.color}; width: ${iconSize}px; height: ${iconSize}px;">
                         <i class="fas ${station.icon}"></i>
                     </div>
                     <div class="station-label">${station.label}</div>
                     <div class="station-status" id="status-${station.id}">Waiting</div>
                 `;
-                
                 container.appendChild(stationEl);
             });
-            
             // Draw conveyor paths
             const paths = [
                 { from: 0, to: 1 }, { from: 1, to: 2 }, { from: 2, to: 3 }, { from: 3, to: 4 },
                 { from: 4, to: 5 }, { from: 5, to: 6 }, { from: 6, to: 7 }, { from: 7, to: 8 }
             ];
-            
             let pathsHTML = '';
             paths.forEach((path, idx) => {
                 const from = workflowStations[path.from];
                 const to = workflowStations[path.to];
-                const x1 = from.x + 35;
-                const y1 = from.y + 35;
-                const x2 = to.x + 35;
-                const y2 = to.y + 35;
-                
+                const x1 = from.x + iconSize/2;
+                const y1 = from.y + iconSize/2;
+                const x2 = to.x + iconSize/2;
+                const y2 = to.y + iconSize/2;
                 pathsHTML += `
                     <path class="conveyor-path" d="M${x1},${y1} L${x2},${y2}" />
                     <path class="conveyor-path-active" id="path-${idx}" d="M${x1},${y1} L${x2},${y2}" />
                 `;
             });
-            
             svg.innerHTML = pathsHTML;
         }
 
@@ -4384,14 +4569,21 @@
             
             for (let i = 0; i < stepsData.length; i++) {
                 if (workflowAborted) break;
-                
                 const step = stepsData[i];
                 const stationIdx = workflowStations.findIndex(s => s.id === step.station);
                 const station = workflowStations[stationIdx];
-                
-                // Animate package movement
-                await animatePackage(pkg, station.x + 15, station.y + 15);
-                
+                const stationEl = document.getElementById(`station-${station.id}`);
+                // Mobile: move job-package outside highlighted section
+                if (window.innerWidth <= 768) {
+                    const conveyor = document.getElementById('conveyor-system');
+                    conveyor.parentNode.insertBefore(pkg, conveyor.nextSibling);
+                    pkg.style.position = 'static';
+                    pkg.style.left = '';
+                    pkg.style.top = '';
+                } else {
+                    // Desktop: animate package movement
+                    await animatePackage(pkg, station.x + 15, station.y + 15);
+                }
                 // Activate station
                 const stationIcon = document.querySelector(`#station-${step.station} .station-icon`);
                 stationIcon.classList.remove('waiting');
