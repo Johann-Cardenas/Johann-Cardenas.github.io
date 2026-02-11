@@ -5,6 +5,8 @@
         (function() {
             var theme = localStorage.getItem('aircrafter-theme') || 'dark';
             document.documentElement.setAttribute('data-theme', theme);
+            // Ensure the global theme-toggle.js respects the app default
+            localStorage.setItem('theme-preference', theme);
         })();
     </script>
     <title>AirCrafter | Contact Stress Engine</title>
@@ -35,14 +37,17 @@
         [data-theme="light"] {
             --ac-bg: #ffffff;
             --ac-bg-alt: #f8fafc;
-            --ac-bg-panel: #f1f5f9;
+            --ac-bg-panel: #e9eff5;
             --ac-bg-dark: #0c1425;
-            --ac-text: #1e293b;
-            --ac-text-secondary: #64748b;
-            --ac-text-muted: #94a3b8;
-            --ac-border: #e2e8f0;
-            --ac-border-dark: #cbd5e1;
-            --ac-card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --ac-text: #0f172a;
+            --ac-text-secondary: #374151;
+            --ac-text-muted: #506070;
+            --ac-border: #c0ccd8;
+            --ac-border-dark: #8896a4;
+            --ac-card-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.1), 0 1px 3px rgb(0 0 0 / 0.06);
+            --glass-bg: rgba(0, 0, 0, 0.04);
+            --glass-border: rgba(0, 0, 0, 0.10);
+            --ac-primary-glow: rgba(14, 165, 233, 0.2);
         }
 
         [data-theme="dark"] {
@@ -51,11 +56,11 @@
             --ac-bg-panel: #1e293b;
             --ac-bg-dark: #0c1425;
             --ac-text: #f1f5f9;
-            --ac-text-secondary: #cbd5e1;
-            --ac-text-muted: #94a3b8;
-            --ac-border: #334155;
-            --ac-border-dark: #475569;
-            --ac-card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+            --ac-text-secondary: #e2e8f0;
+            --ac-text-muted: #a8b8cc;
+            --ac-border: #3b4f6b;
+            --ac-border-dark: #546a84;
+            --ac-card-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.4), 0 1px 3px rgb(0 0 0 / 0.3);
         }
 
         /* ==================== SCROLLBAR ==================== */
@@ -161,6 +166,7 @@
         html { scroll-behavior: smooth; }
         body { font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif; }
         #wrapper, #main, .wrapper, main { padding-top: 0 !important; margin-top: 0 !important; }
+        #header, section#header { display: none !important; }
 
         /* ==================== APP CONTAINER ==================== */
         .aircrafter-app {
@@ -280,16 +286,17 @@
         }
         .module-tab {
             flex: 1; padding: 0.7rem 0.9rem; border-radius: 9px;
-            background: transparent; border: none;
-            color: var(--ac-text-muted); font-weight: 600; font-size: 0.92rem;
+            background: transparent !important; border: none;
+            color: var(--ac-text-muted) !important; font-weight: 600; font-size: 0.92rem;
             cursor: pointer; transition: all 0.3s ease;
             display: flex; align-items: center; justify-content: center; gap: 0.4rem;
             position: relative; overflow: hidden;
+            box-shadow: none;
         }
-        .module-tab:hover { color: var(--ac-text); background: rgba(14, 165, 233, 0.08); }
+        .module-tab:hover { color: var(--ac-text) !important; background: rgba(14, 165, 233, 0.08) !important; }
         .module-tab.active {
-            background: linear-gradient(135deg, var(--ac-primary), var(--ac-primary-hover));
-            color: white;
+            background: linear-gradient(135deg, var(--ac-primary), var(--ac-primary-hover)) !important;
+            color: white !important;
             box-shadow: 0 4px 16px var(--ac-primary-glow);
             transform: translateY(-1px);
         }
@@ -297,7 +304,15 @@
             font-size: 0.65rem; background: rgba(255,255,255,0.2);
             padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 700;
         }
+        [data-theme="light"] .module-tab .tab-badge {
+            background: rgba(14, 165, 233, 0.12);
+            color: var(--ac-primary-hover);
+        }
         .module-tab.active .tab-badge { background: rgba(255,255,255,0.25); }
+        [data-theme="light"] .module-tab.active .tab-badge {
+            background: rgba(255,255,255,0.3);
+            color: white;
+        }
         .module-content { display: none; animation: fadeIn 0.35s ease; }
         .module-content.active { display: block; }
 
@@ -314,11 +329,11 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
         .panel-title {
-            font-size: 1rem; font-weight: 700;
+            font-size: 1.1rem; font-weight: 700;
             color: var(--ac-text); margin: 0 0 0.7rem;
             display: flex; align-items: center; gap: 0.4rem;
         }
-        .panel-title i { color: var(--ac-primary); font-size: 0.85rem; }
+        .panel-title i { color: var(--ac-primary); font-size: 0.95rem; }
 
         /* ==================== CONFIG LAYOUT (2-col) ==================== */
         .config-layout {
@@ -340,15 +355,15 @@
         }
         .filter-group { display: flex; flex-direction: column; gap: 0.25rem; }
         .filter-group label {
-            font-size: 0.78rem; font-weight: 700; color: var(--ac-text-muted);
+            font-size: 0.85rem; font-weight: 700; color: var(--ac-text-muted);
             text-transform: uppercase; letter-spacing: 0.06em;
         }
         .filter-group select,
         .filter-group input[type="text"] {
-            padding: 0.55rem 0.75rem; border-radius: 8px;
+            padding: 0.6rem 0.8rem; border-radius: 8px;
             border: 1px solid var(--ac-border);
             background: var(--ac-bg); color: var(--ac-text);
-            font-size: 0.95rem; transition: all 0.3s ease; font-family: inherit;
+            font-size: 1rem; transition: all 0.3s ease; font-family: inherit;
         }
         .filter-group select:focus,
         .filter-group input[type="text"]:focus {
@@ -364,10 +379,13 @@
         .mini-stat {
             display: inline-flex; align-items: center; gap: 0.4rem;
             background: var(--ac-bg); border: 1px solid var(--ac-border);
-            padding: 0.35rem 0.7rem; border-radius: 8px;
-            font-size: 0.85rem; transition: all 0.3s ease;
+            padding: 0.4rem 0.75rem; border-radius: 8px;
+            font-size: 0.92rem; transition: all 0.3s ease;
         }
-        .mini-stat:hover {\n            border-color: var(--ac-primary);\n            background: rgba(14,165,233,0.06);\n        }
+        .mini-stat:hover {
+            border-color: var(--ac-primary);
+            background: rgba(14,165,233,0.06);
+        }
         .mini-stat .ms-icon { font-size: 0.72rem; }
         .mini-stat .ms-value { font-weight: 800; color: var(--ac-text); font-variant-numeric: tabular-nums; }
         .mini-stat .ms-label { color: var(--ac-text-muted); font-weight: 500; }
@@ -396,14 +414,14 @@
             transform: translateY(-1px);
         }
         .param-card .label {
-            font-size: 0.78rem; font-weight: 700; color: var(--ac-text-muted);
+            font-size: 0.85rem; font-weight: 700; color: var(--ac-text-muted);
             text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.2rem;
         }
         .param-card .unit {
-            font-size: 0.78rem; font-weight: 400; color: var(--ac-text-secondary);
+            font-size: 0.85rem; font-weight: 400; color: var(--ac-text-secondary);
         }
         .param-card input {
-            width: 100%; font-size: 1.15rem; font-weight: 700;
+            width: 100%; font-size: 1.25rem; font-weight: 700;
             padding: 0.25rem 0.4rem; border-radius: 6px;
             border: 1px solid var(--ac-border);
             background: var(--ac-bg-alt); color: var(--ac-text);
@@ -422,12 +440,12 @@
         .rib-table-container { overflow-x: auto; }
         .rib-table {
             width: 100%; border-collapse: separate; border-spacing: 0;
-            font-size: 0.88rem;
+            font-size: 0.95rem;
         }
         .rib-table th {
             background: var(--ac-bg); color: var(--ac-text-secondary);
-            padding: 0.45rem 0.55rem; text-align: center;
-            font-weight: 700; font-size: 0.76rem;
+            padding: 0.5rem 0.6rem; text-align: center;
+            font-weight: 700; font-size: 0.82rem;
             text-transform: uppercase; letter-spacing: 0.04em;
             border-bottom: 2px solid var(--ac-border);
         }
@@ -436,11 +454,11 @@
             border-bottom: 1px solid var(--ac-border);
         }
         .rib-table td input {
-            width: 72px; text-align: center;
-            padding: 0.25rem 0.3rem; border-radius: 6px;
+            width: 78px; text-align: center;
+            padding: 0.3rem 0.35rem; border-radius: 6px;
             border: 1px solid var(--ac-border);
             background: var(--ac-bg-alt); color: var(--ac-text);
-            font-size: 0.82rem; font-family: inherit; transition: all 0.3s ease;
+            font-size: 0.88rem; font-family: inherit; transition: all 0.3s ease;
         }
         .rib-table td input:focus {
             outline: none; border-color: var(--ac-primary);
@@ -450,12 +468,13 @@
             border-color: var(--ac-warning); background: rgba(245, 158, 11, 0.08);
         }
         .rib-table tr:hover td { background: rgba(14, 165, 233, 0.03); }
-        .rib-header-cell { font-weight: 700; color: var(--ac-primary) !important; white-space: nowrap; }
+        .rib-header-cell { font-weight: 700; color: var(--ac-primary-hover) !important; white-space: nowrap; }
+        [data-theme="light"] .rib-header-cell { color: #0369a1 !important; }
 
         /* ==================== BUTTONS ==================== */
         .btn {
-            padding: 0.6rem 1.2rem; border-radius: 10px;
-            font-weight: 600; font-size: 0.95rem; cursor: pointer;
+            padding: 0.65rem 1.3rem; border-radius: 10px;
+            font-weight: 600; font-size: 1rem; cursor: pointer;
             display: inline-flex; align-items: center; gap: 0.4rem;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             border: none; font-family: inherit; position: relative; overflow: hidden;
@@ -475,10 +494,11 @@
         }
         .btn-warning:hover { transform: translateY(-1px); }
         .btn-outline {
-            background: transparent; border: 1px solid var(--ac-border);
-            color: var(--ac-text-secondary);
+            background: transparent !important; border: 1px solid var(--ac-border);
+            color: var(--ac-text-secondary) !important;
+            box-shadow: none;
         }
-        .btn-outline:hover { border-color: var(--ac-primary); color: var(--ac-text); }
+        .btn-outline:hover { border-color: var(--ac-primary); color: var(--ac-text) !important; background: rgba(14, 165, 233, 0.08) !important; }
         .btn-group { display: flex; gap: 0.5rem; }
 
         /* Ripple effect */
@@ -489,17 +509,17 @@
 
         /* ==================== RESULTS SUMMARY TABLE ==================== */
         .results-table {
-            width: 100%; font-size: 0.85rem; border-collapse: collapse;
+            width: 100%; font-size: 0.92rem; border-collapse: collapse;
         }
         .results-table th {
-            text-align: left; padding: 0.4rem 0.55rem;
+            text-align: left; padding: 0.45rem 0.6rem;
             color: var(--ac-text-muted); font-weight: 600;
-            font-size: 0.74rem; text-transform: uppercase;
+            font-size: 0.8rem; text-transform: uppercase;
             letter-spacing: 0.04em;
             border-bottom: 1px solid var(--ac-border);
         }
         .results-table td {
-            padding: 0.3rem 0.5rem; border-bottom: 1px solid rgba(100,100,100,0.1);
+            padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--ac-border);
             color: var(--ac-text);
         }
         .results-table td.val {
@@ -527,23 +547,23 @@
             display: flex; align-items: center; justify-content: space-between;
         }
         .chart-title {
-            font-weight: 700; font-size: 0.92rem; color: var(--ac-text);
+            font-weight: 700; font-size: 1rem; color: var(--ac-text);
             display: flex; align-items: center; gap: 0.4rem;
         }
-        .chart-title i { color: var(--ac-primary); font-size: 0.8rem; }
+        .chart-title i { color: var(--ac-primary); font-size: 0.88rem; }
         .chart-subtitle {
-            font-size: 0.76rem; color: var(--ac-text-muted); font-weight: 500;
+            font-size: 0.85rem; color: var(--ac-text-muted); font-weight: 500;
         }
-        .chart-body { padding: 0.3rem; min-height: 320px; }
-        .chart-body-tall { min-height: 440px; }
-        .chart-body-short { min-height: 260px; }
+        .chart-body { padding: 0.3rem; min-height: 480px; }
+        .chart-body-tall { min-height: 560px; }
+        .chart-body-short { min-height: 420px; }
 
         /* ==================== CONTACT PATCH SVG ==================== */
         .contact-patch-container {
             display: flex; justify-content: center; align-items: center;
-            padding: 0.5rem; min-height: 160px;
+            padding: 1rem; min-height: 320px;
         }
-        #contact-patch-svg { max-width: 100%; height: auto; }
+        #contact-patch-svg { max-width: 100%; height: auto; min-height: 280px; max-height: 380px; }
 
         /* ==================== LOADING OVERLAY ==================== */
         .loading-overlay {
@@ -556,17 +576,58 @@
         .loading-overlay.visible { opacity: 1; pointer-events: all; }
         .loading-card {
             background: var(--ac-bg-panel); border: 1px solid var(--ac-border);
-            border-radius: 16px; padding: 2rem 2.5rem; text-align: center;
+            border-radius: 20px; padding: 2.2rem 2.8rem; text-align: center;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
-            animation: scaleIn 0.3s ease; min-width: 280px;
+            animation: scaleIn 0.3s ease; min-width: 300px;
         }
         .spinner {
-            width: 36px; height: 36px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
+            width: 40px; height: 40px;
+            border: 3px solid var(--ac-border);
             border-top-color: var(--ac-primary); border-radius: 50%;
-            animation: rotate 0.8s linear infinite; margin: 0 auto 0.8rem;
+            animation: rotate 0.8s linear infinite; margin: 0 auto 1rem;
         }
-        .loading-text { color: var(--ac-text); font-weight: 600; font-size: 0.95rem; }
+        .loading-text { color: var(--ac-text); font-weight: 600; font-size: 1.05rem; }
+        /* Selection Loading Card */
+        .selection-loading-card {
+            background: var(--ac-bg-panel); border: 1px solid var(--ac-border);
+            border-radius: 20px; padding: 2rem 2.5rem; text-align: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+            animation: scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); min-width: 320px; max-width: 400px;
+        }
+        .selection-loading-card .aircraft-name {
+            font-size: 1.3rem; font-weight: 800; color: var(--ac-text);
+            margin: 0.8rem 0 0.4rem;
+        }
+        .selection-loading-card .aircraft-name .highlight {
+            background: linear-gradient(135deg, var(--ac-primary), var(--ac-secondary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .selection-loading-card .loading-plane {
+            font-size: 2.2rem; color: var(--ac-primary);
+            animation: float 1.5s ease-in-out infinite;
+            filter: drop-shadow(0 0 12px var(--ac-primary-glow));
+        }
+        .selection-loading-card .loading-steps {
+            margin: 1rem 0 0; text-align: left;
+        }
+        .selection-loading-card .loading-step {
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.35rem 0; font-size: 0.92rem; color: var(--ac-text-muted);
+            transition: all 0.3s ease;
+        }
+        .selection-loading-card .loading-step.active {
+            color: var(--ac-text); font-weight: 600;
+        }
+        .selection-loading-card .loading-step.done {
+            color: var(--ac-success);
+        }
+        .selection-loading-card .loading-step i {
+            width: 18px; text-align: center; font-size: 0.85rem;
+        }
+        .selection-loading-card .loading-step.active i {
+            color: var(--ac-primary);
+        }
+        .selection-loading-card .loading-step.done i { color: var(--ac-success); }
         .progress-container { width: 100%; margin: 0.4rem 0 0.6rem; }
         .progress-bar-track {
             width: 100%; height: 6px; background: var(--ac-border);
@@ -586,14 +647,14 @@
         .empty-state {
             text-align: center; padding: 2.5rem 1rem; color: var(--ac-text-muted);
         }
-        .empty-state i { font-size: 2.5rem; margin-bottom: 0.7rem; opacity: 0.35; }
-        .empty-state p { font-size: 0.95rem; margin: 0.3rem 0; }
+        .empty-state i { font-size: 2.8rem; margin-bottom: 0.7rem; opacity: 0.35; }
+        .empty-state p { font-size: 1.05rem; margin: 0.3rem 0; }
 
         /* ==================== ADVANCED SETTINGS ==================== */
         .advanced-toggle {
             display: flex; align-items: center; gap: 0.4rem;
             cursor: pointer; color: var(--ac-text-muted);
-            font-size: 0.85rem; font-weight: 600;
+            font-size: 0.92rem; font-weight: 600;
             margin-top: 0.6rem; transition: color 0.3s ease; user-select: none;
         }
         .advanced-toggle:hover { color: var(--ac-primary); }
@@ -607,13 +668,13 @@
         }
         .adv-input-group { display: flex; flex-direction: column; gap: 0.15rem; }
         .adv-input-group label {
-            font-size: 0.68rem; font-weight: 600; color: var(--ac-text-muted);
+            font-size: 0.75rem; font-weight: 600; color: var(--ac-text-muted);
         }
         .adv-input-group input {
-            padding: 0.35rem 0.5rem; border-radius: 6px;
+            padding: 0.4rem 0.55rem; border-radius: 6px;
             border: 1px solid var(--ac-border);
             background: var(--ac-bg); color: var(--ac-text);
-            font-size: 0.82rem; font-family: inherit;
+            font-size: 0.88rem; font-family: inherit;
         }
         .adv-input-group input:focus {
             outline: none; border-color: var(--ac-primary);
@@ -623,15 +684,16 @@
         /* ==================== VIZ SUBTABS ==================== */
         .viz-tabs { display: flex; gap: 0.25rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
         .viz-tab {
-            padding: 0.45rem 0.85rem; border-radius: 7px;
-            background: transparent; border: 1px solid var(--ac-border);
-            color: var(--ac-text-muted); cursor: pointer;
-            font-size: 0.85rem; font-weight: 600;
+            padding: 0.5rem 0.9rem; border-radius: 7px;
+            background: transparent !important; border: 1px solid var(--ac-border);
+            color: var(--ac-text-muted) !important; cursor: pointer;
+            font-size: 0.92rem; font-weight: 600;
             transition: all 0.3s ease; font-family: inherit;
+            box-shadow: none;
         }
-        .viz-tab:hover { border-color: var(--ac-primary); color: var(--ac-text); }
+        .viz-tab:hover { border-color: var(--ac-primary); color: var(--ac-text) !important; background: rgba(14, 165, 233, 0.08) !important; }
         .viz-tab.active {
-            background: var(--ac-primary); color: white; border-color: var(--ac-primary);
+            background: var(--ac-primary) !important; color: white !important; border-color: var(--ac-primary);
         }
         .viz-content { display: none; animation: fadeIn 0.3s ease; }
         .viz-content.active { display: block; }
@@ -668,6 +730,188 @@
             font-family: monospace; margin-left: 0.4rem;
         }
 
+        /* ==================== LIGHT MODE OVERRIDES ==================== */
+        [data-theme="light"] .panel {
+            box-shadow: var(--ac-card-shadow);
+        }
+        [data-theme="light"] .panel:hover {
+            box-shadow: 0 6px 24px -4px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.06);
+        }
+        [data-theme="light"] .chart-panel {
+            box-shadow: var(--ac-card-shadow);
+        }
+        [data-theme="light"] .module-tab:hover {
+            background: rgba(14, 165, 233, 0.12);
+            color: var(--ac-primary-hover) !important;
+        }
+        [data-theme="light"] .module-tab {
+            color: #1e293b !important;
+            font-weight: 700;
+        }
+        [data-theme="light"] .mini-stat:hover {
+            background: rgba(14, 165, 233, 0.10);
+        }
+        [data-theme="light"] .rib-table tr:hover td {
+            background: rgba(14, 165, 233, 0.08);
+        }
+        [data-theme="light"] .results-table .rib-row:hover td {
+            background: rgba(14, 165, 233, 0.10);
+        }
+        [data-theme="light"] .results-table td {
+            border-bottom: 1px solid var(--ac-border);
+        }
+        [data-theme="light"] .results-table th {
+            color: var(--ac-text-secondary);
+            border-bottom: 2px solid var(--ac-border-dark);
+        }
+        [data-theme="light"] .empty-state i {
+            opacity: 0.55;
+        }
+        [data-theme="light"] .empty-state p {
+            color: var(--ac-text-secondary);
+        }
+        [data-theme="light"] .param-card::before {
+            opacity: 1;
+        }
+        [data-theme="light"] .param-card {
+            box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+        }
+        [data-theme="light"] .param-card:hover {
+            box-shadow: 0 4px 16px rgba(14,165,233,0.15);
+        }
+        [data-theme="light"] .loading-card {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        [data-theme="light"] .selection-loading-card {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        [data-theme="light"] .filter-group label {
+            color: var(--ac-text-secondary);
+        }
+        [data-theme="light"] .adv-input-group label {
+            color: var(--ac-text-secondary);
+        }
+        [data-theme="light"] .param-card .label {
+            color: var(--ac-text-secondary);
+        }
+        [data-theme="light"] .mini-stat .ms-label {
+            color: var(--ac-text-secondary);
+        }
+        [data-theme="light"] .viz-tab {
+            color: var(--ac-text-secondary) !important;
+        }
+        [data-theme="light"] .viz-tab:hover {
+            border-color: var(--ac-primary);
+            color: var(--ac-text) !important;
+            background: rgba(14, 165, 233, 0.08);
+        }
+        [data-theme="light"] .advanced-toggle {
+            color: var(--ac-text-secondary);
+        }
+        [data-theme="light"] .chart-subtitle {
+            color: var(--ac-text-secondary);
+        }
+        [data-theme="light"] .progress-pct {
+            color: var(--ac-text-secondary);
+        }
+        [data-theme="light"] .kbd-hint {
+            color: var(--ac-text-secondary);
+            background: var(--ac-bg-panel);
+            border-color: var(--ac-border-dark);
+        }
+        [data-theme="light"] .selection-loading-card .loading-step {
+            color: var(--ac-text-secondary);
+        }
+        [data-theme="light"] .btn-outline {
+            color: var(--ac-text-secondary) !important;
+            border-color: var(--ac-border-dark);
+        }
+        [data-theme="light"] .btn-outline:hover {
+            background: rgba(14, 165, 233, 0.08);
+        }
+        [data-theme="light"] .rib-table th {
+            color: var(--ac-text-secondary);
+            background: var(--ac-bg-panel);
+        }
+        [data-theme="light"] .mini-stat {
+            box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+        }
+        [data-theme="light"] .filter-group select,
+        [data-theme="light"] .filter-group input[type="text"] {
+            box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.05);
+        }
+        [data-theme="light"] .rib-table td input {
+            box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.05);
+        }
+        [data-theme="light"] .param-card input {
+            box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.05);
+        }
+        [data-theme="light"] .adv-input-group input {
+            box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.05);
+        }
+        [data-theme="light"] .loading-overlay {
+            background: rgba(0, 0, 0, 0.35);
+        }
+        [data-theme="light"] .tooltip-trigger::after {
+            background: #1e293b;
+            color: #f1f5f9;
+        }
+
+        /* ==================== DARK MODE OVERRIDES ==================== */
+        [data-theme="dark"] .module-tab {
+            color: #c8d5e3 !important;
+        }
+        [data-theme="dark"] .module-tab:hover {
+            color: #f1f5f9 !important;
+            background: rgba(14, 165, 233, 0.14);
+        }
+        [data-theme="dark"] .viz-tab {
+            color: #c8d5e3 !important;
+            border-color: var(--ac-border);
+        }
+        [data-theme="dark"] .viz-tab:hover {
+            color: #f1f5f9 !important;
+            border-color: var(--ac-primary);
+            background: rgba(14, 165, 233, 0.10);
+        }
+        [data-theme="dark"] .panel {
+            box-shadow: var(--ac-card-shadow);
+        }
+        [data-theme="dark"] .chart-panel {
+            box-shadow: var(--ac-card-shadow);
+        }
+        [data-theme="dark"] .chart-subtitle {
+            color: var(--ac-text-secondary);
+        }
+        [data-theme="dark"] .filter-group label {
+            color: #c8d5e3;
+        }
+        [data-theme="dark"] .param-card .label {
+            color: #c8d5e3;
+        }
+        [data-theme="dark"] .adv-input-group label {
+            color: #c8d5e3;
+        }
+        [data-theme="dark"] .mini-stat .ms-label {
+            color: var(--ac-text-secondary);
+        }
+        [data-theme="dark"] .results-table th {
+            color: var(--ac-text-secondary);
+        }
+        [data-theme="dark"] .btn-outline {
+            color: var(--ac-text-secondary) !important;
+            border-color: var(--ac-border-dark);
+        }
+        [data-theme="dark"] .advanced-toggle {
+            color: var(--ac-text-secondary);
+        }
+        [data-theme="dark"] .empty-state i {
+            opacity: 0.45;
+        }
+        [data-theme="dark"] .empty-state p {
+            color: var(--ac-text-secondary);
+        }
+
         /* ==================== RESPONSIVE ==================== */
         @media (max-width: 1200px) {
             .config-layout { grid-template-columns: 1fr; }
@@ -678,16 +922,49 @@
             .charts-row.two-col { grid-template-columns: 1fr; }
             .charts-row.three-col { grid-template-columns: 1fr; }
             .advanced-grid { grid-template-columns: repeat(2, 1fr); }
+            .contact-patch-container { min-height: 400px; padding: 1rem; }
         }
         @media (max-width: 768px) {
             .aircrafter-app { padding: 0.5rem 0.75rem 1.5rem; }
-            .header-content h1 { font-size: 2rem; }
-            .header-content p { font-size: 0.95rem; }
+            .header-content { padding: 1.2rem 1.2rem 1.5rem; }
+            .header-content h1 { font-size: 2.2rem; gap: 0.5rem; }
+            .header-content h1 .plane-icon { font-size: 1.6rem; }
+            .header-content p { font-size: 1.05rem; }
             .module-tabs { flex-wrap: wrap; }
-            .module-tab { font-size: 0.78rem; padding: 0.55rem 0.6rem; }
+            .module-tab { font-size: 0.82rem; padding: 0.55rem 0.6rem; }
+            .module-tab i { display: none; }
             .params-grid { grid-template-columns: 1fr; }
             .selection-grid { grid-template-columns: 1fr; }
             .header-badge { display: none; }
+            .panel { padding: 0.85rem 0.9rem; }
+            .panel-title { font-size: 1rem; }
+            .inline-stats { gap: 0.35rem; }
+            .mini-stat { font-size: 0.82rem; padding: 0.3rem 0.55rem; }
+            .contact-patch-container { min-height: 360px; padding: 0.75rem; }
+            #contact-patch-svg { min-height: 320px; }
+            .chart-body { min-height: 400px; }
+            .chart-body-tall { min-height: 480px; }
+            .chart-body-short { min-height: 360px; }
+            .rib-table td input { width: 65px; font-size: 0.82rem; }
+            .advanced-grid { grid-template-columns: repeat(2, 1fr); }
+            .viz-tab { font-size: 0.82rem; padding: 0.4rem 0.65rem; }
+            .btn { font-size: 0.92rem; padding: 0.55rem 1rem; }
+            .results-table { font-size: 0.82rem; }
+            .results-table th { font-size: 0.72rem; }
+            .loading-card { min-width: 240px; padding: 1.5rem 1.8rem; }
+            .selection-loading-card { min-width: 260px; padding: 1.5rem 1.8rem; }
+        }
+        @media (max-width: 480px) {
+            .aircrafter-app { padding: 0.35rem 0.5rem 1rem; }
+            .header-content h1 { font-size: 1.8rem; }
+            .header-content p { font-size: 0.92rem; }
+            .header-nav { padding: 0.6rem 0.8rem; flex-wrap: wrap; gap: 0.5rem; }
+            .module-tab { font-size: 0.75rem; padding: 0.45rem 0.4rem; flex: 1 1 45%; }
+            .param-card .label { font-size: 0.75rem; }
+            .param-card input { font-size: 1.1rem; }
+            .contact-patch-container { min-height: 280px; }
+            .advanced-grid { grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+            .selection-loading-card { min-width: 220px; }
         }
     </style>
 </head>
@@ -712,8 +989,7 @@
                     </div>
                     <div class="header-content">
                         <h1>
-                            <span class="plane-icon"><i class="fas fa-plane"></i></span>
-                            Air<span class="highlight">Crafter</span>
+                            <span class="plane-icon"><i class="fas fa-plane"></i></span><span>Air<span class="highlight">Crafter</span></span>
                         </h1>
                         <p>Aircraft Tire Contact Stress Analysis Engine</p>
                     </div>
@@ -843,7 +1119,7 @@
                             </div>
                         </div>
 
-                        <!-- RIGHT: Stats + Contact Patch + Quick Results -->
+                        <!-- RIGHT: Stats + Quick Results -->
                         <div class="config-right">
                             <div class="panel animate-in stagger-2" id="stats-panel" style="display:none;">
                                 <div class="panel-title"><i class="fas fa-tachometer-alt"></i> Quick Summary</div>
@@ -857,17 +1133,18 @@
                                 </div>
                             </div>
 
-                            <div class="panel animate-in stagger-3" id="patch-panel" style="display:none;">
-                                <div class="panel-title"><i class="fas fa-shoe-prints"></i> Contact Patch</div>
-                                <div class="contact-patch-container">
-                                    <svg id="contact-patch-svg" viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg"></svg>
-                                </div>
-                            </div>
-
-                            <div class="panel animate-in stagger-4" id="quick-results-panel" style="display:none;">
+                            <div class="panel animate-in stagger-3" id="quick-results-panel" style="display:none;">
                                 <div class="panel-title"><i class="fas fa-clipboard-check"></i> Equilibrium Check</div>
                                 <div id="quick-results-body"></div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Patch (full width below the 2-col layout) -->
+                    <div class="panel animate-in stagger-4" id="patch-panel" style="display:none;">
+                        <div class="panel-title"><i class="fas fa-shoe-prints"></i> Contact Patch</div>
+                        <div class="contact-patch-container">
+                            <svg id="contact-patch-svg" viewBox="0 0 810 500" xmlns="http://www.w3.org/2000/svg"></svg>
                         </div>
                     </div>
                 </div>
@@ -988,6 +1265,11 @@
                         <p>Compute stresses to see the full results table.</p>
                     </div>
                     <div id="summary-content" style="display:none;">
+                        <div style="display:flex; justify-content:flex-end; margin-bottom:0.6rem;">
+                            <button class="btn btn-primary" id="btn-export-xlsx" style="font-size:0.88rem; padding:0.5rem 1.1rem;">
+                                <i class="fas fa-file-excel"></i> Export to Excel
+                            </button>
+                        </div>
                         <div class="charts-row two-col">
                             <div class="panel">
                                 <div class="panel-title"><i class="fas fa-table"></i> Stress Distribution Matrix</div>
@@ -1132,6 +1414,9 @@
         currentRow = aircraftDB.find(a => a.name === name);
         if (!currentRow) return;
 
+        // Show modern selection loading overlay
+        showSelectionLoading(currentRow.name);
+
         const bi = parseList(currentRow.bi_raw);
         const al = parseList(currentRow.al_raw);
         const sig = parseList(currentRow.sig_raw);
@@ -1143,14 +1428,39 @@
             bi: [...bi], al: [...al], sigm_Tip: [...sig]
         };
 
-        applyParams(defaultParams);
+        // Stage the loading steps with brief delays for visual feedback
+        setTimeout(() => {
+            updateSelectionStep(0);
+            applyParams(defaultParams);
+            document.getElementById('param-panel').style.display = '';
+            document.getElementById('stats-panel').style.display = '';
+            document.getElementById('patch-panel').style.display = '';
+            updateSummaryCards();
+        }, 350);
 
-        document.getElementById('param-panel').style.display = '';
-        document.getElementById('stats-panel').style.display = '';
-        document.getElementById('patch-panel').style.display = '';
-        updateSummaryCards();
-        drawContactPatch();
-        computeAndRender();
+        setTimeout(() => {
+            updateSelectionStep(1);
+            drawContactPatch();
+        }, 700);
+
+        setTimeout(() => {
+            updateSelectionStep(2);
+            try {
+                results = computeStresses();
+                updateEquilibriumBadge();
+                updateSummaryCards();
+                Object.keys(chartsNeedRerender).forEach(k => chartsNeedRerender[k] = true);
+                renderChartsForModule(getActiveModule());
+                ['stress3d-empty','analysis-empty','summary-empty'].forEach(id =>
+                    document.getElementById(id).style.display = 'none');
+                ['stress3d-content','analysis-content','summary-content'].forEach(id =>
+                    document.getElementById(id).style.display = '');
+            } catch (e) {
+                console.error('Compute error:', e);
+            }
+            hideSelectionLoading();
+            showSuccessFlash();
+        }, 1100);
     }
 
     function applyParams(p) {
@@ -1260,43 +1570,77 @@
         if (!p.bi.length) return;
         const svg = document.getElementById('contact-patch-svg');
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const textCol = isDark ? '#cbd5e1' : '#334155';
-        const lineCol = isDark ? '#64748b' : '#94a3b8';
-        const fillBase = isDark ? [14, 165, 233] : [14, 130, 200];
+        const textCol = isDark ? '#e2e8f0' : '#1e293b';
+        const lineCol = isDark ? '#546a84' : '#6b7b8d';
+        const dimCol = isDark ? '#a8b8cc' : '#506070';
+        const bgCol = isDark ? 'rgba(15,23,42,0.8)' : 'rgba(255,255,255,0.95)';
+        const ribColors = [
+            [14, 165, 233], [249, 115, 22], [16, 185, 129], [139, 92, 246],
+            [239, 68, 68], [6, 182, 212], [245, 158, 11], [236, 72, 153]
+        ];
 
         const totalW = p.bi.reduce((s, v) => s + v, 0);
-        const pad = 55; const patchW = 360; const patchH = 140;
+        const pad = 80; const patchW = 480; const patchH = 240;
         const scaleY = patchH / totalW;
-        const ox = pad; const oy = pad;
+        const ox = pad; const oy = pad - 10;
+        const svgW = ox + patchW + 140;
+        const svgH = oy + patchH + 65;
+        svg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+
+        let defs = '<defs>';
+        // Gradient defs per rib
+        const maxAl = Math.max(...p.al);
+        p.bi.forEach((_, i) => {
+            const c = ribColors[i % ribColors.length];
+            const alpha = 0.18 + 0.5 * (p.al[i] / (maxAl || 1));
+            defs += `<linearGradient id="ribGrad${i}" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="rgba(${c.join(',')},${(alpha * 0.5).toFixed(2)})"/>
+                <stop offset="50%" stop-color="rgba(${c.join(',')},${alpha.toFixed(2)})"/>
+                <stop offset="100%" stop-color="rgba(${c.join(',')},${(alpha * 0.5).toFixed(2)})"/>
+            </linearGradient>`;
+        });
+        // Arrow markers
+        defs += `
+            <marker id="arrowR" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="${dimCol}"/></marker>
+            <marker id="arrowL" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto"><path d="M8,0 L0,4 L8,8" fill="${dimCol}"/></marker>
+            <marker id="arrowD" markerWidth="8" markerHeight="8" refX="4" refY="7" orient="auto"><path d="M0,0 L4,8 L8,0" fill="${dimCol}"/></marker>
+            <marker id="arrowU" markerWidth="8" markerHeight="8" refX="4" refY="1" orient="auto"><path d="M0,8 L4,0 L8,8" fill="${dimCol}"/></marker>
+        </defs>`;
 
         let html = '';
-        html += `<rect x="${ox}" y="${oy}" width="${patchW}" height="${patchH}" rx="8" ry="8" fill="none" stroke="${lineCol}" stroke-width="1.5" stroke-dasharray="5 3"/>`;
+        // Title
+        html += `<text x="${ox + patchW / 2}" y="${oy - 22}" text-anchor="middle" font-size="18" fill="${textCol}" font-weight="700" letter-spacing="0.5">Tire Contact Footprint</text>`;
+        // Outer patch border
+        html += `<rect x="${ox}" y="${oy}" width="${patchW}" height="${patchH}" rx="10" ry="10" fill="none" stroke="${lineCol}" stroke-width="1.5" stroke-dasharray="6 4"/>`;
 
+        // Rib rectangles with gradient fills
         let cumY = 0;
-        const maxAl = Math.max(...p.al);
         p.bi.forEach((w, i) => {
             const rh = w * scaleY;
-            const alpha = 0.2 + 0.6 * (p.al[i] / (maxAl || 1));
-            html += `<rect x="${ox}" y="${oy + cumY}" width="${patchW}" height="${rh}" fill="rgba(${fillBase.join(',')},${alpha.toFixed(2)})" stroke="${lineCol}" stroke-width="0.5"/>`;
-            html += `<text x="${ox + patchW + 6}" y="${oy + cumY + rh / 2 + 3}" font-size="10" fill="${textCol}" font-weight="600">Rib ${i + 1}</text>`;
-            html += `<text x="${ox + patchW + 6}" y="${oy + cumY + rh / 2 + 14}" font-size="8" fill="${lineCol}">${w} mm</text>`;
+            const c = ribColors[i % ribColors.length];
+            html += `<rect x="${ox}" y="${oy + cumY}" width="${patchW}" height="${rh}" fill="url(#ribGrad${i})" stroke="rgba(${c.join(',')},0.4)" stroke-width="1"/>`;
+            // Rib labels (right side) — name and width on same line
+            const labelY = oy + cumY + rh / 2 + 5;
+            html += `<text x="${ox + patchW + 14}" y="${labelY}" font-size="15" fill="${textCol}" font-weight="700" dominant-baseline="auto">Rib ${i + 1} <tspan fill="rgba(${c.join(',')},0.9)" font-size="13" font-weight="600"> · ${w.toFixed(1)} mm</tspan></text>`;
+            // Width dimension tick marks
+            if (rh > 12) {
+                html += `<line x1="${ox - 6}" y1="${oy + cumY}" x2="${ox}" y2="${oy + cumY}" stroke="${dimCol}" stroke-width="0.8"/>`;
+            }
             cumY += rh;
         });
+        html += `<line x1="${ox - 6}" y1="${oy + patchH}" x2="${ox}" y2="${oy + patchH}" stroke="${dimCol}" stroke-width="0.8"/>`;
 
-        const ay = oy + patchH + 20;
-        html += `<line x1="${ox}" y1="${ay}" x2="${ox + patchW}" y2="${ay}" stroke="${textCol}" stroke-width="1" marker-start="url(#arrowL)" marker-end="url(#arrowR)"/>`;
-        html += `<text x="${ox + patchW / 2}" y="${ay + 14}" text-anchor="middle" font-size="10" fill="${textCol}" font-weight="600">${p.l} mm</text>`;
+        // Horizontal dimension arrow (contact length)
+        const ay = oy + patchH + 35;
+        html += `<line x1="${ox}" y1="${ay}" x2="${ox + patchW}" y2="${ay}" stroke="${dimCol}" stroke-width="1.5" marker-start="url(#arrowL)" marker-end="url(#arrowR)"/>`;
+        html += `<rect x="${ox + patchW / 2 - 52}" y="${ay + 4}" width="104" height="24" rx="6" fill="${bgCol}" stroke="${lineCol}" stroke-width="0.5"/>`;
+        html += `<text x="${ox + patchW / 2}" y="${ay + 21}" text-anchor="middle" font-size="15" fill="${textCol}" font-weight="700">l = ${p.l.toFixed(2)} mm</text>`;
 
-        const ax = ox - 18;
-        html += `<line x1="${ax}" y1="${oy}" x2="${ax}" y2="${oy + patchH}" stroke="${textCol}" stroke-width="1" marker-start="url(#arrowU)" marker-end="url(#arrowD)"/>`;
-        html += `<text x="${ax - 3}" y="${oy + patchH / 2}" text-anchor="middle" font-size="10" fill="${textCol}" font-weight="600" transform="rotate(-90 ${ax - 3} ${oy + patchH / 2})">${totalW.toFixed(0)} mm</text>`;
+        // Vertical dimension arrow (total width)
+        const ax = ox - 32;
+        html += `<line x1="${ax}" y1="${oy}" x2="${ax}" y2="${oy + patchH}" stroke="${dimCol}" stroke-width="1.5" marker-start="url(#arrowU)" marker-end="url(#arrowD)"/>`;
+        html += `<text x="${ax - 6}" y="${oy + patchH / 2}" text-anchor="middle" font-size="15" fill="${textCol}" font-weight="700" transform="rotate(-90 ${ax - 6} ${oy + patchH / 2})">W = ${totalW.toFixed(1)} mm</text>`;
 
-        const defs = `<defs>
-            <marker id="arrowR" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="${textCol}"/></marker>
-            <marker id="arrowL" markerWidth="5" markerHeight="5" refX="1" refY="2.5" orient="auto"><path d="M5,0 L0,2.5 L5,5" fill="${textCol}"/></marker>
-            <marker id="arrowD" markerWidth="5" markerHeight="5" refX="2.5" refY="4" orient="auto"><path d="M0,0 L2.5,5 L5,0" fill="${textCol}"/></marker>
-            <marker id="arrowU" markerWidth="5" markerHeight="5" refX="2.5" refY="1" orient="auto"><path d="M0,5 L2.5,0 L5,5" fill="${textCol}"/></marker>
-        </defs>`;
         svg.innerHTML = defs + html;
     }
 
@@ -1405,17 +1749,18 @@
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         return {
             paper_bgcolor: 'rgba(0,0,0,0)',
-            plot_bgcolor: isDark ? 'rgba(30,41,59,0.4)' : 'rgba(248,250,252,0.4)',
-            font: { color: isDark ? '#e2e8f0' : '#334155', family: 'Source Sans Pro, sans-serif', size: 11 },
+            plot_bgcolor: isDark ? 'rgba(30,41,59,0.5)' : 'rgba(233,239,245,0.6)',
+            font: { color: isDark ? '#f1f5f9' : '#0f172a', family: 'Source Sans Pro, sans-serif', size: 14 },
             scene: {
                 bgcolor: 'rgba(0,0,0,0)',
-                xaxis: { color: isDark ? '#94a3b8' : '#475569', gridcolor: isDark ? '#334155' : '#e2e8f0', showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.3)' : 'rgba(241,245,249,0.5)' },
-                yaxis: { color: isDark ? '#94a3b8' : '#475569', gridcolor: isDark ? '#334155' : '#e2e8f0', showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.3)' : 'rgba(241,245,249,0.5)' },
-                zaxis: { color: isDark ? '#94a3b8' : '#475569', gridcolor: isDark ? '#334155' : '#e2e8f0', showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.3)' : 'rgba(241,245,249,0.5)' },
+                xaxis: { color: isDark ? '#c8d5e3' : '#374151', gridcolor: isDark ? '#3b4f6b' : '#c0ccd8', showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.3)' : 'rgba(233,239,245,0.5)' },
+                yaxis: { color: isDark ? '#c8d5e3' : '#374151', gridcolor: isDark ? '#3b4f6b' : '#c0ccd8', showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.3)' : 'rgba(233,239,245,0.5)' },
+                zaxis: { color: isDark ? '#c8d5e3' : '#374151', gridcolor: isDark ? '#3b4f6b' : '#c0ccd8', showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.3)' : 'rgba(233,239,245,0.5)' },
             },
-            xaxis: { gridcolor: isDark ? '#334155' : '#e2e8f0', zerolinecolor: isDark ? '#475569' : '#cbd5e1', linecolor: isDark ? '#475569' : '#cbd5e1', mirror: true, ticks: 'outside', showline: true },
-            yaxis: { gridcolor: isDark ? '#334155' : '#e2e8f0', zerolinecolor: isDark ? '#475569' : '#cbd5e1', linecolor: isDark ? '#475569' : '#cbd5e1', mirror: true, ticks: 'outside', showline: true },
+            xaxis: { gridcolor: isDark ? '#3b4f6b' : '#c0ccd8', zerolinecolor: isDark ? '#546a84' : '#8896a4', linecolor: isDark ? '#546a84' : '#8896a4', mirror: true, ticks: 'outside', showline: true },
+            yaxis: { gridcolor: isDark ? '#3b4f6b' : '#c0ccd8', zerolinecolor: isDark ? '#546a84' : '#8896a4', linecolor: isDark ? '#546a84' : '#8896a4', mirror: true, ticks: 'outside', showline: true },
             colorway: COLORS,
+            hoverlabel: { font: { color: isDark ? '#0f172a' : '#0f172a', size: 13 }, bgcolor: isDark ? '#f1f5f9' : '#ffffff', bordercolor: isDark ? '#546a84' : '#8896a4' },
             margin: { l: 55, r: 25, t: 35, b: 50 },
         };
     }
@@ -1437,10 +1782,11 @@
         const surface = {
             type: 'surface', x: axdist, y: ribCenters, z: matrix,
             colorscale, cmin, cmax, showscale: !compact,
-            colorbar: compact ? {} : { title: { text: title + ' [MPa]', font: { size: 10 } }, thickness: 12, len: 0.65 },
+            colorbar: compact ? {} : { title: { text: title + ' [MPa]', font: { size: 11, color: theme.font.color } }, tickfont: { color: theme.font.color }, thickness: 14, len: 0.65 },
             contours: {
-                z: { show: true, usecolormap: true, highlightcolor: '#fff', project: { z: true } },
-                x: { show: false }, y: { show: false }
+                z: { show: true, usecolormap: true, highlightcolor: '#fff', project: { z: true }, size: (cmax - cmin) / 30 },
+                x: { show: true, usecolormap: true, highlightwidth: 0.5, size: (axdist[axdist.length - 1] - axdist[0]) / 15 },
+                y: { show: true, usecolormap: true, highlightwidth: 0.5, size: (ribCenters[ribCenters.length - 1] - ribCenters[0]) / (ribCenters.length * 2 || 1) }
             },
             lighting: { ambient: 0.55, diffuse: 0.5, specular: 0.2, roughness: 0.4, fresnel: 0.3 },
             hovertemplate: 'x: %{x:.1f} mm<br>y: %{y:.1f} mm<br>σ: %{z:.4f} MPa<extra></extra>'
@@ -1477,7 +1823,7 @@
             row.forEach((val, ci) => {
                 annotations.push({
                     x: axdist[ci], y: ribLabels[ri], text: val.toFixed(3),
-                    showarrow: false, font: { size: 8, color: Math.abs(val) > (zmax - zmin) * 0.6 + zmin ? 'white' : theme.font.color }
+                    showarrow: false, font: { size: 9, color: Math.abs(val) > (zmax - zmin) * 0.6 + zmin ? 'white' : theme.font.color }
                 });
             });
         });
@@ -1485,15 +1831,15 @@
         const trace = {
             type: 'heatmap', x: axdist, y: ribLabels, z: matrix,
             colorscale, zmin, zmax, zmid, showscale: true,
-            colorbar: { title: { text: title + ' [MPa]', font: { size: 9 } }, thickness: 10 },
+            colorbar: { title: { text: title + ' [MPa]', font: { size: 10, color: theme.font.color } }, tickfont: { color: theme.font.color }, thickness: 12 },
             hovertemplate: 'x: %{x:.1f} mm<br>%{y}<br>σ: %{z:.4f} MPa<extra></extra>',
             xgap: 2, ygap: 2
         };
         const layout = {
             ...theme, annotations,
             xaxis: { ...theme.xaxis, title: 'Contact Length [mm]' },
-            yaxis: { ...theme.yaxis, title: '', autorange: true },
-            margin: { l: 90, r: 25, t: 20, b: 50 }
+            yaxis: { ...theme.yaxis, title: '', autorange: 'reversed' },
+            margin: { l: 90, r: 25, t: 20, b: 60 }
         };
         Plotly.newPlot(containerId, [trace], layout, plotlyConfig);
     }
@@ -1503,27 +1849,41 @@
         const { title, symmetric } = opts;
         const numRibs = ribLabels.length;
         const traces = [];
+        const dashes = ['solid', 'dash', 'dot', 'dashdot', 'longdash', 'longdashdot', 'solid'];
 
+        // LAYER 1: Fill-only traces (very transparent, drawn first / behind)
         for (let i = 0; i < numRibs; i++) {
             const key = 'Rib ' + (i + 1);
             const col = COLORS[i % COLORS.length];
-
-            // Filled area under theory curve
+            traces.push({
+                type: 'scatter', mode: 'none', x: xTheory, y: theoryDict[key],
+                fill: 'tozeroy',
+                fillcolor: col.replace(')', ',0.10)').replace('rgb', 'rgba'),
+                legendgroup: key, showlegend: false, hoverinfo: 'skip'
+            });
+        }
+        // LAYER 2: Line traces (no fill, drawn on top — always visible)
+        for (let i = 0; i < numRibs; i++) {
+            const key = 'Rib ' + (i + 1);
+            const col = COLORS[i % COLORS.length];
+            const dash = dashes[i % dashes.length];
             traces.push({
                 type: 'scatter', mode: 'lines', x: xTheory, y: theoryDict[key],
-                name: ribLabels[i], line: { color: col, width: 2.5 },
-                fill: symmetric ? 'tozeroy' : 'tozeroy',
-                fillcolor: col.replace(')', ',0.08)').replace('rgb', 'rgba'),
+                name: ribLabels[i], line: { color: col, width: 2.5, dash },
                 legendgroup: key,
                 hovertemplate: 'x: %{x:.1f}<br>σ: %{y:.4f} MPa<extra>' + ribLabels[i] + '</extra>'
             });
-            // Averaged scatter with connecting dashed line
+        }
+        // LAYER 3: Averaged scatter markers (on top of everything)
+        for (let i = 0; i < numRibs; i++) {
+            const key = 'Rib ' + (i + 1);
+            const col = COLORS[i % COLORS.length];
             traces.push({
                 type: 'scatter', mode: 'lines+markers', x: axdist, y: avgDict[key],
                 name: ribLabels[i] + ' avg', legendgroup: key, showlegend: false,
                 line: { color: col, width: 1, dash: 'dot' },
                 marker: { color: col, size: 5, symbol: 'diamond',
-                    line: { color: 'rgba(255,255,255,0.5)', width: 0.5 } },
+                    line: { color: 'rgba(255,255,255,0.6)', width: 0.8 } },
                 hovertemplate: 'x: %{x:.1f}<br>σ<sub>avg</sub>: %{y:.4f} MPa<extra>' + ribLabels[i] + '</extra>'
             });
         }
@@ -1540,7 +1900,7 @@
                     text: `Peak: ${vals[maxIdx].toFixed(3)}`,
                     showarrow: true, arrowhead: 2, arrowsize: 0.8,
                     ax: 0, ay: -28,
-                    font: { size: 9, color: COLORS[i], weight: 'bold' },
+                    font: { size: 10, color: COLORS[i], weight: 'bold' },
                     bgcolor: theme.paper_bgcolor === 'rgba(0,0,0,0)' ? 'var(--ac-bg-panel)' : 'white',
                     bordercolor: COLORS[i], borderwidth: 1, borderpad: 3
                 });
@@ -1551,8 +1911,8 @@
             ...theme, annotations,
             xaxis: { ...theme.xaxis, title: 'Contact Length [mm]' },
             yaxis: { ...theme.yaxis, title: title + ' [MPa]' },
-            legend: { orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center', font: { size: 10 } },
-            margin: { l: 55, r: 15, t: 25, b: 65 },
+            legend: { orientation: 'h', y: -0.22, x: 0.5, xanchor: 'center', font: { size: 11 } },
+            margin: { l: 60, r: 15, t: 25, b: 80 },
             hovermode: 'x unified'
         };
 
@@ -1568,31 +1928,35 @@
 
     function renderBarChart(containerId, values, labels, opts) {
         const theme = getPlotlyTheme();
-        const { title, color } = opts;
-        const colorMap = {
-            orange: [249, 115, 22], blue: [14, 165, 233], green: [16, 185, 129]
-        };
-        const rgb = colorMap[color] || colorMap.blue;
+        const { title } = opts;
+        const n = values.length;
+        // Reverse so Rib 1 at top, highest rib at bottom (matching contact patch)
+        const revValues = [...values].reverse();
+        const revLabels = [...labels].reverse();
+
+        // Use COLORS palette — each rib gets its own distinct color
+        const barColors = revValues.map((_, i) => {
+            const col = COLORS[(n - 1 - i) % COLORS.length];
+            return col.replace('rgb', 'rgba').replace(')', ',0.65)');
+        });
+        const borderColors = revValues.map((_, i) => COLORS[(n - 1 - i) % COLORS.length]);
 
         const trace = {
-            type: 'bar', orientation: 'h', x: values, y: labels,
-            marker: {
-                color: values.map((_, i) => {
-                    const t = values.length > 1 ? i / (values.length - 1) : 0;
-                    return `rgba(${rgb.join(',')},${(0.45 + 0.55 * t).toFixed(2)})`;
-                }),
-                line: { color: `rgba(${rgb.join(',')},0.7)`, width: 1 }
-            },
-            text: values.map(v => v.toFixed(4)),
-            textposition: 'outside', textfont: { size: 9 },
-            hovertemplate: '%{y}: %{x:.4f}<extra></extra>'
+            type: 'bar', orientation: 'h', x: revValues, y: revLabels,
+            marker: { color: barColors, line: { color: borderColors, width: 1.5 } },
+            text: revValues.map(v => v.toFixed(4)),
+            textposition: 'outside', textfont: { size: 11 },
+            hovertemplate: '%{y}: %{x:.4f}<extra></extra>',
+            cliponaxis: false
         };
 
+        // Compute x-range with room for outside text
+        const xMax = Math.max(...revValues) * 1.25;
         const layout = {
             ...theme,
-            xaxis: { ...theme.xaxis, title },
-            yaxis: { ...theme.yaxis, autorange: true },
-            margin: { l: 55, r: 50, t: 15, b: 40 }
+            xaxis: { ...theme.xaxis, title, range: [0, xMax] },
+            yaxis: { ...theme.yaxis, categoryorder: 'array', categoryarray: revLabels },
+            margin: { l: 65, r: 70, t: 15, b: 55 }
         };
         Plotly.newPlot(containerId, [trace], layout, plotlyConfig);
     }
@@ -1616,8 +1980,8 @@
             ...theme,
             xaxis: { ...theme.xaxis, title: 'Contact Length [mm]' },
             yaxis: { ...theme.yaxis, title: 'Stress [MPa]' },
-            legend: { orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center', font: { size: 10 } },
-            margin: { l: 55, r: 15, t: 15, b: 65 }, hovermode: 'x unified',
+            legend: { orientation: 'h', y: -0.22, x: 0.5, xanchor: 'center', font: { size: 11 } },
+            margin: { l: 60, r: 15, t: 15, b: 80 }, hovermode: 'x unified',
             shapes: [{ type: 'line', x0: 0, x1: 1, xref: 'paper', y0: 0, y1: 0,
                 line: { color: 'rgba(100,100,100,0.35)', width: 1, dash: 'dash' } }]
         };
@@ -1626,9 +1990,10 @@
 
     function renderPeakComparison(containerId, r) {
         const theme = getPlotlyTheme();
-        const ribNames = r.bi.map((_, i) => `Rib ${i + 1}`);
+        // Reverse so Rib 1 at top, highest rib at bottom
+        const ribNames = r.bi.map((_, i) => `Rib ${i + 1}`).reverse();
         const peakZ = [], peakX = [], peakY = [];
-        for (let i = 0; i < r.numRibs; i++) {
+        for (let i = r.numRibs - 1; i >= 0; i--) {
             const key = 'Rib ' + (i + 1);
             peakZ.push(Math.max(...r.SSZ[key]));
             peakX.push(Math.max(...r.SSX[key].map(Math.abs)));
@@ -1636,36 +2001,39 @@
         }
         const traces = [
             { type: 'bar', name: 'Max σz', y: ribNames, x: peakZ, orientation: 'h',
-                marker: { color: 'rgba(239,68,68,0.7)', line: { color: '#ef4444', width: 1 } },
-                text: peakZ.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: 8 } },
+                marker: { color: 'rgba(239,68,68,0.7)', line: { color: '#ef4444', width: 1.5 } },
+                text: peakZ.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: 11 } },
             { type: 'bar', name: 'Max |σx|', y: ribNames, x: peakX, orientation: 'h',
-                marker: { color: 'rgba(14,165,233,0.7)', line: { color: '#0ea5e9', width: 1 } },
-                text: peakX.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: 8 } },
+                marker: { color: 'rgba(14,165,233,0.7)', line: { color: '#0ea5e9', width: 1.5 } },
+                text: peakX.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: 11 } },
             { type: 'bar', name: 'Max σy', y: ribNames, x: peakY, orientation: 'h',
-                marker: { color: 'rgba(16,185,129,0.7)', line: { color: '#10b981', width: 1 } },
-                text: peakY.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: 8 } },
+                marker: { color: 'rgba(16,185,129,0.7)', line: { color: '#10b981', width: 1.5 } },
+                text: peakY.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: 11 } },
         ];
+        const xMax = Math.max(...peakZ, ...peakX, ...peakY) * 1.2;
         const layout = {
             ...theme, barmode: 'group',
-            xaxis: { ...theme.xaxis, title: 'Peak Stress [MPa]' },
-            yaxis: { ...theme.yaxis, autorange: true },
-            legend: { orientation: 'h', y: -0.2, x: 0.5, xanchor: 'center', font: { size: 10 } },
-            margin: { l: 55, r: 50, t: 15, b: 65 }
+            xaxis: { ...theme.xaxis, title: 'Peak Stress [MPa]', range: [0, xMax] },
+            yaxis: { ...theme.yaxis, categoryorder: 'array', categoryarray: ribNames },
+            legend: { orientation: 'h', y: -0.18, x: 0.5, xanchor: 'center', font: { size: 13 } },
+            margin: { l: 65, r: 65, t: 15, b: 80 }
         };
         Plotly.newPlot(containerId, traces, layout, plotlyConfig);
     }
 
     function renderEqBar(containerId, r) {
         const theme = getPlotlyTheme();
-        const ribNames = r.bi.map((_, i) => `Rib ${i + 1}`);
+        // Reverse so Rib 1 at top, highest rib at bottom
+        const ribNames = r.bi.map((_, i) => `Rib ${i + 1}`).reverse();
+        const revEq = [...r.eqPerRib].reverse();
         const trace = {
-            type: 'bar', y: ribNames, x: r.eqPerRib, orientation: 'h',
+            type: 'bar', y: ribNames, x: revEq, orientation: 'h',
             marker: {
-                color: r.eqPerRib.map(v => v >= 0 ? 'rgba(16,185,129,0.6)' : 'rgba(239,68,68,0.6)'),
-                line: { color: r.eqPerRib.map(v => v >= 0 ? '#10b981' : '#ef4444'), width: 1 }
+                color: revEq.map(v => v >= 0 ? 'rgba(16,185,129,0.6)' : 'rgba(239,68,68,0.6)'),
+                line: { color: revEq.map(v => v >= 0 ? '#10b981' : '#ef4444'), width: 1 }
             },
-            text: r.eqPerRib.map(v => (v / 1000).toFixed(2) + ' kN'),
-            textposition: 'outside', textfont: { size: 9 },
+            text: revEq.map(v => (v / 1000).toFixed(2) + ' kN'),
+            textposition: 'outside', textfont: { size: 11 },
             hovertemplate: '%{y}: %{x:.2f} N<extra></extra>'
         };
         // Add reference line at P/numRibs
@@ -1673,7 +2041,7 @@
         const layout = {
             ...theme,
             xaxis: { ...theme.xaxis, title: 'Load Contribution [N]' },
-            yaxis: { ...theme.yaxis, autorange: true },
+            yaxis: { ...theme.yaxis, categoryorder: 'array', categoryarray: ribNames },
             margin: { l: 55, r: 55, t: 10, b: 40 },
             shapes: [{ type: 'line', x0: idealLoad, x1: idealLoad, y0: -0.5, y1: r.numRibs - 0.5,
                 line: { color: 'rgba(245,158,11,0.6)', width: 1.5, dash: 'dash' } }],
@@ -1804,6 +2172,123 @@
                 <tr><td>Difference</td><td class="val">${r.diff.toFixed(4)} %</td></tr>
                 <tr><td>Tolerance (2.5%)</td><td class="val">${passIcon}</td></tr>
             </table>`;
+
+        // Attach export button handler
+        document.getElementById('btn-export-xlsx').onclick = function() { exportToExcel(r); };
+    }
+
+    // ================================================================
+    //  EXPORT TO EXCEL
+    // ================================================================
+    function exportToExcel(r) {
+        const wb = XLSX.utils.book_new();
+        const aircraftName = currentRow ? currentRow.name : 'Unknown';
+
+        // ---- Sheet 1: Parameters ----
+        const paramData = [
+            ['AirCrafter — Contact Stress Analysis Results'],
+            [],
+            ['Aircraft', aircraftName],
+            ['Date', new Date().toLocaleString()],
+            [],
+            ['Global Parameters'],
+            ['Parameter', 'Value', 'Unit'],
+            ['Load (P)', r.P, 'N'],
+            ['Tire Pressure (TiP)', r.TiP, 'MPa'],
+            ['Contact Length (l)', r.l, 'mm'],
+            ['Number of Ribs', r.numRibs, ''],
+            ['Elements (xn)', r.xn, ''],
+            ['Element Length', r.l_elem.toFixed(4), 'mm'],
+            [],
+            ['Rib Parameters'],
+            ['Rib', 'Width bi [mm]', 'αl', 'σ_Tip', 'Eq Load [N]', 'Max σz [MPa]', 'Max |σx| [MPa]', 'Max σy [MPa]'],
+        ];
+        for (let i = 0; i < r.numRibs; i++) {
+            const key = 'Rib ' + (i + 1);
+            paramData.push([
+                'Rib ' + (i + 1),
+                r.bi[i],
+                r.al[i],
+                r.sigm_Tip[i],
+                r.eqPerRib[i],
+                Math.max(...r.SSZ[key]),
+                Math.max(...r.SSX[key].map(Math.abs)),
+                Math.max(...r.SSY[key])
+            ]);
+        }
+        paramData.push([]);
+        paramData.push(['Equilibrium Check']);
+        paramData.push(['Applied Load P [N]', r.P]);
+        paramData.push(['Computed Pz [N]', r.Calc_Pz]);
+        paramData.push(['Difference [%]', r.diff]);
+        paramData.push(['Status', r.eqPassed ? 'PASSED' : 'FAILED']);
+        const wsParams = XLSX.utils.aoa_to_sheet(paramData);
+        wsParams['!cols'] = [{wch:22},{wch:16},{wch:14},{wch:14},{wch:14},{wch:16},{wch:16},{wch:16}];
+        XLSX.utils.book_append_sheet(wb, wsParams, 'Parameters');
+
+        // ---- Sheet 2: Contact Stresses (single sheet, stacked — matching original Python output) ----
+        // Columns = axdist midpoints; Rows = Rib i_j (partitions expanded)
+        const colHeaders = r.axdist.map(x => parseFloat(x.toFixed(4)));
+        const nElems = r.axdist.length;
+        const nearZero = 0.00001;
+        const stressData = [];
+
+        // --- SSV block (vertical): all partitions of a rib get identical values ---
+        stressData.push(['SSV [MPa]'].concat(colHeaders));
+        for (let i = 0; i < r.numRibs; i++) {
+            const rib = 'Rib ' + (i + 1);
+            for (let j = 0; j < r.nz[i]; j++) {
+                stressData.push([rib + '_' + (j + 1)].concat(r.asz[rib]));
+            }
+        }
+
+        // blank separator
+        stressData.push([]);
+
+        // --- SSX block (longitudinal): all partitions of a rib get identical values ---
+        stressData.push(['SSX [MPa]'].concat(colHeaders));
+        for (let i = 0; i < r.numRibs; i++) {
+            const rib = 'Rib ' + (i + 1);
+            for (let j = 0; j < r.nz[i]; j++) {
+                stressData.push([rib + '_' + (j + 1)].concat(r.asx[rib]));
+            }
+        }
+
+        // blank separator
+        stressData.push([]);
+
+        // --- SSY block (transverse): partition sign logic ---
+        // nz=2: part1 = +asy, part2 = -asy
+        // nz=3: part1 = +asy, part2 = ~0, part3 = -asy
+        // nz=4: part1 = +asy, part2&3 = ~0, part4 = -asy
+        stressData.push(['SSY [MPa]'].concat(colHeaders));
+        for (let i = 0; i < r.numRibs; i++) {
+            const rib = 'Rib ' + (i + 1);
+            const nzi = r.nz[i];
+            const posVals = r.asy[rib];
+            const negVals = posVals.map(v => -1.0 * v);
+            const zeroVals = new Array(nElems).fill(nearZero);
+            for (let j = 0; j < nzi; j++) {
+                let rowVals;
+                if (j === 0) {
+                    rowVals = posVals;                           // first partition = positive
+                } else if (j === nzi - 1) {
+                    rowVals = negVals;                           // last partition = negative (flipped)
+                } else {
+                    rowVals = zeroVals;                          // middle partitions ≈ 0
+                }
+                stressData.push([rib + '_' + (j + 1)].concat(rowVals));
+            }
+        }
+
+        const wsStress = XLSX.utils.aoa_to_sheet(stressData);
+        wsStress['!cols'] = [{wch:14}].concat(colHeaders.map(() => ({wch:12})));
+        XLSX.utils.book_append_sheet(wb, wsStress, 'Contact Stresses');
+
+        // Generate and download
+        const safeName = aircraftName.replace(/[^a-zA-Z0-9_\- ]/g, '').replace(/\s+/g, '_');
+        XLSX.writeFile(wb, 'AirCrafter_' + safeName + '.xlsx');
+        showSuccessFlash('Exported to Excel!');
     }
 
     // ================================================================
@@ -1856,10 +2341,71 @@
         if (label) document.getElementById('loading-text').textContent = label;
     }
 
-    function showSuccessFlash() {
+    // ==================== SELECTION LOADING ====================
+    let selectionOverlay = null;
+    const selectionSteps = [
+        { icon: 'fa-sliders-h', text: 'Loading parameters...' },
+        { icon: 'fa-shoe-prints', text: 'Drawing contact patch...' },
+        { icon: 'fa-bolt', text: 'Computing stresses...' }
+    ];
+
+    function showSelectionLoading(aircraftName) {
+        if (selectionOverlay) selectionOverlay.remove();
+        const overlay = document.createElement('div');
+        overlay.className = 'loading-overlay';
+        overlay.id = 'selection-overlay';
+        overlay.innerHTML = `
+            <div class="selection-loading-card">
+                <div class="loading-plane"><i class="fas fa-plane"></i></div>
+                <div class="aircraft-name">${aircraftName}</div>
+                <div class="loading-steps">
+                    ${selectionSteps.map((s, i) => `
+                        <div class="loading-step${i === 0 ? ' active' : ''}" id="sel-step-${i}">
+                            <i class="fas ${i === 0 ? 'fa-spinner fa-spin' : s.icon}"></i>
+                            <span>${s.text}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+        selectionOverlay = overlay;
+        requestAnimationFrame(() => overlay.classList.add('visible'));
+    }
+
+    function updateSelectionStep(completedIdx) {
+        if (!selectionOverlay) return;
+        for (let i = 0; i <= completedIdx; i++) {
+            const step = selectionOverlay.querySelector('#sel-step-' + i);
+            if (step) {
+                step.className = 'loading-step done';
+                step.querySelector('i').className = 'fas fa-check-circle';
+            }
+        }
+        const next = selectionOverlay.querySelector('#sel-step-' + (completedIdx + 1));
+        if (next) {
+            next.className = 'loading-step active';
+            next.querySelector('i').className = 'fas fa-spinner fa-spin';
+        }
+    }
+
+    function hideSelectionLoading() {
+        if (!selectionOverlay) return;
+        selectionSteps.forEach((_, i) => {
+            const step = selectionOverlay.querySelector('#sel-step-' + i);
+            if (step) { step.className = 'loading-step done'; step.querySelector('i').className = 'fas fa-check-circle'; }
+        });
+        setTimeout(() => {
+            if (selectionOverlay) {
+                selectionOverlay.classList.remove('visible');
+                setTimeout(() => { if (selectionOverlay) { selectionOverlay.remove(); selectionOverlay = null; } }, 300);
+            }
+        }, 400);
+    }
+
+    function showSuccessFlash(msg) {
         const flash = document.createElement('div');
         flash.className = 'success-flash';
-        flash.innerHTML = '<i class="fas fa-check-circle"></i> Stresses computed successfully';
+        flash.innerHTML = '<i class="fas fa-check-circle"></i> ' + (msg || 'Stresses computed successfully');
         document.body.appendChild(flash);
         setTimeout(() => { flash.style.opacity = '0'; }, 1800);
         setTimeout(() => flash.remove(), 2200);
@@ -1975,6 +2521,7 @@
                 const next = current === 'dark' ? 'light' : 'dark';
                 document.documentElement.setAttribute('data-theme', next);
                 localStorage.setItem('aircrafter-theme', next);
+                localStorage.setItem('theme-preference', next);
                 if (results) {
                     // Fast relayout: update theme colors on existing plots without full re-render
                     const theme = getPlotlyTheme();
@@ -1986,8 +2533,15 @@
                                 'font.color': theme.font.color,
                                 'xaxis.gridcolor': theme.xaxis ? theme.xaxis.gridcolor : undefined,
                                 'yaxis.gridcolor': theme.yaxis ? theme.yaxis.gridcolor : undefined,
+                                'xaxis.linecolor': theme.xaxis ? theme.xaxis.linecolor : undefined,
+                                'yaxis.linecolor': theme.yaxis ? theme.yaxis.linecolor : undefined,
+                                'xaxis.zerolinecolor': theme.xaxis ? theme.xaxis.zerolinecolor : undefined,
+                                'yaxis.zerolinecolor': theme.yaxis ? theme.yaxis.zerolinecolor : undefined,
                                 'xaxis.color': theme.font.color,
-                                'yaxis.color': theme.font.color
+                                'yaxis.color': theme.font.color,
+                                'hoverlabel.font.color': theme.hoverlabel.font.color,
+                                'hoverlabel.bgcolor': theme.hoverlabel.bgcolor,
+                                'hoverlabel.bordercolor': theme.hoverlabel.bordercolor
                             });
                         } catch (_) { /* skip non-initialized plots */ }
                     });

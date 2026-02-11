@@ -6,6 +6,8 @@
             // Frontier app defaults to dark mode
             var theme = localStorage.getItem('frontier-theme') || 'dark';
             document.documentElement.setAttribute('data-theme', theme);
+            // Ensure the global theme-toggle.js respects the app default
+            localStorage.setItem('theme-preference', theme);
         })();
     </script>
     <title>Frontier | HPC Intuition Engine</title>
@@ -287,6 +289,7 @@
             padding-top: 0 !important;
             margin-top: 0 !important;
         }
+        #header, section#header { display: none !important; }
 
         /* ==================== APP CONTAINER ==================== */
         .frontier-app {
@@ -364,7 +367,23 @@
             position: relative;
             z-index: 1;
             backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
+
+        .header-badges {
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .header-badge {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 0.35rem 0.75rem; border-radius: 8px;
+            font-size: 0.78rem; font-weight: 600;
+            color: rgba(255,255,255,0.75);
+            letter-spacing: 0.03em;
+        }
+        .header-badge i { margin-right: 0.3rem; font-size: 0.72rem; }
 
         .back-btn {
             background: rgba(24, 169, 168, 0.2);
@@ -399,34 +418,42 @@
 
         .header-content {
             text-align: center;
-            padding: 1.5rem 2rem 2rem;
+            padding: 1.5rem 2rem 1.75rem;
             position: relative;
             z-index: 1;
         }
 
         .app-header h1 {
-            font-size: 3.5rem;
-            margin: 0 0 0.75rem 0;
+            font-size: 3rem;
+            margin: 0 0 0.5rem 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 1rem;
+            gap: 0.8rem;
             font-weight: 800;
             color: white !important;
             text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
             animation: slideInUp 0.8s ease;
         }
 
-        .app-header h1 i {
+        .app-header h1 .frontier-icon {
             color: var(--frontier-primary) !important;
-            font-size: 2.8rem;
+            font-size: 2.2rem;
             animation: float 3s ease-in-out infinite;
             filter: drop-shadow(0 0 10px var(--frontier-primary-glow));
         }
 
+        .app-header h1 .highlight {
+            background: linear-gradient(135deg, var(--frontier-primary), var(--frontier-info));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            padding-bottom: 0.05em;
+            line-height: 1.15;
+            display: inline-block;
+        }
+
         .app-header p {
-            font-size: 1.4rem;
-            opacity: 0.95;
+            font-size: 1.15rem;
+            opacity: 0.9;
             margin: 0;
             color: white !important;
             font-weight: 300;
@@ -3492,9 +3519,15 @@
                         <a href="../../E-Labs.html" class="back-btn">
                             <i class="fas fa-arrow-left"></i> Back to E-Labs
                         </a>
+                        <div class="header-badges">
+                            <span class="header-badge"><i class="fas fa-microchip"></i> 5 Modules</span>
+                            <span class="header-badge"><i class="fas fa-code-branch"></i> v1.0</span>
+                        </div>
                     </div>
                     <div class="header-content">
-                        <h1><i class="fas fa-server"></i> Frontier</h1>
+                        <h1>
+                            <span class="frontier-icon"><i class="fas fa-server"></i></span><span class="highlight">Frontier</span>
+                        </h1>
                         <p>A Hands-On High Performance Computing Intuition Engine</p>
                     </div>
                 </div>
@@ -4168,6 +4201,7 @@
                         const currentTheme = document.documentElement.getAttribute('data-theme');
                         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
                         localStorage.setItem(FRONTIER_STORAGE_KEY, newTheme);
+                        localStorage.setItem('theme-preference', newTheme);
                     }, true); // Use capture to run before the default handler
                 }
             });
