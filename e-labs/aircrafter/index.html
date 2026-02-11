@@ -554,7 +554,7 @@
         .chart-subtitle {
             font-size: 0.85rem; color: var(--ac-text-muted); font-weight: 500;
         }
-        .chart-body { padding: 0.3rem; min-height: 480px; }
+        .chart-body { padding: 0.3rem; min-height: 480px; overflow: hidden; max-width: 100%; }
         .chart-body-tall { min-height: 560px; }
         .chart-body-short { min-height: 420px; }
 
@@ -925,7 +925,7 @@
             .contact-patch-container { min-height: 400px; padding: 1rem; }
         }
         @media (max-width: 768px) {
-            .aircrafter-app { padding: 0.5rem 0.75rem 1.5rem; }
+            .aircrafter-app { padding: 0.5rem 0.75rem 1.5rem; padding-top: 3.5rem; }
             .header-content { padding: 1.2rem 1.2rem 1.5rem; }
             .header-content h1 { font-size: 2.2rem; gap: 0.5rem; }
             .header-content h1 .plane-icon { font-size: 1.6rem; }
@@ -936,26 +936,30 @@
             .params-grid { grid-template-columns: 1fr; }
             .selection-grid { grid-template-columns: 1fr; }
             .header-badge { display: none; }
-            .panel { padding: 0.85rem 0.9rem; }
+            .panel { padding: 0.85rem 0.9rem; overflow: hidden; max-width: 100%; }
             .panel-title { font-size: 1rem; }
             .inline-stats { gap: 0.35rem; }
             .mini-stat { font-size: 0.82rem; padding: 0.3rem 0.55rem; }
             .contact-patch-container { min-height: 360px; padding: 0.75rem; }
             #contact-patch-svg { min-height: 320px; }
-            .chart-body { min-height: 400px; }
-            .chart-body-tall { min-height: 480px; }
-            .chart-body-short { min-height: 360px; }
+            .chart-panel { overflow: hidden; max-width: 100%; }
+            .chart-body { min-height: 350px; }
+            .chart-body-tall { min-height: 420px; }
+            .chart-body-short { min-height: 300px; }
+            .chart-body .js-plotly-plot, .chart-body .plot-container { max-width: 100% !important; }
+            .results-table { font-size: 0.82rem; display: block; overflow-x: auto; }
+            .results-table th { font-size: 0.72rem; }
+            #summary-matrix-body { overflow-x: auto; }
             .rib-table td input { width: 65px; font-size: 0.82rem; }
             .advanced-grid { grid-template-columns: repeat(2, 1fr); }
             .viz-tab { font-size: 0.82rem; padding: 0.4rem 0.65rem; }
             .btn { font-size: 0.92rem; padding: 0.55rem 1rem; }
-            .results-table { font-size: 0.82rem; }
-            .results-table th { font-size: 0.72rem; }
             .loading-card { min-width: 240px; padding: 1.5rem 1.8rem; }
             .selection-loading-card { min-width: 260px; padding: 1.5rem 1.8rem; }
+            #btn-export-xlsx { font-size: 0.8rem !important; padding: 0.4rem 0.8rem !important; }
         }
         @media (max-width: 480px) {
-            .aircrafter-app { padding: 0.35rem 0.5rem 1rem; }
+            .aircrafter-app { padding: 0.35rem 0.5rem 1rem; padding-top: 3.5rem; }
             .header-content h1 { font-size: 1.8rem; }
             .header-content p { font-size: 0.92rem; }
             .header-nav { padding: 0.6rem 0.8rem; flex-wrap: wrap; gap: 0.5rem; }
@@ -965,6 +969,23 @@
             .contact-patch-container { min-height: 280px; }
             .advanced-grid { grid-template-columns: 1fr 1fr; gap: 0.4rem; }
             .selection-loading-card { min-width: 220px; }
+            .chart-body { min-height: 300px; }
+            .chart-body-tall { min-height: 360px; }
+            .chart-body-short { min-height: 260px; }
+            .chart-header { padding: 0.4rem 0.6rem; flex-wrap: wrap; gap: 0.3rem; }
+            .chart-title { font-size: 0.88rem; }
+            .chart-subtitle { font-size: 0.75rem; }
+            .viz-tabs { flex-wrap: wrap; gap: 0.25rem; }
+        }
+
+        /* ===== Plotly mobile fixes ===== */
+        @media (max-width: 768px) {
+            .js-plotly-plot .plotly .modebar { transform: scale(0.75); transform-origin: top right; }
+            .js-plotly-plot, .plot-container.plotly { max-width: 100% !important; width: 100% !important; }
+            .svg-container { max-width: 100% !important; }
+        }
+        @media (max-width: 480px) {
+            .js-plotly-plot .plotly .modebar { transform: scale(0.65); transform-origin: top right; }
         }
     </style>
 </head>
@@ -1750,7 +1771,7 @@
         return {
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: isDark ? 'rgba(30,41,59,0.5)' : 'rgba(233,239,245,0.6)',
-            font: { color: isDark ? '#f1f5f9' : '#0f172a', family: 'Source Sans Pro, sans-serif', size: 14 },
+            font: { color: isDark ? '#f1f5f9' : '#0f172a', family: 'Source Sans Pro, sans-serif', size: isMobile() ? 11 : 14 },
             scene: {
                 bgcolor: 'rgba(0,0,0,0)',
                 xaxis: { color: isDark ? '#c8d5e3' : '#374151', gridcolor: isDark ? '#3b4f6b' : '#c0ccd8', showbackground: true, backgroundcolor: isDark ? 'rgba(15,23,42,0.3)' : 'rgba(233,239,245,0.5)' },
@@ -1761,11 +1782,18 @@
             yaxis: { gridcolor: isDark ? '#3b4f6b' : '#c0ccd8', zerolinecolor: isDark ? '#546a84' : '#8896a4', linecolor: isDark ? '#546a84' : '#8896a4', mirror: true, ticks: 'outside', showline: true },
             colorway: COLORS,
             hoverlabel: { font: { color: isDark ? '#0f172a' : '#0f172a', size: 13 }, bgcolor: isDark ? '#f1f5f9' : '#ffffff', bordercolor: isDark ? '#546a84' : '#8896a4' },
-            margin: { l: 55, r: 25, t: 35, b: 50 },
+            margin: mobileMargin({ l: 55, r: 25, t: 35, b: 50 }),
         };
     }
     const plotlyConfig = { responsive: true, displayModeBar: true, displaylogo: false,
         modeBarButtonsToRemove: ['toImage', 'sendDataToCloud'] };
+
+    function isMobile() { return window.innerWidth <= 768; }
+    function mobileMargin(desktop) {
+        if (!isMobile()) return desktop;
+        return { l: Math.min(desktop.l, 40), r: Math.min(desktop.r, 15), t: Math.min(desktop.t, 25), b: Math.min(desktop.b, 45) };
+    }
+    function mobileFontSize(desktop) { return isMobile() ? Math.max(desktop - 2, 10) : desktop; }
 
     // ================================================================
     //  RENDERING — ENHANCED PLOTLY CHARTS
@@ -1839,7 +1867,7 @@
             ...theme, annotations,
             xaxis: { ...theme.xaxis, title: 'Contact Length [mm]' },
             yaxis: { ...theme.yaxis, title: '', autorange: 'reversed' },
-            margin: { l: 90, r: 25, t: 20, b: 60 }
+            margin: mobileMargin({ l: 90, r: 25, t: 20, b: 60 })
         };
         Plotly.newPlot(containerId, [trace], layout, plotlyConfig);
     }
@@ -1912,7 +1940,7 @@
             xaxis: { ...theme.xaxis, title: 'Contact Length [mm]' },
             yaxis: { ...theme.yaxis, title: title + ' [MPa]' },
             legend: { orientation: 'h', y: -0.22, x: 0.5, xanchor: 'center', font: { size: 11 } },
-            margin: { l: 60, r: 15, t: 25, b: 80 },
+            margin: mobileMargin({ l: 60, r: 15, t: 25, b: 80 }),
             hovermode: 'x unified'
         };
 
@@ -1945,7 +1973,7 @@
             type: 'bar', orientation: 'h', x: revValues, y: revLabels,
             marker: { color: barColors, line: { color: borderColors, width: 1.5 } },
             text: revValues.map(v => v.toFixed(4)),
-            textposition: 'outside', textfont: { size: 11 },
+            textposition: 'outside', textfont: { size: mobileFontSize(11) },
             hovertemplate: '%{y}: %{x:.4f}<extra></extra>',
             cliponaxis: false
         };
@@ -1956,7 +1984,7 @@
             ...theme,
             xaxis: { ...theme.xaxis, title, range: [0, xMax] },
             yaxis: { ...theme.yaxis, categoryorder: 'array', categoryarray: revLabels },
-            margin: { l: 65, r: 70, t: 15, b: 55 }
+            margin: mobileMargin({ l: 65, r: 70, t: 15, b: 55 })
         };
         Plotly.newPlot(containerId, [trace], layout, plotlyConfig);
     }
@@ -1981,7 +2009,7 @@
             xaxis: { ...theme.xaxis, title: 'Contact Length [mm]' },
             yaxis: { ...theme.yaxis, title: 'Stress [MPa]' },
             legend: { orientation: 'h', y: -0.22, x: 0.5, xanchor: 'center', font: { size: 11 } },
-            margin: { l: 60, r: 15, t: 15, b: 80 }, hovermode: 'x unified',
+            margin: mobileMargin({ l: 60, r: 15, t: 15, b: 80 }), hovermode: 'x unified',
             shapes: [{ type: 'line', x0: 0, x1: 1, xref: 'paper', y0: 0, y1: 0,
                 line: { color: 'rgba(100,100,100,0.35)', width: 1, dash: 'dash' } }]
         };
@@ -2002,13 +2030,13 @@
         const traces = [
             { type: 'bar', name: 'Max σz', y: ribNames, x: peakZ, orientation: 'h',
                 marker: { color: 'rgba(239,68,68,0.7)', line: { color: '#ef4444', width: 1.5 } },
-                text: peakZ.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: 11 } },
+                text: peakZ.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: mobileFontSize(11) } },
             { type: 'bar', name: 'Max |σx|', y: ribNames, x: peakX, orientation: 'h',
                 marker: { color: 'rgba(14,165,233,0.7)', line: { color: '#0ea5e9', width: 1.5 } },
-                text: peakX.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: 11 } },
+                text: peakX.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: mobileFontSize(11) } },
             { type: 'bar', name: 'Max σy', y: ribNames, x: peakY, orientation: 'h',
                 marker: { color: 'rgba(16,185,129,0.7)', line: { color: '#10b981', width: 1.5 } },
-                text: peakY.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: 11 } },
+                text: peakY.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: mobileFontSize(11) } },
         ];
         const xMax = Math.max(...peakZ, ...peakX, ...peakY) * 1.2;
         const layout = {
@@ -2016,7 +2044,7 @@
             xaxis: { ...theme.xaxis, title: 'Peak Stress [MPa]', range: [0, xMax] },
             yaxis: { ...theme.yaxis, categoryorder: 'array', categoryarray: ribNames },
             legend: { orientation: 'h', y: -0.18, x: 0.5, xanchor: 'center', font: { size: 13 } },
-            margin: { l: 65, r: 65, t: 15, b: 80 }
+            margin: mobileMargin({ l: 65, r: 65, t: 15, b: 80 })
         };
         Plotly.newPlot(containerId, traces, layout, plotlyConfig);
     }
@@ -2033,7 +2061,7 @@
                 line: { color: revEq.map(v => v >= 0 ? '#10b981' : '#ef4444'), width: 1 }
             },
             text: revEq.map(v => (v / 1000).toFixed(2) + ' kN'),
-            textposition: 'outside', textfont: { size: 11 },
+            textposition: 'outside', textfont: { size: mobileFontSize(11) },
             hovertemplate: '%{y}: %{x:.2f} N<extra></extra>'
         };
         // Add reference line at P/numRibs
@@ -2042,7 +2070,7 @@
             ...theme,
             xaxis: { ...theme.xaxis, title: 'Load Contribution [N]' },
             yaxis: { ...theme.yaxis, categoryorder: 'array', categoryarray: ribNames },
-            margin: { l: 55, r: 55, t: 10, b: 40 },
+            margin: mobileMargin({ l: 55, r: 55, t: 10, b: 40 }),
             shapes: [{ type: 'line', x0: idealLoad, x1: idealLoad, y0: -0.5, y1: r.numRibs - 0.5,
                 line: { color: 'rgba(245,158,11,0.6)', width: 1.5, dash: 'dash' } }],
             annotations: [{ x: idealLoad, y: r.numRibs - 0.5, text: 'Ideal (' + (idealLoad / 1000).toFixed(1) + ' kN)',
@@ -2556,6 +2584,17 @@
         });
 
         loadDatabase();
+    });
+
+    // ===== Responsive Plotly resize on viewport change =====
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            document.querySelectorAll('.js-plotly-plot').forEach(function(el) {
+                try { Plotly.Plots.resize(el); } catch(_) {}
+            });
+        }, 200);
     });
     </script>
 </body>
