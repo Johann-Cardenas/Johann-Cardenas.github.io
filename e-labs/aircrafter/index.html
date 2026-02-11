@@ -2610,20 +2610,26 @@
         loadDatabase();
     });
 
-    // ===== Move back-btn into #titleBar on mobile =====
+    // ===== Move back-btn into #titleBar on mobile (single instance, no clone) =====
     (function() {
+        var restoreParent = null;
         function moveBackBtn() {
             var titleBar = document.getElementById('titleBar');
-            var btn = document.querySelector('.header-nav .back-btn');
-            var titleBarBtn = document.querySelector('#titleBar .back-btn');
-            if (window.innerWidth <= 980 && titleBar && btn && !titleBarBtn) {
-                var clone = btn.cloneNode(true);
-                titleBar.appendChild(clone);
-            } else if (window.innerWidth > 980 && titleBarBtn) {
-                titleBarBtn.remove();
+            var btnInHeader = document.querySelector('.header-nav .back-btn');
+            var btnInTitleBar = titleBar ? titleBar.querySelector('.back-btn') : null;
+            if (window.innerWidth <= 980 && titleBar) {
+                if (btnInTitleBar) { /* already in titleBar */ return; }
+                if (btnInHeader) {
+                    restoreParent = btnInHeader.parentElement;
+                    titleBar.insertBefore(btnInHeader, titleBar.firstChild);
+                }
+            } else {
+                if (btnInTitleBar && restoreParent) {
+                    restoreParent.appendChild(btnInTitleBar);
+                    restoreParent = null;
+                }
             }
         }
-        // Run after main.js creates #titleBar
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() { setTimeout(moveBackBtn, 100); });
         } else {

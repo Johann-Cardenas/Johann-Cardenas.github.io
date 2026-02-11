@@ -2937,37 +2937,58 @@ input, select, textarea {
 					width: 80px;
 					height: 60px;
 					pointer-events: auto;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					transition: transform 0.2s ease;
+				}
+
+				#titleBar .toggle:hover {
+					transform: scale(1.05);
+				}
+
+				#titleBar .toggle:active {
+					transform: scale(0.98);
 				}
 
 			#titleBar .back-btn {
 				pointer-events: auto;
 			}
-						font-variant: normal;
-						text-rendering: auto;
-						line-height: 1;
-						text-transform: none !important;
-						font-family: 'Font Awesome 5 Free';
-						font-weight: 900;
-					}
 
-					#titleBar .toggle:before {
-						content: '\f0c9';
-						display: block;
-						position: absolute;
-						left: 10px;
-						top: 10px;
-						width: 50px;
-						height: 40px;
-						line-height: 40px;
-						font-size: 18px;
+					#titleBar .toggle .toggle-icon {
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						width: 44px;
+						height: 44px;
+						background: rgba(255, 255, 255, 0.12);
+						backdrop-filter: blur(8px);
+						-webkit-backdrop-filter: blur(8px);
+						border: 1px solid rgba(255, 255, 255, 0.18);
+						border-radius: 12px;
 						color: #fff;
-						text-align: center;
-						background: rgba(150, 150, 150, 0.75);
-						border-radius: 5px;
+						transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+						box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 					}
 
-					#titleBar .toggle:active:before {
-						background-color: #969696;
+					#titleBar .toggle .toggle-icon svg {
+						flex-shrink: 0;
+					}
+
+					#titleBar .toggle:hover .toggle-icon {
+						background: rgba(255, 255, 255, 0.2);
+						border-color: rgba(255, 255, 255, 0.3);
+						box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+					}
+
+					#titleBar .toggle:hover .toggle-icon svg {
+						color: var(--accent-primary, #18a9a8);
+					}
+
+					#titleBar .toggle:active .toggle-icon {
+						background: rgba(255, 255, 255, 0.25);
+						border-color: rgba(255, 255, 255, 0.35);
+						box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 					}
 
 			#navPanel {
