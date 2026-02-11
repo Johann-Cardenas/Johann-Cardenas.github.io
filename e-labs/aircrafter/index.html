@@ -167,6 +167,9 @@
         body { font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif; }
         #wrapper, #main, .wrapper, main { padding-top: 0 !important; margin-top: 0 !important; }
         #header, section#header { display: none !important; }
+        #titleBar { background: transparent !important; }
+        #titleBar .toggle { display: none !important; }
+        #navPanel { display: none !important; }
 
         /* ==================== APP CONTAINER ==================== */
         .aircrafter-app {
@@ -925,7 +928,28 @@
             .contact-patch-container { min-height: 400px; padding: 1rem; }
         }
         @media (max-width: 768px) {
-            .aircrafter-app { padding: 0.5rem 0.75rem 1.5rem; padding-top: 3.5rem; }
+            .aircrafter-app { padding: 0.5rem 0.75rem 1.5rem; padding-top: 2.75rem; }
+            /* Collapse header-nav bar; float back-btn into the titleBar row */
+            .header-nav {
+                padding: 0; height: 0; overflow: visible;
+                background: none; border: none; backdrop-filter: none;
+            }
+            .header-badges { display: none; }
+            /* back-btn is moved into #titleBar by JS on mobile */
+            .header-nav .back-btn { display: none !important; }
+            #titleBar .back-btn {
+                position: absolute !important; top: 5px !important; left: 10px !important; right: auto !important;
+                font-size: 0.8rem !important; padding: 0.4rem 0.85rem !important;
+                background: rgba(14, 165, 233, 0.25) !important;
+                border: 1px solid rgba(14, 165, 233, 0.45) !important;
+                backdrop-filter: blur(10px); border-radius: 8px !important;
+                color: white !important; width: auto !important;
+                display: inline-flex !important; align-items: center !important; gap: 0.4rem !important;
+                height: auto !important; line-height: normal !important;
+                text-decoration: none !important; font-weight: 500 !important;
+            }
+            #titleBar .back-btn i { font-size: 0.72rem; }
+            #titleBar .back-btn:hover { transform: none !important; box-shadow: none !important; }
             .header-content { padding: 1.2rem 1.2rem 1.5rem; }
             .header-content h1 { font-size: 2.2rem; gap: 0.5rem; }
             .header-content h1 .plane-icon { font-size: 1.6rem; }
@@ -935,7 +959,6 @@
             .module-tab i { display: none; }
             .params-grid { grid-template-columns: 1fr; }
             .selection-grid { grid-template-columns: 1fr; }
-            .header-badge { display: none; }
             .panel { padding: 0.85rem 0.9rem; overflow: hidden; max-width: 100%; }
             .panel-title { font-size: 1rem; }
             .inline-stats { gap: 0.35rem; }
@@ -959,7 +982,7 @@
             #btn-export-xlsx { font-size: 0.8rem !important; padding: 0.4rem 0.8rem !important; }
         }
         @media (max-width: 480px) {
-            .aircrafter-app { padding: 0.35rem 0.5rem 1rem; padding-top: 3.5rem; }
+            .aircrafter-app { padding: 0.35rem 0.5rem 1rem; padding-top: 2.75rem; }
             .header-content h1 { font-size: 1.8rem; }
             .header-content p { font-size: 0.92rem; }
             .header-nav { padding: 0.6rem 0.8rem; flex-wrap: wrap; gap: 0.5rem; }
@@ -2585,6 +2608,28 @@
 
         loadDatabase();
     });
+
+    // ===== Move back-btn into #titleBar on mobile =====
+    (function() {
+        function moveBackBtn() {
+            var titleBar = document.getElementById('titleBar');
+            var btn = document.querySelector('.header-nav .back-btn');
+            var titleBarBtn = document.querySelector('#titleBar .back-btn');
+            if (window.innerWidth <= 980 && titleBar && btn && !titleBarBtn) {
+                var clone = btn.cloneNode(true);
+                titleBar.appendChild(clone);
+            } else if (window.innerWidth > 980 && titleBarBtn) {
+                titleBarBtn.remove();
+            }
+        }
+        // Run after main.js creates #titleBar
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() { setTimeout(moveBackBtn, 100); });
+        } else {
+            setTimeout(moveBackBtn, 100);
+        }
+        window.addEventListener('resize', moveBackBtn);
+    })();
 
     // ===== Responsive Plotly resize on viewport change =====
     let resizeTimer;

@@ -290,6 +290,9 @@
             margin-top: 0 !important;
         }
         #header, section#header { display: none !important; }
+        #titleBar { background: transparent !important; }
+        #titleBar .toggle { display: none !important; }
+        #navPanel { display: none !important; }
 
         /* ==================== APP CONTAINER ==================== */
         .frontier-app {
@@ -3031,7 +3034,7 @@
         @media (max-width: 768px) {
             .frontier-app {
                 padding: 0.75rem;
-                padding-top: 3.5rem;
+                padding-top: 2.75rem;
             }
 
             /* Header Mobile */
@@ -3056,16 +3059,29 @@
                 padding: 1.5rem 1.25rem 1.75rem;
             }
 
+            /* Collapse header-nav bar; float back-btn into the titleBar row */
             .header-nav {
-                padding: 0.75rem 1rem;
+                padding: 0; height: 0; overflow: visible;
+                background: none; border: none; backdrop-filter: none;
             }
 
-            .header-badge { display: none; }
+            .header-badges { display: none; }
 
-            .back-btn {
-                padding: 0.5rem 0.9rem;
-                font-size: 0.85rem;
+            /* back-btn is moved into #titleBar by JS on mobile */
+            .header-nav .back-btn { display: none !important; }
+            #titleBar .back-btn {
+                position: absolute !important; top: 5px !important; left: 10px !important; right: auto !important;
+                font-size: 0.8rem !important; padding: 0.4rem 0.85rem !important;
+                background: rgba(20, 184, 166, 0.25) !important;
+                border: 1px solid rgba(20, 184, 166, 0.45) !important;
+                backdrop-filter: blur(10px); border-radius: 8px !important;
+                color: white !important; width: auto !important;
+                display: inline-flex !important; align-items: center !important; gap: 0.4rem !important;
+                height: auto !important; line-height: normal !important;
+                text-decoration: none !important; font-weight: 500 !important;
             }
+            #titleBar .back-btn i { font-size: 0.72rem; }
+            #titleBar .back-btn:hover { transform: none !important; box-shadow: none !important; }
 
             /* Module Tabs Mobile */
             .module-tabs {
@@ -3397,7 +3413,7 @@
         @media (max-width: 480px) {
             .frontier-app {
                 padding: 0.5rem;
-                padding-top: 3.5rem;
+                padding-top: 2.75rem;
             }
 
             .app-header h1 {
@@ -5489,6 +5505,26 @@
                 b: Math.round(b * 255)
             };
         }
+    // ===== Move back-btn into #titleBar on mobile =====
+    (function() {
+        function moveBackBtn() {
+            var titleBar = document.getElementById('titleBar');
+            var btn = document.querySelector('.header-nav .back-btn');
+            var titleBarBtn = document.querySelector('#titleBar .back-btn');
+            if (window.innerWidth <= 980 && titleBar && btn && !titleBarBtn) {
+                var clone = btn.cloneNode(true);
+                titleBar.appendChild(clone);
+            } else if (window.innerWidth > 980 && titleBarBtn) {
+                titleBarBtn.remove();
+            }
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() { setTimeout(moveBackBtn, 100); });
+        } else {
+            setTimeout(moveBackBtn, 100);
+        }
+        window.addEventListener('resize', moveBackBtn);
+    })();
     </script>
 </body>
 </html>
