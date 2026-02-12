@@ -671,14 +671,18 @@
         }
 
         .module-tab:nth-child(1) .icon { 
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9); 
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+        }
+        .module-tab:nth-child(2) .icon { 
             background: linear-gradient(135deg, var(--frontier-primary), #0d7377); 
             box-shadow: 0 8px 20px rgba(24, 169, 168, 0.3);
         }
-        .module-tab:nth-child(2) .icon { 
+        .module-tab:nth-child(3) .icon { 
             background: linear-gradient(135deg, var(--frontier-secondary), #a01b3a); 
             box-shadow: 0 8px 20px rgba(213, 35, 73, 0.3);
         }
-        .module-tab:nth-child(3) .icon { 
+        .module-tab:nth-child(4) .icon { 
             background: linear-gradient(135deg, var(--frontier-accent), #d97706); 
             box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
         }
@@ -3101,7 +3105,8 @@
         @media (max-width: 1024px) {
             .workflow-container,
             .scaling-container,
-            .cpugpu-container {
+            .cpugpu-container,
+            .rightsizing-container {
                 grid-template-columns: 1fr;
             }
 
@@ -3937,6 +3942,829 @@
             }
         }
 
+        /* ==================== MODULE 4: RIGHTSIZING ==================== */
+
+        .rightsizing-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Intro panel */
+        .rs-intro-panel {
+            text-align: center;
+            padding: 1.25rem 2rem 0.75rem;
+            margin-bottom: -0.25rem;
+        }
+
+        .rs-intro-panel h2 {
+            justify-content: center;
+        }
+
+        .rs-intro-panel p {
+            color: var(--frontier-text-secondary);
+            font-size: 1.02rem;
+            max-width: 720px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Resource boxes row */
+        .rs-boxes-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .rs-box {
+            border-radius: 20px;
+            padding: 1.25rem;
+            background: var(--frontier-bg-panel);
+            border: 2px solid var(--frontier-border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        box-shadow 0.3s ease,
+                        border-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rs-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--frontier-primary), var(--frontier-info), var(--frontier-primary));
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .rs-box:hover::before {
+            opacity: 1;
+        }
+
+        .rs-box-laptop .rs-box-icon-wrap {
+            background: linear-gradient(135deg, var(--frontier-primary), #0d7377);
+            box-shadow: 0 8px 20px rgba(24, 169, 168, 0.3);
+        }
+        .rs-box-workstation .rs-box-icon-wrap {
+            background: linear-gradient(135deg, var(--frontier-secondary), #a01b3a);
+            box-shadow: 0 8px 20px rgba(213, 35, 73, 0.3);
+        }
+        .rs-box-cluster .rs-box-icon-wrap {
+            background: linear-gradient(135deg, var(--frontier-accent), #d97706);
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .rs-box-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .rs-box-icon-wrap {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: white;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .rs-box:hover .rs-box-icon-wrap {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .rs-box-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--frontier-text);
+            letter-spacing: 0.02em;
+        }
+
+        .rs-box-description {
+            font-size: 0.92rem;
+            color: var(--frontier-text-secondary);
+            margin-bottom: 0.5rem;
+            line-height: 1.45;
+        }
+
+        .rs-box-capacity {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            margin-bottom: 0.65rem;
+        }
+
+        .rs-box-capacity .rs-cap-badge {
+            font-size: 0.82rem;
+            padding: 0.24rem 0.65rem;
+            border-radius: 999px;
+            background: rgba(24, 169, 168, 0.1);
+            border: 1px solid rgba(24, 169, 168, 0.25);
+            color: var(--frontier-primary);
+            font-weight: 600;
+        }
+
+        /* Drop area */
+        .rs-box-droparea {
+            min-height: 110px;
+            padding: 0.5rem;
+            border-radius: 14px;
+            border: 2px dashed var(--frontier-border);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            align-content: flex-start;
+            transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .rs-box-droparea.rs-drop-hover {
+            border-color: var(--frontier-primary);
+            background: rgba(24, 169, 168, 0.06);
+            box-shadow: inset 0 0 20px rgba(24, 169, 168, 0.08);
+        }
+
+        .rs-box-droparea-placeholder {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--frontier-text-muted);
+            font-size: 0.78rem;
+            pointer-events: none;
+            opacity: 0.6;
+            text-align: center;
+        }
+
+        .rs-box-droparea-placeholder i {
+            display: block;
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+            opacity: 0.5;
+        }
+
+        /* Box react animations */
+        @keyframes rs-accept-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+            100% { box-shadow: 0 0 0 14px rgba(16, 185, 129, 0); }
+        }
+
+        @keyframes rs-reject-shake {
+            10%, 90% { transform: translateX(-2px); }
+            20%, 80% { transform: translateX(3px); }
+            30%, 50%, 70% { transform: translateX(-5px); }
+            40%, 60% { transform: translateX(5px); }
+        }
+
+        .rs-box.rs-accept-anim {
+            border-color: var(--frontier-success) !important;
+            animation: rs-accept-pulse 0.55s ease-out;
+        }
+
+        .rs-box.rs-reject-anim {
+            border-color: var(--frontier-danger) !important;
+            animation: rs-reject-shake 0.35s ease-out;
+        }
+
+        .rs-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            border-color: var(--frontier-primary);
+        }
+
+        /* Task cards */
+        .rs-card {
+            width: 170px;
+            padding: 0.75rem 0.7rem 0.7rem;
+            border-radius: 16px;
+            background: var(--frontier-bg-panel);
+            border: 2px solid var(--frontier-border);
+            box-shadow: var(--frontier-card-shadow);
+            cursor: grab;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        box-shadow 0.3s ease,
+                        border-color 0.3s ease,
+                        opacity 0.25s ease;
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        /* Colored top accent strip per tier */
+        .rs-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            border-radius: 16px 16px 0 0;
+            background: var(--frontier-primary);
+            transition: height 0.3s ease;
+        }
+
+        .rs-card[data-tier="light"]::before {
+            background: linear-gradient(90deg, var(--frontier-success), var(--frontier-primary));
+        }
+        .rs-card[data-tier="medium"]::before {
+            background: linear-gradient(90deg, var(--frontier-accent), var(--frontier-secondary));
+        }
+        .rs-card[data-tier="heavy"]::before {
+            background: linear-gradient(90deg, var(--frontier-secondary), #8b5cf6);
+        }
+
+        .rs-card:hover {
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.2);
+            border-color: var(--frontier-primary);
+        }
+
+        .rs-card:hover::before {
+            height: 4px;
+        }
+
+        /* Task icon */
+        .rs-card-icon-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-size: 1.15rem;
+            color: white;
+            position: relative;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        }
+
+        .rs-card:hover .rs-card-icon-wrap {
+            transform: scale(1.12) rotate(-5deg);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Tier-based icon background */
+        .rs-card[data-tier="light"] .rs-card-icon-wrap {
+            background: linear-gradient(135deg, var(--frontier-success), var(--frontier-primary));
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+        .rs-card[data-tier="medium"] .rs-card-icon-wrap {
+            background: linear-gradient(135deg, var(--frontier-accent), var(--frontier-secondary));
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+        }
+        .rs-card[data-tier="heavy"] .rs-card-icon-wrap {
+            background: linear-gradient(135deg, var(--frontier-secondary), #8b5cf6);
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Subtle icon float animation */
+        @keyframes rs-icon-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2px); }
+        }
+
+        .rs-card:hover .rs-card-icon-wrap i {
+            animation: rs-icon-float 1.2s ease-in-out infinite;
+        }
+
+        .rs-card-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--frontier-text);
+            margin-bottom: 0.25rem;
+            line-height: 1.3;
+        }
+
+        .rs-card-desc {
+            font-size: 0.82rem;
+            color: var(--frontier-text-secondary);
+            line-height: 1.4;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            margin: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease, margin 0.3s ease;
+        }
+
+        .rs-card:hover .rs-card-desc {
+            max-height: 60px;
+            opacity: 1;
+            margin-bottom: 0.45rem;
+        }
+
+        /* Compact requirement badges */
+        .rs-card-reqs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .rs-req-badge {
+            font-size: 0.78rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 999px;
+            background: var(--frontier-bg-alt);
+            border: 1px solid var(--frontier-border);
+            color: var(--frontier-text-secondary);
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .rs-req-badge i {
+            font-size: 0.66rem;
+            opacity: 0.7;
+        }
+
+        /* Tooltip on cards (shown after check) */
+        .rs-card-tooltip {
+            margin-top: 0.4rem;
+            font-size: 0.74rem;
+            color: var(--frontier-danger);
+            line-height: 1.4;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.35s ease, margin 0.35s ease;
+            text-align: left;
+        }
+
+        .rs-card.rs-incorrect .rs-card-tooltip {
+            max-height: 80px;
+            opacity: 1;
+        }
+
+        /* Dragging state */
+        .rs-card.rs-origin-dragging {
+            opacity: 0.3;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+
+        .rs-card-ghost {
+            position: fixed;
+            z-index: 10000;
+            pointer-events: none;
+            opacity: 0.92;
+            transform-origin: center center;
+            transition: none;
+            filter: drop-shadow(0 12px 24px rgba(0,0,0,0.3));
+        }
+
+        /* Cursor styles */
+        body.rs-grabbing,
+        body.rs-grabbing * {
+            cursor: grabbing !important;
+        }
+
+        /* Correct / incorrect animations */
+        .rs-card.rs-correct {
+            border-color: var(--frontier-success) !important;
+            box-shadow: 0 0 18px rgba(16, 185, 129, 0.5);
+        }
+
+        .rs-card.rs-incorrect {
+            border-color: var(--frontier-danger) !important;
+            box-shadow: 0 0 18px rgba(239, 68, 68, 0.5);
+        }
+
+        @keyframes rs-card-shake {
+            10%, 90% { transform: translateX(-2px); }
+            20%, 80% { transform: translateX(3px); }
+            30%, 50%, 70% { transform: translateX(-4px); }
+            40%, 60% { transform: translateX(4px); }
+        }
+
+        .rs-card.rs-shake-anim {
+            animation: rs-card-shake 0.5s ease-out;
+        }
+
+        @keyframes rs-card-sparkle {
+            0%, 100% { box-shadow: 0 0 18px rgba(16, 185, 129, 0.5); }
+            50% { box-shadow: 0 0 28px rgba(16, 185, 129, 0.8), 0 0 50px rgba(16, 185, 129, 0.3); }
+        }
+
+        .rs-card.rs-correct {
+            animation: rs-card-sparkle 1.2s ease-in-out 2;
+        }
+
+        @keyframes rs-hint-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            100% { box-shadow: 0 0 0 14px rgba(245, 158, 11, 0); }
+        }
+
+        .rs-card.rs-hint-pulse {
+            animation: rs-hint-pulse 0.9s ease-out;
+        }
+
+        @keyframes rs-bounce-back {
+            0%   { transform: translateY(0); }
+            40%  { transform: translateY(-6px); }
+            100% { transform: translateY(0); }
+        }
+
+        .rs-card.rs-bounce-back {
+            animation: rs-bounce-back 0.3s ease-out;
+        }
+
+        /* Deck */
+        .rs-deck-panel {
+            text-align: center;
+        }
+
+        .rs-deck-panel h2 {
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .rs-task-deck {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            padding: 0.5rem 0;
+        }
+
+        /* Controls row */
+        .rs-controls-row {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .rs-btn {
+            padding: 0.65rem 1.5rem;
+            border-radius: 12px;
+            border: 2px solid var(--frontier-border);
+            background: var(--frontier-bg-panel);
+            color: var(--frontier-text);
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rs-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .rs-btn i {
+            font-size: 0.85rem;
+        }
+
+        .rs-btn-check {
+            background: linear-gradient(135deg, var(--frontier-primary), var(--frontier-primary-hover));
+            border-color: var(--frontier-primary);
+            color: white;
+        }
+
+        .rs-btn-check:hover {
+            box-shadow: 0 8px 25px rgba(24, 169, 168, 0.4);
+        }
+
+        .rs-btn-reset {
+            border-color: var(--frontier-danger);
+            color: var(--frontier-danger);
+        }
+
+        .rs-btn-reset:hover {
+            background: rgba(239, 68, 68, 0.1);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.2);
+        }
+
+        .rs-btn-hint {
+            border-color: var(--frontier-accent);
+            color: var(--frontier-accent);
+        }
+
+        .rs-btn-hint:hover {
+            background: rgba(245, 158, 11, 0.1);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.2);
+        }
+
+        .rs-btn-explain {
+            border-color: var(--frontier-info);
+            color: var(--frontier-info);
+        }
+
+        .rs-btn-explain:hover {
+            background: rgba(59, 130, 246, 0.1);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+        }
+
+        /* ---- Light-mode contrast overrides for Rightsizing ---- */
+        [data-theme="light"] .rs-btn-check {
+            color: white;
+        }
+
+        [data-theme="light"] .rs-btn-reset,
+        [data-theme="light"] .rs-btn-hint,
+        [data-theme="light"] .rs-btn-explain {
+            color: #ffffff;
+            background: #475569;
+            border-color: #475569;
+        }
+        [data-theme="light"] .rs-btn-reset:hover,
+        [data-theme="light"] .rs-btn-hint:hover,
+        [data-theme="light"] .rs-btn-explain:hover {
+            background: #334155;
+            border-color: #334155;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Boxes & cards — stronger secondary text in light mode */
+        [data-theme="light"] .rs-box-description {
+            color: #475569;
+        }
+
+        [data-theme="light"] .rs-card-desc {
+            color: #475569;
+        }
+
+        [data-theme="light"] .rs-req-badge {
+            color: #475569;
+            border-color: #cbd5e1;
+            background: #f1f5f9;
+        }
+
+        [data-theme="light"] .rs-req-badge i {
+            opacity: 0.8;
+        }
+
+        /* Capacity badges — darker teal for light mode */
+        [data-theme="light"] .rs-box-capacity .rs-cap-badge {
+            color: #0f766e;
+            background: rgba(15, 118, 110, 0.08);
+            border-color: rgba(15, 118, 110, 0.3);
+        }
+
+        /* Drop area in light mode */
+        [data-theme="light"] .rs-box-droparea {
+            border-color: #cbd5e1;
+            background: rgba(241, 245, 249, 0.5);
+        }
+
+        [data-theme="light"] .rs-box-droparea-placeholder {
+            color: #64748b;
+        }
+
+        /* Feedback text in light mode */
+        [data-theme="light"] .rs-concept-text,
+        [data-theme="light"] .rs-hint-text,
+        [data-theme="light"] .rs-score-label {
+            color: #475569;
+        }
+
+        [data-theme="light"] .rs-hint-text strong {
+            color: #92400e;
+        }
+
+        [data-theme="light"] .rs-explain-reason {
+            color: #475569;
+        }
+
+        [data-theme="light"] .rs-explain-resource {
+            color: #0f766e;
+        }
+
+        [data-theme="light"] .rs-intro-panel p {
+            color: #475569;
+        }
+
+        /* Tooltip contrast in light mode */
+        [data-theme="light"] .rs-card-tooltip {
+            color: #b91c1c;
+        }
+
+        /* Feedback area */
+        .rs-feedback-panel {
+            min-height: 2rem;
+        }
+
+        .rs-feedback-panel:empty {
+            display: none;
+        }
+
+        .rs-feedback-inner {
+            padding: 1.25rem 1.5rem;
+        }
+
+        .rs-score-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .rs-score-number {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--frontier-primary), var(--frontier-info));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .rs-score-label {
+            font-size: 0.95rem;
+            color: var(--frontier-text-secondary);
+        }
+
+        .rs-score-bar {
+            width: 100%;
+            max-width: 300px;
+            height: 8px;
+            background: var(--frontier-border);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .rs-score-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--frontier-primary), var(--frontier-success));
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .rs-concept-text {
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--frontier-text-secondary);
+            margin-top: 0.75rem;
+            line-height: 1.55;
+        }
+
+        .rs-concept-text i {
+            color: var(--frontier-accent);
+            margin-right: 0.35rem;
+        }
+
+        .rs-hint-text {
+            font-size: 0.95rem;
+            color: var(--frontier-text-secondary);
+            text-align: center;
+            line-height: 1.55;
+        }
+
+        .rs-hint-text strong {
+            color: var(--frontier-accent);
+        }
+
+        .rs-hint-text em {
+            color: var(--frontier-text);
+        }
+
+        .rs-explain-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .rs-explain-item {
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            background: var(--frontier-bg-alt);
+            border: 1px solid var(--frontier-border);
+            transition: transform 0.2s ease;
+        }
+
+        .rs-explain-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .rs-explain-task {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--frontier-text);
+            margin-bottom: 0.15rem;
+        }
+
+        .rs-explain-resource {
+            font-size: 0.82rem;
+            color: var(--frontier-primary);
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+
+        .rs-explain-reason {
+            font-size: 0.78rem;
+            color: var(--frontier-text-secondary);
+            line-height: 1.45;
+        }
+
+        /* Cards inside drop area — compact chip style */
+        .rs-box-droparea .rs-card {
+            width: auto;
+            max-width: 100%;
+            padding: 0.3rem 0.55rem 0.35rem;
+            display: inline-flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.4rem;
+            text-align: left;
+            border-radius: 10px;
+        }
+
+        .rs-box-droparea .rs-card::before {
+            display: none;
+        }
+
+        .rs-box-droparea .rs-card-icon-wrap {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            margin: 0;
+        }
+
+        .rs-box-droparea .rs-card-title {
+            font-size: 0.78rem;
+            margin-bottom: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .rs-box-droparea .rs-card-desc,
+        .rs-box-droparea .rs-card-reqs,
+        .rs-box-droparea .rs-card-tooltip {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .rs-boxes-row {
+                grid-template-columns: 1fr;
+            }
+            .rs-box-droparea {
+                min-height: 80px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .rs-card {
+                width: 150px;
+                padding: 0.6rem 0.5rem;
+            }
+            .rs-card-icon-wrap {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+            }
+            .rs-card-title {
+                font-size: 0.82rem;
+            }
+            .rs-card-desc {
+                font-size: 0.72rem;
+            }
+            .rs-req-badge {
+                font-size: 0.68rem;
+            }
+            .rs-boxes-row {
+                gap: 0.75rem;
+            }
+            .rs-controls-row {
+                gap: 0.5rem;
+            }
+            .rs-btn {
+                padding: 0.55rem 1.1rem;
+                font-size: 0.84rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .rs-card {
+                width: 140px;
+            }
+            .rs-card-icon-wrap {
+                width: 34px;
+                height: 34px;
+                font-size: 0.9rem;
+            }
+        }
+
         /* Disable animations for reduced motion preference */
         @media (prefers-reduced-motion: reduce) {
             *,
@@ -3976,7 +4804,7 @@
                             <i class="fas fa-arrow-left"></i> Back to E-Labs
                         </a>
                         <div class="header-badges">
-                            <span class="header-badge"><i class="fas fa-microchip"></i> 5 Modules</span>
+                            <span class="header-badge"><i class="fas fa-microchip"></i> 4 Modules</span>
                             <span class="header-badge"><i class="fas fa-code-branch"></i> v1.0</span>
                         </div>
                     </div>
@@ -3990,7 +4818,14 @@
 
                 <!-- Module Tabs -->
                 <div class="module-tabs">
-                    <div class="module-tab active" data-module="workflow">
+                    <div class="module-tab active" data-module="rightsizing">
+                        <div class="icon"><i class="fas fa-balance-scale"></i></div>
+                        <div class="info">
+                            <h3>Rightsizing</h3>
+                            <p>Match Tasks to Resources</p>
+                        </div>
+                    </div>
+                    <div class="module-tab" data-module="workflow">
                         <div class="icon"><i class="fas fa-industry"></i></div>
                         <div class="info">
                             <h3>HPC Workflow</h3>
@@ -4013,8 +4848,105 @@
                     </div>
                 </div>
 
+                <!-- ==================== MODULE 0: RIGHTSIZING ==================== -->
+                <div class="module-content active" id="module-rightsizing">
+                    <div class="rightsizing-container">
+                        <!-- Intro Panel -->
+                        <div class="panel rs-intro-panel">
+                            <h2><i class="fas fa-balance-scale"></i> Rightsizing: Match Tasks to Resources</h2>
+                            <p>
+                                Not every task needs a supercomputer, and not every task fits on a laptop.
+                                Drag each task card onto the computing resource where it belongs best. 
+                                Consider  requirements to find the right match.
+                            </p>
+                        </div>
+
+                        <!-- Resource Boxes -->
+                        <div class="rs-boxes-row">
+                            <!-- Laptop -->
+                            <div class="rs-box rs-box-laptop" data-resource="laptop">
+                                <div class="rs-box-header">
+                                    <div class="rs-box-icon-wrap"><i class="fas fa-laptop"></i></div>
+                                    <div class="rs-box-title">Laptop</div>
+                                </div>
+                                <div class="rs-box-description">Lightweight, interactive workloads that complete quickly on a single machine.</div>
+                                <div class="rs-box-capacity">
+                                    <span class="rs-cap-badge"><i class="fas fa-microchip"></i> 4-8 cores</span>
+                                    <span class="rs-cap-badge"><i class="fas fa-memory"></i> 16-32 GB RAM</span>
+                                    <span class="rs-cap-badge"><i class="fas fa-times-circle"></i> No GPU</span>
+                                </div>
+                                <div class="rs-box-droparea" data-resource="laptop">
+                                    <div class="rs-box-droparea-placeholder">
+                                        <i class="fas fa-arrow-down"></i>
+                                        Drop tasks here
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Workstation -->
+                            <div class="rs-box rs-box-workstation" data-resource="workstation">
+                                <div class="rs-box-header">
+                                    <div class="rs-box-icon-wrap"><i class="fas fa-desktop"></i></div>
+                                    <div class="rs-box-title">Workstation</div>
+                                </div>
+                                <div class="rs-box-description">Heavy local compute with optional GPU acceleration for demanding tasks.</div>
+                                <div class="rs-box-capacity">
+                                    <span class="rs-cap-badge"><i class="fas fa-microchip"></i> 16-64 cores</span>
+                                    <span class="rs-cap-badge"><i class="fas fa-memory"></i> 64-256 GB RAM</span>
+                                    <span class="rs-cap-badge"><i class="fas fa-bolt"></i> GPU 12-24 GB</span>
+                                </div>
+                                <div class="rs-box-droparea" data-resource="workstation">
+                                    <div class="rs-box-droparea-placeholder">
+                                        <i class="fas fa-arrow-down"></i>
+                                        Drop tasks here
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cluster / Supercomputer -->
+                            <div class="rs-box rs-box-cluster" data-resource="cluster">
+                                <div class="rs-box-header">
+                                    <div class="rs-box-icon-wrap"><i class="fas fa-server"></i></div>
+                                    <div class="rs-box-title">Cluster / Supercomputer</div>
+                                </div>
+                                <div class="rs-box-description">Distributed memory, many nodes, job scheduler, ideal for massive long-running workloads.</div>
+                                <div class="rs-box-capacity">
+                                    <span class="rs-cap-badge"><i class="fas fa-microchip"></i> 100s-1000s cores</span>
+                                    <span class="rs-cap-badge"><i class="fas fa-memory"></i> TBs RAM</span>
+                                    <span class="rs-cap-badge"><i class="fas fa-bolt"></i> Multi-GPU</span>
+                                </div>
+                                <div class="rs-box-droparea" data-resource="cluster">
+                                    <div class="rs-box-droparea-placeholder">
+                                        <i class="fas fa-arrow-down"></i>
+                                        Drop tasks here
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Task Deck -->
+                        <div class="panel rs-deck-panel">
+                            <h2><i class="fas fa-th-large"></i> Task Deck</h2>
+                            <div class="rs-task-deck" id="rs-task-deck">
+                                <!-- Cards injected by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="rs-controls-row">
+                            <button class="rs-btn rs-btn-check" id="rs-btn-check"><i class="fas fa-check-double"></i> Check</button>
+                            <button class="rs-btn rs-btn-reset" id="rs-btn-reset"><i class="fas fa-undo-alt"></i> Reset</button>
+                            <button class="rs-btn rs-btn-hint" id="rs-btn-hint"><i class="fas fa-lightbulb"></i> Hint</button>
+                            <button class="rs-btn rs-btn-explain" id="rs-btn-explain"><i class="fas fa-book-open"></i> Explain</button>
+                        </div>
+
+                        <!-- Feedback -->
+                        <div class="panel rs-feedback-panel" id="rs-feedback-panel"></div>
+                    </div>
+                </div>
+
                 <!-- ==================== MODULE 1: HPC WORKFLOW ==================== -->
-                <div class="module-content active" id="module-workflow">
+                <div class="module-content" id="module-workflow">
                     <div class="workflow-container">
                         <!-- Controls Panel -->
                         <div class="panel">
@@ -4696,6 +5628,441 @@
                 document.getElementById(`module-${moduleId}`).classList.add('active');
             });
         });
+
+        // ==================== MODULE 0: RIGHTSIZING ====================
+        (function initRightsizing() {
+
+            /* ---- Data Model ---- */
+            const RS_RESOURCES = {
+                laptop: {
+                    id: 'laptop', name: 'Laptop',
+                    cpuCores: 8, ramGb: 32, gpuVramGb: 0,
+                    runtimeClass: 'short', parallelizable: false
+                },
+                workstation: {
+                    id: 'workstation', name: 'Workstation',
+                    cpuCores: 64, ramGb: 256, gpuVramGb: 24,
+                    runtimeClass: 'medium', parallelizable: true
+                },
+                cluster: {
+                    id: 'cluster', name: 'Cluster / Supercomputer',
+                    cpuCores: 4096, ramGb: 4096, gpuVramGb: 512,
+                    runtimeClass: 'long', parallelizable: true
+                }
+            };
+
+            const RS_TASKS = [
+                // Laptop (best fit)
+                { id: 'task-slides', icon: 'fa-file-powerpoint', title: 'Presentation Slides', description: 'Creating a slide deck with images and animations.', cpuCores: 2, ramGb: 4, gpuVramGb: 0, runtimeClass: 'short', parallelizable: false, ioHeavy: false, bestFit: 'laptop', why: 'Small CPU/RAM needs, highly interactive — a laptop is ideal.' },
+                { id: 'task-spreadsheet', icon: 'fa-table', title: 'Spreadsheet Analysis', description: 'Thousands of rows with formulas and pivot tables.', cpuCores: 2, ramGb: 8, gpuVramGb: 0, runtimeClass: 'short', parallelizable: false, ioHeavy: false, bestFit: 'laptop', why: 'Fits easily in laptop memory and runs quickly.' },
+                { id: 'task-lectures', icon: 'fa-graduation-cap', title: 'Online Lectures', description: 'Streaming lecture videos through a browser.', cpuCores: 2, ramGb: 8, gpuVramGb: 0, runtimeClass: 'short', parallelizable: false, ioHeavy: true, bestFit: 'laptop', why: 'Network & IO heavy but computationally trivial.' },
+                { id: 'task-social', icon: 'fa-hashtag', title: 'Social Media Browsing', description: 'Multiple browser tabs with rich media feeds.', cpuCores: 4, ramGb: 16, gpuVramGb: 0, runtimeClass: 'short', parallelizable: false, ioHeavy: true, bestFit: 'laptop', why: 'Comfortably fits on a typical laptop — no specialized hardware needed.' },
+                // Workstation (best fit)
+                { id: 'task-ml', icon: 'fa-brain', title: 'ML Model Training', description: 'Millions of parameters, single GPU, hours of training.', cpuCores: 16, ramGb: 64, gpuVramGb: 16, runtimeClass: 'medium', parallelizable: true, ioHeavy: false, bestFit: 'workstation', why: 'Needs a strong GPU and more RAM than a laptop, but not a full cluster.' },
+                { id: 'task-building', icon: 'fa-drafting-compass', title: 'Building Design (CAD)', description: '3D modeling and rendering of a residential building.', cpuCores: 16, ramGb: 64, gpuVramGb: 12, runtimeClass: 'medium', parallelizable: false, ioHeavy: true, bestFit: 'workstation', why: 'Graphics-intensive, local workloads are perfect for a workstation.' },
+                { id: 'task-gta6', icon: 'fa-gamepad', title: 'AAA Gaming (GTA 6)', description: 'Running a high-end game at ultra resolution.', cpuCores: 12, ramGb: 32, gpuVramGb: 12, runtimeClass: 'medium', parallelizable: false, ioHeavy: true, bestFit: 'workstation', why: 'Needs a powerful GPU with low latency; overkill to use a cluster.' },
+                { id: 'task-video', icon: 'fa-film', title: 'Video Editing (4K)', description: '4K timeline with effects, color grading, and exports.', cpuCores: 16, ramGb: 64, gpuVramGb: 12, runtimeClass: 'medium', parallelizable: true, ioHeavy: true, bestFit: 'workstation', why: 'High-bandwidth local workflow with GPU acceleration suits a workstation.' },
+                // Cluster (best fit)
+                { id: 'task-fea', icon: 'fa-cubes', title: 'Finite Element Analysis', description: 'Large meshes, non-linear materials, many load cases.', cpuCores: 256, ramGb: 512, gpuVramGb: 0, runtimeClass: 'long', parallelizable: true, ioHeavy: false, bestFit: 'cluster', why: 'Requires huge CPU and RAM, and parallelization across many nodes.' },
+                { id: 'task-spaceship', icon: 'fa-rocket', title: 'Spacecraft Trajectory', description: 'High-precision orbital simulations over long horizons.', cpuCores: 128, ramGb: 256, gpuVramGb: 0, runtimeClass: 'long', parallelizable: true, ioHeavy: false, bestFit: 'cluster', why: 'Massively parallel simulations over long durations suit a cluster.' },
+                { id: 'task-autocar', icon: 'fa-car', title: 'Self-Driving Car AI', description: 'Multi-sensor deep learning across a huge dataset.', cpuCores: 512, ramGb: 1024, gpuVramGb: 256, runtimeClass: 'long', parallelizable: true, ioHeavy: true, bestFit: 'cluster', why: 'Needs multiple GPUs, huge RAM, and distributed training.' },
+                { id: 'task-weather', icon: 'fa-cloud-sun-rain', title: 'National Weather Model', description: 'Continental-scale grids, data assimilation, days of runtime.', cpuCores: 2048, ramGb: 2048, gpuVramGb: 512, runtimeClass: 'long', parallelizable: true, ioHeavy: true, bestFit: 'cluster', why: 'Classic supercomputing workload needing thousands of cores.' }
+            ];
+
+            /* ---- Pure logic ---- */
+            function rsFits(task, resource) {
+                const reasons = [];
+                if (task.cpuCores > resource.cpuCores) reasons.push('Needs ' + task.cpuCores + ' CPU cores (resource has ' + resource.cpuCores + ').');
+                if (task.ramGb > resource.ramGb) reasons.push('Needs ' + task.ramGb + ' GB RAM (resource has ' + resource.ramGb + ' GB).');
+                if (task.gpuVramGb > 0 && resource.gpuVramGb === 0) reasons.push('Requires a GPU — this resource has none.');
+                else if (task.gpuVramGb > resource.gpuVramGb) reasons.push('Needs ' + task.gpuVramGb + ' GB GPU VRAM (resource has ' + resource.gpuVramGb + ' GB).');
+                const order = { short: 0, medium: 1, long: 2 };
+                if (order[task.runtimeClass] > order[resource.runtimeClass]) reasons.push('Runtime too long for this resource class.');
+                if (task.parallelizable && !resource.parallelizable) reasons.push('This task benefits from parallelism unavailable on this resource.');
+                return { ok: reasons.length === 0, reasons: reasons };
+            }
+
+            function rsScore(assignments) {
+                let correct = 0, incorrect = 0;
+                const breakdown = [];
+                RS_TASKS.forEach(function(task) {
+                    const resId = assignments[task.id] || null;
+                    if (!resId) {
+                        incorrect++;
+                        breakdown.push({ taskId: task.id, resourceId: null, correct: false, reason: 'Not assigned.', bestFit: task.bestFit });
+                        return;
+                    }
+                    const resource = RS_RESOURCES[resId];
+                    const fit = rsFits(task, resource);
+                    const isBest = resId === task.bestFit;
+                    if (fit.ok && isBest) {
+                        correct++;
+                        breakdown.push({ taskId: task.id, resourceId: resId, correct: true, reason: 'Great match!', bestFit: task.bestFit });
+                    } else {
+                        incorrect++;
+                        const reason = !fit.ok
+                            ? 'Does not fit: ' + fit.reasons.join(' ')
+                            : 'It fits here, but the best fit is ' + RS_RESOURCES[task.bestFit].name + '.';
+                        breakdown.push({ taskId: task.id, resourceId: resId, correct: false, reason: reason, bestFit: task.bestFit });
+                    }
+                });
+                return { correct: correct, incorrect: incorrect, breakdown: breakdown };
+            }
+
+            /* ---- State ---- */
+            const rsState = {
+                assignments: {},
+                draggingTaskId: null,
+                ghostEl: null,
+                originCardEl: null,
+                dragOffset: { x: 0, y: 0 }
+            };
+            RS_TASKS.forEach(function(t) { rsState.assignments[t.id] = null; });
+
+            /* ---- DOM references ---- */
+            const deck = document.getElementById('rs-task-deck');
+            const feedbackPanel = document.getElementById('rs-feedback-panel');
+            const dropAreas = document.querySelectorAll('.rs-box-droparea');
+            const boxes = document.querySelectorAll('.rs-box');
+
+            /* ---- Shuffle helper ---- */
+            function shuffle(arr) {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+                }
+                return arr;
+            }
+
+            /* ---- Card creation ---- */
+            const cardEls = {};
+
+            function buildCard(task) {
+                const card = document.createElement('div');
+                card.className = 'rs-card hover-lift';
+                card.dataset.taskId = task.id;
+                // Tier for visual accent: light (laptop), medium (workstation), heavy (cluster)
+                var tierMap = { laptop: 'light', workstation: 'medium', cluster: 'heavy' };
+                card.dataset.tier = tierMap[task.bestFit] || 'light';
+
+                // Build compact req badges
+                var reqParts = [];
+                reqParts.push('<span class="rs-req-badge"><i class="fas fa-microchip"></i> ' + task.cpuCores + '</span>');
+                reqParts.push('<span class="rs-req-badge"><i class="fas fa-memory"></i> ' + task.ramGb + ' GB</span>');
+                if (task.gpuVramGb > 0) {
+                    reqParts.push('<span class="rs-req-badge"><i class="fas fa-bolt"></i> ' + task.gpuVramGb + ' GB</span>');
+                }
+
+                card.innerHTML =
+                    '<div class="rs-card-icon-wrap"><i class="fas ' + task.icon + '"></i></div>' +
+                    '<div class="rs-card-title">' + task.title + '</div>' +
+                    '<div class="rs-card-desc">' + task.description + '</div>' +
+                    '<div class="rs-card-reqs">' + reqParts.join('') + '</div>' +
+                    '<div class="rs-card-tooltip"></div>';
+                cardEls[task.id] = card;
+                return card;
+            }
+
+            /* ---- Layout ---- */
+            function layoutAll() {
+                deck.innerHTML = '';
+                var unassigned = [];
+                RS_TASKS.forEach(function(t) {
+                    if (!rsState.assignments[t.id]) unassigned.push(t);
+                });
+                shuffle(unassigned);
+                unassigned.forEach(function(t) { deck.appendChild(cardEls[t.id]); });
+
+                dropAreas.forEach(function(da) {
+                    var resId = da.dataset.resource;
+                    // Keep placeholder, remove cards
+                    var existingCards = da.querySelectorAll('.rs-card');
+                    existingCards.forEach(function(c) { c.remove(); });
+                    RS_TASKS.forEach(function(t) {
+                        if (rsState.assignments[t.id] === resId) {
+                            da.appendChild(cardEls[t.id]);
+                        }
+                    });
+                    // Toggle placeholder visibility
+                    var placeholder = da.querySelector('.rs-box-droparea-placeholder');
+                    if (placeholder) {
+                        var hasCards = da.querySelectorAll('.rs-card').length > 0;
+                        placeholder.style.display = hasCards ? 'none' : '';
+                    }
+                });
+            }
+
+            /* ---- Build cards initially ---- */
+            var shuffledTasks = shuffle(RS_TASKS.slice());
+            shuffledTasks.forEach(function(t) { buildCard(t); });
+            layoutAll();
+
+            /* ---- Drag & Drop ---- */
+            function startDrag(cardEl, taskId, clientX, clientY) {
+                rsState.draggingTaskId = taskId;
+                rsState.originCardEl = cardEl;
+
+                // Create ghost
+                var ghost = cardEl.cloneNode(true);
+                ghost.className = 'rs-card rs-card-ghost';
+                ghost.style.width = cardEl.offsetWidth + 'px';
+                document.body.appendChild(ghost);
+                rsState.ghostEl = ghost;
+
+                var rect = cardEl.getBoundingClientRect();
+                rsState.dragOffset.x = clientX - rect.left;
+                rsState.dragOffset.y = clientY - rect.top;
+
+                ghost.style.left = '0px';
+                ghost.style.top = '0px';
+                ghost.style.transform = 'translate(' + (clientX - rsState.dragOffset.x) + 'px,' + (clientY - rsState.dragOffset.y) + 'px) scale(1.05) rotate(2deg)';
+
+                cardEl.classList.add('rs-origin-dragging');
+                document.body.classList.add('rs-grabbing');
+            }
+
+            function moveDrag(clientX, clientY) {
+                if (!rsState.ghostEl) return;
+                rsState.ghostEl.style.transform = 'translate(' + (clientX - rsState.dragOffset.x) + 'px,' + (clientY - rsState.dragOffset.y) + 'px) scale(1.05) rotate(2deg)';
+
+                // Highlight drop zones
+                dropAreas.forEach(function(da) {
+                    var rect = da.getBoundingClientRect();
+                    if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+                        da.classList.add('rs-drop-hover');
+                    } else {
+                        da.classList.remove('rs-drop-hover');
+                    }
+                });
+            }
+
+            function endDrag(clientX, clientY) {
+                if (!rsState.draggingTaskId || !rsState.ghostEl) return;
+
+                var taskId = rsState.draggingTaskId;
+                var ghost = rsState.ghostEl;
+                var originCard = rsState.originCardEl;
+
+                // Find drop target
+                var droppedOn = null;
+                dropAreas.forEach(function(da) {
+                    var rect = da.getBoundingClientRect();
+                    if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+                        droppedOn = da.dataset.resource;
+                    }
+                    da.classList.remove('rs-drop-hover');
+                });
+
+                // Also check if dropped on the deck area (to unassign)
+                var deckRect = deck.getBoundingClientRect();
+                var droppedOnDeck = (clientX >= deckRect.left && clientX <= deckRect.right && clientY >= deckRect.top && clientY <= deckRect.bottom);
+
+                // Cleanup
+                ghost.remove();
+                rsState.ghostEl = null;
+                rsState.draggingTaskId = null;
+                rsState.originCardEl = null;
+                document.body.classList.remove('rs-grabbing');
+                if (originCard) originCard.classList.remove('rs-origin-dragging');
+
+                // Clear any previous check states
+                clearCheckStates();
+
+                if (droppedOnDeck) {
+                    rsState.assignments[taskId] = null;
+                    layoutAll();
+                    return;
+                }
+
+                if (!droppedOn) {
+                    // Bounce back
+                    var card = cardEls[taskId];
+                    if (card) {
+                        card.classList.add('rs-bounce-back');
+                        setTimeout(function() { card.classList.remove('rs-bounce-back'); }, 300);
+                    }
+                    return;
+                }
+
+                // Assign
+                rsState.assignments[taskId] = droppedOn;
+                layoutAll();
+
+                // Box animation feedback
+                var task = RS_TASKS.find(function(t) { return t.id === taskId; });
+                var box = document.querySelector('.rs-box[data-resource="' + droppedOn + '"]');
+                if (box && task) {
+                    var fit = rsFits(task, RS_RESOURCES[droppedOn]);
+                    box.classList.remove('rs-accept-anim', 'rs-reject-anim');
+                    void box.offsetWidth; // force reflow
+                    box.classList.add(fit.ok ? 'rs-accept-anim' : 'rs-reject-anim');
+                    setTimeout(function() { box.classList.remove('rs-accept-anim', 'rs-reject-anim'); }, 600);
+                }
+            }
+
+            /* ---- Mouse events ---- */
+            var rsRoot = document.getElementById('module-rightsizing');
+            rsRoot.addEventListener('mousedown', function(e) {
+                var card = e.target.closest('.rs-card');
+                if (!card || card.classList.contains('rs-card-ghost')) return;
+                var taskId = card.dataset.taskId;
+                if (!taskId) return;
+                e.preventDefault();
+                startDrag(card, taskId, e.clientX, e.clientY);
+            });
+
+            rsRoot.addEventListener('touchstart', function(e) {
+                var card = e.target.closest('.rs-card');
+                if (!card || card.classList.contains('rs-card-ghost')) return;
+                var taskId = card.dataset.taskId;
+                if (!taskId) return;
+                e.preventDefault();
+                var touch = e.touches[0];
+                startDrag(card, taskId, touch.clientX, touch.clientY);
+            }, { passive: false });
+
+            window.addEventListener('mousemove', function(e) {
+                if (!rsState.ghostEl) return;
+                e.preventDefault();
+                moveDrag(e.clientX, e.clientY);
+            });
+
+            window.addEventListener('touchmove', function(e) {
+                if (!rsState.ghostEl) return;
+                e.preventDefault();
+                var touch = e.touches[0];
+                moveDrag(touch.clientX, touch.clientY);
+            }, { passive: false });
+
+            window.addEventListener('mouseup', function(e) {
+                if (!rsState.ghostEl) return;
+                endDrag(e.clientX, e.clientY);
+            });
+
+            window.addEventListener('touchend', function(e) {
+                if (!rsState.ghostEl) return;
+                var touch = e.changedTouches[0];
+                endDrag(touch.clientX, touch.clientY);
+            });
+
+            /* ---- Clear check visual states ---- */
+            function clearCheckStates() {
+                RS_TASKS.forEach(function(t) {
+                    var card = cardEls[t.id];
+                    if (!card) return;
+                    card.classList.remove('rs-correct', 'rs-incorrect', 'rs-shake-anim', 'rs-hint-pulse');
+                    var tip = card.querySelector('.rs-card-tooltip');
+                    if (tip) tip.textContent = '';
+                });
+                feedbackPanel.innerHTML = '';
+            }
+
+            /* ---- Check ---- */
+            document.getElementById('rs-btn-check').addEventListener('click', function() {
+                clearCheckStates();
+                var results = rsScore(rsState.assignments);
+
+                results.breakdown.forEach(function(item) {
+                    var card = cardEls[item.taskId];
+                    if (!card) return;
+                    if (item.correct) {
+                        card.classList.add('rs-correct');
+                    } else {
+                        card.classList.add('rs-incorrect', 'rs-shake-anim');
+                        var tip = card.querySelector('.rs-card-tooltip');
+                        if (tip) tip.textContent = item.reason;
+                        setTimeout(function() { card.classList.remove('rs-shake-anim'); }, 550);
+                    }
+                });
+
+                var total = RS_TASKS.length;
+                var pct = Math.round((results.correct / total) * 100);
+                var concept = results.correct === total
+                    ? '<i class="fas fa-trophy"></i> Perfect! You matched every task to its best computing resource.'
+                    : results.correct >= total * 0.75
+                    ? '<i class="fas fa-star-half-alt"></i> Great work! Check the red cards — look at their requirements to spot the mismatch.'
+                    : '<i class="fas fa-lightbulb"></i> Compare each card\'s requirements (cores, RAM, GPU) with the resource capacities. Focus on the dominant bottleneck.';
+
+                feedbackPanel.innerHTML =
+                    '<div class="rs-feedback-inner">' +
+                        '<div class="rs-score-display">' +
+                            '<span class="rs-score-number">' + results.correct + ' / ' + total + '</span>' +
+                            '<div class="rs-score-bar"><div class="rs-score-fill" style="width: ' + pct + '%"></div></div>' +
+                        '</div>' +
+                        '<div class="rs-concept-text">' + concept + '</div>' +
+                    '</div>';
+            });
+
+            /* ---- Reset ---- */
+            document.getElementById('rs-btn-reset').addEventListener('click', function() {
+                RS_TASKS.forEach(function(t) { rsState.assignments[t.id] = null; });
+                clearCheckStates();
+                layoutAll();
+            });
+
+            /* ---- Hint ---- */
+            document.getElementById('rs-btn-hint').addEventListener('click', function() {
+                clearCheckStates();
+                var results = rsScore(rsState.assignments);
+                var target = results.breakdown.find(function(b) { return !b.correct; });
+                if (!target) {
+                    feedbackPanel.innerHTML =
+                        '<div class="rs-feedback-inner"><div class="rs-hint-text"><i class="fas fa-check-circle" style="color:var(--frontier-success);margin-right:0.4rem;"></i>All current assignments look correct!</div></div>';
+                    return;
+                }
+
+                var task = RS_TASKS.find(function(t) { return t.id === target.taskId; });
+                var resource = target.resourceId ? RS_RESOURCES[target.resourceId] : null;
+                var limiting = 'its requirements';
+
+                if (!resource) {
+                    limiting = task.gpuVramGb > 0 ? 'GPU' : task.ramGb > 64 ? 'RAM' : task.cpuCores > 16 ? 'CPU cores' : 'runtime class';
+                } else {
+                    var fit = rsFits(task, resource);
+                    var txt = fit.reasons.join(' ');
+                    if (/GPU/.test(txt)) limiting = 'GPU';
+                    else if (/RAM/.test(txt)) limiting = 'RAM';
+                    else if (/cores/.test(txt) || /CPU/.test(txt)) limiting = 'CPU cores';
+                    else if (/Runtime/.test(txt) || /long/.test(txt)) limiting = 'runtime';
+                    else if (/parallelism/.test(txt)) limiting = 'parallelism';
+                    else limiting = 'the best fit resource';
+                }
+
+                feedbackPanel.innerHTML =
+                    '<div class="rs-feedback-inner"><div class="rs-hint-text">' +
+                    '<i class="fas fa-lightbulb" style="color:var(--frontier-accent);margin-right:0.4rem;"></i>' +
+                    'Focus on <strong>' + limiting.toUpperCase() + '</strong> for: <em>' + task.title + '</em>. ' +
+                    'Compare the card\'s requirements with each resource\'s capacity.' +
+                    '</div></div>';
+
+                var card = cardEls[task.id];
+                if (card) {
+                    card.classList.add('rs-hint-pulse');
+                    setTimeout(function() { card.classList.remove('rs-hint-pulse'); }, 1000);
+                }
+            });
+
+            /* ---- Explain ---- */
+            document.getElementById('rs-btn-explain').addEventListener('click', function() {
+                clearCheckStates();
+                var items = RS_TASKS.map(function(t) {
+                    var res = RS_RESOURCES[t.bestFit];
+                    return '<li class="rs-explain-item">' +
+                        '<div class="rs-explain-task"><i class="fas ' + t.icon + '" style="margin-right:0.3rem;color:var(--frontier-primary);"></i>' + t.title + '</div>' +
+                        '<div class="rs-explain-resource"><i class="fas fa-arrow-right" style="margin-right:0.3rem;"></i>' + res.name + '</div>' +
+                        '<div class="rs-explain-reason">' + t.why + '</div>' +
+                    '</li>';
+                }).join('');
+
+                feedbackPanel.innerHTML =
+                    '<div class="rs-feedback-inner">' +
+                        '<h3 style="text-align:center;color:var(--frontier-text);margin:0 0 1rem;font-size:1.1rem;">' +
+                        '<i class="fas fa-book-open" style="color:var(--frontier-info);margin-right:0.4rem;"></i>Why Each Task Belongs Where It Does</h3>' +
+                        '<ul class="rs-explain-list">' + items + '</ul>' +
+                    '</div>';
+            });
+
+        })();
 
         // ==================== MODULE 1: HPC WORKFLOW ====================
         const workflowStations = [
