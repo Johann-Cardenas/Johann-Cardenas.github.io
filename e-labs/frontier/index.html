@@ -999,6 +999,131 @@
             color: var(--frontier-primary);
         }
 
+        .factory-desc {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin: -0.75rem 0 1.5rem;
+            max-width: 680px;
+            position: relative;
+            z-index: 1;
+        }
+        .factory-desc strong {
+            color: var(--frontier-primary);
+        }
+
+        /* Job-config panel description */
+        .wf-panel-desc {
+            color: var(--frontier-text-muted);
+            font-size: 0.82rem;
+            line-height: 1.55;
+            margin: -0.25rem 0 1rem;
+        }
+        .wf-panel-desc i {
+            color: var(--frontier-primary);
+        }
+
+        /* Light-mode overrides */
+        [data-theme="light"] .factory-desc {
+            color: rgba(30, 41, 59, 0.7);
+        }
+        [data-theme="light"] .factory-desc strong {
+            color: #0f766e;
+        }
+
+        /* Overall Workflow Progress Bar */
+        .wf-progress {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 1.25rem;
+            padding: 0 0.25rem;
+        }
+        .wf-progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.4rem;
+        }
+        .wf-progress-label {
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 0.78rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        .wf-progress.running .wf-progress-label {
+            color: var(--frontier-primary);
+        }
+        .wf-progress.done .wf-progress-label {
+            color: var(--frontier-success);
+        }
+        .wf-progress.aborted .wf-progress-label {
+            color: var(--frontier-danger);
+        }
+        .wf-progress-pct {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.72rem;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            transition: color 0.3s ease;
+        }
+        .wf-progress.running .wf-progress-pct {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .wf-progress-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .wf-progress-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--frontier-primary), #3b82f6);
+            transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative;
+        }
+        .wf-progress-fill::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            animation: shimmer 2s linear infinite;
+        }
+        .wf-progress.done .wf-progress-fill {
+            background: linear-gradient(90deg, var(--frontier-success), #34d399);
+        }
+        .wf-progress.aborted .wf-progress-fill {
+            background: linear-gradient(90deg, var(--frontier-danger), #f87171);
+        }
+        .wf-progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.35rem;
+        }
+        .wf-progress-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .wf-progress-dot.reached {
+            background: var(--frontier-primary);
+            transform: scale(1.3);
+            box-shadow: 0 0 6px var(--frontier-primary-glow);
+        }
+        .wf-progress.done .wf-progress-dot.reached {
+            background: var(--frontier-success);
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+        }
+        /* Light-mode */
+        [data-theme="light"] .wf-progress-label { color: rgba(30, 41, 59, 0.5); }
+        [data-theme="light"] .wf-progress.running .wf-progress-label { color: #0f766e; }
+        [data-theme="light"] .wf-progress-pct { color: rgba(30, 41, 59, 0.4); }
+        [data-theme="light"] .wf-progress-track { background: rgba(0, 0, 0, 0.08); }
+        [data-theme="light"] .wf-progress-dot { background: rgba(0, 0, 0, 0.1); }
+
         /* Conveyor Belt System */
         .conveyor-system {
             position: relative;
@@ -1155,10 +1280,10 @@
         .resource-meters {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 0.75rem;
+            gap: 0.6rem;
             background: rgba(0, 0, 0, 0.4);
-            border-radius: 16px;
-            padding: 1.25rem;
+            border-radius: 14px;
+            padding: 0.85rem;
             margin-top: 0.5rem;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -1167,10 +1292,10 @@
         .resource-meter {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.7rem;
             background: rgba(255,255,255,0.06);
-            border-radius: 14px;
-            padding: 1rem 1.15rem;
+            border-radius: 12px;
+            padding: 0.7rem 0.85rem;
             transition: all 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.06);
         }
@@ -1184,13 +1309,13 @@
 
         .meter-icon {
             flex-shrink: 0;
-            width: 58px;
-            height: 58px;
-            border-radius: 14px;
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.75rem;
+            font-size: 1.35rem;
             background: rgba(255, 255, 255, 0.08);
             transition: transform 0.3s ease, background 0.3s ease;
         }
@@ -1212,7 +1337,7 @@
 
         .meter-value {
             color: white;
-            font-size: 1.35rem;
+            font-size: 1.15rem;
             font-weight: 700;
             line-height: 1.2;
             letter-spacing: -0.02em;
@@ -1231,10 +1356,10 @@
             width: 100%;
         }
         .meter-bar {
-            height: 5px;
+            height: 4px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
-            margin-top: 0.5rem;
+            margin-top: 0.35rem;
             overflow: hidden;
         }
 
@@ -1254,6 +1379,179 @@
             bottom: 0;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
             animation: shimmer 2s linear infinite;
+        }
+
+        /* ---- Workflow hover-reveal info hints ---- */
+
+        /* Info icon next to slider labels */
+        .wf-info-icon {
+            font-size: 0.7rem;
+            opacity: 0.4;
+            margin-left: 0.3rem;
+            transition: opacity 0.3s ease, color 0.3s ease, transform 0.3s ease;
+            cursor: help;
+            display: inline-block;
+        }
+        .wf-info-icon:hover,
+        .control-group.wf-info-active .wf-info-icon,
+        .image-selection.wf-info-active .wf-info-icon,
+        .why-gpu.wf-info-active .wf-info-icon {
+            opacity: 1;
+            color: var(--frontier-primary);
+            transform: scale(1.2);
+        }
+
+        /* Expandable info text below slider labels */
+        .wf-info-text {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+                        opacity 0.35s ease,
+                        margin 0.3s ease;
+            font-size: 0.78rem;
+            color: var(--frontier-text-muted);
+            line-height: 1.5;
+            margin-top: 0;
+            padding-left: 0.15rem;
+        }
+        /* Reveal on icon hover (desktop) — :has() targets only the icon */
+        .control-group:has(.wf-info-icon:hover) .wf-info-text,
+        .image-selection:has(.wf-info-icon:hover) .wf-info-text,
+        .why-gpu:has(.wf-info-icon:hover) .wf-info-text,
+        /* Reveal on tap/click toggle (mobile + desktop fallback) */
+        .control-group.wf-info-active .wf-info-text,
+        .image-selection.wf-info-active .wf-info-text,
+        .why-gpu.wf-info-active .wf-info-text {
+            max-height: 120px;
+            opacity: 1;
+            margin-top: 0.35rem;
+        }
+
+        /* Stat-card hover hint (Runtime, Efficiency, SU Cost) */
+        .stat-hint {
+            font-size: 0.72rem;
+            color: var(--frontier-text-muted);
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
+            margin-top: 0;
+            line-height: 1.35;
+        }
+        .stat-card:hover .stat-hint {
+            max-height: 40px;
+            opacity: 1;
+            margin-top: 0.3rem;
+        }
+
+        /* Resource-meter hover hint (Cores, Memory, I/O, Network) */
+        .meter-hint {
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.45);
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
+            margin-top: 0;
+            line-height: 1.35;
+            text-align: center;
+        }
+        .resource-meter:hover .meter-hint {
+            max-height: 35px;
+            opacity: 1;
+            margin-top: 0.3rem;
+        }
+
+        /* Metric-card hover hint (Scaling module) */
+        .metric-hint {
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.45);
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
+            margin-top: 0;
+            line-height: 1.35;
+        }
+        .metric-card:hover .metric-hint {
+            max-height: 40px;
+            opacity: 1;
+            margin-top: 0.3rem;
+        }
+
+        /* Efficiency display hover hint */
+        .efficiency-hint {
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.4);
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
+            margin-top: 0;
+            line-height: 1.45;
+        }
+        .efficiency-display:hover .efficiency-hint {
+            max-height: 45px;
+            opacity: 1;
+            margin-top: 0.5rem;
+        }
+
+        /* Light-mode overrides for scaling hints */
+        [data-theme="light"] .metric-hint { color: rgba(30, 41, 59, 0.55); }
+        [data-theme="light"] .efficiency-hint { color: rgba(30, 41, 59, 0.55); }
+
+        /* Pipeline station tooltip */
+        .station-tooltip {
+            position: absolute;
+            top: calc(100% + 0.4rem);
+            left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            background: rgba(15, 23, 42, 0.95);
+            color: #e2e8f0;
+            font-size: 0.72rem;
+            line-height: 1.4;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 20;
+            border: 1px solid rgba(24, 169, 168, 0.25);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            max-width: 200px;
+            white-space: normal;
+            text-align: center;
+        }
+        .station-tooltip::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-bottom-color: rgba(15, 23, 42, 0.95);
+        }
+        .conveyor-station:hover .station-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Light-mode overrides for workflow hints */
+        [data-theme="light"] .wf-info-text {
+            color: #64748b;
+        }
+        [data-theme="light"] .stat-hint {
+            color: #64748b;
+        }
+        [data-theme="light"] .station-tooltip {
+            background: rgba(255, 255, 255, 0.97);
+            color: #334155;
+            border-color: rgba(24, 169, 168, 0.3);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+        [data-theme="light"] .station-tooltip::before {
+            border-bottom-color: rgba(255, 255, 255, 0.97);
         }
 
         /* Left panel: terminal grows with content; no page scroll steal */
@@ -1357,7 +1655,7 @@
             margin-top: 0.5rem;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.65rem;
         }
 
         .workflow-metrics .stats-grid {
@@ -1378,8 +1676,8 @@
         }
 
         .stat-card {
-            padding: 1.25rem 1rem;
-            border-radius: 16px;
+            padding: 0.85rem 0.75rem;
+            border-radius: 14px;
             text-align: center;
             background: linear-gradient(180deg, var(--frontier-bg-alt) 0%, rgba(24, 169, 168, 0.03) 100%);
             border: 1px solid var(--frontier-border);
@@ -1411,8 +1709,8 @@
         }
 
         .stat-card .stat-icon {
-            font-size: 1.75rem;
-            margin-bottom: 0.75rem;
+            font-size: 1.5rem;
+            margin-bottom: 0.35rem;
             display: inline-block;
             transition: transform 0.3s ease;
         }
@@ -1422,10 +1720,10 @@
         }
 
         .stat-card .stat-value {
-            font-size: 1.5rem;
+            font-size: 1.35rem;
             font-weight: 700;
             color: var(--frontier-text);
-            margin-bottom: 0.35rem;
+            margin-bottom: 0.2rem;
             background: linear-gradient(135deg, var(--frontier-text) 0%, var(--frontier-primary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -1499,13 +1797,15 @@
         .worker-viz-title {
             color: white;
             font-size: 1.1rem;
-            margin: 0 0 1.25rem 0;
+            margin: 0 0 1.5rem 0;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 0.5rem;
             font-weight: 600;
             position: relative;
             z-index: 1;
+            text-align: center;
         }
 
         .worker-viz-title i {
@@ -2120,6 +2420,23 @@
         }
 
         /* ==================== MODULE 3: CPU vs GPU ==================== */
+        .render-viz-title {
+            color: var(--frontier-text);
+            font-size: 1.1rem;
+            margin: 0 0 1.5rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+        .render-viz-title i {
+            color: var(--frontier-primary);
+        }
+
         .cpugpu-container {
             display: grid;
             grid-template-columns: 1fr;
@@ -2793,7 +3110,7 @@
         /* Animation Stats Grid */
         .animation-stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
             margin-top: 1.5rem;
         }
@@ -2838,6 +3155,8 @@
             font-size: 2rem;
             font-weight: 800;
             margin-bottom: 0.25rem;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .animation-stat-card.cpu .stat-value { color: var(--frontier-secondary); }
@@ -2847,7 +3166,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            font-size: 2.5rem;
+            font-size: 2rem;
         }
 
         .animation-stat-card .stat-label {
@@ -3464,11 +3783,13 @@
             }
 
             .meter-icon {
-                font-size: 1.1rem;
+                width: 38px;
+                height: 38px;
+                font-size: 1.05rem;
             }
 
             .meter-value {
-                font-size: 0.95rem;
+                font-size: 0.9rem;
             }
 
             .meter-label {
@@ -3573,6 +3894,14 @@
             .efficiency-bar {
                 height: 20px;
             }
+
+            /* Workflow & scaling hints mobile — hidden by default, tap icon to toggle */
+            .wf-info-text { font-size: 0.72rem; }
+            .station-tooltip { display: none; }
+            .stat-hint { font-size: 0.68rem; }
+            .meter-hint { font-size: 0.62rem; }
+            .metric-hint { font-size: 0.62rem; }
+            .efficiency-hint { font-size: 0.68rem; }
 
             /* HPC Suggestions Mobile */
             .hpc-suggestions {
@@ -3805,6 +4134,37 @@
             .factory-title i {
                 font-size: 1.45rem;
             }
+            .factory-desc {
+                text-align: center;
+                margin-left: auto;
+                margin-right: auto;
+                margin-bottom: 2rem;
+                font-size: 0.92rem;
+            }
+            .worker-viz-title {
+                font-size: 1.65rem;
+                margin-bottom: 2rem;
+                font-weight: 700;
+            }
+            .worker-viz-title i {
+                font-size: 1.45rem;
+            }
+            .worker-visualization .factory-desc {
+                margin-bottom: 1.75rem;
+            }
+            .rs-intro-panel h2 {
+                font-size: 1.85rem;
+                margin-bottom: 1.5rem;
+            }
+            .rs-intro-panel p {
+                font-size: 0.92rem;
+            }
+            .wf-progress {
+                max-width: 800px;
+                margin-left: auto;
+                margin-right: auto;
+                margin-bottom: 1.75rem;
+            }
             /* Center the conveyor diagram; match SVG viewBox width so path math aligns */
             .conveyor-system {
                 width: 800px;
@@ -3888,7 +4248,24 @@
                 flex: 1 1 auto;
             }
 
-            /* CPU vs GPU module desktop: larger fonts, balanced spacing */
+            /* CPU vs GPU module desktop */
+            .render-viz-title {
+                font-size: 1.65rem;
+                text-align: center;
+                margin-bottom: 2rem;
+                justify-content: center;
+                font-weight: 700;
+            }
+            .render-viz-title i {
+                font-size: 1.45rem;
+            }
+            .render-viz-panel .factory-desc {
+                text-align: center;
+                margin-left: auto;
+                margin-right: auto;
+                margin-bottom: 2rem;
+                font-size: 0.92rem;
+            }
             #module-cpugpu .render-comparison {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
@@ -3953,20 +4330,26 @@
         /* Intro panel */
         .rs-intro-panel {
             text-align: center;
-            padding: 1.25rem 2rem 0.75rem;
+            padding: 1.5rem 2rem 1.25rem;
             margin-bottom: -0.25rem;
         }
 
         .rs-intro-panel h2 {
             justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
         }
 
         .rs-intro-panel p {
-            color: var(--frontier-text-secondary);
-            font-size: 1.02rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.88rem;
             max-width: 720px;
             margin: 0 auto;
             line-height: 1.6;
+        }
+
+        .rs-intro-panel p strong {
+            color: var(--frontier-primary);
         }
 
         /* Resource boxes row */
@@ -4161,25 +4544,15 @@
             text-align: center;
         }
 
-        /* Colored top accent strip per tier */
+        /* Colored top accent strip */
         .rs-card::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 3px;
             border-radius: 16px 16px 0 0;
-            background: var(--frontier-primary);
+            background: linear-gradient(90deg, var(--frontier-primary), #3b82f6, #8b5cf6);
             transition: height 0.3s ease;
-        }
-
-        .rs-card[data-tier="light"]::before {
-            background: linear-gradient(90deg, var(--frontier-success), var(--frontier-primary));
-        }
-        .rs-card[data-tier="medium"]::before {
-            background: linear-gradient(90deg, var(--frontier-accent), var(--frontier-secondary));
-        }
-        .rs-card[data-tier="heavy"]::before {
-            background: linear-gradient(90deg, var(--frontier-secondary), #8b5cf6);
         }
 
         .rs-card:hover {
@@ -4212,18 +4585,10 @@
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
         }
 
-        /* Tier-based icon background */
-        .rs-card[data-tier="light"] .rs-card-icon-wrap {
-            background: linear-gradient(135deg, var(--frontier-success), var(--frontier-primary));
-            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
-        }
-        .rs-card[data-tier="medium"] .rs-card-icon-wrap {
-            background: linear-gradient(135deg, var(--frontier-accent), var(--frontier-secondary));
-            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
-        }
-        .rs-card[data-tier="heavy"] .rs-card-icon-wrap {
-            background: linear-gradient(135deg, var(--frontier-secondary), #8b5cf6);
-            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+        /* Unified icon background — vibrant gradient, no tier hints */
+        .rs-card .rs-card-icon-wrap {
+            background: linear-gradient(135deg, var(--frontier-primary), #3b82f6, #7c3aed);
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
         }
 
         /* Subtle icon float animation */
@@ -4545,7 +4910,10 @@
         }
 
         [data-theme="light"] .rs-intro-panel p {
-            color: #475569;
+            color: rgba(30, 41, 59, 0.7);
+        }
+        [data-theme="light"] .rs-intro-panel p strong {
+            color: #0f766e;
         }
 
         /* Tooltip contrast in light mode */
@@ -4855,9 +5223,9 @@
                         <div class="panel rs-intro-panel">
                             <h2><i class="fas fa-balance-scale"></i> Rightsizing: Match Tasks to Resources</h2>
                             <p>
-                                Not every task needs a supercomputer, and not every task fits on a laptop.
-                                Drag each task card onto the computing resource where it belongs best. 
-                                Consider  requirements to find the right match.
+                                Not every task needs a supercomputer, and not every task fits on a laptop. 
+                                <strong>Rightsizing</strong> means choosing the computing resource that best matches each job's requirements — saving time, money, and energy.
+                                Drag each task card onto the resource where it belongs best. Look at the <strong>CPU</strong>, <strong>memory</strong>, and <strong>GPU</strong> requirements to find the right match.
                             </p>
                         </div>
 
@@ -4951,36 +5319,41 @@
                         <!-- Controls Panel -->
                         <div class="panel">
                             <h2><i class="fas fa-sliders-h"></i> Job Configuration</h2>
-                            
+                            <p class="wf-panel-desc">Configure the resources your job will request from the cluster. Use the sliders below to set how much computing power, memory, and time you need.</p>
+
                             <div class="control-group">
                                 <label>
-                                    <span><i class="fas fa-microchip"></i> CPU Cores</span>
+                                    <span><i class="fas fa-microchip"></i> CPU Cores <i class="fas fa-info-circle wf-info-icon"></i></span>
                                     <span class="value" id="cores-value">16</span>
                                 </label>
+                                <div class="wf-info-text">Number of processor cores for your job. More cores speed up parallel work, but over-requesting increases queue wait time.</div>
                                 <input type="range" id="cores-slider" min="1" max="128" value="16">
                             </div>
 
                             <div class="control-group">
                                 <label>
-                                    <span><i class="fas fa-memory"></i> Memory (GB)</span>
+                                    <span><i class="fas fa-memory"></i> Memory (GB) <i class="fas fa-info-circle wf-info-icon"></i></span>
                                     <span class="value" id="memory-value">64</span>
                                 </label>
+                                <div class="wf-info-text">RAM allocated to your job in gigabytes. Larger datasets and simulations need more memory. Over-allocating can delay scheduling.</div>
                                 <input type="range" id="memory-slider" min="4" max="512" value="64" step="4">
                             </div>
 
                             <div class="control-group">
                                 <label>
-                                    <span><i class="fas fa-clock"></i> Walltime (hours)</span>
+                                    <span><i class="fas fa-clock"></i> Walltime (hours) <i class="fas fa-info-circle wf-info-icon"></i></span>
                                     <span class="value" id="walltime-value">2</span>
                                 </label>
+                                <div class="wf-info-text">Maximum time your job is allowed to run. If it exceeds this limit, the scheduler terminates it. Shorter requests get scheduled faster.</div>
                                 <input type="range" id="walltime-slider" min="1" max="48" value="2">
                             </div>
 
                             <div class="control-group">
                                 <label>
-                                    <span><i class="fas fa-cube"></i> Problem Size</span>
+                                    <span><i class="fas fa-cube"></i> Problem Size <i class="fas fa-info-circle wf-info-icon"></i></span>
                                     <span class="value" id="problem-value">Medium</span>
                                 </label>
+                                <div class="wf-info-text">Scale of the computation. Larger problems demand more cores and memory to finish in a reasonable time.</div>
                                 <input type="range" id="problem-slider" min="1" max="3" value="2">
                             </div>
 
@@ -5009,7 +5382,20 @@
                         <div class="panel" style="padding: 0; overflow: hidden;">
                             <div class="factory-viz" id="factory-viz">
                                 <p class="factory-title"><i class="fas fa-industry"></i> HPC Job Pipeline</p>
-                                
+                                <p class="factory-desc">HPC stands for <strong>High-Performance Computing</strong> — powerful clusters of interconnected computers that solve problems too large for a single machine. This pipeline shows how a job submitted from your local computer travels through the cluster: from submission and scheduling, through execution, all the way to collecting your results.</p>
+
+                                <!-- Overall Workflow Progress -->
+                                <div class="wf-progress" id="wf-progress">
+                                    <div class="wf-progress-header">
+                                        <span class="wf-progress-label" id="wf-progress-label">Ready to submit</span>
+                                        <span class="wf-progress-pct" id="wf-progress-pct">0%</span>
+                                    </div>
+                                    <div class="wf-progress-track">
+                                        <div class="wf-progress-fill" id="wf-progress-fill"></div>
+                                    </div>
+                                    <div class="wf-progress-steps" id="wf-progress-steps"></div>
+                                </div>
+
                                 <!-- Conveyor System -->
                                 <div class="conveyor-system" id="conveyor-system">
                                     <svg class="conveyor-paths" id="conveyor-paths" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet">
@@ -5031,16 +5417,19 @@
                                             <div class="stat-icon" style="color: var(--frontier-primary)"><i class="fas fa-stopwatch"></i></div>
                                             <div class="stat-value" id="stat-runtime">--</div>
                                             <div class="stat-label">Runtime</div>
+                                            <div class="stat-hint">Wall-clock time from job start to finish</div>
                                         </div>
                                         <div class="stat-card">
                                             <div class="stat-icon" style="color: var(--frontier-success)"><i class="fas fa-tachometer-alt"></i></div>
                                             <div class="stat-value" id="stat-efficiency">--</div>
                                             <div class="stat-label">Efficiency</div>
+                                            <div class="stat-hint">How well the allocated resources were used — higher is better</div>
                                         </div>
                                         <div class="stat-card">
                                             <div class="stat-icon" style="color: var(--frontier-warning)"><i class="fas fa-coins"></i></div>
                                             <div class="stat-value" id="stat-cost">--</div>
                                             <div class="stat-label">SU Cost</div>
+                                            <div class="stat-hint">Service Units — cores x hours, how HPC centers bill usage</div>
                                         </div>
                                     </div>
                                     <div class="resource-meters" id="resource-meters">
@@ -5050,6 +5439,7 @@
                                                 <div class="meter-value" id="meter-cores">0</div>
                                                 <div class="meter-label">Cores</div>
                                                 <div class="meter-bar"><div class="meter-fill" id="meter-cores-fill" style="width: 0%; background: var(--frontier-primary);"></div></div>
+                                                <div class="meter-hint">Active CPU cores running your computation</div>
                                             </div>
                                         </div>
                                         <div class="resource-meter">
@@ -5058,6 +5448,7 @@
                                                 <div class="meter-value" id="meter-memory">0</div>
                                                 <div class="meter-label">Memory</div>
                                                 <div class="meter-bar"><div class="meter-fill" id="meter-memory-fill" style="width: 0%; background: var(--frontier-success);"></div></div>
+                                                <div class="meter-hint">RAM in use by your running job</div>
                                             </div>
                                         </div>
                                         <div class="resource-meter">
@@ -5066,6 +5457,7 @@
                                                 <div class="meter-value" id="meter-io">0</div>
                                                 <div class="meter-label">I/O</div>
                                                 <div class="meter-bar"><div class="meter-fill" id="meter-io-fill" style="width: 0%; background: var(--frontier-warning);"></div></div>
+                                                <div class="meter-hint">Disk read/write activity — data going to and from storage</div>
                                             </div>
                                         </div>
                                         <div class="resource-meter">
@@ -5074,6 +5466,7 @@
                                                 <div class="meter-value" id="meter-network">0</div>
                                                 <div class="meter-label">Network</div>
                                                 <div class="meter-bar"><div class="meter-fill" id="meter-network-fill" style="width: 0%; background: var(--frontier-secondary);"></div></div>
+                                                <div class="meter-hint">Data exchanged between compute nodes</div>
                                             </div>
                                         </div>
                                     </div>
@@ -5099,28 +5492,32 @@
                         <!-- Controls Panel -->
                         <div class="panel">
                             <h2><i class="fas fa-sliders-h"></i> Experiment Setup</h2>
-                            
+                            <p class="wf-panel-desc">Explore how adding more workers (processors) affects performance. Adjust the sliders to change the workload and see the limits of parallel scaling in action.</p>
+
                             <div class="control-group">
                                 <label>
-                                    <span><i class="fas fa-boxes"></i> Work Units</span>
+                                    <span><i class="fas fa-boxes"></i> Work Units <i class="fas fa-info-circle wf-info-icon"></i></span>
                                     <span class="value" id="work-units-value">100</span>
                                 </label>
+                                <div class="wf-info-text">Total number of tasks to complete. Think of it as a pile of assignments that need grading — more units means more total work.</div>
                                 <input type="range" id="work-units-slider" min="50" max="500" value="100" step="10">
                             </div>
 
                             <div class="control-group">
                                 <label>
-                                    <span><i class="fas fa-users"></i> Workers</span>
+                                    <span><i class="fas fa-users"></i> Workers <i class="fas fa-info-circle wf-info-icon"></i></span>
                                     <span class="value" id="workers-value">8</span>
                                 </label>
+                                <div class="wf-info-text">Number of processors working at the same time. More workers can finish faster, but only for the portion of work that can be split up.</div>
                                 <input type="range" id="workers-slider" min="1" max="64" value="8">
                             </div>
 
                             <div class="control-group">
                                 <label>
-                                    <span><i class="fas fa-link"></i> Serial Portion</span>
+                                    <span><i class="fas fa-link"></i> Serial Portion <i class="fas fa-info-circle wf-info-icon"></i></span>
                                     <span class="value" id="serial-value">10%</span>
                                 </label>
+                                <div class="wf-info-text">Percentage of work that must be done one step at a time and cannot be split among workers. This is the bottleneck — it limits how much speedup you can ever achieve.</div>
                                 <input type="range" id="serial-slider" min="1" max="50" value="10">
                             </div>
 
@@ -5158,7 +5555,8 @@
                         <div class="panel" style="padding: 0; overflow: hidden;">
                             <div class="worker-visualization" id="worker-viz">
                                 <p class="worker-viz-title"><i class="fas fa-users-cog"></i> Live Scaling Simulation</p>
-                                
+                                <p class="factory-desc">In HPC, throwing more processors at a problem doesn't always make it faster — understanding <strong>scaling</strong> is key to using resources wisely. Watch below as work is distributed in real time: the <strong>serial portion</strong> runs on a single worker first, then the <strong>parallel portion</strong> is split among all available workers simultaneously.</p>
+
                                 <!-- Work Pile -->
                                 <div class="work-pile" id="work-pile">
                                     <div class="pile-icon"><i class="fas fa-layer-group"></i></div>
@@ -5232,21 +5630,25 @@
                                             <div class="metric-icon"><i class="fas fa-tachometer-alt"></i></div>
                                             <div class="metric-value" id="metric-speedup">1.0×</div>
                                             <div class="metric-label">Speedup</div>
+                                            <div class="metric-hint">How many times faster vs. a single worker</div>
                                         </div>
                                         <div class="metric-card success">
                                             <div class="metric-icon"><i class="fas fa-percentage"></i></div>
                                             <div class="metric-value" id="metric-efficiency">100%</div>
                                             <div class="metric-label">Efficiency</div>
+                                            <div class="metric-hint">How well workers are utilized — 100% means zero waste</div>
                                         </div>
                                         <div class="metric-card warning">
                                             <div class="metric-icon"><i class="fas fa-clock"></i></div>
                                             <div class="metric-value" id="metric-time">--</div>
                                             <div class="metric-label">Time</div>
+                                            <div class="metric-hint">Simulated total time to finish all work units</div>
                                         </div>
                                         <div class="metric-card danger">
                                             <div class="metric-icon"><i class="fas fa-ban"></i></div>
                                             <div class="metric-value" id="metric-limit">--</div>
                                             <div class="metric-label">Max Possible</div>
+                                            <div class="metric-hint">Amdahl's Law limit — adding more workers can never exceed this</div>
                                         </div>
                                     </div>
 
@@ -5259,6 +5661,7 @@
                                         <div class="efficiency-bar">
                                             <div class="efficiency-fill good" id="efficiency-fill" style="width: 100%;"></div>
                                         </div>
+                                        <div class="efficiency-hint">Ratio of actual speedup to ideal speedup. Green = great use of resources, yellow = some waste, red = most workers are idle.</div>
                                     </div>
                                 </div>
                             </div>
@@ -5272,55 +5675,58 @@
                         <!-- Controls Panel -->
                         <div class="panel">
                             <h2><i class="fas fa-sliders-h"></i> Render Settings</h2>
-                            
+                            <p class="wf-panel-desc">CPUs and GPUs process pixels very differently. Pick an image, choose a resolution, and watch both processors race side by side to see why GPUs dominate graphics workloads.</p>
+
                             <!-- Image Selection -->
                             <div class="image-selection">
-                                <span class="image-selection-label"><i class="fas fa-image"></i> Choose Image to Render</span>
+                                <span class="image-selection-label"><i class="fas fa-image"></i> Choose Image to Render <i class="fas fa-info-circle wf-info-icon"></i></span>
+                                <div class="wf-info-text" style="margin-bottom:0.75rem;">Each image uses a different mathematical algorithm. More complex images require more computation per pixel, making the GPU advantage even more dramatic.</div>
                                 <div class="image-options">
                                     <div class="image-option selected" data-image="plasma">
                                         <i class="fas fa-fire"></i>
-                                        <span>Plasma</span>
+                                        <span>Neon Plasma</span>
                                     </div>
                                     <div class="image-option" data-image="mandelbrot">
                                         <i class="fas fa-snowflake"></i>
-                                        <span>Fractal</span>
+                                        <span>Deep Fractal</span>
                                     </div>
                                     <div class="image-option" data-image="sphere3d">
                                         <i class="fas fa-globe"></i>
-                                        <span>3D Sphere</span>
+                                        <span>Glass Sphere</span>
                                     </div>
                                     <div class="image-option" data-image="raymarching">
                                         <i class="fas fa-cube"></i>
-                                        <span>Raymarched</span>
+                                        <span>3D Scene</span>
                                     </div>
                                     <div class="image-option" data-image="galaxy">
                                         <i class="fas fa-star"></i>
-                                        <span>Galaxy</span>
+                                        <span>Spiral Galaxy</span>
                                     </div>
                                     <div class="image-option" data-image="ocean">
                                         <i class="fas fa-water"></i>
-                                        <span>Ocean</span>
+                                        <span>Ocean Sunset</span>
                                     </div>
                                     <div class="image-option" data-image="tunnel">
                                         <i class="fas fa-circle-notch"></i>
-                                        <span>3D Tunnel</span>
+                                        <span>Neon Tunnel</span>
                                     </div>
                                     <div class="image-option" data-image="terrain3d">
                                         <i class="fas fa-mountain"></i>
-                                        <span>3D Terrain</span>
+                                        <span>World Map</span>
                                     </div>
                                     <div class="image-option" data-image="particles">
                                         <i class="fas fa-atom"></i>
-                                        <span>Particles</span>
+                                        <span>Nebula</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="control-group">
                                 <label>
-                                    <span><i class="fas fa-th"></i> Resolution</span>
+                                    <span><i class="fas fa-th"></i> Resolution <i class="fas fa-info-circle wf-info-icon"></i></span>
                                     <span class="value" id="render-size-value">64×64</span>
                                 </label>
+                                <div class="wf-info-text">Number of pixels in each direction. Higher resolution means more pixels to compute — the GPU advantage grows dramatically with size.</div>
                                 <input type="range" id="render-size-slider" min="1" max="5" value="2">
                             </div>
 
@@ -5335,7 +5741,8 @@
 
                             <!-- Why GPU Section -->
                             <div class="why-gpu">
-                                <h4><i class="fas fa-question-circle"></i> Why is GPU faster?</h4>
+                                <h4><i class="fas fa-question-circle"></i> Why is GPU faster? <i class="fas fa-info-circle wf-info-icon"></i></h4>
+                                <div class="wf-info-text">A CPU has a few powerful cores optimized for complex sequential tasks. A GPU has thousands of simpler cores designed to handle many calculations at once — perfect for pixel-level operations.</div>
                                 <div class="processor-comparison">
                                     <div class="processor-card cpu-card">
                                         <h5><i class="fas fa-microchip"></i> CPU</h5>
@@ -5363,9 +5770,10 @@
                         </div>
 
                         <!-- Render Panel -->
-                        <div class="panel">
-                            <h2><i class="fas fa-images"></i> Live Render Comparison</h2>
-                            
+                        <div class="panel render-viz-panel">
+                            <p class="render-viz-title"><i class="fas fa-images"></i> Live Render Comparison</p>
+                            <p class="factory-desc">A Central Processing Unit <strong>(CPU)</strong> processes pixels one by one using a few powerful cores, while a Graphics Processing Unit <strong>(GPU)</strong> computes thousands of pixels simultaneously using massively parallel architecture.</p>
+
                             <div class="render-comparison">
                                 <!-- CPU Render -->
                                 <div class="render-panel cpu">
@@ -5386,14 +5794,17 @@
                                         <div class="render-stat">
                                             <div class="stat-value" id="cpu-time">0.00s</div>
                                             <div class="stat-label">Time</div>
+                                            <div class="stat-hint">Elapsed wall-clock time since the render started.</div>
                                         </div>
                                         <div class="render-stat">
                                             <div class="stat-value" id="cpu-progress-pct">0%</div>
                                             <div class="stat-label">Progress</div>
+                                            <div class="stat-hint">Percentage of total pixels computed so far.</div>
                                         </div>
                                         <div class="render-stat">
                                             <div class="stat-value" id="cpu-pixels">0</div>
                                             <div class="stat-label">Pixels/s</div>
+                                            <div class="stat-hint">Throughput — how many pixels are computed each second.</div>
                                         </div>
                                     </div>
                                 </div>
@@ -5417,14 +5828,17 @@
                                         <div class="render-stat">
                                             <div class="stat-value" id="gpu-time">0.00s</div>
                                             <div class="stat-label">Time</div>
+                                            <div class="stat-hint">Elapsed wall-clock time since the render started.</div>
                                         </div>
                                         <div class="render-stat">
                                             <div class="stat-value" id="gpu-progress-pct">0%</div>
                                             <div class="stat-label">Progress</div>
+                                            <div class="stat-hint">Percentage of total pixels computed so far.</div>
                                         </div>
                                         <div class="render-stat">
                                             <div class="stat-value" id="gpu-pixels">0</div>
                                             <div class="stat-label">Pixels/s</div>
+                                            <div class="stat-hint">Throughput — how many pixels are computed each second.</div>
                                         </div>
                                     </div>
                                 </div>
@@ -5436,11 +5850,13 @@
                                     <h3><i class="fas fa-trophy"></i> GPU Advantage</h3>
                                     <div class="speedup-value" id="gpu-speedup">--×</div>
                                     <div class="speedup-label">faster than CPU</div>
+                                    <div class="stat-hint">How many times faster the GPU completed the render compared to the CPU.</div>
                                 </div>
                                 <div class="speed-card">
                                     <h3><i class="fas fa-clock"></i> GPU Time Savings</h3>
                                     <div class="metric-value" id="gpu-time-saved">--</div>
                                     <div class="metric-label">faster than CPU</div>
+                                    <div class="stat-hint">Absolute time saved by using the GPU instead of the CPU for this render.</div>
                                 </div>
                             </div>
 
@@ -5454,9 +5870,9 @@
 
                     <!-- Animation Comparison Section - Full Width -->
                     <div class="panel animation-comparison-section" style="margin-top: 2rem;">
-                        <h2><i class="fas fa-film"></i> Now Imagine: Animating Your <span id="anim-image-name">Plasma</span></h2>
+                        <h2><i class="fas fa-film"></i> Now Imagine: Animating Your <span id="anim-image-name">Neon Plasma</span></h2>
                         <p style="color: var(--frontier-text-secondary); margin-bottom: 1.5rem;">
-                            You just rendered a single <strong><span id="anim-image-type">Plasma</span></strong> image. But what if you wanted to create an animated GIF or video? 
+                            You just rendered a single <strong><span id="anim-image-type">Neon Plasma</span></strong> image. But what if you wanted to create an animated GIF or video? 
                             Each frame requires the same computation. <strong>The CPU vs GPU gap becomes catastrophic.</strong>
                         </p>
 
@@ -5467,7 +5883,7 @@
                                     <i class="fas fa-fire"></i>
                                 </div>
                                 <div class="preview-info">
-                                    <div class="preview-title">Selected: <span id="anim-selected-type">Plasma</span></div>
+                                    <div class="preview-title">Selected: <span id="anim-selected-type">Neon Plasma</span></div>
                                     <div class="preview-desc">Each frame = full recalculation of every pixel</div>
                                 </div>
                                 <div class="preview-arrow">
@@ -5484,7 +5900,7 @@
                             <div class="animation-header">
                                 <div class="animation-title">
                                     <i class="fas fa-video"></i>
-                                    <span>Animated <span id="anim-title-type">Plasma</span> Render</span>
+                                    <span>Animated <span id="anim-title-type">Neon Plasma</span> Render</span>
                                 </div>
                                 <div class="animation-header-controls">
                                     <div class="frame-count-selector">
@@ -5663,7 +6079,7 @@
                 { id: 'task-gta6', icon: 'fa-gamepad', title: 'AAA Gaming (GTA 6)', description: 'Running a high-end game at ultra resolution.', cpuCores: 12, ramGb: 32, gpuVramGb: 12, runtimeClass: 'medium', parallelizable: false, ioHeavy: true, bestFit: 'workstation', why: 'Needs a powerful GPU with low latency; overkill to use a cluster.' },
                 { id: 'task-video', icon: 'fa-film', title: 'Video Editing (4K)', description: '4K timeline with effects, color grading, and exports.', cpuCores: 16, ramGb: 64, gpuVramGb: 12, runtimeClass: 'medium', parallelizable: true, ioHeavy: true, bestFit: 'workstation', why: 'High-bandwidth local workflow with GPU acceleration suits a workstation.' },
                 // Cluster (best fit)
-                { id: 'task-fea', icon: 'fa-cubes', title: 'Finite Element Analysis', description: 'Large meshes, non-linear materials, many load cases.', cpuCores: 256, ramGb: 512, gpuVramGb: 0, runtimeClass: 'long', parallelizable: true, ioHeavy: false, bestFit: 'cluster', why: 'Requires huge CPU and RAM, and parallelization across many nodes.' },
+                { id: 'task-fea', icon: 'fa-cubes', title: 'Large Engineering Simulation', description: 'Large meshes, non-linear materials, many load cases.', cpuCores: 256, ramGb: 512, gpuVramGb: 0, runtimeClass: 'long', parallelizable: true, ioHeavy: false, bestFit: 'cluster', why: 'Requires huge CPU and RAM, and parallelization across many nodes.' },
                 { id: 'task-spaceship', icon: 'fa-rocket', title: 'Spacecraft Trajectory', description: 'High-precision orbital simulations over long horizons.', cpuCores: 128, ramGb: 256, gpuVramGb: 0, runtimeClass: 'long', parallelizable: true, ioHeavy: false, bestFit: 'cluster', why: 'Massively parallel simulations over long durations suit a cluster.' },
                 { id: 'task-autocar', icon: 'fa-car', title: 'Self-Driving Car AI', description: 'Multi-sensor deep learning across a huge dataset.', cpuCores: 512, ramGb: 1024, gpuVramGb: 256, runtimeClass: 'long', parallelizable: true, ioHeavy: true, bestFit: 'cluster', why: 'Needs multiple GPUs, huge RAM, and distributed training.' },
                 { id: 'task-weather', icon: 'fa-cloud-sun-rain', title: 'National Weather Model', description: 'Continental-scale grids, data assimilation, days of runtime.', cpuCores: 2048, ramGb: 2048, gpuVramGb: 512, runtimeClass: 'long', parallelizable: true, ioHeavy: true, bestFit: 'cluster', why: 'Classic supercomputing workload needing thousands of cores.' }
@@ -5741,9 +6157,8 @@
                 const card = document.createElement('div');
                 card.className = 'rs-card hover-lift';
                 card.dataset.taskId = task.id;
-                // Tier for visual accent: light (laptop), medium (workstation), heavy (cluster)
-                var tierMap = { laptop: 'light', workstation: 'medium', cluster: 'heavy' };
-                card.dataset.tier = tierMap[task.bestFit] || 'light';
+                // Unified visual accent — no tier-based colour hints
+                card.dataset.tier = 'neutral';
 
                 // Build compact req badges
                 var reqParts = [];
@@ -6065,16 +6480,36 @@
         })();
 
         // ==================== MODULE 1: HPC WORKFLOW ====================
+
+        /* Info-icon tap/click toggle for slider hints */
+        const _infoParents = '.control-group, .image-selection, .why-gpu';
+        document.querySelectorAll('.wf-info-icon').forEach(function(icon) {
+            icon.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var group = icon.closest(_infoParents);
+                if (group) group.classList.toggle('wf-info-active');
+            });
+        });
+        /* Close open hints when clicking elsewhere */
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest(_infoParents)) {
+                document.querySelectorAll(_infoParents.split(', ').map(s => s + '.wf-info-active').join(', ')).forEach(function(g) {
+                    g.classList.remove('wf-info-active');
+                });
+            }
+        });
+
         const workflowStations = [
-            { id: 'submit', icon: 'fa-paper-plane', label: 'Submit', color: '#18a9a8', x: 50, y: 30 },
-            { id: 'validate', icon: 'fa-check-circle', label: 'Validate', color: '#3b82f6', x: 200, y: 30 },
-            { id: 'queue', icon: 'fa-clock', label: 'Queue', color: '#f59e0b', x: 350, y: 30 },
-            { id: 'schedule', icon: 'fa-calendar-check', label: 'Schedule', color: '#8b5cf6', x: 500, y: 30 },
-            { id: 'allocate', icon: 'fa-server', label: 'Allocate', color: '#ec4899', x: 650, y: 30 },
-            { id: 'transfer', icon: 'fa-exchange-alt', label: 'Transfer', color: '#14b8a6', x: 650, y: 180 },
-            { id: 'execute', icon: 'fa-cogs', label: 'Execute', color: '#10b981', x: 350, y: 180 },
-            { id: 'collect', icon: 'fa-download', label: 'Collect', color: '#06b6d4', x: 50, y: 180 },
-            { id: 'complete', icon: 'fa-flag-checkered', label: 'Complete', color: '#22c55e', x: 50, y: 330 }
+            { id: 'submit', icon: 'fa-paper-plane', label: 'Submit', color: '#18a9a8', x: 50, y: 30, tip: 'Your job script is sent to the HPC scheduler for processing.' },
+            { id: 'validate', icon: 'fa-check-circle', label: 'Validate', color: '#3b82f6', x: 200, y: 30, tip: 'The scheduler checks that your resource request and script are valid.' },
+            { id: 'queue', icon: 'fa-clock', label: 'Queue', color: '#f59e0b', x: 350, y: 30, tip: 'Your job waits in line until the requested resources become available.' },
+            { id: 'schedule', icon: 'fa-calendar-check', label: 'Schedule', color: '#8b5cf6', x: 500, y: 30, tip: 'The scheduler picks a time slot and a set of nodes for your job.' },
+            { id: 'allocate', icon: 'fa-server', label: 'Allocate', color: '#ec4899', x: 650, y: 30, tip: 'Compute nodes are reserved and configured with the cores and memory you requested.' },
+            { id: 'transfer', icon: 'fa-exchange-alt', label: 'Transfer', color: '#14b8a6', x: 650, y: 180, tip: 'Input files and data are copied from storage to the compute nodes.' },
+            { id: 'execute', icon: 'fa-cogs', label: 'Execute', color: '#10b981', x: 350, y: 180, tip: 'Your code runs on the allocated nodes — this is where the actual computation happens.' },
+            { id: 'collect', icon: 'fa-download', label: 'Collect', color: '#06b6d4', x: 50, y: 180, tip: 'Output files and results are gathered back to shared storage.' },
+            { id: 'complete', icon: 'fa-flag-checkered', label: 'Complete', color: '#22c55e', x: 50, y: 330, tip: 'The job is finished. Resources are released and your results are ready.' }
         ];
 
         let workflowAborted = false;
@@ -6103,6 +6538,7 @@
                     </div>
                     <div class="station-label">${station.label}</div>
                     <div class="station-status" id="status-${station.id}">Waiting</div>
+                    <div class="station-tooltip">${station.tip}</div>
                 `;
                 container.appendChild(stationEl);
             });
@@ -6174,6 +6610,18 @@
             document.getElementById('job-terminal').style.display = 'flex';
             document.getElementById('terminal-output').innerHTML = '';
             document.getElementById('job-stats').style.display = 'none';
+
+            // Reset progress bar
+            const progRoot = document.getElementById('wf-progress');
+            const progFill = document.getElementById('wf-progress-fill');
+            const progLabel = document.getElementById('wf-progress-label');
+            const progPct = document.getElementById('wf-progress-pct');
+            const progSteps = document.getElementById('wf-progress-steps');
+            progRoot.className = 'wf-progress running';
+            progFill.style.width = '0%';
+            progLabel.textContent = 'Starting\u2026';
+            progPct.textContent = '0%';
+            progSteps.innerHTML = workflowStations.map(() => '<span class="wf-progress-dot"></span>').join('');
             
             const pkg = document.getElementById('job-package');
             pkg.classList.add('visible');
@@ -6213,6 +6661,14 @@
                     // Desktop: animate package movement
                     await animatePackage(pkg, station.x + 15, station.y + 15);
                 }
+                // Update progress bar
+                const pctDone = Math.round(((i + 1) / stepsData.length) * 100);
+                progFill.style.width = pctDone + '%';
+                progPct.textContent = pctDone + '%';
+                progLabel.textContent = step.msg.replace('...', '').replace(/\.$/, '');
+                const dots = progSteps.querySelectorAll('.wf-progress-dot');
+                if (dots[i]) dots[i].classList.add('reached');
+
                 // Activate station
                 const stationIcon = document.querySelector(`#station-${step.station} .station-icon`);
                 stationIcon.classList.remove('waiting');
@@ -6254,7 +6710,14 @@
                 addTerminalLine('Job aborted by user', 'error');
                 pkg.classList.remove('visible');
                 document.getElementById('hpc-suggestions').classList.remove('visible');
+                progRoot.className = 'wf-progress aborted';
+                progLabel.textContent = 'Job aborted';
             } else {
+                // Mark progress complete
+                progRoot.className = 'wf-progress done';
+                progLabel.textContent = 'Job completed';
+                progPct.textContent = '100%';
+                progFill.style.width = '100%';
                 // Show stats
                 document.getElementById('job-stats').style.display = 'grid';
                 const runtime = (5 + Math.random() * 3).toFixed(1);
@@ -6705,10 +7168,15 @@
 
         // Image selection
         const imageDisplayNames = {
-            plasma: { name: 'Plasma', icon: 'fa-fire' },
-            mandelbrot: { name: 'Fractal', icon: 'fa-snowflake' },
-            raymarched: { name: '3D Spheres', icon: 'fa-cube' },
-            noise: { name: 'Perlin Noise', icon: 'fa-water' }
+            plasma: { name: 'Neon Plasma', icon: 'fa-fire' },
+            mandelbrot: { name: 'Deep Fractal', icon: 'fa-snowflake' },
+            sphere3d: { name: 'Glass Sphere', icon: 'fa-globe' },
+            raymarching: { name: '3D Scene', icon: 'fa-cube' },
+            galaxy: { name: 'Spiral Galaxy', icon: 'fa-star' },
+            ocean: { name: 'Ocean Sunset', icon: 'fa-water' },
+            tunnel: { name: 'Neon Tunnel', icon: 'fa-circle-notch' },
+            terrain3d: { name: 'World Map', icon: 'fa-mountain' },
+            particles: { name: 'Nebula', icon: 'fa-atom' }
         };
 
         function updateAnimationSectionForImage(imageType) {
@@ -6747,216 +7215,399 @@
             renderAborted = true;
         });
 
-        // Image generators
+        // Pseudo-random hash for deterministic noise
+        function _hash(n) { let s = Math.sin(n) * 43758.5453; return s - Math.floor(s); }
+        function _noise2d(x, y) {
+            const ix = Math.floor(x), iy = Math.floor(y);
+            const fx = x - ix, fy = y - iy;
+            const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+            const a = _hash(ix + iy * 57.0);
+            const b = _hash(ix + 1 + iy * 57.0);
+            const c = _hash(ix + (iy + 1) * 57.0);
+            const d = _hash(ix + 1 + (iy + 1) * 57.0);
+            return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+        }
+        function _fbm(x, y, octaves) {
+            let v = 0, amp = 0.5, freq = 1;
+            for (let i = 0; i < octaves; i++) { v += amp * _noise2d(x * freq, y * freq); amp *= 0.5; freq *= 2.0; }
+            return v;
+        }
+        function _clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+        function _mix(a, b, t) { return a + (b - a) * t; }
+        function _smoothstep(a, b, t) { const x = _clamp((t - a) / (b - a), 0, 1); return x * x * (3 - 2 * x); }
+
+        // Image generators — upgraded for visual complexity
         const imageGenerators = {
+            // ─── Plasma: multi-octave turbulence with vivid HSL cycling ───
             plasma: (x, y, size, t) => {
                 const nx = x / size, ny = y / size;
-                let val = Math.sin(nx * 10 + t) + Math.sin(ny * 10 + t) + Math.sin((nx + ny) * 10);
-                val = (val + 3) / 6;
-                return hslToRgb((val * 360 + t * 50) % 360 / 360, 0.8, 0.5);
+                const v1 = Math.sin(nx * 12.0 + t) + Math.sin(ny * 12.0 + t * 0.7);
+                const v2 = Math.sin(Math.sqrt((nx - 0.5) * (nx - 0.5) + (ny - 0.5) * (ny - 0.5)) * 14.0);
+                const v3 = Math.sin(nx * 8.0 + ny * 6.0 + t * 1.3);
+                const turb = _fbm(nx * 6.0 + t * 0.3, ny * 6.0 - t * 0.2, 4);
+                const val = (v1 + v2 + v3 + turb * 2.0 + 5.0) / 10.0;
+                const hue = (val * 360 + t * 60) % 360 / 360;
+                return hslToRgb(hue, 0.85, 0.35 + val * 0.3);
             },
+
+            // ─── Mandelbrot: deep zoom with smooth iteration coloring ───
             mandelbrot: (x, y, size) => {
-                const cx = (x / size - 0.7) * 3;
-                const cy = (y / size - 0.5) * 3;
+                // Zoom into the Seahorse Valley
+                const cx = -0.745 + (x / size - 0.5) * 0.015;
+                const cy = 0.186 + (y / size - 0.5) * 0.015;
                 let zx = 0, zy = 0, iter = 0;
-                while (zx * zx + zy * zy < 4 && iter < 50) {
+                const maxIter = 200;
+                while (zx * zx + zy * zy < 256 && iter < maxIter) {
                     const tmp = zx * zx - zy * zy + cx;
                     zy = 2 * zx * zy + cy;
                     zx = tmp;
                     iter++;
                 }
-                if (iter === 50) return { r: 0, g: 0, b: 0 };
-                return hslToRgb(iter / 50, 0.9, 0.5);
-            },
-            sphere3d: (x, y, size) => {
-                // 3D sphere with lighting
-                const cx = size / 2, cy = size / 2;
-                const radius = size * 0.45;
-                const dx = x - cx, dy = y - cy;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                
-                if (dist > radius) return { r: 5, g: 10, b: 25 }; // Background
-                
-                // Calculate z coordinate on sphere
-                const z = Math.sqrt(radius * radius - dist * dist);
-                // Normalize
-                const nx = dx / radius, ny = dy / radius, nz = z / radius;
-                // Light direction (top-right)
-                const lightX = 0.5, lightY = -0.5, lightZ = 0.7;
-                const lightLen = Math.sqrt(lightX*lightX + lightY*lightY + lightZ*lightZ);
-                const lx = lightX/lightLen, ly = lightY/lightLen, lz = lightZ/lightLen;
-                
-                // Diffuse lighting
-                const diffuse = Math.max(0, nx*lx + ny*ly + nz*lz);
-                // Specular highlight
-                const specular = Math.pow(Math.max(0, nz * lz + ny * ly + nx * lx), 32);
-                
-                const r = Math.floor(30 + diffuse * 150 + specular * 100);
-                const g = Math.floor(80 + diffuse * 120 + specular * 150);
-                const b = Math.floor(180 + diffuse * 50 + specular * 75);
-                
-                return { r: Math.min(255, r), g: Math.min(255, g), b: Math.min(255, b) };
-            },
-            raymarching: (x, y, size) => {
-                // Simple raymarched scene with a box
-                const u = (x / size - 0.5) * 2;
-                const v = (y / size - 0.5) * 2;
-                
-                // Ray origin and direction
-                const ox = 0, oy = 0, oz = -3;
-                const len = Math.sqrt(u*u + v*v + 1);
-                const dx = u / len, dy = v / len, dz = 1 / len;
-                
-                // March the ray
-                let t = 0;
-                for (let i = 0; i < 50; i++) {
-                    const px = ox + t * dx, py = oy + t * dy, pz = oz + t * dz;
-                    // Box SDF (centered at origin, size 1)
-                    const qx = Math.abs(px) - 0.5;
-                    const qy = Math.abs(py) - 0.5;
-                    const qz = Math.abs(pz) - 0.5;
-                    const d = Math.max(qx, Math.max(qy, qz));
-                    
-                    if (d < 0.01) {
-                        // Hit! Color based on normal
-                        const nx = qx > qy && qx > qz ? 1 : 0;
-                        const ny = qy > qx && qy > qz ? 1 : 0;
-                        const brightness = 0.5 + 0.5 * (1 - t / 5);
-                        return {
-                            r: Math.floor((100 + nx * 100) * brightness),
-                            g: Math.floor((150 + ny * 50) * brightness),
-                            b: Math.floor(200 * brightness)
-                        };
-                    }
-                    t += Math.max(0.01, d);
-                    if (t > 10) break;
-                }
-                
-                // Sky gradient
-                const skyGrad = 0.5 + v * 0.3;
-                return { r: Math.floor(20 * skyGrad), g: Math.floor(30 * skyGrad), b: Math.floor(60 * skyGrad) };
-            },
-            galaxy: (x, y, size) => {
-                const cx = size / 2, cy = size / 2;
-                const dx = x - cx, dy = y - cy;
-                const dist = Math.sqrt(dx * dx + dy * dy) / (size / 2);
-                const angle = Math.atan2(dy, dx);
-                const spiral = (angle + dist * 5) % (Math.PI * 2);
-                const brightness = Math.max(0, 1 - dist) * (0.5 + 0.5 * Math.sin(spiral * 3));
-                const r = Math.floor(brightness * 200 + Math.random() * 55);
-                const g = Math.floor(brightness * 150 + Math.random() * 50);
-                const b = Math.floor(brightness * 255);
-                if (Math.random() < 0.01) return { r: 255, g: 255, b: 255 };
+                if (iter === maxIter) return { r: 0, g: 0, b: 0 };
+                // Smooth iteration count
+                const logZn = Math.log(zx * zx + zy * zy) / 2;
+                const nu = Math.log(logZn / Math.log(2)) / Math.log(2);
+                const smooth = iter + 1 - nu;
+                const t = smooth / maxIter;
+                // Rich palette: deep blue → cyan → gold → magenta → deep blue
+                const r = Math.floor(255 * (0.5 + 0.5 * Math.cos(6.2832 * (t + 0.0))));
+                const g = Math.floor(255 * (0.5 + 0.5 * Math.cos(6.2832 * (t + 0.33))));
+                const b = Math.floor(255 * (0.5 + 0.5 * Math.cos(6.2832 * (t + 0.67))));
                 return { r, g, b };
             },
+
+            // ─── 3D Sphere: glass sphere with environment reflection + checker floor ───
+            sphere3d: (x, y, size) => {
+                const u = (x / size - 0.5) * 2.4;
+                const v = (y / size - 0.5) * 2.4;
+                const scx = 0.0, scy = -0.1;
+                const rad = 0.75;
+                const ddx = u - scx, ddy = v - scy;
+                const dist2 = ddx * ddx + ddy * ddy;
+
+                // Checker floor behind sphere
+                function checkerFloor(uu, vv) {
+                    const floorY = 0.65;
+                    if (vv < floorY) return null;
+                    const fz = 1.0 / (vv - floorY + 0.001);
+                    const fx = uu * fz;
+                    const check = ((Math.floor(fx * 1.5) + Math.floor(fz * 0.5)) & 1) === 0;
+                    const fade = Math.min(1.0, 1.0 / (fz * 0.15 + 1));
+                    const c = check ? 0.85 : 0.25;
+                    return { r: Math.floor(c * fade * 200), g: Math.floor(c * fade * 210), b: Math.floor(c * fade * 230) };
+                }
+
+                if (dist2 > rad * rad) {
+                    // Outside sphere — sky gradient or floor
+                    const floor = checkerFloor(u, v);
+                    if (floor) return floor;
+                    const skyT = _clamp(0.5 - v * 0.6, 0, 1);
+                    return { r: Math.floor(_mix(15, 70, skyT)), g: Math.floor(_mix(15, 50, skyT)), b: Math.floor(_mix(40, 130, skyT)) };
+                }
+
+                const nz = Math.sqrt(rad * rad - dist2);
+                const nx = ddx / rad, ny = ddy / rad, nnz = nz / rad;
+                const lx = 0.5, ly = -0.6, lz = 0.65;
+                const ll = Math.sqrt(lx * lx + ly * ly + lz * lz);
+                const diffuse = Math.max(0, (nx * lx + ny * ly + nnz * lz) / ll);
+                // Reflection vector for environment mapping
+                const dotNL = (nx * lx + ny * ly + nnz * lz) / ll;
+                const rx = 2 * dotNL * nx - lx / ll;
+                const ry = 2 * dotNL * ny - ly / ll;
+                const specular = Math.pow(Math.max(0, nnz * 0.4 + ry * -0.3 + rx * 0.2), 48);
+                // Fresnel rim
+                const fresnel = Math.pow(1 - nnz, 3) * 0.7;
+                // Tinted glass
+                const baseR = 40 + diffuse * 100, baseG = 120 + diffuse * 80, baseB = 200 + diffuse * 40;
+                const r = _clamp(Math.floor(baseR + specular * 220 + fresnel * 120), 0, 255);
+                const g = _clamp(Math.floor(baseG + specular * 230 + fresnel * 180), 0, 255);
+                const b = _clamp(Math.floor(baseB + specular * 255 + fresnel * 220), 0, 255);
+                return { r, g, b };
+            },
+
+            // ─── Raymarching: multi-object scene with soft shadows & AO ───
+            raymarching: (x, y, size) => {
+                const u = (x / size - 0.5) * 2.2;
+                const v = (y / size - 0.5) * 2.2;
+                const ox = 0, oy = 0.4, oz = -3.5;
+                const len = Math.sqrt(u * u + v * v + 1);
+                const dx = u / len, dy = -v / len, dz = 1 / len;
+
+                function sdSphere(px, py, pz, cx, cy, cz, r) {
+                    const a = px - cx, b = py - cy, c = pz - cz;
+                    return Math.sqrt(a * a + b * b + c * c) - r;
+                }
+                function sdBox(px, py, pz, bx, by, bz) {
+                    const qx = Math.abs(px) - bx, qy = Math.abs(py) - by, qz = Math.abs(pz) - bz;
+                    const mx = Math.max(qx, 0), my = Math.max(qy, 0), mz = Math.max(qz, 0);
+                    return Math.sqrt(mx * mx + my * my + mz * mz) + Math.min(Math.max(qx, Math.max(qy, qz)), 0);
+                }
+                function sdTorus(px, py, pz, R, r) {
+                    const qxz = Math.sqrt(px * px + pz * pz) - R;
+                    return Math.sqrt(qxz * qxz + py * py) - r;
+                }
+                function scene(px, py, pz) {
+                    const s = sdSphere(px, py, pz, -0.8, 0.35, 0.5, 0.55);
+                    const b = sdBox(px - 0.7, py + 0.1, pz - 0.3, 0.4, 0.4, 0.4);
+                    const t = sdTorus(px, py - 0.9, pz + 0.2, 0.6, 0.15);
+                    const floor = py + 0.5;
+                    return { d: Math.min(s, Math.min(b, Math.min(t, floor))), id: s < b && s < t && s < floor ? 1 : b < t && b < floor ? 2 : t < floor ? 3 : 0 };
+                }
+
+                let t = 0, hitId = -1;
+                for (let i = 0; i < 80; i++) {
+                    const px = ox + t * dx, py = oy + t * dy, pz = oz + t * dz;
+                    const res = scene(px, py, pz);
+                    if (res.d < 0.005) { hitId = res.id; break; }
+                    t += res.d;
+                    if (t > 15) break;
+                }
+
+                if (hitId < 0) {
+                    const sky = _clamp(0.5 - v * 0.5, 0, 1);
+                    return { r: Math.floor(_mix(10, 50, sky)), g: Math.floor(_mix(8, 30, sky)), b: Math.floor(_mix(25, 90, sky)) };
+                }
+
+                const hp = { x: ox + t * dx, y: oy + t * dy, z: oz + t * dz };
+                const e = 0.001;
+                const nx2 = scene(hp.x + e, hp.y, hp.z).d - scene(hp.x - e, hp.y, hp.z).d;
+                const ny2 = scene(hp.x, hp.y + e, hp.z).d - scene(hp.x, hp.y - e, hp.z).d;
+                const nz2 = scene(hp.x, hp.y, hp.z + e).d - scene(hp.x, hp.y, hp.z - e).d;
+                const nl = Math.sqrt(nx2 * nx2 + ny2 * ny2 + nz2 * nz2) || 1;
+                const nnx = nx2 / nl, nny = ny2 / nl, nnz = nz2 / nl;
+
+                const llx = 1.5, lly = 2.0, llz = -1.0;
+                const ldx = llx - hp.x, ldy = lly - hp.y, ldz = llz - hp.z;
+                const ldl = Math.sqrt(ldx * ldx + ldy * ldy + ldz * ldz);
+                const diff = Math.max(0, (nnx * ldx + nny * ldy + nnz * ldz) / ldl);
+                const spec = Math.pow(Math.max(0, diff), 32);
+                const ao = 0.6 + 0.4 * _clamp(scene(hp.x + nnx * 0.15, hp.y + nny * 0.15, hp.z + nnz * 0.15).d / 0.15, 0, 1);
+                const fog = Math.exp(-t * 0.08);
+
+                let cr, cg, cb;
+                if (hitId === 0) { // floor checker
+                    const ch = ((Math.floor(hp.x + 100) + Math.floor(hp.z + 100)) & 1) === 0;
+                    cr = ch ? 200 : 60; cg = ch ? 200 : 60; cb = ch ? 210 : 65;
+                } else if (hitId === 1) { cr = 220; cg = 80; cb = 80; }
+                else if (hitId === 2) { cr = 80; cg = 180; cb = 220; }
+                else { cr = 240; cg = 200; cb = 80; }
+
+                const shade = (0.15 + diff * 0.65 + spec * 0.3) * ao * fog;
+                return { r: _clamp(Math.floor(cr * shade), 0, 255), g: _clamp(Math.floor(cg * shade), 0, 255), b: _clamp(Math.floor(cb * shade), 0, 255) };
+            },
+
+            // ─── Galaxy: multi-arm spiral with nebula clouds, dust & stars ───
+            galaxy: (x, y, size) => {
+                const cx = size / 2, cy = size / 2;
+                const ddx = (x - cx) / (size / 2), ddy = (y - cy) / (size / 2);
+                const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+                const angle = Math.atan2(ddy, ddx);
+
+                // Deterministic star field using hash
+                const starSeed = _hash(x * 13.731 + y * 7.319);
+                if (starSeed > 0.997) {
+                    const bright = 180 + starSeed * 75;
+                    return { r: Math.floor(bright), g: Math.floor(bright * 0.95), b: Math.floor(bright) };
+                }
+
+                // Multiple spiral arms
+                let armBrightness = 0;
+                for (let arm = 0; arm < 4; arm++) {
+                    const armAngle = arm * Math.PI / 2;
+                    const spiralAngle = angle - armAngle + dist * 4.0;
+                    const wrap = ((spiralAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+                    const armWidth = 0.45 + dist * 0.25;
+                    const armVal = Math.exp(-(wrap * wrap) / (armWidth * armWidth));
+                    armBrightness += armVal;
+                }
+
+                // Core glow
+                const coreGlow = Math.exp(-dist * dist * 6.0) * 1.5;
+                // Nebula clouds
+                const nebula = _fbm(ddx * 3.0 + 1.7, ddy * 3.0 + 2.3, 5) * 0.6;
+                // Dust lanes (dark)
+                const dust = _fbm(ddx * 5.0, ddy * 5.0 + 3.1, 4);
+                const dustMask = _smoothstep(0.3, 0.55, dust) * 0.6;
+
+                const falloff = Math.max(0, 1 - dist * 0.85);
+                let brightness = (armBrightness * falloff + coreGlow + nebula * falloff * 0.5) * (1 - dustMask);
+                brightness = _clamp(brightness, 0, 1);
+
+                // Color: warm core → blue-purple arms
+                const coreT = _clamp(coreGlow * 2, 0, 1);
+                const r = _clamp(Math.floor(brightness * _mix(100, 255, coreT) + nebula * 40), 0, 255);
+                const g = _clamp(Math.floor(brightness * _mix(70, 200, coreT) + nebula * 15), 0, 255);
+                const b = _clamp(Math.floor(brightness * _mix(180, 180, coreT) + nebula * 60), 0, 255);
+                return { r, g, b };
+            },
+
+            // ─── Ocean: realistic waves with sun reflection and atmospheric fog ───
             ocean: (x, y, size) => {
                 const nx = x / size, ny = y / size;
-                // Multiple wave layers for realistic ocean
-                const wave1 = Math.sin(nx * 20 + ny * 5) * 0.5;
-                const wave2 = Math.sin(nx * 8 - ny * 15) * 0.3;
-                const wave3 = Math.sin((nx + ny) * 30) * 0.2;
-                const height = (wave1 + wave2 + wave3 + 1) / 2;
-                
-                // Deep to shallow water gradient + foam
-                const depthFactor = 1 - ny * 0.3;
-                const foam = height > 0.7 ? (height - 0.7) * 3 : 0;
-                
-                const r = Math.floor(20 + foam * 200);
-                const g = Math.floor(80 + height * 60 + foam * 150);
-                const b = Math.floor(140 * depthFactor + height * 80 + foam * 100);
-                
-                return { r: Math.min(255, r), g: Math.min(255, g), b: Math.min(255, b) };
+
+                // Multi-layer waves
+                const w1 = Math.sin(nx * 25 + ny * 3.5) * 0.35;
+                const w2 = Math.sin(nx * 12 - ny * 18 + 1.2) * 0.25;
+                const w3 = Math.sin((nx * 1.5 + ny) * 35 + 0.5) * 0.15;
+                const w4 = _fbm(nx * 8.0, ny * 6.0, 4) * 0.25;
+                const height = (w1 + w2 + w3 + w4 + 1) / 2;
+
+                // Depth gradient (horizon at top)
+                const depth = _clamp(ny, 0, 1);
+                const fog = _smoothstep(0.0, 0.4, ny);
+
+                // Foam on wave crests
+                const foam = _smoothstep(0.68, 0.78, height) * (1 - depth * 0.5);
+
+                // Sun reflection (sun at top-center)
+                const sunX = 0.5, sunY = 0.05;
+                const sunDist = Math.sqrt((nx - sunX) * (nx - sunX) + (ny - sunY) * (ny - sunY));
+                const sunReflect = Math.exp(-sunDist * sunDist * 12) * (0.4 + height * 0.6) * _smoothstep(0.5, 0.0, ny);
+
+                // Base water color
+                const deepR = 10, deepG = 40, deepB = 90;
+                const shallowR = 30, shallowG = 120, shallowB = 170;
+                const t = _clamp(depth * 0.8 + height * 0.2, 0, 1);
+                let r = _mix(shallowR, deepR, t) + height * 20 + foam * 200 + sunReflect * 250;
+                let g = _mix(shallowG, deepG, t) + height * 30 + foam * 210 + sunReflect * 230;
+                let b = _mix(shallowB, deepB, t) + height * 15 + foam * 180 + sunReflect * 180;
+
+                // Horizon fog
+                const fogR = 140, fogG = 160, fogB = 190;
+                const fogAmt = 1 - fog;
+                r = _mix(r, fogR, fogAmt * 0.7);
+                g = _mix(g, fogG, fogAmt * 0.7);
+                b = _mix(b, fogB, fogAmt * 0.7);
+
+                return { r: _clamp(Math.floor(r), 0, 255), g: _clamp(Math.floor(g), 0, 255), b: _clamp(Math.floor(b), 0, 255) };
             },
+
+            // ─── Tunnel: neon-lit infinite tunnel with smooth color transitions ───
             tunnel: (x, y, size) => {
-                // Infinite tunnel effect
                 const cx = size / 2, cy = size / 2;
-                const dx = x - cx, dy = y - cy;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                const angle = Math.atan2(dy, dx);
-                
-                if (dist < 1) return { r: 0, g: 0, b: 0 };
-                
-                // Depth based on distance from center (inverse)
-                const depth = 100 / dist;
-                
-                // Ring pattern
-                const rings = Math.floor(depth * 8) % 2;
-                // Segment pattern
-                const segments = Math.floor((angle + Math.PI) / (Math.PI / 8)) % 2;
-                
-                const pattern = (rings + segments) % 2;
-                const brightness = Math.min(1, depth / 3);
-                
-                if (pattern === 0) {
-                    return { r: Math.floor(180 * brightness), g: Math.floor(60 * brightness), b: Math.floor(200 * brightness) };
-                } else {
-                    return { r: Math.floor(40 * brightness), g: Math.floor(180 * brightness), b: Math.floor(200 * brightness) };
-                }
+                const ddx = (x - cx) / cx, ddy = (y - cy) / cy;
+                const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+                const angle = Math.atan2(ddy, ddx);
+
+                if (dist < 0.005) return { r: 0, g: 0, b: 0 };
+
+                const depth = 1.0 / dist;
+                const twist = angle + depth * 0.4;
+
+                // Hexagonal pattern
+                const ringFreq = depth * 5.0;
+                const segFreq = twist * 4.0 / Math.PI;
+                const rings = Math.sin(ringFreq * Math.PI) * 0.5 + 0.5;
+                const segs = Math.sin(segFreq * Math.PI) * 0.5 + 0.5;
+                const pattern = rings * 0.6 + segs * 0.4;
+
+                // Neon glow lines
+                const neonRing = Math.exp(-Math.pow(Math.sin(ringFreq * Math.PI * 2) * 3, 2));
+                const neonSeg = Math.exp(-Math.pow(Math.sin(segFreq * Math.PI * 2) * 3, 2));
+                const neon = Math.max(neonRing * 0.8, neonSeg * 0.5);
+
+                const fadeIn = _smoothstep(0.0, 0.3, dist);
+                const fadeOut = _clamp(3.0 / (depth + 1), 0, 1);
+                const brightness = fadeIn * fadeOut;
+
+                // Color cycling by depth
+                const hue = ((depth * 0.3 + angle * 0.15) % 1 + 1) % 1;
+                const base = hslToRgb(hue, 0.7, pattern * 0.15 * brightness);
+                const glow = hslToRgb((hue + 0.5) % 1, 1.0, 0.5);
+
+                const r = _clamp(Math.floor(base.r + glow.r * neon * brightness * 1.4), 0, 255);
+                const g = _clamp(Math.floor(base.g + glow.g * neon * brightness * 1.4), 0, 255);
+                const b = _clamp(Math.floor(base.b + glow.b * neon * brightness * 1.4), 0, 255);
+                return { r, g, b };
             },
+
+            // ─── Terrain: 6-octave heightmap with biomes, lighting & atmosphere ───
             terrain3d: (x, y, size) => {
-                // 3D heightmap terrain with lighting
                 const nx = x / size, ny = y / size;
-                
-                // Generate height using multiple octaves
-                const h1 = Math.sin(nx * 6) * Math.cos(ny * 5) * 0.5;
-                const h2 = Math.sin(nx * 12 + 1) * Math.cos(ny * 10 + 2) * 0.25;
-                const h3 = Math.sin(nx * 24 + 3) * Math.cos(ny * 20 + 1) * 0.125;
-                const height = (h1 + h2 + h3 + 0.875) / 1.75;
-                
-                // Calculate approximate normal for lighting
-                const eps = 0.02;
-                const hL = Math.sin((nx - eps) * 6) * Math.cos(ny * 5) * 0.5;
-                const hR = Math.sin((nx + eps) * 6) * Math.cos(ny * 5) * 0.5;
-                const hU = Math.sin(nx * 6) * Math.cos((ny - eps) * 5) * 0.5;
-                const hD = Math.sin(nx * 6) * Math.cos((ny + eps) * 5) * 0.5;
-                
-                const slopeX = (hR - hL) / (2 * eps);
-                const slopeY = (hD - hU) / (2 * eps);
-                const shade = 0.5 + 0.5 * Math.max(0, (slopeX + slopeY) / 2);
-                
-                // Color by height
-                if (height < 0.25) {
-                    return { r: Math.floor(30 * shade), g: Math.floor(80 * shade), b: Math.floor(160 * shade) };
-                } else if (height < 0.35) {
-                    return { r: Math.floor(200 * shade), g: Math.floor(180 * shade), b: Math.floor(140 * shade) };
-                } else if (height < 0.65) {
-                    return { r: Math.floor(50 * shade), g: Math.floor(140 * shade), b: Math.floor(50 * shade) };
-                } else if (height < 0.85) {
-                    return { r: Math.floor(90 * shade), g: Math.floor(70 * shade), b: Math.floor(50 * shade) };
-                } else {
-                    return { r: Math.floor(255 * shade), g: Math.floor(255 * shade), b: Math.floor(255 * shade) };
+
+                // 6-octave fractal terrain
+                const height = _fbm(nx * 5.0 + 0.3, ny * 5.0 + 0.7, 6);
+
+                // Normal for lighting via central differences
+                const eps = 0.005;
+                const hL = _fbm((nx - eps) * 5.0 + 0.3, ny * 5.0 + 0.7, 6);
+                const hR = _fbm((nx + eps) * 5.0 + 0.3, ny * 5.0 + 0.7, 6);
+                const hU = _fbm(nx * 5.0 + 0.3, (ny - eps) * 5.0 + 0.7, 6);
+                const hD = _fbm(nx * 5.0 + 0.3, (ny + eps) * 5.0 + 0.7, 6);
+                const dhdx = (hR - hL) / (2 * eps * 5);
+                const dhdy = (hD - hU) / (2 * eps * 5);
+                const nLen = Math.sqrt(dhdx * dhdx + dhdy * dhdy + 1);
+                const shade = Math.max(0, (-dhdx * 0.5 + -dhdy * 0.6 + 1) / nLen);
+                const lighting = 0.25 + shade * 0.75;
+
+                // Biome coloring by height
+                let r, g, b;
+                if (height < 0.28) { // Deep water
+                    r = 20; g = 50; b = 130;
+                } else if (height < 0.35) { // Shallow water
+                    const t = (height - 0.28) / 0.07;
+                    r = _mix(20, 40, t); g = _mix(50, 90, t); b = _mix(130, 150, t);
+                } else if (height < 0.38) { // Sand / beach
+                    r = 190; g = 175; b = 130;
+                } else if (height < 0.58) { // Grass / forest
+                    const t = (height - 0.38) / 0.20;
+                    r = _mix(60, 35, t); g = _mix(145, 110, t); b = _mix(50, 35, t);
+                } else if (height < 0.72) { // Rock / mountain
+                    const t = (height - 0.58) / 0.14;
+                    r = _mix(95, 130, t); g = _mix(80, 125, t); b = _mix(65, 115, t);
+                } else { // Snow caps
+                    const t = _smoothstep(0.72, 0.82, height);
+                    r = _mix(130, 245, t); g = _mix(125, 245, t); b = _mix(115, 255, t);
                 }
+
+                // Atmospheric perspective
+                const atmo = _smoothstep(0.0, 1.0, ny) * 0.15;
+                r = _mix(r, 160, atmo); g = _mix(g, 180, atmo); b = _mix(b, 210, atmo);
+
+                return { r: _clamp(Math.floor(r * lighting), 0, 255), g: _clamp(Math.floor(g * lighting), 0, 255), b: _clamp(Math.floor(b * lighting), 0, 255) };
             },
+
+            // ─── Particles: nebula-style with 120 particles, glow & connections ───
             particles: (x, y, size) => {
-                // Particle system effect
-                const numParticles = 50;
-                let brightness = 0;
-                let hue = 0;
-                
-                // Pseudo-random seeded particles
+                const numParticles = 120;
+                let totalR = 0, totalG = 0, totalB = 0;
+
                 for (let i = 0; i < numParticles; i++) {
-                    const seed = i * 12345.6789;
-                    const px = (Math.sin(seed) * 0.5 + 0.5) * size;
-                    const py = (Math.cos(seed * 1.5) * 0.5 + 0.5) * size;
-                    const psize = 3 + Math.abs(Math.sin(seed * 2)) * 15;
-                    
-                    const dx = x - px, dy = y - py;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
+                    const seed1 = _hash(i * 17.31);
+                    const seed2 = _hash(i * 31.17 + 7);
+                    const seed3 = _hash(i * 53.71 + 13);
+                    const px = seed1 * size;
+                    const py = seed2 * size;
+                    const psize = 4 + seed3 * 22;
+                    const ddx = x - px, ddy = y - py;
+                    const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+
                     if (dist < psize) {
-                        const glow = 1 - dist / psize;
-                        brightness += glow * glow;
-                        hue += (i / numParticles) * glow;
+                        const falloff = 1 - dist / psize;
+                        const glow = falloff * falloff * falloff; // cubic falloff for soft glow
+                        const hue = (seed1 + seed2 * 0.3) % 1;
+                        const c = hslToRgb(hue, 0.85, 0.5);
+                        totalR += c.r * glow * 0.9;
+                        totalG += c.g * glow * 0.9;
+                        totalB += c.b * glow * 0.9;
                     }
                 }
-                
-                if (brightness < 0.01) return { r: 5, g: 10, b: 20 };
-                
-                brightness = Math.min(1, brightness);
-                hue = (hue / brightness) % 1;
-                
-                const color = hslToRgb(hue, 0.8, 0.3 + brightness * 0.5);
-                return color;
+
+                // Background nebula fog
+                const fogVal = _fbm(x / size * 4.0 + 2.1, y / size * 4.0 + 3.7, 5);
+                const fogBright = fogVal * 0.12;
+                totalR += fogBright * 80;
+                totalG += fogBright * 40;
+                totalB += fogBright * 120;
+
+                if (totalR < 2 && totalG < 2 && totalB < 2) {
+                    // Faint star
+                    const s = _hash(x * 7.13 + y * 13.37);
+                    if (s > 0.998) return { r: 200, g: 200, b: 220 };
+                    return { r: 3, g: 5, b: 15 };
+                }
+
+                return { r: _clamp(Math.floor(totalR), 0, 255), g: _clamp(Math.floor(totalG), 0, 255), b: _clamp(Math.floor(totalB), 0, 255) };
             }
         };
 
@@ -7214,6 +7865,10 @@
             for (let i = 1; i <= frameCount && !animationAborted; i++) {
                 const frame = document.getElementById(`cpu-frame-${i}`);
                 frame.className = 'frame rendering';
+                // Auto-scroll filmstrip to keep current frame visible
+                const strip = frame.parentElement;
+                const scrollTarget = frame.offsetLeft - strip.clientWidth / 2 + frame.offsetWidth / 2;
+                strip.scrollTo({ left: scrollTarget, behavior: 'smooth' });
                 
                 await sleep(delayPerFrame);
                 
@@ -7244,6 +7899,11 @@
                 for (let i = startFrame; i <= endFrame; i++) {
                     document.getElementById(`gpu-frame-${i}`).className = 'frame rendering';
                 }
+                // Auto-scroll filmstrip to keep current batch visible
+                const gpuLast = document.getElementById(`gpu-frame-${endFrame}`);
+                const gpuStrip = gpuLast.parentElement;
+                const gpuTarget = gpuLast.offsetLeft - gpuStrip.clientWidth / 2 + gpuLast.offsetWidth / 2;
+                gpuStrip.scrollTo({ left: gpuTarget, behavior: 'smooth' });
                 
                 await sleep(delayPerBatch);
                 
