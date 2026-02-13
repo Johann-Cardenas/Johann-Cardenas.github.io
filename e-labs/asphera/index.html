@@ -1,0 +1,1854 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <script>
+        (function() {
+            var theme = localStorage.getItem('asphera-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme-preference', theme);
+        })();
+    </script>
+    <title>Asphera | Pavement Response Visualizer</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../../assets/css/main.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* ==================== THEME VARIABLES ==================== */
+        :root {
+            --asp-primary: #18a9a8;
+            --asp-primary-hover: #0d7377;
+            --asp-primary-glow: rgba(24, 169, 168, 0.3);
+            --asp-secondary: #f59e0b;
+            --asp-accent: #8b5cf6;
+            --asp-success: #10b981;
+            --asp-danger: #ef4444;
+            --glass-bg: rgba(255,255,255,0.05);
+            --glass-border: rgba(255,255,255,0.1);
+            --asp-radius: 14px;
+        }
+        [data-theme="light"] {
+            --asp-bg: #ffffff; --asp-bg-alt: #f8fafc; --asp-bg-panel: #e9eff5;
+            --asp-text: #0f172a; --asp-text-secondary: #374151; --asp-text-muted: #506070;
+            --asp-border: #c0ccd8;
+            --asp-card-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.1);
+            --glass-bg: rgba(0,0,0,0.04); --glass-border: rgba(0,0,0,0.10);
+            --asp-primary-glow: rgba(24,169,168,0.15);
+        }
+        [data-theme="dark"] {
+            --asp-bg: #0f172a; --asp-bg-alt: #0c1425; --asp-bg-panel: #1e293b;
+            --asp-text: #f1f5f9; --asp-text-secondary: #e2e8f0; --asp-text-muted: #a8b8cc;
+            --asp-border: #3b4f6b;
+            --asp-card-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.4);
+        }
+
+        /* ==================== SCROLLBAR ==================== */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--asp-bg-alt); }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--asp-primary), var(--asp-primary-hover));
+            border-radius: 4px;
+        }
+        * { scrollbar-width: thin; scrollbar-color: var(--asp-primary) var(--asp-bg-alt); }
+
+        /* ==================== ANIMATIONS ==================== */
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse-ring { 0% { box-shadow:0 0 0 0 var(--asp-primary-glow); } 70% { box-shadow:0 0 0 10px transparent; } 100% { box-shadow:0 0 0 0 transparent; } }
+
+        /* ==================== SITE CHROME OVERRIDES ==================== */
+        #wrapper, #main, .wrapper, main { padding-top:0!important; margin-top:0!important; }
+        #header, section#header { display:none!important; }
+        #titleBar .toggle { display:none!important; }
+        #navPanel { display:none!important; }
+
+        /* ==================== BASE ==================== */
+        body { margin:0; padding:0; background:var(--asp-bg); color:var(--asp-text);
+               font-family:'Source Sans Pro',-apple-system,sans-serif; -webkit-font-smoothing:antialiased; }
+        .asphera-app { max-width:1480px; margin:0 auto; padding:0 1.5rem 3rem; min-height:100vh; }
+
+        /* ==================== HEADER ==================== */
+        .app-header {
+            position:relative; overflow:hidden;
+            background: linear-gradient(135deg, #0a1628 0%, #0f2035 35%, #0d2a3a 65%, #0c1425 100%);
+            border-radius: 24px; margin-bottom: 1.25rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+        .app-header::before {
+            content:''; position:absolute; inset:0; pointer-events:none;
+            background:
+                radial-gradient(circle at 20% 80%, var(--asp-primary-glow) 0%, transparent 40%),
+                radial-gradient(circle at 80% 20%, rgba(45,212,191,0.12) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(139,92,246,0.06) 0%, transparent 60%);
+            animation: headerGlow 8s ease-in-out infinite alternate;
+        }
+        .app-header::after {
+            content:''; position:absolute; inset:0; pointer-events:none;
+            background-image:
+                radial-gradient(2px 2px at 30px 25px, rgba(255,255,255,0.25), transparent),
+                radial-gradient(2px 2px at 100px 65px, rgba(255,255,255,0.15), transparent),
+                radial-gradient(2px 2px at 180px 35px, rgba(255,255,255,0.25), transparent),
+                radial-gradient(3px 3px at 270px 90px, var(--asp-primary), transparent),
+                radial-gradient(2px 2px at 370px 45px, rgba(255,255,255,0.15), transparent),
+                radial-gradient(3px 3px at 450px 25px, var(--asp-accent), transparent),
+                radial-gradient(2px 2px at 520px 75px, rgba(45,212,191,0.4), transparent),
+                radial-gradient(2px 2px at 600px 40px, rgba(255,255,255,0.2), transparent);
+            background-size: 650px 130px;
+            animation: headerParticles 22s linear infinite;
+        }
+        @keyframes headerGlow { 0% { opacity:0.7; } 100% { opacity:1; } }
+        @keyframes headerParticles { 0% { transform:translateX(0); } 100% { transform:translateX(-650px); } }
+        .header-nav {
+            padding:0.85rem 1.5rem;
+            background:rgba(0,0,0,0.3); border-bottom:1px solid rgba(255,255,255,0.08);
+            position:relative; z-index:2; backdrop-filter:blur(10px);
+            display:flex; align-items:center; justify-content:space-between;
+        }
+        .back-btn {
+            display:inline-flex; align-items:center; gap:0.5rem;
+            padding:0.5rem 1rem; border-radius:10px;
+            background:rgba(24,169,168,0.15); color:#fff;
+            text-decoration:none; font-weight:500; font-size:0.88rem;
+            border:1px solid rgba(24,169,168,0.3); backdrop-filter:blur(8px);
+            transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .back-btn:hover {
+            background:rgba(24,169,168,0.3); border-color:rgba(24,169,168,0.5);
+            transform:translateX(-3px); box-shadow:0 4px 15px var(--asp-primary-glow);
+        }
+        .back-btn i { transition:transform 0.3s ease; }
+        .back-btn:hover i { transform:translateX(-3px); }
+        .header-badges { display:flex; gap:0.5rem; margin-left:auto; }
+        .header-badge {
+            display:inline-flex; align-items:center; gap:0.35rem;
+            padding:0.35rem 0.75rem; border-radius:8px;
+            background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.75);
+            font-size:0.78rem; font-weight:600; letter-spacing:0.03em;
+            border:1px solid rgba(255,255,255,0.12);
+        }
+        .header-badge i { font-size:0.72rem; }
+        .header-content {
+            position:relative; z-index:2; text-align:center;
+            padding:1.5rem 2rem 1.75rem;
+        }
+        .header-content h1 {
+            font-size:2.8rem; font-weight:800; color:#fff; margin:0;
+            display:flex; align-items:center; justify-content:center; gap:0.6rem;
+            text-shadow:0 2px 20px rgba(0,0,0,0.3);
+            animation: slideInUp 0.8s ease;
+        }
+        .header-content h1 .highlight {
+            background:linear-gradient(135deg, var(--asp-primary), #2dd4bf, var(--asp-accent), var(--asp-primary));
+            background-size:300% auto;
+            -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+            animation:shimmer 6s ease-in-out infinite;
+        }
+        .header-content .tagline {
+            color:rgba(255,255,255,0.85); font-size:1.1rem; margin-top:0.35rem;
+            font-weight:300; letter-spacing:0.5px;
+            animation: slideInUp 0.8s ease 0.1s both;
+        }
+        .asphera-icon {
+            display:inline-block; animation:float 3s ease-in-out infinite;
+            color:var(--asp-primary); font-size:2rem;
+            filter:drop-shadow(0 0 10px var(--asp-primary-glow));
+        }
+        @keyframes slideInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+        /* ==================== PANELS ==================== */
+        .panel {
+            background:var(--asp-bg-panel); border:1px solid var(--asp-border);
+            border-radius:var(--asp-radius); box-shadow:var(--asp-card-shadow);
+            padding:1.5rem; transition:box-shadow 0.3s ease;
+        }
+        .panel:hover { box-shadow:0 8px 24px -4px rgba(0,0,0,0.15); }
+        .panel-title {
+            font-size:1.1rem; font-weight:700; color:var(--asp-text);
+            margin:0 0 1rem; display:flex; align-items:center; gap:0.5rem;
+        }
+        .panel-title i { color:var(--asp-primary); font-size:0.95rem; }
+
+        /* ==================== STRUCTURE SELECTOR ==================== */
+        .structure-selector { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1rem; margin-bottom:2rem; }
+        .structure-card {
+            padding:1.25rem; cursor:pointer; display:flex; flex-direction:column; gap:0.5rem;
+            transition:all 0.3s ease; position:relative; overflow:hidden;
+        }
+        .structure-card::before {
+            content:''; position:absolute; top:0; left:0; right:0; height:3px;
+            background:var(--asp-border); transition:background 0.3s ease;
+        }
+        .structure-card.active::before, .structure-card:hover::before {
+            background:linear-gradient(90deg,var(--asp-primary),var(--asp-secondary));
+        }
+        .structure-card.active { border-color:var(--asp-primary); }
+        .structure-card .sc-name { font-weight:700; font-size:1.05rem; }
+        .structure-card .sc-desc { font-size:0.85rem; color:var(--asp-text-muted); }
+        .structure-card .sc-badge {
+            display:inline-block; padding:0.2rem 0.6rem; border-radius:6px;
+            font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;
+            background:rgba(24,169,168,0.15); color:var(--asp-primary); width:fit-content;
+        }
+
+        /* ==================== INITIAL LOADING ==================== */
+        .loading-overlay {
+            position:fixed; inset:0; z-index:9999;
+            display:flex; align-items:center; justify-content:center;
+            background:var(--asp-bg); transition:opacity 0.5s ease;
+        }
+        .loading-overlay.hidden { opacity:0; pointer-events:none; }
+        .spinner { width:48px; height:48px; border:4px solid var(--asp-border);
+                   border-top-color:var(--asp-primary); border-radius:50%; animation:spin 0.8s linear infinite; }
+        .loading-text { margin-top:1rem; color:var(--asp-text-muted); font-size:0.9rem; text-align:center; }
+
+        /* ==================== DATA LOADING MODAL ==================== */
+        @keyframes progressGlow {
+            0% { background-position:-200% 0; }
+            100% { background-position:200% 0; }
+        }
+        .data-loader {
+            position:fixed; inset:0; z-index:10000;
+            display:flex; align-items:center; justify-content:center;
+            background:rgba(0,0,0,0.65);
+            backdrop-filter:blur(20px) saturate(1.15);
+            opacity:0; pointer-events:none;
+            transition:opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .data-loader.active {
+            opacity:1; pointer-events:all;
+        }
+        .data-loader::before {
+            content:''; position:absolute; inset:0; pointer-events:none;
+            background:radial-gradient(ellipse 80% 50% at 50% 40%, rgba(24,169,168,0.06), transparent 55%);
+            opacity:0;
+            transition:opacity 0.5s ease;
+        }
+        .data-loader.active::before {
+            animation: loaderBackdropPulse 4s ease-in-out infinite;
+        }
+        @keyframes loaderBackdropPulse {
+            0%,100% { opacity:0; }
+            50% { opacity:0.06; }
+        }
+
+        .data-loader-card {
+            position:relative; overflow:hidden;
+            background:var(--asp-bg-panel);
+            border:1px solid rgba(24,169,168,0.28);
+            border-radius:20px;
+            box-shadow:0 20px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.05);
+            padding:1.9rem 1.9rem 1.5rem;
+            width:340px; max-width:88vw;
+            text-align:center;
+            transform:translateY(20px) scale(0.97);
+            opacity:0.92;
+            transition:transform 0.55s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.5s ease, opacity 0.4s ease;
+        }
+        .data-loader.active .data-loader-card {
+            transform:translateY(0) scale(1);
+            opacity:1;
+            animation: cardBorderGlow 2.8s ease-in-out infinite, cardBreathe 3.5s ease-in-out infinite;
+        }
+        @keyframes cardBorderGlow {
+            0%,100% { box-shadow:0 20px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(24,169,168,0.28), 0 0 0 0 rgba(24,169,168,0); }
+            50% { box-shadow:0 20px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(24,169,168,0.4), 0 0 28px -4px var(--asp-primary-glow); }
+        }
+        @keyframes cardBreathe {
+            0%,100% { transform:translateY(0) scale(1); }
+            50% { transform:translateY(-2px) scale(1.005); }
+        }
+        .data-loader-card::before {
+            content:''; position:absolute; top:0; left:0; right:0; height:4px;
+            background:linear-gradient(90deg, var(--asp-primary), #2dd4bf, var(--asp-accent), var(--asp-primary));
+            background-size:300% 100%;
+            animation: dlShimmer 2.8s linear infinite;
+            opacity:0.95;
+        }
+        @keyframes dlShimmer {
+            0% { background-position:0% 50%; }
+            100% { background-position:300% 50%; }
+        }
+        .data-loader-card::after {
+            content:''; position:absolute; top:-80px; left:50%; transform:translateX(-50%);
+            width:220px; height:220px; border-radius:50%;
+            background:radial-gradient(circle, var(--asp-primary-glow) 0%, transparent 65%);
+            opacity:0.4; pointer-events:none;
+            animation: dlGlowPulse 3s ease-in-out infinite;
+        }
+        @keyframes dlGlowPulse {
+            0%,100% { opacity:0.35; transform:translateX(-50%) scale(1); }
+            50% { opacity:0.5; transform:translateX(-50%) scale(1.08); }
+        }
+        .dl-icon {
+            width:50px; height:50px; margin:0 auto 1rem;
+            border-radius:14px;
+            background:linear-gradient(145deg, var(--asp-primary), #2dd4bf);
+            display:flex; align-items:center; justify-content:center;
+            box-shadow:0 6px 24px var(--asp-primary-glow), inset 0 1px 0 rgba(255,255,255,0.2);
+            position:relative; z-index:1;
+            animation: dlIconFloat 2.5s ease-in-out infinite;
+        }
+        @keyframes dlIconFloat {
+            0%,100% { transform:translateY(0); box-shadow:0 6px 24px var(--asp-primary-glow), inset 0 1px 0 rgba(255,255,255,0.2); }
+            50% { transform:translateY(-3px); box-shadow:0 10px 32px var(--asp-primary-glow), inset 0 1px 0 rgba(255,255,255,0.2); }
+        }
+        .dl-icon i { color:#fff; font-size:1.15rem; }
+        .dl-icon .dl-spin { animation:spin 1.8s linear infinite; }
+
+        .dl-title {
+            font-size:1.18rem; font-weight:700; color:var(--asp-text);
+            margin-bottom:0.2rem; position:relative; z-index:1;
+            letter-spacing:0.02em;
+        }
+        .dl-subtitle {
+            font-size:0.85rem; color:var(--asp-text-muted);
+            margin-bottom:0.85rem; line-height:1.45; position:relative; z-index:1;
+            min-height:1.3em;
+        }
+        .dl-subtitle .dl-ellipsis { display:inline-block; animation:dlBounce 1.1s ease-in-out infinite; }
+        @keyframes dlBounce { 0%,55%,100% { opacity:0.35; transform:translateY(0); } 25% { opacity:1; transform:translateY(-1px); } }
+
+        /* Progress */
+        .dl-progress-row {
+            display:flex; align-items:center; gap:0.55rem; margin-bottom:0.3rem;
+            position:relative; z-index:1;
+        }
+        .dl-progress-track {
+            flex:1; height:6px; border-radius:4px;
+            background:var(--asp-border); overflow:hidden;
+            box-shadow:inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .dl-progress-fill {
+            height:100%; border-radius:4px;
+            background:linear-gradient(90deg, var(--asp-primary), #2dd4bf, var(--asp-accent), var(--asp-primary));
+            background-size:200% 100%;
+            width:0%;
+            transition:width 0.5s cubic-bezier(0.32, 0.72, 0.38, 1);
+            animation:progressShine 2.2s linear infinite;
+            box-shadow:0 0 12px rgba(24,169,168,0.35);
+        }
+        @keyframes progressShine {
+            0% { background-position:200% 0; }
+            100% { background-position:-200% 0; }
+        }
+        .dl-pct {
+            font-size:0.82rem; font-weight:700; color:var(--asp-primary);
+            font-family:'Courier New',monospace; min-width:36px; text-align:right;
+            position:relative; z-index:1;
+            transition:transform 0.25s ease;
+            letter-spacing:0.05em;
+        }
+        .dl-progress-row.updated .dl-pct { animation: pctPop 0.4s cubic-bezier(0.34, 1.2, 0.64, 1); }
+        @keyframes pctPop { 0% { transform:scale(1); } 45% { transform:scale(1.15); } 100% { transform:scale(1); } }
+
+        /* Steps */
+        .dl-steps {
+            display:flex; flex-direction:column; gap:0;
+            text-align:left; margin-top:0.55rem;
+            padding-top:0.55rem; border-top:1px solid var(--glass-border);
+            position:relative; z-index:1;
+        }
+        .dl-step {
+            display:flex; align-items:center; gap:0.45rem;
+            font-size:0.8rem; color:var(--asp-text-muted);
+            padding:0.1rem 0;
+            transition:color 0.3s ease, transform 0.3s ease, opacity 0.3s ease, background 0.25s ease;
+            border-left:3px solid transparent;
+            margin-left:0; padding-left:0.55rem;
+            border-radius:0 8px 8px 0;
+        }
+        .dl-step i {
+            width:16px; text-align:center; font-size:0.72rem;
+            transition:color 0.3s ease, transform 0.3s ease;
+            flex-shrink:0;
+        }
+        .dl-step.done {
+            color:var(--asp-text-secondary);
+            animation:stepDone 0.45s ease backwards;
+        }
+        .dl-step.done i {
+            color:var(--asp-success);
+            animation:checkPop 0.5s cubic-bezier(0.34, 1.25, 0.64, 1) backwards;
+        }
+        @keyframes stepDone {
+            from { opacity:0.6; transform:translateX(-4px); }
+            to { opacity:1; transform:translateX(0); }
+        }
+        @keyframes checkPop {
+            0% { transform:scale(0.7); opacity:0.4; }
+            55% { transform:scale(1.2); }
+            100% { transform:scale(1); opacity:1; }
+        }
+        .dl-step.active {
+            color:var(--asp-text);
+            font-weight:600;
+            border-left-color:var(--asp-primary);
+            background:linear-gradient(90deg, rgba(24,169,168,0.12), rgba(24,169,168,0.02), transparent);
+            animation: stepActiveGlow 2s ease-in-out infinite;
+        }
+        @keyframes stepActiveGlow {
+            0%,100% { background:linear-gradient(90deg, rgba(24,169,168,0.1), rgba(24,169,168,0.02), transparent); }
+            50% { background:linear-gradient(90deg, rgba(24,169,168,0.16), rgba(24,169,168,0.04), transparent); }
+        }
+        .dl-step.active i {
+            color:var(--asp-primary);
+            animation:stepPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes stepPulse {
+            0%,100% { opacity:1; transform:rotate(0deg); }
+            50% { opacity:0.9; transform:rotate(10deg); }
+        }
+
+        /* ==================== DASHBOARD ==================== */
+        .dashboard { display:none; animation:fadeInUp 0.6s ease; }
+        .dashboard.visible { display:block; }
+
+        /* Stats Sidebar */
+        .stats-sidebar { display:flex; flex-direction:column; }
+        .stats-sidebar .panel-title { margin-bottom:0.6rem; }
+        .stats-list { display:flex; flex-direction:column; gap:0.4rem; flex:1; }
+        .stat-card {
+            padding:0.6rem 0.8rem; border-radius:10px;
+            background:var(--glass-bg); border:1px solid var(--glass-border);
+            display:flex; flex-direction:column; gap:0.1rem;
+            transition:all 0.2s ease; cursor:default;
+        }
+        .stat-card:hover { background:var(--asp-primary-glow); transform:translateY(-1px); }
+        .stat-card .stat-label { font-size:0.58rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--asp-text-muted); display:flex; align-items:center; gap:0.25rem; }
+        .stat-card .stat-label i { font-size:0.55rem; color:var(--asp-primary); opacity:0.7; }
+        .stat-card .stat-value { font-size:1rem; font-weight:800; color:var(--asp-primary); font-family:'Courier New',monospace; line-height:1.2; }
+        .stat-card .stat-sub { font-size:0.58rem; color:var(--asp-text-muted); line-height:1.3; }
+
+        /* ==================== TOP ROW ==================== */
+        .top-row { display:grid; grid-template-columns:240px 1fr 210px; gap:1.25rem; margin-bottom:1.5rem; align-items:start; }
+
+        /* Layer Diagram */
+        .layer-diagram { display:flex; flex-direction:column; gap:0; overflow:hidden; border-radius:10px; }
+        .layer-bar {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:0 1rem; color:#fff; font-weight:600; min-height:2.5rem;
+            cursor:pointer; transition:all 0.25s ease; position:relative;
+            border-left:4px solid transparent;
+        }
+        .layer-bar:hover { filter:brightness(1.15); }
+        .layer-bar.active { border-left-color:var(--asp-secondary); filter:brightness(1.2); }
+        .layer-bar .layer-name { font-size:0.85rem; z-index:1; }
+        .layer-bar .layer-thick { font-size:0.75rem; opacity:0.85; z-index:1; font-family:'Courier New',monospace; }
+        .layer-bar::after {
+            content:''; position:absolute; inset:0;
+            background:linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent);
+        }
+        .layer-hint {
+            font-size:0.72rem; color:var(--asp-text-muted); text-align:center;
+            padding:0.6rem 0 0; font-style:italic;
+        }
+
+        /* ==================== CONTOUR / ANIMATION ==================== */
+        .contour-controls { display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:0.75rem; align-items:center; }
+        .control-group { display:flex; align-items:center; gap:0.4rem; }
+        .control-group label { font-size:0.8rem; font-weight:600; color:var(--asp-text-muted); white-space:nowrap; }
+        .control-group select {
+            background:var(--asp-bg); color:var(--asp-text); border:1px solid var(--asp-border);
+            border-radius:8px; padding:0.4rem 0.6rem; font-size:0.8rem; outline:none; cursor:pointer;
+        }
+        .control-group select:focus { border-color:var(--asp-primary); box-shadow:0 0 0 2px var(--asp-primary-glow); }
+        .viz3d-toggles { display:flex; flex-wrap:wrap; align-items:center; gap:0.5rem; }
+        .viz3d-toggles .toggle-opt { font-size:0.75rem; color:var(--asp-text-muted); font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; }
+        .viz3d-toggles .toggle-opt input { cursor:pointer; accent-color:var(--asp-primary); }
+        #viz3d-layer-filter-wrap { display:none; }
+        #viz3d-layer-filter-wrap.visible { display:flex; }
+        .view-tabs { display:flex; gap:0.25rem; }
+        .view-tab {
+            padding:0.4rem 0.9rem; border-radius:8px; font-size:0.8rem; font-weight:600;
+            cursor:pointer; border:none; background:transparent; color:var(--asp-text-muted); transition:all 0.2s ease;
+        }
+        .view-tab.active { background:var(--asp-primary); color:#fff; }
+        .view-tab:hover:not(.active) { background:var(--glass-bg); }
+        .contour-plot { width:100%; min-height:400px; border-radius:10px; overflow:hidden; }
+
+        /* Animation bar */
+        .animation-bar {
+            display:flex; align-items:center; gap:0.75rem;
+            padding:0.6rem 1rem; border-radius:10px;
+            background:var(--asp-bg); border:1px solid var(--asp-border); margin-top:0.75rem;
+        }
+        .anim-btn {
+            width:34px; height:34px; border-radius:50%; border:none;
+            background:var(--asp-primary); color:#fff; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; font-size:0.8rem;
+            transition:all 0.2s ease; flex-shrink:0;
+        }
+        .anim-btn:hover { background:var(--asp-primary-hover); transform:scale(1.08); }
+        .anim-slider {
+            flex:1; -webkit-appearance:none; appearance:none;
+            height:6px; border-radius:3px; background:var(--asp-border); outline:none;
+        }
+        .anim-slider::-webkit-slider-thumb {
+            -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+            background:var(--asp-primary); cursor:pointer; border:2px solid #fff;
+            box-shadow:0 2px 6px rgba(0,0,0,0.2);
+        }
+        .anim-label {
+            font-size:0.8rem; font-weight:700; color:var(--asp-text-secondary);
+            min-width:80px; text-align:center; font-family:'Courier New',monospace; flex-shrink:0;
+        }
+
+        /* ==================== 3D VISUALIZATION ==================== */
+        .viz3d-row { display:grid; grid-template-columns:1fr 300px; gap:1.25rem; margin-bottom:1.5rem; align-items:start; }
+        .viz3d-panel { margin-bottom:0; }
+        .viz3d-plot { width:100%; height:520px; border-radius:10px; overflow:hidden; min-width:0; }
+
+        /* 3D Info Panel */
+        .viz3d-info { display:flex; flex-direction:column; gap:0; padding:1rem 1.1rem; }
+        .viz3d-info .panel-title { margin-bottom:0.4rem; }
+        .field-header {
+            padding:0.3rem 0.85rem 0.35rem; border-radius:10px;
+            background:linear-gradient(135deg, rgba(24,169,168,0.08), rgba(45,212,191,0.04));
+            border:1px solid rgba(24,169,168,0.15);
+            margin-bottom:0.35rem; line-height:1.2;
+        }
+        .field-header .fh-symbol {
+            font-size:1.2rem; font-weight:800; color:var(--asp-primary);
+            font-family:'Courier New',monospace; display:block; margin-bottom:-0.1rem;
+        }
+        .field-header .fh-name { font-size:0.72rem; font-weight:600; color:var(--asp-text-secondary); line-height:1.2; }
+        .field-header .fh-desc { font-size:0.62rem; color:var(--asp-text-muted); margin-top:0; line-height:1.2; }
+
+        .global-stats-grid {
+            display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.4rem; margin-bottom:0.4rem;
+        }
+        .gs-card {
+            padding:0.3rem 0.5rem; border-radius:8px;
+            background:var(--glass-bg); border:1px solid var(--glass-border);
+            text-align:center;
+        }
+        .gs-card .gs-label { font-size:0.52rem; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; color:var(--asp-text-muted); }
+        .gs-card .gs-value { font-size:0.82rem; font-weight:800; font-family:'Courier New',monospace; color:var(--asp-text); line-height:1.2; }
+        .gs-card .gs-unit { font-size:0.5rem; color:var(--asp-text-muted); }
+        .gs-card.gs-min .gs-value { color:#3b82f6; }
+        .gs-card.gs-max .gs-value { color:#ef4444; }
+        .gs-card.gs-mean .gs-value { color:var(--asp-secondary); }
+
+        .envelope-title {
+            font-size:0.7rem; font-weight:700; color:var(--asp-text-secondary);
+            margin-bottom:0.2rem; display:flex; align-items:center; gap:0.3rem;
+        }
+        .envelope-title i { font-size:0.6rem; color:var(--asp-primary); }
+        .envelope-chart { width:100%; height:240px; min-width:0; border-radius:8px; overflow:hidden; }
+
+        .layer-stats-title {
+            font-size:0.7rem; font-weight:700; color:var(--asp-text-secondary);
+            margin:0.35rem 0 0.2rem; display:flex; align-items:center; gap:0.3rem;
+        }
+        .layer-stats-title i { font-size:0.6rem; color:var(--asp-primary); }
+        .layer-stat-row {
+            display:flex; align-items:center; gap:0.5rem;
+            padding:0.2rem 0; border-bottom:1px solid var(--glass-border);
+        }
+        .layer-stat-row:last-child { border-bottom:none; }
+        .ls-color {
+            width:10px; height:10px; border-radius:3px;
+            flex-shrink:0; border:1px solid rgba(255,255,255,0.1);
+        }
+        .ls-name { font-size:0.65rem; font-weight:600; color:var(--asp-text-secondary); flex:1; min-width:0; }
+        .ls-range {
+            font-size:0.6rem; font-family:'Courier New',monospace; color:var(--asp-text-muted);
+            text-align:right; white-space:nowrap;
+        }
+        .ls-bar-track {
+            width:60px; height:4px; border-radius:2px;
+            background:var(--asp-border); overflow:hidden; flex-shrink:0;
+        }
+        .ls-bar-fill { height:100%; border-radius:2px; transition:width 0.4s ease; }
+
+        /* ==================== PROFILE CHARTS ==================== */
+        .profiles-section { margin-top:0; overflow:hidden; }
+        .profiles-section .panel-title { margin-bottom:0.5rem; }
+        .profile-row-title {
+            font-size:0.95rem; font-weight:700; color:var(--asp-text);
+            margin:1.25rem 0 0.75rem; padding-bottom:0.35rem;
+            border-bottom:2px solid var(--asp-border);
+            display:flex; align-items:center; gap:0.5rem;
+        }
+        .profile-row-title i { color:var(--asp-primary); }
+        .profile-row-title:first-of-type { margin-top:0.5rem; }
+        .profile-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
+        .profile-card { padding:1rem; position:relative; overflow:hidden; min-width:0; }
+        .profile-card .profile-label { font-size:0.8rem; font-weight:700; color:var(--asp-text-secondary); margin-bottom:0.5rem; text-align:center; }
+        .profile-chart { width:100%; height:340px; min-width:0; }
+        .profile-card .critical-badge {
+            position:absolute; top:0.75rem; right:0.75rem;
+            display:inline-flex; align-items:center; gap:0.3rem;
+            padding:0.2rem 0.5rem; border-radius:6px;
+            font-size:0.65rem; font-weight:700;
+            background:rgba(239,68,68,0.12); color:var(--asp-danger);
+            border:1px solid rgba(239,68,68,0.2);
+        }
+        .no-profiles-msg {
+            text-align:center; padding:2rem; color:var(--asp-text-muted);
+            font-size:0.95rem; font-style:italic;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width:1100px) {
+            .top-row { grid-template-columns:240px 1fr; }
+            .stats-sidebar { grid-column:1 / -1; }
+            .stats-list { flex-direction:row; flex-wrap:wrap; }
+            .stat-card { flex:1 1 140px; }
+            .viz3d-row { grid-template-columns:1fr; }
+        }
+        @media (max-width:960px) {
+            .top-row { grid-template-columns:1fr; }
+            .profile-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+            .header-content h1 { font-size:1.8rem; }
+        }
+        @media (max-width:600px) {
+            .profile-grid { grid-template-columns:minmax(0,1fr); }
+            .asphera-app { padding:0 0.75rem 2rem; }
+            .app-header { margin:0 -0.75rem 1rem; border-radius:16px; }
+            .header-content { padding:1rem 1.25rem 1.25rem; }
+            .header-nav { padding:0.6rem 1rem; }
+            .header-badges { gap:0.3rem; }
+            .header-badge { font-size:0.68rem; padding:0.25rem 0.5rem; }
+            .stats-list { flex-direction:column; }
+        }
+
+        /* ==================== PLOT CENTERING ==================== */
+        /* Plotly containers must be block-level; flex breaks Plotly's internal sizing */
+        .contour-plot, .viz3d-plot, .profile-chart {
+            display:block; width:100%; margin:0 auto;
+        }
+        .js-plotly-plot, .plot-container.plotly { max-width:100%!important; width:100%!important; }
+
+        /* ==================== CUSTOM TOOLTIPS ==================== */
+        [data-tip] {
+            position:relative; cursor:help;
+        }
+        [data-tip]::after {
+            content: attr(data-tip);
+            position:absolute; z-index:100;
+            bottom: calc(100% + 8px); left:50%; transform:translateX(-50%);
+            padding:0.5rem 0.75rem; border-radius:8px;
+            background:var(--asp-bg-alt); color:var(--asp-text);
+            border:1px solid var(--asp-border);
+            box-shadow:0 4px 16px rgba(0,0,0,0.2);
+            font-size:0.75rem; font-weight:400; line-height:1.45;
+            white-space:normal; width:max-content; max-width:260px;
+            opacity:0; pointer-events:none;
+            transition:opacity 0.25s ease, transform 0.25s ease;
+            transform:translateX(-50%) translateY(4px);
+        }
+        [data-tip]:hover::after {
+            opacity:1; transform:translateX(-50%) translateY(0);
+        }
+        /* Tooltip arrow */
+        [data-tip]::before {
+            content:'';
+            position:absolute; z-index:101;
+            bottom: calc(100% + 3px); left:50%; transform:translateX(-50%);
+            border:5px solid transparent; border-top-color:var(--asp-border);
+            opacity:0; pointer-events:none;
+            transition:opacity 0.25s ease;
+        }
+        [data-tip]:hover::before { opacity:1; }
+        /* Right-aligned variant */
+        [data-tip-right]::after {
+            left:auto; right:0; transform:translateX(0) translateY(4px);
+        }
+        [data-tip-right]:hover::after { transform:translateX(0) translateY(0); }
+
+        /* ==================== INFO ICON ==================== */
+        .info-icon {
+            display:inline-flex; align-items:center; justify-content:center;
+            width:20px; height:20px; border-radius:50%;
+            background:var(--asp-primary-glow); color:var(--asp-primary);
+            font-size:0.6rem; cursor:help; transition:all 0.2s ease;
+            margin-left:0.25rem; flex-shrink:0;
+        }
+        .info-icon:hover {
+            background:var(--asp-primary); color:#fff;
+            transform:scale(1.15);
+        }
+
+        /* ==================== COLOR LEGEND ==================== */
+        .color-legend {
+            display:flex; align-items:center; gap:1rem;
+            font-size:0.72rem; color:var(--asp-text-muted);
+            padding:0.5rem 0 0; justify-content:center;
+        }
+        .color-legend .legend-item {
+            display:inline-flex; align-items:center; gap:0.3rem;
+        }
+        .color-legend .swatch {
+            width:12px; height:12px; border-radius:3px;
+            border:1px solid var(--asp-border);
+        }
+
+        /* ==================== COORD INDICATOR ==================== */
+        .coord-badge {
+            display:inline-flex; align-items:center; gap:0.35rem;
+            padding:0.25rem 0.65rem; border-radius:6px;
+            font-size:0.7rem; font-weight:600;
+            background:var(--glass-bg); border:1px solid var(--glass-border);
+            color:var(--asp-text-muted);
+            transition:all 0.2s ease;
+        }
+        .coord-badge i { font-size:0.6rem; }
+
+        /* ==================== STRUCTURE CARD EXTRAS ==================== */
+        .structure-card .sc-detail {
+            font-size:0.75rem; color:var(--asp-text-muted);
+            max-height:0; overflow:hidden; opacity:0;
+            transition:max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .structure-card:hover .sc-detail,
+        .structure-card.active .sc-detail {
+            max-height:60px; opacity:1;
+        }
+
+        /* ==================== SECTION DIVIDER ==================== */
+        .section-divider {
+            display:flex; align-items:center; gap:0.75rem;
+            margin:0.75rem 0 1.25rem; color:var(--asp-text-muted);
+            font-size:0.75rem; font-weight:600; text-transform:uppercase;
+            letter-spacing:0.8px;
+        }
+        .section-divider::after {
+            content:''; flex:1; height:1px;
+            background:linear-gradient(90deg, var(--asp-border), transparent);
+        }
+    </style>
+</head>
+<body class="asphera is-preload">
+<div id="page-wrapper">
+    <section id="header"><div id="nav-placeholder"></div></section>
+
+    <!-- INITIAL LOADING -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div style="text-align:center;">
+            <div class="spinner"></div>
+            <div class="loading-text" id="loading-text">Initializing Asphera...</div>
+        </div>
+    </div>
+
+    <!-- DATA LOADING MODAL -->
+    <div class="data-loader" id="data-loader">
+        <div class="data-loader-card">
+            <div class="dl-icon"><i class="fas fa-road dl-spin"></i></div>
+            <div class="dl-title" id="dl-title">Loading Structure</div>
+            <div class="dl-subtitle" id="dl-subtitle">Fetching finite element analysis results<span class="dl-ellipsis">...</span></div>
+            <div class="dl-progress-row">
+                <div class="dl-progress-track"><div class="dl-progress-fill" id="dl-progress"></div></div>
+                <span class="dl-pct" id="dl-pct">0%</span>
+            </div>
+            <div class="dl-steps" id="dl-steps">
+                <div class="dl-step" id="dl-step-0"><i class="fas fa-circle"></i> Structure metadata</div>
+                <div class="dl-step" id="dl-step-1"><i class="fas fa-circle"></i> Depth profiles</div>
+                <div class="dl-step" id="dl-step-2"><i class="fas fa-circle"></i> Cross-section contours</div>
+                <div class="dl-step" id="dl-step-3"><i class="fas fa-circle"></i> 3D point cloud</div>
+                <div class="dl-step" id="dl-step-4"><i class="fas fa-circle"></i> Rendering visualizations</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP SHELL -->
+    <div class="asphera-app">
+
+        <!-- HEADER -->
+        <header class="app-header">
+            <nav class="header-nav">
+                <a href="../../E-Labs.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to E-Labs</a>
+                <div class="header-badges">
+                    <span class="header-badge"><i class="fas fa-layer-group"></i> <span id="hdr-struct-count">1</span> Structure</span>
+                    <span class="header-badge"><i class="fas fa-cube"></i> 3D FEM</span>
+                    <span class="header-badge"><i class="fas fa-code-branch"></i> v1.0</span>
+                </div>
+            </nav>
+            <div class="header-content">
+                <h1><span class="asphera-icon"><i class="fas fa-road"></i></span><span>A<span class="highlight">spher</span>a</span></h1>
+                <p class="tagline">Interactive 3D Pavement Response Visualizer</p>
+            </div>
+        </header>
+
+        <!-- STRUCTURE SELECTOR -->
+        <section id="selector-section">
+            <div class="panel-title">
+                <i class="fas fa-folder-open"></i> Select Pavement Structure
+                <span class="info-icon" data-tip="Choose a pavement section to load its 3D finite element analysis results. Each structure contains multi-timestep response data."><i class="fas fa-info"></i></span>
+            </div>
+            <div class="structure-selector" id="structure-selector"></div>
+        </section>
+
+        <!-- DASHBOARD -->
+        <section class="dashboard" id="dashboard">
+
+            <!-- Top row: Layer Diagram + Contour + Stats Sidebar -->
+            <div class="top-row">
+                <!-- Layer Diagram -->
+                <div class="panel">
+                    <div class="panel-title">
+                        <i class="fas fa-layer-group"></i> Layout
+                        <span class="info-icon" data-tip="Visual representation of the pavement cross-section. Click any layer to view its critical strain profiles below."><i class="fas fa-info"></i></span>
+                    </div>
+                    <div class="layer-diagram" id="layer-diagram"></div>
+                    <div class="layer-hint"><i class="fas fa-hand-pointer" style="margin-right:0.3rem;"></i> Click a layer to inspect its critical response profiles</div>
+                </div>
+
+                <!-- Contour + Animation (unified panel) -->
+                <div class="panel" style="overflow:hidden;">
+                    <div class="panel-title">
+                        <i class="fas fa-border-all"></i> Cross-Section Response
+                        <span class="info-icon" data-tip="Heatmap of the selected field variable through the pavement depth. Switch between longitudinal (traffic direction) and transverse views. Use the animation to watch the load passage."><i class="fas fa-info"></i></span>
+                    </div>
+                    <div class="contour-controls">
+                        <div class="control-group">
+                            <label><i class="fas fa-palette" style="margin-right:0.25rem;opacity:0.6;font-size:0.7rem;"></i>Field</label>
+                            <select id="contour-field">
+                                <option value="E11">&epsilon;&#x2081;&#x2081; (Longitudinal)</option>
+                                <option value="E22">&epsilon;&#x2082;&#x2082; (Vertical)</option>
+                                <option value="E33">&epsilon;&#x2083;&#x2083; (Transverse)</option>
+                                <option value="E23">&epsilon;&#x2082;&#x2083; (Shear YZ)</option>
+                                <option value="E13">&epsilon;&#x2081;&#x2083; (Shear XZ)</option>
+                                <option value="U2">U&#x2082; (Deflection)</option>
+                                <option value="SMises">Von Mises</option>
+                            </select>
+                        </div>
+                        <div class="view-tabs">
+                            <button class="view-tab active" data-view="longitudinal" data-tip="Slice along the traffic direction (XY plane at model centerline Z)">Longitudinal (XY)</button>
+                            <button class="view-tab" data-view="transverse" data-tip="Slice across the traffic direction (YZ plane at model center X)">Transverse (YZ)</button>
+                        </div>
+                        <span class="coord-badge" id="coord-badge"><i class="fas fa-crosshairs"></i> <span id="coord-badge-text">XY Plane</span></span>
+                    </div>
+                    <div class="contour-plot" id="contour-plot"></div>
+
+                    <!-- Animation controls -->
+                    <div class="animation-bar" data-tip="Animate the load passage across the pavement. The heatmap updates to show the selected field at each timestep.">
+                        <button class="anim-btn" id="anim-play" title="Play / Pause animation">
+                            <i class="fas fa-play" id="anim-play-icon"></i>
+                        </button>
+                        <input type="range" class="anim-slider" id="anim-slider" min="0" max="12" value="0" title="Drag to scrub through timesteps">
+                        <div class="anim-label" id="anim-label">Step 4</div>
+                    </div>
+                </div>
+
+                <!-- Stats Sidebar -->
+                <div class="panel stats-sidebar">
+                    <div class="panel-title">
+                        <i class="fas fa-chart-bar"></i> Key Metrics
+                        <span class="info-icon" data-tip="Summary statistics for the loaded pavement structure including geometry, analysis parameters, and peak response values."><i class="fas fa-info"></i></span>
+                    </div>
+                    <div class="stats-list" id="stats-bar"></div>
+                </div>
+            </div>
+
+            <div class="section-divider"><i class="fas fa-cube" style="margin-right:0.25rem;"></i> Spatial Visualization</div>
+
+            <!-- 3D Visualization Row -->
+            <div class="viz3d-row">
+                <div class="panel viz3d-panel">
+                    <div class="panel-title">
+                        <i class="fas fa-cubes"></i> 3D Response Field
+                        <span class="info-icon" data-tip="Isometric view of the full FE mesh as a 3D grid of interpolated values. Rotate by dragging, zoom with scroll. Translucent planes mark layer interfaces."><i class="fas fa-info"></i></span>
+                    </div>
+                    <div class="contour-controls">
+                        <div class="control-group">
+                            <label><i class="fas fa-palette" style="margin-right:0.25rem;opacity:0.6;font-size:0.7rem;"></i>Field</label>
+                            <select id="viz3d-field">
+                                <option value="E11">&epsilon;&#x2081;&#x2081; (Longitudinal)</option>
+                                <option value="E22">&epsilon;&#x2082;&#x2082; (Vertical)</option>
+                                <option value="E33">&epsilon;&#x2083;&#x2083; (Transverse)</option>
+                                <option value="E23">&epsilon;&#x2082;&#x2083; (Shear YZ)</option>
+                                <option value="E13">&epsilon;&#x2081;&#x2083; (Shear XZ)</option>
+                                <option value="U2">U&#x2082; (Deflection)</option>
+                                <option value="SMises">Von Mises</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label><i class="fas fa-expand" style="margin-right:0.25rem;opacity:0.6;font-size:0.7rem;"></i>Point Size</label>
+                            <select id="viz3d-size">
+                                <option value="3">Small</option>
+                                <option value="5" selected>Medium</option>
+                                <option value="8">Large</option>
+                            </select>
+                        </div>
+                        <div class="control-group" id="viz3d-layer-filter-wrap">
+                            <label><i class="fas fa-layer-group" style="margin-right:0.25rem;opacity:0.6;font-size:0.7rem;"></i>Layers</label>
+                            <select id="viz3d-layer-filter">
+                                <option value="all">All layers</option>
+                            </select>
+                        </div>
+                        <div class="control-group viz3d-toggles">
+                            <label><i class="fas fa-sliders-h" style="margin-right:0.25rem;opacity:0.6;font-size:0.7rem;"></i>View</label>
+                            <label class="toggle-opt"><input type="checkbox" id="viz3d-show-grid" checked> Grid</label>
+                            <label class="toggle-opt"><input type="checkbox" id="viz3d-show-mesh" checked> Planes</label>
+                        </div>
+                        <span class="coord-badge"><i class="fas fa-cube"></i> X=Traffic, Y=Transverse, Z=Depth (0 at top) &middot; Drag to rotate</span>
+                    </div>
+                    <div class="viz3d-plot" id="viz3d-plot"></div>
+                </div>
+
+                <!-- Field Analysis Panel -->
+                <div class="panel viz3d-info" id="viz3d-info">
+                    <div class="panel-title">
+                        <i class="fas fa-chart-area"></i> Field Analysis
+                        <span class="info-icon" data-tip="Real-time statistics and depth envelope for the selected 3D field. The envelope shows the range (min/max) and mean value at every depth level across the full model domain."><i class="fas fa-info"></i></span>
+                    </div>
+                    <div id="viz3d-info-content">
+                        <div class="no-profiles-msg" style="padding:1rem;font-size:0.8rem;">Select a structure to view field analysis.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-divider"><i class="fas fa-chart-line" style="margin-right:0.25rem;"></i> Detailed Analysis</div>
+
+            <!-- Critical Response Profiles (dynamic per layer) -->
+            <div class="panel profiles-section" id="profiles-panel">
+                <div class="panel-title">
+                    <i class="fas fa-chart-line"></i> Critical Response Profiles
+                    <span class="info-icon" data-tip="Vertical strain profiles at the location of the critical (maximum/minimum) response. The timestep shown is the one where the critical value occurs. Blue = tensile, Red = compressive."><i class="fas fa-info"></i></span>
+                    <span id="profiles-layer-badge" class="coord-badge" style="margin-left:auto;"></span>
+                </div>
+                <div class="color-legend">
+                    <span class="legend-item"><span class="swatch" style="background:rgba(59,130,246,0.5);"></span> Tensile (+)</span>
+                    <span class="legend-item"><span class="swatch" style="background:rgba(239,68,68,0.5);"></span> Compressive (&minus;)</span>
+                    <span class="legend-item"><span class="swatch" style="background:#ef4444; border-radius:50%;width:10px;height:10px;"></span> Critical Value</span>
+                </div>
+                <div id="profiles-container">
+                    <div class="no-profiles-msg"><i class="fas fa-arrow-up" style="margin-right:0.3rem;"></i> Select a layer from the configuration panel above to view its critical response profiles.</div>
+                </div>
+            </div>
+
+        </section>
+    </div>
+
+    <div id="footer-placeholder"></div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="../../assets/js/jquery.min.js"></script>
+<script src="../../assets/js/jquery.dropotron.min.js"></script>
+<script src="../../assets/js/browser.min.js"></script>
+<script src="../../assets/js/breakpoints.min.js"></script>
+<script src="../../assets/js/util.js"></script>
+<script src="../../assets/js/main.js"></script>
+<script src="../../assets/js/components.js"></script>
+<script src="../../assets/js/theme-toggle.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+<script>
+// ================================================================
+//  ASPHERA v2 — Pavement Response Visualizer
+// ================================================================
+
+const DATA_BASE = 'data';
+const STRUCTURES = [
+    { id: 'TK_P1', name: 'Interstate Section', desc: 'SEC, 7.5 kips, 0% Slope' }
+];
+
+// Layer group mapping: which layer IDs map to which profile layerGroup
+const LAYER_GROUP_MAP = {
+    'AC1': 'HMA', 'AC2': 'HMA',
+    'B1':  'B1',
+    'SG1': 'SG1',
+};
+
+// Field descriptor map for the 3D info panel
+const FIELD_INFO = {
+    E11: { symbol:'\u03b5\u2081\u2081', name:'Longitudinal Strain', desc:'Normal strain along the traffic (X) direction. Positive = tensile, Negative = compressive.' },
+    E22: { symbol:'\u03b5\u2082\u2082', name:'Vertical Strain', desc:'Normal strain in the depth (Y) direction. Key indicator for rutting potential.' },
+    E33: { symbol:'\u03b5\u2083\u2083', name:'Transverse Strain', desc:'Normal strain perpendicular to traffic (Z). Relevant for transverse cracking.' },
+    E23: { symbol:'\u03b5\u2082\u2083', name:'Shear Strain YZ', desc:'Shear strain in the vertical\u2013transverse plane. Linked to near-surface cracking.' },
+    E13: { symbol:'\u03b5\u2081\u2083', name:'Shear Strain XZ', desc:'Shear strain in the traffic\u2013transverse plane. Influences load-edge effects.' },
+    U2:  { symbol:'U\u2082', name:'Vertical Deflection', desc:'Vertical displacement at each node. Surface values indicate pavement deflection.' },
+    SMises:{ symbol:'\u03c3\u1d65\u2098', name:'Von Mises Stress', desc:'Equivalent stress combining all stress components. Indicator for material yielding.' },
+};
+
+// ── State ────────────────────────────────────
+let structureData = null, profilesData = null, contoursData = null, pointcloudData = null;
+let currentView = 'longitudinal', currentField = 'E11', currentLayer = null;
+let animPlaying = false, animTimer = null;
+
+// ── Theme helpers ────────────────────────────
+const isDark  = () => document.documentElement.getAttribute('data-theme') === 'dark';
+const pBg     = () => isDark() ? '#1e293b' : '#f0f4f8';
+const pPaper  = () => isDark() ? '#1e293b' : '#ffffff';
+const pFont   = () => isDark() ? '#e2e8f0' : '#1e293b';
+const pGrid   = () => isDark() ? '#2d3f5a' : '#d4dbe6';
+const pLine   = () => isDark() ? '#3b4f6b' : '#b0bec5';
+
+function baseLayout(extra) {
+    return Object.assign({
+        paper_bgcolor: pPaper(), plot_bgcolor: pBg(),
+        font: { family: 'Source Sans Pro, sans-serif', color: pFont(), size: 12 },
+        margin: { l: 60, r: 20, t: 30, b: 50 },
+        xaxis: { gridcolor: pGrid(), zerolinecolor: pLine() },
+        yaxis: { gridcolor: pGrid(), zerolinecolor: pLine() },
+    }, extra || {});
+}
+
+// ================================================================
+//  INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    renderStructureCards();
+    hideLoading();
+});
+
+function hideLoading() {
+    const el = document.getElementById('loading-overlay');
+    el.classList.add('hidden');
+    setTimeout(() => el.style.display = 'none', 500);
+}
+
+// ================================================================
+//  STRUCTURE SELECTOR
+// ================================================================
+function renderStructureCards() {
+    // Update header badge with structure count
+    const countEl = document.getElementById('hdr-struct-count');
+    if (countEl) countEl.textContent = STRUCTURES.length;
+
+    document.getElementById('structure-selector').innerHTML = STRUCTURES.map(s => `
+        <div class="structure-card panel" data-id="${s.id}" onclick="selectStructure('${s.id}')">
+            <span class="sc-badge"><i class="fas fa-check-circle"></i> Available</span>
+            <span class="sc-name"><i class="fas fa-road" style="margin-right:0.4rem;opacity:0.5;"></i>${s.name}</span>
+            <span class="sc-desc">${s.desc}</span>
+            <span class="sc-detail"><i class="fas fa-database" style="margin-right:0.25rem;"></i> 3D dynamic FEM &middot; 18 timesteps &middot; 144k nodes</span>
+        </div>`).join('');
+}
+
+// ── Data-loading modal helpers ────────────────
+// Progress is synced to steps: 0% (step 0 active) → 20% → 40% → 60% → 80% → 100% (done)
+function showLoader(structureName) {
+    const modal = document.getElementById('data-loader');
+    document.getElementById('dl-title').textContent = `Loading ${structureName}`;
+    document.getElementById('dl-subtitle').innerHTML = 'Fetching finite element analysis results<span class="dl-ellipsis">...</span>';
+    document.getElementById('dl-progress').style.width = '0%';
+    document.getElementById('dl-pct').textContent = '0%';
+    const row = document.querySelector('.dl-progress-row');
+    if (row) row.classList.remove('updated');
+    for (let i = 0; i <= 4; i++) {
+        const step = document.getElementById(`dl-step-${i}`);
+        step.className = 'dl-step';
+        step.querySelector('i').className = 'fas fa-circle';
+    }
+    modal.classList.add('active');
+}
+function loaderStep(idx, progress) {
+    // Mark previous steps as done
+    for (let i = 0; i < idx; i++) {
+        const step = document.getElementById(`dl-step-${i}`);
+        step.className = 'dl-step done';
+        step.querySelector('i').className = 'fas fa-check-circle';
+    }
+    // Mark current step as active
+    const cur = document.getElementById(`dl-step-${idx}`);
+    cur.className = 'dl-step active';
+    cur.querySelector('i').className = 'fas fa-spinner fa-spin';
+    // Update progress bar to match step completion (0 → 20 → 40 → 60 → 80 → 100)
+    const fill = document.getElementById('dl-progress');
+    const pct = document.getElementById('dl-pct');
+    const row = document.querySelector('.dl-progress-row');
+    fill.style.width = `${progress}%`;
+    pct.textContent = `${progress}%`;
+    if (row) {
+        row.classList.remove('updated');
+        void row.offsetWidth;
+        row.classList.add('updated');
+    }
+}
+function loaderDone() {
+    for (let i = 0; i <= 4; i++) {
+        const step = document.getElementById(`dl-step-${i}`);
+        step.className = 'dl-step done';
+        step.querySelector('i').className = 'fas fa-check-circle';
+    }
+    document.getElementById('dl-progress').style.width = '100%';
+    document.getElementById('dl-pct').textContent = '100%';
+    document.getElementById('dl-subtitle').innerHTML = 'All data loaded successfully!';
+    document.querySelector('.dl-progress-row')?.classList.add('updated');
+}
+function hideLoader() {
+    document.getElementById('data-loader').classList.remove('active');
+}
+
+async function selectStructure(id) {
+    document.querySelectorAll('.structure-card').forEach(c => c.classList.remove('active'));
+    document.querySelector(`.structure-card[data-id="${id}"]`).classList.add('active');
+    document.getElementById('dashboard').classList.remove('visible');
+
+    const name = STRUCTURES.find(s => s.id === id)?.name || id;
+    showLoader(name);
+
+    try {
+        loaderStep(0, 0);  // step 0 active, 0%
+
+        // Step 0 — Structure metadata (tiny file, instant)
+        structureData = await fetch(`${DATA_BASE}/${id}/structure.json`).then(r => r.json());
+        loaderStep(1, 20);  // 1/5 done
+
+        // Step 1 — Depth profiles (small file)
+        profilesData = await fetch(`${DATA_BASE}/${id}/profiles.json`).then(r => r.json());
+        loaderStep(2, 40);  // 2/5 done
+
+        // Step 2 & 3 — Contours and point cloud in parallel (saves wall-clock time)
+        const base = `${DATA_BASE}/${id}`;
+        const [contours, pointcloud] = await Promise.all([
+            fetch(`${base}/contours.json`).then(r => r.json()).then(j => { loaderStep(3, 60); return j; }),
+            fetch(`${base}/pointcloud.json`).then(r => r.json()).then(j => { loaderStep(3, 60); return j; }),
+        ]);
+        contoursData = contours;
+        pointcloudData = pointcloud;
+        loaderStep(4, 80);  // 4/5 done
+
+        // Step 4 — Render: show dashboard first so Plotly containers have dimensions
+        await new Promise(r => setTimeout(r, 40));
+        const dash = document.getElementById('dashboard');
+        dash.classList.add('visible');
+        dash.offsetHeight;
+        await new Promise(r => setTimeout(r, 20));
+
+        renderDashboard();
+
+        // Single resize pass after layout stabilizes
+        await new Promise(r => setTimeout(r, 220));
+        document.querySelectorAll('.contour-plot,.viz3d-plot,.profile-chart,.envelope-chart')
+            .forEach(el => { if (el && el.data) Plotly.Plots.resize(el); });
+
+        loaderDone();
+        await new Promise(r => setTimeout(r, 350));
+        hideLoader();
+    } catch (e) {
+        console.error('Load failed:', e);
+        hideLoader();
+        alert('Failed to load data. Ensure JSON files exist in the data/ directory.');
+    }
+}
+
+// ================================================================
+//  DASHBOARD
+// ================================================================
+function renderDashboard() {
+    renderStats();
+    renderLayerDiagram();
+    renderContour();
+    bindControls();
+    // Defer heavy 3D and profile charts so contour + stats paint first (faster perceived load)
+    requestAnimationFrame(() => {
+        render3D();
+        requestAnimationFrame(() => {
+            render3DInfo();
+            selectLayer('AC1');
+        });
+    });
+}
+
+// ── Stats ────────────────────────────────────
+function renderStats() {
+    const s = structureData;
+    const totalThick = s.layers.reduce((a, l) => a + l.thickness, 0);
+    const profs = profilesData.profiles;
+    const e11 = profs.find(p => p.component === 'E11' && p.layerGroup === 'HMA');
+    const e22 = profs.find(p => p.component === 'E22' && p.layerGroup === 'B1');
+    const e23 = profs.find(p => p.component === 'E23' && p.layerGroup === 'HMA' && p.category === 'HMA Layer');
+    const stats = [
+        { label:'Total Thickness', value:`${totalThick.toFixed(0)} mm`, sub:`${(totalThick/25.4).toFixed(1)} in`, icon:'fa-ruler-vertical',
+          tip:'Combined thickness of all pavement layers from surface to subgrade bottom' },
+        { label:'Layers', value:s.layers.length, sub:s.layers.map(l=>l.label).join(' / '), icon:'fa-layer-group',
+          tip:'Number of distinct material layers in the pavement structure' },
+        { label:'Timesteps', value:s.timesteps.total, sub:`Steps ${s.timesteps.start}\u2013${s.timesteps.end}`, icon:'fa-clock',
+          tip:'Analysis window of the dynamic simulation used for critical value detection' },
+        { label:'Peak \u03b5\u2081\u2081 (HMA)', value:`${e11?e11.criticalValue.toFixed(1):'---'} \u00b5\u03b5`, sub:e11?`@ ${e11.criticalDepth.toFixed(1)} mm depth, ts=${e11.timestep}`:'', icon:'fa-arrow-right',
+          tip:'Maximum longitudinal tensile strain in the asphalt layer \u2014 controls fatigue cracking' },
+        { label:'Peak \u03b5\u2082\u2082 (Base)', value:`${e22?e22.criticalValue.toFixed(1):'---'} \u00b5\u03b5`, sub:e22?`@ ${e22.criticalDepth.toFixed(1)} mm depth, ts=${e22.timestep}`:'', icon:'fa-arrow-down',
+          tip:'Maximum vertical compressive strain in the base \u2014 controls rutting potential' },
+        { label:'Peak \u03b5\u2082\u2083 (HMA)', value:`${e23?e23.criticalValue.toFixed(1):'---'} \u00b5\u03b5`, sub:e23?`@ ${e23.criticalDepth.toFixed(1)} mm depth, ts=${e23.timestep}`:'', icon:'fa-arrows-alt',
+          tip:'Maximum shear strain in the asphalt layer \u2014 influences near-surface cracking' },
+    ];
+    document.getElementById('stats-bar').innerHTML = stats.map(st => `
+        <div class="stat-card" data-tip="${st.tip}">
+            <span class="stat-label"><i class="fas ${st.icon}"></i> ${st.label}</span>
+            <span class="stat-value">${st.value}</span>
+            <span class="stat-sub">${st.sub}</span>
+        </div>`).join('');
+}
+
+// ── Layer Diagram (clickable) ────────────────
+const LAYER_ICONS = { AC1:'fa-road', AC2:'fa-road', B1:'fa-cubes', SG1:'fa-mountain' };
+const LAYER_DESCS = {
+    AC1:'Hot Mix Asphalt surface course', AC2:'Hot Mix Asphalt binder course',
+    B1:'Granular base course', SG1:'Natural subgrade soil'
+};
+
+function renderLayerDiagram() {
+    const layers = structureData.layers;
+    const total = layers.reduce((a, l) => a + l.thickness, 0);
+    document.getElementById('layer-diagram').innerHTML = layers.map(layer => {
+        const frac = layer.thickness / total;
+        const h = Math.max(40, Math.min(180, Math.log(1 + frac * 10) / Math.log(11) * 360));
+        const inches = (layer.thickness / 25.4).toFixed(1);
+        const icon = LAYER_ICONS[layer.id] || 'fa-layer-group';
+        const desc = LAYER_DESCS[layer.id] || '';
+        return `<div class="layer-bar" data-layer="${layer.id}"
+                     style="height:${h}px; background:${layer.color};"
+                     title="${desc} \u2014 ${layer.thickness} mm (${inches} in)"
+                     onclick="selectLayer('${layer.id}')">
+                    <span class="layer-name"><i class="fas ${icon}" style="margin-right:0.35rem;opacity:0.7;font-size:0.75rem;"></i>${layer.label}</span>
+                    <span class="layer-thick">${layer.thickness} mm (${inches}")</span>
+                </div>`;
+    }).join('');
+}
+
+function selectLayer(layerId) {
+    currentLayer = layerId;
+    // Highlight active layer
+    document.querySelectorAll('.layer-bar').forEach(b => b.classList.remove('active'));
+    const el = document.querySelector(`.layer-bar[data-layer="${layerId}"]`);
+    if (el) el.classList.add('active');
+    // Update layer badge in profiles panel
+    const layer = structureData.layers.find(l => l.id === layerId);
+    const badge = document.getElementById('profiles-layer-badge');
+    if (badge && layer) {
+        const icon = LAYER_ICONS[layerId] || 'fa-layer-group';
+        badge.innerHTML = `<i class="fas ${icon}"></i> ${layer.label}`;
+    }
+    // Render matching profiles
+    renderProfiles(LAYER_GROUP_MAP[layerId]);
+}
+
+// ── Contour Plot (centered axes) ─────────────
+function renderContour() {
+    const viewData = contoursData[currentView];
+    if (!viewData) return;
+    const fieldData = viewData.fields[currentField];
+    if (!fieldData) return;
+
+    const axisLabel = contoursData.axisLabels[currentView];
+    const unit = fieldData.unit || '';
+
+    // Layer interface shapes
+    const xRange = [viewData.axis1[0], viewData.axis1[viewData.axis1.length - 1]];
+    const shapes = structureData.layers.map(l => ({
+        type:'line', x0:xRange[0], x1:xRange[1],
+        y0:l.depthTop, y1:l.depthTop,
+        line:{ color:pLine(), width:1, dash:'dot' },
+    }));
+    const annotations = structureData.layers.map(l => ({
+        x: xRange[0] + (xRange[1] - xRange[0]) * 0.02,
+        y: l.depthTop + l.thickness * 0.3,
+        text: l.label, showarrow:false,
+        font:{ size:10, color:pFont() }, opacity:0.7,
+    }));
+
+    const trace = {
+        z: fieldData.values, x: viewData.axis1, y: viewData.depths,
+        type:'heatmap', colorscale:'RdBu', reversescale:true,
+        colorbar:{ title:{ text:unit, side:'right' }, thickness:15, len:0.9 },
+        hoverongaps:false,
+        hovertemplate: `${axisLabel.split(' ')[0]}: %{x:.0f} mm<br>Depth: %{y:.1f} mm<br>Value: %{z:.2f} ${unit}<extra></extra>`,
+    };
+
+    const maxDepthShown = Math.min(710, Math.max(...viewData.depths));
+    const layout = baseLayout({
+        xaxis: { title: axisLabel, gridcolor:pGrid(), zeroline:true,
+                 zerolinecolor: isDark() ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)', zerolinewidth:1.5,
+                 autorange:false, range:[xRange[0], xRange[1]] },
+        yaxis: { title:'Y \u2013 Depth from Surface (mm)', autorange:false, range:[maxDepthShown, 0], gridcolor:pGrid() },
+        shapes, annotations,
+        margin:{ l:70, r:30, t:10, b:50 },
+        autosize: true,
+    });
+
+    Plotly.react('contour-plot', [trace], layout, { responsive:true, displayModeBar:false });
+
+    // Update coordinate badge
+    const coordBadge = document.getElementById('coord-badge-text');
+    if (coordBadge) {
+        coordBadge.textContent = currentView === 'longitudinal'
+            ? 'XY Plane at Z = 0' : 'YZ Plane at X = 0';
+    }
+}
+
+// ── Animation (follows selected field and view: longitudinal or transverse) ───────
+function getAnimForView() {
+    const a = contoursData.animation;
+    if (!a) return null;
+    if (a.longitudinal && a.transverse) return a[currentView] || a.longitudinal;
+    return a; // legacy: single animation (longitudinal)
+}
+function renderAnimFrame(idx) {
+    const anim = getAnimForView();
+    if (!anim || !anim.frames || !anim.frames[idx]) return;
+    const frame = anim.frames[idx];
+    const fieldObj = frame.fields[currentField];
+    if (!fieldObj) return;
+    const unit = fieldObj.unit || '';
+
+    const staticView = contoursData[currentView] || contoursData.longitudinal;
+    const xMin = staticView.axis1[0];
+    const xMax = staticView.axis1[staticView.axis1.length - 1];
+    const staticMaxDepth = Math.min(710, Math.max(...staticView.depths));
+    const axisLabel = contoursData.axisLabels[currentView];
+
+    const shapes = structureData.layers.map(l => ({
+        type:'line', x0:xMin, x1:xMax,
+        y0:l.depthTop, y1:l.depthTop,
+        line:{ color:pLine(), width:1, dash:'dot' },
+    }));
+
+    const annotations = structureData.layers.map(l => ({
+        x: xMin + (xMax - xMin) * 0.02,
+        y: l.depthTop + l.thickness * 0.3,
+        text: l.label, showarrow:false,
+        font:{ size:10, color:pFont() }, opacity:0.7,
+    }));
+
+    const trace = {
+        z: fieldObj.values, x: anim.axis1, y: anim.depths,
+        type:'heatmap', colorscale:'RdBu', reversescale:true,
+        colorbar:{ title:{ text:unit, side:'right' }, thickness:15, len:0.9 },
+        hoverongaps:false,
+        hovertemplate: axisLabel.split(' ')[0] + ': %{x:.0f} mm<br>Depth: %{y:.1f} mm<br>Value: %{z:.2f} ' + unit + '<extra></extra>',
+    };
+
+    const layout = baseLayout({
+        xaxis: { title: axisLabel, gridcolor:pGrid(),
+                 zeroline:true, zerolinecolor: isDark() ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)', zerolinewidth:1.5,
+                 autorange:false, range:[xMin, xMax] },
+        yaxis: { title:'Y \u2013 Depth from Surface (mm)', autorange:false, range:[staticMaxDepth, 0], gridcolor:pGrid() },
+        shapes, annotations,
+        margin:{ l:70, r:30, t:10, b:50 },
+        autosize: true,
+    });
+
+    Plotly.react('contour-plot', [trace], layout, { responsive:true, displayModeBar:false });
+    document.getElementById('anim-label').textContent = `Step ${frame.timestep}`;
+}
+
+// ── 3D Point Cloud ───────────────────────────
+// Axes: X = Traffic, Y = Transverse, Z = Depth (0 at top = surface)
+function render3D() {
+    if (!pointcloudData) return;
+    const pc = pointcloudData;
+    const field = document.getElementById('viz3d-field').value;
+    const markerSize = parseInt(document.getElementById('viz3d-size').value);
+    const layerFilter = document.getElementById('viz3d-layer-filter')?.value || 'all';
+    const showGrid = document.getElementById('viz3d-show-grid')?.checked !== false;
+    const showMesh = document.getElementById('viz3d-show-mesh')?.checked !== false;
+
+    const fieldObj = pc.fields[field];
+    if (!fieldObj) return;
+
+    const vals = fieldObj.values;
+    const unit = fieldObj.unit || '';
+    const { x: gx, depths: gy, z: gz, nx, ny, nz } = pc;
+    const maxDepth = Math.max(...gy);
+
+    // Layer filter: which depths to include (depth = depth from surface, 0 at top)
+    let depthInLayer = () => true;
+    if (structureData && layerFilter !== 'all') {
+        const layer = structureData.layers.find(l => l.id === layerFilter);
+        if (layer) {
+            const dTop = layer.depthTop, dBot = dTop + layer.thickness;
+            depthInLayer = d => d >= dTop && d < dBot;
+        }
+    }
+
+    // Unpack flat array: plot X=Traffic(gx), Y=Transverse(gz), Z=Depth with 0 at top (maxDepth - depth)
+    const xs = [], ys = [], zs = [], cs = [], depths = [];
+    for (let ix = 0; ix < nx; ix++) {
+        for (let iy = 0; iy < ny; iy++) {
+            const depth = gy[iy];
+            if (!depthInLayer(depth)) continue;
+            for (let iz = 0; iz < nz; iz++) {
+                const idx = ix * ny * nz + iy * nz + iz;
+                const v = vals[idx];
+                if (v === null || v === undefined) continue;
+                xs.push(gx[ix]);
+                ys.push(gz[iz]);           // Y = Transverse
+                zs.push(maxDepth - depth); // Z = vertical, surface (depth=0) at top
+                cs.push(v);
+                depths.push(depth);
+            }
+        }
+    }
+
+    const scatter = {
+        x: xs, y: ys, z: zs,
+        mode: 'markers',
+        type: 'scatter3d',
+        marker: {
+            size: markerSize,
+            color: cs,
+            colorscale: 'RdBu',
+            reversescale: true,
+            colorbar: { title: { text: unit }, thickness: 15 },
+            opacity: 0.85,
+            line: { width: 0.3, color: 'rgba(0,0,0,0.15)' },
+        },
+        hovertemplate: 'Traffic X: %{x:.0f} mm<br>Transverse Z: %{y:.0f} mm<br>Depth: %{customdata:.0f} mm<br>Value: %{marker.color:.2f} ' + unit + '<extra></extra>',
+        customdata: depths,
+    };
+
+    const xMin = Math.min(...gx), xMax = Math.max(...gx);
+    const zMin = Math.min(...gz), zMax = Math.max(...gz);
+
+    const meshTraces = [];
+    if (showMesh && structureData) {
+        structureData.layers.forEach((layer, li) => {
+            if (li === 0) return;
+            const zPlane = maxDepth - layer.depthTop;
+            meshTraces.push({
+                x: [xMin, xMax, xMax, xMin],
+                y: [zMin, zMin, zMax, zMax],
+                z: [zPlane, zPlane, zPlane, zPlane],
+                i: [0, 0], j: [1, 2], k: [2, 3],
+                type: 'mesh3d',
+                opacity: 0.1,
+                color: layer.color,
+                hoverinfo: 'text',
+                text: layer.label,
+                showscale: false,
+            });
+        });
+    }
+
+    const lineTraces = [];
+    if (showGrid) {
+        const lineColor = isDark() ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+        for (let iy = 0; iy < ny; iy++) {
+            if (!depthInLayer(gy[iy])) continue;
+            for (let iz = 0; iz < nz; iz++) {
+                const lx = [], ly = [], lz = [];
+                for (let ix = 0; ix < nx; ix++) {
+                    lx.push(gx[ix]); ly.push(gz[iz]); lz.push(maxDepth - gy[iy]);
+                }
+                lineTraces.push({ x:lx, y:ly, z:lz, mode:'lines', type:'scatter3d',
+                    line:{ width:1, color:lineColor }, hoverinfo:'skip', showlegend:false });
+            }
+        }
+        for (let ix = 0; ix < nx; ix++) {
+            for (let iy = 0; iy < ny; iy++) {
+                if (!depthInLayer(gy[iy])) continue;
+                const lx = [], ly = [], lz = [];
+                for (let iz = 0; iz < nz; iz++) {
+                    lx.push(gx[ix]); ly.push(gz[iz]); lz.push(maxDepth - gy[iy]);
+                }
+                lineTraces.push({ x:lx, y:ly, z:lz, mode:'lines', type:'scatter3d',
+                    line:{ width:1, color:lineColor }, hoverinfo:'skip', showlegend:false });
+            }
+        }
+        for (let ix = 0; ix < nx; ix++) {
+            for (let iz = 0; iz < nz; iz++) {
+                const lx = [], ly = [], lz = [];
+                for (let iy = 0; iy < ny; iy++) {
+                    if (!depthInLayer(gy[iy])) continue;
+                    lx.push(gx[ix]); ly.push(gz[iz]); lz.push(maxDepth - gy[iy]);
+                }
+                if (lx.length > 1) lineTraces.push({ x:lx, y:ly, z:lz, mode:'lines', type:'scatter3d',
+                    line:{ width:1, color:lineColor }, hoverinfo:'skip', showlegend:false });
+            }
+        }
+    }
+
+    const zTickVals = [];
+    const zTickText = [];
+    const step = Math.max(500, Math.floor(maxDepth / 5));
+    for (let z = 0; z <= maxDepth; z += step) {
+        zTickVals.push(z);                    // scene Z coordinate (0 at bottom, maxDepth at top)
+        zTickText.push(String(maxDepth - z)); // label: depth 0 at top, maxDepth at bottom
+    }
+    if (zTickVals[zTickVals.length - 1] !== maxDepth) {
+        zTickVals.push(maxDepth);
+        zTickText.push('0');
+    }
+
+    const layout3d = {
+        paper_bgcolor: pPaper(),
+        font: { family:'Source Sans Pro', color:pFont(), size:11 },
+        margin: { l:0, r:0, t:0, b:0 },
+        autosize: true,
+        scene: {
+            xaxis: { title:'X \u2013 Traffic (mm)', gridcolor:pGrid(), backgroundcolor:pBg(), zerolinecolor:pLine(), showspikes:false },
+            yaxis: { title:'Y \u2013 Transverse (mm)', gridcolor:pGrid(), backgroundcolor:pBg(), zerolinecolor:pLine(), showspikes:false },
+            zaxis: {
+                title: 'Z \u2013 Depth (mm)',
+                gridcolor: pGrid(),
+                backgroundcolor: pBg(),
+                zerolinecolor: pLine(),
+                showspikes: false,
+                tickvals: zTickVals,
+                ticktext: zTickText,
+            },
+            aspectmode: 'data',
+            camera: { eye: { x: 1.4, y: 1.3, z: 0.9 } },
+        },
+        showlegend: false,
+    };
+
+    Plotly.react('viz3d-plot', [scatter, ...meshTraces, ...lineTraces], layout3d,
+                 { responsive:true, displayModeBar:true, modeBarButtonsToRemove:['toImage'] });
+}
+
+// ── 3D Field Analysis Panel ──────────────────
+function render3DInfo() {
+    if (!pointcloudData || !structureData) return;
+    const field = document.getElementById('viz3d-field').value;
+    const pc = pointcloudData;
+    const fieldObj = pc.fields[field];
+    if (!fieldObj) return;
+    const vals = fieldObj.values;
+    const unit = fieldObj.unit || '';
+    const info = FIELD_INFO[field] || { symbol:field, name:field, desc:'' };
+
+    // ── Global statistics ──
+    let globalMin = Infinity, globalMax = -Infinity, globalSum = 0, globalN = 0;
+    for (let i = 0; i < vals.length; i++) {
+        const v = vals[i];
+        if (v === null || v === undefined) continue;
+        if (v < globalMin) globalMin = v;
+        if (v > globalMax) globalMax = v;
+        globalSum += v; globalN++;
+    }
+    const globalMean = globalN ? globalSum / globalN : 0;
+
+    // ── Per-depth statistics (for envelope) ──
+    const envDepths = [], envMin = [], envMax = [], envMean = [];
+    for (let iy = 0; iy < pc.ny; iy++) {
+        let dMin = Infinity, dMax = -Infinity, dSum = 0, dN = 0;
+        for (let ix = 0; ix < pc.nx; ix++) {
+            for (let iz = 0; iz < pc.nz; iz++) {
+                const v = vals[ix * pc.ny * pc.nz + iy * pc.nz + iz];
+                if (v === null || v === undefined) continue;
+                if (v < dMin) dMin = v;
+                if (v > dMax) dMax = v;
+                dSum += v; dN++;
+            }
+        }
+        if (dN) {
+            envDepths.push(pc.depths[iy]);
+            envMin.push(dMin); envMax.push(dMax);
+            envMean.push(dSum / dN);
+        }
+    }
+
+    // ── Per-layer statistics ──
+    const layerStats = structureData.layers.map(layer => {
+        const dTop = layer.depthTop, dBot = dTop + layer.thickness;
+        let lMin = Infinity, lMax = -Infinity, lSum = 0, lN = 0;
+        for (let iy = 0; iy < pc.ny; iy++) {
+            if (pc.depths[iy] < dTop || pc.depths[iy] >= dBot) continue;
+            for (let ix = 0; ix < pc.nx; ix++) {
+                for (let iz = 0; iz < pc.nz; iz++) {
+                    const v = vals[ix * pc.ny * pc.nz + iy * pc.nz + iz];
+                    if (v === null || v === undefined) continue;
+                    if (v < lMin) lMin = v;
+                    if (v > lMax) lMax = v;
+                    lSum += v; lN++;
+                }
+            }
+        }
+        const range = lN ? lMax - lMin : 0;
+        return { id:layer.id, label:layer.label, color:layer.color,
+                 min:lN?lMin:0, max:lN?lMax:0, mean:lN?lSum/lN:0, range, count:lN };
+    });
+    const maxRange = Math.max(...layerStats.map(l=>l.range), 1);
+
+    // ── Format helper ──
+    const fmt = v => {
+        const av = Math.abs(v);
+        if (av >= 1000) return v.toFixed(0);
+        if (av >= 100)  return v.toFixed(1);
+        if (av >= 1)    return v.toFixed(2);
+        return v.toFixed(3);
+    };
+
+    // ── Render HTML ──
+    const container = document.getElementById('viz3d-info-content');
+    container.innerHTML = `
+        <div class="field-header">
+            <span class="fh-symbol">${info.symbol}</span>
+            <span class="fh-name">${info.name}</span>
+            <span class="fh-desc">${info.desc}</span>
+        </div>
+        <div class="global-stats-grid">
+            <div class="gs-card gs-min"><div class="gs-label">Min</div><div class="gs-value">${fmt(globalMin)}</div><div class="gs-unit">${unit}</div></div>
+            <div class="gs-card gs-mean"><div class="gs-label">Mean</div><div class="gs-value">${fmt(globalMean)}</div><div class="gs-unit">${unit}</div></div>
+            <div class="gs-card gs-max"><div class="gs-label">Max</div><div class="gs-value">${fmt(globalMax)}</div><div class="gs-unit">${unit}</div></div>
+        </div>
+        <div class="envelope-title"><i class="fas fa-chart-area"></i> Response Envelope vs Depth</div>
+        <div class="envelope-chart" id="envelope-chart"></div>
+        <div class="layer-stats-title"><i class="fas fa-layer-group"></i> Per-Layer Breakdown</div>
+        ${layerStats.map(ls => `
+            <div class="layer-stat-row">
+                <span class="ls-color" style="background:${ls.color};"></span>
+                <span class="ls-name">${ls.label}</span>
+                <span class="ls-range">${fmt(ls.min)} / ${fmt(ls.max)}</span>
+                <span class="ls-bar-track"><span class="ls-bar-fill" style="width:${(ls.range/maxRange*100).toFixed(0)}%;background:${ls.color};"></span></span>
+            </div>`).join('')}
+    `;
+
+    // ── Render depth envelope chart ──
+    setTimeout(() => {
+        const envFill = {
+            x: [...envMax, ...envMin.slice().reverse()],
+            y: [...envDepths, ...envDepths.slice().reverse()],
+            type:'scatter', fill:'toself',
+            fillcolor: isDark() ? 'rgba(24,169,168,0.12)' : 'rgba(24,169,168,0.15)',
+            line:{width:0}, showlegend:false, hoverinfo:'skip',
+        };
+        const envMinTrace = {
+            x:envMin, y:envDepths, type:'scatter', mode:'lines',
+            line:{color:'#3b82f6', width:1.5, dash:'dot'}, name:'Min',
+            hovertemplate:'Min: %{x:.2f} '+unit+'<br>Depth: %{y:.1f} mm<extra></extra>',
+        };
+        const envMaxTrace = {
+            x:envMax, y:envDepths, type:'scatter', mode:'lines',
+            line:{color:'#ef4444', width:1.5, dash:'dot'}, name:'Max',
+            hovertemplate:'Max: %{x:.2f} '+unit+'<br>Depth: %{y:.1f} mm<extra></extra>',
+        };
+        const envMeanTrace = {
+            x:envMean, y:envDepths, type:'scatter', mode:'lines',
+            line:{color:isDark()?'#2dd4bf':'#0d7377', width:2.5}, name:'Mean',
+            hovertemplate:'Mean: %{x:.2f} '+unit+'<br>Depth: %{y:.1f} mm<extra></extra>',
+        };
+        // Compute tight-fit ranges from envelope data (include 0 for fills)
+        const allEnvX = [...envMin, ...envMax, 0];
+        const exMin = Math.min(...allEnvX), exMax = Math.max(...allEnvX);
+        const exSpan = Math.max(exMax - exMin, Math.max(Math.abs(exMin), Math.abs(exMax)) * 0.1, 1);
+        const exPad = exSpan * 0.06;
+        const eyMin = Math.min(...envDepths), eyMax = Math.max(...envDepths);
+        const eySpan = Math.max(eyMax - eyMin, 1);
+        const eyPad = eySpan * 0.04;
+
+        // Layer boundary shapes
+        const shapes = structureData.layers.map(l => ({
+            type:'line', xref:'paper', x0:0, x1:1,
+            y0:l.depthTop, y1:l.depthTop, line:{color:pLine(), width:0.8},
+        }));
+        const annots = structureData.layers.map(l => ({
+            xref:'paper', x:0.98, y:l.depthTop + l.thickness * 0.3,
+            text:l.label, showarrow:false,
+            font:{size:7, color:pFont()}, opacity:0.5, xanchor:'right',
+        }));
+        const envLayout = baseLayout({
+            xaxis:{title:{text:unit, font:{size:9, color:pFont()}}, gridcolor:pGrid(), zeroline:true, zerolinecolor:pLine(),
+                   tickfont:{color:pFont()}, autorange:false, range:[exMin - exPad, exMax + exPad]},
+            yaxis:{title:{text:'Depth (mm)', font:{size:9, color:pFont()}}, autorange:false,
+                   tickfont:{color:pFont()}, range:[eyMax + eyPad, eyMin - eyPad], gridcolor:pGrid()},
+            shapes, annotations:annots,
+            margin:{l:42, r:8, t:6, b:30},
+            autosize:true, showlegend:false,
+            font:{size:9, color:pFont()},
+        });
+        Plotly.newPlot('envelope-chart', [envFill, envMinTrace, envMaxTrace, envMeanTrace], envLayout,
+                       {responsive:true, displayModeBar:false});
+    }, 40);
+}
+
+// ── Profile Charts (per layer group) ─────────
+function renderProfiles(layerGroup) {
+    const container = document.getElementById('profiles-container');
+    const profiles = profilesData.profiles.filter(p => p.layerGroup === layerGroup);
+
+    if (!profiles.length) {
+        container.innerHTML = '<div class="no-profiles-msg">No profiles available for this layer.</div>';
+        return;
+    }
+
+    // Group by category
+    const groups = {};
+    profiles.forEach(p => {
+        if (!groups[p.category]) groups[p.category] = [];
+        groups[p.category].push(p);
+    });
+
+    let html = '';
+    const icons = { 'HMA Layer':'fa-road', 'Near-Surface Responses':'fa-arrows-alt-v',
+                    'Base Layer':'fa-mountain', 'Subgrade Layer':'fa-globe' };
+
+    Object.entries(groups).forEach(([cat, profs]) => {
+        const icon = icons[cat] || 'fa-chart-line';
+        html += `<div class="profile-row-title"><i class="fas ${icon}"></i> ${cat}</div>`;
+        html += '<div class="profile-grid">';
+        profs.forEach((prof, i) => {
+            const cardId = `pc-${layerGroup}-${cat.replace(/\s/g,'')}-${i}`;
+            const detLayer = structureData.layers.find(l => l.id === prof.detectionLayer);
+            const detLabel = detLayer ? detLayer.label : prof.detectionLayer;
+            html += `<div class="profile-card panel" data-tip="Detection layer: ${detLabel} | Critical timestep: ${prof.timestep} | Depth: ${prof.criticalDepth.toFixed(1)} mm">
+                <div class="profile-label">${prof.label}</div>
+                <div class="critical-badge"><i class="fas fa-crosshairs"></i> ${prof.criticalValue.toFixed(1)} \u00b5\u03b5</div>
+                <div class="profile-chart" id="${cardId}"></div>
+            </div>`;
+        });
+        html += '</div>';
+    });
+
+    container.innerHTML = html;
+
+    // Defer chart creation one frame so grid layout is ready
+    requestAnimationFrame(() => {
+        Object.entries(groups).forEach(([cat, profs]) => {
+            profs.forEach((prof, i) => {
+                const cardId = `pc-${layerGroup}-${cat.replace(/\s/g,'')}-${i}`;
+                renderProfileChart(cardId, prof);
+            });
+        });
+    });
+}
+
+function renderProfileChart(elementId, prof) {
+    const { depths, values, criticalDepth, criticalValue, viewType } = prof;
+
+    // Compute fitted ranges including zero (fill traces anchor at x=0)
+    const xData = [...values, criticalValue, 0];
+    const yData = [...depths, criticalDepth];
+    const xMin = Math.min(...xData), xMax = Math.max(...xData);
+    const yMin = Math.min(...yData), yMax = Math.max(...yData);
+    const xSpan = Math.max(xMax - xMin, Math.max(Math.abs(xMin), Math.abs(xMax)) * 0.1, 1);
+    const ySpan = Math.max(yMax - yMin, 1);
+    const xPad = xSpan * 0.06;
+    const yPad = ySpan * 0.04;
+
+    const mainTrace = {
+        x: values, y: depths, type:'scatter', mode:'lines',
+        line:{ color:'#7c3aed', width:2.5 }, name:prof.label,
+        hovertemplate:'%{x:.2f} \u00b5\u03b5<br>Depth: %{y:.1f} mm<extra></extra>',
+    };
+    const posFill = {
+        x: values.map(v => v >= 0 ? v : 0), y: depths, type:'scatter', mode:'lines',
+        fill:'tozerox', fillcolor:'rgba(59,130,246,0.2)', line:{width:0},
+        showlegend:false, hoverinfo:'skip',
+    };
+    const negFill = {
+        x: values.map(v => v < 0 ? v : 0), y: depths, type:'scatter', mode:'lines',
+        fill:'tozerox', fillcolor:'rgba(239,68,68,0.2)', line:{width:0},
+        showlegend:false, hoverinfo:'skip',
+    };
+    const critMarker = {
+        x:[criticalValue], y:[criticalDepth], type:'scatter', mode:'markers+text',
+        marker:{ color:'#ef4444', size:8, line:{color:'#000',width:1} },
+        text:[`${criticalValue.toFixed(1)} \u00b5\u03b5`], textposition:'middle right',
+        textfont:{ size:9, color:pFont() }, showlegend:false, hoverinfo:'skip',
+    };
+
+    const shapes = [], annots = [];
+    structureData.layers.forEach(l => {
+        shapes.push({ type:'line', xref:'paper', x0:0, x1:1,
+            y0:l.depthTop, y1:l.depthTop, line:{color:pLine(), width:0.8} });
+        annots.push({ xref:'paper', x:0.02, y:l.depthTop + 3,
+            text:l.label, showarrow:false, font:{size:8, color:pFont()}, opacity:0.6 });
+    });
+
+    const layout = baseLayout({
+        xaxis:{ title:{text:prof.label+' (\u00b5\u03b5)', font:{size:11}}, gridcolor:pGrid(),
+                zeroline:true, zerolinecolor:pLine(), zerolinewidth:1,
+                autorange:false, range:[xMin - xPad, xMax + xPad] },
+        yaxis:{ title:{text:'Depth (mm)', font:{size:11}}, autorange:false,
+                range:[yMax + yPad, yMin - yPad], gridcolor:pGrid() },
+        shapes, annotations:annots, showlegend:false,
+        margin:{l:55, r:15, t:10, b:45},
+        autosize:true,
+    });
+
+    Plotly.newPlot(elementId, [posFill, negFill, mainTrace, critMarker], layout,
+                  { responsive:true, displayModeBar:false });
+}
+
+// ── Controls ─────────────────────────────────
+function bindControls() {
+    // Field selector
+    document.getElementById('contour-field').onchange = (e) => {
+        currentField = e.target.value;
+        stopAnimation();
+        renderContour();
+    };
+
+    // View tabs
+    document.querySelectorAll('.view-tab').forEach(tab => {
+        tab.onclick = () => {
+            document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentView = tab.dataset.view;
+            stopAnimation();
+            const anim = getAnimForView();
+            const slider = document.getElementById('anim-slider');
+            if (anim && anim.frames && slider) {
+                slider.max = Math.max(0, anim.frames.length - 1);
+                const idx = Math.min(parseInt(slider.value) || 0, anim.frames.length - 1);
+                slider.value = idx;
+                renderAnimFrame(idx);
+            } else {
+                renderContour();
+            }
+        };
+    });
+
+    // Animation (uses current view: longitudinal or transverse)
+    const slider = document.getElementById('anim-slider');
+    const animForView = getAnimForView();
+    if (animForView && animForView.frames) {
+        slider.max = animForView.frames.length - 1;
+        slider.value = 0;
+    }
+
+    slider.oninput = () => {
+        renderAnimFrame(parseInt(slider.value));
+    };
+
+    document.getElementById('anim-play').onclick = () => {
+        if (animPlaying) { stopAnimation(); return; }
+        animPlaying = true;
+        document.getElementById('anim-play-icon').className = 'fas fa-pause';
+        animTimer = setInterval(() => {
+            const anim = getAnimForView();
+            if (!anim || !anim.frames) return;
+            let v = parseInt(slider.value) + 1;
+            if (v >= anim.frames.length) v = 0;
+            slider.value = v;
+            renderAnimFrame(v);
+        }, 400);
+    };
+
+    // 3D controls
+    document.getElementById('viz3d-field').onchange = () => { render3D(); render3DInfo(); };
+    document.getElementById('viz3d-size').onchange = () => render3D();
+    const layerWrap = document.getElementById('viz3d-layer-filter-wrap');
+    const layerSelect = document.getElementById('viz3d-layer-filter');
+    if (structureData && structureData.layers.length) {
+        layerWrap.classList.add('visible');
+        layerSelect.innerHTML = '<option value="all">All layers</option>' +
+            structureData.layers.map(l => `<option value="${l.id}">${l.label}</option>`).join('');
+    } else {
+        layerWrap.classList.remove('visible');
+    }
+    layerSelect.onchange = () => render3D();
+    const gridCb = document.getElementById('viz3d-show-grid');
+    const meshCb = document.getElementById('viz3d-show-mesh');
+    if (gridCb) gridCb.onchange = () => render3D();
+    if (meshCb) meshCb.onchange = () => render3D();
+}
+
+function stopAnimation() {
+    if (animTimer) clearInterval(animTimer);
+    animPlaying = false;
+    document.getElementById('anim-play-icon').className = 'fas fa-play';
+    // Restore static contour
+    renderContour();
+}
+
+// ── Theme reactivity ─────────────────────────
+new MutationObserver(() => {
+    if (!structureData) return;
+    renderContour();
+    render3D();
+    render3DInfo();
+    if (currentLayer) renderProfiles(LAYER_GROUP_MAP[currentLayer]);
+}).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+
+</script>
+</body>
+</html>
