@@ -175,18 +175,53 @@
         .structure-selector { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1rem; margin-bottom:2rem; }
         .structure-card {
             padding:1.25rem; cursor:pointer; display:flex; flex-direction:column; gap:0.5rem;
-            transition:all 0.3s ease; position:relative; overflow:hidden;
+            transition:transform 0.25s ease, box-shadow 0.25s ease, border-color 0.3s ease;
+            position:relative; overflow:hidden;
+        }
+        .structure-card:hover {
+            transform:translateY(-4px);
+            box-shadow:0 12px 28px rgba(0,0,0,0.15), 0 0 0 1px var(--asp-border);
         }
         .structure-card::before {
-            content:''; position:absolute; top:0; left:0; right:0; height:3px;
+            content:''; position:absolute; top:0; left:0; right:0; height:4px;
             background:var(--asp-border); transition:background 0.3s ease;
         }
         .structure-card.active::before, .structure-card:hover::before {
             background:linear-gradient(90deg,var(--asp-primary),var(--asp-secondary));
         }
-        .structure-card.active { border-color:var(--asp-primary); }
+        .structure-card.active {
+            border-color:var(--asp-primary);
+            box-shadow:0 8px 24px var(--asp-primary-glow), 0 0 0 1px var(--asp-primary);
+        }
         .structure-card .sc-name { font-weight:700; font-size:1.05rem; }
-        .structure-card .sc-desc { font-size:0.85rem; color:var(--asp-text-muted); }
+        .structure-card .sc-tags {
+            display:flex; flex-wrap:wrap; gap:0.4rem; align-items:center;
+        }
+        .structure-card .sc-tag {
+            display:inline-flex; align-items:center; gap:0.4rem;
+            padding:0.3rem 0.65rem; border-radius:8px; font-size:0.75rem; font-weight:600;
+            border:none; position:relative; overflow:hidden;
+            transition:transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .structure-card .sc-tag::before {
+            content:''; position:absolute; inset:0; border-radius:inherit;
+            opacity:0.15; pointer-events:none;
+        }
+        .structure-card .sc-tag i { opacity:0.95; font-size:0.7rem; position:relative; z-index:1; }
+        .structure-card .sc-tag { color:inherit; }
+        .structure-card .sc-tag-load {
+            background:linear-gradient(135deg, #0d7377 0%, var(--asp-primary) 50%, #2dd4bf 100%);
+            color:#fff; box-shadow:0 2px 8px rgba(24,169,168,0.35);
+        }
+        .structure-card .sc-tag-load::before { background:linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%); }
+        .structure-card .sc-tag-accel {
+            background:linear-gradient(135deg, #334155 0%, #475569 50%, #64748b 100%);
+            color:rgba(255,255,255,0.95); box-shadow:0 2px 8px rgba(0,0,0,0.2);
+        }
+        .structure-card .sc-tag-accel::before { background:linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 50%); }
+        .structure-card:hover .sc-tag { transform:translateY(-1px); }
+        .structure-card:hover .sc-tag-load { box-shadow:0 4px 12px rgba(24,169,168,0.45); }
+        .structure-card:hover .sc-tag-accel { box-shadow:0 4px 12px rgba(0,0,0,0.3); }
         .structure-card .sc-badge {
             display:inline-block; padding:0.2rem 0.6rem; border-radius:6px;
             font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;
@@ -409,18 +444,19 @@
         /* Stats Sidebar */
         .stats-sidebar { display:flex; flex-direction:column; }
         .stats-sidebar .panel-title { margin-bottom:0.6rem; }
-        .stats-list { display:flex; flex-direction:column; gap:0.4rem; flex:1; }
+        .stats-list { display:flex; flex-direction:column; gap:0.4rem; flex:1; min-width:0; }
         .stat-card {
             padding:0.6rem 0.8rem; border-radius:10px;
             background:var(--glass-bg); border:1px solid var(--glass-border);
             display:flex; flex-direction:column; gap:0.1rem;
             transition:all 0.2s ease; cursor:default;
+            min-width:0; overflow-wrap:break-word;
         }
         .stat-card:hover { background:var(--asp-primary-glow); transform:translateY(-1px); }
-        .stat-card .stat-label { font-size:0.58rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--asp-text-muted); display:flex; align-items:center; gap:0.25rem; }
-        .stat-card .stat-label i { font-size:0.55rem; color:var(--asp-primary); opacity:0.7; }
-        .stat-card .stat-value { font-size:1rem; font-weight:800; color:var(--asp-primary); font-family:'Courier New',monospace; line-height:1.2; }
-        .stat-card .stat-sub { font-size:0.58rem; color:var(--asp-text-muted); line-height:1.3; }
+        .stat-card .stat-label { font-size:0.58rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--asp-text-muted); display:flex; align-items:center; gap:0.25rem; flex-wrap:wrap; min-width:0; }
+        .stat-card .stat-label i { font-size:0.55rem; color:var(--asp-primary); opacity:0.7; flex-shrink:0; }
+        .stat-card .stat-value { font-size:1rem; font-weight:800; color:var(--asp-primary); font-family:'Courier New',monospace; line-height:1.2; word-break:break-word; overflow-wrap:break-word; }
+        .stat-card .stat-sub { font-size:0.58rem; color:var(--asp-text-muted); line-height:1.4; word-break:break-word; overflow-wrap:break-word; }
 
         /* ==================== TOP ROW ==================== */
         .top-row { display:grid; grid-template-columns:240px 1fr 210px; gap:1.25rem; margin-bottom:1.5rem; align-items:start; }
@@ -595,9 +631,9 @@
         /* ==================== RESPONSIVE ==================== */
         @media (max-width:1100px) {
             .top-row { grid-template-columns:240px 1fr; }
-            .stats-sidebar { grid-column:1 / -1; }
-            .stats-list { flex-direction:row; flex-wrap:wrap; }
-            .stat-card { flex:1 1 140px; }
+            .stats-sidebar { grid-column:1 / -1; min-width:0; }
+            .stats-list { flex-direction:row; flex-wrap:wrap; gap:0.5rem; }
+            .stat-card { flex:1 1 min(180px, 100%); min-width:0; }
             .viz3d-row { grid-template-columns:1fr; }
         }
         @media (max-width:960px) {
@@ -613,7 +649,18 @@
             .header-nav { padding:0.6rem 1rem; }
             .header-badges { gap:0.3rem; }
             .header-badge { font-size:0.68rem; padding:0.25rem 0.5rem; }
-            .stats-list { flex-direction:column; }
+            .stats-list { flex-direction:column; gap:0.5rem; }
+            .stat-card {
+                flex:none; width:100%; min-width:0;
+                padding:0.75rem 1rem;
+            }
+            .stat-card .stat-label { font-size:0.65rem; }
+            .stat-card .stat-label i { font-size:0.6rem; }
+            .stat-card .stat-value { font-size:1.05rem; }
+            .stat-card .stat-sub { font-size:0.65rem; line-height:1.45; }
+        }
+        @media (max-width:380px) {
+            .stat-card .stat-value { font-size:0.95rem; }
         }
 
         /* ==================== PLOT CENTERING ==================== */
@@ -945,13 +992,16 @@
 
 const DATA_BASE = 'data';
 const STRUCTURES = [
-    { id: 'TK_P1', name: 'Interstate Section', desc: 'SEC, 7.5 kips, 0% Slope' }
+    { id: 'TK_P1', name: 'Arterial Section', load: '7.5 kips', acceleration: 'No Acceleration', nodeCount: 144452 },
+    { id: 'FD_P1', name: 'Interstate Section', load: '6.0 kips', acceleration: 'No Acceleration', nodeCount: 144452 },
+    { id: 'LV_P1', name: 'Rural Section', load: '7.5 kips', acceleration: 'No Acceleration', nodeCount: 144452 },
+    { id: 'SMA_P1', name: 'Heavily-Trafficked Section', load: '7.5 kips', acceleration: 'No Acceleration', nodeCount: 144452 },
 ];
 
-// Layer group mapping: which layer IDs map to which profile layerGroup
+// Layer group mapping: which layer IDs map to which profile layerGroup (all sections)
 const LAYER_GROUP_MAP = {
-    'AC1': 'HMA', 'AC2': 'HMA',
-    'B1':  'B1',
+    'AC1': 'HMA', 'AC2': 'HMA', 'AC3': 'HMA',
+    'B1': 'B1', 'SB1': 'SB1', 'PCC': 'PCC',
     'SG1': 'SG1',
 };
 
@@ -970,6 +1020,7 @@ const FIELD_INFO = {
 let structureData = null, profilesData = null, contoursData = null, pointcloudData = null;
 let currentView = 'longitudinal', currentField = 'E11', currentLayer = null;
 let animPlaying = false, animTimer = null;
+let lastViz3dNarrow = null;
 
 // ── Theme helpers ────────────────────────────
 const isDark  = () => document.documentElement.getAttribute('data-theme') === 'dark';
@@ -995,6 +1046,14 @@ function baseLayout(extra) {
 document.addEventListener('DOMContentLoaded', () => {
     renderStructureCards();
     hideLoading();
+    window.addEventListener('resize', () => {
+        if (!pointcloudData) return;
+        const narrow = window.matchMedia('(max-width: 768px)').matches;
+        if (lastViz3dNarrow !== narrow) {
+            lastViz3dNarrow = narrow;
+            render3D();
+        }
+    });
 });
 
 function hideLoading() {
@@ -1011,12 +1070,16 @@ function renderStructureCards() {
     const countEl = document.getElementById('hdr-struct-count');
     if (countEl) countEl.textContent = STRUCTURES.length;
 
+    const fmtNodes = (n) => n >= 1000 ? (n / 1000).toFixed(0) + 'k' : String(n);
     document.getElementById('structure-selector').innerHTML = STRUCTURES.map(s => `
         <div class="structure-card panel" data-id="${s.id}" onclick="selectStructure('${s.id}')">
             <span class="sc-badge"><i class="fas fa-check-circle"></i> Available</span>
             <span class="sc-name"><i class="fas fa-road" style="margin-right:0.4rem;opacity:0.5;"></i>${s.name}</span>
-            <span class="sc-desc">${s.desc}</span>
-            <span class="sc-detail"><i class="fas fa-database" style="margin-right:0.25rem;"></i> 3D dynamic FEM &middot; 18 timesteps &middot; 144k nodes</span>
+            <div class="sc-tags">
+                <span class="sc-tag sc-tag-load" title="Wheel load"><i class="fas fa-weight-hanging"></i>${s.load}</span>
+                <span class="sc-tag sc-tag-accel" title="Slope / acceleration"><i class="fas fa-tachometer-alt"></i>${s.acceleration}</span>
+            </div>
+            <span class="sc-detail"><i class="fas fa-database" style="margin-right:0.25rem;"></i> 3D dynamic FEM &middot; 18 timesteps &middot; ${fmtNodes(s.nodeCount)} nodes</span>
         </div>`).join('');
 }
 
@@ -1152,7 +1215,7 @@ function renderStats() {
     const totalThick = s.layers.reduce((a, l) => a + l.thickness, 0);
     const profs = profilesData.profiles;
     const e11 = profs.find(p => p.component === 'E11' && p.layerGroup === 'HMA');
-    const e22 = profs.find(p => p.component === 'E22' && p.layerGroup === 'B1');
+    const e22 = profs.find(p => p.component === 'E22' && ['B1','SB1','PCC'].includes(p.layerGroup));
     const e23 = profs.find(p => p.component === 'E23' && p.layerGroup === 'HMA' && p.category === 'HMA Layer');
     const stats = [
         { label:'Total Thickness', value:`${totalThick.toFixed(0)} mm`, sub:`${(totalThick/25.4).toFixed(1)} in`, icon:'fa-ruler-vertical',
@@ -1163,8 +1226,8 @@ function renderStats() {
           tip:'Analysis window of the dynamic simulation used for critical value detection' },
         { label:'Peak \u03b5\u2081\u2081 (HMA)', value:`${e11?e11.criticalValue.toFixed(1):'---'} \u00b5\u03b5`, sub:e11?`@ ${e11.criticalDepth.toFixed(1)} mm depth, ts=${e11.timestep}`:'', icon:'fa-arrow-right',
           tip:'Maximum longitudinal tensile strain in the asphalt layer \u2014 controls fatigue cracking' },
-        { label:'Peak \u03b5\u2082\u2082 (Base)', value:`${e22?e22.criticalValue.toFixed(1):'---'} \u00b5\u03b5`, sub:e22?`@ ${e22.criticalDepth.toFixed(1)} mm depth, ts=${e22.timestep}`:'', icon:'fa-arrow-down',
-          tip:'Maximum vertical compressive strain in the base \u2014 controls rutting potential' },
+        { label:'Peak \u03b5\u2082\u2082 (Base/PCC)', value:`${e22?e22.criticalValue.toFixed(1):'---'} \u00b5\u03b5`, sub:e22?`@ ${e22.criticalDepth.toFixed(1)} mm depth, ts=${e22.timestep}`:'', icon:'fa-arrow-down',
+          tip:'Maximum vertical compressive strain in base/subbase/PCC \u2014 controls rutting potential' },
         { label:'Peak \u03b5\u2082\u2083 (HMA)', value:`${e23?e23.criticalValue.toFixed(1):'---'} \u00b5\u03b5`, sub:e23?`@ ${e23.criticalDepth.toFixed(1)} mm depth, ts=${e23.timestep}`:'', icon:'fa-arrows-alt',
           tip:'Maximum shear strain in the asphalt layer \u2014 influences near-surface cracking' },
     ];
@@ -1177,10 +1240,11 @@ function renderStats() {
 }
 
 // ── Layer Diagram (clickable) ────────────────
-const LAYER_ICONS = { AC1:'fa-road', AC2:'fa-road', B1:'fa-cubes', SG1:'fa-mountain' };
+const LAYER_ICONS = { AC1:'fa-road', AC2:'fa-road', AC3:'fa-road', B1:'fa-cubes', SB1:'fa-layer-group', PCC:'fa-th-large', SG1:'fa-mountain' };
 const LAYER_DESCS = {
-    AC1:'Hot Mix Asphalt surface course', AC2:'Hot Mix Asphalt binder course',
-    B1:'Granular base course', SG1:'Natural subgrade soil'
+    AC1:'Hot Mix Asphalt surface course', AC2:'Hot Mix Asphalt binder course', AC3:'Hot Mix Asphalt third course',
+    B1:'Granular base course', SB1:'Subbase course', PCC:'Portland cement concrete',
+    SG1:'Natural subgrade soil'
 };
 
 function renderLayerDiagram() {
@@ -1376,6 +1440,7 @@ function render3D() {
         }
     }
 
+    const isNarrow3d = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
     const scatter = {
         x: xs, y: ys, z: zs,
         mode: 'markers',
@@ -1385,7 +1450,11 @@ function render3D() {
             color: cs,
             colorscale: 'RdBu',
             reversescale: true,
-            colorbar: { title: { text: unit }, thickness: 15 },
+            colorbar: {
+                title: { text: unit },
+                thickness: isNarrow3d ? 10 : 15,
+                len: isNarrow3d ? 0.88 : 0.9,
+            },
             opacity: 0.85,
             line: { width: 0.3, color: 'rgba(0,0,0,0.15)' },
         },
@@ -1466,6 +1535,11 @@ function render3D() {
         zTickText.push('0');
     }
 
+    lastViz3dNarrow = isNarrow3d;
+    const cameraEye = isNarrow3d
+        ? { x: 0.5, y: 0.48, z: 0.32 }
+        : { x: 1.4, y: 1.3, z: 0.9 };
+
     const layout3d = {
         paper_bgcolor: pPaper(),
         font: { family:'Source Sans Pro', color:pFont(), size:11 },
@@ -1484,7 +1558,7 @@ function render3D() {
                 ticktext: zTickText,
             },
             aspectmode: 'data',
-            camera: { eye: { x: 1.4, y: 1.3, z: 0.9 } },
+            camera: { eye: cameraEye },
         },
         showlegend: false,
     };

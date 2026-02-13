@@ -332,7 +332,7 @@ def main():
 
         structure = {
             "id":   case.replace("_SL0", ""),
-            "name": "Interstate Section",
+            "name": "Arterial Section",
             "description": "SEC, 7.5 kips, 0% Slope",
             "model": {
                 "length": MODEL_LENGTH, "width": MODEL_WIDTH,
@@ -357,7 +357,10 @@ def main():
         _write(os.path.join(out_dir, "profiles.json"), {"profiles": profiles})
 
         # ── 3. Contour data + multi-field animation ─
-        overview_ts = profiles[6]["timestep"] - 1  # E22@B1
+        overview_ts = next(
+            (p["timestep"] - 1 for p in profiles if p.get("layerGroup") == "B1"),
+            profiles[0]["timestep"] - 1,
+        )
 
         print(f"\n  Static contours (ts={overview_ts+1}) ...")
         df_static = data_all[overview_ts]
