@@ -142,7 +142,13 @@
 							gap: 0.5rem;
 							list-style: none;
 							position: relative;
+							/* Avoid overflow-x: hidden here – it makes browsers add overflow-y: auto and a second scrollbar */
 						}
+			.resume-intro {
+				width: 100%;
+				box-sizing: border-box;
+				padding: 1.5rem 2rem 1.75rem;
+			}
 			.resume-social-row {
 				display: flex;
 				justify-content: center;
@@ -187,6 +193,8 @@
 			.resume-bio {
 				max-width: 720px;
 				margin: 0 auto;
+				width: 100%;
+				box-sizing: border-box;
 			}
 			.resume-bio p {
 				margin: 0;
@@ -194,6 +202,8 @@
 				line-height: 1.8;
 				color: var(--resume-text, #333);
 				text-align: center;
+				overflow-wrap: break-word;
+				word-wrap: break-word;
 			}
 			.resume-bio p a {
 				color: var(--resume-accent, #18a9a8);
@@ -416,13 +426,16 @@
 				background: linear-gradient(135deg, #0d7377, #18a9a8);
 			}
 			@media screen and (max-width: 736px) {
-				.resume-main .resume-container { padding: 0 1rem; }
-				.resume-intro,
-				.resume-cv-section { padding-left: 1.25rem; padding-right: 1.25rem; }
+				.resume-main .resume-container { padding: 0 0.75rem; }
+				.resume-intro {
+					padding: 1rem 0.75rem 1.25rem;
+				}
+				.resume-cv-section { padding: 1.25rem 0.75rem 1.25rem; }
 				.resume-hero-overlay { padding: 1rem 1.25rem 1.25rem; }
 				.resume-hero-tagline { font-size: 0.9rem; }
-				.resume-contact-bar { flex-direction: row; flex-wrap: nowrap; gap: 0.75rem 1rem; font-size: 0.8rem; justify-content: center; overflow-x: auto; padding-bottom: 0.25rem; -webkit-overflow-scrolling: touch; }
+				.resume-contact-bar { flex-direction: row; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.8rem; justify-content: center; }
 				.resume-contact-bar a { white-space: nowrap; }
+				.resume-bio p { font-size: 0.875rem; line-height: 1.65; }
 				.resume-cv-header { flex-direction: column; align-items: flex-start; }
 				.resume-cv-buttons { flex-direction: column; }
 				.cv-entry-header { flex-direction: column; align-items: flex-start; }

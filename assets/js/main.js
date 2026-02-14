@@ -73,27 +73,24 @@
 	const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 	if (!prefersReducedMotion) {
-		// Intersection Observer for scroll animations
+		// Intersection Observer for scroll animations – trigger early so fast scroll doesn’t outrun them
 		const observerOptions = {
-			threshold: 0.1,
-			rootMargin: '0px 0px -50px 0px'
+			threshold: 0.05,
+			rootMargin: '0px 0px 180px 0px' // trigger when element is 180px below viewport
 		};
 
 		const animationObserver = new IntersectionObserver((entries) => {
 			entries.forEach((entry) => {
 				if (entry.isIntersecting) {
-					// Add stagger effect based on element index within its parent
 					const parent = entry.target.parentElement;
 					const siblings = parent ? Array.from(parent.children).filter(
 						child => child.classList.contains('animate-on-scroll')
 					) : [];
 					const index = siblings.indexOf(entry.target);
-					
+					// Short stagger so animations keep up with fast scrolling
 					setTimeout(() => {
 						entry.target.classList.add('visible');
-					}, index * 100); // 100ms stagger between siblings
-					
-					// Optionally unobserve after animation
+					}, index * 35);
 					animationObserver.unobserve(entry.target);
 				}
 			});
