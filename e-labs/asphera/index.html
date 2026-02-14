@@ -114,6 +114,7 @@
             text-decoration:none; font-weight:500; font-size:0.88rem;
             border:1px solid rgba(24,169,168,0.3); backdrop-filter:blur(8px);
             transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            margin-right:auto;
         }
         .back-btn:hover {
             background:rgba(24,169,168,0.3); border-color:rgba(24,169,168,0.5);
@@ -121,7 +122,7 @@
         }
         .back-btn i { transition:transform 0.3s ease; }
         .back-btn:hover i { transform:translateX(-3px); }
-        .header-badges { display:flex; gap:0.5rem; margin-left:auto; }
+        .header-badges { display:flex; gap:0.5rem; margin-left:auto; align-items:center; }
         .header-badge {
             display:inline-flex; align-items:center; gap:0.35rem;
             padding:0.35rem 0.75rem; border-radius:8px;
@@ -130,6 +131,34 @@
             border:1px solid rgba(255,255,255,0.12);
         }
         .header-badge i { font-size:0.72rem; }
+        /* Higher specificity to override main.css button styles */
+        .header-nav .about-btn,
+        .header-nav button.about-btn {
+            display:inline-flex; align-items:center; gap:0.45rem;
+            padding:0.45rem 1rem; border-radius:10px;
+            background:linear-gradient(155deg, #0e7a7d 0%, #0c6467 35%, #094a4c 100%) !important;
+            color:#fff !important; font-size:0.82rem; font-weight:600; letter-spacing:0.04em;
+            border:1px solid rgba(24,169,168,0.4);
+            box-shadow:0 3px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+            backdrop-filter:blur(8px);
+            cursor:pointer; text-decoration:none; transition:all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+        .header-nav .about-btn i,
+        .header-nav button.about-btn i { transition:transform 0.3s ease; }
+        .header-nav .about-btn:hover,
+        .header-nav button.about-btn:hover {
+            background:linear-gradient(155deg, #109193 0%, #0e7a7d 35%, #0b5d5f 100%) !important;
+            border-color:rgba(24,169,168,0.55);
+            box-shadow:0 5px 20px var(--asp-primary-glow), inset 0 1px 0 rgba(255,255,255,0.2);
+            transform:translateY(-1px);
+        }
+        .header-nav .about-btn:hover i,
+        .header-nav button.about-btn:hover i { transform:scale(1.08); }
+        .header-nav .about-btn:active,
+        .header-nav button.about-btn:active {
+            transform:translateY(0);
+            box-shadow:0 2px 8px rgba(0,0,0,0.25), inset 0 2px 4px rgba(0,0,0,0.2);
+        }
         .header-content {
             position:relative; z-index:2; text-align:center;
             padding:1.5rem 2rem 1.75rem;
@@ -437,6 +466,136 @@
             50% { opacity:0.9; transform:rotate(10deg); }
         }
 
+        /* ==================== ABOUT MODAL ==================== */
+        .about-overlay {
+            position:fixed; inset:0; z-index:11000;
+            display:flex; align-items:center; justify-content:center;
+            background:rgba(0,0,0,0.6);
+            backdrop-filter:blur(16px) saturate(1.2);
+            opacity:0; pointer-events:none;
+            transition:opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .about-overlay::before {
+            content:''; position:absolute; inset:0; pointer-events:none;
+            background:radial-gradient(ellipse 80% 50% at 50% 50%, rgba(24,169,168,0.06), transparent 60%);
+        }
+        .about-overlay.open {
+            opacity:1; pointer-events:all;
+        }
+        .about-modal {
+            position:relative; overflow:hidden;
+            width:440px; max-width:92vw; max-height:85vh;
+            background:var(--asp-bg-panel);
+            border:1px solid rgba(24,169,168,0.25);
+            border-radius:20px;
+            box-shadow:0 24px 64px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,0,0,0.06), 0 0 48px -8px var(--asp-primary-glow);
+            transform:translateY(24px) scale(0.96);
+            opacity:0;
+            transition:transform 0.4s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.35s ease, box-shadow 0.4s ease;
+        }
+        .about-overlay.open .about-modal {
+            transform:translateY(0) scale(1);
+            opacity:1;
+            box-shadow:0 24px 64px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.08), 0 0 56px -4px var(--asp-primary-glow);
+        }
+        .about-modal::before {
+            content:''; position:absolute; top:0; left:0; right:0; height:5px;
+            background:linear-gradient(90deg, var(--asp-primary), #2dd4bf, var(--asp-accent), var(--asp-primary));
+            background-size:300% 100%;
+            animation:dlShimmer 3s linear infinite;
+        }
+        .about-modal::after {
+            content:''; position:absolute; top:-100px; left:50%; transform:translateX(-50%);
+            width:280px; height:280px; border-radius:50%;
+            background:radial-gradient(circle, var(--asp-primary-glow) 0%, transparent 60%);
+            opacity:0.35; pointer-events:none;
+        }
+        .about-header {
+            display:flex; align-items:center; gap:1rem;
+            padding:1.5rem 1.75rem 1rem;
+            position:relative; z-index:1;
+        }
+        .about-icon {
+            width:48px; height:48px;
+            border-radius:14px;
+            background:linear-gradient(145deg, var(--asp-primary), #2dd4bf);
+            display:flex; align-items:center; justify-content:center;
+            box-shadow:0 6px 20px var(--asp-primary-glow), inset 0 1px 0 rgba(255,255,255,0.25);
+        }
+        .about-icon i { color:#fff; font-size:1.25rem; }
+        .about-header h2 {
+            font-size:1.5rem; font-weight:800;
+            background:linear-gradient(135deg, var(--asp-text) 0%, var(--asp-text-secondary) 100%);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+            background-clip:text;
+        }
+        .about-body {
+            padding:0 1.75rem 1.25rem;
+            overflow-y:auto; max-height:50vh;
+            position:relative; z-index:1;
+        }
+        .about-section {
+            margin-bottom:1rem;
+        }
+        .about-section:last-child { margin-bottom:0; }
+        .about-section h3 {
+            font-size:0.8rem; font-weight:700; text-transform:uppercase;
+            letter-spacing:0.08em; color:var(--asp-primary);
+            margin-bottom:0.5rem;
+        }
+        .about-list {
+            list-style:none; padding:0; margin:0;
+            font-size:0.88rem; color:var(--asp-text-secondary);
+            line-height:1.65;
+        }
+        .about-list li {
+            padding:0.25rem 0;
+            border-bottom:1px solid var(--glass-border);
+        }
+        .about-list li:last-child { border-bottom:none; }
+        .about-list a {
+            color:var(--asp-primary);
+            text-decoration:none;
+            border-bottom:1px solid rgba(24,169,168,0.4);
+            transition:color 0.2s ease, border-color 0.2s ease;
+        }
+        .about-list a:hover {
+            color:#2dd4bf;
+            border-bottom-color:var(--asp-primary);
+        }
+        .about-footer {
+            display:flex; justify-content:flex-end; gap:0.6rem;
+            padding:1rem 1.75rem 1.5rem;
+            border-top:1px solid var(--glass-border);
+            background:linear-gradient(180deg, transparent, var(--glass-bg));
+            border-radius:0 0 20px 20px;
+            position:relative; z-index:1;
+        }
+        .about-copy-btn, .about-close-btn {
+            padding:0.5rem 1rem; border-radius:10px;
+            font-size:0.88rem; font-weight:600;
+            cursor:pointer; transition:all 0.25s ease;
+        }
+        .about-copy-btn {
+            background:transparent;
+            color:var(--asp-primary);
+            border:1px solid rgba(24,169,168,0.4);
+        }
+        .about-copy-btn:hover {
+            background:rgba(24,169,168,0.12);
+            border-color:var(--asp-primary);
+        }
+        .about-close-btn {
+            background:linear-gradient(135deg, var(--asp-primary), #2dd4bf);
+            color:#fff;
+            border:none;
+            box-shadow:0 4px 14px var(--asp-primary-glow);
+        }
+        .about-close-btn:hover {
+            filter:brightness(1.1);
+            box-shadow:0 6px 20px var(--asp-primary-glow);
+        }
+
         /* ==================== DASHBOARD ==================== */
         .dashboard { display:none; animation:fadeInUp 0.6s ease; }
         .dashboard.visible { display:block; }
@@ -680,6 +839,22 @@
             .profile-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
             .header-content h1 { font-size:1.8rem; }
         }
+        @media (max-width:980px) {
+            .asphera-app { padding-top:2.25rem; }
+            .header-nav {
+                padding:0; height:0; overflow:visible;
+                background:none; border:none; backdrop-filter:none;
+            }
+            .header-nav .header-badges { display:none; }
+            .header-nav .back-btn { display:none!important; }
+            #titleBar .back-btn {
+                position:absolute!important; top:5px!important; left:10px!important; right:auto!important;
+                font-size:0.8rem!important; padding:0.4rem 0.85rem!important;
+                white-space:nowrap!important; z-index:10002;
+            }
+            #titleBar .back-btn i { font-size:0.72rem; }
+            #titleBar .back-btn:hover { transform:none!important; box-shadow:none!important; }
+        }
         @media (max-width:600px) {
             .profile-grid { grid-template-columns:minmax(0,1fr); }
             .asphera-app { padding:0 0.75rem 2rem; }
@@ -840,6 +1015,41 @@
         </div>
     </div>
 
+    <!-- ABOUT MODAL -->
+    <div class="about-overlay" id="about-overlay" role="dialog" aria-labelledby="about-title" aria-modal="true" aria-hidden="true">
+        <div class="about-modal">
+            <div class="about-header">
+                <div class="about-icon"><i class="fas fa-road"></i></div>
+                <h2 id="about-title">Asphera</h2>
+            </div>
+            <div class="about-body">
+                <section class="about-section">
+                    <h3>Version</h3>
+                    <ul class="about-list">
+                        <li><strong>Version:</strong> 1.0 (stable)</li>
+                        <li><strong>Build:</strong> Interactive 3D Pavement Response Visualizer</li>
+                    </ul>
+                </section>
+                <section class="about-section">
+                    <h3>Credits & Data Sources</h3>
+                    <ul class="about-list">
+                        <li>The data presented herein were produced as part of the Illinois Center for Transportation (ICT) and Illinois Department of Transportation (IDOT) project &ldquo;R27-252: Impact of Commercial Electric Vehicles on Flexible Pavement Performance.&rdquo;</li>
+                    </ul>
+                </section>
+                <section class="about-section">
+                    <h3>Referenced Publications</h3>
+                    <ul class="about-list">
+                        <li>Jayme A., Hernandez J., Al-Qadi I., Cardenas J., Hafeez M., and Villamil W. (2025) Impact of Heavy Commercial Electric Vehicles on Flexible Pavements. ICT Project R27-252. Illinois Center for Transportation. ISSN:0197-9191. <a href="https://doi.org/10.36501/0197-9191/25-003" target="_blank" rel="noopener noreferrer">https://doi.org/10.36501/0197-9191/25-003</a>.</li>
+                    </ul>
+                </section>
+            </div>
+            <div class="about-footer">
+                <button type="button" class="about-copy-btn" id="about-copy-btn"><i class="fas fa-copy"></i> Copy</button>
+                <button type="button" class="about-close-btn" id="about-close-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
     <!-- APP SHELL -->
     <div class="asphera-app">
 
@@ -848,8 +1058,8 @@
             <nav class="header-nav">
                 <a href="../../E-Labs.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to E-Labs</a>
                 <div class="header-badges">
+                    <button type="button" class="about-btn" id="about-btn" aria-label="About Asphera"><i class="fas fa-info-circle"></i> About</button>
                     <span class="header-badge"><i class="fas fa-layer-group"></i> <span id="hdr-struct-count">1</span> Structure</span>
-                    <span class="header-badge"><i class="fas fa-cube"></i> 3D FEM</span>
                     <span class="header-badge"><i class="fas fa-code-branch"></i> v1.0</span>
                 </div>
             </nav>
@@ -1094,6 +1304,72 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// ===== Move back-btn into #titleBar on mobile (floating/fixed behavior, matches Aircrafter/Frontier) =====
+(function() {
+    let restoreParent = null;
+    function moveBackBtn() {
+        const titleBar = document.getElementById('titleBar');
+        const btnInNav = document.querySelector('.header-nav .back-btn');
+        const btnInTitleBar = titleBar ? titleBar.querySelector('.back-btn') : null;
+        if (window.innerWidth <= 980 && titleBar) {
+            if (btnInTitleBar) return;
+            if (btnInNav) {
+                restoreParent = btnInNav.parentElement;
+                titleBar.insertBefore(btnInNav, titleBar.firstChild);
+            }
+        } else {
+            if (btnInTitleBar && restoreParent) {
+                restoreParent.appendChild(btnInTitleBar);
+                restoreParent = null;
+            }
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(moveBackBtn, 100));
+    } else {
+        setTimeout(moveBackBtn, 100);
+    }
+    window.addEventListener('resize', moveBackBtn);
+})();
+
+// ===== About modal ───────────────────────────────────────────────
+(function() {
+    const overlay = document.getElementById('about-overlay');
+    const btn = document.getElementById('about-btn');
+    const closeBtn = document.getElementById('about-close-btn');
+    const copyBtn = document.getElementById('about-copy-btn');
+    if (!overlay || !btn) return;
+
+    function openAbout() {
+        overlay.classList.add('open');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeAbout() {
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+
+    btn.addEventListener('click', openAbout);
+    closeBtn?.addEventListener('click', closeAbout);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeAbout(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('open')) closeAbout(); });
+
+    copyBtn?.addEventListener('click', () => {
+        const body = overlay.querySelector('.about-body');
+        const text = body ? body.innerText.replace(/\s+/g, ' ').trim() : '';
+        const header = overlay.querySelector('.about-header h2');
+        const headerText = header ? header.textContent + '\n' : '';
+        const full = headerText + text;
+        navigator.clipboard?.writeText(full).then(() => {
+            const orig = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied';
+            setTimeout(() => { copyBtn.innerHTML = orig; }, 1500);
+        });
+    });
+})();
 
 function hideLoading() {
     const el = document.getElementById('loading-overlay');

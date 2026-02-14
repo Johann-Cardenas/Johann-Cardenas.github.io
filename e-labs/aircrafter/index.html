@@ -253,6 +253,34 @@
             letter-spacing: 0.03em;
         }
         .header-badge i { margin-right: 0.3rem; font-size: 0.72rem; }
+        /* Higher specificity to override main.css button styles */
+        .header-nav .about-btn,
+        .header-nav button.about-btn {
+            display: inline-flex; align-items: center; gap: 0.45rem;
+            padding: 0.45rem 1rem; border-radius: 10px;
+            background: linear-gradient(155deg, #0369a1 0%, #025a8c 35%, #014d77 100%) !important;
+            color: #fff !important; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.04em;
+            border: 1px solid rgba(14, 165, 233, 0.4);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            cursor: pointer; text-decoration: none; transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+        .header-nav .about-btn i,
+        .header-nav button.about-btn i { transition: transform 0.3s ease; }
+        .header-nav .about-btn:hover,
+        .header-nav button.about-btn:hover {
+            background: linear-gradient(155deg, #0284c7 0%, #0369a1 35%, #025a8c 100%) !important;
+            border-color: rgba(14, 165, 233, 0.55);
+            box-shadow: 0 5px 20px var(--ac-primary-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        .header-nav .about-btn:hover i,
+        .header-nav button.about-btn:hover i { transform: scale(1.08); }
+        .header-nav .about-btn:active,
+        .header-nav button.about-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
         .header-content {
             text-align: center;
             padding: 1.5rem 2rem 1.75rem;
@@ -282,35 +310,172 @@
             animation: slideInUp 0.8s ease 0.1s both;
         }
 
+        /* ==================== ABOUT MODAL ==================== */
+        .about-overlay {
+            position: fixed; inset: 0; z-index: 11000;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(16px) saturate(1.2);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .about-overlay::before {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background: radial-gradient(ellipse 80% 50% at 50% 50%, rgba(14, 165, 233, 0.06), transparent 60%);
+        }
+        .about-overlay.open { opacity: 1; pointer-events: all; }
+        .about-modal {
+            position: relative; overflow: hidden;
+            width: 440px; max-width: 92vw; max-height: 85vh;
+            background: var(--ac-bg-panel);
+            border: 1px solid rgba(14, 165, 233, 0.25);
+            border-radius: 20px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.06), 0 0 48px -8px var(--ac-primary-glow);
+            transform: translateY(24px) scale(0.96);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.35s ease, box-shadow 0.4s ease;
+        }
+        .about-overlay.open .about-modal {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 56px -4px var(--ac-primary-glow);
+        }
+        .about-modal::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+            background: linear-gradient(90deg, var(--ac-primary), #38bdf8, var(--ac-secondary), var(--ac-primary));
+            background-size: 300% 100%;
+            animation: shimmer 3s linear infinite;
+        }
+        .about-modal::after {
+            content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+            width: 280px; height: 280px; border-radius: 50%;
+            background: radial-gradient(circle, var(--ac-primary-glow) 0%, transparent 60%);
+            opacity: 0.35; pointer-events: none;
+        }
+        .about-header {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 1.5rem 1.75rem 1rem;
+            position: relative; z-index: 1;
+        }
+        .about-icon {
+            width: 48px; height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(145deg, var(--ac-primary), var(--ac-primary-hover));
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 20px var(--ac-primary-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        }
+        .about-icon i { color: #fff; font-size: 1.25rem; }
+        .about-header h2 {
+            font-size: 1.5rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--ac-text) 0%, var(--ac-text-secondary) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .about-body {
+            padding: 0 1.75rem 1.25rem;
+            overflow-y: auto; max-height: 50vh;
+            position: relative; z-index: 1;
+        }
+        .about-section { margin-bottom: 1rem; }
+        .about-section:last-child { margin-bottom: 0; }
+        .about-section h3 {
+            font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--ac-primary);
+            margin-bottom: 0.5rem;
+        }
+        .about-list {
+            list-style: none; padding: 0; margin: 0;
+            font-size: 0.88rem; color: var(--ac-text-secondary);
+            line-height: 1.65;
+        }
+        .about-list li {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .about-list li:last-child { border-bottom: none; }
+        .about-list a {
+            color: var(--ac-primary);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(14, 165, 233, 0.4);
+            transition: color 0.2s ease, border-color 0.2s ease;
+        }
+        .about-list a:hover {
+            color: #38bdf8;
+            border-bottom-color: var(--ac-primary);
+        }
+        .about-footer {
+            display: flex; justify-content: flex-end; gap: 0.6rem;
+            padding: 1rem 1.75rem 1.5rem;
+            border-top: 1px solid var(--glass-border);
+            background: linear-gradient(180deg, transparent, var(--glass-bg));
+            border-radius: 0 0 20px 20px;
+            position: relative; z-index: 1;
+        }
+        .about-copy-btn, .about-close-btn {
+            padding: 0.5rem 1rem; border-radius: 10px;
+            font-size: 0.88rem; font-weight: 600;
+            cursor: pointer; transition: all 0.25s ease;
+        }
+        .about-copy-btn {
+            background: transparent;
+            color: var(--ac-primary);
+            border: 1px solid rgba(14, 165, 233, 0.4);
+        }
+        .about-copy-btn:hover {
+            background: rgba(14, 165, 233, 0.12);
+            border-color: var(--ac-primary);
+        }
+        .about-close-btn {
+            background: linear-gradient(135deg, var(--ac-primary), var(--ac-primary-hover));
+            color: #fff;
+            border: none;
+            box-shadow: 0 4px 14px var(--ac-primary-glow);
+        }
+        .about-close-btn:hover {
+            filter: brightness(1.1);
+            box-shadow: 0 6px 20px var(--ac-primary-glow);
+        }
+
         /* ==================== MODULE TABS ==================== */
         .module-tabs {
             display: flex; gap: 0.3rem; margin-bottom: 1rem;
-            background: var(--ac-bg-panel); padding: 0.35rem; border-radius: 12px;
-            border: 1px solid var(--ac-border);
+            padding: 0.35rem; border-radius: 12px;
+            background: linear-gradient(135deg, #0c1425 0%, #1a2744 50%, #0f2040 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        .module-tabs::before {
+            content: '';
+            position: absolute; inset: 0; pointer-events: none;
+            background: radial-gradient(circle at 50% 50%, rgba(3, 105, 161, 0.08) 0%, transparent 60%);
         }
         .module-tab {
             flex: 1; padding: 0.7rem 0.9rem; border-radius: 9px;
             background: transparent !important; border: none;
-            color: var(--ac-text-muted) !important; font-weight: 600; font-size: 0.92rem;
+            color: #fff !important; font-weight: 600; font-size: 0.92rem;
             cursor: pointer; transition: all 0.3s ease;
             display: flex; align-items: center; justify-content: center; gap: 0.4rem;
             position: relative; overflow: hidden;
             box-shadow: none;
+            z-index: 1;
         }
-        .module-tab:hover { color: var(--ac-text) !important; background: rgba(14, 165, 233, 0.08) !important; }
+        .module-tab:hover { color: #fff !important; background: rgba(3, 105, 161, 0.18) !important; }
         .module-tab.active {
-            background: linear-gradient(135deg, var(--ac-primary), var(--ac-primary-hover)) !important;
+            background: linear-gradient(135deg, #0369a1, #025a8c) !important;
             color: white !important;
-            box-shadow: 0 4px 16px var(--ac-primary-glow);
+            box-shadow: 0 4px 16px rgba(3, 105, 161, 0.4);
             transform: translateY(-1px);
         }
         .module-tab .tab-badge {
-            font-size: 0.65rem; background: rgba(255,255,255,0.2);
+            font-size: 0.65rem; background: rgba(255,255,255,0.25);
+            color: #fff;
             padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 700;
         }
         [data-theme="light"] .module-tab .tab-badge {
-            background: rgba(14, 165, 233, 0.12);
-            color: var(--ac-primary-hover);
+            background: rgba(3, 105, 161, 0.3);
+            color: #fff;
         }
         .module-tab.active .tab-badge { background: rgba(255,255,255,0.25); }
         [data-theme="light"] .module-tab.active .tab-badge {
@@ -745,11 +910,11 @@
             box-shadow: var(--ac-card-shadow);
         }
         [data-theme="light"] .module-tab:hover {
-            background: rgba(14, 165, 233, 0.12);
-            color: var(--ac-primary-hover) !important;
+            background: rgba(3, 105, 161, 0.18) !important;
+            color: #fff !important;
         }
         [data-theme="light"] .module-tab {
-            color: #1e293b !important;
+            color: #fff !important;
             font-weight: 700;
         }
         [data-theme="light"] .mini-stat:hover {
@@ -863,11 +1028,11 @@
 
         /* ==================== DARK MODE OVERRIDES ==================== */
         [data-theme="dark"] .module-tab {
-            color: #c8d5e3 !important;
+            color: #fff !important;
         }
         [data-theme="dark"] .module-tab:hover {
-            color: #f1f5f9 !important;
-            background: rgba(14, 165, 233, 0.14);
+            color: #fff !important;
+            background: rgba(3, 105, 161, 0.2) !important;
         }
         [data-theme="dark"] .viz-tab {
             color: #c8d5e3 !important;
@@ -1020,6 +1185,42 @@
         <section id="header"><div id="nav-placeholder"></div></section>
 
         <section id="main">
+            <!-- ABOUT MODAL -->
+            <div class="about-overlay" id="about-overlay" role="dialog" aria-labelledby="about-title" aria-modal="true" aria-hidden="true">
+                <div class="about-modal">
+                    <div class="about-header">
+                        <div class="about-icon"><i class="fas fa-plane"></i></div>
+                        <h2 id="about-title">AirCrafter</h2>
+                    </div>
+                    <div class="about-body">
+                        <section class="about-section">
+                            <h3>Version</h3>
+                            <ul class="about-list">
+                                <li><strong>Version:</strong> 2.0 (stable)</li>
+                                <li><strong>Build:</strong> Aircraft Tire Contact Stress Analysis Engine</li>
+                            </ul>
+                        </section>
+                        <section class="about-section">
+                            <h3>Credits & Data Sources</h3>
+                            <ul class="about-list">
+                                <li>The data presented herein were produced as part of the Illinois Center for Transportation (ICT) and Federal Aviation Administration (FAA) project &ldquo;R27-203: Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis.&rdquo;</li>
+                            </ul>
+                        </section>
+                        <section class="about-section">
+                            <h3>Referenced Publications</h3>
+                            <ul class="about-list">
+                                <li>Hernandez, J. A., A. Gamez, I. L. Al-Qadi, and M. De Beer. Analytical Approach for Predicting Three-Dimensional Tire&ndash;Pavement Contact Load. Transportation Research Record: Journal of the Transportation Research Board, Vol. 2456, No. 1, 2014, pp. 75&ndash;84. <a href="https://doi.org/10.3141/2456-08" target="_blank" rel="noopener noreferrer">https://doi.org/10.3141/2456-08</a>.</li>
+                                <li>Al-Qadi, I., Jayme, A., Zhou, Q., Cardenas J., Singh, A. and Liu, F. (2026) Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis. Volume II. ICT-R27-203. Illinois Center for Transportation. Accepted [Under Review].</li>
+                            </ul>
+                        </section>
+                    </div>
+                    <div class="about-footer">
+                        <button type="button" class="about-copy-btn" id="about-copy-btn"><i class="fas fa-copy"></i> Copy</button>
+                        <button type="button" class="about-close-btn" id="about-close-btn">OK</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="aircrafter-app">
 
                 <!-- ===== HEADER ===== -->
@@ -1029,6 +1230,7 @@
                             <i class="fas fa-arrow-left"></i> Back to E-Labs
                         </a>
                         <div class="header-badges">
+                            <button type="button" class="about-btn" id="about-btn" aria-label="About AirCrafter"><i class="fas fa-info-circle"></i> About</button>
                             <span class="header-badge"><i class="fas fa-database"></i> <span id="db-count">—</span> Aircraft</span>
                             <span class="header-badge"><i class="fas fa-code-branch"></i> v2.0</span>
                         </div>
@@ -2637,6 +2839,46 @@
             setTimeout(moveBackBtn, 100);
         }
         window.addEventListener('resize', moveBackBtn);
+    })();
+
+    // ===== About modal =====
+    (function() {
+        var overlay = document.getElementById('about-overlay');
+        var btn = document.getElementById('about-btn');
+        var closeBtn = document.getElementById('about-close-btn');
+        var copyBtn = document.getElementById('about-copy-btn');
+        if (!overlay || !btn) return;
+
+        function openAbout() {
+            overlay.classList.add('open');
+            overlay.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeAbout() {
+            overlay.classList.remove('open');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+
+        btn.addEventListener('click', openAbout);
+        if (closeBtn) closeBtn.addEventListener('click', closeAbout);
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) closeAbout(); });
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && overlay.classList.contains('open')) closeAbout(); });
+
+        if (copyBtn) copyBtn.addEventListener('click', function() {
+            var body = overlay.querySelector('.about-body');
+            var text = body ? body.innerText.replace(/\s+/g, ' ').trim() : '';
+            var header = overlay.querySelector('.about-header h2');
+            var headerText = header ? header.textContent + '\n' : '';
+            var full = headerText + text;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(full).then(function() {
+                    var orig = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied';
+                    setTimeout(function() { copyBtn.innerHTML = orig; }, 1500);
+                });
+            }
+        });
     })();
 
     // ===== Responsive Plotly resize on viewport change =====
