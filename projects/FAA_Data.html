@@ -110,7 +110,7 @@
 			}
 			.project-card-content h3 {
 				margin: 0 0 0.6rem 0;
-				font-size: 1.15rem;
+				font-size: 1.12rem;
 				line-height: 1.35;
 			}
 			.project-card-content h3 a {
@@ -121,11 +121,11 @@
 			.project-card-content h3 a:hover { color: #18a9a8; }
 			.project-card-content .project-excerpt {
 				color: var(--project-text-color, #666);
-				line-height: 1.5;
+				line-height: 1.7;
 				margin-bottom: 1rem;
 				flex: 1;
 				text-align: justify;
-				font-size: 0.9rem;
+				font-size: 1rem;
 			}
 			.project-read-btn {
 				display: inline-flex;
@@ -156,6 +156,186 @@
 			}
 			[data-theme="dark"] .project-card-modern:hover {
 				box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+			}
+
+			/* ===== Project entry page: modern, visually appealing ===== */
+			body.FAA_Data #main {
+				padding-top: 1.25rem;
+			}
+			body.FAA_Data article.box.post {
+				background: var(--bg-box, #fff);
+				border-radius: 16px;
+				box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+				border: 1px solid var(--border-light, #e2e8f0);
+				padding: 2.5rem 2.75rem 2.75rem;
+				overflow: hidden;
+			}
+			[data-theme="dark"] body.FAA_Data article.box.post {
+				box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+				border-color: var(--border-light);
+			}
+			body.FAA_Data article.box.post header[style*="text-align: center"] {
+				padding-top: 0;
+				margin-bottom: 0.5rem;
+				text-align: center;
+			}
+			body.FAA_Data article.box.post header h2 {
+				font-size: 1.95rem;
+				line-height: 1.3;
+				font-weight: 700;
+				letter-spacing: -0.02em;
+				color: var(--text-primary, #1e293b);
+				margin: 0 auto 0.75rem auto;
+				padding-bottom: 1rem;
+				border-bottom: 2px solid var(--accent-primary, #18a9a8);
+				text-align: center;
+				max-width: 90%;
+			}
+			body.FAA_Data article.box.post header p {
+				font-size: 1.15rem;
+				color: var(--text-secondary, #64748b);
+				margin: 0;
+				text-align: center;
+			}
+			body.FAA_Data article.box.post header a {
+				color: var(--accent-primary, #18a9a8);
+				text-decoration: none;
+				font-weight: 500;
+			}
+			body.FAA_Data article.box.post header a:hover {
+				text-decoration: underline;
+			}
+			body.FAA_Data .blog-infobar {
+				background: var(--bg-box-alt, #f8fafc);
+				border-radius: 12px;
+				padding: 1rem 1.5rem;
+				margin: 1.75rem 0 2.25rem 0 !important;
+				border: 1px solid var(--border-light, #e2e8f0);
+				flex-wrap: wrap;
+			}
+			[data-theme="dark"] body.FAA_Data .blog-infobar {
+				background: rgba(30, 41, 59, 0.5);
+				border-color: rgba(255,255,255,0.08);
+			}
+			body.FAA_Data .blog-infobar .infotext {
+				color: var(--text-secondary, #64748b) !important;
+			}
+			body.FAA_Data article.box.post .callout-box {
+				border-radius: 12px;
+				padding: 1.1rem 1.35rem;
+				border-left-width: 4px;
+				box-shadow: 0 2px 8px rgba(24, 169, 168, 0.08);
+			}
+			body.FAA_Data article.box.post h3 {
+				position: relative;
+				font-size: 1.2rem;
+				font-weight: 700;
+				color: var(--text-primary, #1e293b);
+				margin: 2.25rem 0 0.75rem 0;
+				padding-left: 1rem;
+				border-left: 4px solid var(--accent-primary, #18a9a8);
+				line-height: 1.4;
+			}
+			body.FAA_Data article.box.post h3:first-of-type { margin-top: 1.5rem; }
+			body.FAA_Data article.box.post p {
+				color: var(--text-primary, #1e293b);
+				line-height: 1.75;
+			}
+			[data-theme="dark"] body.FAA_Data article.box.post p {
+				color: var(--text-primary);
+			}
+			body.FAA_Data article.box.post ul:not(.social),
+			body.FAA_Data article.box.post ol {
+				line-height: 1.7;
+				color: var(--text-primary, #1e293b);
+			}
+			body.FAA_Data article.box.post figure {
+				background: var(--bg-box-alt, #f8fafc);
+				border-radius: 12px;
+				overflow: hidden;
+				padding: 1rem;
+				margin: 1.5rem 0;
+				box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+				border: 1px solid var(--border-light, #e2e8f0);
+			}
+			[data-theme="dark"] body.FAA_Data article.box.post figure {
+				background: rgba(30, 41, 59, 0.5);
+				border-color: rgba(255,255,255,0.06);
+			}
+			body.FAA_Data article.box.post figure img {
+				border-radius: 8px;
+				display: block;
+			}
+			body.FAA_Data article.box.post figcaption {
+				font-size: 0.9rem;
+				font-weight: 600;
+				color: var(--text-secondary, #64748b);
+				margin-top: 0.75rem;
+				text-align: center;
+			}
+			body.FAA_Data article.box.post figcaption h1 {
+				font-size: inherit;
+				font-weight: inherit;
+				margin: 0;
+				color: inherit;
+			}
+			body.FAA_Data article.box.post .share-section hr {
+				border-top-color: var(--border-medium, #cbd5e1) !important;
+			}
+			[data-theme="dark"] body.FAA_Data article.box.post .share-section hr {
+				border-top-color: rgba(255,255,255,0.12) !important;
+			}
+			body.FAA_Data article.box.post .share-section p:first-of-type {
+				color: var(--text-secondary, #64748b) !important;
+				font-size: 0.85rem;
+				letter-spacing: 0.12em;
+			}
+			body.FAA_Data article.box.post .share-section p:last-of-type {
+				color: var(--text-secondary, #64748b);
+				font-size: 0.9rem;
+			}
+
+			/* ===== Mobile: project entry only ===== */
+			@media (max-width: 768px) {
+				body.FAA_Data article.box.post header h2 {
+					font-size: 1.48rem;
+					line-height: 1.28;
+				}
+				body.FAA_Data article.box.post header p {
+					font-size: 1rem;
+				}
+				body.FAA_Data .blog-infobar {
+					flex-wrap: nowrap;
+					padding: 0.5rem 0.75rem;
+					gap: 0.5rem;
+					margin: 1.25rem 0 1.75rem 0 !important;
+				}
+				body.FAA_Data .blog-infobar .infotext {
+					font-size: 0.8rem !important;
+					white-space: nowrap;
+					min-width: 0;
+				}
+				body.FAA_Data .blog-infobar .infotext .icon {
+					font-size: 0.9em !important;
+				}
+				body.FAA_Data .blog-infobar > div:first-of-type {
+					display: flex !important;
+					align-items: center;
+					gap: 0.6rem !important;
+					min-width: 0;
+					flex-shrink: 1;
+				}
+				body.FAA_Data .blog-infobar ul.social {
+					flex-shrink: 0;
+				}
+				body.FAA_Data .blog-infobar ul.social li a {
+					width: 1.85em !important;
+					height: 1.85em !important;
+				}
+				body.FAA_Data .blog-infobar ul.social li a:before {
+					font-size: 1.1em !important;
+					line-height: 1.65em !important;
+				}
 			}
 		</style>
 
