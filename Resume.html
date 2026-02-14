@@ -21,6 +21,7 @@
 		<link rel="preload" as="image" href="images/Resume_Banner.jpg" fetchpriority="high" />
 
 		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 		<style>
 		/* Brand icon color logic for Resume.html only */
 		ul.social li a.icon.brands,
@@ -43,169 +44,388 @@
 		}
 		</style>
 		<style>
-			/* Resume: narrow sidebar, wider main column */
-			body.Resume #main .container .row > .col-4.col-12-medium {
-				width: 25%;
+			/* Resume: full-width layout */
+			.resume-main {
+				width: 100%;
 			}
-			body.Resume #main .container .row > .col-8.col-12-medium {
-				width: 75%;
-			}
-			@media screen and (max-width: 980px) {
-				body.Resume #main .container .row > .col-4.col-12-medium,
-				body.Resume #main .container .row > .col-8.col-12-medium {
-					width: 100%;
-				}
-			}
-			/* Resume: modern glass touches, typography */
-			#main .box.post {
-				background: var(--resume-box-bg, rgba(255,255,255,0.6));
-				backdrop-filter: blur(12px);
-				-webkit-backdrop-filter: blur(12px);
-				border: 1px solid var(--resume-box-border, rgba(24, 169, 168, 0.12));
-				border-radius: 16px;
-				box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-				overflow: hidden;
-			}
-			#main .box.post .image.featured {
+			/* Resume banner (separate block, same pattern as Projects/Publications) */
+			.resume-banner {
 				position: relative;
-				display: block;
-				border-radius: 16px 16px 0 0;
+				width: 100%;
+				border-radius: 20px;
+				overflow: hidden;
+				margin-bottom: 2rem;
+				box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+			}
+			.resume-banner-image {
+				position: relative;
+				width: 100%;
+				aspect-ratio: 5 / 1;
 				overflow: hidden;
 			}
-			#main .box.post .image.featured::after {
+			.resume-banner-image img {
+				display: block;
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+			}
+			.resume-banner-image::after {
 				content: '';
 				position: absolute;
 				inset: 0;
-				background: linear-gradient(to top, rgba(15, 23, 42, 0.35) 0%, rgba(15, 23, 42, 0.15) 40%, rgba(15, 23, 42, 0.05) 70%, transparent 100%);
+				background: linear-gradient(to top, rgba(15, 23, 42, 0.5) 0%, rgba(15, 23, 42, 0.28) 40%, rgba(15, 23, 42, 0.08) 70%, transparent 100%);
 				pointer-events: none;
 			}
-			#main .box.post .image.featured img {
-				display: block;
-				width: 100%;
-				height: auto;
-			}
-			[data-theme="dark"] #main .box.post .image.featured::after {
-				background: linear-gradient(to top, rgba(15, 23, 42, 0.5) 0%, rgba(15, 23, 42, 0.2) 45%, rgba(15, 23, 42, 0.06) 75%, transparent 100%);
-			}
-			#main .box.sidebar-card {
-				background: var(--resume-sidebar-bg, rgba(255,255,255,0.5));
-				backdrop-filter: blur(10px);
-				-webkit-backdrop-filter: blur(10px);
-				border: 1px solid var(--resume-sidebar-border, rgba(24, 169, 168, 0.1));
-				border-radius: 14px;
-				box-shadow: 0 2px 16px rgba(0,0,0,0.05);
-				transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-				padding: 0;
-				overflow: hidden;
-			}
-			#main .box.sidebar-card:hover {
-				transform: translateY(-2px);
-				box-shadow: 0 6px 20px rgba(24, 169, 168, 0.12);
-				border-color: rgba(24, 169, 168, 0.22);
-			}
-			#main .box.sidebar-card .image.featured {
-				position: relative;
+			.resume-banner-content {
+				position: absolute;
+				bottom: 0;
 				left: 0;
-				top: 0;
-				width: 100%;
+				right: 0;
+				padding: 2rem 2.5rem 2.5rem;
+				z-index: 1;
+			}
+			.resume-banner-content h2 {
+				color: #fff;
+				font-size: 2rem;
+				margin: 0 0 0.35rem 0;
+				text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+			}
+			.resume-banner-content .banner-subtitle {
+				color: rgba(255,255,255,0.9);
+				font-size: 1.1rem;
 				margin: 0;
-				border-radius: 14px 14px 0 0;
-				overflow: hidden;
+				font-weight: 300;
 			}
-			#main .box.sidebar-card .image.featured img {
-				display: block;
-				width: 100%;
-				height: auto;
+			[data-theme="dark"] .resume-banner {
+				box-shadow: 0 12px 40px rgba(0,0,0,0.4);
 			}
-			#main .box.sidebar-card header {
-				padding: 1em 1.15em 0 1.15em;
-				margin: 0 0 0.5em 0;
+			[data-theme="dark"] .resume-banner-image::after {
+				background: linear-gradient(to top, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.38) 40%, rgba(15, 23, 42, 0.12) 70%, transparent 100%);
 			}
-			#main .box.sidebar-card h3 {
-				font-size: 1.02rem;
-				font-weight: 700;
-				letter-spacing: 0.01em;
-				line-height: 1.10;
-				margin: 0;
+			@media (max-width: 768px) {
+				.resume-banner {
+					margin-bottom: 1.25rem;
+				}
+				.resume-banner-image {
+					position: relative;
+					aspect-ratio: unset;
+					height: 26vh;
+					min-height: 180px;
+					max-height: 220px;
+					overflow: hidden;
+				}
+				.resume-banner-image img {
+					position: absolute;
+					inset: 0;
+					width: 100%;
+					height: 100%;
+					object-fit: cover;
+					object-position: center top;
+					display: block;
+				}
+				.resume-banner-content {
+					padding: 1rem 1.25rem 1.25rem;
+				}
+				.resume-banner-content h2 { font-size: 1.5rem; }
+				.resume-banner-content .banner-subtitle { font-size: 0.95rem; }
 			}
-			#main .box.sidebar-card p {
-				font-size: 0.875rem;
-				line-height: 1.32;
-				color: var(--text-secondary, #555);
-				margin: 0;
-				padding: 0 1.25em 1.15em 1.25em;
+			/* Content uses same .container width as banner (no extra constraint) */
+						.resume-article {
+							display: flex;
+							flex-wrap: wrap;
+							justify-content: center;
+							margin: 0 !important;
+							padding: 0 !important;
+							line-height: 1 !important;
+							border: 1px solid var(--resume-card-border, rgba(24, 169, 168, 0.1));
+							border-radius: 20px;
+							gap: 0.5rem;
+							list-style: none;
+							position: relative;
+						}
+			.resume-social-row {
+				display: flex;
+				justify-content: center;
+				margin-bottom: 0;
 			}
-			.sidebar-card h3 a {
-				color: inherit;
+			.resume-social-row ul.social {
+				margin-bottom: 1.75rem;
+			}
+			.resume-contact-bar {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: center;
+				gap: 1.50rem 1.75rem;
+				margin-bottom: 0.75rem;
+				font-size: 0.9rem;
+			}
+			.resume-contact-bar a {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.35rem;
+				color: var(--resume-text, #333);
 				text-decoration: none;
 				transition: color 0.2s ease;
 			}
-			.sidebar-card h3 a:hover {
-				color: var(--accent-primary, #18a9a8);
+			.resume-contact-bar a:hover {
+				color: var(--resume-accent, #18a9a8);
 			}
-			/* CV header section: refined lines and typography */
-			.header-section {
-				text-align: left;
-				position: relative;
+			.resume-contact-bar i {
+				font-size: 0.85em;
+				opacity: 0.8;
+			}
+			.resume-social {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: center;
+				gap: 0.5rem;
+				list-style: none;
 				margin: 0;
 				padding: 0;
 			}
-			.header-line {
-				width: 100%;
-				height: 1px;
-				background: linear-gradient(90deg, transparent, rgba(24, 169, 168, 0.3), transparent);
+			.resume-social li { margin: 0; }
+			.resume-bio {
+				max-width: 720px;
+				margin: 0 auto;
+			}
+			.resume-bio p {
 				margin: 0;
+				font-size: 1.05rem;
+				line-height: 1.8;
+				color: var(--resume-text, #333);
+				text-align: center;
 			}
-			.header-line.top { position: relative; top: -1em; }
-			.header-container h3 {
-				display: inline-block;
-				background-color: var(--resume-heading-bg, #fff);
-				padding: 0;
-				font-size: 1.75rem;
-				font-weight: 700;
-				margin: 0;
-				line-height: 1.2;
-				letter-spacing: 0.02em;
-			}
-			/* Biography paragraph */
-			#main .box.post section p {
-				font-size: 0.95rem;
-				line-height: 1.65;
-				color: var(--text-primary, #333);
-			}
-			#main .box.post section p a {
-				color: var(--accent-primary, #18a9a8);
+			.resume-bio p a {
+				color: var(--resume-accent, #18a9a8);
 				text-decoration: none;
 				border-bottom: 1px solid rgba(24, 169, 168, 0.35);
 				transition: color 0.2s ease, border-color 0.2s ease;
 			}
-			#main .box.post section p a:hover {
+			.resume-bio p a:hover {
 				color: #0d7377;
 				border-bottom-color: #18a9a8;
 			}
-			/* PDF viewer container */
-			#main .box.post iframe {
+			/* CV section */
+			.resume-cv-section {
+				padding: 1.75rem 2rem 2rem;
+			}
+			.resume-cv-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				flex-wrap: wrap;
+				gap: 0.75rem;
+				margin-bottom: 1.25rem;
+				padding-bottom: 1rem;
+				border-bottom: 2px solid var(--resume-accent, #18a9a8);
+			}
+			.resume-cv-header h3 {
+				margin: 0;
+				font-size: 1.35rem;
+				font-weight: 700;
+				letter-spacing: 0.02em;
+				color: inherit;
+			}
+			.resume-cv-buttons {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.6rem;
+			}
+			.resume-download-btn,
+			.resume-open-btn {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.4rem;
+				padding: 0.5rem 1rem;
+				font-size: 0.875rem;
+				font-weight: 600;
+				text-decoration: none;
 				border-radius: 10px;
-				box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+				transition: transform 0.2s ease, box-shadow 0.2s ease;
+			}
+			.resume-download-btn {
+				background: linear-gradient(135deg, #18a9a8, #0d7377);
+				color: #fff !important;
+			}
+			.resume-download-btn:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 4px 16px rgba(24, 169, 168, 0.4);
+				color: #fff !important;
+			}
+			.resume-open-btn {
+				background: transparent;
+				color: var(--resume-accent, #18a9a8) !important;
+				border: 2px solid var(--resume-accent, #18a9a8);
+			}
+			.resume-open-btn:hover {
+				background: rgba(24, 169, 168, 0.08);
+				transform: translateY(-2px);
+				color: var(--resume-accent, #18a9a8) !important;
+			}
+			.resume-cv-content {
+				margin-top: 0;
+			}
+			.cv-block {
+				margin-bottom: 1.75rem;
+			}
+			.cv-block:last-child {
+				margin-bottom: 0;
+			}
+			.cv-block h4 {
+				margin: 0 0 0.75rem 0;
+				font-size: 1.08rem;
+				font-weight: 700;
+				color: inherit;
+				border-left: 4px solid var(--resume-accent, #18a9a8);
+				padding-left: 0.75rem;
+				padding-bottom: 0;
+				border-bottom: none;
+			}
+			.cv-block ul {
+				margin: 0;
+				padding-left: 1.25rem;
+				line-height: 1.65;
+				color: var(--resume-text, #333);
+			}
+			.cv-block li {
+				margin-bottom: 0.4rem;
+			}
+			.cv-block li:last-child {
+				margin-bottom: 0;
+			}
+			.cv-block p {
+				margin: 0 0 0.5rem 0;
+				line-height: 1.7;
+				color: var(--resume-text, #333);
+			}
+			.cv-block p a {
+				color: var(--resume-accent, #18a9a8);
+				text-decoration: none;
+				border-bottom: 1px solid rgba(24, 169, 168, 0.35);
+			}
+			.cv-block p a:hover {
+				border-bottom-color: #18a9a8;
+			}
+			/* CV entry styling */
+			.cv-entry {
+				margin-bottom: 1.5rem;
+				padding-left: 0;
+			}
+			.cv-entry:last-child {
+				margin-bottom: 0;
+			}
+			.cv-entry-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: baseline;
+				flex-wrap: wrap;
+				gap: 0.4rem;
+				margin-bottom: 0.2rem;
+			}
+			.cv-entry-title {
+				font-weight: 700;
+				color: inherit;
+			}
+			.cv-entry-date {
+				font-size: 0.9em;
+				color: var(--resume-meta, #555);
+				font-weight: 500;
+			}
+			.cv-entry-org {
+				margin: 0 0 0.25rem 0;
+				font-size: 0.95em;
+				color: var(--resume-meta, #555);
+				font-style: italic;
+			}
+			.cv-entry-type {
+				margin: 0 0 0.35rem 0;
+				font-size: 0.88em;
+				color: var(--resume-meta, #666);
+			}
+			.cv-entry ul {
+				margin: 0.35rem 0 0 0;
+				padding-left: 1.2rem;
+			}
+			.cv-entry-extracurricular {
+				margin-bottom: 1.25rem;
+			}
+			.cv-entry-extracurricular:last-child {
+				margin-bottom: 0;
+			}
+			.cv-report-org {
+				margin: 0 0 0.5rem 0;
+				font-size: 0.92em;
+				color: var(--resume-meta, #555);
+				font-style: italic;
+			}
+			.cv-list-compact {
+				list-style: none;
+				padding-left: 0;
+			}
+			.cv-list-compact li {
+				padding: 0.35rem 0;
+				border-bottom: 1px solid var(--resume-divider, rgba(24, 169, 168, 0.08));
+				font-size: 0.95em;
+				line-height: 1.5;
+			}
+			.cv-list-compact li:last-child {
+				border-bottom: none;
+			}
+			.cv-extracurricular li,
+			.cv-pub-list li {
+				margin-bottom: 0.5rem;
+				font-size: 0.92em;
+				line-height: 1.55;
+			}
+			.cv-extracurricular li:last-child,
+			.cv-pub-list li:last-child {
+				margin-bottom: 0;
+			}
+			.cv-skills {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 1rem 1.5rem;
+			}
+			.cv-skill-cat {
+				flex: 1 1 280px;
+				padding: 0.75rem 1rem;
+				background: var(--resume-skill-bg, rgba(24, 169, 168, 0.06));
+				border-radius: 10px;
+				font-size: 0.9em;
+				line-height: 1.5;
+			}
+			.cv-skill-cat strong {
+				display: block;
+				margin-bottom: 0.25rem;
+				color: var(--resume-accent, #18a9a8);
+				font-size: 0.85em;
+				text-transform: uppercase;
+				letter-spacing: 0.03em;
 			}
 			/* Dark theme */
-			[data-theme="dark"] #main .box.post {
-				--resume-box-bg: rgba(30, 41, 59, 0.7);
-				--resume-box-border: rgba(24, 169, 168, 0.18);
+			[data-theme="dark"] .resume-article {
+				--resume-card-bg: rgba(30, 41, 59, 0.75);
+				--resume-card-border: rgba(24, 169, 168, 0.15);
+				--resume-divider: rgba(24, 169, 168, 0.15);
+				--resume-text: #e2e8f0;
+				--resume-accent: #2dd4bf;
+				--resume-meta: #94a3b8;
+				--resume-skill-bg: rgba(24, 169, 168, 0.1);
 			}
-			[data-theme="dark"] #main .box.sidebar-card {
-				--resume-sidebar-bg: rgba(30, 41, 59, 0.6);
-				--resume-sidebar-border: rgba(24, 169, 168, 0.15);
+			[data-theme="dark"] .resume-download-btn {
+				background: linear-gradient(135deg, #0d7377, #18a9a8);
 			}
-			[data-theme="dark"] .header-container h3 {
-				--resume-heading-bg: var(--bg-box, #1e293b);
-				background-color: var(--bg-box, #1e293b) !important;
-			}
-			[data-theme="dark"] #main .box.sidebar-card p {
-				color: var(--text-secondary, #cbd5e1);
-			}
-			@media screen and (max-width: 980px) {
-				.header-section.cvhead-section { margin-top: 0.5em !important; }
+			@media screen and (max-width: 736px) {
+				.resume-main .resume-container { padding: 0 1rem; }
+				.resume-intro,
+				.resume-cv-section { padding-left: 1.25rem; padding-right: 1.25rem; }
+				.resume-hero-overlay { padding: 1rem 1.25rem 1.25rem; }
+				.resume-hero-tagline { font-size: 0.9rem; }
+				.resume-contact-bar { flex-direction: row; flex-wrap: nowrap; gap: 0.75rem 1rem; font-size: 0.8rem; justify-content: center; overflow-x: auto; padding-bottom: 0.25rem; -webkit-overflow-scrolling: touch; }
+				.resume-contact-bar a { white-space: nowrap; }
+				.resume-cv-header { flex-direction: column; align-items: flex-start; }
+				.resume-cv-buttons { flex-direction: column; }
+				.cv-entry-header { flex-direction: column; align-items: flex-start; }
 			}
 		</style>
 
@@ -232,77 +452,342 @@
 				</section>
 
 			<!-- Main -->
-				<section id="main">
+				<section id="main" class="resume-main">
 					<div class="container">
-						<div class="row">
-							<div class="col-4 col-12-medium">
-
-								<!-- Sidebar -->
-									<section class="box sidebar-card">
-										<a href="https://ict.illinois.edu/" class="image featured"><img src="images/Side_01.jpg" alt="" loading="lazy" decoding="async" /></a>
-										<header>
-											<h3><a href="https://ict.illinois.edu/">ICT: "Where Excellence and Transportation Meet"</a></h3>
-										</header>
-										<p style="text-align: justify;"> I serve as a Graduate Research Assistant at the Illinois Center for Transportation (ICT) at the University of Illinois at Urbana-Champaign. 
-											ICT works in partnership with the Illinois Department of Transportation (IDOT) to
-											address the urgent and evolving transportation needs of the state, the country and the world.
-										</p>
-									</section>
-									<section class="box sidebar-card">
-										<a href="https://cee.illinois.edu/about/rankings-and-statistics" class="image featured"><img src="images/Side_02.jpg" alt="" loading="lazy" decoding="async" /></a>
-										<header>
-											<h3><a href="https://cee.illinois.edu/about/rankings-and-statistics">CEE at Illinois</a></h3>
-										</header>
-										<p style="text-align: justify;"> The CEE Department consistently ranks among the most elite programs in the U.S. and worldwide for both undergraduate and graduate studies.
-											The Transportation Engineering group within CEE at Illinois offers unequalled expertise in pavement and transportation systems engineering.
-										</p>
-									</section>
-
+						<div class="col-12">
+							<!-- Banner (separate block, same pattern as Projects/Publications) -->
+							<div class="resume-banner">
+								<div class="resume-banner-image">
+									<img src="images/Resume_Banner.jpg" alt="" decoding="async" fetchpriority="high" />
+								</div>
+								<div class="resume-banner-content">
+									<h2>Resume</h2>
+									<p class="banner-subtitle">Curriculum Vitae &amp; Experience</p>
+								</div>
 							</div>
-							<div class="col-8 col-12-medium imp-medium">
 
-								<!-- Content -->
-								<article class="box post">
-									<a href="#" class="image featured"><img src="images/Resume_Banner.jpg" alt="" decoding="async" fetchpriority="high" /></a>
+							<!-- Content: intro + CV (separate block) -->
+							<article class="resume-article">
+							<!-- Intro strip: social + short bio -->
+							<div class="resume-intro">
+								<div class="resume-social-row">
+									<ul class="social resume-social">
+										<li><a class="icon brands fa-linkedin-in" href="https://www.linkedin.com/in/johanncardenas/"><span class="label">LinkedIn</span></a></li>
+										<li><a class="icon brands fa-github" href="https://github.com/Johann-Cardenas"><span class="label">GitHub</span></a></li>
+										<li><a class="icon solid fa-graduation-cap" href="https://scholar.google.com/citations?user=yBNtQBoAAAAJ" title="Google Scholar"><span class="label">Google Scholar</span></a></li>
+										<li><a class="icon brands fa-orcid" href="https://orcid.org/0000-0002-4695-7639" title="ORCID"><span class="label">ORCID</span></a></li>
+									</ul>
+								</div>
+								<div class="resume-contact-bar">
+									<a href="tel:+12179531311"><i class="fas fa-phone"></i> (+1) 217-953-1311</a>
+									<a href="mailto:johannc2@illinois.edu"><i class="fas fa-envelope"></i> johannc2@illinois.edu</a>
+									<a href="https://www.johanncardenas.com" target="_blank" rel="noopener"><i class="fas fa-globe"></i> johanncardenas.com</a>
+								</div>
+								<div class="resume-bio">
+									<p>
+										Cardenas is a doctoral student at the University of Illinois, Urbana-Champaign, working under Dr. Imad Al-Qadi. 
+										He earned his bachelor's degree at the National University of San Marcos (Peru) and his master's from the University of Illinois, 
+										Urbana-Champaign sponsored by the Fulbright Foreign Student Scholarship Program. His research centers on advanced numerical modeling 
+										of flexible pavement structures, pavement mechanics and vehicle dynamics. Cardenas has participated in projects funded by agencies including 
+										the Illinois Department of Transportation (IDOT) and the Federal Aviation Administration (FAA), focusing on numerical and data-driven prediction 
+										models for flexible pavement responses.
+									</p>
+								</div>
+							</div>
 
-									<!--
-										<div class="col-9 col-12-medium">
-											<h2 style="text-align: center;">Johann J. Cardenas</h2>
-											<p style="text-align: center;">MS in Civil Engineering, Fulbright Scholar</p>
-										</div>
-									-->
-
-									<section class="header-section cvhead-section" style="margin-top: -1.5em;">
-										<header class="cvhead">
-											<div style="display: flex; justify-content: center;">
-												<ul class="social" style="font-size: 0.85em; margin: 0;">
-													<li><a class="icon brands fa-linkedin-in" href="https://www.linkedin.com/in/johanncardenas/"><span class="label">LinkedIn</span></a></li>
-													<li><a class="icon brands fa-github" href="https://github.com/Johann-Cardenas"><span class="label">GitHub</span></a></li>
-													<li><a class="icon solid fa-graduation-cap" href="https://scholar.google.com/citations?user=yBNtQBoAAAAJ" title="Google Scholar"><span class="label">Google Scholar</span></a></li>
-													<li><a class="icon brands fa-orcid" href="https://orcid.org/0000-0002-4695-7639" title="ORCID"><span class="label">ORCID</span></a></li>
-												</ul>
-											</div>
-										</header>
-									</section>
-
-									<section style="margin-top: -1em;">
-										<p style="text-align: justify;"> 
-											Cardenas is a doctoral student at the University of Illinois, Urbana-Champaign, working under Dr. <a href="https://cee.illinois.edu/directory/profile/alqadi">Imad L. Al-Qadi.</a>
-											He earned his bachelor's degree at the National University of San Marcos (Peru) and his master's from the University of Illinois, Urbana-Champaign sponsored by 
-											the Fulbright Foreign Student Scholarship Program. His research centers on advanced numerical modeling of flexible pavement structures, 
-											pavement mechanics and vehicle dynamics. Cardenas has participated in projects funded by agencies including the Illinois Department of Transportation (IDOT), 
-											and the Federal Aviation Administration (FAA), focusing on numerical and data-driven prediction models for flexible pavement responses.
-										</p>
-									</section>
-
-
-									<div style="width: 100%; max-width: 800px; margin: 0 auto;">
-										<iframe src="/pdfjs/web/viewer.html?file=/documents/cv_industry.pdf" width="100%" height="940px" style="border: none;"></iframe>
+							<!-- CV section -->
+							<div class="resume-cv-section">
+								<div class="resume-cv-header">
+									<h3>Curriculum Vitae</h3>
+									<div class="resume-cv-buttons">
+										<a href="/documents/cv_industry.pdf" class="resume-download-btn" download target="_blank" rel="noopener"><i class="fas fa-download"></i> Download PDF</a>
+										<a href="/documents/cv_industry.pdf" class="resume-open-btn" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> Open in Browser</a>
 									</div>
+								</div>
 
-								</article>
+								<div class="resume-cv-content">
+									<section class="cv-block">
+										<h4>Education</h4>
+										<div class="cv-entry">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">Ph.D. in Civil Engineering</span>
+												<span class="cv-entry-date">May 2023 – May 2027</span>
+											</div>
+											<p class="cv-entry-org">University of Illinois, Urbana-Champaign · Illinois, USA</p>
+											<ul><li>Research emphasis on mechanistic modeling and data analytics for pavement design and evaluation (GPA: 3.97).</li></ul>
+										</div>
+										<div class="cv-entry">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">M.S. in Civil Engineering</span>
+												<span class="cv-entry-date">Aug 2021 – May 2023</span>
+											</div>
+											<p class="cv-entry-org">University of Illinois, Urbana-Champaign · Illinois, USA</p>
+											<ul><li>Fulbright Foreign Scholar selected among top-tier professionals (GPA: 4.00).</li></ul>
+										</div>
+										<div class="cv-entry">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">B.S. in Civil Engineering</span>
+												<span class="cv-entry-date">Mar 2011 – Jul 2016</span>
+											</div>
+											<p class="cv-entry-org">National University of San Marcos (UNMSM) · Lima, Peru</p>
+											<ul><li>Graduated ranked #1 out of 39 students in cohort.</li></ul>
+										</div>
+									</section>
 
+									<section class="cv-block">
+										<h4>Professional Development</h4>
+										<div class="cv-entry">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">Specialization in Pavement Engineering</span>
+												<span class="cv-entry-date">Nov 2020 – Jul 2021</span>
+											</div>
+											<p class="cv-entry-org">University of Engineering and Technology (UTEC) · Lima, Peru</p>
+											<ul>
+												<li>Received the Academic Excellence Award for graduating top of class (GPA: 19.0/20.0).</li>
+												<li>Advanced coursework in pavement materials characterization, mechanistic-empirical design, and asset management.</li>
+											</ul>
+										</div>
+										<div class="cv-entry">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">International Diploma in Project Management</span>
+												<span class="cv-entry-date">Feb 2020 – Sep 2020</span>
+											</div>
+											<p class="cv-entry-org">ESAN Graduate School of Business · Lima, Peru</p>
+											<ul>
+												<li>Graduated #1 out of 62 students (GPA: 17.6/20.0).</li>
+												<li>Gained strong cross-functional leadership and planning skills applicable to engineering project execution.</li>
+											</ul>
+										</div>
+									</section>
+
+									<section class="cv-block">
+										<h4>Research Experience</h4>
+										<div class="cv-entry">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">Graduate Research Assistant</span>
+												<span class="cv-entry-date">Aug 2021 – Present</span>
+											</div>
+											<p class="cv-entry-org">Illinois Center for Transportation (ICT) · Illinois, USA</p>
+											<ul>
+												<li>Developed a mechanistic framework to integrate emerging loading conditions into flexible pavement design.</li>
+												<li>Conducted numerical simulations using advanced FEM modeling to predict pavement structure response.</li>
+												<li>Analyzed tire geometry, load, inflation pressure, and rolling condition effects on contact stresses.</li>
+												<li>Calibrated dynamic vehicle models for semi-trailer trucks and heavy-duty electric vehicles.</li>
+												<li>Performed laboratory testing (Dynamic Modulus) for asphalt mix characterization.</li>
+												<li>Led documentation, progress tracking, and team coordination of research projects.</li>
+											</ul>
+										</div>
+									</section>
+
+									<section class="cv-block">
+										<h4>Industry Experience</h4>
+										<div class="cv-entry">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">Project Engineer / Project Control</span>
+												<span class="cv-entry-date">Jan 2019 – Mar 2021</span>
+											</div>
+											<p class="cv-entry-org">CONCAR S.A. – Grupo Graña y Montero · Lima, Peru</p>
+											<p class="cv-entry-type">Road Construction, Management & Operation</p>
+											<ul>
+												<li>Managed formulation, approval and execution of additional work with the client.</li>
+												<li>Issued monthly operational and performance reports; annual budget plan and planning dossier.</li>
+												<li>Selected, hired, monitored and coordinated subcontractors and suppliers.</li>
+											</ul>
+										</div>
+										<div class="cv-entry">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">Junior Engineer / Project Control</span>
+												<span class="cv-entry-date">Jul 2018 – Dec 2018</span>
+											</div>
+											<p class="cv-entry-org">FLESAN DEL PERU S.A.C · Lima, Peru</p>
+											<p class="cv-entry-type">Foundations and Anchored Walls Construction for a Retail Store</p>
+											<ul>
+												<li>Reviewed engineering drawings; issued RFI reports to Project Management Office.</li>
+												<li>Formulated additional and deductive budgets; issued weekly progress reports (“S” Curve).</li>
+											</ul>
+										</div>
+										<div class="cv-entry">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">Junior Engineer / Project Control</span>
+												<span class="cv-entry-date">Aug 2017 – Jun 2018</span>
+											</div>
+											<p class="cv-entry-org">CONCAR S.A. – Grupo Graña y Montero · Apurimac, Peru</p>
+											<p class="cv-entry-type">Management and Conservation by Service Levels of a Road Corridor</p>
+											<ul>
+												<li>Controlled productivity rates; reported daily cost status to Project Manager.</li>
+												<li>Elaborated progress and aggregate cost reports; issued service orders to subcontractors.</li>
+											</ul>
+										</div>
+										<div class="cv-entry">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">Trainee Engineer / Talent Development Program</span>
+												<span class="cv-entry-date">Jan 2017 – Jul 2017</span>
+											</div>
+											<p class="cv-entry-org">CONCAR S.A. – Grupo Graña y Montero · Apurimac, Peru</p>
+											<p class="cv-entry-type">Management and Conservation by Service Levels of a Road Corridor</p>
+											<ul>
+												<li>Processed field data; controlled productivity rates; issued service orders.</li>
+												<li>Identified bottlenecks; proposed solution to Top Management; invited to join the company.</li>
+											</ul>
+										</div>
+									</section>
+
+									<section class="cv-block">
+										<h4>Honors &amp; Awards</h4>
+										<ul class="cv-list-compact">
+											<li><strong>2025</strong> Recipient, ACRP Graduate Research Award Program on Public-Sector Aviation Issues · DC, USA</li>
+											<li><strong>2025</strong> Recipient, Illinois Asphalt Pavement Association (IAPA) Scholarship · Illinois, USA</li>
+											<li><strong>2025</strong> Audience Choice Award, Transportation Research Board Three-Minute Thesis Competition · DC, USA</li>
+											<li><strong>2024</strong> Recipient, San Diego Supercomputer Center CIML Summer Institute Scholarship · California, USA</li>
+											<li><strong>2024</strong> 3rd Place, Ashby Prize in Computational Science, National Center for Supercomputing Applications · Illinois, USA</li>
+											<li><strong>2021</strong> Grantee, Fulbright Foreign Student Scholarship · Lima, Peru</li>
+											<li><strong>2021</strong> Recipient, UTEC Academic Excellence Certificate · Lima, Peru</li>
+											<li><strong>2020</strong> Grantee, UTEC Pavement Engineering Scholarship · Lima, Peru</li>
+											<li><strong>2020</strong> Recipient, ESAN Academic Excellence Certificate · Lima, Peru</li>
+											<li><strong>2016</strong> Recipient, UNMSM Academic Excellence Certificate · Lima, Peru</li>
+										</ul>
+									</section>
+
+									<section class="cv-block cv-block-grid">
+										<h4>Skills</h4>
+										<div class="cv-skills">
+											<div class="cv-skill-cat"><strong>Coursework</strong> CEE 407 Airport Design, CEE 506 Pavement Design II, CEE 416 Traffic Capacity Analysis, CEE 598 Advanced Bituminous Materials, CEE 508 Pavement Evaluation & Rehabilitation, CEE 570 Finite Element Methods, CS 547 Deep Learning</div>
+											<div class="cv-skill-cat"><strong>Software</strong> ABAQUS, AutoCAD, Civil 3D, Power BI, Primavera P6, MS Project, SAP2000, ETABS</div>
+											<div class="cv-skill-cat"><strong>Programming</strong> Python, Matlab, R, HTML, CSS, JavaScript, Java, LaTeX</div>
+											<div class="cv-skill-cat"><strong>Languages</strong> Spanish (Native), English (Proficient), Portuguese (Basic)</div>
+										</div>
+									</section>
+
+									<section class="cv-block">
+										<h4>Extracurricular Activity</h4>
+										<div class="cv-entry cv-entry-extracurricular">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">Campus Coordinator</span>
+												<span class="cv-entry-date">Jan 2025 – Dec 2025</span>
+											</div>
+											<p class="cv-entry-org">Fulbright Association, University of Illinois · Illinois, USA</p>
+											<ul>
+												<li>Expanding campus Fulbright presence to ensure students and faculty are aware of available resources and events.</li>
+												<li>Strengthening local Chapter ties to bridge institutional programming with the Fulbright community.</li>
+											</ul>
+										</div>
+										<div class="cv-entry cv-entry-extracurricular">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">Transportation Representative</span>
+												<span class="cv-entry-date">Dec 2024 – Present</span>
+											</div>
+											<p class="cv-entry-org">CEE Graduate Student Advisory Committee · Illinois, USA</p>
+											<ul>
+												<li>Served as a link between graduate students and department leadership, organizing socials, information sessions, and workshops.</li>
+											</ul>
+										</div>
+										<div class="cv-entry cv-entry-extracurricular">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">Treasurer</span>
+												<span class="cv-entry-date">Aug 2022 – May 2025</span>
+											</div>
+											<p class="cv-entry-org">Peruvian Student Association at the University of Illinois · Illinois, USA</p>
+											<ul>
+												<li>Managed budgets, secured grants, and oversaw financial planning, expense tracking, and income reporting for the association.</li>
+											</ul>
+										</div>
+										<div class="cv-entry cv-entry-extracurricular">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">President</span>
+												<span class="cv-entry-date">May 2022 – Jul 2023</span>
+											</div>
+											<p class="cv-entry-org">Fulbright Student Association at the University of Illinois · Illinois, USA</p>
+											<ul>
+												<li>Organized networking, professional and social activities for the Fulbright grantees.</li>
+											</ul>
+										</div>
+										<div class="cv-entry cv-entry-extracurricular">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">Membership Director / Internal Communications Chair</span>
+												<span class="cv-entry-date">Aug 2021 – May 2023</span>
+											</div>
+											<p class="cv-entry-org">ASCE Transportation &amp; Development Institute, Graduate Student Organization · Illinois, USA</p>
+											<ul>
+												<li>Oversaw and coordinated internal communication strategies, disseminated information about academic and social events.</li>
+												<li>Oversaw recruitment, retention and engagement of members.</li>
+											</ul>
+										</div>
+										<div class="cv-entry cv-entry-extracurricular">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">Member</span>
+												<span class="cv-entry-date">Aug 2020 – Aug 2021</span>
+											</div>
+											<p class="cv-entry-org">Project Management Institute (PMI), Lima Chapter · Lima, Peru</p>
+											<ul>
+												<li>Volunteered to organize professional events. Participated in the mentoring program as a mentee.</li>
+											</ul>
+										</div>
+										<div class="cv-entry cv-entry-extracurricular">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">Member · Registered Engineer, CIP N°252041</span>
+												<span class="cv-entry-date">Nov 2020 – Present</span>
+											</div>
+											<p class="cv-entry-org">Colegio de Ingenieros del Peru (Peruvian Association of Engineers) · Lima, Peru</p>
+										</div>
+										<div class="cv-entry cv-entry-extracurricular">
+											<div class="cv-entry-header">
+												<span class="cv-entry-title">President / Founder</span>
+												<span class="cv-entry-date">Mar 2014 – Jul 2020</span>
+											</div>
+											<p class="cv-entry-org">Estructuras UNMSM · Lima, Peru</p>
+											<ul>
+												<li>Initiated and led an undergraduate research organization focused on social projects, academic events, and intercollege activities.</li>
+											</ul>
+										</div>
+									</section>
+
+									<section class="cv-block">
+										<h4>Journal Articles</h4>
+										<p>For full citations and presentations, see <a href="Publications.html">Publications</a>.</p>
+										<ul class="cv-pub-list">
+											<li>Al-Qadi I., Diab L., Cardenas J. and Hafeez M. (2026) Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>12th BCRRA</em>. Under Review.</li>
+											<li>Hafeez M., Al-Qadi I., Cardenas J., Jayme A. and Hernandez J. (2026) Electric Truck Adoption: Infrastructure Energy Burden and Economic Impacts. <em>ASCE J. Transp. Eng.</em> Under Review.</li>
+											<li>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2026) Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Record</em>. Under Review.</li>
+											<li>Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2026) Relative Flexible Pavement Distress due to Heavy-Duty Electric Trucks. <em>Transportation Research Record</em>. <a href="https://doi.org/10.1177/03611981251404350">https://doi.org/10.1177/03611981251404350</a></li>
+											<li>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2025) Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE Pavements Conference 2025</em>. <a href="https://doi.org/10.1061/9780784486214.059">https://doi.org/10.1061/9780784486214.059</a></li>
+											<li>Singh A., Khan A., Cardenas J. and Al-Qadi I. (2025) Effect of Road Roughness on E-Truck Energy Consumption. <em>International J. Pavement Engineering</em>. <a href="https://doi.org/10.1080/10298436.2025.2528982">https://doi.org/10.1080/10298436.2025.2528982</a></li>
+											<li>Cardenas J. and Al-Qadi I. (2024) Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>ASCE J. Eng. Mech.</em> <a href="https://doi.org/10.1061/JENMDT.EMENG-7900">https://doi.org/10.1061/JENMDT.EMENG-7900</a></li>
+											<li>Hernandez J., Jayme A., Cardenas J. and Al-Qadi I. (2024) Effect of Heavy-Duty Electric Vehicles on Tire-Pavement Contact Forces. <em>ASCE J. Eng. Mech.</em> <a href="https://doi.org/10.1061/JENMDT.EMENG-7835">https://doi.org/10.1061/JENMDT.EMENG-7835</a></li>
+											<li>Cardenas J. and Al-Qadi I. (2024) Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>Transportation Research Record</em>. <a href="https://doi.org/10.1177/03611981241242378">https://doi.org/10.1177/03611981241242378</a></li>
+										</ul>
+									</section>
+
+									<section class="cv-block">
+										<h4>Presentations</h4>
+										<p>For full list and conference details, see <a href="Publications.html">Publications</a>.</p>
+										<ul class="cv-pub-list">
+											<li>Al-Qadi I., Diab L., Cardenas J. and Hafeez M. (2026) Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>12th BCRRA</em>. Keynote Session. Jun 2026.</li>
+											<li>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2026) Quantification of Truck Electrification Damage to Flexible Pavements. <em>TRB 2026</em>. Poster Session, Accelerated Pavement Testing (4082). Jan 2026.</li>
+											<li>Hafeez M., Al-Qadi I., Cardenas J., Jayme A. and Hernandez J. (2026) Infrastructure Energy Burden and Economic Impacts due to Electric Truck Adoption. <em>TRB 2026</em>. Poster Session, Pavement Rehabilitation (4085). Jan 2026.</li>
+											<li>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2025) Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE International Conference on Transportation &amp; Development, and Airfield &amp; Highway Pavements Conference</em>. Jun 2025.</li>
+											<li>Hafeez M., Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025) Environmental Impact of Commercial E-Trucks on Flexible Pavement. <em>ASCE ICTD &amp; Pavements Conference</em>. Jun 2025.</li>
+											<li>Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025) Flexible Pavement Damage Quantification due to Heavy-Duty Electric Trucks. <em>TRB 2025</em>. Lectern Session, Event 2137. Jan 2025.</li>
+											<li>Singh A., Khan A., Cardenas J. and Al-Qadi I. (2025) Effect of Road Roughness on E-Truck Energy Consumption. <em>TRB 2025</em>. Poster Session, Event 4048. Jan 2025.</li>
+											<li>Hernandez J., Jayme A., Cardenas J., and Al-Qadi I. (2024) Electric Heavy Trucks — Impact on Pavement Damage. <em>65th Illinois Bituminous Paving Conference</em>. Dec 2024.</li>
+											<li>Cardenas J., and Al-Qadi I. (2024) Impact of Vehicular Maneuvering and Dynamic Loading on Flexible Pavements. <em>ISAP 2024</em>. Jun 2024.</li>
+											<li>Singh A., Cardenas J. and Al-Qadi I. (2024) Numerical Modeling of Truck-Electrification-Induced Energy Loss in Highway Flexible Pavements. <em>ASCE EMI 2024 Conference</em>. May 2024.</li>
+											<li>Hernandez J., Jayme A., Cardenas J., and Al-Qadi I. (2024) Effect of Heavy-Duty Electric Vehicles on Pavement Contact Forces. <em>TRB 2024</em>. Lectern Session, Event 2020. Jan 2024.</li>
+											<li>Cardenas J., and Al-Qadi I. (2024) Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>TRB 2024</em>. Lectern Session, Event 2020. Jan 2024.</li>
+											<li>Cardenas J., and Al-Qadi I. (2024) The Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>TRB 2024</em>. Poster Session. Jan 2024.</li>
+										</ul>
+									</section>
+
+									<section class="cv-block">
+										<h4>Technical Reports</h4>
+										<p class="cv-report-org">Illinois Center for Transportation, University of Illinois Urbana-Champaign</p>
+										<ul class="cv-pub-list">
+											<li>Jayme A., Hernandez J., Al-Qadi I., Cardenas J., Hafeez M., and Villamil W. (2025) Impact of Heavy Commercial Electric Vehicles on Flexible Pavements. <em>ICT Project R27-252</em>. ISSN:0197-9191. <a href="https://doi.org/10.36501/0197-9191/25-003">https://doi.org/10.36501/0197-9191/25-003</a></li>
+											<li>Al-Qadi I., Jayme A., Zhou Q., Cardenas J., Liu F., Singh A. (2024) Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis. Vol. II. <em>ICT-R27-246</em>. Under Review.</li>
+										</ul>
+									</section>
+								</div>
 							</div>
+						</article>
 						</div>
 					</div>
 				</section>

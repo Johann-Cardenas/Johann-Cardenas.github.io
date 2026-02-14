@@ -55,7 +55,12 @@
     {
       "name": "E-Labs",
       "url": "E-Labs.html",
-      "type": "page"
+      "type": "dropdown",
+      "children": [
+        { "name": "AirCrafter", "url": "e-labs/aircrafter/index.html" },
+        { "name": "Frontier", "url": "e-labs/frontier/index.html" },
+        { "name": "Asphera", "url": "e-labs/asphera/index.html" }
+      ]
     }
   ]
 }

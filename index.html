@@ -467,7 +467,7 @@
 					margin-bottom: 0;
 				}
 				body.homepage #header #banner {
-					padding-bottom: 0;
+					padding: 7em 0 1.25em 0;
 					background-size: cover;
 					background-position: center center;
 				}
@@ -481,32 +481,10 @@
 			}
 			/* About Me section – modern refinement, keep map proportion */
 			#about-me {
-				margin-bottom: 2.5rem;
+				margin-bottom: 1.5rem;
 				padding: 1rem 0 2rem 0;
 			}
-			#about-me .major {
-				margin-bottom: 1.5rem;
-				text-align: center;
-			}
-			#about-me .major h2 {
-				font-size: 1.85rem;
-				font-weight: 700;
-				letter-spacing: 0.02em;
-				margin: 0 0 0.5rem 0;
-				position: relative;
-				display: inline-block;
-			}
-			#about-me .major h2::after {
-				content: '';
-				position: absolute;
-				left: 50%;
-				bottom: -0.35rem;
-				transform: translateX(-50%);
-				width: 60px;
-				height: 3px;
-				background: linear-gradient(90deg, transparent, var(--accent-primary, #18a9a8), transparent);
-				border-radius: 2px;
-			}
+			/* About Me header uses same pattern as Research Projects / Blog Entries (header.major from main.css) */
 			#about-me .row {
 				display: flex;
 				flex-wrap: nowrap;
@@ -666,6 +644,9 @@
 				box-shadow: 0 8px 32px rgba(0,0,0,0.35);
 			}
 			@media (max-width: 768px) {
+				#about-me header.major {
+					margin-bottom: 0.75rem;
+				}
 				#about-me .row {
 					flex-direction: column;
 					flex-wrap: wrap;

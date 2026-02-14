@@ -128,15 +128,27 @@
 				background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.7) 40%, rgba(15, 23, 42, 0.25) 70%, transparent 100%);
 			}
 			@media (max-width: 768px) {
+				.publications-banner {
+					margin-bottom: 1.25rem;
+				}
 				.publications-banner-image {
-					aspect-ratio: auto;
-					min-height: 280px;
+					aspect-ratio: unset;
+					height: 26vh;
+					min-height: 180px;
+					max-height: 220px;
+				}
+				.publications-banner-image img {
+					object-fit: cover;
+					object-position: center center;
+					width: 100%;
+					height: 100%;
 				}
 				.publications-banner-content {
-					padding: 1.5rem 1.25rem 1.5rem;
+					padding: 1rem 1.25rem 1.25rem;
 				}
 				.publications-banner-content h2 { font-size: 1.5rem; }
-				.publications-banner-content .banner-subtitle { font-size: 1rem; }
+				.publications-banner-content .banner-subtitle { font-size: 0.95rem; }
+				.pub-intro { padding: 0.9rem 1.1rem; margin-bottom: 1rem; }
 			}
 
 			/* Intro block: social + IDs in a glassy strip */

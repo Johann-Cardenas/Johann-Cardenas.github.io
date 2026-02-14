@@ -71,6 +71,36 @@
         return html;
     }
 
+    /**
+     * Generate mobile nav panel HTML with grouped dropdowns so subsections
+     * can be hidden by default and shown on hover (mobile side menu).
+     */
+    function generateMobileNavPanel(navData, currentPage) {
+        if (!navData || !navData.menu) return '';
+
+        let html = '';
+        navData.menu.forEach(function(item) {
+            if (item.type === 'dropdown' && item.children && item.children.length) {
+                html += '<div class="nav-panel-group">';
+                html += '<div class="nav-panel-head">';
+                html += '<a class="link depth-0" href="' + basePath + item.url + '">' +
+                    '<span class="indent-0"></span>' + item.name + '</a>';
+                html += '<span class="nav-panel-trigger" role="button" tabindex="0" aria-label="Show submenu">&#9660;</span>';
+                html += '</div>';
+                html += '<div class="nav-panel-subs">';
+                item.children.forEach(function(child) {
+                    html += '<a class="link depth-1" href="' + basePath + child.url + '">' +
+                        '<span class="indent-1"></span>' + child.name + '</a>';
+                });
+                html += '</div></div>';
+            } else {
+                html += '<a class="link depth-0" href="' + basePath + item.url + '">' +
+                    '<span class="indent-0"></span>' + item.name + '</a>';
+            }
+        });
+        return html;
+    }
+
     // Generate footer HTML
     function generateFooter(footerData) {
         if (!footerData) return '';
@@ -360,20 +390,24 @@
     }
 
     // Rebuild mobile navigation panel after dynamic nav loading
-    function rebuildMobileNav() {
+    function rebuildMobileNav(navData, currentPage) {
         var attempts = 0;
         var maxAttempts = 20; // Try for up to 2 seconds (20 * 100ms)
         
         var checkInterval = setInterval(function() {
             attempts++;
             
-            // Check if jQuery, navList plugin, and navPanel are all available
-            if (typeof jQuery !== 'undefined' && jQuery.fn.navList) {
-                var $nav = jQuery('#nav');
+            // Check if jQuery and navPanel are available
+            if (typeof jQuery !== 'undefined') {
                 var $navPanel = jQuery('#navPanel');
-                
-                if ($nav.length && $navPanel.length && $nav.find('li').length > 0) {
-                    // Clear existing nav content and rebuild
+                // Prefer grouped panel HTML from navData (hover-to-show subs) when available
+                if (navData && currentPage != null && $navPanel.length) {
+                    $navPanel.find('nav').html(generateMobileNavPanel(navData, currentPage));
+                    clearInterval(checkInterval);
+                    return;
+                }
+                var $nav = jQuery('#nav');
+                if ($nav.length && $navPanel.length && jQuery.fn.navList && $nav.find('li').length > 0) {
                     $navPanel.find('nav').html($nav.navList());
                     clearInterval(checkInterval);
                     return;
@@ -400,8 +434,8 @@
             const navHTML = generateNavigation(navData, currentPage);
             navElement.outerHTML = navHTML;
             
-            // Rebuild mobile nav panel after navigation is loaded
-            rebuildMobileNav();
+            // Rebuild mobile nav panel (grouped structure so subs show on hover only)
+            rebuildMobileNav(navData, currentPage);
         }
 
         // Load footer
