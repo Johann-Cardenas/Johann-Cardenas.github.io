@@ -18,106 +18,163 @@
 		<link rel="icon" href="/favicon.ico" type="image/x-icon">
 
 		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 		<style>
-			#all-news-placeholder {
-				margin-top: 0.0em;
+			/* E-Labs style: Section intro */
+			.section-intro {
+				text-align: center;
+				max-width: 800px;
+				margin: 0 auto 3rem auto;
 			}
-			#all-news-placeholder .row {
-				margin-top: 0 !important;
-				margin-left: 0 !important;
+			.section-intro h2 {
+				font-size: 2rem;
+				margin-bottom: 1rem;
 			}
-			#all-news-placeholder .row > * {
-				padding: 0.0em 0 0 0 !important;
+			.section-intro p {
+				color: var(--text-secondary, #666);
+				line-height: 1.7;
 			}
-			#all-news-placeholder .row > *:first-child {
-				padding-top: 0 !important;
+
+			/* News grid (E-Labs apps-grid style) - 4 cards per row */
+			.news-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+				gap: 1.5rem;
+				margin-top: 2rem;
 			}
-			#all-news-placeholder .box {
-				margin-bottom: 0 !important;
-				padding: 0.75em 1.75em 0.75em 1.75em !important;
+
+			/* News card (E-Labs app-card style) */
+			.news-card-modern {
+				background: var(--news-card-bg, #fff);
+				border-radius: 12px;
+				overflow: hidden;
+				box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+				transition: transform 0.3s ease, box-shadow 0.3s ease;
+				display: flex;
+				flex-direction: column;
+				border: 1px solid var(--news-card-border, transparent);
 			}
-			#all-news-placeholder .box header {
-				margin-bottom: 0.0em !important;
+			.news-card-modern:hover {
+				transform: translateY(-4px);
+				box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+				border-color: var(--news-card-border-hover, transparent);
 			}
-			#all-news-placeholder .box header h3 {
-				margin-bottom: 0.0em !important;
+
+			.news-card-image {
+				position: relative;
+				width: 100%;
+				aspect-ratio: 1 / 1;
+				overflow: hidden;
 			}
-			#all-news-placeholder .box header p {
-				margin-bottom: 0.0em !important;
+			.news-card-image img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				transition: transform 0.3s ease;
 			}
-			#all-news-placeholder .box > p {
-				margin-bottom: 0 !important;
+			.news-card-modern:hover .news-card-image img {
+				transform: scale(1.05);
 			}
-			
-			/* News highlight tags */
+			.news-card-image a {
+				display: block;
+				height: 100%;
+			}
+
+			.news-card-content {
+				padding: 1.1rem 1.25rem;
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+			}
+			.news-card-content h3 {
+				margin: 0 0 0.4rem 0;
+				font-size: 1.1rem;
+				line-height: 1.35;
+			}
+			.news-card-content h3 a {
+				color: inherit;
+				text-decoration: none;
+				transition: color 0.2s ease;
+			}
+			.news-card-content h3 a:hover {
+				color: #18a9a8;
+			}
+			.news-meta {
+				color: var(--news-meta-color, #888);
+				font-size: 0.78rem;
+				margin: 0 0 0.5rem 0;
+				line-height: 1.25;
+			}
+			.news-excerpt {
+				color: var(--news-text-color, #666);
+				line-height: 1.5;
+				margin-bottom: 0.9rem;
+				flex: 1;
+				text-align: justify;
+				font-size: 0.88rem;
+			}
 			.news-tags {
 				display: flex;
 				flex-wrap: wrap;
-				gap: 0.5rem;
+				gap: 0.35rem;
+				margin-bottom: 0.5rem;
 			}
 			.news-tag {
 				display: inline-block;
-				padding: 0.2rem 0.6rem;
+				padding: 3px 8px;
 				border-radius: 4px;
-				font-size: 0.75rem;
+				font-size: 0.68rem;
 				font-weight: 600;
 				text-transform: uppercase;
 				letter-spacing: 0.5px;
 			}
-			/* Tag color variations */
-			.tag-featured {
-				background: linear-gradient(135deg, #18a9a8 0%, #0d7d7c 100%);
+			.tag-featured { background: linear-gradient(135deg, #18a9a8 0%, #0d7d7c 100%); color: #fff; }
+			.tag-award { background: linear-gradient(135deg, #f6ad55 0%, #dd6b20 100%); color: #fff; }
+			.tag-keynote { background: linear-gradient(135deg, #9f7aea 0%, #6b46c1 100%); color: #fff; }
+			.tag-presentation { background: linear-gradient(135deg, #4299e1 0%, #2b6cb0 100%); color: #fff; }
+			.tag-research { background: linear-gradient(135deg, #48bb78 0%, #2f855a 100%); color: #fff; }
+
+			.news-read-btn {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.4rem;
+				padding: 0.5rem 1rem;
+				background: linear-gradient(135deg, #18a9a8, #0d7377);
 				color: #fff;
+				border: none;
+				border-radius: 8px;
+				font-size: 0.9rem;
+				font-weight: 600;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				text-decoration: none;
 			}
-			.tag-award {
-				background: linear-gradient(135deg, #f6ad55 0%, #dd6b20 100%);
-				color: #fff;
-			}
-			.tag-keynote {
-				background: linear-gradient(135deg, #9f7aea 0%, #6b46c1 100%);
-				color: #fff;
-			}
-			.tag-presentation {
-				background: linear-gradient(135deg, #4299e1 0%, #2b6cb0 100%);
-				color: #fff;
-			}
-			.tag-research {
-				background: linear-gradient(135deg, #48bb78 0%, #2f855a 100%);
-				color: #fff;
-			}
-			/* News card hover effect */
-			.news-card {
-				transition: transform 0.2s ease, box-shadow 0.2s ease;
-			}
-			.news-card:hover {
+			.news-read-btn:hover {
+				background: linear-gradient(135deg, #0d7377, #18a9a8);
 				transform: translateY(-2px);
-				box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+				box-shadow: 0 4px 12px rgba(24, 169, 168, 0.4);
+				color: #fff;
 			}
-			.news-card h3 a {
-				color: inherit;
-				transition: color 0.2s ease;
+
+			/* News cards without image */
+			.news-card-modern:not(:has(.news-card-image)) .news-card-content {
+				padding-top: 1.5rem;
 			}
-			.news-card h3 a:hover {
-				color: #18a9a8;
+
+			/* Dark theme support */
+			[data-theme="dark"] .news-card-modern {
+				--news-card-bg: #252525;
+				--news-card-border: #3a3a3a;
+				--news-card-border-hover: #4a4a4a;
+				--news-meta-color: #b0b0b0;
+				--news-text-color: #d0d0d0;
 			}
-			/* Reduce vertical spacing in news card content */
-			.news-card .news-tags {
-				margin-bottom: 0.25rem !important;
+			[data-theme="dark"] .news-card-modern:hover {
+				box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 			}
-			.news-card header {
-				margin-bottom: 0.15rem !important;
-			}
-			.news-card header h3 {
-				margin-bottom: 0.1rem !important;
-				line-height: 1.3;
-			}
-			.news-card header p {
-				margin-bottom: 0.25rem !important;
-				line-height: 1.2;
-			}
-			.news-card > div > div:last-child > p:last-child {
-				margin-top: 0.15rem !important;
-				line-height: 1.4;
+			[data-theme="dark"] .section-intro p {
+				color: #c0c0c0;
 			}
 		</style>
 
@@ -145,27 +202,21 @@
 			<!-- Main -->
 				<section id="main">
 					<div class="container">
-						<div class="columns">
-							<div class="col-12">
+						<div class="col-12">
 
-								<!-- Content -->
-									<article class="box post">
-										<header>
-											<h2>In the News</h2>
-											<p>Highlights and Recognition</p>
-										</header>
-										<p style="text-align: justify;">
-											News articles and publications where my research and achievements have been highlighted. 
-											From awards and recognitions to research collaborations and presentations, these articles showcase the impact 
-											of our work in highway and airfield pavement research.
-										</p>
-
-										<!-- All News Items Placeholder -->
-										<div id="all-news-placeholder"></div>
-
-									</article>
-
+							<!-- Section Intro (E-Labs style) -->
+							<div class="section-intro">
+								<h2>In the News</h2>
+								<p>
+									News articles and publications where my research and achievements have been highlighted.
+									From awards and recognitions to research collaborations and presentations, these articles
+									showcase the impact of our work in highway and airfield pavement research.
+								</p>
 							</div>
+
+							<!-- News Grid (populated by components.js) -->
+							<div id="all-news-placeholder"></div>
+
 						</div>
 					</div>
 				</section>

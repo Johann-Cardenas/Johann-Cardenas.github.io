@@ -297,41 +297,34 @@
         return generateProjects(projectsData, '', imageBasePath, true);
     }
 
-    // Generate news item card HTML
+    // Generate news item card HTML (E-Labs style: image on top, content below)
     function generateNewsCard(newsItem, imageBasePath = '') {
         // Generate highlight tags if provided
         const highlightTags = newsItem.tags && newsItem.tags.length > 0
-            ? newsItem.tags.map(tag => `<mark class="news-tag tag-${tag.toLowerCase().replace(/\s+/g, '-')}">${tag}</mark>`).join(' ')
+            ? newsItem.tags.map(tag => `<span class="news-tag tag-${tag.toLowerCase().replace(/\s+/g, '-')}">${tag}</span>`).join('')
             : '';
         
-        // Square image section (left side)
-        const imageSection = newsItem.image 
-            ? `<div class="col-3 col-12-medium" style="display: flex; align-items: center; justify-content: center;">
-                    <a href="${newsItem.url}" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%;">
-                        <img src="${imageBasePath}${newsItem.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" style="width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px;" />
+        const imageSection = newsItem.image
+            ? `<div class="news-card-image">
+                    <a href="${newsItem.url}" target="_blank" rel="noopener noreferrer">
+                        <img src="${imageBasePath}${newsItem.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" />
                     </a>
                 </div>`
             : '';
         
-        // Adjust content column width based on whether image exists
-        const contentColClass = newsItem.image ? 'col-9 col-12-medium' : 'col-12';
-        
         return `
-            <div class="col-12">
-                <section class="box news-card">
-                    <div class="row aln-middle">
-                        ${imageSection}
-                        <div class="${contentColClass}">
-                            ${highlightTags ? `<div class="news-tags" style="margin-bottom: 0.5rem;">${highlightTags}</div>` : ''}
-                            <header>
-                                <h3 style="margin-bottom: 0.25rem;"><a href="${newsItem.url}" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">${newsItem.title}</a></h3>
-                                <p style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem;">${newsItem.source} • ${newsItem.dateDisplay}</p>
-                            </header>
-                            <p style="text-align: justify; margin-bottom: 0;">${newsItem.excerpt}</p>
-                        </div>
-                    </div>
-                </section>
-            </div>`;
+            <article class="news-card-modern">
+                ${imageSection}
+                <div class="news-card-content">
+                    ${highlightTags ? `<div class="news-tags">${highlightTags}</div>` : ''}
+                    <h3><a href="${newsItem.url}" target="_blank" rel="noopener noreferrer">${newsItem.title}</a></h3>
+                    <p class="news-meta">${newsItem.source} • ${newsItem.dateDisplay}</p>
+                    <p class="news-excerpt">${newsItem.excerpt}</p>
+                    <a href="${newsItem.url}" target="_blank" rel="noopener noreferrer" class="news-read-btn">
+                        <i class="fas fa-external-link-alt"></i> Read Article
+                    </a>
+                </div>
+            </article>`;
     }
 
     // Generate all news items HTML
@@ -340,16 +333,11 @@
 
         if (newsData.items.length === 0) return '';
 
-        let html = `
-            <div class="row gtr-0">`;
-
+        let html = `<div class="news-grid">`;
         newsData.items.forEach(item => {
             html += generateNewsCard(item, imageBasePath);
         });
-
-        html += `
-            </div>`;
-
+        html += `</div>`;
         return html;
     }
 
