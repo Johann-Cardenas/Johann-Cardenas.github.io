@@ -646,7 +646,7 @@
 				--about-map-border: rgba(24, 169, 168, 0.15);
 				box-shadow: 0 8px 32px rgba(0,0,0,0.35);
 			}
-			@media (min-width: 737px) and (max-width: 980px) {
+			@media (min-width: 737px) and (max-width: 1024px) {
 				/* Tablet: About Me layout matches mobile, but fonts are larger */
 				body.homepage #main .container .row > #about-me-placeholder {
 					width: 100%;
@@ -698,12 +698,19 @@
 					margin-bottom: 0;
 				}
 				body.homepage #header #banner {
-					padding: 7em 0 1.25em 0;
+					padding: 16em 0 1.25em 0;
 					background-size: cover;
 					background-position: center center;
 				}
-				body.homepage #main {
-					padding-top: 0.5rem;
+				body.homepage #main .container .row > #about-me-placeholder {
+					padding-top: 5rem;
+				}
+				#about-me .about-me-section p {
+					font-size: 1.08rem;
+					line-height: 1.6;
+				}
+				#about-me .about-me-section h3 {
+					font-size: 1.18rem;
 				}
 				body.homepage #main .container .row > #about-me-placeholder {
 					padding-top: 0.25rem;
