@@ -48,9 +48,11 @@
     {"name": "Publications", "url": "Publications.html"},
     {"name": "Resume", "url": "Resume.html"},
     {"name": "Blog", "url": "Blog.html"},
+    {"name": "E-Labs", "url": "E-Labs.html"},
     {"name": "News", "url": "News.html"}
   ],
   "affiliations": [
+    {"name": "Illinois Center for Transportation", "url": "https://ict.illinois.edu/"},
     {"name": "University of Illinois, Urbana-Champaign", "url": "https://illinois.edu/"},
     {"name": "Universidad Nacional Mayor de San Marcos", "url": "https://unmsm.edu.pe/"},
     {"name": "The Fulbright Program (Peru Commision)", "url": "https://www.fulbright.pe/"}
@@ -75,8 +77,8 @@
     "year": 2026,
     "text": "All rights reserved.",
     "link": {
-      "text": "Illinois Center for Transportation",
-      "url": "https://ict.illinois.edu/"
+      "text": "Research • Code • Design",
+      "url": "https://github.com/Johann-Cardenas"
     }
   }
 }

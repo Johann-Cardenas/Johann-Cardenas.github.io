@@ -137,17 +137,34 @@
 							margin: 0 !important;
 							padding: 0 !important;
 							line-height: 1 !important;
-							border: 1px solid var(--resume-card-border, rgba(24, 169, 168, 0.1));
+							border: 1px solid var(--resume-card-border, rgba(24, 169, 168, 0.12));
 							border-radius: 20px;
-							gap: 0.5rem;
+							gap: 0;
 							list-style: none;
 							position: relative;
-							/* Avoid overflow-x: hidden here – it makes browsers add overflow-y: auto and a second scrollbar */
+							overflow: hidden;
+							background: var(--resume-card-bg, rgba(255, 255, 255, 0.7));
+							backdrop-filter: blur(14px);
+							-webkit-backdrop-filter: blur(14px);
+							box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
 						}
+			.resume-article::before {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 4px;
+				background: linear-gradient(90deg, transparent 0%, var(--resume-accent, #18a9a8) 15%, var(--resume-accent, #18a9a8) 85%, transparent 100%);
+				opacity: 0.9;
+				z-index: 1;
+			}
 			.resume-intro {
 				width: 100%;
 				box-sizing: border-box;
-				padding: 1.5rem 2rem 1.75rem;
+				padding: 1.75rem 2rem 2rem;
+				background: var(--resume-intro-bg, rgba(24, 169, 168, 0.04));
+				border-bottom: 1px solid var(--resume-card-border, rgba(24, 169, 168, 0.08));
 			}
 			.resume-social-row {
 				display: flex;
@@ -168,17 +185,24 @@
 			.resume-contact-bar a {
 				display: inline-flex;
 				align-items: center;
-				gap: 0.35rem;
+				gap: 0.4rem;
 				color: var(--resume-text, #333);
 				text-decoration: none;
-				transition: color 0.2s ease;
+				transition: color 0.25s ease, transform 0.2s ease;
+				padding: 0.35rem 0.6rem;
+				border-radius: 8px;
 			}
 			.resume-contact-bar a:hover {
 				color: var(--resume-accent, #18a9a8);
+				background: var(--resume-contact-hover, rgba(24, 169, 168, 0.08));
 			}
 			.resume-contact-bar i {
-				font-size: 0.85em;
-				opacity: 0.8;
+				font-size: 0.9em;
+				opacity: 0.85;
+				transition: opacity 0.2s ease;
+			}
+			.resume-contact-bar a:hover i {
+				opacity: 1;
 			}
 			.resume-social {
 				display: flex;
@@ -217,7 +241,8 @@
 			}
 			/* CV section */
 			.resume-cv-section {
-				padding: 1.75rem 2rem 2rem;
+				padding: 2rem 2rem 2.25rem;
+				position: relative;
 			}
 			.resume-cv-header {
 				display: flex;
@@ -225,15 +250,27 @@
 				justify-content: space-between;
 				flex-wrap: wrap;
 				gap: 0.75rem;
-				margin-bottom: 1.25rem;
-				padding-bottom: 1rem;
-				border-bottom: 2px solid var(--resume-accent, #18a9a8);
+				margin-bottom: 1.5rem;
+				padding-bottom: 1.15rem;
+				border-bottom: none;
+				position: relative;
+			}
+			.resume-cv-header::after {
+				content: '';
+				position: absolute;
+				left: 0;
+				bottom: 0;
+				width: 4em;
+				height: 3px;
+				background: linear-gradient(90deg, var(--resume-accent, #18a9a8), transparent);
+				border-radius: 2px;
 			}
 			.resume-cv-header h3 {
 				margin: 0;
-				font-size: 1.35rem;
+				font-size: 1.4rem;
 				font-weight: 700;
-				letter-spacing: 0.02em;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
 				color: inherit;
 			}
 			.resume-cv-buttons {
@@ -276,20 +313,24 @@
 				margin-top: 0;
 			}
 			.cv-block {
-				margin-bottom: 1.75rem;
+				margin-bottom: 2rem;
+				transition: opacity 0.2s ease;
 			}
 			.cv-block:last-child {
 				margin-bottom: 0;
 			}
 			.cv-block h4 {
-				margin: 0 0 0.75rem 0;
-				font-size: 1.08rem;
+				margin: 0 0 0.85rem 0;
+				font-size: 1.1rem;
 				font-weight: 700;
+				letter-spacing: 0.05em;
+				text-transform: uppercase;
 				color: inherit;
 				border-left: 4px solid var(--resume-accent, #18a9a8);
-				padding-left: 0.75rem;
+				padding-left: 0.9rem;
 				padding-bottom: 0;
 				border-bottom: none;
+				position: relative;
 			}
 			.cv-block ul {
 				margin: 0;
@@ -318,8 +359,15 @@
 			}
 			/* CV entry styling */
 			.cv-entry {
-				margin-bottom: 1.5rem;
-				padding-left: 0;
+				margin-bottom: 1.15rem;
+				padding: 1rem 1rem 1rem 1.15rem;
+				border-radius: 12px;
+				border-left: 3px solid transparent;
+				transition: background 0.25s ease, border-left-color 0.25s ease;
+			}
+			.cv-entry:hover {
+				background: var(--resume-entry-hover, rgba(24, 169, 168, 0.04));
+				border-left-color: rgba(24, 169, 168, 0.35);
 			}
 			.cv-entry:last-child {
 				margin-bottom: 0;
@@ -329,20 +377,25 @@
 				justify-content: space-between;
 				align-items: baseline;
 				flex-wrap: wrap;
-				gap: 0.4rem;
-				margin-bottom: 0.2rem;
+				gap: 0.5rem;
+				margin-bottom: 0.25rem;
 			}
 			.cv-entry-title {
 				font-weight: 700;
 				color: inherit;
+				font-size: 1.02em;
 			}
 			.cv-entry-date {
-				font-size: 0.9em;
+				font-size: 0.88em;
 				color: var(--resume-meta, #555);
-				font-weight: 500;
+				font-weight: 600;
+				letter-spacing: 0.02em;
+				padding: 0.2rem 0.5rem;
+				background: var(--resume-date-bg, rgba(24, 169, 168, 0.08));
+				border-radius: 6px;
 			}
 			.cv-entry-org {
-				margin: 0 0 0.25rem 0;
+				margin: 0 0 0.3rem 0;
 				font-size: 0.95em;
 				color: var(--resume-meta, #555);
 				font-style: italic;
@@ -371,12 +424,20 @@
 			.cv-list-compact {
 				list-style: none;
 				padding-left: 0;
+				border-radius: 12px;
+				overflow: hidden;
+				background: var(--resume-list-bg, rgba(24, 169, 168, 0.03));
 			}
 			.cv-list-compact li {
-				padding: 0.35rem 0;
+				padding: 0.6rem 1rem;
 				border-bottom: 1px solid var(--resume-divider, rgba(24, 169, 168, 0.08));
 				font-size: 0.95em;
-				line-height: 1.5;
+				line-height: 1.55;
+				transition: background 0.2s ease, padding-left 0.2s ease;
+			}
+			.cv-list-compact li:hover {
+				background: var(--resume-entry-hover, rgba(24, 169, 168, 0.05));
+				padding-left: 1.25rem;
 			}
 			.cv-list-compact li:last-child {
 				border-bottom: none;
@@ -398,33 +459,89 @@
 			}
 			.cv-skill-cat {
 				flex: 1 1 280px;
-				padding: 0.75rem 1rem;
+				padding: 1rem 1.2rem;
 				background: var(--resume-skill-bg, rgba(24, 169, 168, 0.06));
-				border-radius: 10px;
-				font-size: 0.9em;
-				line-height: 1.5;
+				border: 1px solid var(--resume-skill-border, rgba(24, 169, 168, 0.1));
+				border-radius: 12px;
+				font-size: 0.92em;
+				line-height: 1.55;
+				transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+			}
+			.cv-skill-cat:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 6px 20px rgba(24, 169, 168, 0.08);
+				border-color: rgba(24, 169, 168, 0.2);
 			}
 			.cv-skill-cat strong {
 				display: block;
-				margin-bottom: 0.25rem;
+				margin-bottom: 0.35rem;
 				color: var(--resume-accent, #18a9a8);
-				font-size: 0.85em;
+				font-size: 0.8em;
 				text-transform: uppercase;
-				letter-spacing: 0.03em;
+				letter-spacing: 0.06em;
+				font-weight: 700;
 			}
 			/* Dark theme */
 			[data-theme="dark"] .resume-article {
-				--resume-card-bg: rgba(30, 41, 59, 0.75);
-				--resume-card-border: rgba(24, 169, 168, 0.15);
+				--resume-card-bg: rgba(30, 41, 59, 0.85);
+				--resume-card-border: rgba(24, 169, 168, 0.18);
 				--resume-divider: rgba(24, 169, 168, 0.15);
 				--resume-text: #e2e8f0;
 				--resume-accent: #2dd4bf;
 				--resume-meta: #94a3b8;
-				--resume-skill-bg: rgba(24, 169, 168, 0.1);
+				--resume-skill-bg: rgba(24, 169, 168, 0.12);
+				--resume-skill-border: rgba(24, 169, 168, 0.18);
+				--resume-intro-bg: rgba(24, 169, 168, 0.06);
+				--resume-entry-hover: rgba(24, 169, 168, 0.08);
+				--resume-list-bg: rgba(24, 169, 168, 0.05);
+				--resume-date-bg: rgba(24, 169, 168, 0.12);
+				--resume-contact-hover: rgba(24, 169, 168, 0.12);
 			}
 			[data-theme="dark"] .resume-download-btn {
 				background: linear-gradient(135deg, #0d7377, #18a9a8);
 			}
+
+			/* Desktop: larger typography and polish */
+			@media screen and (min-width: 981px) {
+				.resume-banner-content h2 {
+					font-size: 2.1rem;
+				}
+				.resume-banner-content .banner-subtitle {
+					font-size: 1.15rem;
+				}
+				.resume-bio {
+					max-width: 860px;
+				}
+				.resume-bio p {
+					font-size: 1.08rem;
+					line-height: 1.85;
+				}
+				.resume-contact-bar {
+					font-size: 0.95rem;
+				}
+				.resume-cv-header h3 {
+					font-size: 1.5rem;
+				}
+				.cv-block h4 {
+					font-size: 1.12rem;
+				}
+				.cv-block ul,
+				.cv-block p,
+				.cv-entry ul {
+					font-size: 1rem;
+					line-height: 1.65;
+				}
+				.cv-entry-title {
+					font-size: 1.04em;
+				}
+				.cv-list-compact li {
+					font-size: 0.98rem;
+				}
+				.cv-skill-cat {
+					font-size: 0.95rem;
+				}
+			}
+
 			@media screen and (max-width: 736px) {
 				.resume-main .resume-container { padding: 0 0.75rem; }
 				.resume-intro {

@@ -2694,6 +2694,120 @@ input, select, textarea {
 				font-size: 1.75em;
 			}
 
+/* Footer - Modern enhancements */
+	#footer.footer-modern {
+		position: relative;
+		overflow: hidden;
+		padding: 4.5em 0 4em 0;
+		background: var(--bg-footer);
+	}
+	#footer .footer-bg {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: radial-gradient(ellipse 120% 80% at 50% 0%, rgba(24, 169, 168, 0.06) 0%, transparent 55%);
+	}
+	#footer .footer-accent {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 4px;
+		background: linear-gradient(90deg, transparent 0%, var(--accent-primary) 15%, var(--accent-primary) 85%, transparent 100%);
+		opacity: 0.9;
+		animation: footerAccentShine 4s ease-in-out infinite;
+	}
+	#footer .footer-block {
+		opacity: 0;
+		animation: footerBlockFadeIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+	}
+	#footer .footer-block-1 { animation-delay: 0.06s; }
+	#footer .footer-block-2 { animation-delay: 0.16s; }
+	#footer .footer-block-3 { animation-delay: 0.26s; }
+	#footer .footer-section {
+		position: relative;
+		padding: 1em 0;
+	}
+	#footer .footer-block-1 .footer-section,
+	#footer .footer-block-2 .footer-section {
+		border-right: 1px solid rgba(255, 255, 255, 0.06);
+		padding-right: 1.5em;
+		margin-right: -1px;
+	}
+	#footer.footer-modern header h2 {
+		letter-spacing: 0.1em;
+		font-weight: 700;
+		text-transform: uppercase;
+		font-size: 0.9em;
+		color: rgba(255, 255, 255, 0.92);
+		margin-bottom: 1.35em;
+		position: relative;
+		padding-bottom: 0.65em;
+	}
+	#footer.footer-modern header h2::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		width: 2em;
+		height: 2px;
+		background: linear-gradient(90deg, var(--accent-primary), transparent);
+		border-radius: 1px;
+		opacity: 0.8;
+	}
+	#footer.footer-modern ul.divided li {
+		transition: border-color 0.25s ease, padding-left 0.25s ease, color 0.2s ease;
+		padding: 0.35em 0;
+	}
+	#footer.footer-modern ul.divided li:hover {
+		padding-left: 6px;
+	}
+	#footer.footer-modern ul.divided li a {
+		transition: color 0.2s ease, opacity 0.2s ease;
+	}
+	#footer.footer-modern ul.contact li {
+		transition: opacity 0.25s ease;
+	}
+	#footer.footer-modern ul.contact li:hover {
+		opacity: 1;
+	}
+	#footer.footer-modern ul.contact li h3 {
+		font-size: 0.85em;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: rgba(255, 255, 255, 0.7);
+	}
+	#footer .footer-copyright-wrap {
+		opacity: 0;
+		animation: footerCopyrightFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards;
+	}
+	#footer .footer-copyright-wrap::before {
+		content: '';
+		display: block;
+		height: 1px;
+		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+		margin: 2.5em 0 2em 0;
+	}
+	#footer .footer-copyright ul.links {
+		border-radius: 999px;
+		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.06);
+		transition: box-shadow 0.35s ease, transform 0.2s ease;
+	}
+	#footer .footer-copyright:hover ul.links {
+		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 20px rgba(24, 169, 168, 0.08);
+		transform: translateY(-1px);
+	}
+	#footer .footer-copyright .links li a {
+		transition: color 0.2s ease, opacity 0.2s ease;
+	}
+	/* Social icons: subtle glow on hover, size unchanged */
+	#footer.footer-modern ul.social li a.icon.brands {
+		transition: background 0.25s ease, box-shadow 0.25s ease;
+	}
+	#footer.footer-modern ul.social li a.icon.brands:hover {
+		box-shadow: 0 0 14px rgba(24, 169, 168, 0.35);
+	}
+
 /* Copyright */
 
 	#copyright {
@@ -3391,6 +3505,13 @@ input, select, textarea {
 				padding: 40px 0 20px 0;
 			}
 
+			#footer .footer-block-1 .footer-section,
+			#footer .footer-block-2 .footer-section {
+				border-right: none;
+				padding-right: 0;
+				margin-right: 0;
+			}
+
 	}
 
 /* =====================================================
@@ -3469,6 +3590,33 @@ input, select, textarea {
 	100% {
 		background-position: 200% 0;
 	}
+}
+
+@keyframes footerBlockFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes footerCopyrightFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes footerAccentShine {
+	0%, 100% { opacity: 0.75; }
+	50% { opacity: 1; }
 }
 
 /* Scroll Animation Classes – minimal duration for immediate reveal on fast scroll */

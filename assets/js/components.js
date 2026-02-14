@@ -106,45 +106,13 @@
         if (!footerData) return '';
 
         let html = `
-            <section id="footer">
+            <section id="footer" class="footer-modern">
+                <div class="footer-accent"></div>
+                <div class="footer-bg"></div>
                 <div class="container">
-                    <div class="row">
-                        <div class="col-8 col-12-medium">
-                            <section>
-                                <header>
-                                    <h2>Important Dates</h2>
-                                </header>
-                                <ul class="dates">`;
-
-        footerData.importantDates.forEach(date => {
-            html += `
-                                    <li>
-                                        <span class="date">${date.month} <strong>${date.day}</strong></span>
-                                        <h3><a href="${date.url}">${date.title}</a></h3>
-                                        <p>${date.description}</p>
-                                    </li>`;
-        });
-
-        html += `
-                                </ul>
-                            </section>
-                        </div>
-                        <div class="col-4 col-12-medium">
-                            <section>
-                                <header>
-                                    <h2>${footerData.gradStudent.title}</h2>
-                                </header>
-                                <a href="${basePath}${footerData.gradStudent.linkUrl}" class="image featured" style="border-radius: 12px; overflow: hidden;"><img src="${basePath}${footerData.gradStudent.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" style="border-radius: 12px;" /></a>
-                                <p style="text-align: justify;">${footerData.gradStudent.text}</p>
-                                <footer>
-                                    <ul class="actions">
-                                        <li><a href="${basePath}${footerData.gradStudent.linkUrl}" class="button">${footerData.gradStudent.linkText}</a></li>
-                                    </ul>
-                                </footer>
-                            </section>
-                        </div>
-                        <div class="col-4 col-6-medium col-12-small">
-                            <section>
+                    <div class="row footer-blocks">
+                        <div class="col-4 col-6-medium col-12-small footer-block footer-block-1">
+                            <section class="footer-section">
                                 <header>
                                     <h2>Content</h2>
                                 </header>
@@ -159,8 +127,8 @@
                                 </ul>
                             </section>
                         </div>
-                        <div class="col-4 col-6-medium col-12-small">
-                            <section>
+                        <div class="col-4 col-6-medium col-12-small footer-block footer-block-2">
+                            <section class="footer-section">
                                 <header>
                                     <h2>Afilliations</h2>
                                 </header>
@@ -175,8 +143,8 @@
                                 </ul>
                             </section>
                         </div>
-                        <div class="col-4 col-12-medium">
-                            <section>
+                        <div class="col-4 col-12-medium footer-block footer-block-3">
+                            <section class="footer-section">
                                 <header>
                                     <h2>Connect with me:</h2>
                                 </header>
@@ -209,11 +177,11 @@
                                 </ul>
                             </section>
                         </div>
-                        <div class="col-12">
-                            <div id="copyright">
+                        <div class="col-12 footer-copyright-wrap">
+                            <div id="copyright" class="footer-copyright">
                                 <ul class="links">
                                     <li>&copy; ${footerData.copyright.year}. ${footerData.copyright.text}</li>
-                                    <li>See more : <a href="${footerData.copyright.link.url}">${footerData.copyright.link.text}</a></li>
+                                    <li><a href="${footerData.copyright.link.url}">${footerData.copyright.link.text}</a></li>
                                 </ul>
                             </div>
                         </div>
