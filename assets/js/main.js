@@ -75,22 +75,14 @@
 	if (!prefersReducedMotion) {
 		// Intersection Observer for scroll animations – trigger early so fast scroll doesn’t outrun them
 		const observerOptions = {
-			threshold: 0.05,
-			rootMargin: '0px 0px 180px 0px' // trigger when element is 180px below viewport
+			threshold: 0.01,
+			rootMargin: '0px 0px 280px 0px' // trigger when element is 280px below viewport
 		};
 
 		const animationObserver = new IntersectionObserver((entries) => {
 			entries.forEach((entry) => {
 				if (entry.isIntersecting) {
-					const parent = entry.target.parentElement;
-					const siblings = parent ? Array.from(parent.children).filter(
-						child => child.classList.contains('animate-on-scroll')
-					) : [];
-					const index = siblings.indexOf(entry.target);
-					// Short stagger so animations keep up with fast scrolling
-					setTimeout(() => {
-						entry.target.classList.add('visible');
-					}, index * 35);
+					entry.target.classList.add('visible');
 					animationObserver.unobserve(entry.target);
 				}
 			});

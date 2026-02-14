@@ -644,6 +644,17 @@
 				box-shadow: 0 8px 32px rgba(0,0,0,0.35);
 			}
 			@media (max-width: 768px) {
+				/* Align About me width with Research Projects: inner #about-me has .container and would be 40px narrower otherwise */
+				body.homepage #main .container .row > #about-me-placeholder {
+					width: 100%;
+					flex: 0 0 100%;
+					max-width: 100%;
+					box-sizing: border-box;
+				}
+				body.homepage #about-me.container {
+					width: 100%;
+					max-width: 100%;
+				}
 				#about-me header.major {
 					margin-bottom: 0.75rem;
 				}
