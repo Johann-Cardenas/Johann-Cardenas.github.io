@@ -10,41 +10,6 @@
 				document.documentElement.setAttribute('data-theme', theme);
 			})();
 		</script>
-			<style>
-				/* Info bar social icon hover color override */
-				.blog-infobar ul.social li a,
-				.share-section ul.social li a {
-					background: #666666 !important;
-					color: #fff !important;
-					box-shadow: none !important;
-					transition: background 0.2s, color 0.2s;
-				}
-				.blog-infobar ul.social li a:hover,
-				.blog-infobar ul.social li a:focus,
-				.share-section ul.social li a:hover,
-				.share-section ul.social li a:focus {
-					background: #18a9a8 !important;
-					color: #fff !important;
-					box-shadow: none !important;
-				}
-			</style>
-		<style>
-			/* Info bar social icons smaller */
-			.blog-infobar ul.social li a {
-				width: 2.4em !important;
-				height: 2.4em !important;
-			}
-			.blog-infobar ul.social li a:before {
-				font-size: 1.40em !important;
-				line-height: 1.80em !important;
-				display: inline-block;
-				vertical-align: middle;
-				margin-top: 0.00em;
-			}
-			.blog-infobar .infotext {
-				font-size: 0.98em !important;
-			}
-		</style>
 		<title>Johann J Cardenas | Blog</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
@@ -53,177 +18,6 @@
 		<link rel="icon" href="/favicon.ico" type="image/x-icon">
 		<link rel="stylesheet" href="../assets/css/main.css" />
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-		<style>
-			/* Blog grid and modern cards (Other posts section) */
-			.blog-grid {
-				display: grid;
-				grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-				gap: 1.75rem;
-				margin-top: 0.5rem;
-				width: 100%;
-				max-width: 100%;
-				box-sizing: border-box;
-			}
-			.blog-grid .blog-card-modern {
-				min-width: 0;
-			}
-			.blog-card-modern {
-				background: var(--blog-card-bg, #fff);
-				border-radius: 12px;
-				overflow: hidden;
-				box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-				transition: transform 0.3s ease, box-shadow 0.3s ease;
-				display: flex;
-				flex-direction: column;
-				border: 1px solid var(--blog-card-border, transparent);
-			}
-			.blog-card-modern:hover {
-				transform: translateY(-4px);
-				box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-				border-color: var(--blog-card-border-hover, transparent);
-			}
-			.blog-card-image {
-				position: relative;
-				width: 100%;
-				overflow: hidden;
-			}
-			.blog-card-image img {
-				width: 100%;
-				height: auto;
-				display: block;
-				vertical-align: top;
-				transition: transform 0.3s ease;
-			}
-			.blog-card-modern:hover .blog-card-image img {
-				transform: scale(1.05);
-			}
-			.blog-card-image a { display: block; }
-			.blog-card-content {
-				padding: 1.25rem 1.4rem;
-				flex: 1;
-				display: flex;
-				flex-direction: column;
-			}
-			.blog-card-content h3 {
-				margin: 0 0 0.4rem 0;
-				font-size: 1.12rem;
-				line-height: 1.35;
-			}
-			.blog-card-content h3 a {
-				color: inherit;
-				text-decoration: none;
-				transition: color 0.2s ease;
-			}
-			.blog-card-content h3 a:hover { color: #18a9a8; }
-			.blog-card-content .blog-meta {
-				color: var(--blog-meta-color, #888);
-				font-size: 0.9rem;
-				margin: 0 0 0.5rem 0;
-				line-height: 1.3;
-			}
-			.blog-card-content .blog-excerpt {
-				color: var(--blog-text-color, #666);
-				line-height: 1.7;
-				margin-bottom: 0.9rem;
-				flex: 1;
-				text-align: justify;
-				font-size: 1rem;
-			}
-			.blog-read-btn {
-				display: inline-flex;
-				align-items: center;
-				justify-content: center;
-				gap: 0.4rem;
-				padding: 0.55rem 1.1rem;
-				background: linear-gradient(135deg, #18a9a8, #0d7377);
-				color: #fff;
-				border: none;
-				border-radius: 8px;
-				font-size: 0.9rem;
-				font-weight: 600;
-				transition: all 0.3s ease;
-				text-decoration: none;
-			}
-			.blog-read-btn:hover {
-				background: linear-gradient(135deg, #0d7377, #18a9a8);
-				transform: translateY(-2px);
-				box-shadow: 0 4px 12px rgba(24, 169, 168, 0.4);
-				color: #fff;
-			}
-			[data-theme="dark"] .blog-card-modern {
-				--blog-card-bg: #252525;
-				--blog-card-border: #3a3a3a;
-				--blog-card-border-hover: #4a4a4a;
-				--blog-meta-color: #b0b0b0;
-				--blog-text-color: #d0d0d0;
-			}
-			[data-theme="dark"] .blog-card-modern:hover {
-				box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-			}
-
-			article.box.post a[href^="https:"] { color: #18a9a8 !important; transition: color 0.2s, text-decoration 0.2s; text-decoration: none; }
-			article.box.post a[href^="https:"]:hover { color: #14908f !important; text-decoration: underline; }
-			body.ATLAS #main { padding-top: 1.25rem; }
-			body.ATLAS article.box.post { background: var(--bg-box, #fff); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04); border: 1px solid var(--border-light, #e2e8f0); padding: 2.5rem 2.75rem 2.75rem; overflow: hidden; }
-			[data-theme="dark"] body.ATLAS article.box.post { box-shadow: 0 4px 24px rgba(0,0,0,0.25); border-color: var(--border-light); }
-			body.ATLAS article.box.post header[style*="text-align: center"] { padding-top: 0; margin-bottom: 0.5rem; text-align: center; }
-			body.ATLAS article.box.post header h2 { font-size: 1.95rem; line-height: 1.3; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary, #1e293b); margin: 0 auto 0.75rem auto; padding-bottom: 1rem; border-bottom: 2px solid var(--accent-primary, #18a9a8); text-align: center; max-width: 90%; }
-			body.ATLAS article.box.post header p { font-size: 1.15rem; color: var(--text-secondary, #64748b); margin: 0; text-align: center; }
-			body.ATLAS article.box.post header a { color: var(--accent-primary, #18a9a8); text-decoration: none; font-weight: 500; }
-			body.ATLAS article.box.post header a:hover { text-decoration: underline; }
-			body.ATLAS .blog-infobar { background: var(--bg-box-alt, #f8fafc); border-radius: 12px; padding: 1rem 1.5rem; margin: 1.75rem 0 2.25rem 0 !important; border: 1px solid var(--border-light, #e2e8f0); flex-wrap: wrap; }
-			[data-theme="dark"] body.ATLAS .blog-infobar { background: rgba(30, 41, 59, 0.5); border-color: rgba(255,255,255,0.08); }
-			body.ATLAS .blog-infobar .infotext { color: var(--text-secondary, #64748b) !important; }
-			body.ATLAS article.box.post .callout-box { border-radius: 12px; padding: 1.1rem 1.35rem; border-left-width: 4px; box-shadow: 0 2px 8px rgba(24, 169, 168, 0.08); }
-			body.ATLAS article.box.post h3 { position: relative; font-size: 1.2rem; font-weight: 700; color: var(--text-primary, #1e293b); margin: 2.25rem 0 0.75rem 0; padding-left: 1rem; border-left: 4px solid var(--accent-primary, #18a9a8); line-height: 1.4; }
-			body.ATLAS article.box.post h3:first-of-type { margin-top: 1.5rem; }
-			body.ATLAS article.box.post p { color: var(--text-primary, #1e293b); line-height: 1.75; }
-			[data-theme="dark"] body.ATLAS article.box.post p { color: var(--text-primary); }
-			body.ATLAS article.box.post ul:not(.social), body.ATLAS article.box.post ol { line-height: 1.7; color: var(--text-primary, #1e293b); }
-			body.ATLAS article.box.post figure { background: var(--bg-box-alt, #f8fafc); border-radius: 12px; overflow: hidden; padding: 1rem; margin: 1.5rem 0; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid var(--border-light, #e2e8f0); }
-			[data-theme="dark"] body.ATLAS article.box.post figure { background: rgba(30, 41, 59, 0.5); border-color: rgba(255,255,255,0.06); }
-			body.ATLAS article.box.post figure img { border-radius: 8px; display: block; }
-			body.ATLAS article.box.post figcaption { font-size: 0.9rem; font-weight: 600; color: var(--text-secondary, #64748b); margin-top: 0.75rem; text-align: center; }
-			body.ATLAS article.box.post figcaption h1 { font-size: inherit; font-weight: inherit; margin: 0; color: inherit; }
-			body.ATLAS article.box.post .share-section hr { border-top-color: var(--border-medium, #cbd5e1) !important; }
-			[data-theme="dark"] body.ATLAS article.box.post .share-section hr { border-top-color: rgba(255,255,255,0.12) !important; }
-			body.ATLAS article.box.post .share-section p:first-of-type { color: var(--text-secondary, #64748b) !important; font-size: 0.85rem; letter-spacing: 0.12em; }
-			body.ATLAS article.box.post .share-section p:last-of-type { color: var(--text-secondary, #64748b); font-size: 0.9rem; }
-			body.ATLAS article.box.post .table-block { margin: 1.5rem 0; }
-			body.ATLAS article.box.post .table-caption { font-size: 1.08rem; font-weight: 700; color: var(--text-primary, #1e293b); padding: 0 0 0.6rem 0; text-align: center; letter-spacing: 0.02em; margin: 0; }
-			[data-theme="dark"] body.ATLAS article.box.post .table-caption { color: var(--text-primary); }
-			body.ATLAS article.box.post .table-block > div { overflow-x: auto; overflow-y: hidden; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid var(--border-light, #e2e8f0); background: var(--bg-box-alt, #f8fafc); }
-			[data-theme="dark"] body.ATLAS article.box.post .table-block > div { box-shadow: 0 2px 16px rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.08); background: rgba(30, 41, 59, 0.35); }
-			body.ATLAS article.box.post table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.95rem; }
-			body.ATLAS article.box.post thead { position: sticky; top: 0; z-index: 1; }
-			body.ATLAS article.box.post thead th { background: linear-gradient(135deg, #18a9a8, #0d7377) !important; color: #fff !important; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.03em; text-align: center; padding: 0.9rem 1rem !important; border: none !important; border-bottom: 2px solid rgba(0,0,0,0.1) !important; line-height: 1.35; }
-			[data-theme="dark"] body.ATLAS article.box.post thead th { background: linear-gradient(135deg, #1a9e9d, #0f686b) !important; border-bottom-color: rgba(0,0,0,0.25) !important; }
-			body.ATLAS article.box.post tbody tr { transition: background 0.15s ease; }
-			body.ATLAS article.box.post tbody tr:nth-child(even) { background: rgba(0,0,0,0.03); }
-			[data-theme="dark"] body.ATLAS article.box.post tbody tr:nth-child(even) { background: rgba(255,255,255,0.03); }
-			body.ATLAS article.box.post tbody tr:hover { background: rgba(24, 169, 168, 0.08); }
-			[data-theme="dark"] body.ATLAS article.box.post tbody tr:hover { background: rgba(24, 169, 168, 0.12); }
-			body.ATLAS article.box.post tbody td { padding: 0.85rem 1rem !important; border: 1px solid var(--border-light, #e2e8f0) !important; border-top: none !important; color: var(--text-primary, #1e293b); line-height: 1.5; vertical-align: middle; }
-			body.ATLAS article.box.post tbody td:first-child { border-left: none !important; }
-			body.ATLAS article.box.post tbody td:last-child { border-right: none !important; }
-			[data-theme="dark"] body.ATLAS article.box.post tbody td { border-color: rgba(255,255,255,0.08) !important; color: var(--text-primary); }
-			body.ATLAS article.box.post table a.button, body.ATLAS article.box.post table .button { background: linear-gradient(135deg, #18a9a8, #0d7377) !important; color: #fff !important; border: none; border-radius: 6px; padding: 0.45rem 0.85rem; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease; text-decoration: none; display: inline-block; }
-			body.ATLAS article.box.post table a.button:hover, body.ATLAS article.box.post table .button:hover { background: linear-gradient(135deg, #0d7377, #18a9a8) !important; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(24, 169, 168, 0.35); }
-			body.ATLAS article.box.post table strong { color: var(--text-primary, #1e293b); }
-			body.ATLAS article.box.post table em { color: var(--text-secondary, #64748b); }
-			@media (max-width: 768px) {
-				body.ATLAS article.box.post { padding: 1.25rem 1rem 1.5rem; }
-				body.ATLAS article.box.post header h2 { font-size: 1.48rem; line-height: 1.28; }
-				body.ATLAS article.box.post header p { font-size: 1rem; }
-				body.ATLAS .blog-infobar { flex-wrap: nowrap; padding: 0.5rem 0.75rem; gap: 0.5rem; margin: 1.25rem 0 1.75rem 0 !important; }
-				body.ATLAS .blog-infobar .infotext { font-size: 0.8rem !important; white-space: nowrap; min-width: 0; }
-				body.ATLAS .blog-infobar .infotext .icon { font-size: 0.9em !important; }
-				body.ATLAS .blog-infobar > div:first-of-type { display: flex !important; align-items: center; gap: 0.6rem !important; min-width: 0; flex-shrink: 1; }
-				body.ATLAS .blog-infobar ul.social { flex-shrink: 0; }
-				body.ATLAS .blog-infobar ul.social li a { width: 1.85em !important; height: 1.85em !important; }
-				body.ATLAS .blog-infobar ul.social li a:before { font-size: 1.1em !important; line-height: 1.65em !important; }
-			}
-		</style>
 		<!-- Social Sharing: Open Graph (for LinkedIn, Facebook, etc.) -->
 		<meta property="og:type" content="article">
 		<meta property="og:title" content="The Reborn of the Illinois Accelerated Pavement Tester">
@@ -239,7 +33,7 @@
 
 	</head>
 
-	<body class="ATLAS is-preload">
+	<body class="entry-page ATLAS is-preload">
 		<div id="page-wrapper">
 
 			<!-- Header -->
@@ -256,23 +50,23 @@
 								<!-- Content -->
 									<article class="box post">
 										<!-- <a href="#" class="image featured"><img src="../images/Projects_Banner.jpg" alt="" /></a> -->
-										<header style="text-align: center;">
-											<h2 style="line-height: 1.0;"> The Reborn of the Illinois Accelerated Pavement Tester </h2>
+										<header class="entry-header-center">
+										<h2>The Reborn of the Illinois Accelerated Pavement Tester </h2>
 											<p><strong> The Upgrade of ATLAS to the I-APT </strong></p>
 										</header>
 																		   <!-- Info Bar: Date, Reading Time, Socials -->
-																		   <div class="blog-infobar" style="display: flex; align-items: center; justify-content: space-between; margin: 1.5em 0 2em 0; gap: 1em;">
-																			   <div style="display: flex; align-items: center; gap: 2.5em;">
-																				   <span class="infotext" style="display: flex; align-items: center; gap: 0.5em; color: #222; font-size: 1.05em;">
-																					   <span class="icon solid fa-calendar-alt" style="color: #222; font-size: 1.1em;"></span>
+																		   <div class="blog-infobar">
+										<div>
+																				   <span class="infotext">
+																					   <span class="icon solid fa-calendar-alt"></span>
 																					   <span>8/6/2023</span>
 																				   </span>
-																				   <span class="infotext" style="display: flex; align-items: center; gap: 0.5em; color: #222; font-size: 1.05em;">
-																					   <span class="icon solid fa-clock" style="color: #222; font-size: 1.1em;"></span>
+																				   <span class="infotext">
+																					   <span class="icon solid fa-clock"></span>
 																					   <span>5 min read</span>
 																				   </span>
 																			   </div>
-																			   <ul class="social" style="margin: 0;">
+																			   <ul class="social">
 																				   <li>
 																					   <a href="https://www.facebook.com/sharer/sharer.php?u=https://johann-cardenas.github.io/blog/ATLAS.html" target="_blank" class="icon brands fa-facebook" title="Share on Facebook"></a>
 																				   </li>
@@ -287,7 +81,7 @@
 										
 										<div class="row">
 											
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
+											<div class="col-6 col-6-medium col-12-small entry-row-text">
 											<p>
 												It had been some years since the Illinois Accelerated Pavement Tester (I-APT) was operational. The original piece of equipment, 
 												was known previously as the Advanced Transportation Loading System (ATLAS). ATLAS was going to be upgraded because large-scale 
@@ -302,10 +96,10 @@
 											</p>
 											</div>
 
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+											<div class="col-6 col-6-medium col-12-small entry-row-figure">
 												<figure>
 													<div>
-														<img src="../images/blog/E06_01.jpg" alt="" style="width: 100%;" loading="lazy" />
+														<img src="../images/blog/E06_01.jpg" alt="" loading="lazy" />
 													</div>
 													<figcaption><h1>Fig 1. ICT Grad Students</h1></figcaption>
 													<p>Ready to help during the construction of the pavement test section.</p>
@@ -315,7 +109,7 @@
 										</div>
 
 
-										<h3 style="line-height: 1.5; text-align: justify;">Section Instrumentation</h3>
+										<h3 class="entry-subtitle">Section Instrumentation</h3>
 										<p style="text-align: justify;">
 											Perhaps, the most important part of building a pavement test section is the instrumentation. Without instrumentation, 
 											we would not be able to measure the response of the pavement under the repeated loading of the I-APT. 
@@ -326,16 +120,16 @@
 
 										<div class="row">
 					
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+											<div class="col-6 col-6-medium col-12-small entry-row-figure">
 												<figure>
 													<div>
-														<img src="../images/blog/E06_02.jpg" alt="" style="width: 100%;" loading="lazy" />
+														<img src="../images/blog/E06_02.jpg" alt="" loading="lazy" />
 													</div>
 													<figcaption><h1>Fig 2. Installation of Strain Gauges</h1></figcaption>
 												</figure>
 											</div>
 
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
+											<div class="col-6 col-6-medium col-12-small entry-row-text">
 												<p>
 													Prof. Al-Qadi himself led the installation of the instrumentation. In <strong>Fig 2</strong>, we can see Prof. Al-Qadi installing 
 													a strain gauge at the bottom of the asphalt layer. The installation of the instrumentation was a meticulous process that required
@@ -352,16 +146,16 @@
 
 										<div class="row">
 					
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+											<div class="col-6 col-6-medium col-12-small entry-row-figure">
 												<figure>
 													<div>
-														<img src="../images/blog/E06_03.jpg" alt="" style="width: 100%;" loading="lazy" />
+														<img src="../images/blog/E06_03.jpg" alt="" loading="lazy" />
 													</div>
 													<figcaption><h1>Fig 3. Installation of Thermocouples</h1></figcaption>
 												</figure>
 											</div>
 
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
+											<div class="col-6 col-6-medium col-12-small entry-row-text">
 												<p>
 													Thermocouples were also installed within the SMA layer to monitor temperature variations during testing.
 													In <strong>Fig 3</strong>, we can see Prof. Al-Qadi working on it. Temperature plays a crucial role in asphalt performance,
@@ -379,16 +173,16 @@
 
 										<div class="row">
 					
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+											<div class="col-6 col-6-medium col-12-small entry-row-figure">
 												<figure>
 													<div>
-														<img src="../images/blog/E06_04.jpg" alt="" style="width: 100%;" loading="lazy" />
+														<img src="../images/blog/E06_04.jpg" alt="" loading="lazy" />
 													</div>
 													<figcaption><h1>Fig 4. Installation of Pressure Cells</h1></figcaption>
 												</figure>
 											</div>
 
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
+											<div class="col-6 col-6-medium col-12-small entry-row-text">
 												<p>
 													Pressure cells (PCs) were installed at the mid-depth of the SMA layer to measure vertical stresses during loading.
 													This was the most complicated installation of all the instrumentation.
@@ -406,12 +200,12 @@
 										</div>
 
 										
-										<h3 style="line-height: 1.5; text-align: justify;">Ready to Test</h3>
+										<h3 class="entry-subtitle">Ready to Test</h3>
 			
 
 										<div class="row">
 					
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
+											<div class="col-6 col-6-medium col-12-small entry-row-text">
 												<p>
 													It may take several years (if ever) to get to see another pavement test section built from scratch like this one. 
 													The data collected from this test section will allow ICT to conduct research from different perspectives: 
@@ -423,10 +217,10 @@
 													and instrumentation installation.
 											</div>
 
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+											<div class="col-6 col-6-medium col-12-small entry-row-figure">
 												<figure>
 													<div>
-														<img src="../images/blog/E06_05.jpg" alt="" style="width: 100%;" loading="lazy" />
+														<img src="../images/blog/E06_05.jpg" alt="" loading="lazy" />
 													</div>
 													<figcaption><h1>Fig 5. Getting the Job Done</h1></figcaption>
 												</figure>
@@ -435,10 +229,10 @@
 										</div>
 
 										   <header>
-										   <hr style="margin-top: 2em; margin-bottom: 1em; border: none; border-top: 2px solid #bbb;">
-										   <div class="share-section" style="text-align: center;">
-											   <p style="font-weight: bold; letter-spacing: 0.15em; color: #222; font-size: 1.2em; margin-bottom: 0.5em;">SHARE THIS STORY</p>
-											   <ul class="social" style="display: inline-block; margin-bottom: 0.5em;">
+										   <hr class="entry-hr">
+										   <div class="share-section">
+											   <p class="share-heading">SHARE THIS STORY</p>
+											   <ul class="social">
 												   <li>
 													   <a href="https://www.facebook.com/sharer/sharer.php?u=https://johann-cardenas.github.io/blog/ATLAS.html" target="_blank" class="icon brands fa-facebook" title="Share on Facebook"></a>
 												   </li>
@@ -449,7 +243,7 @@
 													   <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://johann-cardenas.github.io/blog/ATLAS.html" target="_blank" class="icon brands fa-linkedin" title="Share on LinkedIn"></a>
 												   </li>
 											   </ul>
-											   <p style="font-style: italic; color: #222; margin-top: 1em;">This entry was published on August 6th, 2023.</p>
+											   <p class="share-footer">This entry was published on August 6th, 2023.</p>
 										   </div>
 
 									</article>

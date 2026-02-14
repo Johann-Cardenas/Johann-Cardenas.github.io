@@ -1,5 +1,14 @@
 @import url("fontawesome-all.min.css");
 @import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,900,300italic");
+@import url("breakpoints.css");
+@import url("banners.css");
+@import url("cards.css");
+@import url("entry-page.css");
+@import url("utilities.css");
+@import url("publications.css");
+@import url("news.css");
+@import url("e-labs.css");
+@import url("resume.css");
 
 /*
 	Dopetrope by HTML5 UP
@@ -4001,6 +4010,21 @@ html {
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
 	background: var(--border-dark);
+}
+
+/* Google Maps embed (Contact page) */
+.mapouter {
+	position: relative;
+	text-align: right;
+	height: 0;
+	padding-bottom: 56.25%;
+}
+.mapouter iframe {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
 }
 
 /* Google Maps iframe dark mode - subtle invert for better integration */

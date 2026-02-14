@@ -1,0 +1,27 @@
+/*
+   =====================================================
+   BREAKPOINTS - Single source of truth
+   =====================================================
+   Use these three viewports across the codebase so that
+   desktop, tablet, and mobile are easy to find and edit.
+
+   MOBILE:  max-width: 736px   (phones, small devices)
+   TABLET:  min-width: 737px and max-width: 980px
+   DESKTOP: min-width: 981px   (large screens)
+
+   Usage in CSS (variables cannot be used inside @media):
+   - Mobile:   @media screen and (max-width: 736px) { ... }
+   - Tablet:   @media screen and (min-width: 737px) and (max-width: 980px) { ... }
+   - Desktop:  @media screen and (min-width: 981px) { ... }
+
+   For "tablet and up":  @media screen and (min-width: 737px) { ... }
+   For "tablet and down": @media screen and (max-width: 980px) { ... }
+*/
+
+:root {
+	/* Breakpoint values (for JS or calc; not valid in @media) */
+	--bp-mobile-max: 736px;
+	--bp-tablet-min: 737px;
+	--bp-tablet-max: 980px;
+	--bp-desktop-min: 981px;
+}

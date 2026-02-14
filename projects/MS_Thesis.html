@@ -10,41 +10,6 @@
 				document.documentElement.setAttribute('data-theme', theme);
 			})();
 		</script>
-			<style>
-				/* Info bar social icon hover color override */
-				.blog-infobar ul.social li a,
-				.share-section ul.social li a {
-					background: #666666 !important;
-					color: #fff !important;
-					box-shadow: none !important;
-					transition: background 0.2s, color 0.2s;
-				}
-				.blog-infobar ul.social li a:hover,
-				.blog-infobar ul.social li a:focus,
-				.share-section ul.social li a:hover,
-				.share-section ul.social li a:focus {
-					background: #18a9a8 !important;
-					color: #fff !important;
-					box-shadow: none !important;
-				}
-			</style>
-			<style>
-				/* Info bar social icons smaller */
-				.blog-infobar ul.social li a {
-					width: 2.4em !important;
-					height: 2.4em !important;
-				}
-				.blog-infobar ul.social li a:before {
-					font-size: 1.40em !important;
-					line-height: 1.80em !important;
-					display: inline-block;
-					vertical-align: middle;
-					margin-top: 0.00em;
-				}
-				.blog-infobar .infotext {
-					font-size: 0.98em !important;
-				}
-			</style>
 		<title>Johann J Cardenas | Projects</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
@@ -53,294 +18,6 @@
 		<link rel="icon" href="/favicon.ico" type="image/x-icon">
 		<link rel="stylesheet" href="../assets/css/main.css" />
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-		<style>
-		article.box.post a[href^="https:"] {
-			color: #18a9a8 !important;
-			transition: color 0.2s, text-decoration 0.2s;
-			text-decoration: none;
-		}
-		article.box.post a[href^="https:"]:hover {
-			color: #14908f !important;
-			text-decoration: underline;
-		}
-			/* Project grid & modern cards (match Projects.html / index) */
-			.project-grid {
-				display: grid;
-				grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-				gap: 1.75rem;
-				margin-top: 0.5rem;
-				width: 100%;
-				max-width: 100%;
-				box-sizing: border-box;
-			}
-			.project-grid .project-card-modern { min-width: 0; }
-			.project-card-modern {
-				background: var(--project-card-bg, #fff);
-				border-radius: 12px;
-				overflow: hidden;
-				box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-				transition: transform 0.3s ease, box-shadow 0.3s ease;
-				display: flex;
-				flex-direction: column;
-				border: 1px solid var(--project-card-border, transparent);
-			}
-			.project-card-modern:hover {
-				transform: translateY(-4px);
-				box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-				border-color: var(--project-card-border-hover, transparent);
-			}
-			.project-card-image {
-				position: relative;
-				width: 100%;
-				overflow: hidden;
-			}
-			.project-card-image img {
-				width: 100%;
-				height: auto;
-				display: block;
-				transition: transform 0.3s ease;
-			}
-			.project-card-modern:hover .project-card-image img { transform: scale(1.05); }
-			.project-card-image a { display: block; }
-			.project-card-content {
-				padding: 1.25rem 1.4rem;
-				flex: 1;
-				display: flex;
-				flex-direction: column;
-			}
-			.project-card-content h3 {
-				margin: 0 0 0.6rem 0;
-				font-size: 1.12rem;
-				line-height: 1.35;
-			}
-			.project-card-content h3 a {
-				color: inherit;
-				text-decoration: none;
-				transition: color 0.2s ease;
-			}
-			.project-card-content h3 a:hover { color: #18a9a8; }
-			.project-card-content .project-excerpt {
-				color: var(--project-text-color, #666);
-				line-height: 1.7;
-				margin-bottom: 1rem;
-				flex: 1;
-				text-align: justify;
-				font-size: 1rem;
-			}
-			.project-read-btn {
-				display: inline-flex;
-				align-items: center;
-				justify-content: center;
-				gap: 0.4rem;
-				padding: 0.55rem 1.1rem;
-				background: linear-gradient(135deg, #18a9a8, #0d7377);
-				color: #fff;
-				border: none;
-				border-radius: 8px;
-				font-size: 0.9rem;
-				font-weight: 600;
-				transition: all 0.3s ease;
-				text-decoration: none;
-			}
-			.project-read-btn:hover {
-				background: linear-gradient(135deg, #0d7377, #18a9a8);
-				transform: translateY(-2px);
-				box-shadow: 0 4px 12px rgba(24, 169, 168, 0.4);
-				color: #fff;
-			}
-			[data-theme="dark"] .project-card-modern {
-				--project-card-bg: #252525;
-				--project-card-border: #3a3a3a;
-				--project-card-border-hover: #4a4a4a;
-				--project-text-color: #d0d0d0;
-			}
-			[data-theme="dark"] .project-card-modern:hover {
-				box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-			}
-
-			/* ===== Project entry page: modern, visually appealing ===== */
-			body.MS_Thesis #main {
-				padding-top: 1.25rem;
-			}
-			body.MS_Thesis article.box.post {
-				background: var(--bg-box, #fff);
-				border-radius: 16px;
-				box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
-				border: 1px solid var(--border-light, #e2e8f0);
-				padding: 2.5rem 2.75rem 2.75rem;
-				overflow: hidden;
-			}
-			[data-theme="dark"] body.MS_Thesis article.box.post {
-				box-shadow: 0 4px 24px rgba(0,0,0,0.25);
-				border-color: var(--border-light);
-			}
-			body.MS_Thesis article.box.post header[style*="text-align: center"] {
-				padding-top: 0;
-				margin-bottom: 0.5rem;
-				text-align: center;
-			}
-			body.MS_Thesis article.box.post header h2 {
-				font-size: 1.95rem;
-				line-height: 1.3;
-				font-weight: 700;
-				letter-spacing: -0.02em;
-				color: var(--text-primary, #1e293b);
-				margin: 0 auto 0.75rem auto;
-				padding-bottom: 1rem;
-				border-bottom: 2px solid var(--accent-primary, #18a9a8);
-				text-align: center;
-				max-width: 90%;
-			}
-			body.MS_Thesis article.box.post header p {
-				font-size: 1.15rem;
-				color: var(--text-secondary, #64748b);
-				margin: 0;
-				text-align: center;
-			}
-			body.MS_Thesis article.box.post header a {
-				color: var(--accent-primary, #18a9a8);
-				text-decoration: none;
-				font-weight: 500;
-			}
-			body.MS_Thesis article.box.post header a:hover {
-				text-decoration: underline;
-			}
-			body.MS_Thesis .blog-infobar {
-				background: var(--bg-box-alt, #f8fafc);
-				border-radius: 12px;
-				padding: 1rem 1.5rem;
-				margin: 1.75rem 0 2.25rem 0 !important;
-				border: 1px solid var(--border-light, #e2e8f0);
-				flex-wrap: wrap;
-			}
-			[data-theme="dark"] body.MS_Thesis .blog-infobar {
-				background: rgba(30, 41, 59, 0.5);
-				border-color: rgba(255,255,255,0.08);
-			}
-			body.MS_Thesis .blog-infobar .infotext {
-				color: var(--text-secondary, #64748b) !important;
-			}
-			body.MS_Thesis article.box.post .callout-box {
-				border-radius: 12px;
-				padding: 1.1rem 1.35rem;
-				border-left-width: 4px;
-				box-shadow: 0 2px 8px rgba(24, 169, 168, 0.08);
-			}
-			body.MS_Thesis article.box.post h3 {
-				position: relative;
-				font-size: 1.2rem;
-				font-weight: 700;
-				color: var(--text-primary, #1e293b);
-				margin: 2.25rem 0 0.75rem 0;
-				padding-left: 1rem;
-				border-left: 4px solid var(--accent-primary, #18a9a8);
-				line-height: 1.4;
-			}
-			body.MS_Thesis article.box.post h3:first-of-type { margin-top: 1.5rem; }
-			body.MS_Thesis article.box.post p {
-				color: var(--text-primary, #1e293b);
-				line-height: 1.75;
-			}
-			[data-theme="dark"] body.MS_Thesis article.box.post p {
-				color: var(--text-primary);
-			}
-			body.MS_Thesis article.box.post ul:not(.social),
-			body.MS_Thesis article.box.post ol {
-				line-height: 1.7;
-				color: var(--text-primary, #1e293b);
-			}
-			body.MS_Thesis article.box.post figure {
-				background: var(--bg-box-alt, #f8fafc);
-				border-radius: 12px;
-				overflow: hidden;
-				padding: 1rem;
-				margin: 1.5rem 0;
-				box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-				border: 1px solid var(--border-light, #e2e8f0);
-			}
-			[data-theme="dark"] body.MS_Thesis article.box.post figure {
-				background: rgba(30, 41, 59, 0.5);
-				border-color: rgba(255,255,255,0.06);
-			}
-			body.MS_Thesis article.box.post figure img {
-				border-radius: 8px;
-				display: block;
-			}
-			body.MS_Thesis article.box.post figcaption {
-				font-size: 0.9rem;
-				font-weight: 600;
-				color: var(--text-secondary, #64748b);
-				margin-top: 0.75rem;
-				text-align: center;
-			}
-			body.MS_Thesis article.box.post figcaption h1 {
-				font-size: inherit;
-				font-weight: inherit;
-				margin: 0;
-				color: inherit;
-			}
-			body.MS_Thesis article.box.post .share-section hr {
-				border-top-color: var(--border-medium, #cbd5e1) !important;
-			}
-			[data-theme="dark"] body.MS_Thesis article.box.post .share-section hr {
-				border-top-color: rgba(255,255,255,0.12) !important;
-			}
-			body.MS_Thesis article.box.post .share-section p:first-of-type {
-				color: var(--text-secondary, #64748b) !important;
-				font-size: 0.85rem;
-				letter-spacing: 0.12em;
-			}
-			body.MS_Thesis article.box.post .share-section p:last-of-type {
-				color: var(--text-secondary, #64748b);
-				font-size: 0.9rem;
-			}
-
-			/* ===== Mobile: project entry (match ACRP_FEM formatting) ===== */
-			@media (max-width: 768px) {
-				body.MS_Thesis article.box.post {
-					padding: 1.25rem 1rem 1.5rem;
-				}
-				body.MS_Thesis article.box.post header h2 {
-					font-size: 1.48rem;
-					line-height: 1.28;
-				}
-				body.MS_Thesis article.box.post header p {
-					font-size: 1rem;
-				}
-				body.MS_Thesis .blog-infobar {
-					flex-wrap: nowrap;
-					padding: 0.5rem 0.75rem;
-					gap: 0.5rem;
-					margin: 1.25rem 0 1.75rem 0 !important;
-				}
-				body.MS_Thesis .blog-infobar .infotext {
-					font-size: 0.8rem !important;
-					white-space: nowrap;
-					min-width: 0;
-				}
-				body.MS_Thesis .blog-infobar .infotext .icon {
-					font-size: 0.9em !important;
-				}
-				body.MS_Thesis .blog-infobar > div:first-of-type {
-					display: flex !important;
-					align-items: center;
-					gap: 0.6rem !important;
-					min-width: 0;
-					flex-shrink: 1;
-				}
-				body.MS_Thesis .blog-infobar ul.social {
-					flex-shrink: 0;
-				}
-				body.MS_Thesis .blog-infobar ul.social li a {
-					width: 1.85em !important;
-					height: 1.85em !important;
-				}
-				body.MS_Thesis .blog-infobar ul.social li a:before {
-					font-size: 1.1em !important;
-					line-height: 1.65em !important;
-				}
-			}
-		</style>
 
 		<!-- Social Sharing: Open Graph (for LinkedIn, Facebook, etc.) -->
 		<meta property="og:type" content="article">
@@ -357,7 +34,7 @@
 
 	</head>
 
-	<body class="MS_Thesis is-preload">
+	<body class="entry-page MS_Thesis is-preload">
 		<div id="page-wrapper">
 
 			<!-- Header -->
@@ -374,26 +51,26 @@
 								<!-- Content -->
 									<article class="box post">
 										<!-- <a href="#" class="image featured"><img src="../images/Projects_Banner.jpg" alt="" /></a> -->
-										<header style="text-align: center;">
-											<h2 style="line-height: 1.0;">Effect of Roughness-Induced Dynamic Wheel Loading on Flexible Pavements</h2>
+										<header class="entry-header-center">
+										<h2>Effect of Roughness-Induced Dynamic Wheel Loading on Flexible Pavements</h2>
 											<p>
 												<strong>Master's Thesis</strong> <br>
 												<strong>Adviser:</strong> <a href="https://scholar.google.com/citations?user=XcWBRgEAAAAJ">Imad L. Al-Qadi</a>
 											</p>
 										</header>
 																		   <!-- Info Bar: Date, Reading Time, Socials -->
-																		   <div class="blog-infobar" style="display: flex; align-items: center; justify-content: space-between; margin: 1.5em 0 2em 0; gap: 1em;">
-																			   <div style="display: flex; align-items: center; gap: 2.5em;">
-																				   <span class="infotext" style="display: flex; align-items: center; gap: 0.5em; color: #222; font-size: 1.05em;">
-																					   <span class="icon solid fa-calendar-alt" style="color: #222; font-size: 1.1em;"></span>
+																		   <div class="blog-infobar">
+										<div>
+																				   <span class="infotext">
+																					   <span class="icon solid fa-calendar-alt"></span>
 																					   <span>1/3/2026</span>
 																				   </span>
-																				   <span class="infotext" style="display: flex; align-items: center; gap: 0.5em; color: #222; font-size: 1.05em;">
-																					   <span class="icon solid fa-clock" style="color: #222; font-size: 1.1em;"></span>
+																				   <span class="infotext">
+																					   <span class="icon solid fa-clock"></span>
 																					   <span>10 min read</span>
 																				   </span>
 																			   </div>
-																			   <ul class="social" style="margin: 0;">
+																			   <ul class="social">
 																				   <li>
 																					   <a href="https://www.facebook.com/sharer/sharer.php?u=https://johann-cardenas.github.io/projects/MS_Thesis.html" target="_blank" class="icon brands fa-facebook" title="Share on Facebook"></a>
 																				   </li>
@@ -424,7 +101,7 @@
 										</div>
 
 
-										<h3 style="line-height: 1.5;">Abstract</h3>
+										<h3 class="entry-subtitle">Abstract</h3>
 										<p style="text-align: justify; margin-bottom: 1.00rem;">
 											In this study, a decoupled vehicle–tire–pavement interaction model 
 											was used to establish a mechanistic framework to predict critical pavement responses. The response to roughness-induced dynamic wheel load (DWL) amplification and non-free 
@@ -438,7 +115,7 @@
 											Overlooking load amplification due to road roughness and impact of rolling conditions would results in unpredicting pavement distresses, such as bottom-up fatigue cracking, near-surface cracking, and rutting.
 										</p>
 							
-										<h3 style="line-height: 1.5;">Objectives</h3>
+										<h3 class="entry-subtitle">Objectives</h3>
 										<p style="text-align: justify; margin-bottom: 0.50rem;">
 										</p>
 
@@ -451,7 +128,7 @@
 												contact stresses are applied to relatively thin and thick flexible pavement structures.</li>
 										</ul>
 
-										<h3 style="line-height: 1.5;">Methodology</h3>
+										<h3 class="entry-subtitle">Methodology</h3>
 										<p style="text-align: justify;margin-bottom: 0.50rem;">
 											The reviewed framework to incorporate roughness-induced DWL into flexible pavement response prediction comprises four major steps, 
 											as illustrated in <strong>Figure 1</strong>:
@@ -499,7 +176,7 @@
 										</div>
 										<br>
 
-										<h3 style="line-height: 1.5;">Results</h3>
+										<h3 class="entry-subtitle">Results</h3>
 										<p style="text-align: justify; margin-bottom: 0.50rem;">
 										</p>
 
@@ -534,7 +211,7 @@
 										</div>
 										<br>
 
-										<h3 style="line-height: 1.5;">Conclusions</h3>
+										<h3 class="entry-subtitle">Conclusions</h3>
 											<p style="text-align: justify; margin-bottom: 0.50rem;">
 											</p>
 
@@ -547,10 +224,10 @@
 											</ul>
 
 										   <header>
-										   <hr style="margin-top: 2em; margin-bottom: 1em; border: none; border-top: 2px solid #bbb;">
-										   <div class="share-section" style="text-align: center;">
-											   <p style="font-weight: bold; letter-spacing: 0.15em; color: #222; font-size: 1.2em; margin-bottom: 0.5em;">SHARE THIS STORY</p>
-											   <ul class="social" style="display: inline-block; margin-bottom: 0.5em;">
+										   <hr class="entry-hr">
+										   <div class="share-section">
+											   <p class="share-heading">SHARE THIS STORY</p>
+											   <ul class="social">
 												   <li>
 													   <a href="https://www.facebook.com/sharer/sharer.php?u=https://johann-cardenas.github.io/projects/MS_Thesis.html" target="_blank" class="icon brands fa-facebook" title="Share on Facebook"></a>
 												   </li>
@@ -561,7 +238,7 @@
 													   <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://johann-cardenas.github.io/projects/MS_Thesis.html" target="_blank" class="icon brands fa-linkedin" title="Share on LinkedIn"></a>
 												   </li>
 											   </ul>
-											   <p style="font-style: italic; color: #222; margin-top: 1em;">This entry was last updated on January 3rd, 2026.</p>
+											   <p class="share-footer">This entry was last updated on January 3rd, 2026.</p>
 										   </div>
 
 									</article>

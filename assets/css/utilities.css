@@ -1,0 +1,51 @@
+/*
+   Shared utility classes for layout and typography.
+   Use these instead of inline styles so one change updates the whole site.
+   Breakpoints: mobile ≤736px, tablet 737–980px, desktop ≥981px.
+*/
+
+/* Section with extra bottom spacing (e.g. index Research Projects) */
+.section-spaced {
+	margin-bottom: 3rem;
+}
+
+/* Wrapper for visit counter / badge block (center + vertical margin) */
+.visit-counter-wrap {
+	text-align: center;
+	margin: 2em 0;
+}
+
+/* Visitor badge image inside .visit-counter-minimal */
+.visit-counter-wrap .visit-counter-minimal img,
+.visit-badge-img {
+	height: 20px;
+	vertical-align: middle;
+}
+
+/* Error message when dynamic content fails to load */
+.load-error {
+	color: red;
+}
+
+/* Justified body text (Contact intro, entry paragraphs, etc.) */
+.text-justify {
+	text-align: justify;
+}
+
+/* Section intro (centered block used on News, E-Labs) */
+.section-intro {
+	text-align: center;
+	max-width: 800px;
+	margin: 0 auto 3rem auto;
+}
+.section-intro h2 {
+	font-size: 2rem;
+	margin-bottom: 1rem;
+}
+.section-intro p {
+	color: var(--text-secondary, #666);
+	line-height: 1.7;
+}
+[data-theme="dark"] .section-intro p {
+	color: #c0c0c0;
+}

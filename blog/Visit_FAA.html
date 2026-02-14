@@ -10,41 +10,6 @@
 				document.documentElement.setAttribute('data-theme', theme);
 			})();
 		</script>
-			<style>
-				/* Info bar social icon hover color override */
-				.blog-infobar ul.social li a,
-				.share-section ul.social li a {
-					background: #666666 !important;
-					color: #fff !important;
-					box-shadow: none !important;
-					transition: background 0.2s, color 0.2s;
-				}
-				.blog-infobar ul.social li a:hover,
-				.blog-infobar ul.social li a:focus,
-				.share-section ul.social li a:hover,
-				.share-section ul.social li a:focus {
-					background: #18a9a8 !important;
-					color: #fff !important;
-					box-shadow: none !important;
-				}
-			</style>
-		<style>
-			/* Info bar social icons smaller */
-			.blog-infobar ul.social li a {
-				width: 2.4em !important;
-				height: 2.4em !important;
-			}
-			.blog-infobar ul.social li a:before {
-				font-size: 1.40em !important;
-				line-height: 1.80em !important;
-				display: inline-block;
-				vertical-align: middle;
-				margin-top: 0.00em;
-			}
-			.blog-infobar .infotext {
-				font-size: 0.98em !important;
-			}
-		</style>
 		<title>Johann J Cardenas | Blog</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
@@ -53,177 +18,6 @@
 		<link rel="icon" href="/favicon.ico" type="image/x-icon">
 		<link rel="stylesheet" href="../assets/css/main.css" />
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-		<style>
-			/* Blog grid and modern cards (Other posts section) */
-			.blog-grid {
-				display: grid;
-				grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-				gap: 1.75rem;
-				margin-top: 0.5rem;
-				width: 100%;
-				max-width: 100%;
-				box-sizing: border-box;
-			}
-			.blog-grid .blog-card-modern {
-				min-width: 0;
-			}
-			.blog-card-modern {
-				background: var(--blog-card-bg, #fff);
-				border-radius: 12px;
-				overflow: hidden;
-				box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-				transition: transform 0.3s ease, box-shadow 0.3s ease;
-				display: flex;
-				flex-direction: column;
-				border: 1px solid var(--blog-card-border, transparent);
-			}
-			.blog-card-modern:hover {
-				transform: translateY(-4px);
-				box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-				border-color: var(--blog-card-border-hover, transparent);
-			}
-			.blog-card-image {
-				position: relative;
-				width: 100%;
-				overflow: hidden;
-			}
-			.blog-card-image img {
-				width: 100%;
-				height: auto;
-				display: block;
-				vertical-align: top;
-				transition: transform 0.3s ease;
-			}
-			.blog-card-modern:hover .blog-card-image img {
-				transform: scale(1.05);
-			}
-			.blog-card-image a { display: block; }
-			.blog-card-content {
-				padding: 1.25rem 1.4rem;
-				flex: 1;
-				display: flex;
-				flex-direction: column;
-			}
-			.blog-card-content h3 {
-				margin: 0 0 0.4rem 0;
-				font-size: 1.12rem;
-				line-height: 1.35;
-			}
-			.blog-card-content h3 a {
-				color: inherit;
-				text-decoration: none;
-				transition: color 0.2s ease;
-			}
-			.blog-card-content h3 a:hover { color: #18a9a8; }
-			.blog-card-content .blog-meta {
-				color: var(--blog-meta-color, #888);
-				font-size: 0.9rem;
-				margin: 0 0 0.5rem 0;
-				line-height: 1.3;
-			}
-			.blog-card-content .blog-excerpt {
-				color: var(--blog-text-color, #666);
-				line-height: 1.7;
-				margin-bottom: 0.9rem;
-				flex: 1;
-				text-align: justify;
-				font-size: 1rem;
-			}
-			.blog-read-btn {
-				display: inline-flex;
-				align-items: center;
-				justify-content: center;
-				gap: 0.4rem;
-				padding: 0.55rem 1.1rem;
-				background: linear-gradient(135deg, #18a9a8, #0d7377);
-				color: #fff;
-				border: none;
-				border-radius: 8px;
-				font-size: 0.9rem;
-				font-weight: 600;
-				transition: all 0.3s ease;
-				text-decoration: none;
-			}
-			.blog-read-btn:hover {
-				background: linear-gradient(135deg, #0d7377, #18a9a8);
-				transform: translateY(-2px);
-				box-shadow: 0 4px 12px rgba(24, 169, 168, 0.4);
-				color: #fff;
-			}
-			[data-theme="dark"] .blog-card-modern {
-				--blog-card-bg: #252525;
-				--blog-card-border: #3a3a3a;
-				--blog-card-border-hover: #4a4a4a;
-				--blog-meta-color: #b0b0b0;
-				--blog-text-color: #d0d0d0;
-			}
-			[data-theme="dark"] .blog-card-modern:hover {
-				box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-			}
-
-			article.box.post a[href^="https:"] { color: #18a9a8 !important; transition: color 0.2s, text-decoration 0.2s; text-decoration: none; }
-			article.box.post a[href^="https:"]:hover { color: #14908f !important; text-decoration: underline; }
-			body.Visit_FAA #main { padding-top: 1.25rem; }
-			body.Visit_FAA article.box.post { background: var(--bg-box, #fff); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04); border: 1px solid var(--border-light, #e2e8f0); padding: 2.5rem 2.75rem 2.75rem; overflow: hidden; }
-			[data-theme="dark"] body.Visit_FAA article.box.post { box-shadow: 0 4px 24px rgba(0,0,0,0.25); border-color: var(--border-light); }
-			body.Visit_FAA article.box.post header[style*="text-align: center"] { padding-top: 0; margin-bottom: 0.5rem; text-align: center; }
-			body.Visit_FAA article.box.post header h2 { font-size: 1.95rem; line-height: 1.3; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary, #1e293b); margin: 0 auto 0.75rem auto; padding-bottom: 1rem; border-bottom: 2px solid var(--accent-primary, #18a9a8); text-align: center; max-width: 90%; }
-			body.Visit_FAA article.box.post header p { font-size: 1.15rem; color: var(--text-secondary, #64748b); margin: 0; text-align: center; }
-			body.Visit_FAA article.box.post header a { color: var(--accent-primary, #18a9a8); text-decoration: none; font-weight: 500; }
-			body.Visit_FAA article.box.post header a:hover { text-decoration: underline; }
-			body.Visit_FAA .blog-infobar { background: var(--bg-box-alt, #f8fafc); border-radius: 12px; padding: 1rem 1.5rem; margin: 1.75rem 0 2.25rem 0 !important; border: 1px solid var(--border-light, #e2e8f0); flex-wrap: wrap; }
-			[data-theme="dark"] body.Visit_FAA .blog-infobar { background: rgba(30, 41, 59, 0.5); border-color: rgba(255,255,255,0.08); }
-			body.Visit_FAA .blog-infobar .infotext { color: var(--text-secondary, #64748b) !important; }
-			body.Visit_FAA article.box.post .callout-box { border-radius: 12px; padding: 1.1rem 1.35rem; border-left-width: 4px; box-shadow: 0 2px 8px rgba(24, 169, 168, 0.08); }
-			body.Visit_FAA article.box.post h3 { position: relative; font-size: 1.2rem; font-weight: 700; color: var(--text-primary, #1e293b); margin: 2.25rem 0 0.75rem 0; padding-left: 1rem; border-left: 4px solid var(--accent-primary, #18a9a8); line-height: 1.4; }
-			body.Visit_FAA article.box.post h3:first-of-type { margin-top: 1.5rem; }
-			body.Visit_FAA article.box.post p { color: var(--text-primary, #1e293b); line-height: 1.75; }
-			[data-theme="dark"] body.Visit_FAA article.box.post p { color: var(--text-primary); }
-			body.Visit_FAA article.box.post ul:not(.social), body.Visit_FAA article.box.post ol { line-height: 1.7; color: var(--text-primary, #1e293b); }
-			body.Visit_FAA article.box.post figure { background: var(--bg-box-alt, #f8fafc); border-radius: 12px; overflow: hidden; padding: 1rem; margin: 1.5rem 0; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid var(--border-light, #e2e8f0); }
-			[data-theme="dark"] body.Visit_FAA article.box.post figure { background: rgba(30, 41, 59, 0.5); border-color: rgba(255,255,255,0.06); }
-			body.Visit_FAA article.box.post figure img { border-radius: 8px; display: block; }
-			body.Visit_FAA article.box.post figcaption { font-size: 0.9rem; font-weight: 600; color: var(--text-secondary, #64748b); margin-top: 0.75rem; text-align: center; }
-			body.Visit_FAA article.box.post figcaption h1 { font-size: inherit; font-weight: inherit; margin: 0; color: inherit; }
-			body.Visit_FAA article.box.post .share-section hr { border-top-color: var(--border-medium, #cbd5e1) !important; }
-			[data-theme="dark"] body.Visit_FAA article.box.post .share-section hr { border-top-color: rgba(255,255,255,0.12) !important; }
-			body.Visit_FAA article.box.post .share-section p:first-of-type { color: var(--text-secondary, #64748b) !important; font-size: 0.85rem; letter-spacing: 0.12em; }
-			body.Visit_FAA article.box.post .share-section p:last-of-type { color: var(--text-secondary, #64748b); font-size: 0.9rem; }
-			body.Visit_FAA article.box.post .table-block { margin: 1.5rem 0; }
-			body.Visit_FAA article.box.post .table-caption { font-size: 1.08rem; font-weight: 700; color: var(--text-primary, #1e293b); padding: 0 0 0.6rem 0; text-align: center; letter-spacing: 0.02em; margin: 0; }
-			[data-theme="dark"] body.Visit_FAA article.box.post .table-caption { color: var(--text-primary); }
-			body.Visit_FAA article.box.post .table-block > div { overflow-x: auto; overflow-y: hidden; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid var(--border-light, #e2e8f0); background: var(--bg-box-alt, #f8fafc); }
-			[data-theme="dark"] body.Visit_FAA article.box.post .table-block > div { box-shadow: 0 2px 16px rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.08); background: rgba(30, 41, 59, 0.35); }
-			body.Visit_FAA article.box.post table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.95rem; }
-			body.Visit_FAA article.box.post thead { position: sticky; top: 0; z-index: 1; }
-			body.Visit_FAA article.box.post thead th { background: linear-gradient(135deg, #18a9a8, #0d7377) !important; color: #fff !important; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.03em; text-align: center; padding: 0.9rem 1rem !important; border: none !important; border-bottom: 2px solid rgba(0,0,0,0.1) !important; line-height: 1.35; }
-			[data-theme="dark"] body.Visit_FAA article.box.post thead th { background: linear-gradient(135deg, #1a9e9d, #0f686b) !important; border-bottom-color: rgba(0,0,0,0.25) !important; }
-			body.Visit_FAA article.box.post tbody tr { transition: background 0.15s ease; }
-			body.Visit_FAA article.box.post tbody tr:nth-child(even) { background: rgba(0,0,0,0.03); }
-			[data-theme="dark"] body.Visit_FAA article.box.post tbody tr:nth-child(even) { background: rgba(255,255,255,0.03); }
-			body.Visit_FAA article.box.post tbody tr:hover { background: rgba(24, 169, 168, 0.08); }
-			[data-theme="dark"] body.Visit_FAA article.box.post tbody tr:hover { background: rgba(24, 169, 168, 0.12); }
-			body.Visit_FAA article.box.post tbody td { padding: 0.85rem 1rem !important; border: 1px solid var(--border-light, #e2e8f0) !important; border-top: none !important; color: var(--text-primary, #1e293b); line-height: 1.5; vertical-align: middle; }
-			body.Visit_FAA article.box.post tbody td:first-child { border-left: none !important; }
-			body.Visit_FAA article.box.post tbody td:last-child { border-right: none !important; }
-			[data-theme="dark"] body.Visit_FAA article.box.post tbody td { border-color: rgba(255,255,255,0.08) !important; color: var(--text-primary); }
-			body.Visit_FAA article.box.post table a.button, body.Visit_FAA article.box.post table .button { background: linear-gradient(135deg, #18a9a8, #0d7377) !important; color: #fff !important; border: none; border-radius: 6px; padding: 0.45rem 0.85rem; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease; text-decoration: none; display: inline-block; }
-			body.Visit_FAA article.box.post table a.button:hover, body.Visit_FAA article.box.post table .button:hover { background: linear-gradient(135deg, #0d7377, #18a9a8) !important; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(24, 169, 168, 0.35); }
-			body.Visit_FAA article.box.post table strong { color: var(--text-primary, #1e293b); }
-			body.Visit_FAA article.box.post table em { color: var(--text-secondary, #64748b); }
-			@media (max-width: 768px) {
-				body.Visit_FAA article.box.post { padding: 1.25rem 1rem 1.5rem; }
-				body.Visit_FAA article.box.post header h2 { font-size: 1.48rem; line-height: 1.28; }
-				body.Visit_FAA article.box.post header p { font-size: 1rem; }
-				body.Visit_FAA .blog-infobar { flex-wrap: nowrap; padding: 0.5rem 0.75rem; gap: 0.5rem; margin: 1.25rem 0 1.75rem 0 !important; }
-				body.Visit_FAA .blog-infobar .infotext { font-size: 0.8rem !important; white-space: nowrap; min-width: 0; }
-				body.Visit_FAA .blog-infobar .infotext .icon { font-size: 0.9em !important; }
-				body.Visit_FAA .blog-infobar > div:first-of-type { display: flex !important; align-items: center; gap: 0.6rem !important; min-width: 0; flex-shrink: 1; }
-				body.Visit_FAA .blog-infobar ul.social { flex-shrink: 0; }
-				body.Visit_FAA .blog-infobar ul.social li a { width: 1.85em !important; height: 1.85em !important; }
-				body.Visit_FAA .blog-infobar ul.social li a:before { font-size: 1.1em !important; line-height: 1.65em !important; }
-			}
-		</style>
 		<!-- Social Sharing: Open Graph (for LinkedIn, Facebook, etc.) -->
 		<meta property="og:type" content="article">
 		<meta property="og:title" content="The William J. Hughes Technical Center">
@@ -239,7 +33,7 @@
 
 	</head>
 
-	<body class="Visit_FAA is-preload">
+	<body class="entry-page Visit_FAA is-preload">
 		<div id="page-wrapper">
 
 			<!-- Header -->
@@ -256,23 +50,23 @@
 								<!-- Content -->
 									<article class="box post">
 										<!-- <a href="#" class="image featured"><img src="../images/Projects_Banner.jpg" alt="" /></a> -->
-										<header style="text-align: center;">
-											<h2 style="line-height: 1.0;"> A Visit to the William J. Hughes Technical Center </h2>
+										<header class="entry-header-center">
+										<h2>A Visit to the William J. Hughes Technical Center </h2>
 											<p><strong> At the Heart of Airfield Pavement Research </strong></p>
 										</header>
 																		   <!-- Info Bar: Date, Reading Time, Socials -->
-																		   <div class="blog-infobar" style="display: flex; align-items: center; justify-content: space-between; margin: 1.5em 0 2em 0; gap: 1em;">
-																			   <div style="display: flex; align-items: center; gap: 2.5em;">
-																				   <span class="infotext" style="display: flex; align-items: center; gap: 0.5em; color: #222; font-size: 1.05em;">
-																					   <span class="icon solid fa-calendar-alt" style="color: #222; font-size: 1.1em;"></span>
+																		   <div class="blog-infobar">
+										<div>
+																				   <span class="infotext">
+																					   <span class="icon solid fa-calendar-alt"></span>
 																					   <span>8/14/2023</span>
 																				   </span>
-																				   <span class="infotext" style="display: flex; align-items: center; gap: 0.5em; color: #222; font-size: 1.05em;">
-																					   <span class="icon solid fa-clock" style="color: #222; font-size: 1.1em;"></span>
+																				   <span class="infotext">
+																					   <span class="icon solid fa-clock"></span>
 																					   <span>5 min read</span>
 																				   </span>
 																			   </div>
-																			   <ul class="social" style="margin: 0;">
+																			   <ul class="social">
 																				   <li>
 																					   <a href="https://www.facebook.com/sharer/sharer.php?u=https://johann-cardenas.github.io/blog/Visit_FAA.html" target="_blank" class="icon brands fa-facebook" title="Share on Facebook"></a>
 																				   </li>
@@ -287,7 +81,7 @@
 										
 										<div class="row">
 											
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
+											<div class="col-6 col-6-medium col-12-small entry-row-text">
 											<p>
 												Most of my research happens in an office, where pavement features are arrays, aircraft are gear configurations, and "damage" 
 												is computed before it even happens. Although abstractions are powerful, sometimes it makes you feel like that data came out 
@@ -303,10 +97,10 @@
 											</p>
 											</div>
 
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+											<div class="col-6 col-6-medium col-12-small entry-row-figure">
 												<figure>
 													<div>
-														<img src="../images/blog/E03_01.jpg" alt="" style="width: 100%;" loading="lazy" />
+														<img src="../images/blog/E03_01.jpg" alt="" loading="lazy" />
 													</div>
 													<figcaption><h1>Fig 1. NAPTF Control Center </h1></figcaption>
 													<p>A brief text about the image</p>
@@ -316,7 +110,7 @@
 										</div>
 
 
-										<h3 style="line-height: 1.5; text-align: justify;">Large-Scale Testing</h3>
+										<h3 class="entry-subtitle">Large-Scale Testing</h3>
 
 										<p>
 											The FAA's William J. Hughes Technical Center houses the National Airport Pavement Test Facility (NAPTF), a fully enclosed, full-scale 
@@ -326,10 +120,10 @@
 
 										<div class="row">
 					
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+											<div class="col-6 col-6-medium col-12-small entry-row-figure">
 												<figure>
 													<div>
-														<img src="../images/blog/E03_04.jpg" alt="" style="width: 100%;" loading="lazy" />
+														<img src="../images/blog/E03_04.jpg" alt="" loading="lazy" />
 													</div>
 													<figcaption><h1>Fig 2. NAPTF Airfield Test Vehicle</h1></figcaption>
 													<p>The 5340 kN Testing Machine spans two sets of railway tracks that are 23.2m apart.
@@ -338,7 +132,7 @@
 												</figure>
 											</div>
 
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
+											<div class="col-6 col-6-medium col-12-small entry-row-text">
 												<p>
 													The NAPTF setup revolves around a rail-based airfield pavement test vehicle designed to simulated aircraft landing gear loads across instrumented 
 													sections. The test vehicle consists of two carriages (north and south), and each carriage can be configured with 
@@ -353,7 +147,7 @@
 
 										<div class="row">
 											
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
+											<div class="col-6 col-6-medium col-12-small entry-row-text">
 											<p>
 												What stuck with me was the scale of the gears. The tires were almost human-sized (see <strong>Figure 3</strong>). On the technical side, I was impressed by the 
 												level of instrumentation embedded in the pavement sections. Strain gauges, pressure cells, thermocouples, and displacement transducers 
@@ -363,10 +157,10 @@
 											</p>
 											</div>
 
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+											<div class="col-6 col-6-medium col-12-small entry-row-figure">
 												<figure>
 													<div>
-														<img src="../images/blog/E03_05.jpg" alt="" style="width: 100%;" loading="lazy" />
+														<img src="../images/blog/E03_05.jpg" alt="" loading="lazy" />
 													</div>
 													<figcaption><h1>Fig 3. Gear Configuration of NAPTF Test Vehicle</h1></figcaption>
 													<p>5-dual wheel configuration landing gear</p>
@@ -377,17 +171,17 @@
 
 										<div class="row">
 					
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+											<div class="col-6 col-6-medium col-12-small entry-row-figure">
 												<figure>
 													<div>
-														<img src="../images/blog/E03_03.jpg" alt="" style="width: 100%;" loading="lazy" />
+														<img src="../images/blog/E03_03.jpg" alt="" loading="lazy" />
 													</div>
 													<figcaption><h1>Fig 4. Heavy Vehicle Simulator (HVS-A) Airfields Mark VI</h1></figcaption>
 													<p>HVS-A is part of the National Airport Pavement and Materials Research Center (NAPMRC)</p>
 												</figure>
 											</div>
 
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
+											<div class="col-6 col-6-medium col-12-small entry-row-text">
 												<p>
 													If the NAPTF reassembles controlled aircraft trafficking inside a hangar, the Heavy Vehicle Simulator (HVS-A) is its outdoor counterpart (see <strong>Figure 4</strong>).
 													HVS-A is a mobile pavement testing platform that can be driven to different locations to conduct in-situ pavement testing under realistic environmental conditions.
@@ -402,7 +196,7 @@
 										</div>
 
 
-										<h3 style="line-height: 1.5; text-align: justify;">Other Active Experiments</h3>
+										<h3 class="entry-subtitle">Other Active Experiments</h3>
 										<p style="text-align: justify;">
 											Beyond the trafficking testing, we also got a close look at other ongoing activities, specially how distress progression is monitored.
 											We visite one active effort of crack monitoring on the NAPTF test lanes, and observed rutting evaluation on a visibly failed section.
@@ -412,17 +206,17 @@
 
 										<div class="row">
 					
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+											<div class="col-6 col-6-medium col-12-small entry-row-figure">
 												<figure>
 													<div>
-														<img src="../images/blog/E03_07.jpg" alt="" style="width: 100%;" loading="lazy" />
+														<img src="../images/blog/E03_07.jpg" alt="" loading="lazy" />
 													</div>
 													<figcaption><h1>Fig 5. NAPTF Test Sections and Crack Monitoring</h1></figcaption>
 													<p>Cracks are marked for monitoring and analysis purposes.</p>
 												</figure>
 											</div>
 
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
+											<div class="col-6 col-6-medium col-12-small entry-row-text">
 												<p>
 													Seeing a cracked test section from the ground level makes it obvious why accelerated pavement testing is so valuable. 
 													You get to observe how a crack evolves under controlled loading. Cracks were clearly marked and indexed directly on the 
@@ -436,17 +230,17 @@
 
 										<div class="row">
 					
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+											<div class="col-6 col-6-medium col-12-small entry-row-figure">
 												<figure>
 													<div>
-														<img src="../images/blog/E03_06.jpg" alt="" style="width: 100%;" loading="lazy" />
+														<img src="../images/blog/E03_06.jpg" alt="" loading="lazy" />
 													</div>
 													<figcaption><h1>Fig 6. Rutting in Airfield Pavements</h1></figcaption>
 													<p>Prof. Al-Qadi measures on field the rut depth of a failed section</p>
 												</figure>
 											</div>
 
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
+											<div class="col-6 col-6-medium col-12-small entry-row-text">
 												<p>
 													For rutting evaluation, a straightedge was placed across the wheel path and the rut depth was measured manually with 
 													a tape. That measurement is a snapshot of permanent deformation. It's also a nice reality check for a numerical model. 
@@ -460,7 +254,7 @@
 
 										
 										
-										<h3 style="line-height: 1.5; text-align: justify;">Final Thoughts</h3>
+										<h3 class="entry-subtitle">Final Thoughts</h3>
 										<p style="text-align: justify; margin-bottom: 1.0em;">
 											Coming back from the Technical Center, our project felt more like what it actually was: translating full-scale experimental physics 
 											into computational tools that could be fast enough to be usable. The NAPTF and HVS-A were not built to prove a theory, 
@@ -469,7 +263,7 @@
 
 										<div class="row", style="margin-bottom: 0.25em;">
 					
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: top; text-align: justify;">
+											<div class="col-6 col-6-medium col-12-small entry-row-text">
 												<p>
 													On a personal reflection, the control room, with people monitoring the system live, coordinating tests, maintaining instrumentation 
 													designing experiments, reminded me that research is a collective machine. In that context, our numerical models are one small gear in a 
@@ -479,10 +273,10 @@
 												</p>
 											</div>
 
-											<div class="col-6 col-6-medium col-12-small" style="display: flex; flex-direction: row; align-items: center; text-align: center;">
+											<div class="col-6 col-6-medium col-12-small entry-row-figure">
 												<figure>
 													<div>
-														<img src="../images/blog/E03_02.jpg" alt="" style="width: 100%;" loading="lazy" />
+														<img src="../images/blog/E03_02.jpg" alt="" loading="lazy" />
 													</div>
 													<figcaption><h1>Fig 7. Relative Size of Testing Vehicles</h1></figcaption>
 													<p>The coolest machine in pavement research, and two simulators</p>
@@ -492,10 +286,10 @@
 										</div>
 							
 										   <header>
-										   <hr style="margin-top: 2em; margin-bottom: 1em; border: none; border-top: 2px solid #bbb;">
-										   <div class="share-section" style="text-align: center;">
-											   <p style="font-weight: bold; letter-spacing: 0.15em; color: #222; font-size: 1.2em; margin-bottom: 0.5em;">SHARE THIS STORY</p>
-											   <ul class="social" style="display: inline-block; margin-bottom: 0.5em;">
+										   <hr class="entry-hr">
+										   <div class="share-section">
+											   <p class="share-heading">SHARE THIS STORY</p>
+											   <ul class="social">
 												   <li>
 													   <a href="https://www.facebook.com/sharer/sharer.php?u=https://johann-cardenas.github.io/blog/Visit_FAA.html" target="_blank" class="icon brands fa-facebook" title="Share on Facebook"></a>
 												   </li>
@@ -506,7 +300,7 @@
 													   <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://johann-cardenas.github.io/blog/Visit_FAA.html" target="_blank" class="icon brands fa-linkedin" title="Share on LinkedIn"></a>
 												   </li>
 											   </ul>
-											   <p style="font-style: italic; color: #222; margin-top: 1em;">This entry was published on August 14th, 2023.</p>
+											   <p class="share-footer">This entry was published on August 14th, 2023.</p>
 										   </div>
 
 									</article>

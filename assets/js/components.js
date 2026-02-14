@@ -248,8 +248,8 @@
 
         if (postsToShow.length === 0) return '';
 
-        let html = `<section class="other-posts" style="margin-top: 2rem;">
-            <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">More from the Blog</h3>
+        let html = `<section class="other-posts">
+            <h3>More from the Blog</h3>
             <div class="blog-grid">`;
 
         postsToShow.forEach(post => {
@@ -289,8 +289,8 @@
 
         if (projectsToShow.length === 0) return '';
 
-        let html = `<section class="other-projects" style="margin-top: 2rem;">
-            <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Other Projects</h3>
+        let html = `<section class="other-projects">
+            <h3>Other Projects</h3>
             <div class="project-grid">`;
 
         projectsToShow.forEach(project => {

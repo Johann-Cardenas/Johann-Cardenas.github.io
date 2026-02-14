@@ -156,7 +156,7 @@
 												});
 											}, 0);
 									})
-									.catch(err => { aboutMeDiv.innerHTML = '<div style="color:red">Failed to load About Me section.</div>'; });
+									.catch(err => { aboutMeDiv.innerHTML = '<div class="load-error">Failed to load About Me section.</div>'; });
 						}
 		});
 		</script>
@@ -732,7 +732,7 @@
 							<div class="col-12">
 
 								<!-- Research Projects -->
-									<section style="margin-bottom: 3rem;">
+									<section class="section-spaced">
 										<header class="major">
 											<h2>Research Projects</h2>
 										</header>
@@ -756,11 +756,11 @@
 				</section>
 
 			<!-- Minimalist Visit Counter -->
-			<div style="text-align: center; margin: 2em 0;">
+			<div class="visit-counter-wrap">
 				<div class="visit-counter-minimal">
 					<span class="counter-dot"></span>
 					<span class="counter-text">Site Stats</span>
-					<img src="https://visitor-badge.laobi.icu/badge?page_id=Johann-Cardenas.github.io&left_color=%230f172a&right_color=%2318a9a8&left_text=" alt="Visitors" style="height: 20px; vertical-align: middle;"/>
+					<img src="https://visitor-badge.laobi.icu/badge?page_id=Johann-Cardenas.github.io&left_color=%230f172a&right_color=%2318a9a8&left_text=" alt="Visitors" class="visit-badge-img"/>
 				</div>
 			</div>
 

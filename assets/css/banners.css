@@ -1,0 +1,237 @@
+/*
+   Shared hero/banner styles for Blog, Projects, Publications, and Resume landing pages.
+   Use classes: blog-banner, project-banner, publications-banner, resume-banner (same structure).
+   Breakpoints: desktop (default), tablet 737–980px, mobile ≤736px.
+*/
+
+/* ========== DESKTOP (default: 981px and up) ========== */
+
+.blog-banner,
+.project-banner,
+.publications-banner {
+	position: relative;
+	border-radius: 20px;
+	overflow: hidden;
+	margin-bottom: 2.5rem;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.blog-banner-image,
+.project-banner-image,
+.publications-banner-image {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 4 / 1;
+	overflow: hidden;
+}
+
+.resume-banner-image {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 5 / 1;
+	overflow: hidden;
+}
+
+.blog-banner-image img,
+.project-banner-image img,
+.publications-banner-image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.blog-banner-image::after,
+.project-banner-image::after,
+.publications-banner-image::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(to top, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.6) 35%, rgba(15, 23, 42, 0.2) 65%, transparent 100%);
+	pointer-events: none;
+}
+
+.resume-banner-image img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.resume-banner-image::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(to top, rgba(15, 23, 42, 0.5) 0%, rgba(15, 23, 42, 0.28) 40%, rgba(15, 23, 42, 0.08) 70%, transparent 100%);
+	pointer-events: none;
+}
+
+.blog-banner-content,
+.project-banner-content,
+.publications-banner-content,
+.resume-banner-content {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	padding: 2rem 2.5rem 2.5rem;
+	z-index: 1;
+}
+
+.blog-banner-content h2,
+.project-banner-content h2,
+.publications-banner-content h2,
+.resume-banner-content h2 {
+	color: #fff;
+	font-size: 2rem;
+	margin: 0 0 0.35rem 0;
+	text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.blog-banner-content .banner-subtitle,
+.project-banner-content .banner-subtitle,
+.publications-banner-content .banner-subtitle,
+.resume-banner-content .banner-subtitle {
+	color: rgba(255, 255, 255, 0.9);
+	font-size: 1.1rem;
+	margin: 0 0 1rem 0;
+	font-weight: 300;
+}
+
+.blog-banner-content p {
+	color: rgba(255, 255, 255, 0.85);
+	line-height: 1.6;
+	margin: 0;
+	max-width: 700px;
+}
+
+.project-banner-content p {
+	color: rgba(255, 255, 255, 0.85);
+	line-height: 1.6;
+	margin: 0 0 0.75rem 0;
+	max-width: 800px;
+}
+
+.blog-banner-content p:last-child,
+.project-banner-content p:last-child {
+	margin-bottom: 0;
+}
+
+[data-theme="dark"] .blog-banner,
+[data-theme="dark"] .project-banner,
+[data-theme="dark"] .publications-banner,
+[data-theme="dark"] .resume-banner {
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .blog-banner-image::after,
+[data-theme="dark"] .project-banner-image::after,
+[data-theme="dark"] .publications-banner-image::after {
+	background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.7) 40%, rgba(15, 23, 42, 0.25) 70%, transparent 100%);
+}
+
+[data-theme="dark"] .resume-banner-image::after {
+	background: linear-gradient(to top, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.38) 40%, rgba(15, 23, 42, 0.12) 70%, transparent 100%);
+}
+
+.resume-banner {
+	position: relative;
+	width: 100%;
+	border-radius: 20px;
+	overflow: hidden;
+	margin-bottom: 2rem;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Project banner uses slightly darker overlay in light mode (optional) */
+.project-banner {
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.project-banner-image::after {
+	background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.7) 40%, rgba(15, 23, 42, 0.25) 70%, transparent 100%);
+}
+
+/* ========== TABLET (737px – 980px) ========== */
+@media screen and (min-width: 737px) and (max-width: 980px) {
+	.blog-banner-content,
+	.project-banner-content,
+	.publications-banner-content,
+	.resume-banner-content {
+		padding: 1.5rem 2rem 2rem;
+	}
+	.blog-banner-content h2,
+	.project-banner-content h2,
+	.publications-banner-content h2,
+	.resume-banner-content h2 {
+		font-size: 1.75rem;
+	}
+	.blog-banner-content .banner-subtitle,
+	.project-banner-content .banner-subtitle,
+	.publications-banner-content .banner-subtitle,
+	.resume-banner-content .banner-subtitle {
+		font-size: 1rem;
+	}
+}
+
+/* ========== MOBILE (≤736px) ========== */
+@media screen and (max-width: 736px) {
+	.blog-banner,
+	.project-banner,
+	.publications-banner,
+	.resume-banner {
+		margin-bottom: 1.25rem;
+	}
+	.blog-banner-image,
+	.project-banner-image,
+	.publications-banner-image {
+		aspect-ratio: unset;
+		height: 26vh;
+		min-height: 180px;
+		max-height: 220px;
+	}
+	.resume-banner-image {
+		aspect-ratio: unset;
+		height: 26vh;
+		min-height: 180px;
+		max-height: 220px;
+	}
+	.blog-banner-image img,
+	.project-banner-image img,
+	.publications-banner-image img {
+		object-fit: cover;
+		object-position: center center;
+		width: 100%;
+		height: 100%;
+	}
+	.resume-banner-image img {
+		position: absolute;
+		inset: 0;
+		object-fit: cover;
+		object-position: center top;
+	}
+	.blog-banner-content,
+	.project-banner-content,
+	.publications-banner-content,
+	.resume-banner-content {
+		padding: 1rem 1.25rem 1.25rem;
+	}
+	.blog-banner-content h2,
+	.project-banner-content h2,
+	.publications-banner-content h2,
+	.resume-banner-content h2 {
+		font-size: 1.5rem;
+	}
+	.blog-banner-content .banner-subtitle,
+	.project-banner-content .banner-subtitle,
+	.publications-banner-content .banner-subtitle,
+	.resume-banner-content .banner-subtitle {
+		font-size: 0.95rem;
+		margin-bottom: 0.5rem;
+	}
+	.blog-banner-content p,
+	.project-banner-content p {
+		font-size: 0.95rem;
+		max-width: none;
+		margin-bottom: 0.6rem;
+	}
+}
