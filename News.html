@@ -176,6 +176,43 @@
 			[data-theme="dark"] .section-intro p {
 				color: #c0c0c0;
 			}
+
+			/* Mobile: 2 cards per row + adjusted fonts for small cards */
+			@media (max-width: 768px) {
+				.news-grid {
+					grid-template-columns: repeat(2, 1fr);
+					gap: 1rem;
+				}
+				.news-card-content {
+					padding: 0.85rem 0.9rem;
+				}
+				.news-card-content h3 {
+					font-size: 0.95rem;
+					line-height: 1.3;
+					margin-bottom: 0.25rem;
+				}
+				.news-meta {
+					font-size: 0.78rem;
+					margin-bottom: 0.35rem;
+				}
+				.news-excerpt {
+					font-size: 0.78rem;
+					line-height: 1.5;
+					margin-bottom: 0.6rem;
+				}
+				.news-tag {
+					font-size: 0.62rem;
+					padding: 3px 6px;
+				}
+				.news-tags {
+					margin-bottom: 0.35rem;
+					gap: 0.25rem;
+				}
+				.news-read-btn {
+					font-size: 0.78rem;
+					padding: 0.4rem 0.7rem;
+				}
+			}
 		</style>
 
 		<!-- Social Sharing: Open Graph (for LinkedIn, Facebook, etc.) -->
