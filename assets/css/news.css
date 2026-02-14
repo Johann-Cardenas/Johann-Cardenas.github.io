@@ -5,9 +5,15 @@
 
 .news-grid {
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
+	grid-template-columns: repeat(2, 1fr);
 	gap: 1.75rem;
 	margin-top: 2rem;
+}
+
+@media screen and (min-width: 981px) {
+	.news-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
 }
 
 .news-card-modern {
@@ -152,7 +158,7 @@
 	box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 }
 
-@media screen and (max-width: 736px) {
+@media screen and (max-width: 980px) {
 	.news-grid {
 		grid-template-columns: repeat(2, 1fr);
 		gap: 1rem;
