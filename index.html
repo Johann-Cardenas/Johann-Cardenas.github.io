@@ -241,7 +241,7 @@
 				width: 100%;
 				height: auto;
 				display: block;
-				vertical-align: top;
+				/* vertical-align: top; removed, not needed for block elements */
 				transition: transform 0.3s ease;
 			}
 			.project-card-modern:hover .project-card-image img {
@@ -341,7 +341,7 @@
 				width: 100%;
 				height: auto;
 				display: block;
-				vertical-align: top;
+				/* vertical-align: top; removed, not needed for block elements */
 				transition: transform 0.3s ease;
 			}
 			.blog-card-modern:hover .blog-card-image img {
@@ -456,12 +456,10 @@
 				padding-top: 1rem;
 			}
 			/* Homepage mobile: remove gap so no blue or light strip between banner and About Me */
-			@media screen and (max-width: 768px) {
-				/* Intro is empty but theme gives it padding – remove so it adds no height */
+			@media screen and (max-width: 737px) {
 				body.homepage #intro {
 					display: none;
 				}
-				/* No blue strip below banner */
 				body.homepage #header {
 					padding-bottom: 0;
 					margin-bottom: 0;
@@ -471,10 +469,6 @@
 					background-size: cover;
 					background-position: center center;
 				}
-				body.homepage #main .container .row > #about-me-placeholder {
-					padding-top: 4rem;
-				}
-				/* Minimal strip so About Me sits right under banner */
 				body.homepage #main {
 					padding-top: 0.5rem;
 				}
@@ -647,12 +641,27 @@
 				box-shadow: 0 8px 32px rgba(0,0,0,0.35);
 			}
 			@media (min-width: 737px) and (max-width: 1024px) {
-				/* Tablet: About Me layout matches mobile, but fonts are larger */
+				body.homepage #intro {
+					display: none;
+				}
+				body.homepage #header {
+					padding-bottom: 0;
+					margin-bottom: 0;
+				}
+				body.homepage #header #banner {
+					padding: 16em 0 1.25em 0;
+					background-size: cover;
+					background-position: center center;
+				}
+				body.homepage #main {
+					padding-top: 0.5rem;
+				}
 				body.homepage #main .container .row > #about-me-placeholder {
 					width: 100%;
 					flex: 0 0 100%;
 					max-width: 100%;
 					box-sizing: border-box;
+					padding-top: 0.25rem;
 				}
 				body.homepage #about-me.container {
 					width: 100%;
@@ -672,11 +681,11 @@
 					flex: 1 1 100% !important;
 				}
 				#about-me .about-me-section p {
-					font-size: 1rem;
-					line-height: 1.5;
+					font-size: 1.08rem;
+					line-height: 1.6;
 				}
 				#about-me .about-me-section h3 {
-					font-size: 1.12rem;
+					font-size: 1.18rem;
 				}
 				#about-me #about-me-map {
 					min-height: 300px;
@@ -689,35 +698,8 @@
 					font-size: 0.75rem;
 					padding: 0.4rem 0.8rem;
 				}
-				/* Tablet: Banner fills top space like mobile */
-				body.homepage #intro {
-					display: none;
-				}
-				body.homepage #header {
-					padding-bottom: 0;
-					margin-bottom: 0;
-				}
-				body.homepage #header #banner {
-					padding: 16em 0 1.25em 0;
-					background-size: cover;
-					background-position: center center;
-				}
-				body.homepage #main .container .row > #about-me-placeholder {
-					padding-top: 5rem;
-				}
-				#about-me .about-me-section p {
-					font-size: 1.08rem;
-					line-height: 1.6;
-				}
-				#about-me .about-me-section h3 {
-					font-size: 1.18rem;
-				}
-				body.homepage #main .container .row > #about-me-placeholder {
-					padding-top: 0.25rem;
-				}
 			}
-			@media (max-width: 768px) {
-				/* Mobile: About Me layout */
+			@media (max-width: 737px) {
 				body.homepage #main .container .row > #about-me-placeholder {
 					width: 100%;
 					flex: 0 0 100%;
