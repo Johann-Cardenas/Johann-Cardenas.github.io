@@ -1,48 +1,25 @@
-<!-- About Me Section (modular, for inclusion in index.html) -->
-<section id="about-me" class="container" style="margin-bottom: 2em;">
-  <header class="major" style="margin-bottom: 0.5em; text-align: center;">
+<!-- About Me Section (modular, for inclusion in index.html; styles in index.html) -->
+<section id="about-me" class="container">
+  <header class="major">
     <h2>About Me</h2>
   </header>
 
-  <style>
-    .about-me-section {
-      position: relative;
-      padding: 0.75em 0 0.75em 1.25em;
-      margin-bottom: 0.75em;
-    }
-    .about-me-section::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0.5em;
-      bottom: 0.5em;
-      width: 3px;
-      background: var(--accent-primary, #18a9a8);
-      border-radius: 2px;
-    }
-  </style>
-
-  <div class="row" style="display: flex; flex-wrap: wrap; align-items: stretch; justify-content: center;">
-    <div class="col-6 col-12-medium" style="display: flex; flex-direction: column; justify-content: center;">
-
+  <div class="row">
+    <div class="col-6 col-12-medium">
       <div class="about-me-section">
-        <h3 style="margin-bottom: 0.25em; display: flex; align-items: center;"><span class="fas fa-briefcase" style="margin-right: 0.5em; color: var(--accent-primary, #18a9a8);"></span>Professional</h3>
-        <p style="margin: 0;max-width: 100%; text-align: justify; text-justify: inter-word">I am a PhD student at the University of Illinois, Urbana-Champaign, and a Graduate Research Assistant at the Illinois Center for Transportation.
-          My professional background spans the private industry, with over 5 years of experience in highway construction and maintenance; and the academia, with over 4 years 
-            of experience in research on transportation infrastructure.
-        </p>
+        <h3><span class="fas fa-briefcase"></span>Professional</h3>
+        <p>I am a PhD student at the University of Illinois, Urbana-Champaign, and a Graduate Research Assistant at the Illinois Center for Transportation.
+          My professional background spans the private industry, with over 5 years of experience in highway construction and maintenance; and the academia, with over 4 years
+          of experience in research on transportation infrastructure.</p>
       </div>
-
       <div class="about-me-section">
-        <h3 style="margin-bottom: 0.25em; display: flex; align-items: center;"><span class="fas fa-globe-americas" style="margin-right: 0.5em; color: var(--accent-primary, #18a9a8);"></span>Personal</h3>
-        <p style="margin: 0;max-width: 100%; text-align: justify; text-justify: inter-word">Originally from Lima, Peru. I've lived in the USA since 2021, when I arrived to pursue my 
-            graduate studies in Civil Engineering. I love exploring new cultures and cuisines, 
-            watching sports and movies, endurance training, building side projects in web development, and spending time with my loved ones.
-        </p>
+        <h3><span class="fas fa-globe-americas"></span>Personal</h3>
+        <p>Originally from Lima, Peru. I've lived in the USA since 2021, when I arrived to pursue my
+          graduate studies in Civil Engineering. I love exploring new cultures and cuisines,
+          watching sports and movies, endurance training, building side projects in web development, and spending time with my loved ones.</p>
       </div>
-
       <div class="about-me-section">
-        <h3 style="margin-bottom: 0.75em; display: flex; align-items: center;"><span class="fas fa-star" style="margin-right: 0.5em; color: var(--accent-primary, #18a9a8);"></span>Interests</h3>
+        <h3><span class="fas fa-star"></span>Interests</h3>
         <div class="about-me-interests-pills">
           <span class="about-me-pill">Running</span>
           <span class="about-me-pill">Hiking</span>
@@ -53,64 +30,9 @@
           <span class="about-me-pill">Mentoring</span>
         </div>
       </div>
-
-    </style>
-    <style>
-      .about-me-interests-pills {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.7em;
-        margin-top: 0.2em;
-      }
-      .about-me-pill {
-        background: #0f172a;
-        color: #fff;
-        border-radius: 2em;
-        padding: 0.35em 1.2em;
-        font-size: 1em;
-        font-weight: 500;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        letter-spacing: 0.01em;
-        white-space: nowrap;
-        transition: background 0.2s;
-        display: inline-block;
-      }
-      .about-me-pill:hover {
-        background: var(--accent-color, #18a9a8);
-      }
-    </style>
     </div>
-    <div class="col-6 col-12-medium" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
-      <div style="margin-bottom: 1em; text-align: center; width: 100%;">
-        <span style="font-size: 1.1em; font-weight: 500; display: block; font-style: italic;">My travel record. A life story told in layovers.</span>
-      </div>
-      <div id="about-me-map" style="width: 100%; aspect-ratio: 1.1/1; min-height: 320px; max-width: 600px; flex: 1 1 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.08); background: var(--bg-header, #222); margin: 0 auto;"></div>
+    <div class="col-6 col-12-medium">
+      <div id="about-me-map"></div>
     </div>
-    
-  <style>
-    @media (max-width: 980px) {
-      #about-me .row {
-        flex-direction: column !important;
-        align-items: stretch !important;
-      }
-      #about-me .col-6 {
-        max-width: 100% !important;
-        flex: 1 1 100% !important;
-      }
-      #about-me #about-me-map {
-        min-height: 220px !important;
-        aspect-ratio: 1/1 !important;
-        max-width: 100% !important;
-        height: auto !important;
-      }
-    }
-    @media (max-width: 600px) {
-      #about-me #about-me-map {
-        min-height: 140px !important;
-        aspect-ratio: 1/1 !important;
-        max-width: 100% !important;
-        height: auto !important;
-      }
-    }
-  </style>
+  </div>
 </section>

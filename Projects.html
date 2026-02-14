@@ -21,37 +21,183 @@
 		<link rel="preload" as="image" href="images/Projects_Banner.jpg" fetchpriority="high" />
 
 		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 		<style>
-			/* Project card hover effect */
-			.project-card {
-				transition: transform 0.2s ease, box-shadow 0.2s ease;
+			/* Projects banner hero (Blog/E-Labs style with gradient overlay) */
+			.project-banner {
+				position: relative;
+				border-radius: 20px;
+				overflow: hidden;
+				margin-bottom: 2.5rem;
+				box-shadow: 0 12px 40px rgba(0,0,0,0.15);
 			}
-			.project-card:hover {
-				transform: translateY(-2px);
-				box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+			.project-banner-image {
+				position: relative;
+				width: 100%;
+				aspect-ratio: 4 / 1;
+				overflow: hidden;
 			}
-			.project-card h3 a {
+			.project-banner-image img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+			}
+			.project-banner-image::after {
+				content: '';
+				position: absolute;
+				inset: 0;
+				background: linear-gradient(to top, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.6) 35%, rgba(15, 23, 42, 0.2) 65%, transparent 100%);
+				pointer-events: none;
+			}
+			.project-banner-content {
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				padding: 2rem 2.5rem 2.5rem;
+				z-index: 1;
+			}
+			.project-banner-content h2 {
+				color: #fff;
+				font-size: 2rem;
+				margin: 0 0 0.35rem 0;
+				text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+			}
+			.project-banner-content .banner-subtitle {
+				color: rgba(255,255,255,0.9);
+				font-size: 1.1rem;
+				margin: 0 0 1rem 0;
+				font-weight: 300;
+			}
+			.project-banner-content p {
+				color: rgba(255,255,255,0.85);
+				line-height: 1.6;
+				margin: 0 0 0.75rem 0;
+				max-width: 800px;
+			}
+			.project-banner-content p:last-child {
+				margin-bottom: 0;
+			}
+			[data-theme="dark"] .project-banner {
+				box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+			}
+			[data-theme="dark"] .project-banner-image::after {
+				background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.7) 40%, rgba(15, 23, 42, 0.25) 70%, transparent 100%);
+			}
+			/* Mobile: taller banner for intro readability */
+			@media (max-width: 768px) {
+				.project-banner-image {
+					aspect-ratio: auto;
+					min-height: 380px;
+				}
+				.project-banner-content {
+					padding: 1.5rem 1.25rem 1.5rem;
+				}
+				.project-banner-content h2 { font-size: 1.5rem; }
+				.project-banner-content .banner-subtitle { font-size: 1rem; margin-bottom: 0.75rem; }
+				.project-banner-content p { font-size: 0.95rem; max-width: none; margin-bottom: 0.6rem; }
+			}
+
+			/* Project grid - 3 cards per row */
+			.project-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+				gap: 1.75rem;
+				margin-top: 0;
+				width: 100%;
+				max-width: 100%;
+				box-sizing: border-box;
+			}
+			.project-grid .project-card-modern {
+				min-width: 0;
+			}
+			/* Project card (Blog/News style) */
+			.project-card-modern {
+				background: var(--project-card-bg, #fff);
+				border-radius: 12px;
+				overflow: hidden;
+				box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+				transition: transform 0.3s ease, box-shadow 0.3s ease;
+				display: flex;
+				flex-direction: column;
+				border: 1px solid var(--project-card-border, transparent);
+			}
+			.project-card-modern:hover {
+				transform: translateY(-4px);
+				box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+				border-color: var(--project-card-border-hover, transparent);
+			}
+			.project-card-image {
+				position: relative;
+				width: 100%;
+				overflow: hidden;
+			}
+			.project-card-image img {
+				width: 100%;
+				height: auto;
+				display: block;
+				vertical-align: top;
+				transition: transform 0.3s ease;
+			}
+			.project-card-modern:hover .project-card-image img {
+				transform: scale(1.05);
+			}
+			.project-card-image a { display: block; }
+			.project-card-content {
+				padding: 1.25rem 1.4rem;
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+			}
+			.project-card-content h3 {
+				margin: 0 0 0.6rem 0;
+				font-size: 1.15rem;
+				line-height: 1.35;
+			}
+			.project-card-content h3 a {
 				color: inherit;
+				text-decoration: none;
 				transition: color 0.2s ease;
 			}
-			.project-card h3 a:hover {
-				color: #18a9a8;
+			.project-card-content h3 a:hover { color: #18a9a8; }
+			.project-card-content .project-excerpt {
+				color: var(--project-text-color, #666);
+				line-height: 1.5;
+				margin-bottom: 1rem;
+				flex: 1;
+				text-align: justify;
+				font-size: 0.9rem;
 			}
-			/* Reduce vertical spacing in project card content */
-			.project-card .image.featured {
-				margin-bottom: 1.5rem;
+			.project-read-btn {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.4rem;
+				padding: 0.55rem 1.1rem;
+				background: linear-gradient(135deg, #18a9a8, #0d7377);
+				color: #fff;
+				border: none;
+				border-radius: 8px;
+				font-size: 0.9rem;
+				font-weight: 600;
+				transition: all 0.3s ease;
+				text-decoration: none;
 			}
-			.project-card header {
-				margin-bottom: 0.25rem;
+			.project-read-btn:hover {
+				background: linear-gradient(135deg, #0d7377, #18a9a8);
+				transform: translateY(-2px);
+				box-shadow: 0 4px 12px rgba(24, 169, 168, 0.4);
+				color: #fff;
 			}
-			.project-card header h3 {
-				margin-bottom: 0.25rem;
-				line-height: 1.3;
+			/* Dark theme */
+			[data-theme="dark"] .project-card-modern {
+				--project-card-bg: #252525;
+				--project-card-border: #3a3a3a;
+				--project-card-border-hover: #4a4a4a;
+				--project-text-color: #d0d0d0;
 			}
-			.project-card > p {
-				margin-top: 0;
-				margin-bottom: 0.5rem;
-				line-height: 1.4;
+			[data-theme="dark"] .project-card-modern:hover {
+				box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 			}
 		</style>
 
@@ -80,68 +226,27 @@
 			<!-- Main -->
 				<section id="main">
 					<div class="container">
-						<!-- <div class="row"> -->
-							<div class="col-8 col-12-medium">
+						<div class="col-12">
 
-								<!-- Content -->
-									<article class="box post">
-										<a href="#" class="image featured"><img src="images/Projects_Banner.jpg" alt="" decoding="async" fetchpriority="high" /></a>
-										<header>
-											<h2>Research Projects</h2>
-											<p>Advancing Transportation Engineering</p>
-										</header>
-
-										<p style="text-align: justify; margin-bottom: 0.5rem;">
-											The Illinois Center for Transportation (ICT) conducts research that goes from theoretical studies to practical applications.
-											Most projects are carried out in partnership with the Illinois Department of Transportation (IDOT), with additional support
-											from agencies such as the Federal Aviation Administration (FAA) and the Federal Highway Administration (FHWA).
-										</p>
-
-										<p style="text-align: justify; margin-bottom: 0.5rem;">
-											My research focuses on advanced numerical modeling, particularly FEM, to predict, analyze, and optimize the response of 
-											flexible pavement structures under complex loading conditions. My related work includes tire-pavement interaction modeling, 
-											mechanistic vehicle dynamics, and the use of machine learning (ML) techniques for high-dimensional engineering problems. 
-											Current ICT projects I have been involved with include:
-										</p>
-
-										<!-- All Projects Placeholder -->
-										<div id="all-projects-placeholder"></div>
-
-									</article>
-
+							<!-- Projects Banner Hero -->
+							<div class="project-banner">
+								<div class="project-banner-image">
+									<img src="images/Projects_Banner.jpg" alt="Research Projects" decoding="async" fetchpriority="high" />
+								</div>
+								<div class="project-banner-content">
+									<h2>Research Projects</h2>
+									<p class="banner-subtitle">Advancing Transportation Engineering</p>
+									<p>
+										My research focuses on advanced numerical modeling for the analysis and design of
+										flexible pavement structures, including mechanics, tire-pavement interaction, vehicle dynamics, and data science.
+									</p>
+								</div>
 							</div>
-							
-							<!-- <div class="col-4 col-12-medium"> -->
-								<!-- Sidebar -->
-									<!-- <section class="box">
-										<a href="#" class="image featured"><img src="images/pic09.jpg" alt="" /></a>
-										<header>
-											<h3>Sed etiam lorem nulla</h3>
-										</header>
-										<p>Lorem ipsum dolor sit amet sit veroeros sed amet blandit consequat veroeros lorem blandit  adipiscing et feugiat phasellus tempus dolore ipsum lorem dolore.</p>
-										<footer>
-											<a href="#" class="button alt">Magna sed taciti</a>
-										</footer>
-									</section>
-									<section class="box">
-										<header>
-											<h3>Feugiat consequat</h3>
-										</header>
-										<p>Veroeros sed amet blandit consequat veroeros lorem blandit adipiscing et feugiat sed lorem consequat feugiat lorem dolore.</p>
-										<ul class="divided">
-											<li><a href="#">Sed et blandit consequat sed</a></li>
-											<li><a href="#">Hendrerit tortor vitae sapien dolore</a></li>
-											<li><a href="#">Sapien id suscipit magna sed felis</a></li>
-											<li><a href="#">Aptent taciti sociosqu ad litora</a></li>
-										</ul>
-										<footer>
-											<a href="#" class="button alt">Ipsum consequat</a>
-										</footer>
-									</section> -->
-							<!-- </div> -->
 
-						<!-- </div> -->
+							<!-- Projects Grid (populated by components.js) -->
+							<div id="all-projects-placeholder"></div>
 
+						</div>
 					</div>
 				</section>
 

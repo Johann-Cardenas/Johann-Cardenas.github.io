@@ -17,35 +17,215 @@
 		<!-- Favicon -->
 		<link rel="icon" href="/favicon.ico" type="image/x-icon">
 
+		<!-- Preload banner (reuse Blog banner; add images/Publications_Banner.jpg to override) -->
+		<link rel="preload" as="image" href="images/Blog_Banner.jpg" fetchpriority="high" />
+
 		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 		<style>
 		/* Accent color for hyperlinks in main content of Publications.html */
-		article.box.post a {
-			color: #18a9a8 !important;
+		#main article.box.post a {
+			color: var(--accent-primary, #18a9a8) !important;
 			transition: color 0.2s, text-decoration 0.2s;
 			text-decoration: underline;
 		}
-		article.box.post a:hover {
+		#main article.box.post a:hover {
 			color: #14908f !important;
 			text-decoration: underline;
 		}
 		</style>
 		<style>
-			/* Sidebar card hover effect */
-			.sidebar-card {
-				transition: transform 0.2s ease, box-shadow 0.2s ease;
+			/* Publications: modern glass box, full-width content */
+			body.Publications #main .box.post {
+				background: var(--pub-box-bg, rgba(255,255,255,0.6));
+				backdrop-filter: blur(12px);
+				-webkit-backdrop-filter: blur(12px);
+				border: 1px solid var(--pub-box-border, rgba(24, 169, 168, 0.12));
+				border-radius: 16px;
+				box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+				overflow: hidden;
 			}
-			.sidebar-card:hover {
+			#main .box.post header h2 {
+				font-size: 1.85rem;
+				font-weight: 700;
+				letter-spacing: 0.02em;
+			}
+			#main .box.post section header h3 {
+				font-size: 1.2rem;
+				font-weight: 700;
+				letter-spacing: 0.02em;
+				margin-bottom: 0;
+			}
+			#main .box.post section header hr {
+				height: 1px;
+				border: none;
+				background: linear-gradient(90deg, transparent, rgba(24, 169, 168, 0.35), transparent);
+				margin: 0.4em 0 0.6em 0;
+			}
+			#main .box.post section ul {
+				font-size: 0.95rem;
+				line-height: 1.5;
+				color: var(--text-primary, #333);
+			}
+			[data-theme="dark"] body.Publications #main .box.post {
+				--pub-box-bg: rgba(30, 41, 59, 0.7);
+				--pub-box-border: rgba(24, 169, 168, 0.18);
+			}
+			[data-theme="dark"] #main .box.post section ul {
+				color: var(--text-primary, #e2e8f0);
+			}
+
+			/* Publications banner hero (Blog/Projects style) */
+			.publications-banner {
+				position: relative;
+				border-radius: 20px;
+				overflow: hidden;
+				margin-bottom: 2rem;
+				box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+			}
+			.publications-banner-image {
+				position: relative;
+				width: 100%;
+				aspect-ratio: 4 / 1;
+				overflow: hidden;
+			}
+			.publications-banner-image img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+			}
+			.publications-banner-image::after {
+				content: '';
+				position: absolute;
+				inset: 0;
+				background: linear-gradient(to top, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.6) 35%, rgba(15, 23, 42, 0.2) 65%, transparent 100%);
+				pointer-events: none;
+			}
+			.publications-banner-content {
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				padding: 2rem 2.5rem 2.5rem;
+				z-index: 1;
+			}
+			.publications-banner-content h2 {
+				color: #fff;
+				font-size: 2rem;
+				margin: 0 0 0.35rem 0;
+				text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+			}
+			.publications-banner-content .banner-subtitle {
+				color: rgba(255,255,255,0.9);
+				font-size: 1.1rem;
+				margin: 0;
+				font-weight: 300;
+			}
+			[data-theme="dark"] .publications-banner {
+				box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+			}
+			[data-theme="dark"] .publications-banner-image::after {
+				background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.7) 40%, rgba(15, 23, 42, 0.25) 70%, transparent 100%);
+			}
+			@media (max-width: 768px) {
+				.publications-banner-image {
+					aspect-ratio: auto;
+					min-height: 280px;
+				}
+				.publications-banner-content {
+					padding: 1.5rem 1.25rem 1.5rem;
+				}
+				.publications-banner-content h2 { font-size: 1.5rem; }
+				.publications-banner-content .banner-subtitle { font-size: 1rem; }
+			}
+
+			/* Intro block: social + IDs in a glassy strip */
+			.pub-intro {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: center;
+				gap: 1rem 1.5rem;
+				padding: 1.1rem 1.4rem;
+				margin-bottom: 1.5rem;
+				background: var(--pub-intro-bg, rgba(24, 169, 168, 0.06));
+				border: 1px solid var(--pub-intro-border, rgba(24, 169, 168, 0.12));
+				border-radius: 12px;
+				font-size: 0.95rem;
+			}
+			.pub-intro .social {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+				margin: 0;
+				padding: 0;
+				list-style: none;
+			}
+			.pub-intro .social a {
+				transition: transform 0.2s ease, opacity 0.2s ease;
+			}
+			.pub-intro .social a:hover {
 				transform: translateY(-2px);
-				box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+				opacity: 0.9;
 			}
-			.sidebar-card h3 a {
-				color: inherit;
-				text-decoration: none;
-				transition: color 0.2s ease;
+			.pub-intro .social li a.icon {
+				background: var(--pub-icon-bg, #666) !important;
+				transition: background 0.2s, color 0.2s;
 			}
-			.sidebar-card h3 a:hover {
-				color: #18a9a8;
+			.pub-intro .social li a.icon:before {
+				color: #e5e7eb !important;
+			}
+			.pub-intro .social li a.icon:hover {
+				background: #18a9a8 !important;
+			}
+			.pub-intro .social li a.icon:hover:before {
+				color: #fff !important;
+			}
+			.pub-intro .pub-ids {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.75rem 1.25rem;
+				align-items: baseline;
+				color: var(--text-secondary, #555);
+			}
+			.pub-intro .pub-ids strong {
+				color: var(--text-primary, #333);
+				font-weight: 600;
+			}
+			[data-theme="dark"] .pub-intro {
+				--pub-intro-bg: rgba(24, 169, 168, 0.08);
+				--pub-intro-border: rgba(24, 169, 168, 0.15);
+			}
+			[data-theme="dark"] .pub-intro .pub-ids {
+				color: var(--text-secondary, #94a3b8);
+			}
+			[data-theme="dark"] .pub-intro .pub-ids strong {
+				color: var(--text-primary, #e2e8f0);
+			}
+
+			/* Section and list refinements */
+			body.Publications #main .box.post section {
+				margin-top: 1.75rem;
+			}
+			body.Publications #main .box.post section:first-of-type {
+				margin-top: 0;
+			}
+			#main .box.post .pub-list {
+				list-style: none;
+				margin: 0.5rem 0 0 0;
+				padding: 0;
+				text-align: justify;
+			}
+			#main .box.post .pub-list li {
+				position: relative;
+				padding-left: 1rem;
+				margin-bottom: 0.65rem;
+				border-left: 2px solid rgba(24, 169, 168, 0.25);
+			}
+			#main .box.post .pub-list li:last-child {
+				margin-bottom: 0;
+			}
+			[data-theme="dark"] #main .box.post .pub-list li {
+				border-left-color: rgba(24, 169, 168, 0.4);
 			}
 		</style>
 
@@ -75,131 +255,90 @@
 				<section id="main">
 					<div class="container">
 						<div class="row">
-							<div class="col-8 col-12-medium">
+							<div class="col-12">
+
+								<!-- Banner -->
+								<div class="publications-banner">
+									<div class="publications-banner-image">
+										<img src="images/Publications_Banner.jpg" alt="" decoding="async" fetchpriority="high" />
+									</div>
+									<div class="publications-banner-content">
+										<h2>Publications</h2>
+										<p class="banner-subtitle">Journal articles, technical reports, and presentations</p>								
+									</div>
+								</div>
 
 								<!-- Content -->
 								<article class="box post">
-									<header>
-										<h2>Publications</h2>
-									</header>
-
-									<style>
-										ul.social li a.fa-graduation-cap,
-										ul.social li a.fa-researchgate,
-										ul.social li a.fa-university,
-										ul.social li a.fa-orcid {
-											background: #666666;
-										}
-										ul.social li a.fa-graduation-cap:hover,
-										ul.social li a.fa-researchgate:hover,
-										ul.social li a.fa-university:hover,
-										ul.social li a.fa-orcid:hover {
-											background: #18a9a8 !important;
-										}
-										ul.social {
-											display: flex;
-											align-items: center;
-											justify-content: flex-start;
-										}
-									</style>
-
-									<div style="margin-top: 1em; margin-bottom: 1em;">
-										<ul class="social" style="margin: 0; padding: 0; list-style: none;">
+									<div class="pub-intro">
+										<ul class="social">
 											<li><a class="icon solid fa-graduation-cap" href="https://scholar.google.com/citations?user=yBNtQBoAAAAJ" title="Google Scholar"><span class="label">Google Scholar</span></a></li>
 											<li><a class="icon brands fa-orcid" href="https://orcid.org/0000-0002-4695-7639" title="ORCID"><span class="label">ORCID</span></a></li>
 											<li><a class="icon brands fa-researchgate" href="https://www.researchgate.net/profile/Johann-Cardenas-3?ev=hdr_xprf" title="ResearchGate"><span class="label">ResearchGate</span></a></li>
 											<li><a class="icon solid fa-university" href="https://illinois.academia.edu/johanncardenas" title="Academia.edu"><span class="label">Academia.edu</span></a></li>
 										</ul>
-										<br>
-										<strong>Researcher ID:</strong> <a href="https://www.webofscience.com/wos/author/record/NVM-1989-2025" target="_blank">NVM-1989-2025</a><br>
-										<strong>Scopus Author ID:</strong> <a href="https://www.scopus.com/authid/detail.uri?authorId=59137857000" target="_blank">59137857000</a>
+										<div class="pub-ids">
+											<span><strong>Researcher ID:</strong> <a href="https://www.webofscience.com/wos/author/record/NVM-1989-2025" target="_blank" rel="noopener">NVM-1989-2025</a></span>
+											<span><strong>Scopus Author ID:</strong> <a href="https://www.scopus.com/authid/detail.uri?authorId=59137857000" target="_blank" rel="noopener">59137857000</a></span>
+										</div>
 									</div>
 
 									<!-- Technical Reports Section -->
-									<section style="margin-top: 1.2em;">
+									<section>
 										<header>
 											<h3>Technical Reports</h3>
-											<hr /, style="margin-top: 0.3em; margin-bottom: 0.6em;" />
+											<hr />
 										</header>
-										<ul style="text-align: justify; margin-left: 1em; margin-top: 0.3em;">
-											<li style="margin-bottom: 0.4em;"><strong>Jayme A., Hernandez J., Al-Qadi I., Cardenas J., Hafeez M., and Villamil W. (2025)</strong> Impact of Heavy Commercial Electric Vehicles on Flexible Pavements. <em>ICT Project R27-252</em>. Illinois Center for Transportation. <em>ISSN:0197-9191</em>. <a href="https://doi.org/10.36501/0197-9191/25-003">https://doi.org/10.36501/0197-9191/25-003</a>.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Al-Qadi, I., Jayme, A., Zhou, Q., Cardenas J., Singh, A. and Liu, F. (2025)</strong> Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis. Volume II. <em>ICT-R27-246</em>. Illinois Center for Transportation. Accepted <strong>[Under Review]</strong>.</li>
+										<ul class="pub-list">
+											<li><strong>Jayme A., Hernandez J., Al-Qadi I., Cardenas J., Hafeez M., and Villamil W. (2025)</strong> Impact of Heavy Commercial Electric Vehicles on Flexible Pavements. <em>ICT Project R27-252</em>. Illinois Center for Transportation. <em>ISSN:0197-9191</em>. <a href="https://doi.org/10.36501/0197-9191/25-003">https://doi.org/10.36501/0197-9191/25-003</a>.</li>
+											<li><strong>Al-Qadi, I., Jayme, A., Zhou, Q., Cardenas J., Singh, A. and Liu, F. (2025)</strong> Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis. Volume II. <em>ICT-R27-246</em>. Illinois Center for Transportation. Accepted <strong>[Under Review]</strong>.</li>
 										</ul>
 									</section>
 
 									<!-- Journal Articles Section -->
-									<section style="margin-top: 1.2em;">
+									<section>
 										<header>
 											<h3>Journal Articles</h3>
-											<hr /, style="margin-top: 0.3em; margin-bottom: 0.6em;" />
+											<hr />
 										</header>
-										<ul style="text-align: justify; margin-left: 1em; margin-top: 0.3em; ">
-											<li style="margin-bottom: 0.4em;"><strong>Al-Qadi I., Diab L., Cardenas J. and Hafeez, M. (2026)</strong> Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>Proceedings of the 12th International Conference on Bearing Capacity of Roads, Railways, and Airfields, 12th BCRRA 26</em>. Accepted <strong>[Under Review]</strong>.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Hafeez M., Al-Qadi I., Cardenas J., Jayme, A. and Hernandez, J. (2026)</strong> Electric Truck Adoption: Infrastructure Energy Burden and Economic Impacts. <em>ASCE Journal of Transportation Engineering: Part B, Pavements</em>. Accepted <strong>[Under Review]</strong>.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Cardenas J., Jayme, A., Hernandez, J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Record</em>. Accepted <strong>[Under Review]</strong>.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Jayme, A., Cardenas J., Hernandez, J. and Al-Qadi I. (2026)</strong> Relative Flexible Pavement Distress due to Heavy-Duty Electric Trucks. <em>Transportation Research Record</em>, <em>0</em>(0) <a href="https://doi.org/10.1177/03611981251404350">https://doi.org/10.1177/03611981251404350</a></li>
-											<li style="margin-bottom: 0.4em;"><strong>Cardenas J., Jayme, A., Hernandez J., and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE Proceedings of the International Airfield and Highway Pavements Conference 2025: Design, Construction, Condition Evaluation, and Management of Pavements</em>. <a href="https://doi.org/10.1061/9780784486214.059">https://doi.org/10.1061/9780784486214.059</a></li>
-											<li style="margin-bottom: 0.4em;"><strong>Singh, A., Khan, A., Cardenas J.,and Al-Qadi I. (2025)</strong> Effect of Road Roughness on E-Truck Energy Consumption. <em>International Journal of Pavement Engineering</em>, <em>151</em>(1) <a href="https://doi.org/10.1080/10298436.2025.2528982">https://doi.org/10.1080/10298436.2025.2528982</a></li>
-											<li style="margin-bottom: 0.4em;"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>ASCE Journal of Engineering Mechanics</em>, <em>151</em>(2). <a href="https://doi.org/10.1061/JENMDT.EMENG-7900">https://doi.org/10.1061/JENMDT.EMENG-7900</a></li>
-											<li style="margin-bottom: 0.4em;"><strong>Hernandez J., Jayme, A., Cardenas J., and Al-Qadi I. (2024)</strong> Effect of Heavy-Duty Electric Vehicles on Tire-Pavement Contact Forces. <em>ASCE Journal of Engineering Mechanics</em>, <em>151</em>(1). <a href="https://doi.org/10.1061/JENMDT.EMENG-7835">https://doi.org/10.1061/JENMDT.EMENG-7835</a></li>
-											<li style="margin-bottom: 0.4em;"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>Transportation Research Record</em>, <em>2678</em>(11) <a href="https://doi.org/10.1177/03611981241242378">https://doi.org/10.1177/03611981241242378</a></li>
+										<ul class="pub-list">
+											<li><strong>Al-Qadi I., Diab L., Cardenas J. and Hafeez, M. (2026)</strong> Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>Proceedings of the 12th International Conference on Bearing Capacity of Roads, Railways, and Airfields, 12th BCRRA 26</em>. Accepted <strong>[Under Review]</strong>.</li>
+											<li><strong>Hafeez M., Al-Qadi I., Cardenas J., Jayme, A. and Hernandez, J. (2026)</strong> Electric Truck Adoption: Infrastructure Energy Burden and Economic Impacts. <em>ASCE Journal of Transportation Engineering: Part B, Pavements</em>. Accepted <strong>[Under Review]</strong>.</li>
+											<li><strong>Cardenas J., Jayme, A., Hernandez, J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Record</em>. Accepted <strong>[Under Review]</strong>.</li>
+											<li><strong>Jayme, A., Cardenas J., Hernandez, J. and Al-Qadi I. (2026)</strong> Relative Flexible Pavement Distress due to Heavy-Duty Electric Trucks. <em>Transportation Research Record</em>, <em>0</em>(0) <a href="https://doi.org/10.1177/03611981251404350">https://doi.org/10.1177/03611981251404350</a></li>
+											<li><strong>Cardenas J., Jayme, A., Hernandez J., and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE Proceedings of the International Airfield and Highway Pavements Conference 2025: Design, Construction, Condition Evaluation, and Management of Pavements</em>. <a href="https://doi.org/10.1061/9780784486214.059">https://doi.org/10.1061/9780784486214.059</a></li>
+											<li><strong>Singh, A., Khan, A., Cardenas J.,and Al-Qadi I. (2025)</strong> Effect of Road Roughness on E-Truck Energy Consumption. <em>International Journal of Pavement Engineering</em>, <em>151</em>(1) <a href="https://doi.org/10.1080/10298436.2025.2528982">https://doi.org/10.1080/10298436.2025.2528982</a></li>
+											<li><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>ASCE Journal of Engineering Mechanics</em>, <em>151</em>(2). <a href="https://doi.org/10.1061/JENMDT.EMENG-7900">https://doi.org/10.1061/JENMDT.EMENG-7900</a></li>
+											<li><strong>Hernandez J., Jayme, A., Cardenas J., and Al-Qadi I. (2024)</strong> Effect of Heavy-Duty Electric Vehicles on Tire-Pavement Contact Forces. <em>ASCE Journal of Engineering Mechanics</em>, <em>151</em>(1). <a href="https://doi.org/10.1061/JENMDT.EMENG-7835">https://doi.org/10.1061/JENMDT.EMENG-7835</a></li>
+											<li><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>Transportation Research Record</em>, <em>2678</em>(11) <a href="https://doi.org/10.1177/03611981241242378">https://doi.org/10.1177/03611981241242378</a></li>
 										</ul>
 									</section>
 
 									<!-- Presentations Section -->
-									<section style="margin-top: 1.2em;">
+									<section>
 										<header>
 											<h3>Presentations</h3>
-											<hr /, style="margin-top: 0.3em; margin-bottom: 0.6em;" />
+											<hr />
 										</header>
-										<ul style="text-align: justify; margin-left: 1em; margin-top: 0.3em;">
-											<li style="margin-bottom: 0.4em;"><strong>Al-Qadi I., Diab L., Cardenas J. and Hafeez, M. (2026)</strong> Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>12th International Conference on Bearing Capacity of Roads, Railways, and Airfields, 12th BCRRA 26</em>. Keynote Session. Date: Jun. 2026.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Board 2026</em>. Poster Session. Event Title: Accelerated Pavement Testing. Event Number: 4082. Date: Jan. 2026.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Hafeez M., Al-Qadi I., Cardenas J., Jayme A. and Hernandez J. (2026)</strong> Infrastructure Energy Burden and Economic Impacts due to Electric Truck Adoption. <em>Transportation Research Board 2026</em>. Poster Session. Event Title: Pavement Rehabilitation. Event Number: 4085. Date: Jan. 2026.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE International Conference on Transportation & Development, and International Airfield & Highway Pavements Conference</em>. Date: Jun. 2025.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Hafeez M., Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025)</strong> Environmental Impact of Commercial E-Trucks on Flexible Pavement. <em>ASCE International Conference on Transportation & Development, and International Airfield & Highway Pavements Conference</em>. Date: Jun. 2025.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification due to Heavy-Duty Electric Trucks. <em>Transportation Research Board 2025</em>. Lectern Session. Event Title: From Top to Bottom: The Impact of Heavy Truck Loads and Flexible Pavement Foundations. Event Number: 2137. Date: Jan. 2025.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Singh A., Khan A., Cardenas J. and Al-Qadi I. (2025)</strong> Effect of Road Roughness on E-Truck Energy Consumption. <em>Transportation Research Board 2025</em>. Poster Session. Event Title: Current Issues in Trucking Industry Research. Event Number: 4048. Date: Jan. 2025</li>
-											<li style="margin-bottom: 0.4em;"><strong>Hernandez J., Jayme A., Cardenas J., and Al-Qadi I. (2024)</strong> Electric Heavy Trucks - Impact on Pavement Damage. <em>65th Illinois Bituminous Paving Conference</em>. Date: December 2024.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Vehicular Maneuvering and Dynamic Loading on Flexible Pavements. <em>International Conference on Asphalt Pavement ISAP 2024</em>. Date: June 2024.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Singh A., Cardenas J. and Al-Qadi I. (2024)</strong> Numerical Modeling of Truck-Electrification-Induced Energy Loss in Highway Flexible Pavements. <em>ASCE Engineering Mechanics Institute 2024 Conference</em>. Date: May 2024.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Hernandez J., Jayme, A., Cardenas J., and Al-Qadi I. (2024)</strong> Effect of Heavy-Duty Electric Vehicles on Pavement Contact Forces. <em>Transportation Research Board 2024</em>. Lectern Session: Asphalt Pavement Network Evaluation for Heavy Loads. Event Number: 2020. Date: Jan. 2024.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>Transportation Research Board 2024</em>. Lectern Session: Asphalt Pavement Network Evaluation for Heavy Loads. Event Number: 2020. Date: Jan. 2024.</li>
-											<li style="margin-bottom: 0.4em;"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> The Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>Transportation Research Board 2024</em>. Poster Session. Event Title: Pavement Structural Testing and Evaluation - Falling Weight Deflectomer, Traffic Speed Deflection Device, Accelerated Pavement Testing, and more. Event Number: 2047. Date: Jan. 2024.</li>
+										<ul class="pub-list">
+											<li><strong>Al-Qadi I., Diab L., Cardenas J. and Hafeez, M. (2026)</strong> Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>12th International Conference on Bearing Capacity of Roads, Railways, and Airfields, 12th BCRRA 26</em>. Keynote Session. Date: Jun. 2026.</li>
+											<li><strong>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Board 2026</em>. Poster Session. Event Title: Accelerated Pavement Testing. Event Number: 4082. Date: Jan. 2026.</li>
+											<li><strong>Hafeez M., Al-Qadi I., Cardenas J., Jayme A. and Hernandez J. (2026)</strong> Infrastructure Energy Burden and Economic Impacts due to Electric Truck Adoption. <em>Transportation Research Board 2026</em>. Poster Session. Event Title: Pavement Rehabilitation. Event Number: 4085. Date: Jan. 2026.</li>
+											<li><strong>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE International Conference on Transportation & Development, and International Airfield & Highway Pavements Conference</em>. Date: Jun. 2025.</li>
+											<li><strong>Hafeez M., Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025)</strong> Environmental Impact of Commercial E-Trucks on Flexible Pavement. <em>ASCE International Conference on Transportation & Development, and International Airfield & Highway Pavements Conference</em>. Date: Jun. 2025.</li>
+											<li><strong>Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification due to Heavy-Duty Electric Trucks. <em>Transportation Research Board 2025</em>. Lectern Session. Event Title: From Top to Bottom: The Impact of Heavy Truck Loads and Flexible Pavement Foundations. Event Number: 2137. Date: Jan. 2025.</li>
+											<li><strong>Singh A., Khan A., Cardenas J. and Al-Qadi I. (2025)</strong> Effect of Road Roughness on E-Truck Energy Consumption. <em>Transportation Research Board 2025</em>. Poster Session. Event Title: Current Issues in Trucking Industry Research. Event Number: 4048. Date: Jan. 2025</li>
+											<li><strong>Hernandez J., Jayme A., Cardenas J., and Al-Qadi I. (2024)</strong> Electric Heavy Trucks - Impact on Pavement Damage. <em>65th Illinois Bituminous Paving Conference</em>. Date: December 2024.</li>
+											<li><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Vehicular Maneuvering and Dynamic Loading on Flexible Pavements. <em>International Conference on Asphalt Pavement ISAP 2024</em>. Date: June 2024.</li>
+											<li><strong>Singh A., Cardenas J. and Al-Qadi I. (2024)</strong> Numerical Modeling of Truck-Electrification-Induced Energy Loss in Highway Flexible Pavements. <em>ASCE Engineering Mechanics Institute 2024 Conference</em>. Date: May 2024.</li>
+											<li><strong>Hernandez J., Jayme, A., Cardenas J., and Al-Qadi I. (2024)</strong> Effect of Heavy-Duty Electric Vehicles on Pavement Contact Forces. <em>Transportation Research Board 2024</em>. Lectern Session: Asphalt Pavement Network Evaluation for Heavy Loads. Event Number: 2020. Date: Jan. 2024.</li>
+											<li><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>Transportation Research Board 2024</em>. Lectern Session: Asphalt Pavement Network Evaluation for Heavy Loads. Event Number: 2020. Date: Jan. 2024.</li>
+											<li><strong>Cardenas J., and Al-Qadi I. (2024)</strong> The Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>Transportation Research Board 2024</em>. Poster Session. Event Title: Pavement Structural Testing and Evaluation - Falling Weight Deflectomer, Traffic Speed Deflection Device, Accelerated Pavement Testing, and more. Event Number: 2047. Date: Jan. 2024.</li>
 										</ul>
 									</section>
 
 								</article>
 							</div>
-
-
-
-							<div class="col-4 col-12-medium">
-
-								<!-- Sidebar -->
-								<section class="box sidebar-card">
-									<a href="https://ict.illinois.edu/" class="image featured"><img src="images/Side_01.jpg" alt="" loading="lazy" decoding="async" /></a>
-									<header>
-										<h3><a href="https://ict.illinois.edu/">ICT: "Where Excellence and Transportation Meet"</a></h3>
-									</header>
-									<p style="text-align: justify;"> I serve as a Graduate Research Assistant at the Illinois Center for Transportation (ICT) at the University of Illinois at Urbana-Champaign. 
-										ICT works in partnership with the Illinois Department of Transportation (IDOT) to
-										address the urgent and evolving transportation needs of the state, the country and the world.
-									</p>
-								</section>
-
-								<section class="box sidebar-card">
-									<a href="https://cee.illinois.edu/about/rankings-and-statistics" class="image featured"><img src="images/Side_02.jpg" alt="" loading="lazy" decoding="async" /></a>
-									<header>
-										<h3><a href="https://cee.illinois.edu/about/rankings-and-statistics">CEE at Illinois</a></h3>
-									</header>
-									<p style="text-align: justify;"> The CEE Department consistently ranks among the most elite programs in the U.S. and worldwide for both undergraduate and graduate studies.
-										The Transportation Engineering group within CEE at Illinois offers unequalled expertise in pavement and transportation systems engineering.
-									</p>
-								</section>
-
-							</div>
-						</div>
 					</div>
 				</section>
 

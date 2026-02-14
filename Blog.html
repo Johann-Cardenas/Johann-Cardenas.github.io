@@ -21,41 +21,198 @@
 		<link rel="preload" as="image" href="images/Blog_Banner.jpg" fetchpriority="high" />
 
 		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 		<style>
-			/* Blog card hover effect */
-			.blog-card {
-				transition: transform 0.2s ease, box-shadow 0.2s ease;
+			/* Blog banner hero (E-Labs style with gradient overlay) */
+			.blog-banner {
+				position: relative;
+				border-radius: 20px;
+				overflow: hidden;
+				margin-bottom: 2.5rem;
+				box-shadow: 0 12px 40px rgba(0,0,0,0.15);
 			}
-			.blog-card:hover {
-				transform: translateY(-2px);
-				box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+			.blog-banner-image {
+				position: relative;
+				width: 100%;
+				aspect-ratio: 4 / 1;
+				overflow: hidden;
 			}
-			.blog-card h3 a {
+			.blog-banner-image img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+			}
+			.blog-banner-image::after {
+				content: '';
+				position: absolute;
+				inset: 0;
+				background: linear-gradient(to top, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.6) 35%, rgba(15, 23, 42, 0.2) 65%, transparent 100%);
+				pointer-events: none;
+			}
+			.blog-banner-content {
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				padding: 2rem 2.5rem 2.5rem;
+				z-index: 1;
+			}
+			.blog-banner-content h2 {
+				color: #fff;
+				font-size: 2rem;
+				margin: 0 0 0.35rem 0;
+				text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+			}
+			.blog-banner-content .banner-subtitle {
+				color: rgba(255,255,255,0.9);
+				font-size: 1.1rem;
+				margin: 0 0 1rem 0;
+				font-weight: 300;
+			}
+			.blog-banner-content p {
+				color: rgba(255,255,255,0.85);
+				line-height: 1.6;
+				margin: 0;
+				max-width: 700px;
+			}
+			[data-theme="dark"] .blog-banner {
+				box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+			}
+			[data-theme="dark"] .blog-banner-image::after {
+				background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.7) 40%, rgba(15, 23, 42, 0.25) 70%, transparent 100%);
+			}
+
+			/* Mobile: taller banner so intro text is readable */
+			@media (max-width: 768px) {
+				.blog-banner-image {
+					aspect-ratio: auto;
+					min-height: 340px;
+				}
+				.blog-banner-content {
+					padding: 1.5rem 1.25rem 1.5rem;
+				}
+				.blog-banner-content h2 {
+					font-size: 1.5rem;
+				}
+				.blog-banner-content .banner-subtitle {
+					font-size: 1rem;
+					margin-bottom: 0.75rem;
+				}
+				.blog-banner-content p {
+					font-size: 0.95rem;
+					max-width: none;
+				}
+			}
+
+			/* Blog grid - 3 cards per row */
+			.blog-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+				gap: 1.75rem;
+				margin-top: 0;
+				width: 100%;
+				max-width: 100%;
+				box-sizing: border-box;
+			}
+			.blog-grid .blog-card-modern {
+				min-width: 0;
+			}
+
+			/* Blog card (E-Labs/News style) */
+			.blog-card-modern {
+				background: var(--blog-card-bg, #fff);
+				border-radius: 12px;
+				overflow: hidden;
+				box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+				transition: transform 0.3s ease, box-shadow 0.3s ease;
+				display: flex;
+				flex-direction: column;
+				border: 1px solid var(--blog-card-border, transparent);
+			}
+			.blog-card-modern:hover {
+				transform: translateY(-4px);
+				box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+				border-color: var(--blog-card-border-hover, transparent);
+			}
+			.blog-card-image {
+				position: relative;
+				width: 100%;
+				overflow: hidden;
+			}
+			.blog-card-image img {
+				width: 100%;
+				height: auto;
+				display: block;
+				vertical-align: top;
+				transition: transform 0.3s ease;
+			}
+			.blog-card-modern:hover .blog-card-image img {
+				transform: scale(1.05);
+			}
+			.blog-card-image a { display: block; height: 100%; }
+			.blog-card-content {
+				padding: 1.25rem 1.4rem;
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+			}
+			.blog-card-content h3 {
+				margin: 0 0 0.4rem 0;
+				font-size: 1.15rem;
+				line-height: 1.35;
+			}
+			.blog-card-content h3 a {
 				color: inherit;
+				text-decoration: none;
 				transition: color 0.2s ease;
 			}
-			.blog-card h3 a:hover {
-				color: #18a9a8;
+			.blog-card-content h3 a:hover { color: #18a9a8; }
+			.blog-card-content .blog-meta {
+				color: var(--blog-meta-color, #888);
+				font-size: 0.8rem;
+				margin: 0 0 0.6rem 0;
+				line-height: 1.25;
 			}
-			/* Reduce vertical spacing in blog card content */
-			.blog-card .image.featured {
-				margin-bottom: 1.5rem;
+			.blog-card-content .blog-excerpt {
+				color: var(--blog-text-color, #666);
+				line-height: 1.5;
+				margin-bottom: 1rem;
+				flex: 1;
+				text-align: justify;
+				font-size: 0.9rem;
 			}
-			.blog-card header {
-				margin-bottom: 0.15rem !important;
+			.blog-read-btn {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.4rem;
+				padding: 0.55rem 1.1rem;
+				background: linear-gradient(135deg, #18a9a8, #0d7377);
+				color: #fff;
+				border: none;
+				border-radius: 8px;
+				font-size: 0.9rem;
+				font-weight: 600;
+				transition: all 0.3s ease;
+				text-decoration: none;
 			}
-			.blog-card header h3 {
-				margin-bottom: 0.1rem !important;
-				line-height: 1.3;
+			.blog-read-btn:hover {
+				background: linear-gradient(135deg, #0d7377, #18a9a8);
+				transform: translateY(-2px);
+				box-shadow: 0 4px 12px rgba(24, 169, 168, 0.4);
+				color: #fff;
 			}
-			.blog-card header p {
-				margin-bottom: 0.25rem !important;
-				line-height: 1.2;
+
+			/* Dark theme */
+			[data-theme="dark"] .blog-card-modern {
+				--blog-card-bg: #252525;
+				--blog-card-border: #3a3a3a;
+				--blog-card-border-hover: #4a4a4a;
+				--blog-meta-color: #b0b0b0;
+				--blog-text-color: #d0d0d0;
 			}
-			.blog-card > p {
-				margin-top: 0.15rem !important;
-				margin-bottom: 0.5rem;
-				line-height: 1.4;
+			[data-theme="dark"] .blog-card-modern:hover {
+				box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 			}
 		</style>
 
@@ -84,58 +241,27 @@
 			<!-- Main -->
 				<section id="main">
 					<div class="container">
-						<div class="columns">
-							<div class="col-8 col-12-medium">
+						<div class="col-12">
 
-								<!-- Content -->
-									<article class="box post">
-										<a href="#" class="image featured"><img src="images/Blog_Banner.jpg" alt="" decoding="async" fetchpriority="high" /></a>
-										<header>
-											<h2>Welcome to Asphaltemia!</h2>
-											<p>A Flexible Perspective from Grad School</p>
-										</header>
-										<p style="text-align: justify; margin-bottom: 0.5rem;">
-											I share notes and experiences from my PhD journey in Transportation Engineering. You'll find practical explanations 
-											of concepts I'm working through, research and project updates, conferences I attend, and lessons learned from being 
-											a grad student. 
-										</p>
-
-										<!-- All Blog Posts Placeholder -->
-										<div id="all-blog-posts-placeholder"></div>
-
-									</article>
-
+							<!-- Blog Banner Hero (E-Labs style with gradient overlay) -->
+							<div class="blog-banner">
+								<div class="blog-banner-image">
+									<img src="images/Blog_Banner.jpg" alt="Asphaltemia Blog" decoding="async" fetchpriority="high" />
+								</div>
+								<div class="blog-banner-content">
+									<h2>Welcome to Asphaltemia!</h2>
+									<p class="banner-subtitle">A Flexible Perspective from Grad School</p>
+									<p>
+										Notes and experiences from my PhD journey. You'll find early explanations
+										of concepts I'm working through, conferences I attend, and lessons learned from being
+										a grad student.
+									</p>
+								</div>
 							</div>
-							<!-- <div class="col-4 col-12-medium"> -->
 
-								<!-- Sidebar -->
-									<!-- <section class="box">
-										<a href="#" class="image featured"><img src="images/pic09.jpg" alt="" /></a>
-										<header>
-											<h3>Sed etiam lorem nulla</h3>
-										</header>
-										<p>Lorem ipsum dolor sit amet sit veroeros sed amet blandit consequat veroeros lorem blandit  adipiscing et feugiat phasellus tempus dolore ipsum lorem dolore.</p>
-										<footer>
-											<a href="#" class="button alt">Magna sed taciti</a>
-										</footer>
-									</section>
-									<section class="box">
-										<header>
-											<h3>Feugiat consequat</h3>
-										</header>
-										<p>Veroeros sed amet blandit consequat veroeros lorem blandit adipiscing et feugiat sed lorem consequat feugiat lorem dolore.</p>
-										<ul class="divided">
-											<li><a href="#">Sed et blandit consequat sed</a></li>
-											<li><a href="#">Hendrerit tortor vitae sapien dolore</a></li>
-											<li><a href="#">Sapien id suscipit magna sed felis</a></li>
-											<li><a href="#">Aptent taciti sociosqu ad litora</a></li>
-										</ul>
-										<footer>
-											<a href="#" class="button alt">Ipsum consequat</a>
-										</footer>
-									</section> -->
-<!-- 
-							</div> -->
+							<!-- Blog Posts Grid (populated by components.js) -->
+							<div id="all-blog-posts-placeholder"></div>
+
 						</div>
 					</div>
 				</section>

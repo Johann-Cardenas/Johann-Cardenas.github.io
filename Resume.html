@@ -22,11 +22,11 @@
 
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<style>
-		/* Brand icon color logic for Resume.html only, matching Publications.html */
+		/* Brand icon color logic for Resume.html only */
 		ul.social li a.icon.brands,
 		ul.social li a.icon.solid.fa-graduation-cap {
 			background: #666666 !important;
-			transition: background 0.2s;
+			transition: background 0.2s, color 0.2s;
 		}
 		ul.social li a.icon.brands:before,
 		ul.social li a.icon.solid.fa-graduation-cap:before {
@@ -43,13 +43,97 @@
 		}
 		</style>
 		<style>
-			/* Sidebar card hover effect */
-			.sidebar-card {
-				transition: transform 0.2s ease, box-shadow 0.2s ease;
+			/* Resume: narrow sidebar, wider main column */
+			body.Resume #main .container .row > .col-4.col-12-medium {
+				width: 25%;
 			}
-			.sidebar-card:hover {
+			body.Resume #main .container .row > .col-8.col-12-medium {
+				width: 75%;
+			}
+			@media screen and (max-width: 980px) {
+				body.Resume #main .container .row > .col-4.col-12-medium,
+				body.Resume #main .container .row > .col-8.col-12-medium {
+					width: 100%;
+				}
+			}
+			/* Resume: modern glass touches, typography */
+			#main .box.post {
+				background: var(--resume-box-bg, rgba(255,255,255,0.6));
+				backdrop-filter: blur(12px);
+				-webkit-backdrop-filter: blur(12px);
+				border: 1px solid var(--resume-box-border, rgba(24, 169, 168, 0.12));
+				border-radius: 16px;
+				box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+				overflow: hidden;
+			}
+			#main .box.post .image.featured {
+				position: relative;
+				display: block;
+				border-radius: 16px 16px 0 0;
+				overflow: hidden;
+			}
+			#main .box.post .image.featured::after {
+				content: '';
+				position: absolute;
+				inset: 0;
+				background: linear-gradient(to top, rgba(15, 23, 42, 0.35) 0%, rgba(15, 23, 42, 0.15) 40%, rgba(15, 23, 42, 0.05) 70%, transparent 100%);
+				pointer-events: none;
+			}
+			#main .box.post .image.featured img {
+				display: block;
+				width: 100%;
+				height: auto;
+			}
+			[data-theme="dark"] #main .box.post .image.featured::after {
+				background: linear-gradient(to top, rgba(15, 23, 42, 0.5) 0%, rgba(15, 23, 42, 0.2) 45%, rgba(15, 23, 42, 0.06) 75%, transparent 100%);
+			}
+			#main .box.sidebar-card {
+				background: var(--resume-sidebar-bg, rgba(255,255,255,0.5));
+				backdrop-filter: blur(10px);
+				-webkit-backdrop-filter: blur(10px);
+				border: 1px solid var(--resume-sidebar-border, rgba(24, 169, 168, 0.1));
+				border-radius: 14px;
+				box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+				transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+				padding: 0;
+				overflow: hidden;
+			}
+			#main .box.sidebar-card:hover {
 				transform: translateY(-2px);
-				box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+				box-shadow: 0 6px 20px rgba(24, 169, 168, 0.12);
+				border-color: rgba(24, 169, 168, 0.22);
+			}
+			#main .box.sidebar-card .image.featured {
+				position: relative;
+				left: 0;
+				top: 0;
+				width: 100%;
+				margin: 0;
+				border-radius: 14px 14px 0 0;
+				overflow: hidden;
+			}
+			#main .box.sidebar-card .image.featured img {
+				display: block;
+				width: 100%;
+				height: auto;
+			}
+			#main .box.sidebar-card header {
+				padding: 1em 1.15em 0 1.15em;
+				margin: 0 0 0.5em 0;
+			}
+			#main .box.sidebar-card h3 {
+				font-size: 1.02rem;
+				font-weight: 700;
+				letter-spacing: 0.01em;
+				line-height: 1.10;
+				margin: 0;
+			}
+			#main .box.sidebar-card p {
+				font-size: 0.875rem;
+				line-height: 1.32;
+				color: var(--text-secondary, #555);
+				margin: 0;
+				padding: 0 1.25em 1.15em 1.25em;
 			}
 			.sidebar-card h3 a {
 				color: inherit;
@@ -59,9 +143,69 @@
 			.sidebar-card h3 a:hover {
 				color: var(--accent-primary, #18a9a8);
 			}
-			/* Dark mode: Biography header background */
+			/* CV header section: refined lines and typography */
+			.header-section {
+				text-align: left;
+				position: relative;
+				margin: 0;
+				padding: 0;
+			}
+			.header-line {
+				width: 100%;
+				height: 1px;
+				background: linear-gradient(90deg, transparent, rgba(24, 169, 168, 0.3), transparent);
+				margin: 0;
+			}
+			.header-line.top { position: relative; top: -1em; }
+			.header-container h3 {
+				display: inline-block;
+				background-color: var(--resume-heading-bg, #fff);
+				padding: 0;
+				font-size: 1.75rem;
+				font-weight: 700;
+				margin: 0;
+				line-height: 1.2;
+				letter-spacing: 0.02em;
+			}
+			/* Biography paragraph */
+			#main .box.post section p {
+				font-size: 0.95rem;
+				line-height: 1.65;
+				color: var(--text-primary, #333);
+			}
+			#main .box.post section p a {
+				color: var(--accent-primary, #18a9a8);
+				text-decoration: none;
+				border-bottom: 1px solid rgba(24, 169, 168, 0.35);
+				transition: color 0.2s ease, border-color 0.2s ease;
+			}
+			#main .box.post section p a:hover {
+				color: #0d7377;
+				border-bottom-color: #18a9a8;
+			}
+			/* PDF viewer container */
+			#main .box.post iframe {
+				border-radius: 10px;
+				box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+			}
+			/* Dark theme */
+			[data-theme="dark"] #main .box.post {
+				--resume-box-bg: rgba(30, 41, 59, 0.7);
+				--resume-box-border: rgba(24, 169, 168, 0.18);
+			}
+			[data-theme="dark"] #main .box.sidebar-card {
+				--resume-sidebar-bg: rgba(30, 41, 59, 0.6);
+				--resume-sidebar-border: rgba(24, 169, 168, 0.15);
+			}
 			[data-theme="dark"] .header-container h3 {
+				--resume-heading-bg: var(--bg-box, #1e293b);
 				background-color: var(--bg-box, #1e293b) !important;
+			}
+			[data-theme="dark"] #main .box.sidebar-card p {
+				color: var(--text-secondary, #cbd5e1);
+			}
+			@media screen and (max-width: 980px) {
+				.header-section.cvhead-section { margin-top: 0.5em !important; }
 			}
 		</style>
 
@@ -128,58 +272,6 @@
 										</div>
 									-->
 
-									<section>
-										<style>
-										.header-section {
-											text-align: left;
-											position: relative;
-											margin: 0em 0em 0em 0em;
-											padding: 0;
-										}
-
-										.header-line {
-											position: absolute;
-											left: 0;
-											right: 0;
-											height: 0.50px;
-											background-color: grey;
-											margin: 0;
-										}
-
-										.header-line.top {
-											position: relative;
-											top: -1em;
-											padding-top: 0em;
-										}
-
-										.header-line.bottom {
-											bottom: 0em;
-											padding-bottom: 0em;
-										}
-
-										.header-container {
-											text-align: left;
-											position: relative;
-											margin: 0em 0em 0em 0em;
-										}
-
-										.header-container h3 {
-											display: inline-block;
-											background-color: white;
-											padding: 0em 0em;
-											font-size: 2.0em;
-											margin: 0em 0em;
-											line-height: 0.75; /* Add this line to increase the line-height */
-										}
-
-										/* Mobile: add spacing between banner and social icons */
-										@media screen and (max-width: 980px) {
-											.header-section.cvhead-section {
-												margin-top: 0.5em !important;
-											}
-										}
-										</style>
-
 									<section class="header-section cvhead-section" style="margin-top: -1.5em;">
 										<header class="cvhead">
 											<div style="display: flex; justify-content: center;">
@@ -192,15 +284,6 @@
 											</div>
 										</header>
 									</section>
-
-									<style>
-										.header-container {
-											display: flex;
-											align-items: justify-content;
-											justify-content: space-between;
-											flex-direction: row;
-										}
-									</style>
 
 									<section style="margin-top: -1em;">
 										<p style="text-align: justify;"> 

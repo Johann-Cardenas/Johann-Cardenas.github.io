@@ -194,33 +194,43 @@
         return html;
     }
 
-    // Generate blog post card HTML
+    // Generate blog post card HTML (E-Labs/News style: image on top, content below)
     function generateBlogCard(post, imageBasePath = '') {
         return `
-            <div class="col-6 col-12-small">
-                <section class="box blog-card">
-                    <a href="${basePath}${post.url}" class="image featured"><img src="${imageBasePath}${post.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" style="border-radius: 8px;" /></a>
-                    <header>
-                        <h3><a href="${basePath}${post.url}" style="text-decoration: none;">${post.title}</a></h3>
-                        <p>Posted on ${post.dateDisplay}</p>
-                    </header>
-                    <p style="text-align: justify;">${post.excerpt}</p>
-                </section>
-            </div>`;
+            <article class="blog-card-modern">
+                <div class="blog-card-image">
+                    <a href="${basePath}${post.url}">
+                        <img src="${imageBasePath}${post.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" />
+                    </a>
+                </div>
+                <div class="blog-card-content">
+                    <h3><a href="${basePath}${post.url}">${post.title}</a></h3>
+                    <p class="blog-meta">Posted on ${post.dateDisplay}</p>
+                    <p class="blog-excerpt">${post.excerpt}</p>
+                    <a href="${basePath}${post.url}" class="blog-read-btn">
+                        <i class="fas fa-arrow-right"></i> Continue Reading
+                    </a>
+                </div>
+            </article>`;
     }
 
-    // Generate project card HTML
+    // Generate project card HTML (E-Labs/Blog style: image on top, content below)
     function generateProjectCard(project, imageBasePath = '') {
         return `
-            <div class="col-4 col-6-medium col-12-small">
-                <section class="box project-card">
-                    <a href="${basePath}${project.url}" class="image featured"><img src="${imageBasePath}${project.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" style="border-radius: 8px;" /></a>
-                    <header>
-                        <h3 style="text-align: center;"><a href="${basePath}${project.url}" style="text-decoration: none;">${project.title}</a></h3>
-                    </header>
-                    <p style="text-align: justify;">${project.excerpt}</p>
-                </section>
-            </div>`;
+            <article class="project-card-modern">
+                <div class="project-card-image">
+                    <a href="${basePath}${project.url}">
+                        <img src="${imageBasePath}${project.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" />
+                    </a>
+                </div>
+                <div class="project-card-content">
+                    <h3><a href="${basePath}${project.url}">${project.title}</a></h3>
+                    <p class="project-excerpt">${project.excerpt}</p>
+                    <a href="${basePath}${project.url}" class="project-read-btn">
+                        <i class="fas fa-arrow-right"></i> Learn More
+                    </a>
+                </div>
+            </article>`;
     }
 
     // Generate blog posts HTML (excluding current post)
@@ -240,24 +250,28 @@
 
         if (postsToShow.length === 0) return '';
 
-        let html = `
-            <article class="box post">
-                <div class="row">`;
+        let html = `<section class="other-posts" style="margin-top: 2rem;">
+            <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">More from the Blog</h3>
+            <div class="blog-grid">`;
 
         postsToShow.forEach(post => {
             html += generateBlogCard(post, imageBasePath);
         });
 
-        html += `
-                </div>
-            </article>`;
+        html += `</div></section>`;
 
         return html;
     }
 
     // Generate all blog posts HTML (for listing pages)
     function generateAllBlogPosts(blogData, imageBasePath = '') {
-        return generateBlogPosts(blogData, '', imageBasePath, true);
+        if (!blogData || !blogData.posts) return '';
+        let html = '<div class="blog-grid">';
+        blogData.posts.forEach(post => {
+            html += generateBlogCard(post, imageBasePath);
+        });
+        html += '</div>';
+        return html;
     }
 
     // Generate projects HTML (excluding current project)
@@ -277,24 +291,28 @@
 
         if (projectsToShow.length === 0) return '';
 
-        let html = `
-            <article class="box post">
-                <div class="row">`;
+        let html = `<section class="other-projects" style="margin-top: 2rem;">
+            <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">Other Projects</h3>
+            <div class="project-grid">`;
 
         projectsToShow.forEach(project => {
             html += generateProjectCard(project, imageBasePath);
         });
 
-        html += `
-                </div>
-            </article>`;
+        html += `</div></section>`;
 
         return html;
     }
 
     // Generate all projects HTML (for listing pages)
     function generateAllProjects(projectsData, imageBasePath = '') {
-        return generateProjects(projectsData, '', imageBasePath, true);
+        if (!projectsData || !projectsData.projects) return '';
+        let html = '<div class="project-grid">';
+        projectsData.projects.forEach(project => {
+            html += generateProjectCard(project, imageBasePath);
+        });
+        html += '</div>';
+        return html;
     }
 
     // Generate news item card HTML (E-Labs style: image on top, content below)
