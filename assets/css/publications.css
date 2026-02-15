@@ -9,6 +9,13 @@ body.Publications #main article.box.post a {
 	transition: color 0.2s, text-decoration 0.2s;
 	text-decoration: underline;
 }
+
+@media screen and (max-width: 736px) {
+	/* Align Publications banner image to the right on mobile */
+	.publications-banner-image img {
+		object-position: right center !important;
+	}
+}
 body.Publications #main article.box.post a:hover {
 	color: #14908f !important;
 	text-decoration: underline;
