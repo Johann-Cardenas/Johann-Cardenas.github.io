@@ -854,16 +854,18 @@
                                                 .header-badges {
                                                     margin-top: 0 !important;
                                                     z-index: 2;
+                                                    background: transparent !important;
+                                                    box-shadow: none !important;
+                                                    padding: 0.25rem 0.75rem;
                                                 }
                                 .header-badges {
                                     display: flex !important;
                                     align-items: center;
                                     gap: 0.5rem;
                                     margin-left: auto;
-                                    padding: 0.25rem 0.75rem;
-                                    background: rgba(0,0,0,0.18);
+                                    background: transparent !important;
                                     border-radius: 12px;
-                                    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                                    box-shadow: none !important;
                                 }
                                 .header-badge {
                                     background: rgba(255,255,255,0.13);
@@ -1007,7 +1009,34 @@
             .app-header { margin:0 -0.75rem 1rem; border-radius:16px; }
             .header-content { padding:1rem 1.25rem 1.25rem; }
             .header-nav { padding:0.6rem 1rem; }
-            .header-badges { gap:0.3rem; }
+            .header-badges {
+                display: flex !important;
+                position: fixed;
+                top: 0.5rem;
+                right: 0.7rem;
+                flex-direction: row;
+                align-items: center;
+                justify-content: flex-end;
+                z-index: 9999;
+                background: transparent !important;
+                border-radius: 12px;
+                box-shadow: none !important;
+                padding: 0.18rem 0.25rem;
+                min-width: 0;
+                width: auto;
+            }
+            .header-badges .about-btn {
+                margin: 0;
+                font-size: 0.72rem !important;
+                padding: 0.28rem 0.6rem !important;
+                border-radius: 8px !important;
+            }
+            .header-badges .about-btn i {
+                font-size: 0.68rem !important;
+            }
+            .header-badges .header-badge {
+                display: none !important;
+            }
             .header-badge { font-size:0.68rem; padding:0.25rem 0.5rem; }
             .stats-list { flex-direction:column; gap:0.5rem; }
             .stat-card {
