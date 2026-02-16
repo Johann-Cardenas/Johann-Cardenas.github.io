@@ -1,4 +1,0 @@
-# Ignore large binary source files (pkl.bz2) - only JSON is needed for the web app
-*.pkl.bz2
-*.pkl
-*.txt
