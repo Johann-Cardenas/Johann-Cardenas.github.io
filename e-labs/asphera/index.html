@@ -8,7 +8,7 @@
                 <p style="color:#e2e8f0;font-size:0.97em;margin-bottom:1.1em;text-align:center;max-width:320px;line-height:1.35;">This application is restricted and for internal authorized use only. Please enter the access password to continue.<br><span style='color:#18a9a8;font-size:0.85em;display:block;margin-top:0.4em;'>Contact the administrator if you need access.</span></p>
                 <div style="width:100%;max-width:270px;position:relative;">
                     <input id="password-input" type="password" placeholder="Password" autocomplete="off" style="padding:0.7em 2.5em 0.7em 1em;font-size:1em;border-radius:9px;border:1.5px solid #18a9a8;background:rgba(255,255,255,0.13);color:#fff;width:100%;outline:none;box-shadow:0 1px 4px rgba(24,169,168,0.07);transition:border 0.2s;background-clip:padding-box;caret-color:#18a9a8;" autofocus />
-                    <i class="fas fa-key" style="position:absolute;right:2.2em;top:50%;transform:translateY(-50%);color:#18a9a8;opacity:0.7;"></i>
+                      <!-- Removed duplicate eye/key icon, only toggle button remains -->
                     <button id="toggle-password-visibility" type="button" tabindex="0" aria-label="Show password" style="position:absolute;right:0.3em;top:50%;transform:translateY(-50%);background:none;border:none;outline:none;cursor:pointer;padding:0;margin:0;color:#18a9a8;opacity:0.8;font-size:1.1em;z-index:2;">
                         <i id="eye-icon" class="fas fa-eye"></i>
                     </button>
@@ -20,6 +20,31 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+            <style>
+            /* Password Modal Animations */
+            #password-modal.unlocking {
+                animation: modalUnlockFade 0.7s cubic-bezier(.4,1.2,.7,1) forwards;
+            }
+            @keyframes modalUnlockFade {
+                0% { opacity: 1; transform: scale(1); }
+                60% { opacity: 0.7; transform: scale(1.07); }
+                100% { opacity: 0; transform: scale(1.12); pointer-events:none; }
+            }
+            #password-form.shake {
+                animation: shakeModal 0.45s cubic-bezier(.36,.07,.19,.97) both;
+            }
+            @keyframes shakeModal {
+                10%, 90% { transform: translateX(-2px); }
+                20%, 80% { transform: translateX(4px); }
+                30%, 50%, 70% { transform: translateX(-8px); }
+                40%, 60% { transform: translateX(8px); }
+            }
+            #password-input.error {
+                border-color: #ef4444 !important;
+                background: rgba(255,0,0,0.07);
+                transition: border 0.2s, background 0.2s;
+            }
+            </style>
     <script>
         (function() {
             var theme = localStorage.getItem('asphera-theme') || 'dark';
@@ -2468,9 +2493,12 @@ new MutationObserver(() => {
             var error = document.getElementById('password-error');
             var allowed = false;
             function unlock() {
-                modal.style.display = 'none';
-                allowed = true;
-                document.body.style.overflow = '';
+                modal.classList.add('unlocking');
+                setTimeout(function() {
+                    modal.style.display = 'none';
+                    allowed = true;
+                    document.body.style.overflow = '';
+                }, 700);
             }
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -2478,11 +2506,17 @@ new MutationObserver(() => {
                     unlock();
                 } else {
                     error.style.display = 'block';
+                    form.classList.add('shake');
+                    input.classList.add('error');
+                    setTimeout(function() {
+                        form.classList.remove('shake');
+                        input.classList.remove('error');
+                    }, 450);
                     input.value = '';
                     input.focus();
                 }
             });
-            input.addEventListener('input', function() { error.style.display = 'none'; });
+            input.addEventListener('input', function() { error.style.display = 'none'; input.classList.remove('error'); });
             // Prevent navigation/interaction outside modal until unlocked
             document.addEventListener('click', function(e) {
                 if (!allowed && !modal.contains(e.target)) {
