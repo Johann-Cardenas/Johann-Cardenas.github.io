@@ -1,3 +1,22 @@
+        <!-- Password Modal Overlay -->
+        <div id="password-modal" style="position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(15,23,42,0.96);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);">
+            <form id="password-form" style="background:rgba(255,255,255,0.07);border-radius:22px;padding:2.1em 2.1em 1.7em 2.1em;box-shadow:0 10px 40px 0 rgba(24,169,168,0.18),0 2px 16px 0 rgba(0,0,0,0.18);display:flex;flex-direction:column;align-items:center;min-width:320px;max-width:92vw;backdrop-filter:blur(2px);border:1.5px solid #18a9a8;">
+                <div style="font-size:2em;color:#18a9a8;margin-bottom:0.4em;display:flex;align-items:center;gap:0.3em;">
+                    <i class='fas fa-shield-alt' style="color:#18a9a8;"></i>
+                    <span style="font-size:0.62em;color:#fff;font-weight:600;letter-spacing:0.04em;">Authentication Required</span>
+                </div>
+                <p style="color:#e2e8f0;font-size:0.97em;margin-bottom:1.1em;text-align:center;max-width:320px;line-height:1.35;">This application is restricted and for internal authorized use only. Please enter the access password to continue.<br><span style='color:#18a9a8;font-size:0.85em;display:block;margin-top:0.4em;'>Contact the administrator if you need access.</span></p>
+                <div style="width:100%;max-width:270px;position:relative;">
+                    <input id="password-input" type="password" placeholder="Password" autocomplete="off" style="padding:0.7em 2.5em 0.7em 1em;font-size:1em;border-radius:9px;border:1.5px solid #18a9a8;background:rgba(255,255,255,0.13);color:#fff;width:100%;outline:none;box-shadow:0 1px 4px rgba(24,169,168,0.07);transition:border 0.2s;background-clip:padding-box;caret-color:#18a9a8;" autofocus />
+                    <i class="fas fa-key" style="position:absolute;right:2.2em;top:50%;transform:translateY(-50%);color:#18a9a8;opacity:0.7;"></i>
+                    <button id="toggle-password-visibility" type="button" tabindex="0" aria-label="Show password" style="position:absolute;right:0.3em;top:50%;transform:translateY(-50%);background:none;border:none;outline:none;cursor:pointer;padding:0;margin:0;color:#18a9a8;opacity:0.8;font-size:1.1em;z-index:2;">
+                        <i id="eye-icon" class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <button type="submit" style="margin-top:1em;background:linear-gradient(90deg,#18a9a8 60%,#0d7377 100%);color:#fff;font-weight:700;font-size:1em;padding:0.55em 2em;border:none;border-radius:9px;box-shadow:0 2px 8px rgba(24,169,168,0.13);cursor:pointer;transition:background 0.2s,box-shadow 0.2s;letter-spacing:0.03em;">Unlock</button>
+                <div id="password-error" style="color:#ef4444;font-size:0.92em;margin-top:1em;display:none;text-align:center;">Incorrect password. Please try again.</div>
+            </form>
+        </div>
 <!DOCTYPE HTML>
 <html>
 <head>
@@ -2440,4 +2459,65 @@ new MutationObserver(() => {
 
 </script>
 </body>
+        <script>
+        // Password Modal Logic for Asphera
+        (function() {
+            var modal = document.getElementById('password-modal');
+            var form = document.getElementById('password-form');
+            var input = document.getElementById('password-input');
+            var error = document.getElementById('password-error');
+            var allowed = false;
+            function unlock() {
+                modal.style.display = 'none';
+                allowed = true;
+                document.body.style.overflow = '';
+            }
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (input.value === 'LIVEAULIMA') {
+                    unlock();
+                } else {
+                    error.style.display = 'block';
+                    input.value = '';
+                    input.focus();
+                }
+            });
+            input.addEventListener('input', function() { error.style.display = 'none'; });
+            // Prevent navigation/interaction outside modal until unlocked
+            document.addEventListener('click', function(e) {
+                if (!allowed && !modal.contains(e.target)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+            }, true);
+            document.addEventListener('keydown', function(e) {
+                if (!allowed && !modal.contains(document.activeElement)) {
+                    if (e.key !== 'Tab' && e.key !== 'Enter') e.preventDefault();
+                }
+            }, true);
+            // Autofocus input on load
+            setTimeout(function() { input.focus(); }, 100);
+        })();
+        // Password visibility toggle
+        (function() {
+            var input = document.getElementById('password-input');
+            var btn = document.getElementById('toggle-password-visibility');
+            var icon = document.getElementById('eye-icon');
+            if (!input || !btn || !icon) return;
+            btn.addEventListener('click', function() {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                    btn.setAttribute('aria-label', 'Hide password');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                    btn.setAttribute('aria-label', 'Show password');
+                }
+                input.focus();
+            });
+        })();
+        </script>
 </html>
