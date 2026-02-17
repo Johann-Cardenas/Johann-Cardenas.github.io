@@ -1,3 +1,128 @@
+		<!-- Password Modal Overlay -->
+		<div id="password-modal" style="position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(15,23,42,0.96);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);">
+			<form id="password-form" style="background:rgba(255,255,255,0.07);border-radius:22px;padding:2.1em 2.1em 1.7em 2.1em;box-shadow:0 10px 40px 0 rgba(24,169,168,0.18),0 2px 16px 0 rgba(0,0,0,0.18);display:flex;flex-direction:column;align-items:center;min-width:320px;max-width:92vw;backdrop-filter:blur(2px);border:1.5px solid #18a9a8;">
+				<div style="font-size:2em;color:#18a9a8;margin-bottom:0.4em;display:flex;align-items:center;gap:0.3em;">
+					<i class='fas fa-shield-alt' style="color:#18a9a8;"></i>
+					<span style="font-size:0.62em;color:#fff;font-weight:600;letter-spacing:0.04em;">Authentication Required</span>
+				</div>
+				<p style="color:#e2e8f0;font-size:0.97em;margin-bottom:1.1em;text-align:center;max-width:320px;line-height:1.35;">This app is for authorized internal use only.<br>Enter the password to continue.</p>
+				<div style="width:100%;max-width:270px;position:relative;">
+					<input id="password-input" type="password" placeholder="Password" autocomplete="off" style="padding:0.7em 1em 0.7em 1em;font-size:1em;border-radius:9px;border:1.5px solid #18a9a8;background:rgba(255,255,255,0.13);color:#fff;width:100%;outline:none;box-shadow:0 1px 4px rgba(24,169,168,0.07);transition:border 0.2s;background-clip:padding-box;caret-color:#18a9a8;" autofocus />
+				</div>
+				<button type="submit" style="margin-top:1em;background:linear-gradient(90deg,#18a9a8 60%,#0d7377 100%);color:#fff;font-weight:700;font-size:1em;padding:0.55em 2em;border:none;border-radius:9px;box-shadow:0 2px 8px rgba(24,169,168,0.13);cursor:pointer;transition:background 0.2s,box-shadow 0.2s;letter-spacing:0.03em;">Unlock</button>
+				<div id="password-error" style="color:#ef4444;font-size:0.92em;margin-top:1em;display:none;text-align:center;">Incorrect password. Please try again.</div>
+			</form>
+		</div>
+		<script>
+		// Password Modal Logic for ACRP_FEM
+		(function() {
+			var modal = document.getElementById('password-modal');
+			var form = document.getElementById('password-form');
+			var input = document.getElementById('password-input');
+			var error = document.getElementById('password-error');
+			var allowed = false;
+			function unlock() {
+				modal.classList.add('unlocking');
+				setTimeout(function() {
+					modal.style.display = 'none';
+					allowed = true;
+					document.body.style.overflow = '';
+				}, 700);
+			}
+			form.addEventListener('submit', function(e) {
+				e.preventDefault();
+				if (input.value === 'LIVEAULIMA') {
+					unlock();
+				} else {
+					error.style.display = 'block';
+					form.classList.add('shake');
+					input.classList.add('error');
+					setTimeout(function() {
+						form.classList.remove('shake');
+						input.classList.remove('error');
+					}, 450);
+					input.value = '';
+					input.focus();
+				}
+			});
+			input.addEventListener('input', function() { error.style.display = 'none'; input.classList.remove('error'); });
+			// Prevent navigation/interaction outside modal until unlocked
+			document.addEventListener('click', function(e) {
+				if (!allowed && !modal.contains(e.target)) {
+					e.stopPropagation();
+					e.preventDefault();
+				}
+			}, true);
+			document.addEventListener('keydown', function(e) {
+				if (!allowed && !modal.contains(document.activeElement)) {
+					if (e.key !== 'Tab' && e.key !== 'Enter') e.preventDefault();
+				}
+			}, true);
+			// Autofocus input on load
+			setTimeout(function() { input.focus(); }, 100);
+		})();
+		</script>
+		<style>
+		/* Password Modal Animations */
+		#password-modal.unlocking {
+			animation: modalUnlockFade 0.7s cubic-bezier(.4,1.2,.7,1) forwards;
+		}
+		@keyframes modalUnlockFade {
+			0% { opacity: 1; transform: scale(1); }
+			60% { opacity: 0.7; transform: scale(1.07); }
+			100% { opacity: 0; transform: scale(1.12); pointer-events:none; }
+		}
+		#password-form.shake {
+			animation: shakeModal 0.45s cubic-bezier(.36,.07,.19,.97) both;
+		}
+		@keyframes shakeModal {
+			10%, 90% { transform: translateX(-2px); }
+			20%, 80% { transform: translateX(4px); }
+			30%, 50%, 70% { transform: translateX(-8px); }
+			40%, 60% { transform: translateX(8px); }
+		}
+		#password-input.error {
+			border-color: #ef4444 !important;
+			background: rgba(255,0,0,0.07);
+			transition: border 0.2s, background 0.2s;
+		}
+		@media (max-width: 900px) {
+			#password-modal form {
+				min-width: 260px;
+				padding: 1.7em 1.2em 1.2em 1.2em;
+			}
+			#password-modal p {
+				font-size: 0.95em;
+			}
+		}
+		@media (max-width: 600px) {
+			#password-modal form {
+				min-width: 0;
+				width: 98vw;
+				max-width: 99vw;
+				padding: 1.2em 0.5em 1em 0.5em;
+				border-radius: 13px;
+			}
+			#password-modal p {
+				font-size: 0.92em;
+			}
+			#password-modal .fa-shield-alt {
+				font-size: 1.2em !important;
+			}
+			#password-modal input[type="password"] {
+				font-size: 0.98em;
+			}
+		}
+		@media (max-width: 400px) {
+			#password-modal form {
+				padding: 0.7em 0.2em 0.7em 0.2em;
+				border-radius: 7px;
+			}
+			#password-modal p {
+				font-size: 0.89em;
+			}
+		}
+		</style>
 <!DOCTYPE HTML>
 <!--
 -->
