@@ -2,7 +2,7 @@
 Here are my HTML, CSS and JS files to build my first static website:
 
 > [!IMPORTANT]
-> Although I am pleased to share my codes with the broader community for education, research and development purposes, I do not take any responsibility for the results obtained. You are fully responsible for your results.
+> Although I am pleased to share my personal website with the broader community for education, research and development purposes, I do not take any responsibility for the results obtained. You are fully responsible for your results.
 > **Attribution:** If you use this code for academic of research purposes, proper attribution to the original author (myself) is appreciated.
 
 > [!TIP]
