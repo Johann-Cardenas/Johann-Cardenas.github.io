@@ -216,26 +216,30 @@
     function generateProjectCard(project, imageBasePath = '') {
         // Add status tag if present
         const statusTag = project.status ? `<span class="project-status-tag project-status-${project.status.toLowerCase()}">${project.status}</span>` : '';
-        // Disable Learn More button for ML-Based Prediction Models project
+        // Disable Learn More button for ML-Based Prediction Models and Mechanistic Overload Permitting projects
         const isMLProject = project.title && project.title.includes('ML‑Based Prediction Models');
-        const learnMoreClass = isMLProject ? 'project-read-btn project-read-btn-disabled' : 'project-read-btn';
-        const learnMoreAttrs = isMLProject ? 'tabindex="-1" aria-disabled="true" onclick="return false;"' : '';
-        // Remove links for ML project
-        const infoIcon = `<span class=\"project-info-icon\" tabindex=\"0\"><i class=\"fas fa-info-circle\"></i><span class=\"project-info-tooltip\">The final report of this project is still under review and the results will become available once the document is published.</span></span>`;
+        const isOverloadProject = project.title && project.title.includes('Mechanistic Overload Permitting for Flexible Airfield Pavements via Damage Factors');
+        const learnMoreClass = (isMLProject || isOverloadProject) ? 'project-read-btn project-read-btn-disabled' : 'project-read-btn';
+        const learnMoreAttrs = (isMLProject || isOverloadProject) ? 'tabindex="-1" aria-disabled="true" onclick="return false;"' : '';
+        // Info icon for both
+        const infoIconML = `<span class="project-info-icon" tabindex="0"><i class="fas fa-info-circle"></i><span class="project-info-tooltip">The final report of this project is still under review and the results will become available once the document is published.</span></span>`;
+        const infoIconOverload = `<span class="project-info-icon" tabindex="0"><i class="fas fa-info-circle"></i><span class="project-info-tooltip">This project is active, but access to the results is not yet enabled. Please check back soon for updates.</span></span>`;
         const imageSection = isMLProject
-            ? `<div class=\"project-card-image\">${infoIcon}<img src=\"${imageBasePath}${project.image}\" alt=\"\" loading=\"lazy\" decoding=\"async\" fetchpriority=\"low\" />${statusTag}</div>`
-            : `<div class=\"project-card-image\"><a href=\"${basePath}${project.url}\"><img src=\"${imageBasePath}${project.image}\" alt=\"\" loading=\"lazy\" decoding=\"async\" fetchpriority=\"low\" /></a>${statusTag}</div>`;
-        const titleSection = isMLProject
+            ? `<div class="project-card-image">${infoIconML}<img src="${imageBasePath}${project.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" />${statusTag}</div>`
+            : isOverloadProject
+                ? `<div class="project-card-image">${infoIconOverload}<img src="${imageBasePath}${project.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" />${statusTag}</div>`
+                : `<div class="project-card-image"><a href="${basePath}${project.url}"><img src="${imageBasePath}${project.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" /></a>${statusTag}</div>`;
+        const titleSection = (isMLProject || isOverloadProject)
             ? `<h3>${project.title}</h3>`
-            : `<h3><a href=\"${basePath}${project.url}\">${project.title}</a></h3>`;
+            : `<h3><a href="${basePath}${project.url}">${project.title}</a></h3>`;
         return `
-            <article class=\"project-card-modern\">
+            <article class="project-card-modern">
                 ${imageSection}
-                <div class=\"project-card-content\">
+                <div class="project-card-content">
                     ${titleSection}
-                    <p class=\"project-excerpt\">${project.excerpt}</p>
-                    <a href=\"${basePath}${project.url}\" class=\"${learnMoreClass}\" ${learnMoreAttrs}>
-                        <i class=\"fas fa-arrow-right\"></i> Learn More
+                    <p class="project-excerpt">${project.excerpt}</p>
+                    <a href="${basePath}${project.url}" class="${learnMoreClass}" ${learnMoreAttrs}>
+                        <i class="fas fa-arrow-right"></i> Learn More
                     </a>
                 </div>
             </article>`;
