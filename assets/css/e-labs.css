@@ -1,3 +1,89 @@
+.app-card .launch-btn.private-launch {
+	background: linear-gradient(135deg, #dc2626, #f87171) !important;
+}
+.app-card .launch-btn.private-launch:hover {
+	background: linear-gradient(135deg, #b91c1c, #ef4444) !important;
+}
+
+[data-theme="dark"] .app-card .launch-btn.private-launch {
+	background: linear-gradient(135deg, #b91c1c, #ef4444) !important;
+}
+[data-theme="dark"] .app-card .launch-btn.private-launch:hover {
+	background: linear-gradient(135deg, #991b1b, #f87171) !important;
+}
+/* ==================== PRIVATE MODAL ==================== */
+.private-modal-overlay {
+	position: fixed; inset: 0; z-index: 12000;
+	display: flex; align-items: center; justify-content: center;
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(16px) saturate(1.2);
+	opacity: 0; pointer-events: none;
+	transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.private-modal-overlay.open { opacity: 1; pointer-events: all; }
+.private-modal {
+	position: relative; overflow: hidden;
+	width: 400px; max-width: 92vw; max-height: 85vh;
+	background: var(--ac-bg-panel, #fff);
+	border: 1px solid rgba(220, 38, 38, 0.18);
+	border-radius: 18px;
+	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.06);
+	transform: translateY(24px) scale(0.96);
+	opacity: 0;
+	transition: transform 0.4s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.35s ease, box-shadow 0.4s ease;
+}
+.private-modal-overlay.open .private-modal {
+	transform: translateY(0) scale(1);
+	opacity: 1;
+	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+.private-modal-header {
+	display: flex; align-items: center; gap: 1rem;
+	padding: 1.3rem 1.5rem 1rem;
+	position: relative; z-index: 1;
+}
+.private-modal-icon {
+	font-size: 2.1rem; color: #dc2626;
+	background: rgba(220, 38, 38, 0.08);
+	border-radius: 50%; padding: 0.5em;
+	display: flex; align-items: center; justify-content: center;
+}
+.private-modal-header h2 {
+	font-size: 1.3rem; margin: 0; color: #dc2626;
+}
+.private-modal-body {
+	padding: 0 1.5rem 1.2rem;
+}
+.private-modal-body p {
+	margin-bottom: 1.1em; color: #444; font-size: 1.05em;
+}
+.private-modal-body label {
+	display: block; margin-bottom: 0.4em; font-weight: 600;
+}
+.private-modal-body input[type="password"] {
+	width: 100%; padding: 0.5em 0.8em; border-radius: 6px;
+	border: 1px solid #ddd; font-size: 1em; margin-bottom: 0.7em;
+}
+.private-modal-submit {
+	background: linear-gradient(135deg, #dc2626, #f87171);
+	color: #fff; border: none; border-radius: 7px;
+	padding: 0.55em 1.2em; font-size: 1em; font-weight: 600;
+	cursor: pointer; transition: background 0.2s;
+}
+.private-modal-submit:hover {
+	background: linear-gradient(135deg, #b91c1c, #ef4444);
+}
+.private-modal-close {
+	position: absolute; top: 10px; right: 16px;
+	background: none; border: none; color: #888;
+	font-size: 1.7em; cursor: pointer; z-index: 2;
+	transition: color 0.2s;
+}
+.private-modal-close:hover { color: #dc2626; }
+
+@media (max-width: 600px) {
+	.private-modal { width: 98vw; border-radius: 10px; }
+}
 /*
    E-Labs page: apps-grid, app-card. Section intro is in utilities.css.
    Breakpoints: mobile ≤736px, tablet 737–980px, desktop ≥981px.

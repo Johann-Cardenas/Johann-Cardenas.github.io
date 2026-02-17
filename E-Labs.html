@@ -41,6 +41,27 @@
 					<div id="nav-placeholder"></div>
 				</section>
 
+<!-- PRIVATE APP PASSWORD MODAL -->
+<div class="private-modal-overlay" id="private-modal-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+	<div class="private-modal">
+		<div class="private-modal-header">
+			<div class="private-modal-icon"><i class="fas fa-lock"></i></div>
+			<h2>Restricted Access</h2>
+		</div>
+		<div class="private-modal-body">
+			<p>These tools are for internal use only and authorization is required upon access.</p>
+			<form id="private-modal-form" autocomplete="off">
+				<label for="private-modal-password">Password:</label>
+				<input type="password" id="private-modal-password" name="private-modal-password" required autocomplete="off" />
+				<input type="hidden" id="private-modal-app" name="private-modal-app" />
+				<div class="private-modal-error" id="private-modal-error" style="display:none;color:#dc2626;margin-top:0.5em;font-size:0.95em;"></div>
+				<button type="submit" class="private-modal-submit">Access App</button>
+			</form>
+		</div>
+		<button class="private-modal-close" id="private-modal-close" aria-label="Close">&times;</button>
+	</div>
+</div>
+
 			<!-- Main -->
 				<section id="main">
 					<div class="container">
@@ -80,7 +101,7 @@
 											<span class="tag">Stress Analysis</span>
 											<span class="tag">Interactive</span>
 										</div>
-										<a class="launch-btn" style="pointer-events:none;opacity:0.6;cursor:not-allowed;">
+										<a href="#" class="launch-btn private-launch" data-app="aircrafter">
 											<i class="fas fa-rocket"></i> Launch App
 										</a>
 									</div>
@@ -131,7 +152,7 @@
 											<span class="tag">Stress-Strain</span>
 											<span class="tag">Interactive</span>
 										</div>
-										<a class="launch-btn" style="pointer-events:none;opacity:0.6;cursor:not-allowed;">
+										<a href="#" class="launch-btn private-launch" data-app="asphera">
 											<i class="fas fa-rocket"></i> Launch App
 										</a>
 									</div>
