@@ -57,8 +57,13 @@
 	letter-spacing: 0.5px;
 }
 
-.app-card .status-badge.coming-soon {
-	background: rgba(255, 152, 0, 0.9);
+
+.app-card .status-badge.private {
+	background: rgba(220, 38, 38, 0.92); /* reddish */
+}
+
+.app-card .status-badge.public {
+	background: rgba(24, 169, 168, 0.9); /* keep original */
 }
 
 .app-card .content {
@@ -146,9 +151,16 @@
 	color: #888;
 }
 
-[data-theme="dark"] .app-card .status-badge.coming-soon {
-	background: rgba(255, 170, 50, 0.95);
-	color: #1a1a1a;
+
+[data-theme="dark"] .app-card .status-badge.private {
+	background: rgba(239, 68, 68, 0.95); /* deeper red */
+	color: #fff;
+	font-weight: 700;
+}
+
+[data-theme="dark"] .app-card .status-badge.public {
+	background: rgba(24, 169, 168, 0.9);
+	color: #fff;
 	font-weight: 700;
 }
 
