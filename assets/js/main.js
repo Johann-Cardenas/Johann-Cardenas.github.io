@@ -198,61 +198,6 @@
 		});
 	}
 
-// ===== PRIVATE APP MODAL LOGIC =====
-$(function() {
-	var $privateOverlay = $('#private-modal-overlay');
-	var $privateModal = $privateOverlay.find('.private-modal');
-	var $privateForm = $('#private-modal-form');
-	var $privatePassword = $('#private-modal-password');
-	var $privateApp = $('#private-modal-app');
-	var $privateError = $('#private-modal-error');
-	var $privateClose = $('#private-modal-close');
-	var appLinks = {
-		aircrafter: 'e-labs/aircrafter/index.html',
-		asphera: 'e-labs/asphera/index.html'
-	};
-	var PASSWORD = 'LIVEAULIMA';
-
-	// Open modal on Launch click
-	$('.launch-btn[data-app]').on('click', function(e) {
-		e.preventDefault();
-		var app = $(this).data('app');
-		$privateApp.val(app);
-		$privatePassword.val('');
-		$privateError.hide();
-		$privateOverlay.addClass('open').attr('aria-hidden', 'false');
-		$privatePassword.focus();
-	});
-
-	// Close modal
-	function closePrivateModal() {
-		$privateOverlay.removeClass('open').attr('aria-hidden', 'true');
-		$privatePassword.val('');
-		$privateError.hide();
-	}
-	$privateClose.on('click', closePrivateModal);
-	$privateOverlay.on('click', function(e) {
-		if (e.target === this) closePrivateModal();
-	});
-	$(document).on('keydown', function(e) {
-		if ($privateOverlay.hasClass('open') && e.key === 'Escape') closePrivateModal();
-	});
-
-	// Handle form submit
-	$privateForm.on('submit', function(e) {
-		e.preventDefault();
-		var input = $privatePassword.val();
-		var app = $privateApp.val();
-		if (input === PASSWORD) {
-			closePrivateModal();
-			if (appLinks[app]) {
-				window.location.href = appLinks[app];
-			}
-		} else {
-			$privateError.text('Incorrect password. Please try again.').show();
-			$privatePassword.val('').focus();
-		}
-	});
-});
+// Password modal logic removed: Aircrafter and Asphera are now direct access.
 
 })(jQuery);

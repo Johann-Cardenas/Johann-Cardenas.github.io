@@ -189,6 +189,7 @@
 	font-size: 0.75rem;
 }
 
+/* Default Launch App button (teal-green) */
 .app-card .launch-btn {
 	display: inline-flex;
 	align-items: center;
@@ -206,6 +207,13 @@
 	text-decoration: none;
 }
 
+/* Aircrafter & Asphera: override to red gradient */
+.app-card.aircrafter .launch-btn,
+.app-card.asphera .launch-btn,
+.app-card .launch-btn.disabled {
+	background: linear-gradient(135deg, #e53935, #b71c1c);
+}
+
 .app-card .launch-btn:hover {
 	background: linear-gradient(135deg, #0d7377, #18a9a8);
 	transform: translateY(-2px);
@@ -213,7 +221,7 @@
 }
 
 .app-card .launch-btn.disabled {
-	background: #ccc;
+	background: linear-gradient(135deg, #e53935, #b71c1c);
 	cursor: not-allowed;
 	pointer-events: none;
 }

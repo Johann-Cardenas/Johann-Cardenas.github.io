@@ -1,3 +1,99 @@
+/* Info icon and tooltip for disabled ML project card */
+.project-info-icon {
+	position: absolute;
+	top: 0.85em;
+	left: 0.85em;
+	z-index: 3;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	color: #fff;
+	background: linear-gradient(135deg, #b91d3f 60%, #888 100%);
+	border-radius: 50%;
+	width: 2.1em;
+	height: 2.1em;
+	justify-content: center;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+	font-size: 1.18em;
+	transition: background 0.2s, color 0.2s;
+}
+.project-info-icon:hover,
+.project-info-icon:focus {
+	background: linear-gradient(135deg, #d52349 60%, #b91d3f 100%);
+	color: #fff;
+}
+.project-info-icon i {
+	pointer-events: none;
+}
+.project-info-tooltip {
+	display: none;
+	position: absolute;
+	top: 2.5em;
+	left: 0;
+	min-width: 220px;
+	max-width: 320px;
+	background: rgba(30,30,30,0.97);
+	color: #fff;
+	font-size: 0.68em;
+	line-height: 1.15;
+	font-weight: 400;
+	padding: 0.55em 0.7em;
+	border-radius: 0.7em;
+	box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+	white-space: normal;
+	z-index: 10;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.18s;
+}
+.project-info-icon:hover .project-info-tooltip,
+.project-info-icon:focus .project-info-tooltip {
+	display: block;
+	opacity: 1;
+	pointer-events: auto;
+}
+/* Disabled Learn More button for ML-Based Prediction Models project */
+.project-read-btn-disabled {
+	background: linear-gradient(90deg, #b91d3f 60%, #888 100%);
+	color: #fff !important;
+	cursor: not-allowed !important;
+	pointer-events: none;
+	opacity: 0.7;
+	box-shadow: none;
+	border: none;
+	text-decoration: line-through;
+	filter: grayscale(0.2);
+}
+/* Project status tag styles */
+
+.project-card-image {
+	position: relative;
+}
+.project-status-tag {
+	position: absolute;
+	top: 0.85em;
+	right: 0.85em;
+	z-index: 2;
+	display: inline-block;
+	padding: 0.22em 0.95em;
+	font-size: 0.92em;
+	font-weight: 700;
+	border-radius: 1em;
+	letter-spacing: 0.02em;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+	background: #eee;
+	color: #444;
+	text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+	user-select: none;
+}
+.project-status-active {
+	background: linear-gradient(90deg, #ffe066 60%, #ffd700 100%);
+	color: #7a5c00;
+}
+.project-status-completed {
+	background: linear-gradient(90deg, #18a9a8 60%, #0d7377 100%);
+	color: #fff;
+}
 /*
    Shared card and grid styles for Blog and Projects (listing + cards in entry pages).
    Classes: blog-grid, project-grid | blog-card-modern, project-card-modern | blog-read-btn, project-read-btn

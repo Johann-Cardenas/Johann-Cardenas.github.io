@@ -8,7 +8,8 @@
       "url": "projects/ACRP_FEM.html",
       "excerpt": "This ACRP-sponsored project aimed to suplement the existing ACR-PCR 5%-10% rule by developing a preliminary mechanistic framework where incremental structural damage cause by overload departures could be translated into a reliable allowance policy.",
       "pis": [],
-      "advisor": "Imad L. Al-Qadi"
+      "advisor": "Imad L. Al-Qadi",
+      "status": "Active"
     },
     {
       "id": "ev-trucks",
@@ -18,7 +19,8 @@
       "url": "projects/EV_Trucks.html",
       "excerpt": "This IDOT project aimed to assess the impact of heavy-duty electric trucks on flexible pavements, focusing on the effect of higher wheel torque levels delivered by electric engines. Potential changes in IDOT pavement design guidelines were recommended.",
       "pis": ["Angeli Jayme", "Jaime Hernandez"],
-      "advisor": "Imad L. Al-Qadi"
+      "advisor": "Imad L. Al-Qadi",
+      "status": "Completed"
     },
     {
       "id": "faa-data",
@@ -28,7 +30,8 @@
       "url": "projects/FAA_Data.html",
       "excerpt": "This FAA project focused on combining field and synthetic data to develop and calibrate generalized prediction models for airfield pavement analysis, using advanced FEM modeling and physics-informed Machine Learning algorithms.",
       "pis": ["Imad L. Al-Qadi"],
-      "advisor": null
+      "advisor": null,
+      "status": "Completed"
     },
     {
       "id": "ms-thesis",
@@ -38,7 +41,8 @@
       "url": "projects/MS_Thesis.html",
       "excerpt": "MS Thesis project. Building on the work carried out by former ICT researchers, a reviewed framework to incoporate roughness-induced Dynamic Wheel Loading on pavement analysis was developed.",
       "pis": [],
-      "advisor": null
+      "advisor": null,
+      "status": "Completed"
     }
   ]
 }
