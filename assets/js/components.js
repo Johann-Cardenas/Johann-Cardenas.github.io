@@ -89,20 +89,8 @@
                 html += '</div>';
                 html += '<div class="nav-panel-subs">';
                 item.children.forEach(function(child) {
-                    // Disable links for AirCrafter, Asphera, ML-Based Models, and ME Overload Permitting
-                    const disabledLinks = [
-                        'e-labs/aircrafter/index.html',
-                        'e-labs/asphera/index.html',
-                        'projects/FAA_Data.html',
-                        'projects/ACRP_FEM.html'
-                    ];
-                    if (disabledLinks.includes(child.url)) {
-                        html += '<a class="link depth-1 nav-link-disabled" href="#" tabindex="-1" aria-disabled="true" onclick="return false;">' +
-                            '<span class="indent-1"></span>' + child.name + '</a>';
-                    } else {
-                        html += '<a class="link depth-1" href="' + basePath + child.url + '">' +
-                            '<span class="indent-1"></span>' + child.name + '</a>';
-                    }
+                    html += '<a class="link depth-1" href="' + basePath + child.url + '">' +
+                        '<span class="indent-1"></span>' + child.name + '</a>';
                 });
                 html += '</div></div>';
             } else {
