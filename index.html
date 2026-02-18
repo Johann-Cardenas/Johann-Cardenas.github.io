@@ -764,7 +764,7 @@
 						<section id="banner">
 							<header>
 								<!--<h2>Johann J Cárdenas</h2>
-								<!--<p>Civil/Transportation Engineer, Science Enthusiast</p>-->
+								<p>Civil/Transportation Engineer, Science Enthusiast</p>-->
 							</header>
 						</section>
 
@@ -782,7 +782,80 @@
 
 				<!-- About Me Section  -->
 				<!-- About Me Section Placeholder: included from about-me.html -->
-				<div id="about-me-placeholder"></div>
+				<div class="col-12">
+					<div id="about-me-placeholder"></div>
+				</div>
+
+				<!-- Research Metrics Section -->
+				<div class="col-12">
+					<section class="section-spaced">
+						<header class="major">
+							<h2>Research Metrics</h2>
+						</header>
+						<div class="metrics-band">
+							<div class="metrics-grid">
+								<div class="metric-card animate-pop-in">
+									<div class="metric-icon"><i class="fas fa-quote-right"></i></div>
+									<div class="metric-value counter" data-target="27">0</div>
+									<div class="metric-label">Citations</div>
+								</div>
+								<div class="metric-card animate-pop-in" style="animation-delay: 0.1s;">
+									<div class="metric-icon"><i class="fas fa-chart-line"></i></div>
+									<div class="metric-value counter" data-target="4">0</div>
+									<div class="metric-label">h-index</div>
+								</div>
+								<div class="metric-card animate-pop-in" style="animation-delay: 0.2s;">
+									<div class="metric-icon"><i class="fas fa-list-ol"></i></div>
+									<div class="metric-value counter" data-target="1">0</div>
+									<div class="metric-label">i10-index</div>
+								</div>
+								<div class="metric-card animate-pop-in" style="animation-delay: 0.3s;">
+									<div class="metric-icon"><i class="fas fa-file-alt"></i></div>
+									<div class="metric-value counter" data-target="10">0</div>
+									<div class="metric-label">Publications</div>
+								</div>
+							</div>
+							<div class="metrics-footer">
+								<p class="metrics-source">
+									<i class="fab fa-google"></i> Metrics retrieved from <strong>Google Scholar</strong> are constantly updated. <a href="https://scholar.google.com/citations?user=yBNtQBoAAAAJ&hl=en" target="_blank" class="scholar-link-subtle">See profile</a>.
+								</p>
+							</div>
+						</div>
+					</section>
+				</div>
+
+				<!-- Software Stack Section -->
+				<div class="col-12">
+					<section class="section-spaced">
+						<header class="major">
+							<h2>Software Stack</h2>
+						</header>
+						<div class="stack-container animate-fade-in">
+							<div class="stack-bar">
+								<div class="stack-segment" data-lang="js" style="--final-width: 51.9%; background-color: #18a9a8; width: 51.9%;" title="JavaScript 51.9%"></div>
+								<div class="stack-segment" data-lang="fluent" style="--final-width: 28.4%; background-color: #0369a1; width: 28.4%;" title="Fluent 28.4%"></div>
+								<div class="stack-segment" data-lang="html" style="--final-width: 12.9%; background-color: #2dd4bf; width: 12.9%;" title="HTML 12.9%"></div>
+								<div class="stack-segment" data-lang="css" style="--final-width: 5.4%; background-color: #6366f1; width: 5.4%;" title="CSS 5.4%"></div>
+								<div class="stack-segment" data-lang="python" style="--final-width: 0.9%; background-color: #0f172a; width: 0.9%;" title="Python 0.9%"></div>
+								<div class="stack-segment" data-lang="scss" style="--final-width: 0.55%; background-color: #10b981; width: 0.55%;" title="SCSS 0.55%"></div>
+							</div>
+							<div class="stack-legend">
+								<div class="stack-item" data-lang="js"><span class="stack-dot" style="background-color: #18a9a8;"></span> JavaScript <span class="stack-percent">51.9%</span></div>
+								<div class="stack-item" data-lang="fluent"><span class="stack-dot" style="background-color: #0369a1;"></span> Fluent <span class="stack-percent">28.4%</span></div>
+								<div class="stack-item" data-lang="html"><span class="stack-dot" style="background-color: #2dd4bf;"></span> HTML <span class="stack-percent">12.9%</span></div>
+								<div class="stack-item" data-lang="css"><span class="stack-dot" style="background-color: #6366f1;"></span> CSS <span class="stack-percent">5.4%</span></div>
+								<div class="stack-item" data-lang="python"><span class="stack-dot" style="background-color: #0f172a;"></span> Python <span class="stack-percent">0.9%</span></div>
+								<div class="stack-item" data-lang="scss"><span class="stack-dot" style="background-color: #10b981;"></span> SCSS <span class="stack-percent">0.55%</span></div>
+							</div>
+							<div class="stack-description-box">
+								<p class="stack-description-text" id="stack-description">Hover over a programming language to see its role in this website.</p>
+							</div>
+							<div class="stack-footer">
+								<p class="stack-text"><i class="fab fa-github"></i> This is a <strong>GitHub Pages</strong> static website.</p>
+							</div>
+						</div>
+					</section>
+				</div>
 
 							<div class="col-12">
 
@@ -833,6 +906,71 @@
 			<script src="assets/js/util.js"></script>
 			<script src="assets/js/main.js"></script>
 			<script src="assets/js/theme-toggle.js"></script>
+			<script>
+				// Animation for counters in Research Metrics section
+				document.addEventListener('DOMContentLoaded', function() {
+					const counters = document.querySelectorAll('.counter');
+					const speed = 200;
+
+					const animateCounter = (counter) => {
+						const target = +counter.getAttribute('data-target');
+						const count = +counter.innerText;
+						const inc = target / speed;
+
+						if (count < target) {
+							counter.innerText = Math.ceil(count + inc);
+							setTimeout(() => animateCounter(counter), 1);
+						} else {
+							counter.innerText = target;
+						}
+					};
+
+					const observerOptions = {
+						threshold: 0.5
+					};
+
+					const observer = new IntersectionObserver((entries, observer) => {
+						entries.forEach(entry => {
+							if (entry.isIntersecting) {
+								animateCounter(entry.target);
+								observer.unobserve(entry.target);
+							}
+						});
+					}, observerOptions);
+
+					counters.forEach(counter => {
+						observer.observe(counter);
+					});
+
+					// Interactive Software Stack Descriptions
+					const stackDesc = document.getElementById('stack-description');
+					const stackElements = document.querySelectorAll('.stack-segment, .stack-item');
+					const defaultText = "Hover over a language to see its role in this website.";
+					
+					const descriptions = {
+						'js': '<strong>JavaScript:</strong> Powers the interactive 3D globe, dynamic component loading (navigation/footer), and smooth UI animations across the site.',
+						'fluent': '<strong>Fluent:</strong> Utilized within the integrated PDF viewer system to handle localized UI elements and complex document interactions.',
+						'html': '<strong>HTML:</strong> Provides the structural foundation for all pages and modular components, ensuring semantic and accessible content.',
+						'css': '<strong>CSS:</strong> Manages the modern visual identity, including the responsive grid system and the seamless Light/Dark theme transitions.',
+						'python': '<strong>Python:</strong> Drives the backend scientific tools for Abaqus ODB extraction, material data fitting, and automated research workflows.',
+						'scss': '<strong>SCSS:</strong> The source styling language used to generate optimized, maintainable, and modular CSS for the entire portfolio.'
+					};
+
+					stackElements.forEach(el => {
+						el.addEventListener('mouseenter', () => {
+							const lang = el.getAttribute('data-lang');
+							if (descriptions[lang]) {
+								stackDesc.innerHTML = descriptions[lang];
+								stackDesc.classList.add('active');
+							}
+						});
+						el.addEventListener('mouseleave', () => {
+							stackDesc.innerHTML = defaultText;
+							stackDesc.classList.remove('active');
+						});
+					});
+				});
+			</script>
 
 	</body>
 		<!-- Use local versions of three.min.js and globe.gl.min.js -->
