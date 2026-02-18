@@ -799,17 +799,17 @@
 									<div class="metric-value counter" data-target="27">0</div>
 									<div class="metric-label">Citations</div>
 								</div>
-								<div class="metric-card animate-pop-in" style="animation-delay: 0.05s;">
+								<div class="metric-card animate-pop-in">
 									<div class="metric-icon"><i class="fas fa-chart-line"></i></div>
 									<div class="metric-value counter" data-target="4">0</div>
 									<div class="metric-label">h-index</div>
 								</div>
-								<div class="metric-card animate-pop-in" style="animation-delay: 0.1s;">
+								<div class="metric-card animate-pop-in">
 									<div class="metric-icon"><i class="fas fa-list-ol"></i></div>
 									<div class="metric-value counter" data-target="1">0</div>
 									<div class="metric-label">i10-index</div>
 								</div>
-								<div class="metric-card animate-pop-in" style="animation-delay: 0.15s;">
+								<div class="metric-card animate-pop-in">
 									<div class="metric-icon"><i class="fas fa-file-alt"></i></div>
 									<div class="metric-value counter" data-target="10">0</div>
 									<div class="metric-label">Publications</div>
@@ -836,7 +836,7 @@
 								<div class="stack-segment" data-lang="fluent" style="--final-width: 28.4%; background-color: #0369a1; width: 28.4%;" title="Fluent 28.4%"></div>
 								<div class="stack-segment" data-lang="html" style="--final-width: 12.9%; background-color: #2dd4bf; width: 12.9%;" title="HTML 12.9%"></div>
 								<div class="stack-segment" data-lang="css" style="--final-width: 5.4%; background-color: #6366f1; width: 5.4%;" title="CSS 5.4%"></div>
-								<div class="stack-segment" data-lang="python" style="--final-width: 0.9%; background-color: #0f172a; width: 0.9%;" title="Python 0.9%"></div>
+								<div class="stack-segment" data-lang="python" style="--final-width: 0.9%; background-color: #f59e0b; width: 0.9%;" title="Python 0.9%"></div>
 								<div class="stack-segment" data-lang="scss" style="--final-width: 0.55%; background-color: #10b981; width: 0.55%;" title="SCSS 0.55%"></div>
 							</div>
 							<div class="stack-legend">
@@ -844,11 +844,11 @@
 								<div class="stack-item" data-lang="fluent"><span class="stack-dot" style="background-color: #0369a1;"></span> Fluent <span class="stack-percent">28.4%</span></div>
 								<div class="stack-item" data-lang="html"><span class="stack-dot" style="background-color: #2dd4bf;"></span> HTML <span class="stack-percent">12.9%</span></div>
 								<div class="stack-item" data-lang="css"><span class="stack-dot" style="background-color: #6366f1;"></span> CSS <span class="stack-percent">5.4%</span></div>
-								<div class="stack-item" data-lang="python"><span class="stack-dot" style="background-color: #0f172a;"></span> Python <span class="stack-percent">0.9%</span></div>
+								<div class="stack-item" data-lang="python"><span class="stack-dot" style="background-color: #f59e0b;"></span> Python <span class="stack-percent">0.9%</span></div>
 								<div class="stack-item" data-lang="scss"><span class="stack-dot" style="background-color: #10b981;"></span> SCSS <span class="stack-percent">0.55%</span></div>
 							</div>
 							<div class="stack-description-box">
-								<p class="stack-description-text" id="stack-description">Hover over a programming language to see its role in this website.</p>
+								<p class="stack-description-text" id="stack-description">Hover or click on a language to see its role in this website.</p>
 							</div>
 							<div class="stack-footer">
 								<p class="stack-text"><i class="fab fa-github"></i> This is a <strong>GitHub Pages</strong> static website.</p>
@@ -910,7 +910,7 @@
 				// Animation for counters in Research Metrics section
 				document.addEventListener('DOMContentLoaded', function() {
 					const counters = document.querySelectorAll('.counter');
-					const speed = 100;
+					const speed = 50;
 
 					const animateCounter = (counter) => {
 						const target = +counter.getAttribute('data-target');
@@ -927,7 +927,7 @@
 
 					const observerOptions = {
 						threshold: 0,
-						rootMargin: "0px 0px 400px 0px"
+						rootMargin: "0px 0px 1000px 0px"
 					};
 
 					const observer = new IntersectionObserver((entries, observer) => {
@@ -943,10 +943,12 @@
 						observer.observe(counter);
 					});
 
-					// Interactive Software Stack Descriptions
+					// Interactive Software Stack Descriptions & Selection
 					const stackDesc = document.getElementById('stack-description');
 					const stackElements = document.querySelectorAll('.stack-segment, .stack-item');
-					const defaultText = "Hover over a language to see its role in this website.";
+					const stackContainer = document.querySelector('.stack-container');
+					const defaultText = "Hover or click on a language to see its role in this website.";
+					let selectedLang = null;
 					
 					const descriptions = {
 						'js': '<strong>JavaScript:</strong> Powers the interactive 3D globe, dynamic component loading (navigation/footer), and smooth UI animations across the site.',
@@ -957,18 +959,63 @@
 						'scss': '<strong>SCSS:</strong> The source styling language used to generate optimized, maintainable, and modular CSS for the entire portfolio.'
 					};
 
+					const updateSelection = (lang) => {
+						if (selectedLang === lang) {
+							// Deselect
+							selectedLang = null;
+							stackElements.forEach(el => {
+								el.classList.remove('active', 'dimmed');
+							});
+							stackDesc.innerHTML = defaultText;
+							stackDesc.classList.remove('active');
+						} else {
+							// Select new
+							selectedLang = lang;
+							stackElements.forEach(el => {
+								const elLang = el.getAttribute('data-lang');
+								if (elLang === lang) {
+									el.classList.add('active');
+									el.classList.remove('dimmed');
+								} else {
+									el.classList.add('dimmed');
+									el.classList.remove('active');
+								}
+							});
+							if (descriptions[lang]) {
+								stackDesc.innerHTML = descriptions[lang];
+								stackDesc.classList.add('active');
+							}
+						}
+					};
+
 					stackElements.forEach(el => {
 						el.addEventListener('mouseenter', () => {
+							if (selectedLang) return; // Don't change on hover if something is selected
 							const lang = el.getAttribute('data-lang');
 							if (descriptions[lang]) {
 								stackDesc.innerHTML = descriptions[lang];
 								stackDesc.classList.add('active');
 							}
 						});
+
 						el.addEventListener('mouseleave', () => {
+							if (selectedLang) return; // Don't change on hover if something is selected
 							stackDesc.innerHTML = defaultText;
 							stackDesc.classList.remove('active');
 						});
+
+						el.addEventListener('click', (e) => {
+							e.stopPropagation();
+							const lang = el.getAttribute('data-lang');
+							updateSelection(lang);
+						});
+					});
+
+					// Clicking outside the segments/items clears selection
+					document.addEventListener('click', (e) => {
+						if (selectedLang && !stackContainer.contains(e.target)) {
+							updateSelection(selectedLang); // This will toggle it off
+						}
 					});
 				});
 			</script>

@@ -25,8 +25,9 @@
 	--accent-primary: #18a9a8;
 	--accent-primary-hover: #14908f;
 	--accent-primary-glow: rgba(24, 169, 168, 0.3);
-	--accent-secondary: #d52349;
-	--accent-secondary-hover: #b91d3f;
+	--accent-secondary: #6366f1;
+	--accent-secondary-hover: #4f46e5;
+	--accent-secondary-glow: rgba(99, 102, 241, 0.3);
 	
 	/* Theme transition duration */
 	--theme-transition: 0.35s;
@@ -127,7 +128,7 @@
 
 .metric-card:hover {
 	transform: translateY(-12px);
-	box-shadow: var(--shadow-xl);
+	box-shadow: 0 15px 30px var(--accent-secondary-glow);
 	border-bottom-color: var(--accent-secondary);
 	background: var(--bg-box-alt);
 }
@@ -151,7 +152,7 @@
 	margin-bottom: 0.1em;
 	line-height: 1.1;
 	font-family: 'Source Sans Pro', sans-serif;
-	background: linear-gradient(45deg, var(--text-primary), var(--accent-primary));
+	background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 }
@@ -281,7 +282,7 @@
 	transition: opacity 0.3s;
 }
 
-.stack-segment:hover {
+.stack-segment:hover, .stack-segment.active {
 	filter: brightness(1.15);
 	cursor: pointer;
 	z-index: 2;
@@ -289,8 +290,14 @@
 	box-shadow: 0 0 15px rgba(0,0,0,0.2);
 }
 
-.stack-segment:hover::after {
+.stack-segment:hover::after, .stack-segment.active::after {
 	opacity: 1;
+}
+
+.stack-segment.dimmed {
+	opacity: 0.4;
+	filter: grayscale(0.5) brightness(0.8);
+	transform: scaleY(0.9);
 }
 
 .stack-legend {
@@ -311,13 +318,25 @@
 	background: var(--bg-box-alt);
 	transition: all 0.3s ease;
 	border: 1px solid transparent;
+	cursor: pointer;
 }
 
-.stack-item:hover {
+.stack-item:hover, .stack-item.active {
 	background: var(--bg-box);
-	border-color: var(--border-light);
+	border-color: var(--accent-primary);
 	transform: translateY(-3px);
 	box-shadow: var(--shadow-sm);
+}
+
+.stack-item.active {
+	background: var(--bg-box);
+	border-color: var(--accent-primary);
+	box-shadow: 0 0 10px rgba(24, 169, 168, 0.3);
+}
+
+.stack-item.dimmed {
+	opacity: 0.5;
+	transform: scale(0.95);
 }
 
 .stack-dot {
@@ -356,7 +375,7 @@
 .animate-pop-in {
 	opacity: 0;
 	transform: translateY(20px) scale(0.9);
-	animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+	animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 @keyframes popIn {
@@ -369,7 +388,7 @@
 .animate-fade-in {
 	opacity: 0;
 	transform: translateY(15px);
-	animation: fadeIn 0.8s ease-out forwards;
+	animation: fadeIn 0.4s ease-out forwards;
 }
 
 @keyframes fadeIn {
@@ -381,7 +400,7 @@
 
 /* Progress bar animation */
 .stack-segment {
-	animation: growWidth 1.2s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+	animation: growWidth 0.6s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
 }
 
 @keyframes growWidth {
@@ -2349,7 +2368,7 @@ input, select, textarea {
 			input[type="reset"].alt:hover,
 			button.alt:hover,
 			.button.alt:hover {
-				background: #b91d3f;
+				background: var(--accent-secondary-hover);
 				box-shadow: var(--shadow-md);
 				transform: translateY(-1px);
 			}
@@ -2359,7 +2378,7 @@ input, select, textarea {
 			input[type="reset"].alt:active,
 			button.alt:active,
 			.button.alt:active {
-				background: #9e1835;
+				background: var(--accent-secondary-hover);
 				box-shadow: var(--shadow-sm);
 				transform: translateY(0);
 			}
