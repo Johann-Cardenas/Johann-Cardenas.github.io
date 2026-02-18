@@ -24,15 +24,6 @@ The website is hosted on **GitHub Pages** and utilizes a modular, component-base
     *   **Custom Component Loader:** A bespoke `components.js` system that dynamically injects navigation, footers, and content fragments (from `data/*.json`) into pages to ensure DRY (*Don't Repeat Yourself*) principles.
 *   **Design:** Responsive grid system with theme-toggling capabilities (Light/Dark mode).
 
-### **Scientific Processing (Python)**
-A collection of scripts designed to interface with **Abaqus FEA** and process engineering data.
-
-*   **Runtime:** Python 3.8 or later.
-*   **Key Capabilities:**
-    *   **Abaqus ODB Extraction:** Automated extraction of nodal responses and simulation results from `.odb` files.
-    *   **Data Fitting:** Prony series fitting for viscoelastic material models and temperature gradient modeling.
-    *   **Scientific Visualization:** Matplotlib-based plotting for 2D/3D depth profiles and animations.
-
 ---
 
 ## 📂 Repository Structure
@@ -50,7 +41,7 @@ The repository is organized into clear functional domains:
 ├── projects/             # Project-specific detailed HTML pages
 ├── e-labs/               # Specialized interactive laboratory sub-modules
 ├── images/               # Optimized media for projects, news, and blog
-└── [Root Python Scripts] # Scientific tools (Extract_Responses.py, Plot_Main.py, etc.)
+
 ```
 
 ---
@@ -59,7 +50,6 @@ The repository is organized into clear functional domains:
 
 - [ ] **Headless CMS Integration:** Move JSON data to a headless CMS for easier content updates.
 - [ ] **PWA Support:** Implement Service Workers for offline access to publications and resume.
-- [ ] **Enhanced Visualization:** Migrate Python-based Matplotlib animations to interactive D3.js or Plotly.js charts directly on the website.
 - [ ] **Automated CI/CD:** Implement GitHub Actions to automate Sass compilation and ODB extraction testing.
 - [ ] **Search Functionality:** Add a client-side search engine (e.g., Lunr.js) for blog and projects.
 
