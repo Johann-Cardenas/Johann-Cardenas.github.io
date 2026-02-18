@@ -799,17 +799,17 @@
 									<div class="metric-value counter" data-target="27">0</div>
 									<div class="metric-label">Citations</div>
 								</div>
-								<div class="metric-card animate-pop-in" style="animation-delay: 0.1s;">
+								<div class="metric-card animate-pop-in" style="animation-delay: 0.05s;">
 									<div class="metric-icon"><i class="fas fa-chart-line"></i></div>
 									<div class="metric-value counter" data-target="4">0</div>
 									<div class="metric-label">h-index</div>
 								</div>
-								<div class="metric-card animate-pop-in" style="animation-delay: 0.2s;">
+								<div class="metric-card animate-pop-in" style="animation-delay: 0.1s;">
 									<div class="metric-icon"><i class="fas fa-list-ol"></i></div>
 									<div class="metric-value counter" data-target="1">0</div>
 									<div class="metric-label">i10-index</div>
 								</div>
-								<div class="metric-card animate-pop-in" style="animation-delay: 0.3s;">
+								<div class="metric-card animate-pop-in" style="animation-delay: 0.15s;">
 									<div class="metric-icon"><i class="fas fa-file-alt"></i></div>
 									<div class="metric-value counter" data-target="10">0</div>
 									<div class="metric-label">Publications</div>
@@ -910,7 +910,7 @@
 				// Animation for counters in Research Metrics section
 				document.addEventListener('DOMContentLoaded', function() {
 					const counters = document.querySelectorAll('.counter');
-					const speed = 200;
+					const speed = 100;
 
 					const animateCounter = (counter) => {
 						const target = +counter.getAttribute('data-target');
@@ -926,7 +926,8 @@
 					};
 
 					const observerOptions = {
-						threshold: 0.5
+						threshold: 0,
+						rootMargin: "0px 0px 400px 0px"
 					};
 
 					const observer = new IntersectionObserver((entries, observer) => {
