@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c4d64a90-6ca6-4b94-b66e-dec31468ca9e" name="Changes" comment="&lt;update&gt;: ReadmE.md file update">
-      <change beforePath="$PROJECT_DIR$/images/Foot_01.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/images/Side_01.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/images/Side_02.jpg" beforeDir="false" />
-    </list>
+    <list default="true" id="c4d64a90-6ca6-4b94-b66e-dec31468ca9e" name="Changes" comment="&lt;update&gt;: Thumbnail for Frontier" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -84,7 +80,7 @@
       <updated>1771445788578</updated>
       <workItem from="1771445791104" duration="405000" />
       <workItem from="1771446273157" duration="6035000" />
-      <workItem from="1771457842382" duration="4471000" />
+      <workItem from="1771457842382" duration="4805000" />
     </task>
     <task id="LOCAL-00001" summary="&lt;update&gt;: Using WebStorm">
       <option name="closed" value="true" />
@@ -142,7 +138,23 @@
       <option name="project" value="LOCAL" />
       <updated>1771467555889</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="&lt;update&gt;: Thumbnail for Frontier">
+      <option name="closed" value="true" />
+      <created>1771469533505</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1771469533505</updated>
+    </task>
+    <task id="LOCAL-00009" summary="&lt;update&gt;: Thumbnail for Frontier">
+      <option name="closed" value="true" />
+      <created>1771469559668</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1771469559668</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -156,6 +168,7 @@
     <MESSAGE value="&lt;update&gt;: Password modals updated" />
     <MESSAGE value="&lt;update&gt;: Color palette for Research Metrics and Software Stack sections." />
     <MESSAGE value="&lt;update&gt;: ReadmE.md file update" />
-    <option name="LAST_COMMIT_MESSAGE" value="&lt;update&gt;: ReadmE.md file update" />
+    <MESSAGE value="&lt;update&gt;: Thumbnail for Frontier" />
+    <option name="LAST_COMMIT_MESSAGE" value="&lt;update&gt;: Thumbnail for Frontier" />
   </component>
 </project>
