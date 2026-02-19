@@ -1,7 +1,6 @@
 # IDE Settings
 .idea/
 .vscode/
-.xml
 
 # Python Cache
 .mypy_cache/
@@ -11,8 +10,3 @@ __pycache__/
 # OS generated files
 Thumbs.db
 .DS_Store
-
-# Data files
-.txt
-.xlsx
-.csv
