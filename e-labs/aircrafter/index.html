@@ -1482,12 +1482,16 @@
                         <!-- RIGHT: Stats + Quick Results -->
                         <div class="config-right">
                             <div class="panel animate-in stagger-2" id="stats-panel" style="display:none;">
-                                <div class="panel-title"><i class="fas fa-tachometer-alt"></i> Quick Summary</div>
+                                <div class="panel-title">
+                                    <i class="fas fa-tachometer-alt"></i> Quick Summary
+                                    <i class="fas fa-info-circle" style="margin-left:0.5rem; font-size:0.85em; opacity:0.7; cursor:help;" title="Default values loaded from the FAARFIELD 2.1 aircraft library"></i>
+                                </div>
                                 <div class="inline-stats" id="inline-stats">
                                     <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-primary)"><i class="fas fa-plane"></i></span> <span class="ms-value" id="stat-aircraft">—</span></div>
                                     <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-secondary)"><i class="fas fa-weight-hanging"></i></span> <span class="ms-value" id="stat-load">—</span> <span class="ms-label">kN</span></div>
                                     <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-info)"><i class="fas fa-gauge-high"></i></span> <span class="ms-value" id="stat-pressure">—</span></div>
                                     <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-accent)"><i class="fas fa-ruler-horizontal"></i></span> <span class="ms-value" id="stat-length">—</span> <span class="ms-label">mm</span></div>
+                                    <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-highlight)"><i class="fas fa-arrows-left-right"></i></span> <span class="ms-value" id="stat-width">—</span> <span class="ms-label">mm</span></div>
                                     <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-success)"><i class="fas fa-layer-group"></i></span> <span class="ms-value" id="stat-ribs">—</span> <span class="ms-label">ribs</span></div>
                                     <div class="mini-stat" id="eq-stat"><span class="ms-icon" style="color:var(--ac-warning)"><i class="fas fa-scale-balanced"></i></span> <span class="ms-value" id="stat-eq">—</span></div>
                                 </div>
@@ -1766,6 +1770,7 @@
                 P: parseFloat(r['Load (N)']) || 0,
                 TiP: parseFloat(r['Tire Pressure (MPa)']) || 0,
                 l: parseFloat(r['Tire Contact Length (mm)']) || 0,
+                width: parseFloat(r['Tire Contact Width (mm)']) || 0,
                 bi_raw: String(r['Ribs (mm)'] || ''),
                 al_raw: String(r['Load Factor'] || ''),
                 sig_raw: String(r['Stress Factor'] || ''),
@@ -2001,6 +2006,7 @@
         document.getElementById('stat-load').textContent = (p.P / 1000).toFixed(1);
         document.getElementById('stat-pressure').textContent = p.TiP.toFixed(3) + ' MPa';
         document.getElementById('stat-length').textContent = p.l.toFixed(1);
+        document.getElementById('stat-width').textContent = currentRow.width ? currentRow.width.toFixed(1) : '—';
         document.getElementById('stat-ribs').textContent = p.bi.length;
     }
 
@@ -2018,12 +2024,14 @@
     function drawContactPatch() {
         const p = getCurrentParams();
         if (!p.bi.length) return;
+        const adv = getAdvancedParams();
         const svg = document.getElementById('contact-patch-svg');
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const textCol = isDark ? '#e2e8f0' : '#1e293b';
         const lineCol = isDark ? '#546a84' : '#6b7b8d';
         const dimCol = isDark ? '#a8b8cc' : '#506070';
         const bgCol = isDark ? 'rgba(15,23,42,0.8)' : 'rgba(255,255,255,0.95)';
+        const meshCol = isDark ? 'rgba(140,140,140,0.25)' : 'rgba(100,100,100,0.2)';
         const ribColors = [
             [14, 165, 233], [249, 115, 22], [16, 185, 129], [139, 92, 246],
             [239, 68, 68], [6, 182, 212], [245, 158, 11], [236, 72, 153]
@@ -2076,6 +2084,7 @@
 
         // Rib rectangles with gradient fills and grooves in between
         let cumY = 0;
+        const ribPositions = []; // Store rib start positions and heights for nnz partitions
         p.bi.forEach((w, i) => {
             const rh = w * scaleY;
             const c = ribColors[i % ribColors.length];
@@ -2087,6 +2096,8 @@
             if (rh > 12) {
                 html += `<line x1="${ox - 6}" y1="${oy + cumY}" x2="${ox}" y2="${oy + cumY}" stroke="${dimCol}" stroke-width="0.8"/>`;
             }
+            // Store rib position for mesh grid
+            ribPositions.push({ y: cumY, height: rh });
             cumY += rh;
 
             // Add groove after this rib (if not the last rib)
@@ -2101,6 +2112,23 @@
             }
         });
         html += `<line x1="${ox - 6}" y1="${oy + patchH}" x2="${ox}" y2="${oy + patchH}" stroke="${dimCol}" stroke-width="0.8"/>`;
+
+        // ==================== MESH GRID VISUALIZATION ====================
+        // Vertical lines (xn elements along length)
+        const xn = adv.xn || 10;
+        for (let i = 1; i < xn; i++) {
+            const xPos = ox + (patchW * i / xn);
+            html += `<line x1="${xPos}" y1="${oy}" x2="${xPos}" y2="${oy + patchH}" stroke="${meshCol}" stroke-width="0.8" stroke-dasharray="3 2"/>`;
+        }
+
+        // Horizontal lines (nnz partitions per rib)
+        const nnz = adv.nnz || 2;
+        ribPositions.forEach(rib => {
+            for (let i = 1; i < nnz; i++) {
+                const yPos = oy + rib.y + (rib.height * i / nnz);
+                html += `<line x1="${ox}" y1="${yPos}" x2="${ox + patchW}" y2="${yPos}" stroke="${meshCol}" stroke-width="0.8" stroke-dasharray="3 2"/>`;
+            }
+        });
 
         // Horizontal dimension arrow (contact length)
         const ay = oy + patchH + 35;
