@@ -1422,6 +1422,15 @@
                                         <tbody id="rib-table-body"></tbody>
                                     </table>
                                 </div>
+                                <div class="panel-title" style="margin-top:0.3rem; font-size:0.85rem;">
+                                    <i class="fas fa-grip-lines"></i> Groove Parameters
+                                </div>
+                                <div class="rib-table-container">
+                                    <table class="rib-table" id="groove-table">
+                                        <thead><tr id="groove-table-header"></tr></thead>
+                                        <tbody id="groove-table-body"></tbody>
+                                    </table>
+                                </div>
                                 <div class="advanced-toggle" id="adv-toggle">
                                     <i class="fas fa-chevron-right"></i> Advanced Settings
                                 </div>
@@ -1821,11 +1830,18 @@
         const al = parseList(currentRow.al_raw);
         const sig = parseList(currentRow.sig_raw);
 
+        // Initialize groove widths - default to 10mm for each groove
+        const numGrooves = bi.length - 1;
+        const gi = [];
+        for (let i = 0; i < numGrooves; i++) {
+            gi.push(10.0);
+        }
+
         defaultParams = {
             P: currentRow.P,
             TiP: Math.round(currentRow.TiP * 1000) / 1000,
             l: currentRow.l,
-            bi: [...bi], al: [...al], sigm_Tip: [...sig]
+            bi: [...bi], al: [...al], sigm_Tip: [...sig], gi: [...gi]
         };
 
         // Stage the loading steps with brief delays for visual feedback
@@ -1868,6 +1884,7 @@
         document.getElementById('input-TiP').value = p.TiP;
         document.getElementById('input-l').value = p.l;
         buildRibTable(p.bi, p.al, p.sigm_Tip);
+        buildGrooveTable(p.bi.length, p.gi);
         clearModifiedFlags();
     }
 
@@ -1875,11 +1892,12 @@
         const P = parseFloat(document.getElementById('input-P').value) || 0;
         const TiP = parseFloat(document.getElementById('input-TiP').value) || 0;
         const l = parseFloat(document.getElementById('input-l').value) || 0;
-        const bi = [], al = [], sigm_Tip = [];
+        const bi = [], al = [], sigm_Tip = [], gi = [];
         document.querySelectorAll('#rib-table .rib-bi').forEach(inp => bi.push(parseFloat(inp.value) || 0));
         document.querySelectorAll('#rib-table .rib-al').forEach(inp => al.push(parseFloat(inp.value) || 0));
         document.querySelectorAll('#rib-table .rib-sig').forEach(inp => sigm_Tip.push(parseFloat(inp.value) || 0));
-        return { P, TiP, l, bi, al, sigm_Tip };
+        document.querySelectorAll('#groove-table .groove-gi').forEach(inp => gi.push(parseFloat(inp.value) || 10.0));
+        return { P, TiP, l, bi, al, sigm_Tip, gi };
     }
 
     function getAdvancedParams() {
@@ -1919,9 +1937,37 @@
         });
     }
 
+    function buildGrooveTable(numRibs, gi = []) {
+        const numGrooves = numRibs - 1;
+        if (numGrooves <= 0) {
+            document.getElementById('groove-table').style.display = 'none';
+            return;
+        }
+        document.getElementById('groove-table').style.display = '';
+        const thead = document.getElementById('groove-table-header');
+        const tbody = document.getElementById('groove-table-body');
+        let hdr = '<th>Parameter</th>';
+        for (let i = 0; i < numGrooves; i++) hdr += `<th>Groove ${i + 1}</th>`;
+        thead.innerHTML = hdr;
+
+        // Initialize groove widths with default 10mm if not provided
+        const grooveVals = [];
+        for (let i = 0; i < numGrooves; i++) {
+            grooveVals.push(gi[i] !== undefined ? gi[i] : 10.0);
+        }
+
+        tbody.innerHTML = '';
+        let tr = `<td class="rib-header-cell">g<sub>i</sub> [mm]</td>`;
+        grooveVals.forEach(v => { tr += `<td><input type="number" class="groove-gi" value="${v}" step="any" /></td>`; });
+        const trEl = document.createElement('tr');
+        trEl.innerHTML = tr;
+        tbody.appendChild(trEl);
+    }
+
     function clearModifiedFlags() {
         document.querySelectorAll('.param-card').forEach(c => c.classList.remove('modified'));
         document.querySelectorAll('.rib-table td input').forEach(i => i.classList.remove('modified'));
+        document.querySelectorAll('#groove-table td input').forEach(i => i.classList.remove('modified'));
     }
 
     function checkModified() {
@@ -1940,6 +1986,10 @@
         });
         document.querySelectorAll('.rib-sig').forEach((inp, i) => {
             inp.classList.toggle('modified', Math.abs(parseFloat(inp.value) - defaultParams.sigm_Tip[i]) > 1e-9);
+        });
+        document.querySelectorAll('.groove-gi').forEach((inp, i) => {
+            const defaultVal = defaultParams.gi && defaultParams.gi[i] !== undefined ? defaultParams.gi[i] : 10.0;
+            inp.classList.toggle('modified', Math.abs(parseFloat(inp.value) - defaultVal) > 1e-9);
         });
     }
 
@@ -1979,7 +2029,11 @@
             [239, 68, 68], [6, 182, 212], [245, 158, 11], [236, 72, 153]
         ];
 
-        const totalW = p.bi.reduce((s, v) => s + v, 0);
+        // Get groove widths (default to 10mm if not present)
+        const gi = p.gi || [];
+        const numGrooves = p.bi.length - 1;
+
+        const totalW = p.bi.reduce((s, v) => s + v, 0) + gi.slice(0, numGrooves).reduce((s, v) => s + v, 0);
         const pad = 80; const patchW = 480; const patchH = 240;
         const scaleY = patchH / totalW;
         const ox = pad; const oy = pad - 10;
@@ -1999,6 +2053,13 @@
                 <stop offset="100%" stop-color="rgba(${c.join(',')},${(alpha * 0.5).toFixed(2)})"/>
             </linearGradient>`;
         });
+        // Groove gradient (grey)
+        const grooveGrey = isDark ? '120,120,120' : '160,160,160';
+        defs += `<linearGradient id="grooveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="rgba(${grooveGrey},0.3)"/>
+            <stop offset="50%" stop-color="rgba(${grooveGrey},0.5)"/>
+            <stop offset="100%" stop-color="rgba(${grooveGrey},0.3)"/>
+        </linearGradient>`;
         // Arrow markers
         defs += `
             <marker id="arrowR" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="${dimCol}"/></marker>
@@ -2013,7 +2074,7 @@
         // Outer patch border
         html += `<rect x="${ox}" y="${oy}" width="${patchW}" height="${patchH}" rx="10" ry="10" fill="none" stroke="${lineCol}" stroke-width="1.5" stroke-dasharray="6 4"/>`;
 
-        // Rib rectangles with gradient fills
+        // Rib rectangles with gradient fills and grooves in between
         let cumY = 0;
         p.bi.forEach((w, i) => {
             const rh = w * scaleY;
@@ -2027,6 +2088,17 @@
                 html += `<line x1="${ox - 6}" y1="${oy + cumY}" x2="${ox}" y2="${oy + cumY}" stroke="${dimCol}" stroke-width="0.8"/>`;
             }
             cumY += rh;
+
+            // Add groove after this rib (if not the last rib)
+            if (i < p.bi.length - 1) {
+                const grooveWidth = gi[i] || 10.0;
+                const gh = grooveWidth * scaleY;
+                html += `<rect x="${ox}" y="${oy + cumY}" width="${patchW}" height="${gh}" fill="url(#grooveGrad)" stroke="rgba(${grooveGrey},0.5)" stroke-width="0.5"/>`;
+                // Groove label (right side)
+                const grooveLabelY = oy + cumY + gh / 2 + 5;
+                html += `<text x="${ox + patchW + 14}" y="${grooveLabelY}" font-size="13" fill="${dimCol}" font-weight="600" font-style="italic">Groove ${i + 1} <tspan fill="${dimCol}" font-size="11"> · ${grooveWidth.toFixed(1)} mm</tspan></text>`;
+                cumY += gh;
+            }
         });
         html += `<line x1="${ox - 6}" y1="${oy + patchH}" x2="${ox}" y2="${oy + patchH}" stroke="${dimCol}" stroke-width="0.8"/>`;
 
