@@ -2423,17 +2423,20 @@ function bindControls() {
 
     // Animation (uses current view: longitudinal or transverse)
     const slider = document.getElementById('anim-slider');
+    const playBtn = document.getElementById('anim-play');
     const animForView = getAnimForView();
     if (animForView && animForView.frames) {
         slider.max = animForView.frames.length - 1;
         slider.value = 0;
+        // Enable play button now that data is loaded
+        playBtn.disabled = false;
     }
 
     slider.oninput = () => {
         renderAnimFrame(parseInt(slider.value));
     };
 
-    document.getElementById('anim-play').onclick = () => {
+    playBtn.onclick = () => {
         if (animPlaying) { stopAnimation(); return; }
         animPlaying = true;
         document.getElementById('anim-play-icon').className = 'fas fa-pause';
@@ -2493,14 +2496,35 @@ new MutationObserver(() => {
             var input = document.getElementById('password-input');
             var error = document.getElementById('password-error');
             var allowed = false;
+
+            // Click handler reference for removal later
+            var clickBlocker = function(e) {
+                if (!allowed && !modal.contains(e.target)) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+            };
+
+            // Keydown handler reference for removal later
+            var keyBlocker = function(e) {
+                if (!allowed && !modal.contains(document.activeElement)) {
+                    if (e.key !== 'Tab' && e.key !== 'Enter') e.preventDefault();
+                }
+            };
+
             function unlock() {
+                allowed = true;
+                // Remove event blockers IMMEDIATELY when unlocking starts
+                document.removeEventListener('click', clickBlocker, true);
+                document.removeEventListener('keydown', keyBlocker, true);
+
                 modal.classList.add('unlocking');
                 setTimeout(function() {
                     modal.style.display = 'none';
-                    allowed = true;
                     document.body.style.overflow = '';
                 }, 700);
             }
+
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
                 if (input.value === 'LIVEAULIMA') {
@@ -2518,18 +2542,11 @@ new MutationObserver(() => {
                 }
             });
             input.addEventListener('input', function() { error.style.display = 'none'; input.classList.remove('error'); });
+
             // Prevent navigation/interaction outside modal until unlocked
-            document.addEventListener('click', function(e) {
-                if (!allowed && !modal.contains(e.target)) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                }
-            }, true);
-            document.addEventListener('keydown', function(e) {
-                if (!allowed && !modal.contains(document.activeElement)) {
-                    if (e.key !== 'Tab' && e.key !== 'Enter') e.preventDefault();
-                }
-            }, true);
+            document.addEventListener('click', clickBlocker, true);
+            document.addEventListener('keydown', keyBlocker, true);
+
             // Autofocus input on load
             setTimeout(function() { input.focus(); }, 100);
         })();
