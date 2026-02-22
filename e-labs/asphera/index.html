@@ -863,7 +863,8 @@
             .top-row { grid-template-columns:1fr; }
             .profile-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
         }
-        @media (max-width:736px) {
+        @media (max-width:768px) {
+            .asphera-app { padding:0.5rem 0.75rem 1.5rem; padding-top:2.25rem; }
             .header-content { padding:1.2rem 1.2rem 1.5rem; }
             .header-content h1 {
                 font-size:2.2rem; gap:0.5rem;
@@ -994,9 +995,9 @@
         }
         @media (max-width:600px) {
             .profile-grid { grid-template-columns:minmax(0,1fr); }
-            .asphera-app { padding:0 0.75rem 2rem; }
-            .app-header { margin:0 -0.75rem 1rem; border-radius:16px; }
-            .header-content { padding:1rem 1.25rem 1.25rem; }
+            .asphera-app { padding:0.5rem 0.75rem 2rem; padding-top:2.25rem; }
+            .app-header { margin:0 -0.75rem 1.25rem; border-radius:16px; }
+            .header-content { padding:1.2rem 1.2rem 1.5rem; }
             .header-nav { padding:0.6rem 1rem; }
             .header-badges {
                 display: flex !important;
@@ -1007,9 +1008,9 @@
                 align-items: center;
                 justify-content: flex-end;
                 z-index: 9999;
-                background: transparent !important;
+                background: rgba(10, 22, 40, 0.85);
                 border-radius: 12px;
-                box-shadow: none !important;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.18);
                 padding: 0.18rem 0.25rem;
                 min-width: 0;
                 width: auto;
