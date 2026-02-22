@@ -189,8 +189,8 @@
             padding:1.5rem 2rem 1.75rem;
         }
         .header-content h1 {
-            font-size:2.8rem; font-weight:800; color:#fff; margin:0;
-            display:flex; align-items:center; justify-content:center; gap:0.6rem;
+            font-size:3rem; font-weight:800; color:#fff; margin:0 0 0.5rem;
+            display:flex; align-items:center; justify-content:center; gap:0.8rem;
             text-shadow:0 2px 20px rgba(0,0,0,0.3);
             animation: slideInUp 0.8s ease;
         }
@@ -201,7 +201,7 @@
             animation:shimmer 6s ease-in-out infinite;
         }
         .header-content .tagline {
-            color:rgba(255,255,255,0.85); font-size:1.1rem; margin-top:0.35rem;
+            color:#fff; opacity:0.9; font-size:1.15rem; margin:0;
             font-weight:300; letter-spacing:0.5px;
             animation: slideInUp 0.8s ease 0.1s both;
         }
@@ -862,171 +862,135 @@
         @media (max-width:960px) {
             .top-row { grid-template-columns:1fr; }
             .profile-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        }
+        @media (max-width:736px) {
+            .header-content { padding:1.2rem 1.2rem 1.5rem; }
             .header-content h1 {
-                font-size:2.2rem;
+                font-size:2.2rem; gap:0.5rem;
                 font-family: 'Segoe UI', 'Arial', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            }
+            .header-content .tagline { font-size:1.05rem; }
+            .asphera-icon { font-size:1.6rem; }
+        }
+        @media (min-width: 981px) {
+            .header-nav {
+                padding: 0.85rem 1.5rem !important;
+                background: rgba(0, 0, 0, 0.3) !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+                position: relative !important;
+                z-index: 2 !important;
+                backdrop-filter: blur(10px) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                height: auto !important;
+                overflow: visible !important;
+                flex-direction: row !important;
+            }
+            .header-badges {
+                display: flex !important;
+                gap: 0.5rem !important;
+                margin-left: auto !important;
+                align-items: center !important;
+                margin-top: 0 !important;
+                position: static !important;
+                flex-direction: row !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+            }
+            .header-nav .back-btn {
+                display: inline-flex !important;
+                position: static !important;
+                margin-right: auto !important;
+            }
+        }
+        @media (min-width: 737px) and (max-width: 980px) {
+            .header-nav {
+                padding: 0.85rem 1.5rem;
+                background: rgba(0, 0, 0, 0.3);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                position: relative;
+                z-index: 1;
+                backdrop-filter: blur(10px);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                height: auto;
+                overflow: visible;
+            }
+            .header-badges {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin-left: auto;
+                margin-top: 0;
+                background: transparent;
+                box-shadow: none;
+                border-radius: 12px;
+                padding: 0.25rem 0.75rem;
+                z-index: 2;
+            }
+            .header-badge {
+                background: rgba(255,255,255,0.13);
+                border: 1px solid rgba(255,255,255,0.18);
+                padding: 0.35rem 0.75rem;
+                border-radius: 8px;
+                font-size: 0.78rem;
+                font-weight: 600;
+                color: rgba(255,255,255,0.85);
+                letter-spacing: 0.03em;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+            }
+            .header-badge i {
+                margin-right: 0.3rem;
+                font-size: 0.72rem;
+            }
+            .header-nav .about-btn,
+            .header-nav button.about-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.45rem;
+                padding: 0.45rem 1rem;
+                border-radius: 10px;
+                background: linear-gradient(155deg, #0e7a7d 0%, #0c6467 35%, #094a4c 100%) !important;
+                color: #fff !important;
+                font-size: 0.82rem;
+                font-weight: 600;
+                letter-spacing: 0.04em;
+                border: 1px solid rgba(24, 169, 168, 0.4);
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(8px);
+                cursor: pointer;
+                text-decoration: none;
+                transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+            }
+            .header-nav .about-btn:hover,
+            .header-nav button.about-btn:hover {
+                background: linear-gradient(155deg, #109193 0%, #0e7a7d 35%, #0b5d5f 100%) !important;
+                border-color: rgba(24, 169, 168, 0.55);
+                box-shadow: 0 5px 20px var(--asp-primary-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                transform: translateY(-1px);
             }
         }
         @media (max-width:980px) {
             .asphera-app { padding-top:0.5rem; }
-            @media (min-width: 737px) and (max-width: 1024px) {
-                                                .header-nav {
-                                                    overflow: visible !important;
-                                                    height: auto !important;
-                                                    background: rgba(0, 0, 0, 0.3) !important;
-                                                    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-                                                }
-                                                .header-badges {
-                                                    margin-top: 0 !important;
-                                                    z-index: 2;
-                                                    background: transparent !important;
-                                                    box-shadow: none !important;
-                                                    padding: 0.25rem 0.75rem;
-                                                }
-                                .header-badges {
-                                    display: flex !important;
-                                    align-items: center;
-                                    gap: 0.5rem;
-                                    margin-left: auto;
-                                    background: transparent !important;
-                                    border-radius: 12px;
-                                    box-shadow: none !important;
-                                }
-                                .header-badge {
-                                    background: rgba(255,255,255,0.13);
-                                    border: 1px solid rgba(255,255,255,0.18);
-                                    padding: 0.35rem 0.75rem;
-                                    border-radius: 8px;
-                                    font-size: 0.78rem;
-                                    font-weight: 600;
-                                    color: rgba(255,255,255,0.85);
-                                    letter-spacing: 0.03em;
-                                    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-                                }
-                                .header-badge i {
-                                    margin-right: 0.3rem;
-                                    font-size: 0.72rem;
-                                }
-                                .header-nav .about-btn,
-                                .header-nav button.about-btn {
-                                    display: inline-flex !important;
-                                    align-items: center;
-                                    gap: 0.45rem;
-                                    padding: 0.45rem 1rem;
-                                    border-radius: 10px;
-                                    background: linear-gradient(155deg, #0369a1 0%, #025a8c 35%, #014d77 100%) !important;
-                                    color: #fff !important;
-                                    font-size: 0.82rem;
-                                    font-weight: 600;
-                                    letter-spacing: 0.04em;
-                                    border: 1px solid rgba(14, 165, 233, 0.4);
-                                    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-                                    backdrop-filter: blur(8px);
-                                    cursor: pointer;
-                                    text-decoration: none;
-                                    transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
-                                }
-                                .header-nav .about-btn:hover,
-                                .header-nav button.about-btn:hover {
-                                    background: linear-gradient(155deg, #0284c7 0%, #0369a1 35%, #025a8c 100%) !important;
-                                    border-color: rgba(14, 165, 233, 0.55);
-                                    box-shadow: 0 5px 20px var(--asp-primary-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-                                    transform: translateY(-1px);
-                                }
+        }
+        @media (max-width: 736px) {
                 .header-nav {
-                    padding: 0.85rem 1.5rem;
-                    background: rgba(0, 0, 0, 0.3);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                    position: relative; z-index: 1; backdrop-filter: blur(10px);
-                    display: flex; align-items: center; justify-content: space-between;
+                    padding:0; height:0; overflow:visible;
+                    background:none; border:none; backdrop-filter:none;
                 }
-                .header-badges {
-                    display: flex; align-items: center; gap: 0.5rem; margin-left: auto;
+                .header-nav .header-badges { display:none; }
+                .header-nav .back-btn { display:none!important; }
+                #titleBar .back-btn {
+                    position:absolute!important; top:5px!important; left:10px!important; right:auto!important;
+                    font-size:0.8rem!important; padding:0.4rem 0.85rem!important;
+                    white-space:nowrap!important; z-index:10002;
                 }
-                .header-badge {
-                    background: rgba(255,255,255,0.1);
-                    border: 1px solid rgba(255,255,255,0.15);
-                    padding: 0.35rem 0.75rem; border-radius: 8px;
-                    font-size: 0.78rem; font-weight: 600;
-                    color: rgba(255,255,255,0.75);
-                    letter-spacing: 0.03em;
-                }
-                .header-badge i {
-                    margin-right: 0.3rem; font-size: 0.72rem;
-                }
-                .header-nav .about-btn,
-                .header-nav button.about-btn {
-                    display: inline-flex; align-items: center; gap: 0.45rem;
-                    padding: 0.45rem 1rem; border-radius: 10px;
-                    background: linear-gradient(155deg, #0369a1 0%, #025a8c 35%, #014d77 100%) !important;
-                    color: #fff !important; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.04em;
-                    border: 1px solid rgba(14, 165, 233, 0.4);
-                    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-                    backdrop-filter: blur(8px);
-                    cursor: pointer; text-decoration: none; transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
-                }
-                .header-nav .about-btn:hover,
-                .header-nav button.about-btn:hover {
-                    background: linear-gradient(155deg, #0284c7 0%, #0369a1 35%, #025a8c 100%) !important;
-                    border-color: rgba(14, 165, 233, 0.55);
-                    box-shadow: 0 5px 20px var(--asp-primary-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-                    transform: translateY(-1px);
-                }
-            }
-            @media (min-width: 737px) and (max-width: 1024px) {
-                .header-nav {
-                    padding: 0.85rem 1.5rem;
-                    background: rgba(0, 0, 0, 0.3);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                    position: relative; z-index: 1; backdrop-filter: blur(10px);
-                    display: flex; align-items: center; justify-content: space-between;
-                }
-                .header-badges {
-                    display: flex !important; align-items: center; gap: 0.5rem; margin-left: auto;
-                }
-                .header-badge {
-                    background: rgba(255,255,255,0.1);
-                    border: 1px solid rgba(255,255,255,0.15);
-                    padding: 0.35rem 0.75rem; border-radius: 8px;
-                    font-size: 0.78rem; font-weight: 600;
-                    color: rgba(255,255,255,0.75);
-                    letter-spacing: 0.03em;
-                }
-                .header-badge i {
-                    margin-right: 0.3rem; font-size: 0.72rem;
-                }
-                .header-nav .about-btn,
-                .header-nav button.about-btn {
-                    display: inline-flex !important; align-items: center; gap: 0.45rem;
-                    padding: 0.45rem 1rem; border-radius: 10px;
-                    background: linear-gradient(155deg, #0369a1 0%, #025a8c 35%, #014d77 100%) !important;
-                    color: #fff !important; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.04em;
-                    border: 1px solid rgba(14, 165, 233, 0.4);
-                    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-                    backdrop-filter: blur(8px);
-                    cursor: pointer; text-decoration: none; transition: all 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
-                }
-                .header-nav .about-btn:hover,
-                .header-nav button.about-btn:hover {
-                    background: linear-gradient(155deg, #0284c7 0%, #0369a1 35%, #025a8c 100%) !important;
-                    border-color: rgba(14, 165, 233, 0.55);
-                    box-shadow: 0 5px 20px var(--asp-primary-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-                    transform: translateY(-1px);
-                }
-            }
-            .header-nav {
-                padding:0; height:0; overflow:visible;
-                background:none; border:none; backdrop-filter:none;
-            }
-            .header-nav .header-badges { display:none; }
-            .header-nav .back-btn { display:none!important; }
-            #titleBar .back-btn {
-                position:absolute!important; top:5px!important; left:10px!important; right:auto!important;
-                font-size:0.8rem!important; padding:0.4rem 0.85rem!important;
-                white-space:nowrap!important; z-index:10002;
-            }
-            #titleBar .back-btn i { font-size:0.72rem; }
-            #titleBar .back-btn:hover { transform:none!important; box-shadow:none!important; }
+                #titleBar .back-btn i { font-size:0.72rem; }
+                #titleBar .back-btn:hover { transform:none!important; box-shadow:none!important; }
         }
         @media (max-width:600px) {
             .profile-grid { grid-template-columns:minmax(0,1fr); }
@@ -1072,6 +1036,10 @@
             .stat-card .stat-label i { font-size:0.6rem; }
             .stat-card .stat-value { font-size:1.05rem; }
             .stat-card .stat-sub { font-size:0.65rem; line-height:1.45; }
+        }
+        @media (max-width:480px) {
+            .header-content h1 { font-size:1.8rem; }
+            .header-content .tagline { font-size:0.92rem; }
         }
         @media (max-width:380px) {
             .stat-card .stat-value { font-size:0.95rem; }
@@ -1528,29 +1496,68 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===== Move back-btn into #titleBar on mobile (floating/fixed behavior, matches Aircrafter/Frontier) =====
 (function() {
     let restoreParent = null;
+    let lastWidth = window.innerWidth;
+    let resizeTimer;
+
+    function forceLayoutRecalc() {
+        const headerNav = document.querySelector('.header-nav');
+        const headerBadges = document.querySelector('.header-badges');
+
+        if (headerNav) {
+            // Remove any inline styles that might have been set
+            headerNav.style.cssText = '';
+            // Force a reflow by reading offsetHeight
+            void headerNav.offsetHeight;
+        }
+        if (headerBadges) {
+            headerBadges.style.cssText = '';
+            void headerBadges.offsetHeight;
+        }
+    }
+
     function moveBackBtn() {
         const titleBar = document.getElementById('titleBar');
         const btnInNav = document.querySelector('.header-nav .back-btn');
         const btnInTitleBar = titleBar ? titleBar.querySelector('.back-btn') : null;
-        if (window.innerWidth <= 980 && titleBar) {
+        const headerNav = document.querySelector('.header-nav');
+        const currentWidth = window.innerWidth;
+
+        if (currentWidth <= 980 && titleBar) {
             if (btnInTitleBar) return;
             if (btnInNav) {
                 restoreParent = btnInNav.parentElement;
                 titleBar.insertBefore(btnInNav, titleBar.firstChild);
             }
         } else {
-            if (btnInTitleBar && restoreParent) {
-                restoreParent.appendChild(btnInTitleBar);
+            // Desktop mode (>980px)
+            if (btnInTitleBar && restoreParent && headerNav) {
+                // Insert back button as FIRST child of header-nav to maintain correct order
+                // (back-btn should be before header-badges)
+                headerNav.insertBefore(btnInTitleBar, headerNav.firstChild);
                 restoreParent = null;
             }
+
+            // If transitioning from tablet/mobile to desktop, force layout recalc
+            if (lastWidth <= 980 && currentWidth > 980) {
+                // Clear any inline styles and force reflow
+                forceLayoutRecalc();
+            }
         }
+        lastWidth = currentWidth;
     }
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => setTimeout(moveBackBtn, 100));
     } else {
         setTimeout(moveBackBtn, 100);
     }
-    window.addEventListener('resize', moveBackBtn);
+
+    // Single resize handler with debouncing
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        moveBackBtn(); // Execute immediately for responsiveness
+        resizeTimer = setTimeout(moveBackBtn, 100); // Also execute after settling
+    });
 })();
 
 // ===== About modal ───────────────────────────────────────────────
