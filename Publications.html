@@ -105,57 +105,66 @@
 										</div>
 									</div>
 
+									<!-- Filter Bar -->
+									<div class="pub-filter-bar" id="pub-filter-bar">
+										<button class="pub-filter-pill active" data-filter="all">All <span class="pill-count">(24)</span></button>
+										<button class="pub-filter-pill" data-filter="journal"><i class="fas fa-file-alt"></i> Journal Articles <span class="pill-count">(9)</span></button>
+										<button class="pub-filter-pill" data-filter="report"><i class="fas fa-book"></i> Technical Reports <span class="pill-count">(2)</span></button>
+										<button class="pub-filter-pill" data-filter="presentation"><i class="fas fa-chalkboard-teacher"></i> Presentations <span class="pill-count">(13)</span></button>
+										<button class="pub-sort-toggle" id="pub-sort-btn" title="Toggle sort order"><i class="fas fa-sort-amount-down"></i> Newest</button>
+									</div>
+
 									<!-- Technical Reports Section -->
-									<section>
+									<section class="pub-section" data-section="report">
 										<header>
 											<h3>Technical Reports</h3>
 											<hr />
 										</header>
 										<ul class="pub-list">
-											<li><strong>Jayme A., Hernandez J., Al-Qadi I., Cardenas J., Hafeez M., and Villamil W. (2025)</strong> Impact of Heavy Commercial Electric Vehicles on Flexible Pavements. <em>ICT Project R27-252</em>. Illinois Center for Transportation. <em>ISSN:0197-9191</em>. <a href="https://doi.org/10.36501/0197-9191/25-003">https://doi.org/10.36501/0197-9191/25-003</a>.</li>
-											<li><strong>Al-Qadi, I., Jayme, A., Zhou, Q., Cardenas J., Singh, A. and Liu, F. (2025)</strong> Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis. Volume II. <em>ICT-R27-246</em>. Illinois Center for Transportation. Accepted <strong>[Under Review]</strong>.</li>
+											<li data-type="report" data-year="2025"><strong>Jayme A., Hernandez J., Al-Qadi I., Cardenas J., Hafeez M., and Villamil W. (2025)</strong> Impact of Heavy Commercial Electric Vehicles on Flexible Pavements. <em>ICT Project R27-252</em>. Illinois Center for Transportation. <em>ISSN:0197-9191</em>. <a href="https://doi.org/10.36501/0197-9191/25-003">https://doi.org/10.36501/0197-9191/25-003</a>.</li>
+											<li data-type="report" data-year="2025"><strong>Al-Qadi, I., Jayme, A., Zhou, Q., Cardenas J., Singh, A. and Liu, F. (2025)</strong> Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis. Volume II. <em>ICT-R27-246</em>. Illinois Center for Transportation. Accepted <strong>[Under Review]</strong>.</li>
 										</ul>
 									</section>
 
 									<!-- Journal Articles Section -->
-									<section>
+									<section class="pub-section" data-section="journal">
 										<header>
 											<h3>Journal Articles</h3>
 											<hr />
 										</header>
 										<ul class="pub-list">
-											<li><strong>Al-Qadi I., Diab L., Cardenas J. and Hafeez, M. (2026)</strong> Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>Proceedings of the 12th International Conference on Bearing Capacity of Roads, Railways, and Airfields, 12th BCRRA 26</em>. Accepted <strong>[Under Review]</strong>.</li>
-											<li><strong>Hafeez M., Al-Qadi I., Cardenas J., Jayme, A. and Hernandez, J. (2026)</strong> Electric Truck Adoption: Infrastructure Energy Burden and Economic Impacts. <em>ASCE Journal of Transportation Engineering: Part B, Pavements</em>. Accepted <strong>[Under Review]</strong>.</li>
-											<li><strong>Cardenas J., Jayme, A., Hernandez, J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Record</em>. Accepted <strong>[Under Review]</strong>.</li>
-											<li><strong>Jayme, A., Cardenas J., Hernandez, J. and Al-Qadi I. (2026)</strong> Relative Flexible Pavement Distress due to Heavy-Duty Electric Trucks. <em>Transportation Research Record</em>, <em>0</em>(0) <a href="https://doi.org/10.1177/03611981251404350">https://doi.org/10.1177/03611981251404350</a></li>
-											<li><strong>Cardenas J., Jayme, A., Hernandez J., and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE Proceedings of the International Airfield and Highway Pavements Conference 2025: Design, Construction, Condition Evaluation, and Management of Pavements</em>. <a href="https://doi.org/10.1061/9780784486214.059">https://doi.org/10.1061/9780784486214.059</a></li>
-											<li><strong>Singh, A., Khan, A., Cardenas J.,and Al-Qadi I. (2025)</strong> Effect of Road Roughness on E-Truck Energy Consumption. <em>International Journal of Pavement Engineering</em>, <em>151</em>(1) <a href="https://doi.org/10.1080/10298436.2025.2528982">https://doi.org/10.1080/10298436.2025.2528982</a></li>
-											<li><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>ASCE Journal of Engineering Mechanics</em>, <em>151</em>(2). <a href="https://doi.org/10.1061/JENMDT.EMENG-7900">https://doi.org/10.1061/JENMDT.EMENG-7900</a></li>
-											<li><strong>Hernandez J., Jayme, A., Cardenas J., and Al-Qadi I. (2024)</strong> Effect of Heavy-Duty Electric Vehicles on Tire-Pavement Contact Forces. <em>ASCE Journal of Engineering Mechanics</em>, <em>151</em>(1). <a href="https://doi.org/10.1061/JENMDT.EMENG-7835">https://doi.org/10.1061/JENMDT.EMENG-7835</a></li>
-											<li><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>Transportation Research Record</em>, <em>2678</em>(11) <a href="https://doi.org/10.1177/03611981241242378">https://doi.org/10.1177/03611981241242378</a></li>
+											<li data-type="journal" data-year="2026"><strong>Al-Qadi I., Diab L., Cardenas J. and Hafeez, M. (2026)</strong> Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>Proceedings of the 12th International Conference on Bearing Capacity of Roads, Railways, and Airfields, 12th BCRRA 26</em>. Accepted <strong>[Under Review]</strong>.</li>
+											<li data-type="journal" data-year="2026"><strong>Hafeez M., Al-Qadi I., Cardenas J., Jayme, A. and Hernandez, J. (2026)</strong> Electric Truck Adoption: Infrastructure Energy Burden and Economic Impacts. <em>ASCE Journal of Transportation Engineering: Part B, Pavements</em>. Accepted <strong>[Under Review]</strong>.</li>
+											<li data-type="journal" data-year="2026"><strong>Cardenas J., Jayme, A., Hernandez, J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Record</em>. Accepted <strong>[Under Review]</strong>.</li>
+											<li data-type="journal" data-year="2026"><strong>Jayme, A., Cardenas J., Hernandez, J. and Al-Qadi I. (2026)</strong> Relative Flexible Pavement Distress due to Heavy-Duty Electric Trucks. <em>Transportation Research Record</em>, <em>0</em>(0) <a href="https://doi.org/10.1177/03611981251404350">https://doi.org/10.1177/03611981251404350</a></li>
+											<li data-type="journal" data-year="2025"><strong>Cardenas J., Jayme, A., Hernandez J., and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE Proceedings of the International Airfield and Highway Pavements Conference 2025: Design, Construction, Condition Evaluation, and Management of Pavements</em>. <a href="https://doi.org/10.1061/9780784486214.059">https://doi.org/10.1061/9780784486214.059</a></li>
+											<li data-type="journal" data-year="2025"><strong>Singh, A., Khan, A., Cardenas J.,and Al-Qadi I. (2025)</strong> Effect of Road Roughness on E-Truck Energy Consumption. <em>International Journal of Pavement Engineering</em>, <em>151</em>(1) <a href="https://doi.org/10.1080/10298436.2025.2528982">https://doi.org/10.1080/10298436.2025.2528982</a></li>
+											<li data-type="journal" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>ASCE Journal of Engineering Mechanics</em>, <em>151</em>(2). <a href="https://doi.org/10.1061/JENMDT.EMENG-7900">https://doi.org/10.1061/JENMDT.EMENG-7900</a></li>
+											<li data-type="journal" data-year="2024"><strong>Hernandez J., Jayme, A., Cardenas J., and Al-Qadi I. (2024)</strong> Effect of Heavy-Duty Electric Vehicles on Tire-Pavement Contact Forces. <em>ASCE Journal of Engineering Mechanics</em>, <em>151</em>(1). <a href="https://doi.org/10.1061/JENMDT.EMENG-7835">https://doi.org/10.1061/JENMDT.EMENG-7835</a></li>
+											<li data-type="journal" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>Transportation Research Record</em>, <em>2678</em>(11) <a href="https://doi.org/10.1177/03611981241242378">https://doi.org/10.1177/03611981241242378</a></li>
 										</ul>
 									</section>
 
 									<!-- Presentations Section -->
-									<section>
+									<section class="pub-section" data-section="presentation">
 										<header>
 											<h3>Presentations</h3>
 											<hr />
 										</header>
 										<ul class="pub-list">
-											<li><strong>Al-Qadi I., Diab L., Cardenas J. and Hafeez, M. (2026)</strong> Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>12th International Conference on Bearing Capacity of Roads, Railways, and Airfields, 12th BCRRA 26</em>. Keynote Session. Date: Jun. 2026.</li>
-											<li><strong>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Board 2026</em>. Poster Session. Event Title: Accelerated Pavement Testing. Event Number: 4082. Date: Jan. 2026.</li>
-											<li><strong>Hafeez M., Al-Qadi I., Cardenas J., Jayme A. and Hernandez J. (2026)</strong> Infrastructure Energy Burden and Economic Impacts due to Electric Truck Adoption. <em>Transportation Research Board 2026</em>. Poster Session. Event Title: Pavement Rehabilitation. Event Number: 4085. Date: Jan. 2026.</li>
-											<li><strong>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE International Conference on Transportation & Development, and International Airfield & Highway Pavements Conference</em>. Date: Jun. 2025.</li>
-											<li><strong>Hafeez M., Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025)</strong> Environmental Impact of Commercial E-Trucks on Flexible Pavement. <em>ASCE International Conference on Transportation & Development, and International Airfield & Highway Pavements Conference</em>. Date: Jun. 2025.</li>
-											<li><strong>Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification due to Heavy-Duty Electric Trucks. <em>Transportation Research Board 2025</em>. Lectern Session. Event Title: From Top to Bottom: The Impact of Heavy Truck Loads and Flexible Pavement Foundations. Event Number: 2137. Date: Jan. 2025.</li>
-											<li><strong>Singh A., Khan A., Cardenas J. and Al-Qadi I. (2025)</strong> Effect of Road Roughness on E-Truck Energy Consumption. <em>Transportation Research Board 2025</em>. Poster Session. Event Title: Current Issues in Trucking Industry Research. Event Number: 4048. Date: Jan. 2025</li>
-											<li><strong>Hernandez J., Jayme A., Cardenas J., and Al-Qadi I. (2024)</strong> Electric Heavy Trucks - Impact on Pavement Damage. <em>65th Illinois Bituminous Paving Conference</em>. Date: December 2024.</li>
-											<li><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Vehicular Maneuvering and Dynamic Loading on Flexible Pavements. <em>International Conference on Asphalt Pavement ISAP 2024</em>. Date: June 2024.</li>
-											<li><strong>Singh A., Cardenas J. and Al-Qadi I. (2024)</strong> Numerical Modeling of Truck-Electrification-Induced Energy Loss in Highway Flexible Pavements. <em>ASCE Engineering Mechanics Institute 2024 Conference</em>. Date: May 2024.</li>
-											<li><strong>Hernandez J., Jayme, A., Cardenas J., and Al-Qadi I. (2024)</strong> Effect of Heavy-Duty Electric Vehicles on Pavement Contact Forces. <em>Transportation Research Board 2024</em>. Lectern Session: Asphalt Pavement Network Evaluation for Heavy Loads. Event Number: 2020. Date: Jan. 2024.</li>
-											<li><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>Transportation Research Board 2024</em>. Lectern Session: Asphalt Pavement Network Evaluation for Heavy Loads. Event Number: 2020. Date: Jan. 2024.</li>
-											<li><strong>Cardenas J., and Al-Qadi I. (2024)</strong> The Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>Transportation Research Board 2024</em>. Poster Session. Event Title: Pavement Structural Testing and Evaluation - Falling Weight Deflectomer, Traffic Speed Deflection Device, Accelerated Pavement Testing, and more. Event Number: 2047. Date: Jan. 2024.</li>
+											<li data-type="presentation" data-year="2026"><strong>Al-Qadi I., Diab L., Cardenas J. and Hafeez, M. (2026)</strong> Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>12th International Conference on Bearing Capacity of Roads, Railways, and Airfields, 12th BCRRA 26</em>. Keynote Session. Date: Jun. 2026.</li>
+											<li data-type="presentation" data-year="2026"><strong>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Board 2026</em>. Poster Session. Event Title: Accelerated Pavement Testing. Event Number: 4082. Date: Jan. 2026.</li>
+											<li data-type="presentation" data-year="2026"><strong>Hafeez M., Al-Qadi I., Cardenas J., Jayme A. and Hernandez J. (2026)</strong> Infrastructure Energy Burden and Economic Impacts due to Electric Truck Adoption. <em>Transportation Research Board 2026</em>. Poster Session. Event Title: Pavement Rehabilitation. Event Number: 4085. Date: Jan. 2026.</li>
+											<li data-type="presentation" data-year="2025"><strong>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE International Conference on Transportation & Development, and International Airfield & Highway Pavements Conference</em>. Date: Jun. 2025.</li>
+											<li data-type="presentation" data-year="2025"><strong>Hafeez M., Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025)</strong> Environmental Impact of Commercial E-Trucks on Flexible Pavement. <em>ASCE International Conference on Transportation & Development, and International Airfield & Highway Pavements Conference</em>. Date: Jun. 2025.</li>
+											<li data-type="presentation" data-year="2025"><strong>Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification due to Heavy-Duty Electric Trucks. <em>Transportation Research Board 2025</em>. Lectern Session. Event Title: From Top to Bottom: The Impact of Heavy Truck Loads and Flexible Pavement Foundations. Event Number: 2137. Date: Jan. 2025.</li>
+											<li data-type="presentation" data-year="2025"><strong>Singh A., Khan A., Cardenas J. and Al-Qadi I. (2025)</strong> Effect of Road Roughness on E-Truck Energy Consumption. <em>Transportation Research Board 2025</em>. Poster Session. Event Title: Current Issues in Trucking Industry Research. Event Number: 4048. Date: Jan. 2025</li>
+											<li data-type="presentation" data-year="2024"><strong>Hernandez J., Jayme A., Cardenas J., and Al-Qadi I. (2024)</strong> Electric Heavy Trucks - Impact on Pavement Damage. <em>65th Illinois Bituminous Paving Conference</em>. Date: December 2024.</li>
+											<li data-type="presentation" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Vehicular Maneuvering and Dynamic Loading on Flexible Pavements. <em>International Conference on Asphalt Pavement ISAP 2024</em>. Date: June 2024.</li>
+											<li data-type="presentation" data-year="2024"><strong>Singh A., Cardenas J. and Al-Qadi I. (2024)</strong> Numerical Modeling of Truck-Electrification-Induced Energy Loss in Highway Flexible Pavements. <em>ASCE Engineering Mechanics Institute 2024 Conference</em>. Date: May 2024.</li>
+											<li data-type="presentation" data-year="2024"><strong>Hernandez J., Jayme, A., Cardenas J., and Al-Qadi I. (2024)</strong> Effect of Heavy-Duty Electric Vehicles on Pavement Contact Forces. <em>Transportation Research Board 2024</em>. Lectern Session: Asphalt Pavement Network Evaluation for Heavy Loads. Event Number: 2020. Date: Jan. 2024.</li>
+											<li data-type="presentation" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>Transportation Research Board 2024</em>. Lectern Session: Asphalt Pavement Network Evaluation for Heavy Loads. Event Number: 2020. Date: Jan. 2024.</li>
+											<li data-type="presentation" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> The Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>Transportation Research Board 2024</em>. Poster Session. Event Title: Pavement Structural Testing and Evaluation - Falling Weight Deflectomer, Traffic Speed Deflection Device, Accelerated Pavement Testing, and more. Event Number: 2047. Date: Jan. 2024.</li>
 										</ul>
 									</section>
 
@@ -178,6 +187,78 @@
 			<script src="assets/js/util.js"></script>
 			<script src="assets/js/main.js"></script>
 			<script src="assets/js/theme-toggle.js"></script>
+			<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
+			<script src="assets/js/search.js"></script>
+			<script src="assets/js/back-to-top.js"></script>
+
+			<!-- Publication Filter/Sort -->
+			<script>
+			(function () {
+				'use strict';
+				var filterBar = document.getElementById('pub-filter-bar');
+				var sortBtn   = document.getElementById('pub-sort-btn');
+				var allItems  = Array.from(document.querySelectorAll('.pub-list li[data-type]'));
+				var sections  = Array.from(document.querySelectorAll('.pub-section'));
+				var activeFilter = 'all';
+				var ascending = false; // default newest first
+
+				function applyFilter(type) {
+					activeFilter = type;
+					allItems.forEach(function (li) {
+						if (type === 'all' || li.getAttribute('data-type') === type) {
+							li.classList.remove('pub-hidden');
+						} else {
+							li.classList.add('pub-hidden');
+						}
+					});
+					// Hide empty sections
+					sections.forEach(function (sec) {
+						var visible = sec.querySelectorAll('.pub-list li:not(.pub-hidden)');
+						if (visible.length === 0) {
+							sec.classList.add('pub-section-hidden');
+						} else {
+							sec.classList.remove('pub-section-hidden');
+						}
+					});
+					// Update active pill
+					filterBar.querySelectorAll('.pub-filter-pill').forEach(function (btn) {
+						btn.classList.toggle('active', btn.getAttribute('data-filter') === type);
+					});
+				}
+
+				function applySort() {
+					sections.forEach(function (sec) {
+						var ul = sec.querySelector('.pub-list');
+						if (!ul) return;
+						var items = Array.from(ul.querySelectorAll('li[data-year]'));
+						items.sort(function (a, b) {
+							var ya = parseInt(a.getAttribute('data-year'), 10);
+							var yb = parseInt(b.getAttribute('data-year'), 10);
+							return ascending ? ya - yb : yb - ya;
+						});
+						items.forEach(function (li) { ul.appendChild(li); });
+					});
+					sortBtn.innerHTML = ascending
+						? '<i class="fas fa-sort-amount-up"></i> Oldest'
+						: '<i class="fas fa-sort-amount-down"></i> Newest';
+					sortBtn.classList.toggle('asc', ascending);
+				}
+
+				// Filter click
+				filterBar.addEventListener('click', function (e) {
+					var pill = e.target.closest('.pub-filter-pill');
+					if (pill) {
+						applyFilter(pill.getAttribute('data-filter'));
+					}
+				});
+
+				// Sort click
+				sortBtn.addEventListener('click', function () {
+					ascending = !ascending;
+					applySort();
+				});
+			})();
+			</script>
 
 	</body>
 </html>

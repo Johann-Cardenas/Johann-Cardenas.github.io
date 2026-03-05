@@ -195,6 +195,9 @@
 
     // Generate blog post card HTML (E-Labs/News style: image on top, content below)
     function generateBlogCard(post, imageBasePath = '') {
+        const readTimeBadge = post.readTime
+            ? '<span class="blog-meta-sep">&middot;</span><span class="blog-read-time"><i class="fas fa-clock"></i> ' + post.readTime + ' min read</span>'
+            : '';
         return `
             <article class="blog-card-modern">
                 <div class="blog-card-image">
@@ -204,7 +207,7 @@
                 </div>
                 <div class="blog-card-content">
                     <h3><a href="${basePath}${post.url}">${post.title}</a></h3>
-                    <p class="blog-meta">Posted on ${post.dateDisplay}</p>
+                    <p class="blog-meta">Posted on ${post.dateDisplay}${readTimeBadge}</p>
                     <p class="blog-excerpt">${post.excerpt}</p>
                     <a href="${basePath}${post.url}" class="blog-read-btn">
                         <i class="fas fa-arrow-right"></i> Continue Reading

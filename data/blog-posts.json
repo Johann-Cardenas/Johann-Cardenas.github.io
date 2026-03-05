@@ -8,6 +8,7 @@
       "image": "images/blog/E12_Cover.jpg",
       "url": "blog/TRB2026.html",
       "excerpt": "The Transportation Research Board (TRB) 105rd Annual Meeting was held in January 11–15, 2026 in Washington, D.C. It is the single largest gathering of transportation practitioners and researchers in the world.",
+      "readTime": 6,
       "comments": 2,
       "buttonText": "Continue Reading"
     },
@@ -19,6 +20,7 @@
       "image": "images/blog/E11_Cover.jpg",
       "url": "blog/ASCE2025.html",
       "excerpt": "The ASCE International Conference on Transportation and Development (ICTD 2025) and the International Airfield & Highway Pavements Conference (Pavements 2025) was held in June 8-11, 2025 in Arizona.",
+      "readTime": 4,
       "comments": 2,
       "buttonText": "Continue Reading"
     },
@@ -30,6 +32,7 @@
       "image": "images/blog/E10_Cover.jpg",
       "url": "blog/TRB2025.html",
       "excerpt": "The Transportation Research Board (TRB) 104rd Annual Meeting was held in January 5–9, 2025 in Washington, D.C. The TRB Annual Meeting attracts thousands of transportation professionals from around the world.",
+      "readTime": 5,
       "comments": 2,
       "buttonText": "Continue Reading"
     },
@@ -41,6 +44,7 @@
       "image": "images/blog/E09_Cover.jpg",
       "url": "blog/ISAP2024.html",
       "excerpt": "The International Conference on Asphalt Pavement (ISAP 2024) was held in June 2-6, 2024 in Montreal. The ISAP Conference has been the major source of state-of-the-practice information in asphalt technology since its first meeting in Michigan (1962).",
+      "readTime": 4,
       "comments": 2,
       "buttonText": "Continue Reading"
     },
@@ -52,6 +56,7 @@
       "image": "images/blog/E08_Cover.jpg",
       "url": "blog/Datathon2024.html",
       "excerpt": "The 8th annual Illinois Statistics Datathon was hosted by the Department of Statistics and Illini Stat Club in partnertship with Synchrony Financial. Farid, Seon Mi, Divyansh, and me worked intensively during 36 hours to uncover patterns within Synchrony's Interactive Voice System. We ranked 4th out of 345 teams!",
+      "readTime": 4,
       "comments": 2,
       "buttonText": "Continue Reading"
     },
@@ -63,6 +68,7 @@
       "image": "images/blog/E07_Cover.jpg",
       "url": "blog/TRB2024.html",
       "excerpt": "The Transportation Research Board (TRB) 103rd Annual Meeting was held in January 7–11, 2024 in Washington, D.C. As the single largest gathering of transportation practitioners and researchers in the world, it attracted more than 13,000 attendees from throughout the United States and across the world during its last edition.",
+      "readTime": 5,
       "comments": 2,
       "buttonText": "Continue Reading"
     },
@@ -74,6 +80,7 @@
       "image": "images/blog/E06_Cover.jpg",
       "url": "blog/ATLAS.html",
       "excerpt": "ICT's Accelerated Transportation Loading Assembly (ATLAS), a system that is capable of simulating aircraft, truck and rail traffic distributions is currently undergoing a major upgrade. Its new capabilities will be fundamental for the accelerated pavement testing of the sections recently built as part of the R27-216 project, \"Optimizing the Use of Local Aggregates in Stone-matrix Asphalt (SMA)\".",
+      "readTime": 5,
       "comments": 2,
       "buttonText": "Continue Reading"
     },
@@ -85,6 +92,7 @@
       "image": "images/blog/E05_Cover.jpg",
       "url": "blog/Graduation.html",
       "excerpt": "I am proud to announce that I have successfully completed my MS in Civil Engineering at the University of Illinois, Urbana-Champaign. This achievement holds an extra special significance for me as I am a first-generation college student. As I move forward, my next destination will be the PhD program at The Grainger College of Engineering. Here's to new beginnings, endless possibilities, and the pursuit of greatness!",
+      "readTime": 3,
       "comments": 2,
       "buttonText": "Continue Reading"
     },
@@ -96,6 +104,7 @@
       "image": "images/blog/E04_Cover.jpg",
       "url": "blog/TRB2023.html",
       "excerpt": "The Transportation Research Board (TRB) 102st Annual Meeting was held in January 8–12, 2023 in Washington, D.C. As the single largest gathering of transportation practitioners and researchers in the world, it attracted more than 13,000 attendees from throughout the United States and across the world during its last edition.",
+      "readTime": 3,
       "comments": 1,
       "buttonText": "Continue Reading"
     },
@@ -107,6 +116,7 @@
       "image": "images/blog/E03_Cover.jpg",
       "url": "blog/Visit_FAA.html",
       "excerpt": "Located 10 miles northwest of Atlantic City, New Jersey, the FAA William J. Hughes Technical Center is a US premier federal aviation laboratory. It is home to the National Airport Pavement Test Facility (NAPTF), where accelerated airfield pavement testing is continuously conducted. The rail-based test vehicle has two loading carriages than can be configured for up to 10 wheels per carriage with loads up to 333.75 kN per wheel.",
+      "readTime": 5,
       "comments": 2,
       "buttonText": "Continue Reading"
     },
@@ -118,6 +128,7 @@
       "image": "images/blog/E02_Cover.jpg",
       "url": "blog/TRB2022.html",
       "excerpt": "The Transportation Research Board (TRB) 101st Annual Meeting was held in January 9–13, 2022 in Washington, D.C. More than 7,500 attendees joined the 2022 edition, including researchers, policy makers, administrators, practitioners, and representatives of government, industry, and academic institutions. TRB's 177 standing technical committees continued to address current and emerging issues within their scopes.",
+      "readTime": 3,
       "comments": 1,
       "buttonText": "Continue Reading"
     },
@@ -129,6 +140,7 @@
       "image": "images/blog/E01_Cover.jpg",
       "url": "blog/Fulbright.html",
       "excerpt": "On July 9th, 2020, I would receive the call I had been waiting for. Laura Balbuena, Executive Director of the Fulbright Peru Commision, was on the line and I was being offered a Fulbright scholarship to pursue a Master's degree in the United States. Because I submitted my application shortly before the deadline and this was the first time I was ever applying to any scholarship, I had kept my expectations low. I was in shock. I was going to the US! Fate had smiled upon me.",
+      "readTime": 6,
       "comments": 1,
       "buttonText": "Continue Reading"
     }
