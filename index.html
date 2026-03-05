@@ -910,24 +910,30 @@
 				// Animation for counters in Research Metrics section
 				document.addEventListener('DOMContentLoaded', function() {
 					const counters = document.querySelectorAll('.counter');
-					const speed = 50;
+					const duration = 1200; // ms
+
+					const easeOutExpo = (t) => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
 
 					const animateCounter = (counter) => {
 						const target = +counter.getAttribute('data-target');
-						const count = +counter.innerText;
-						const inc = target / speed;
+						const start = performance.now();
 
-						if (count < target) {
-							counter.innerText = Math.ceil(count + inc);
-							setTimeout(() => animateCounter(counter), 1);
-						} else {
-							counter.innerText = target;
-						}
+						const step = (now) => {
+							const elapsed = now - start;
+							const progress = Math.min(elapsed / duration, 1);
+							const value = Math.round(easeOutExpo(progress) * target);
+							counter.innerText = value;
+							if (progress < 1) {
+								requestAnimationFrame(step);
+							} else {
+								counter.innerText = target;
+							}
+						};
+						requestAnimationFrame(step);
 					};
 
 					const observerOptions = {
-						threshold: 0,
-						rootMargin: "0px 0px 1000px 0px"
+						threshold: 0.2
 					};
 
 					const observer = new IntersectionObserver((entries, observer) => {

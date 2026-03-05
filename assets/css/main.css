@@ -443,22 +443,19 @@
 
 @media screen and (max-width: 480px) {
 	.metrics-grid {
-		grid-template-columns: 1fr;
-		max-width: 300px;
-		margin-left: auto;
-		margin-right: auto;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.8em;
 	}
 	.stack-legend {
-		gap: 1em;
-		flex-direction: column;
-		align-items: flex-start;
-		max-width: 200px;
-		margin-left: auto;
-		margin-right: auto;
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.6em;
 	}
 	.stack-item {
 		width: 100%;
 		justify-content: flex-start;
+		padding: 0.4em 0.6em;
+		font-size: 0.85em;
 	}
 	.stack-description-box {
 		min-height: 5em; /* More space for wrapped text on mobile */
