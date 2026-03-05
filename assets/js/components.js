@@ -416,8 +416,11 @@
             // Replace the placeholder with navigation HTML (h1 + nav)
             const navHTML = generateNavigation(navData, currentPage);
             navElement.outerHTML = navHTML;
-            
-            // Rebuild mobile nav panel (grouped structure so subs show on hover only)
+        }
+
+        // Always rebuild mobile nav panel if navData is available
+        // (supports both placeholder-based and inlined nav)
+        if (navData) {
             rebuildMobileNav(navData, currentPage);
         }
 

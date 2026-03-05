@@ -1,0 +1,202 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<!-- Theme initialization (prevents flash of wrong theme) -->
+		<script>
+			(function() {
+				var theme = localStorage.getItem('theme-preference') || 'light';
+				document.documentElement.setAttribute('data-theme', theme);
+			})();
+		</script>
+		<title>Page Not Found | Johann J Cardenas</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+
+		<!-- Favicon -->
+		<link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,900,300italic&display=swap">
+
+		<style>
+			.error-page {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				min-height: 60vh;
+				text-align: center;
+				padding: 4rem 2rem;
+			}
+
+			.error-code {
+				font-size: 8rem;
+				font-weight: 900;
+				line-height: 1;
+				background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
+				margin: 0 0 0.5rem 0;
+				letter-spacing: -0.04em;
+			}
+
+			.error-title {
+				font-size: 1.75rem;
+				font-weight: 700;
+				color: var(--text-primary);
+				margin: 0 0 1rem 0;
+				letter-spacing: -0.02em;
+			}
+
+			.error-message {
+				font-size: 1.1rem;
+				color: var(--text-secondary);
+				max-width: 480px;
+				line-height: 1.6;
+				margin: 0 0 2.5rem 0;
+			}
+
+			.error-nav {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.75rem;
+				justify-content: center;
+			}
+
+			.error-nav a {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				padding: 0.7rem 1.4rem;
+				border-radius: 8px;
+				font-size: 0.95rem;
+				font-weight: 600;
+				text-decoration: none;
+				transition: all 0.25s ease;
+			}
+
+			.error-nav a.primary-link {
+				background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
+				color: #fff;
+				box-shadow: 0 2px 8px var(--accent-primary-glow);
+			}
+
+			.error-nav a.primary-link:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 4px 16px var(--accent-primary-glow);
+			}
+
+			.error-nav a.secondary-link {
+				background: var(--bg-box-alt);
+				color: var(--text-primary);
+				border: 1px solid var(--border-light);
+			}
+
+			.error-nav a.secondary-link:hover {
+				border-color: var(--accent-primary);
+				color: var(--accent-primary);
+				transform: translateY(-2px);
+				box-shadow: var(--shadow-md);
+			}
+
+			.error-divider {
+				width: 60px;
+				height: 3px;
+				background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+				border: none;
+				border-radius: 2px;
+				margin: 0 auto 2rem auto;
+			}
+
+			@media screen and (max-width: 736px) {
+				.error-code { font-size: 5rem; }
+				.error-title { font-size: 1.35rem; }
+				.error-message { font-size: 1rem; }
+				.error-nav { flex-direction: column; align-items: center; }
+				.error-nav a { width: 100%; max-width: 260px; justify-content: center; }
+			}
+		</style>
+	</head>
+	<body class="no-sidebar is-preload">
+		<div id="page-wrapper">
+
+			<!-- Header -->
+				<section id="header">
+					<h1><a href="index.html">Johann Cardenas</a></h1>
+					<nav id="nav">
+						<ul>
+							<li><a href="index.html">Home</a></li>
+							<li>
+								<a href="Projects.html">Projects</a>
+								<ul>
+									<li><a href="projects/ACRP_FEM.html">ME Overload Permitting for Airfields</a></li>
+									<li><a href="projects/EV_Trucks.html">Impact of HDEVs on Flexible Pavements</a></li>
+									<li><a href="projects/FAA_Data.html">ML-Based Models for Airfield Pavements</a></li>
+									<li><a href="projects/MS_Thesis.html">Impact of DWL on Flexible Pavements</a></li>
+								</ul>
+							</li>
+							<li><a href="Publications.html">Publications</a></li>
+							<li><a href="Resume.html">Resume</a></li>
+							<li><a href="Blog.html">Blog</a></li>
+							<li><a href="News.html">News</a></li>
+							<li>
+								<a href="E-Labs.html">E-Labs</a>
+								<ul>
+									<li><a href="e-labs/aircrafter/index.html">AirCrafter</a></li>
+									<li><a href="e-labs/frontier/index.html">Frontier</a></li>
+									<li><a href="e-labs/asphera/index.html">Asphera</a></li>
+								</ul>
+							</li>
+						</ul>
+					</nav>
+				</section>
+
+			<!-- Main -->
+				<section id="main">
+					<div class="container">
+						<div class="error-page">
+							<div class="error-code">404</div>
+							<h1 class="error-title">Page Not Found</h1>
+							<hr class="error-divider">
+							<p class="error-message">
+								The page you're looking for doesn't exist or has been moved.
+								Let's get you back on track.
+							</p>
+							<nav class="error-nav" aria-label="Error page navigation">
+								<a href="index.html" class="primary-link">
+									<i class="fas fa-home"></i> Home
+								</a>
+								<a href="Projects.html" class="secondary-link">
+									<i class="fas fa-flask"></i> Projects
+								</a>
+								<a href="Blog.html" class="secondary-link">
+									<i class="fas fa-pen-nib"></i> Blog
+								</a>
+								<a href="Publications.html" class="secondary-link">
+									<i class="fas fa-book"></i> Publications
+								</a>
+							</nav>
+						</div>
+					</div>
+				</section>
+
+			<!-- Footer -->
+				<div id="footer-placeholder"></div>
+
+		</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/components.js"></script>
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.dropotron.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+			<script src="assets/js/theme-toggle.js"></script>
+
+	</body>
+</html>
