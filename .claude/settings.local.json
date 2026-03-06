@@ -4,7 +4,9 @@
       "WebFetch(domain:127.0.0.1)",
       "Bash(bundle exec:*)",
       "Bash(curl:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(start:*)",
+      "Bash(npx:*)"
     ]
   }
 }
