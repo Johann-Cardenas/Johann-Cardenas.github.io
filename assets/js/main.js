@@ -99,7 +99,9 @@
 				'#intro section',
 				'ul.dates li',
 				'ul.divided li',
-				'.row > [class*="col-"]'
+				'.row > [class*="col-"]',
+				'.cv-block',
+				'.cv-entry'
 			].join(', ');
 
 			$(animateElements).each(function(index) {

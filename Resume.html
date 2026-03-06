@@ -40,6 +40,25 @@
 
 	</head>
 	<body class="Resume is-preload">
+		<!-- Scroll Progress Bar -->
+		<div class="resume-scroll-progress" id="scrollProgress"></div>
+
+		<!-- Floating TOC (must be outside #page-wrapper — its animation creates a containing block that traps position:fixed) -->
+		<nav class="resume-toc" id="resumeToc" aria-label="CV Section Navigation">
+			<ul>
+				<li><a href="#cv-education"><i class="fas fa-graduation-cap"></i> Education</a></li>
+				<li><a href="#cv-profdev"><i class="fas fa-certificate"></i> Prof. Development</a></li>
+				<li><a href="#cv-research"><i class="fas fa-flask"></i> Research</a></li>
+				<li><a href="#cv-industry"><i class="fas fa-briefcase"></i> Industry</a></li>
+				<li><a href="#cv-awards"><i class="fas fa-trophy"></i> Awards</a></li>
+				<li><a href="#cv-skills"><i class="fas fa-code"></i> Skills</a></li>
+				<li><a href="#cv-extracurricular"><i class="fas fa-users"></i> Activities</a></li>
+				<li><a href="#cv-publications"><i class="fas fa-book"></i> Publications</a></li>
+				<li><a href="#cv-presentations"><i class="fas fa-microphone-alt"></i> Presentations</a></li>
+				<li><a href="#cv-reports"><i class="fas fa-file-alt"></i> Reports</a></li>
+			</ul>
+		</nav>
+
 		<div id="page-wrapper">
 
 			<!-- Header -->
@@ -115,6 +134,29 @@
 										models for flexible pavement responses.
 									</p>
 								</div>
+								<!-- Key Stats Strip -->
+								<div class="resume-stats">
+									<div class="resume-stat-card">
+										<i class="fas fa-book-open"></i>
+										<span class="resume-stat-value">9+</span>
+										<span class="resume-stat-label">Publications</span>
+									</div>
+									<div class="resume-stat-card">
+										<i class="fas fa-trophy"></i>
+										<span class="resume-stat-value">10</span>
+										<span class="resume-stat-label">Awards</span>
+									</div>
+									<div class="resume-stat-card">
+										<i class="fas fa-hard-hat"></i>
+										<span class="resume-stat-value">5+</span>
+										<span class="resume-stat-label">Years Experience</span>
+									</div>
+									<div class="resume-stat-card">
+										<i class="fas fa-star"></i>
+										<span class="resume-stat-value">3.97</span>
+										<span class="resume-stat-label">GPA</span>
+									</div>
+								</div>
 							</div>
 
 							<!-- CV section -->
@@ -128,8 +170,8 @@
 								</div>
 
 								<div class="resume-cv-content">
-									<section class="cv-block">
-										<h4>Education</h4>
+									<section class="cv-block cv-block-timeline" id="cv-education">
+										<h4><i class="fas fa-graduation-cap"></i> Education</h4>
 										<div class="cv-entry">
 											<div class="cv-entry-header">
 												<span class="cv-entry-title">Ph.D. in Civil Engineering</span>
@@ -156,8 +198,8 @@
 										</div>
 									</section>
 
-									<section class="cv-block">
-										<h4>Professional Development</h4>
+									<section class="cv-block cv-block-timeline" id="cv-profdev">
+										<h4><i class="fas fa-certificate"></i> Professional Development</h4>
 										<div class="cv-entry">
 											<div class="cv-entry-header">
 												<span class="cv-entry-title">Specialization in Pavement Engineering</span>
@@ -182,8 +224,8 @@
 										</div>
 									</section>
 
-									<section class="cv-block">
-										<h4>Research Experience</h4>
+									<section class="cv-block cv-block-timeline" id="cv-research">
+										<h4><i class="fas fa-flask"></i> Research Experience</h4>
 										<div class="cv-entry">
 											<div class="cv-entry-header">
 												<span class="cv-entry-title">Graduate Research Assistant</span>
@@ -201,8 +243,8 @@
 										</div>
 									</section>
 
-									<section class="cv-block">
-										<h4>Industry Experience</h4>
+									<section class="cv-block cv-block-timeline" id="cv-industry">
+										<h4><i class="fas fa-briefcase"></i> Industry Experience</h4>
 										<div class="cv-entry">
 											<div class="cv-entry-header">
 												<span class="cv-entry-title">Project Engineer / Project Control</span>
@@ -254,34 +296,72 @@
 										</div>
 									</section>
 
-									<section class="cv-block">
-										<h4>Honors &amp; Awards</h4>
+									<section class="cv-block" id="cv-awards">
+										<h4><i class="fas fa-trophy"></i> Honors &amp; Awards</h4>
 										<ul class="cv-list-compact">
-											<li><strong>2025</strong> Recipient, ACRP Graduate Research Award Program on Public-Sector Aviation Issues · DC, USA</li>
-											<li><strong>2025</strong> Recipient, Illinois Asphalt Pavement Association (IAPA) Scholarship · Illinois, USA</li>
-											<li><strong>2025</strong> Audience Choice Award, Transportation Research Board Three-Minute Thesis Competition · DC, USA</li>
-											<li><strong>2024</strong> Recipient, San Diego Supercomputer Center CIML Summer Institute Scholarship · California, USA</li>
-											<li><strong>2024</strong> 3rd Place, Ashby Prize in Computational Science, National Center for Supercomputing Applications · Illinois, USA</li>
-											<li><strong>2021</strong> Grantee, Fulbright Foreign Student Scholarship · Lima, Peru</li>
-											<li><strong>2021</strong> Recipient, UTEC Academic Excellence Certificate · Lima, Peru</li>
-											<li><strong>2020</strong> Grantee, UTEC Pavement Engineering Scholarship · Lima, Peru</li>
-											<li><strong>2020</strong> Recipient, ESAN Academic Excellence Certificate · Lima, Peru</li>
-											<li><strong>2016</strong> Recipient, UNMSM Academic Excellence Certificate · Lima, Peru</li>
+											<li><i class="fas fa-medal cv-award-icon"></i><strong>2025</strong> Recipient, ACRP Graduate Research Award Program on Public-Sector Aviation Issues · DC, USA</li>
+											<li><i class="fas fa-medal cv-award-icon"></i><strong>2025</strong> Recipient, Illinois Asphalt Pavement Association (IAPA) Scholarship · Illinois, USA</li>
+											<li><i class="fas fa-medal cv-award-icon"></i><strong>2025</strong> Audience Choice Award, Transportation Research Board Three-Minute Thesis Competition · DC, USA</li>
+											<li><i class="fas fa-medal cv-award-icon"></i><strong>2024</strong> Recipient, San Diego Supercomputer Center CIML Summer Institute Scholarship · California, USA</li>
+											<li><i class="fas fa-medal cv-award-icon"></i><strong>2024</strong> 3rd Place, Ashby Prize in Computational Science, National Center for Supercomputing Applications · Illinois, USA</li>
+											<li><i class="fas fa-medal cv-award-icon"></i><strong>2021</strong> Grantee, Fulbright Foreign Student Scholarship · Lima, Peru</li>
+											<li><i class="fas fa-medal cv-award-icon"></i><strong>2021</strong> Recipient, UTEC Academic Excellence Certificate · Lima, Peru</li>
+											<li><i class="fas fa-medal cv-award-icon"></i><strong>2020</strong> Grantee, UTEC Pavement Engineering Scholarship · Lima, Peru</li>
+											<li><i class="fas fa-medal cv-award-icon"></i><strong>2020</strong> Recipient, ESAN Academic Excellence Certificate · Lima, Peru</li>
+											<li><i class="fas fa-medal cv-award-icon"></i><strong>2016</strong> Recipient, UNMSM Academic Excellence Certificate · Lima, Peru</li>
 										</ul>
 									</section>
 
-									<section class="cv-block cv-block-grid">
-										<h4>Skills</h4>
+									<section class="cv-block cv-block-grid" id="cv-skills">
+										<h4><i class="fas fa-code"></i> Skills</h4>
 										<div class="cv-skills">
-											<div class="cv-skill-cat"><strong>Coursework</strong> CEE 407 Airport Design, CEE 506 Pavement Design II, CEE 416 Traffic Capacity Analysis, CEE 598 Advanced Bituminous Materials, CEE 508 Pavement Evaluation & Rehabilitation, CEE 570 Finite Element Methods, CS 547 Deep Learning</div>
-											<div class="cv-skill-cat"><strong>Software</strong> ABAQUS, AutoCAD, Civil 3D, Power BI, Primavera P6, MS Project, SAP2000, ETABS</div>
-											<div class="cv-skill-cat"><strong>Programming</strong> Python, Matlab, R, HTML, CSS, JavaScript, Java, LaTeX</div>
-											<div class="cv-skill-cat"><strong>Languages</strong> Spanish (Native), English (Proficient), Portuguese (Basic)</div>
+											<div class="cv-skill-cat" data-skill-category="coursework"><strong>Coursework</strong>
+												<div class="cv-skill-pills">
+													<span class="cv-skill-pill">CEE 407 Airport Design</span>
+													<span class="cv-skill-pill">CEE 506 Pavement Design II</span>
+													<span class="cv-skill-pill">CEE 416 Traffic Capacity Analysis</span>
+													<span class="cv-skill-pill">CEE 598 Advanced Bituminous Materials</span>
+													<span class="cv-skill-pill">CEE 508 Pavement Evaluation &amp; Rehabilitation</span>
+													<span class="cv-skill-pill">CEE 570 Finite Element Methods</span>
+													<span class="cv-skill-pill">CS 547 Deep Learning</span>
+												</div>
+											</div>
+											<div class="cv-skill-cat" data-skill-category="software"><strong>Software</strong>
+												<div class="cv-skill-pills">
+													<span class="cv-skill-pill">ABAQUS</span>
+													<span class="cv-skill-pill">AutoCAD</span>
+													<span class="cv-skill-pill">Civil 3D</span>
+													<span class="cv-skill-pill">Power BI</span>
+													<span class="cv-skill-pill">Primavera P6</span>
+													<span class="cv-skill-pill">MS Project</span>
+													<span class="cv-skill-pill">SAP2000</span>
+													<span class="cv-skill-pill">ETABS</span>
+												</div>
+											</div>
+											<div class="cv-skill-cat" data-skill-category="programming"><strong>Programming</strong>
+												<div class="cv-skill-pills">
+													<span class="cv-skill-pill">Python</span>
+													<span class="cv-skill-pill">Matlab</span>
+													<span class="cv-skill-pill">R</span>
+													<span class="cv-skill-pill">HTML</span>
+													<span class="cv-skill-pill">CSS</span>
+													<span class="cv-skill-pill">JavaScript</span>
+													<span class="cv-skill-pill">Java</span>
+													<span class="cv-skill-pill">LaTeX</span>
+												</div>
+											</div>
+											<div class="cv-skill-cat" data-skill-category="languages"><strong>Languages</strong>
+												<div class="cv-skill-pills">
+													<span class="cv-skill-pill">Spanish (Native)</span>
+													<span class="cv-skill-pill">English (Proficient)</span>
+													<span class="cv-skill-pill">Portuguese (Basic)</span>
+												</div>
+											</div>
 										</div>
 									</section>
 
-									<section class="cv-block">
-										<h4>Extracurricular Activity</h4>
+									<section class="cv-block" id="cv-extracurricular" data-collapsible="4">
+										<h4><i class="fas fa-users"></i> Extracurricular Activity</h4>
 										<div class="cv-entry cv-entry-extracurricular">
 											<div class="cv-entry-header">
 												<span class="cv-entry-title">Campus Coordinator</span>
@@ -363,8 +443,8 @@
 										</div>
 									</section>
 
-									<section class="cv-block">
-										<h4>Journal Articles</h4>
+									<section class="cv-block" id="cv-publications">
+										<h4><i class="fas fa-book"></i> Journal Articles</h4>
 										<p>For full citations and presentations, see <a href="Publications.html">Publications</a>.</p>
 										<ul class="cv-pub-list">
 											<li>Al-Qadi I., Diab L., Cardenas J. and Hafeez M. (2026) Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>12th BCRRA</em>. Under Review.</li>
@@ -379,8 +459,8 @@
 										</ul>
 									</section>
 
-									<section class="cv-block">
-										<h4>Presentations</h4>
+									<section class="cv-block" id="cv-presentations" data-collapsible="5">
+										<h4><i class="fas fa-microphone-alt"></i> Presentations</h4>
 										<p>For full list and conference details, see <a href="Publications.html">Publications</a>.</p>
 										<ul class="cv-pub-list">
 											<li>Al-Qadi I., Diab L., Cardenas J. and Hafeez M. (2026) Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>12th BCRRA</em>. Keynote Session. Jun 2026.</li>
@@ -399,8 +479,8 @@
 										</ul>
 									</section>
 
-									<section class="cv-block">
-										<h4>Technical Reports</h4>
+									<section class="cv-block" id="cv-reports">
+										<h4><i class="fas fa-file-alt"></i> Technical Reports</h4>
 										<p class="cv-report-org">Illinois Center for Transportation, University of Illinois Urbana-Champaign</p>
 										<ul class="cv-pub-list">
 											<li>Jayme A., Hernandez J., Al-Qadi I., Cardenas J., Hafeez M., and Villamil W. (2025) Impact of Heavy Commercial Electric Vehicles on Flexible Pavements. <em>ICT Project R27-252</em>. ISSN:0197-9191. <a href="https://doi.org/10.36501/0197-9191/25-003">https://doi.org/10.36501/0197-9191/25-003</a></li>
@@ -431,6 +511,144 @@
 			<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
 			<script src="assets/js/search.js"></script>
 			<script src="assets/js/back-to-top.js"></script>
+
+		<!-- Resume Page Enhancements -->
+		<script>
+		(function() {
+			'use strict';
+
+			// Scroll Progress Bar
+			var progressBar = document.getElementById('scrollProgress');
+			if (progressBar) {
+				var ticking = false;
+				window.addEventListener('scroll', function() {
+					if (!ticking) {
+						requestAnimationFrame(function() {
+							var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+							var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+							var scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+							progressBar.style.width = scrollPercent + '%';
+							ticking = false;
+						});
+						ticking = true;
+					}
+				});
+			}
+
+			// TOC Active State + Smooth Scroll + Visibility
+			var tocNav = document.getElementById('resumeToc');
+			if (tocNav) {
+				var tocLinks = tocNav.querySelectorAll('a[href^="#"]');
+				var sections = [];
+				tocLinks.forEach(function(link) {
+					var id = link.getAttribute('href').substring(1);
+					var section = document.getElementById(id);
+					if (section) sections.push({ el: section, link: link });
+				});
+
+				// Reference point: show TOC once the first CV section is near viewport
+				var firstSection = sections.length ? sections[0].el : null;
+
+				// Smooth scroll on click
+				tocLinks.forEach(function(link) {
+					link.addEventListener('click', function(e) {
+						e.preventDefault();
+						var id = link.getAttribute('href').substring(1);
+						var target = document.getElementById(id);
+						if (!target) return;
+						var offset = 80;
+						// On mobile/tablet, account for fixed TOC height
+						if (window.innerWidth <= 1280 && tocNav.offsetHeight) {
+							offset = tocNav.offsetHeight + 16;
+						}
+						var y = target.getBoundingClientRect().top + window.pageYOffset - offset;
+						window.scrollTo({ top: y, behavior: 'smooth' });
+					});
+				});
+
+				var tocTicking = false;
+				window.addEventListener('scroll', function() {
+					if (!tocTicking) {
+						requestAnimationFrame(function() {
+							var scrollPos = window.pageYOffset;
+
+							// Show/hide TOC on mobile/tablet (show once scrolled to CV content)
+							if (window.innerWidth <= 1280 && firstSection) {
+								var showAt = firstSection.getBoundingClientRect().top + scrollPos - window.innerHeight * 0.7;
+								if (scrollPos >= showAt) {
+									tocNav.classList.add('visible');
+								} else {
+									tocNav.classList.remove('visible');
+								}
+							}
+
+							// Active section highlighting
+							var activeScrollPos = scrollPos + 120;
+							var active = null;
+							for (var i = sections.length - 1; i >= 0; i--) {
+								if (sections[i].el.offsetTop <= activeScrollPos) {
+									active = sections[i];
+									break;
+								}
+							}
+							tocLinks.forEach(function(l) { l.parentElement.classList.remove('active'); });
+							if (active) {
+								active.link.parentElement.classList.add('active');
+								// On mobile/tablet, scroll active pill into view
+								if (window.innerWidth <= 1280) {
+									active.link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+								}
+							}
+							tocTicking = false;
+						});
+						tocTicking = true;
+					}
+				});
+			}
+
+			// Expand/Collapse for Long Sections
+			document.querySelectorAll('[data-collapsible]').forEach(function(section) {
+				var limit = parseInt(section.getAttribute('data-collapsible'), 10);
+				var entries = section.querySelectorAll('.cv-entry, .cv-pub-list > li');
+				if (entries.length <= limit) return;
+
+				var hiddenEntries = [];
+				for (var i = limit; i < entries.length; i++) {
+					entries[i].style.display = 'none';
+					hiddenEntries.push(entries[i]);
+				}
+
+				var btn = document.createElement('button');
+				btn.className = 'cv-collapse-toggle';
+				var remaining = entries.length - limit;
+				btn.innerHTML = '<i class="fas fa-chevron-down cv-collapse-icon"></i> Show ' + remaining + ' more';
+				btn.setAttribute('aria-expanded', 'false');
+
+				section.appendChild(btn);
+
+				btn.addEventListener('click', function() {
+					var expanded = btn.getAttribute('aria-expanded') === 'true';
+					hiddenEntries.forEach(function(entry) {
+						entry.style.display = expanded ? 'none' : '';
+					});
+					btn.setAttribute('aria-expanded', String(!expanded));
+					if (expanded) {
+						btn.innerHTML = '<i class="fas fa-chevron-down cv-collapse-icon"></i> Show ' + remaining + ' more';
+					} else {
+						btn.innerHTML = '<i class="fas fa-chevron-up cv-collapse-icon"></i> Show less';
+					}
+				});
+			});
+
+			// Author Highlight in Publications
+			document.querySelectorAll('.cv-pub-list li').forEach(function(li) {
+				li.innerHTML = li.innerHTML.replace(
+					/Cardenas J\./g,
+					'<strong class="cv-author-highlight">Cardenas J.</strong>'
+				);
+			});
+		})();
+		</script>
 
 	</body>
 </html>
