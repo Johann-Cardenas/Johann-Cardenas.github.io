@@ -18,7 +18,7 @@
 		<link rel="icon" href="/favicon.ico" type="image/x-icon">
 
 		<!-- Preload banner (reuse Blog banner; add images/Publications_Banner.jpg to override) -->
-		<link rel="preload" as="image" href="images/Blog_Banner.jpg" fetchpriority="high" />
+		<link rel="preload" as="image" href="images/Publications_Banner.jpg" fetchpriority="high" />
 
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,6 +40,20 @@
 
 	</head>
 	<body class="Publications is-preload">
+
+		<!-- Scroll Progress Bar -->
+		<div class="pub-scroll-progress" id="pubScrollProgress"></div>
+
+		<!-- Floating Table of Contents -->
+		<nav class="pub-toc" id="pubToc" aria-label="Publications table of contents">
+			<ul>
+				<li><a href="#pub-overview"><i class="fas fa-chart-bar"></i> Overview</a></li>
+				<li><a href="#pub-sec-journal"><i class="fas fa-file-alt"></i> Journal Articles</a></li>
+				<li><a href="#pub-sec-report"><i class="fas fa-book"></i> Reports</a></li>
+				<li><a href="#pub-sec-presentation"><i class="fas fa-chalkboard-teacher"></i> Presentations</a></li>
+			</ul>
+		</nav>
+
 		<div id="page-wrapper">
 
 			<!-- Header -->
@@ -86,12 +100,12 @@
 									</div>
 									<div class="publications-banner-content">
 										<h2>Publications</h2>
-										<p class="banner-subtitle">Journal articles, technical reports, and presentations</p>								
+										<p class="banner-subtitle">Journal articles, technical reports, and presentations</p>
 									</div>
 								</div>
 
 								<!-- Content -->
-								<article class="box post">
+								<article class="pub-article">
 									<div class="pub-intro">
 										<ul class="social">
 											<li><a class="icon solid fa-graduation-cap" href="https://scholar.google.com/citations?user=yBNtQBoAAAAJ" title="Google Scholar"><span class="label">Google Scholar</span></a></li>
@@ -105,6 +119,30 @@
 										</div>
 									</div>
 
+									<!-- Stat Cards -->
+									<div class="pub-stats" id="pub-overview">
+										<div class="pub-stat-card">
+											<i class="fas fa-file-alt"></i>
+											<span class="pub-stat-value">9</span>
+											<span class="pub-stat-label">Journal Articles</span>
+										</div>
+										<div class="pub-stat-card">
+											<i class="fas fa-book-open"></i>
+											<span class="pub-stat-value">2</span>
+											<span class="pub-stat-label">Project Reports</span>
+										</div>
+										<div class="pub-stat-card">
+											<i class="fas fa-chalkboard-teacher"></i>
+											<span class="pub-stat-value">13</span>
+											<span class="pub-stat-label">Presentations</span>
+										</div>
+										<div class="pub-stat-card">
+											<i class="fas fa-calendar-alt"></i>
+											<span class="pub-stat-value">3</span>
+											<span class="pub-stat-label">Active Years</span>
+										</div>
+									</div>
+
 									<!-- Filter Bar -->
 									<div class="pub-filter-bar" id="pub-filter-bar">
 										<button class="pub-filter-pill active" data-filter="all">All <span class="pill-count">(24)</span></button>
@@ -114,57 +152,195 @@
 										<button class="pub-sort-toggle" id="pub-sort-btn" title="Toggle sort order"><i class="fas fa-sort-amount-down"></i> Newest</button>
 									</div>
 
-									<!-- Technical Reports Section -->
-									<section class="pub-section" data-section="report">
+									<!-- Journal Articles Section -->
+									<section class="pub-section pub-timeline" data-section="journal" id="pub-sec-journal">
 										<header>
-											<h3>Technical Reports</h3>
+											<h3><i class="fas fa-file-alt"></i> Journal Articles</h3>
 											<hr />
 										</header>
 										<ul class="pub-list">
-											<li data-type="report" data-year="2025"><strong>Jayme A., Hernandez J., Al-Qadi I., Cardenas J., Hafeez M., and Villamil W. (2025)</strong> Impact of Heavy Commercial Electric Vehicles on Flexible Pavements. <em>ICT Project R27-252</em>. Illinois Center for Transportation. <em>ISSN:0197-9191</em>. <a href="https://doi.org/10.36501/0197-9191/25-003">https://doi.org/10.36501/0197-9191/25-003</a>.</li>
-											<li data-type="report" data-year="2025"><strong>Al-Qadi, I., Jayme, A., Zhou, Q., Cardenas J., Singh, A. and Liu, F. (2025)</strong> Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis. Volume II. <em>ICT-R27-246</em>. Illinois Center for Transportation. Accepted <strong>[Under Review]</strong>.</li>
+											<li class="pub-year-marker" data-year="2026"><span>2026</span></li>
+											<li data-type="journal" data-year="2026"><strong>Al-Qadi I., Diab L., Cardenas J. and Hafeez, M. (2026)</strong> Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>Proceedings of the 12th International Conference on Bearing Capacity of Roads, Railways, and Airfields, 12th BCRRA 26</em>. Accepted.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Journal</span>
+													<span class="pub-badge-year">2026</span>
+													<span class="pub-badge-review">Under Review</span>
+												</div>
+											</li>
+											<li data-type="journal" data-year="2026"><strong>Hafeez M., Al-Qadi I., Cardenas J., Jayme, A. and Hernandez, J. (2026)</strong> Electric Truck Adoption: Infrastructure Energy Burden and Economic Impacts. <em>ASCE Journal of Transportation Engineering: Part B, Pavements</em>. Accepted.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Journal</span>
+													<span class="pub-badge-year">2026</span>
+													<span class="pub-badge-review">Under Review</span>
+												</div>
+											</li>
+											<li data-type="journal" data-year="2026"><strong>Cardenas J., Jayme, A., Hernandez, J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Record</em>. Accepted.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Journal</span>
+													<span class="pub-badge-year">2026</span>
+													<span class="pub-badge-review">Under Review</span>
+												</div>
+											</li>
+											<li data-type="journal" data-year="2026"><strong>Jayme, A., Cardenas J., Hernandez, J. and Al-Qadi I. (2026)</strong> Relative Flexible Pavement Distress due to Heavy-Duty Electric Trucks. <em>Transportation Research Record</em>, <em>0</em>(0) <a href="https://doi.org/10.1177/03611981251404350">https://doi.org/10.1177/03611981251404350</a>
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Journal</span>
+													<span class="pub-badge-year">2026</span>
+													<span class="pub-badge-published">Published</span>
+												</div>
+											</li>
+											<li class="pub-year-marker" data-year="2025"><span>2025</span></li>
+											<li data-type="journal" data-year="2025"><strong>Cardenas J., Jayme, A., Hernandez J., and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE Proceedings of the International Airfield and Highway Pavements Conference 2025: Design, Construction, Condition Evaluation, and Management of Pavements</em>. <a href="https://doi.org/10.1061/9780784486214.059">https://doi.org/10.1061/9780784486214.059</a>
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Journal</span>
+													<span class="pub-badge-year">2025</span>
+													<span class="pub-badge-published">Published</span>
+												</div>
+											</li>
+											<li data-type="journal" data-year="2025"><strong>Singh, A., Khan, A., Cardenas J.,and Al-Qadi I. (2025)</strong> Effect of Road Roughness on E-Truck Energy Consumption. <em>International Journal of Pavement Engineering</em>, <em>151</em>(1) <a href="https://doi.org/10.1080/10298436.2025.2528982">https://doi.org/10.1080/10298436.2025.2528982</a>
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Journal</span>
+													<span class="pub-badge-year">2025</span>
+													<span class="pub-badge-published">Published</span>
+												</div>
+											</li>
+											<li class="pub-year-marker" data-year="2024"><span>2024</span></li>
+											<li data-type="journal" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>ASCE Journal of Engineering Mechanics</em>, <em>151</em>(2). <a href="https://doi.org/10.1061/JENMDT.EMENG-7900">https://doi.org/10.1061/JENMDT.EMENG-7900</a>
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Journal</span>
+													<span class="pub-badge-year">2024</span>
+													<span class="pub-badge-published">Published</span>
+												</div>
+											</li>
+											<li data-type="journal" data-year="2024"><strong>Hernandez J., Jayme, A., Cardenas J., and Al-Qadi I. (2024)</strong> Effect of Heavy-Duty Electric Vehicles on Tire-Pavement Contact Forces. <em>ASCE Journal of Engineering Mechanics</em>, <em>151</em>(1). <a href="https://doi.org/10.1061/JENMDT.EMENG-7835">https://doi.org/10.1061/JENMDT.EMENG-7835</a>
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Journal</span>
+													<span class="pub-badge-year">2024</span>
+													<span class="pub-badge-published">Published</span>
+												</div>
+											</li>
+											<li data-type="journal" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>Transportation Research Record</em>, <em>2678</em>(11) <a href="https://doi.org/10.1177/03611981241242378">https://doi.org/10.1177/03611981241242378</a>
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Journal</span>
+													<span class="pub-badge-year">2024</span>
+													<span class="pub-badge-published">Published</span>
+												</div>
+											</li>
 										</ul>
 									</section>
 
-									<!-- Journal Articles Section -->
-									<section class="pub-section" data-section="journal">
+									<!-- Technical Reports Section -->
+									<section class="pub-section pub-timeline" data-section="report" id="pub-sec-report">
 										<header>
-											<h3>Journal Articles</h3>
+											<h3><i class="fas fa-book"></i> Technical Reports</h3>
 											<hr />
 										</header>
 										<ul class="pub-list">
-											<li data-type="journal" data-year="2026"><strong>Al-Qadi I., Diab L., Cardenas J. and Hafeez, M. (2026)</strong> Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>Proceedings of the 12th International Conference on Bearing Capacity of Roads, Railways, and Airfields, 12th BCRRA 26</em>. Accepted <strong>[Under Review]</strong>.</li>
-											<li data-type="journal" data-year="2026"><strong>Hafeez M., Al-Qadi I., Cardenas J., Jayme, A. and Hernandez, J. (2026)</strong> Electric Truck Adoption: Infrastructure Energy Burden and Economic Impacts. <em>ASCE Journal of Transportation Engineering: Part B, Pavements</em>. Accepted <strong>[Under Review]</strong>.</li>
-											<li data-type="journal" data-year="2026"><strong>Cardenas J., Jayme, A., Hernandez, J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Record</em>. Accepted <strong>[Under Review]</strong>.</li>
-											<li data-type="journal" data-year="2026"><strong>Jayme, A., Cardenas J., Hernandez, J. and Al-Qadi I. (2026)</strong> Relative Flexible Pavement Distress due to Heavy-Duty Electric Trucks. <em>Transportation Research Record</em>, <em>0</em>(0) <a href="https://doi.org/10.1177/03611981251404350">https://doi.org/10.1177/03611981251404350</a></li>
-											<li data-type="journal" data-year="2025"><strong>Cardenas J., Jayme, A., Hernandez J., and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE Proceedings of the International Airfield and Highway Pavements Conference 2025: Design, Construction, Condition Evaluation, and Management of Pavements</em>. <a href="https://doi.org/10.1061/9780784486214.059">https://doi.org/10.1061/9780784486214.059</a></li>
-											<li data-type="journal" data-year="2025"><strong>Singh, A., Khan, A., Cardenas J.,and Al-Qadi I. (2025)</strong> Effect of Road Roughness on E-Truck Energy Consumption. <em>International Journal of Pavement Engineering</em>, <em>151</em>(1) <a href="https://doi.org/10.1080/10298436.2025.2528982">https://doi.org/10.1080/10298436.2025.2528982</a></li>
-											<li data-type="journal" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>ASCE Journal of Engineering Mechanics</em>, <em>151</em>(2). <a href="https://doi.org/10.1061/JENMDT.EMENG-7900">https://doi.org/10.1061/JENMDT.EMENG-7900</a></li>
-											<li data-type="journal" data-year="2024"><strong>Hernandez J., Jayme, A., Cardenas J., and Al-Qadi I. (2024)</strong> Effect of Heavy-Duty Electric Vehicles on Tire-Pavement Contact Forces. <em>ASCE Journal of Engineering Mechanics</em>, <em>151</em>(1). <a href="https://doi.org/10.1061/JENMDT.EMENG-7835">https://doi.org/10.1061/JENMDT.EMENG-7835</a></li>
-											<li data-type="journal" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>Transportation Research Record</em>, <em>2678</em>(11) <a href="https://doi.org/10.1177/03611981241242378">https://doi.org/10.1177/03611981241242378</a></li>
+											<li class="pub-year-marker" data-year="2025"><span>2025</span></li>
+											<li data-type="report" data-year="2025"><strong>Jayme A., Hernandez J., Al-Qadi I., Cardenas J., Hafeez M., and Villamil W. (2025)</strong> Impact of Heavy Commercial Electric Vehicles on Flexible Pavements. <em>ICT Project R27-252</em>. Illinois Center for Transportation. <em>ISSN:0197-9191</em>. <a href="https://doi.org/10.36501/0197-9191/25-003">https://doi.org/10.36501/0197-9191/25-003</a>.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Report</span>
+													<span class="pub-badge-year">2025</span>
+													<span class="pub-badge-published">Published</span>
+												</div>
+											</li>
+											<li data-type="report" data-year="2025"><strong>Al-Qadi, I., Jayme, A., Zhou, Q., Cardenas J., Singh, A. and Liu, F. (2025)</strong> Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis. Volume II. <em>ICT-R27-246</em>. Illinois Center for Transportation. Accepted.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Report</span>
+													<span class="pub-badge-year">2025</span>
+													<span class="pub-badge-review">Under Review</span>
+												</div>
+											</li>
 										</ul>
 									</section>
 
 									<!-- Presentations Section -->
-									<section class="pub-section" data-section="presentation">
+									<section class="pub-section pub-timeline" data-section="presentation" data-collapsible="5" id="pub-sec-presentation">
 										<header>
-											<h3>Presentations</h3>
+											<h3><i class="fas fa-chalkboard-teacher"></i> Presentations</h3>
 											<hr />
 										</header>
 										<ul class="pub-list">
-											<li data-type="presentation" data-year="2026"><strong>Al-Qadi I., Diab L., Cardenas J. and Hafeez, M. (2026)</strong> Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>12th International Conference on Bearing Capacity of Roads, Railways, and Airfields, 12th BCRRA 26</em>. Keynote Session. Date: Jun. 2026.</li>
-											<li data-type="presentation" data-year="2026"><strong>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Board 2026</em>. Poster Session. Event Title: Accelerated Pavement Testing. Event Number: 4082. Date: Jan. 2026.</li>
-											<li data-type="presentation" data-year="2026"><strong>Hafeez M., Al-Qadi I., Cardenas J., Jayme A. and Hernandez J. (2026)</strong> Infrastructure Energy Burden and Economic Impacts due to Electric Truck Adoption. <em>Transportation Research Board 2026</em>. Poster Session. Event Title: Pavement Rehabilitation. Event Number: 4085. Date: Jan. 2026.</li>
-											<li data-type="presentation" data-year="2025"><strong>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE International Conference on Transportation & Development, and International Airfield & Highway Pavements Conference</em>. Date: Jun. 2025.</li>
-											<li data-type="presentation" data-year="2025"><strong>Hafeez M., Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025)</strong> Environmental Impact of Commercial E-Trucks on Flexible Pavement. <em>ASCE International Conference on Transportation & Development, and International Airfield & Highway Pavements Conference</em>. Date: Jun. 2025.</li>
-											<li data-type="presentation" data-year="2025"><strong>Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification due to Heavy-Duty Electric Trucks. <em>Transportation Research Board 2025</em>. Lectern Session. Event Title: From Top to Bottom: The Impact of Heavy Truck Loads and Flexible Pavement Foundations. Event Number: 2137. Date: Jan. 2025.</li>
-											<li data-type="presentation" data-year="2025"><strong>Singh A., Khan A., Cardenas J. and Al-Qadi I. (2025)</strong> Effect of Road Roughness on E-Truck Energy Consumption. <em>Transportation Research Board 2025</em>. Poster Session. Event Title: Current Issues in Trucking Industry Research. Event Number: 4048. Date: Jan. 2025</li>
-											<li data-type="presentation" data-year="2024"><strong>Hernandez J., Jayme A., Cardenas J., and Al-Qadi I. (2024)</strong> Electric Heavy Trucks - Impact on Pavement Damage. <em>65th Illinois Bituminous Paving Conference</em>. Date: December 2024.</li>
-											<li data-type="presentation" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Vehicular Maneuvering and Dynamic Loading on Flexible Pavements. <em>International Conference on Asphalt Pavement ISAP 2024</em>. Date: June 2024.</li>
-											<li data-type="presentation" data-year="2024"><strong>Singh A., Cardenas J. and Al-Qadi I. (2024)</strong> Numerical Modeling of Truck-Electrification-Induced Energy Loss in Highway Flexible Pavements. <em>ASCE Engineering Mechanics Institute 2024 Conference</em>. Date: May 2024.</li>
-											<li data-type="presentation" data-year="2024"><strong>Hernandez J., Jayme, A., Cardenas J., and Al-Qadi I. (2024)</strong> Effect of Heavy-Duty Electric Vehicles on Pavement Contact Forces. <em>Transportation Research Board 2024</em>. Lectern Session: Asphalt Pavement Network Evaluation for Heavy Loads. Event Number: 2020. Date: Jan. 2024.</li>
-											<li data-type="presentation" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>Transportation Research Board 2024</em>. Lectern Session: Asphalt Pavement Network Evaluation for Heavy Loads. Event Number: 2020. Date: Jan. 2024.</li>
-											<li data-type="presentation" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> The Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>Transportation Research Board 2024</em>. Poster Session. Event Title: Pavement Structural Testing and Evaluation - Falling Weight Deflectomer, Traffic Speed Deflection Device, Accelerated Pavement Testing, and more. Event Number: 2047. Date: Jan. 2024.</li>
+											<li class="pub-year-marker" data-year="2026"><span>2026</span></li>
+											<li data-type="presentation" data-year="2026"><strong>Al-Qadi I., Diab L., Cardenas J. and Hafeez, M. (2026)</strong> Innovative Flexible Pavements: Energy-Efficient and Resilient for Future Mobility. <em>12th International Conference on Bearing Capacity of Roads, Railways, and Airfields, 12th BCRRA 26</em>. Keynote Session. Date: Jun. 2026.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Presentation</span>
+													<span class="pub-badge-year">2026</span>
+												</div>
+											</li>
+											<li data-type="presentation" data-year="2026"><strong>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2026)</strong> Quantification of Truck Electrification Damage to Flexible Pavements. <em>Transportation Research Board 2026</em>. Poster Session. Event Title: Accelerated Pavement Testing. Event Number: 4082. Date: Jan. 2026.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Presentation</span>
+													<span class="pub-badge-year">2026</span>
+												</div>
+											</li>
+											<li data-type="presentation" data-year="2026"><strong>Hafeez M., Al-Qadi I., Cardenas J., Jayme A. and Hernandez J. (2026)</strong> Infrastructure Energy Burden and Economic Impacts due to Electric Truck Adoption. <em>Transportation Research Board 2026</em>. Poster Session. Event Title: Pavement Rehabilitation. Event Number: 4085. Date: Jan. 2026.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Presentation</span>
+													<span class="pub-badge-year">2026</span>
+												</div>
+											</li>
+											<li class="pub-year-marker" data-year="2025"><span>2025</span></li>
+											<li data-type="presentation" data-year="2025"><strong>Cardenas J., Jayme A., Hernandez J. and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification for Heavy-Duty Electric Trucks. <em>ASCE International Conference on Transportation & Development, and International Airfield & Highway Pavements Conference</em>. Date: Jun. 2025.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Presentation</span>
+													<span class="pub-badge-year">2025</span>
+												</div>
+											</li>
+											<li data-type="presentation" data-year="2025"><strong>Hafeez M., Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025)</strong> Environmental Impact of Commercial E-Trucks on Flexible Pavement. <em>ASCE International Conference on Transportation & Development, and International Airfield & Highway Pavements Conference</em>. Date: Jun. 2025.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Presentation</span>
+													<span class="pub-badge-year">2025</span>
+												</div>
+											</li>
+											<li data-type="presentation" data-year="2025"><strong>Jayme A., Cardenas J., Hernandez J. and Al-Qadi I. (2025)</strong> Flexible Pavement Damage Quantification due to Heavy-Duty Electric Trucks. <em>Transportation Research Board 2025</em>. Lectern Session. Event Title: From Top to Bottom: The Impact of Heavy Truck Loads and Flexible Pavement Foundations. Event Number: 2137. Date: Jan. 2025.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Presentation</span>
+													<span class="pub-badge-year">2025</span>
+												</div>
+											</li>
+											<li data-type="presentation" data-year="2025"><strong>Singh A., Khan A., Cardenas J. and Al-Qadi I. (2025)</strong> Effect of Road Roughness on E-Truck Energy Consumption. <em>Transportation Research Board 2025</em>. Poster Session. Event Title: Current Issues in Trucking Industry Research. Event Number: 4048. Date: Jan. 2025
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Presentation</span>
+													<span class="pub-badge-year">2025</span>
+												</div>
+											</li>
+											<li class="pub-year-marker" data-year="2024"><span>2024</span></li>
+											<li data-type="presentation" data-year="2024"><strong>Hernandez J., Jayme A., Cardenas J., and Al-Qadi I. (2024)</strong> Electric Heavy Trucks - Impact on Pavement Damage. <em>65th Illinois Bituminous Paving Conference</em>. Date: December 2024.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Presentation</span>
+													<span class="pub-badge-year">2024</span>
+												</div>
+											</li>
+											<li data-type="presentation" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Vehicular Maneuvering and Dynamic Loading on Flexible Pavements. <em>International Conference on Asphalt Pavement ISAP 2024</em>. Date: June 2024.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Presentation</span>
+													<span class="pub-badge-year">2024</span>
+												</div>
+											</li>
+											<li data-type="presentation" data-year="2024"><strong>Singh A., Cardenas J. and Al-Qadi I. (2024)</strong> Numerical Modeling of Truck-Electrification-Induced Energy Loss in Highway Flexible Pavements. <em>ASCE Engineering Mechanics Institute 2024 Conference</em>. Date: May 2024.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Presentation</span>
+													<span class="pub-badge-year">2024</span>
+												</div>
+											</li>
+											<li data-type="presentation" data-year="2024"><strong>Hernandez J., Jayme, A., Cardenas J., and Al-Qadi I. (2024)</strong> Effect of Heavy-Duty Electric Vehicles on Pavement Contact Forces. <em>Transportation Research Board 2024</em>. Lectern Session: Asphalt Pavement Network Evaluation for Heavy Loads. Event Number: 2020. Date: Jan. 2024.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Presentation</span>
+													<span class="pub-badge-year">2024</span>
+												</div>
+											</li>
+											<li data-type="presentation" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> Impact of Dynamic Wheel Loading on Flexible Pavement Responses for Non-Free Rolling Conditions. <em>Transportation Research Board 2024</em>. Lectern Session: Asphalt Pavement Network Evaluation for Heavy Loads. Event Number: 2020. Date: Jan. 2024.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Presentation</span>
+													<span class="pub-badge-year">2024</span>
+												</div>
+											</li>
+											<li data-type="presentation" data-year="2024"><strong>Cardenas J., and Al-Qadi I. (2024)</strong> The Impact of Road Roughness on Tire-Pavement Contact Stresses During Vehicle Maneuvering. <em>Transportation Research Board 2024</em>. Poster Session. Event Title: Pavement Structural Testing and Evaluation - Falling Weight Deflectomer, Traffic Speed Deflection Device, Accelerated Pavement Testing, and more. Event Number: 2047. Date: Jan. 2024.
+												<div class="pub-item-badges">
+													<span class="pub-badge-type">Presentation</span>
+													<span class="pub-badge-year">2024</span>
+												</div>
+											</li>
 										</ul>
 									</section>
 
@@ -191,16 +367,117 @@
 			<script src="assets/js/search.js"></script>
 			<script src="assets/js/back-to-top.js"></script>
 
-			<!-- Publication Filter/Sort -->
+			<!-- Publication Enhancements -->
 			<script>
 			(function () {
 				'use strict';
+
+				/* ── 1. Scroll Progress Bar ── */
+				var progressBar = document.getElementById('pubScrollProgress');
+				var ticking = false;
+				function updateProgress() {
+					var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+					var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+					var pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+					progressBar.style.width = pct + '%';
+					ticking = false;
+				}
+				window.addEventListener('scroll', function () {
+					if (!ticking) { requestAnimationFrame(updateProgress); ticking = true; }
+				}, { passive: true });
+
+				/* ── 2. Floating TOC ── */
+				var tocNav = document.getElementById('pubToc');
+				var tocLinks = Array.from(tocNav.querySelectorAll('a[href^="#"]'));
+				var tocSections = [];
+				tocLinks.forEach(function (link) {
+					var id = link.getAttribute('href').substring(1);
+					var section = document.getElementById(id);
+					if (section) tocSections.push({ el: section, link: link });
+				});
+
+				var firstTocSection = tocSections.length ? tocSections[0].el : null;
+
+				// Fast eased scroll helper (distance-aware, 200-400ms)
+				function smoothScrollTo(targetY) {
+					var start = window.pageYOffset;
+					var distance = targetY - start;
+					var duration = Math.min(400, Math.max(200, Math.abs(distance) * 0.15));
+					var startTime = null;
+					function step(ts) {
+						if (!startTime) startTime = ts;
+						var t = Math.min((ts - startTime) / duration, 1);
+						// instant launch, gentle land (exponent 0.4 = aggressive early progress)
+						var ease = 1 - Math.pow(1 - t, 2.5);
+						window.scrollTo(0, start + distance * ease);
+						if (t < 1) requestAnimationFrame(step);
+					}
+					requestAnimationFrame(step);
+				}
+
+				// Smooth scroll with offset for fixed TOC on mobile/tablet
+				tocLinks.forEach(function (link) {
+					link.addEventListener('click', function (e) {
+						e.preventDefault();
+						var id = link.getAttribute('href').substring(1);
+						var target = document.getElementById(id);
+						if (!target) return;
+						var offset = 80;
+						if (window.innerWidth <= 1280 && tocNav.offsetHeight) {
+							offset = tocNav.offsetHeight + 16;
+						}
+						var y = target.getBoundingClientRect().top + window.pageYOffset - offset;
+						smoothScrollTo(y);
+					});
+				});
+
+				var tocTicking = false;
+				window.addEventListener('scroll', function () {
+					if (!tocTicking) {
+						requestAnimationFrame(function () {
+							var scrollPos = window.pageYOffset;
+
+							// Show/hide TOC on mobile/tablet once scrolled near first section
+							if (window.innerWidth <= 1280 && firstTocSection) {
+								var showAt = firstTocSection.getBoundingClientRect().top + scrollPos - window.innerHeight * 0.7;
+								if (scrollPos >= showAt) {
+									tocNav.classList.add('visible');
+								} else {
+									tocNav.classList.remove('visible');
+								}
+							}
+
+							// Active section highlighting (bottom-up for accuracy)
+							var activeScrollPos = scrollPos + 120;
+							var active = null;
+							for (var i = tocSections.length - 1; i >= 0; i--) {
+								if (tocSections[i].el.offsetTop <= activeScrollPos) {
+									active = tocSections[i];
+									break;
+								}
+							}
+							tocLinks.forEach(function (l) { l.parentElement.classList.remove('active'); });
+							if (active) {
+								active.link.parentElement.classList.add('active');
+								// On mobile/tablet, scroll active pill into view
+								if (window.innerWidth <= 1280) {
+									active.link.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+								}
+							}
+							tocTicking = false;
+						});
+						tocTicking = true;
+					}
+				}, { passive: true });
+
+				/* ── 3. Filter & Sort ── */
 				var filterBar = document.getElementById('pub-filter-bar');
-				var sortBtn   = document.getElementById('pub-sort-btn');
-				var allItems  = Array.from(document.querySelectorAll('.pub-list li[data-type]'));
-				var sections  = Array.from(document.querySelectorAll('.pub-section'));
+				var sortBtn = document.getElementById('pub-sort-btn');
+				var allItems = Array.from(document.querySelectorAll('.pub-list li[data-type]'));
+				var yearMarkers = Array.from(document.querySelectorAll('.pub-year-marker'));
+				var sections = Array.from(document.querySelectorAll('.pub-section'));
 				var activeFilter = 'all';
-				var ascending = false; // default newest first
+				var ascending = false;
 
 				function applyFilter(type) {
 					activeFilter = type;
@@ -211,32 +488,48 @@
 							li.classList.add('pub-hidden');
 						}
 					});
+					// Hide year markers when no visible items share that year within the section
+					yearMarkers.forEach(function (marker) {
+						var ul = marker.parentElement;
+						var year = marker.getAttribute('data-year');
+						var siblingsVisible = Array.from(ul.querySelectorAll('li[data-type][data-year="' + year + '"]:not(.pub-hidden)'));
+						marker.classList.toggle('pub-hidden', siblingsVisible.length === 0);
+					});
 					// Hide empty sections
 					sections.forEach(function (sec) {
-						var visible = sec.querySelectorAll('.pub-list li:not(.pub-hidden)');
-						if (visible.length === 0) {
-							sec.classList.add('pub-section-hidden');
-						} else {
-							sec.classList.remove('pub-section-hidden');
-						}
+						var visible = sec.querySelectorAll('.pub-list li[data-type]:not(.pub-hidden)');
+						sec.classList.toggle('pub-section-hidden', visible.length === 0);
 					});
 					// Update active pill
 					filterBar.querySelectorAll('.pub-filter-pill').forEach(function (btn) {
 						btn.classList.toggle('active', btn.getAttribute('data-filter') === type);
 					});
+					// Re-apply collapsible after filter
+					applyCollapsible();
 				}
 
 				function applySort() {
 					sections.forEach(function (sec) {
 						var ul = sec.querySelector('.pub-list');
 						if (!ul) return;
-						var items = Array.from(ul.querySelectorAll('li[data-year]'));
-						items.sort(function (a, b) {
-							var ya = parseInt(a.getAttribute('data-year'), 10);
-							var yb = parseInt(b.getAttribute('data-year'), 10);
-							return ascending ? ya - yb : yb - ya;
+						// Gather year groups: year marker + its items
+						var years = {};
+						var currentYear = null;
+						Array.from(ul.children).forEach(function (li) {
+							if (li.classList.contains('pub-year-marker')) {
+								currentYear = li.getAttribute('data-year');
+								years[currentYear] = { marker: li, items: [] };
+							} else if (currentYear && li.hasAttribute('data-type')) {
+								years[currentYear].items.push(li);
+							}
 						});
-						items.forEach(function (li) { ul.appendChild(li); });
+						var sortedYears = Object.keys(years).sort(function (a, b) {
+							return ascending ? a - b : b - a;
+						});
+						sortedYears.forEach(function (y) {
+							ul.appendChild(years[y].marker);
+							years[y].items.forEach(function (li) { ul.appendChild(li); });
+						});
 					});
 					sortBtn.innerHTML = ascending
 						? '<i class="fas fa-sort-amount-up"></i> Oldest'
@@ -244,19 +537,113 @@
 					sortBtn.classList.toggle('asc', ascending);
 				}
 
-				// Filter click
 				filterBar.addEventListener('click', function (e) {
 					var pill = e.target.closest('.pub-filter-pill');
-					if (pill) {
-						applyFilter(pill.getAttribute('data-filter'));
-					}
+					if (pill) applyFilter(pill.getAttribute('data-filter'));
 				});
 
-				// Sort click
 				sortBtn.addEventListener('click', function () {
 					ascending = !ascending;
 					applySort();
 				});
+
+				/* ── 4. Author Highlighting ── */
+				allItems.forEach(function (li) {
+					li.childNodes.forEach(function (node) {
+						if (node.nodeType === 3) { // text node
+							var text = node.textContent;
+							if (/Cardenas\s*J\./.test(text)) {
+								var span = document.createElement('span');
+								span.innerHTML = text.replace(/(Cardenas\s*J\.)/g, '<span class="pub-author-highlight">$1</span>');
+								node.parentNode.replaceChild(span, node);
+							}
+						}
+					});
+					// Also check inside <strong> tags
+					li.querySelectorAll('strong').forEach(function (el) {
+						if (/Cardenas\s*J\./.test(el.innerHTML)) {
+							el.innerHTML = el.innerHTML.replace(/(Cardenas\s*J\.)/g, '<span class="pub-author-highlight">$1</span>');
+						}
+					});
+				});
+
+				/* ── 5. Collapse/Expand (Presentations) ── */
+				function applyCollapsible() {
+					sections.forEach(function (sec) {
+						var limit = parseInt(sec.getAttribute('data-collapsible'), 10);
+						if (!limit) return;
+						var ul = sec.querySelector('.pub-list');
+						if (!ul) return;
+						var visibleItems = Array.from(ul.querySelectorAll('li[data-type]:not(.pub-hidden)'));
+						var total = visibleItems.length;
+
+						// Remove existing toggle
+						var oldToggle = sec.querySelector('.cv-collapse-toggle');
+						if (oldToggle) oldToggle.remove();
+
+						if (total <= limit) {
+							// Show all
+							visibleItems.forEach(function (li) { li.style.display = ''; });
+							yearMarkers.forEach(function (m) {
+								if (m.parentElement === ul) m.style.display = '';
+							});
+							return;
+						}
+
+						var expanded = sec.hasAttribute('data-expanded');
+						var hiddenCount = total - limit;
+
+						visibleItems.forEach(function (li, i) {
+							li.style.display = (!expanded && i >= limit) ? 'none' : '';
+						});
+
+						// Show/hide year markers based on whether their items are visible
+						yearMarkers.forEach(function (m) {
+							if (m.parentElement !== ul) return;
+							var year = m.getAttribute('data-year');
+							var yearItems = visibleItems.filter(function (li) {
+								return li.getAttribute('data-year') === year && li.style.display !== 'none';
+							});
+							m.style.display = yearItems.length > 0 ? '' : 'none';
+						});
+
+						var toggle = document.createElement('button');
+						toggle.className = 'cv-collapse-toggle';
+						toggle.innerHTML = expanded
+							? '<span class="cv-collapse-icon" style="transform:rotate(180deg)">&#9660;</span> Show less'
+							: '<span class="cv-collapse-icon">&#9660;</span> Show ' + hiddenCount + ' more';
+						toggle.addEventListener('click', function () {
+							if (expanded) {
+								sec.removeAttribute('data-expanded');
+							} else {
+								sec.setAttribute('data-expanded', '');
+							}
+							applyCollapsible();
+						});
+						sec.appendChild(toggle);
+					});
+				}
+				applyCollapsible();
+
+				/* ── 6. Scroll Reveal ── */
+				var revealEls = document.querySelectorAll('.pub-section, .pub-stats, .pub-intro');
+				if ('IntersectionObserver' in window) {
+					var revealObs = new IntersectionObserver(function (entries) {
+						entries.forEach(function (entry) {
+							if (entry.isIntersecting) {
+								entry.target.classList.add('pub-visible');
+								revealObs.unobserve(entry.target);
+							}
+						});
+					}, { threshold: 0.1 });
+					revealEls.forEach(function (el) { revealObs.observe(el); });
+				} else {
+					// Fallback: show everything
+					revealEls.forEach(function (el) { el.classList.add('pub-visible'); });
+				}
+
+				// Initial call
+				updateProgress();
 			})();
 			</script>
 

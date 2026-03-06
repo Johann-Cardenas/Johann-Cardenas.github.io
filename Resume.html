@@ -549,6 +549,23 @@
 				// Reference point: show TOC once the first CV section is near viewport
 				var firstSection = sections.length ? sections[0].el : null;
 
+				// Fast eased scroll helper (distance-aware, 200-400ms)
+				function smoothScrollTo(targetY) {
+					var start = window.pageYOffset;
+					var distance = targetY - start;
+					var duration = Math.min(400, Math.max(200, Math.abs(distance) * 0.15));
+					var startTime = null;
+					function step(ts) {
+						if (!startTime) startTime = ts;
+						var t = Math.min((ts - startTime) / duration, 1);
+						// instant launch, gentle land (exponent 0.4 = aggressive early progress)
+						var ease = 1 - Math.pow(1 - t, 2.5);
+						window.scrollTo(0, start + distance * ease);
+						if (t < 1) requestAnimationFrame(step);
+					}
+					requestAnimationFrame(step);
+				}
+
 				// Smooth scroll on click
 				tocLinks.forEach(function(link) {
 					link.addEventListener('click', function(e) {
@@ -562,7 +579,7 @@
 							offset = tocNav.offsetHeight + 16;
 						}
 						var y = target.getBoundingClientRect().top + window.pageYOffset - offset;
-						window.scrollTo({ top: y, behavior: 'smooth' });
+						smoothScrollTo(y);
 					});
 				});
 
