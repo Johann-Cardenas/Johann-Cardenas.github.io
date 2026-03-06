@@ -7798,12 +7798,15 @@ html {
 }
 
 [data-theme="dark"] .about-me-pill {
-	background: var(--accent-primary) !important;
-	color: var(--text-inverse) !important;
+	background: rgba(24, 169, 168, 0.12) !important;
+	color: #2dd4bf !important;
+	border-color: rgba(24, 169, 168, 0.2) !important;
+	box-shadow: none !important;
 }
 
 [data-theme="dark"] .about-me-pill:hover {
-	background: var(--accent-primary-hover) !important;
+	background: rgba(24, 169, 168, 0.22) !important;
+	color: #2dd4bf !important;
 }
 
 /* Section borders for dark mode */
