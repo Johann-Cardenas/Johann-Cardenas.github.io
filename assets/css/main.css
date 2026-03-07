@@ -466,6 +466,91 @@
 	background: linear-gradient(90deg, #18a9a8 60%, #0d7377 100%);
 	color: #fff;
 }
+
+/* ========== Sponsors Highlight Section ========== */
+.sponsors-section {
+	margin: 2.5rem 0 2rem;
+	text-align: center;
+}
+.sponsors-heading {
+	font-size: 1.15rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: #555;
+	margin-bottom: 1.25rem;
+}
+.sponsors-grid {
+	display: flex;
+	justify-content: center;
+	gap: 2rem;
+	flex-wrap: wrap;
+}
+.sponsor-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background: #f8f9fa;
+	border: 1px solid #e0e0e0;
+	border-radius: 12px;
+	width: 110px;
+	height: 110px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+	transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.sponsor-card:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 6px 18px rgba(24, 169, 168, 0.15);
+	border-color: #18a9a8;
+}
+.sponsor-card img {
+	height: 70px;
+	width: auto;
+	object-fit: contain;
+	max-width: 90%;
+}
+.sponsor-card span {
+	font-size: 0.88rem;
+	font-weight: 600;
+	color: #444;
+	text-align: center;
+	line-height: 1.3;
+}
+
+/* Dark theme – sponsors */
+[data-theme="dark"] .sponsors-heading {
+	color: #b0b0b0;
+}
+[data-theme="dark"] .sponsor-card {
+	background: #f8f9fa;
+	border-color: #e0e0e0;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] .sponsor-card:hover {
+	border-color: #22d3d1;
+	box-shadow: 0 6px 18px rgba(34, 211, 209, 0.2);
+}
+[data-theme="dark"] .sponsor-card span {
+	color: #d0d0d0;
+}
+
+@media screen and (max-width: 736px) {
+	.sponsors-grid {
+		display: grid;
+		grid-template-columns: repeat(2, auto);
+		justify-content: center;
+		gap: 1rem;
+	}
+	.sponsor-card {
+		width: 90px;
+		height: 90px;
+	}
+	.sponsor-card img {
+		height: 50px;
+	}
+}
+
 /*
    Shared card and grid styles for Blog and Projects (listing + cards in entry pages).
    Classes: blog-grid, project-grid | blog-card-modern, project-card-modern | blog-read-btn, project-read-btn
