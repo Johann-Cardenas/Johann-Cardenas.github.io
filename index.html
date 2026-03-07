@@ -532,5 +532,106 @@
 			});
 		</script>
 
+		<!-- Research Projects: show first 3, collapse the rest -->
+		<script>
+		(function () {
+			'use strict';
+			var VISIBLE = 3;
+
+			function initCollapse() {
+				var grid = document.querySelector('#all-projects-placeholder')
+					? null
+					: document.querySelector('.project-grid');
+				if (!grid) return;
+
+				var cards = Array.from(grid.querySelectorAll('.project-card-modern'));
+				if (cards.length <= VISIBLE) return;
+
+				var hiddenCards = cards.slice(VISIBLE);
+				hiddenCards.forEach(function (c) { c.style.display = 'none'; });
+
+				var remaining = hiddenCards.length;
+				var btn = document.createElement('button');
+				btn.className = 'cv-collapse-toggle';
+				btn.innerHTML = '<i class="fas fa-chevron-down cv-collapse-icon"></i> Show ' + remaining + ' more';
+				btn.setAttribute('aria-expanded', 'false');
+				btn.style.marginTop = '1.5rem';
+				grid.parentElement.appendChild(btn);
+
+				btn.addEventListener('click', function () {
+					var expanded = btn.getAttribute('aria-expanded') === 'true';
+					hiddenCards.forEach(function (c) {
+						c.style.display = expanded ? 'none' : '';
+					});
+					btn.setAttribute('aria-expanded', String(!expanded));
+					if (expanded) {
+						btn.innerHTML = '<i class="fas fa-chevron-down cv-collapse-icon"></i> Show ' + remaining + ' more';
+					} else {
+						btn.innerHTML = '<i class="fas fa-chevron-up cv-collapse-icon"></i> Show less';
+					}
+				});
+			}
+
+			var obs = new MutationObserver(function () {
+				if (document.querySelector('.project-grid')) {
+					obs.disconnect();
+					initCollapse();
+				}
+			});
+			obs.observe(document.body, { childList: true, subtree: true });
+		})();
+		</script>
+
+		<!-- Blog Entries: show first 3, collapse the rest -->
+		<script>
+		(function () {
+			'use strict';
+			var VISIBLE = 3;
+
+			function initCollapse() {
+				var grid = document.querySelector('#all-blog-posts-placeholder')
+					? null
+					: document.querySelector('.blog-grid');
+				if (!grid) return;
+
+				var cards = Array.from(grid.querySelectorAll('.blog-card-modern'));
+				if (cards.length <= VISIBLE) return;
+
+				var hiddenCards = cards.slice(VISIBLE);
+				hiddenCards.forEach(function (c) { c.style.display = 'none'; });
+
+				var remaining = hiddenCards.length;
+				var btn = document.createElement('button');
+				btn.className = 'cv-collapse-toggle';
+				btn.innerHTML = '<i class="fas fa-chevron-down cv-collapse-icon"></i> Show ' + remaining + ' more';
+				btn.setAttribute('aria-expanded', 'false');
+				btn.style.marginTop = '1.5rem';
+				grid.parentElement.appendChild(btn);
+
+				btn.addEventListener('click', function () {
+					var expanded = btn.getAttribute('aria-expanded') === 'true';
+					hiddenCards.forEach(function (c) {
+						c.style.display = expanded ? 'none' : '';
+					});
+					btn.setAttribute('aria-expanded', String(!expanded));
+					if (expanded) {
+						btn.innerHTML = '<i class="fas fa-chevron-down cv-collapse-icon"></i> Show ' + remaining + ' more';
+					} else {
+						btn.innerHTML = '<i class="fas fa-chevron-up cv-collapse-icon"></i> Show less';
+					}
+				});
+			}
+
+			// Wait for components.js to replace the placeholder
+			var obs = new MutationObserver(function () {
+				if (document.querySelector('.blog-grid')) {
+					obs.disconnect();
+					initCollapse();
+				}
+			});
+			obs.observe(document.body, { childList: true, subtree: true });
+		})();
+		</script>
+
 	</body>
 </html>
