@@ -1855,6 +1855,14 @@ body.Publications .pub-article .pub-section:first-of-type {
 	.pub-toc a i { display: none; }
 }
 
+/* Dark theme – pub TOC (mirrors resume-toc dark colors) */
+[data-theme="dark"] .pub-toc {
+	--pub-card-bg: rgba(30, 41, 59, 0.85);
+	--pub-card-border: rgba(24, 169, 168, 0.18);
+	--pub-accent: #2dd4bf;
+	--text-secondary: #94a3b8;
+}
+
 /* --- Timeline --- */
 .pub-timeline .pub-list::before {
 	content: '';
@@ -3315,6 +3323,14 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 	}
 
 	.resume-toc a i { display: none; }
+}
+
+/* Dark theme – resume TOC */
+[data-theme="dark"] .resume-toc {
+	--resume-card-bg: rgba(30, 41, 59, 0.85);
+	--resume-card-border: rgba(24, 169, 168, 0.18);
+	--resume-accent: #2dd4bf;
+	--resume-meta: #94a3b8;
 }
 
 /* --- Publications Enhancement --- */
@@ -9205,6 +9221,14 @@ html {
 	}
 
 	.blog-year-nav a i { display: none; }
+}
+
+/* Dark theme – blog year nav */
+[data-theme="dark"] .blog-year-nav {
+	--pub-card-bg: rgba(30, 41, 59, 0.85);
+	--pub-card-border: rgba(24, 169, 168, 0.18);
+	--pub-accent: #2dd4bf;
+	--text-secondary: #94a3b8;
 }
 
 /* --- Hidden State (cards + year markers) --- */
