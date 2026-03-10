@@ -6694,6 +6694,7 @@
             var stars = [];
             var shootingStars = [];
             var animId = null;
+            var mouseX = -9999, mouseY = -9999;
 
             function resize() {
                 var rect = canvas.parentElement.getBoundingClientRect();
@@ -6719,16 +6720,90 @@
 
             function draw(t) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                // Stars
+                var hasM = mouseX > 0 && mouseY > 0;
+                var repR = 120;
+
+                // Cursor nebula glow — soft radial aura around cursor
+                if (hasM) {
+                    ctx.globalAlpha = 1;
+                    var nebGrad = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, 110);
+                    nebGrad.addColorStop(0, 'rgba(167,139,250,0.07)');
+                    nebGrad.addColorStop(0.35, 'rgba(34,211,209,0.035)');
+                    nebGrad.addColorStop(1, 'rgba(167,139,250,0)');
+                    ctx.fillStyle = nebGrad;
+                    ctx.fillRect(mouseX - 110, mouseY - 110, 220, 220);
+                }
+
+                // Constellation lines — connect nearby stars around cursor
+                if (hasM) {
+                    var nearby = [];
+                    for (var i = 0; i < stars.length; i++) {
+                        var s = stars[i];
+                        var cdx = s.x - mouseX, cdy = s.y - mouseY;
+                        var cDist = Math.sqrt(cdx * cdx + cdy * cdy);
+                        if (cDist < 120) {
+                            var f = cDist < repR && cDist > 0 ? ((repR - cDist) / repR) : 0;
+                            f = f * f;
+                            nearby.push({
+                                dx: s.x + (cDist > 0 ? (cdx / cDist) * f * 30 : 0),
+                                dy: s.y + (cDist > 0 ? (cdy / cDist) * f * 30 : 0),
+                                dist: cDist
+                            });
+                        }
+                    }
+                    ctx.globalAlpha = 1;
+                    for (var i = 0; i < nearby.length; i++) {
+                        for (var j = i + 1; j < nearby.length; j++) {
+                            var ldx = nearby[i].dx - nearby[j].dx;
+                            var ldy = nearby[i].dy - nearby[j].dy;
+                            var lDist = Math.sqrt(ldx * ldx + ldy * ldy);
+                            if (lDist < 85) {
+                                var fadeI = 1 - Math.max(nearby[i].dist, nearby[j].dist) / 120;
+                                var lA = (1 - lDist / 85) * 0.2 * fadeI;
+                                ctx.beginPath();
+                                ctx.moveTo(nearby[i].dx, nearby[i].dy);
+                                ctx.lineTo(nearby[j].dx, nearby[j].dy);
+                                ctx.strokeStyle = 'rgba(167,139,250,' + lA + ')';
+                                ctx.lineWidth = 0.6;
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                }
+
+                // Stars — repulsion + brightness/size boost near cursor
                 for (var i = 0; i < stars.length; i++) {
                     var s = stars[i];
-                    var a = s.alpha * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
+                    var drawX = s.x, drawY = s.y, rBoost = 0, aBoost = 0;
+                    if (hasM) {
+                        var dx = s.x - mouseX, dy = s.y - mouseY;
+                        var dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < repR && dist > 0) {
+                            var f = (repR - dist) / repR;
+                            f = f * f;
+                            drawX += (dx / dist) * f * 30;
+                            drawY += (dy / dist) * f * 30;
+                            aBoost = f * 0.35;
+                            rBoost = f * 1.8;
+                        }
+                    }
+                    var a = Math.min((s.alpha + aBoost) * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase)), 1);
                     ctx.beginPath();
-                    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                    ctx.arc(drawX, drawY, s.r + rBoost, 0, Math.PI * 2);
                     ctx.fillStyle = s.color;
                     ctx.globalAlpha = a;
                     ctx.fill();
+                    // Glow ring on stars very close to cursor
+                    if (hasM && rBoost > 0.6) {
+                        ctx.beginPath();
+                        ctx.arc(drawX, drawY, s.r + rBoost + 3, 0, Math.PI * 2);
+                        ctx.strokeStyle = s.color;
+                        ctx.globalAlpha = aBoost * 0.4;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
                 }
+
                 // Shooting stars
                 ctx.globalAlpha = 1;
                 for (var j = shootingStars.length - 1; j >= 0; j--) {
@@ -6768,6 +6843,18 @@
             }
 
             window.addEventListener('resize', function() { resize(); createStars(); });
+            // Mouse interaction — track cursor over landing section
+            var landingSec = document.getElementById('landing-section');
+            if (landingSec) {
+                landingSec.addEventListener('mousemove', function(ev) {
+                    var rect = canvas.getBoundingClientRect();
+                    mouseX = ev.clientX - rect.left;
+                    mouseY = ev.clientY - rect.top;
+                });
+                landingSec.addEventListener('mouseleave', function() {
+                    mouseX = -9999; mouseY = -9999;
+                });
+            }
             // Start when visible
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', start);

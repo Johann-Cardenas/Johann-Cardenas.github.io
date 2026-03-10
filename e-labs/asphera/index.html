@@ -2312,13 +2312,12 @@
         }
     }
 
-    // Get stress color from a 0-1 value (blue → teal → green → yellow → red)
+    // Get stress color from a 0-1 value (deep blue → blue → teal → bright aqua)
     function stressColor(v, alpha) {
         var r, g, b;
-        if (v < 0.25)      { var t=v/0.25;     r=0;          g=Math.round(80*t);  b=Math.round(180+75*t); }
-        else if (v < 0.5)  { var t=(v-0.25)/0.25; r=0;       g=Math.round(80+100*t); b=Math.round(255-155*t); }
-        else if (v < 0.75) { var t=(v-0.5)/0.25; r=Math.round(200*t); g=Math.round(180+40*t); b=Math.round(100-100*t); }
-        else               { var t=(v-0.75)/0.25; r=Math.round(200+55*t); g=Math.round(220-140*t); b=0; }
+        if (v < 0.33)      { var t=v/0.33;     r=0;                    g=Math.round(40+60*t);   b=Math.round(140+80*t); }
+        else if (v < 0.66) { var t=(v-0.33)/0.33; r=0;                 g=Math.round(100+80*t);  b=Math.round(220-60*t); }
+        else               { var t=(v-0.66)/0.34; r=Math.round(15*t);  g=Math.round(180+31*t);  b=Math.round(160+9*t); }
         return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
     }
 
@@ -2335,6 +2334,17 @@
         var w = canvas.style.width ? parseFloat(canvas.style.width) : canvas.width;
         var h = canvas.style.height ? parseFloat(canvas.style.height) : canvas.height;
         ctx.clearRect(0, 0, w + 1, h + 1);
+
+        // Cursor stress-probe spotlight — soft radial glow following mouse
+        if (mouseX > 0 && mouseY > 0) {
+            var spotGrad = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, 150);
+            var spotC = isDark ? '34,211,209' : '24,169,168';
+            spotGrad.addColorStop(0, 'rgba(' + spotC + ',0.07)');
+            spotGrad.addColorStop(0.4, 'rgba(' + spotC + ',0.025)');
+            spotGrad.addColorStop(1, 'rgba(' + spotC + ',0)');
+            ctx.fillStyle = spotGrad;
+            ctx.fillRect(mouseX - 150, mouseY - 150, 300, 300);
+        }
 
         // Update node positions (breathing)
         for (var i = 0; i < nodes.length; i++) {
@@ -2371,9 +2381,9 @@
             // Mouse proximity boost
             var mdx = cx_ - mouseX, mdy = cy_ - mouseY;
             var mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-            var mouseBoost = mDist < 150 ? (1 - mDist / 150) * 0.4 : 0;
-            var fillAlpha = baseAlpha + waveIntensity * (isDark ? 0.14 : 0.08) + mouseBoost * (isDark ? 0.12 : 0.06);
-            var stressVal = (Math.sin(ts * 0.5 + pos * 4) * 0.5 + 0.5) * 0.6 + waveIntensity * 0.4;
+            var mouseBoost = mDist < 160 ? (1 - mDist / 160) * 0.5 : 0;
+            var fillAlpha = baseAlpha + waveIntensity * (isDark ? 0.14 : 0.08) + mouseBoost * (isDark ? 0.2 : 0.12);
+            var stressVal = Math.min((Math.sin(ts * 0.5 + pos * 4) * 0.5 + 0.5) * 0.6 + waveIntensity * 0.4 + mouseBoost * 0.6, 1.0);
             if (fillAlpha > 0.01) {
                 ctx.beginPath();
                 ctx.moveTo(a.x, a.y);
@@ -2426,12 +2436,20 @@
                 ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
                 ctx.fillStyle = nodeColor(nAlpha);
                 ctx.fill();
-                // Glow ring on mouse-near nodes
-                if (nMouseGlow > 0.3) {
+                // Inner glow ring on mouse-near nodes
+                if (nMouseGlow > 0.15) {
                     ctx.beginPath();
                     ctx.arc(n.x, n.y, r + 3, 0, Math.PI * 2);
-                    ctx.strokeStyle = nodeColor(nMouseGlow * 0.25);
+                    ctx.strokeStyle = nodeColor(nMouseGlow * 0.3);
                     ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+                // Outer glow ring — wider, fainter halo
+                if (nMouseGlow > 0.4) {
+                    ctx.beginPath();
+                    ctx.arc(n.x, n.y, r + 7, 0, Math.PI * 2);
+                    ctx.strokeStyle = nodeColor(nMouseGlow * 0.12);
+                    ctx.lineWidth = 0.6;
                     ctx.stroke();
                 }
             }
@@ -2444,18 +2462,30 @@
             var si = i * sensorStep;
             if (si >= nodes.length) break;
             var sn = nodes[si];
-            var sp = 0.4 + 0.6 * Math.sin(ts * 1.2 + si);
-            var sr = 2 + sp * 1.5;
+            // Mouse proximity makes sensors pulse faster and glow brighter
+            var sdx = sn.x - mouseX, sdy = sn.y - mouseY;
+            var sDist = Math.sqrt(sdx * sdx + sdy * sdy);
+            var sMouse = sDist < 130 ? (1 - sDist / 130) : 0;
+            var sp = 0.4 + 0.6 * Math.sin(ts * (1.2 + sMouse * 3) + si);
+            var sr = 2 + sp * 1.5 + sMouse * 2.5;
             ctx.beginPath();
             ctx.arc(sn.x, sn.y, sr, 0, Math.PI * 2);
-            ctx.fillStyle = nodeColor(sp * (isDark ? 0.35 : 0.2));
+            ctx.fillStyle = nodeColor((sp + sMouse * 0.5) * (isDark ? 0.35 : 0.2));
             ctx.fill();
             // outer ring
             ctx.beginPath();
-            ctx.arc(sn.x, sn.y, sr + 4, 0, Math.PI * 2);
-            ctx.strokeStyle = nodeColor(sp * (isDark ? 0.12 : 0.06));
-            ctx.lineWidth = 1;
+            ctx.arc(sn.x, sn.y, sr + 4 + sMouse * 3, 0, Math.PI * 2);
+            ctx.strokeStyle = nodeColor((sp + sMouse * 0.3) * (isDark ? 0.12 : 0.06));
+            ctx.lineWidth = 1 + sMouse * 0.5;
             ctx.stroke();
+            // Extra flare ring when very close to mouse
+            if (sMouse > 0.5) {
+                ctx.beginPath();
+                ctx.arc(sn.x, sn.y, sr + 9 + sMouse * 4, 0, Math.PI * 2);
+                ctx.strokeStyle = nodeColor(sMouse * (isDark ? 0.08 : 0.04));
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+            }
         }
 
         animId = requestAnimationFrame(draw);

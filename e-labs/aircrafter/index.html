@@ -2131,12 +2131,12 @@
             isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-        // AirCrafter palette
+        // AirCrafter palette — deeper tones for background subtlety
         var C = {
-            sky:    function(a){ return isDark ? 'rgba(14,165,233,'+a+')' : 'rgba(2,132,199,'+a+')'; },
-            orange: function(a){ return isDark ? 'rgba(249,115,22,'+a+')' : 'rgba(234,88,12,'+a+')'; },
-            violet: function(a){ return isDark ? 'rgba(139,92,246,'+a+')' : 'rgba(109,40,217,'+a+')'; },
-            teal:   function(a){ return isDark ? 'rgba(45,212,191,'+a+')' : 'rgba(20,184,166,'+a+')'; }
+            sky:    function(a){ return isDark ? 'rgba(6,95,150,'+a+')' : 'rgba(2,80,130,'+a+')'; },
+            orange: function(a){ return isDark ? 'rgba(180,70,10,'+a+')' : 'rgba(160,55,5,'+a+')'; },
+            violet: function(a){ return isDark ? 'rgba(90,50,180,'+a+')' : 'rgba(70,25,150,'+a+')'; },
+            teal:   function(a){ return isDark ? 'rgba(20,140,130,'+a+')' : 'rgba(12,110,100,'+a+')'; }
         };
 
         function resize() {
@@ -2234,12 +2234,12 @@
             }
         }
 
-        // Pressure colormap: deep blue → sky blue → orange → bright orange
+        // Pressure colormap: deep navy → dark teal → burnt orange
         function pressureColor(v, alpha) {
             var r, g, b;
-            if (v < 0.33)      { var t=v/0.33;     r=Math.round(14*t);  g=Math.round(50+115*t);  b=Math.round(120+113*t); }
-            else if (v < 0.66) { var t=(v-0.33)/0.33; r=Math.round(14+235*t); g=Math.round(165-50*t); b=Math.round(233-211*t); }
-            else               { var t=(v-0.66)/0.34; r=Math.round(249);      g=Math.round(115+40*t); b=Math.round(22); }
+            if (v < 0.33)      { var t=v/0.33;     r=Math.round(5+5*t);   g=Math.round(25+55*t);   b=Math.round(70+60*t); }
+            else if (v < 0.66) { var t=(v-0.33)/0.33; r=Math.round(10+160*t); g=Math.round(80-10*t);  b=Math.round(130-115*t); }
+            else               { var t=(v-0.66)/0.34; r=Math.round(170+10*t); g=Math.round(70+10*t);  b=Math.round(15); }
             return 'rgba('+r+','+g+','+b+','+alpha+')';
         }
 
@@ -2268,7 +2268,7 @@
             var wavePhase = (ts * 0.3) % 2.5;
 
             // --- Draw triangle fills (pressure field) ---
-            var baseFill = isDark ? 0.02 : 0.012;
+            var baseFill = isDark ? 0.04 : 0.025;
             for (var i = 0; i < tris.length; i++) {
                 var tri = tris[i];
                 var a = nodes[tri[0]], b = nodes[tri[1]], c = nodes[tri[2]];
@@ -2282,17 +2282,17 @@
                     minZoneDist = Math.min(minZoneDist, Math.sqrt(zdx*zdx + zdy*zdy));
                 }
 
-                // Wave ring effect
+                // Wave ring effect — wider band, stronger amplitude
                 var waveRing = Math.abs(minZoneDist * 0.15 - wavePhase);
-                var waveBoost = waveRing < 0.4 ? (1 - waveRing/0.4) * 0.06 : 0;
+                var waveBoost = waveRing < 0.55 ? (1 - waveRing/0.55) * 0.18 : 0;
 
                 // Mouse boost
                 var mdx = tcx - mouseX, mdy = tcy - mouseY;
                 var mDist = Math.sqrt(mdx*mdx + mdy*mdy);
-                var mBoost = mDist < 130 ? (1-mDist/130) * 0.12 : 0;
+                var mBoost = mDist < 130 ? (1-mDist/130) * 0.3 : 0;
 
-                var intensity = Math.max(0, 1 - minZoneDist * 0.12);
-                var fillA = baseFill + intensity * (isDark ? 0.04 : 0.02) + waveBoost * (isDark ? 0.3 : 0.15) + mBoost * (isDark ? 0.04 : 0.02);
+                var intensity = Math.max(0, 1 - minZoneDist * 0.1);
+                var fillA = baseFill + intensity * (isDark ? 0.12 : 0.07) + waveBoost * (isDark ? 0.8 : 0.5) + mBoost * (isDark ? 0.12 : 0.06);
 
                 if (fillA > 0.01) {
                     var pVal = intensity * 0.5 + waveBoost * 2 + Math.sin(ts * 0.3 + minZoneDist * 0.5) * 0.15 + 0.15;
@@ -2309,12 +2309,12 @@
             for (var i = 0; i < pressureRings.length; i++) {
                 var pr = pressureRings[i];
                 var pulse = 0.5 + 0.5 * Math.sin(ts * 0.8 + pr.phase);
-                var rAlpha = (isDark ? 0.035 : 0.018) * (1 - pr.ring * 0.2) * pulse;
+                var rAlpha = (isDark ? 0.07 : 0.04) * (1 - pr.ring * 0.15) * pulse;
                 if (rAlpha > 0.005) {
                     ctx.beginPath();
                     ctx.ellipse(pr.cx, pr.cy, pr.rx + Math.sin(ts*0.5+pr.phase)*3, pr.ry + Math.cos(ts*0.4+pr.phase)*2, 0, 0, Math.PI*2);
-                    ctx.strokeStyle = pr.ring <= 2 ? C.sky(rAlpha * 2) : C.orange(rAlpha * 2);
-                    ctx.lineWidth = pr.ring === 1 ? 1.2 : 0.6;
+                    ctx.strokeStyle = pr.ring <= 2 ? C.sky(rAlpha * 3) : C.orange(rAlpha * 3);
+                    ctx.lineWidth = pr.ring === 1 ? 1.5 : 0.8;
                     ctx.setLineDash(pr.ring > 2 ? [4,6] : []);
                     ctx.stroke();
                     ctx.setLineDash([]);
@@ -2322,11 +2322,11 @@
             }
 
             // --- Draw edges ---
-            var edgeBase = isDark ? 0.055 : 0.03;
-            if (Math.random() < 0.008 && edges.length > 0) {
+            var edgeBase = isDark ? 0.18 : 0.12;
+            if (Math.random() < 0.009 && edges.length > 0) {
                 // Random load-path glow
                 var ri = Math.floor(Math.random() * edges.length);
-                edges[ri].glowTarget = 0.3 + Math.random() * 0.3;
+                edges[ri].glowTarget = 0.6 + Math.random() * 0.4;
             }
             for (var i = 0; i < edges.length; i++) {
                 var e = edges[i];
@@ -2336,20 +2336,20 @@
                 // Mouse proximity
                 var emx = (a.x+b.x)/2 - mouseX, emy = (a.y+b.y)/2 - mouseY;
                 var eDist = Math.sqrt(emx*emx + emy*emy);
-                var eMouse = eDist < 90 ? (1-eDist/90)*0.15 : 0;
+                var eMouse = eDist < 100 ? (1-eDist/100)*0.3 : 0;
                 // Near-contact-zone edges are brighter
                 var zoneProx = 0;
                 for (var z = 0; z < contactZones.length; z++) {
                     var zn = contactZones[z];
                     var zdx = ((a.x+b.x)/2 - zn.cx), zdy = ((a.y+b.y)/2 - zn.cy);
                     var zd = Math.sqrt(zdx*zdx + zdy*zdy);
-                    if (zd < 100) zoneProx = Math.max(zoneProx, (100-zd)/100 * 0.08);
+                    if (zd < 100) zoneProx = Math.max(zoneProx, (100-zd)/100 * 0.15);
                 }
-                var alpha = edgeBase + e.glow * 0.2 + eMouse + zoneProx;
+                var alpha = edgeBase + e.glow * 0.4 + eMouse + zoneProx;
                 ctx.beginPath();
                 ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
                 ctx.strokeStyle = e.glow > 0.1 ? C.orange(alpha) : C.sky(alpha);
-                ctx.lineWidth = 0.4 + e.glow * 1.0 + eMouse * 0.6;
+                ctx.lineWidth = 0.5 + e.glow * 1.2 + eMouse * 0.8;
                 ctx.stroke();
             }
 
@@ -2359,18 +2359,18 @@
                 var pulse = 0.3 + 0.3 * Math.sin(ts * n.pulseSpeed + n.pulsePhase);
                 var ndx = n.x - mouseX, ndy = n.y - mouseY;
                 var nDist = Math.sqrt(ndx*ndx + ndy*ndy);
-                var nMouse = nDist < 90 ? (1-nDist/90) : 0;
-                var nr = 0.7 + nMouse * 1.8;
-                var nAlpha = (isDark ? 0.07 : 0.035) * pulse + nMouse * 0.35;
+                var nMouse = nDist < 100 ? (1-nDist/100) : 0;
+                var nr = 1.2 + nMouse * 2.5;
+                var nAlpha = (isDark ? 0.22 : 0.15) * pulse + nMouse * 0.6;
                 if (nAlpha > 0.025) {
                     ctx.beginPath();
                     ctx.arc(n.x, n.y, nr, 0, Math.PI*2);
                     ctx.fillStyle = C.sky(nAlpha);
                     ctx.fill();
-                    if (nMouse > 0.4) {
+                    if (nMouse > 0.3) {
                         ctx.beginPath();
                         ctx.arc(n.x, n.y, nr + 3, 0, Math.PI*2);
-                        ctx.strokeStyle = C.sky(nMouse * 0.12);
+                        ctx.strokeStyle = C.sky(nMouse * 0.25);
                         ctx.lineWidth = 1;
                         ctx.stroke();
                     }
@@ -2384,15 +2384,15 @@
                 // Inner ellipse fill
                 ctx.beginPath();
                 ctx.ellipse(zn.cx, zn.cy, zn.rx + Math.sin(ts*0.6)*2, zn.ry + Math.cos(ts*0.5)*1.5, 0, 0, Math.PI*2);
-                ctx.fillStyle = C.orange(isDark ? 0.04 * zPulse : 0.02 * zPulse);
+                ctx.fillStyle = C.orange(isDark ? 0.06 * zPulse : 0.03 * zPulse);
                 ctx.fill();
-                ctx.strokeStyle = C.orange(isDark ? 0.1 * zPulse : 0.05 * zPulse);
-                ctx.lineWidth = 1;
+                ctx.strokeStyle = C.orange(isDark ? 0.15 * zPulse : 0.08 * zPulse);
+                ctx.lineWidth = 1.1;
                 ctx.stroke();
                 // Center dot
                 ctx.beginPath();
-                ctx.arc(zn.cx, zn.cy, 2 + zPulse * 0.8, 0, Math.PI*2);
-                ctx.fillStyle = C.orange(isDark ? 0.3 * zPulse : 0.15 * zPulse);
+                ctx.arc(zn.cx, zn.cy, 2.2 + zPulse * 0.9, 0, Math.PI*2);
+                ctx.fillStyle = C.orange(isDark ? 0.4 * zPulse : 0.22 * zPulse);
                 ctx.fill();
             }
 
@@ -2404,22 +2404,22 @@
                 if (si >= nodes.length) break;
                 var sn = nodes[si];
                 var sp = 0.3 + 0.7 * Math.sin(ts * 1.1 + si * 0.7);
-                var sr = 1.5 + sp * 0.8;
+                var sr = 2 + sp * 1.5;
                 ctx.beginPath();
                 ctx.arc(sn.x, sn.y, sr, 0, Math.PI*2);
-                ctx.fillStyle = C.violet(sp * (isDark ? 0.15 : 0.07));
+                ctx.fillStyle = C.violet(sp * (isDark ? 0.5 : 0.3));
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(sn.x, sn.y, sr + 3, 0, Math.PI*2);
-                ctx.strokeStyle = C.violet(sp * (isDark ? 0.06 : 0.025));
-                ctx.lineWidth = 0.6;
+                ctx.arc(sn.x, sn.y, sr + 4, 0, Math.PI*2);
+                ctx.strokeStyle = C.violet(sp * (isDark ? 0.18 : 0.1));
+                ctx.lineWidth = 1;
                 ctx.stroke();
             }
 
             // --- Tiny aircraft silhouette (wireframe, very subtle) ---
             var planeX = w * 0.82, planeY = h * 0.15;
             var planeScale = Math.min(w, h) * 0.0009;
-            var planeAlpha = isDark ? 0.05 + 0.025*Math.sin(ts*0.3) : 0.03 + 0.015*Math.sin(ts*0.3);
+            var planeAlpha = isDark ? 0.1 + 0.05*Math.sin(ts*0.3) : 0.07 + 0.03*Math.sin(ts*0.3);
             ctx.save();
             ctx.translate(planeX, planeY);
             ctx.scale(planeScale, planeScale);
