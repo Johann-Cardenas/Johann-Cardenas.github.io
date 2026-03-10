@@ -151,6 +151,52 @@
             0%, 100% { border-color: var(--ac-border); }
             50% { border-color: var(--ac-primary); }
         }
+        @keyframes meshDrift {
+            0% { transform: translate(0,0) scale(1); }
+            50% { transform: translate(-15px,10px) scale(1.02); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+        @keyframes scanLine {
+            0% { top: -2px; opacity: 0; }
+            10% { opacity: 0.7; }
+            90% { opacity: 0.7; }
+            100% { top: 100%; opacity: 0; }
+        }
+        @keyframes heroTextReveal {
+            from { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes orbFloat {
+            0%,100% { transform: translate(0,0) scale(1); }
+            25% { transform: translate(15px,-20px) scale(1.05); }
+            50% { transform: translate(-10px,15px) scale(0.95); }
+            75% { transform: translate(20px,10px) scale(1.03); }
+        }
+        @keyframes nodeGlow {
+            0%,100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.3); }
+        }
+        @keyframes cardReveal {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes computeGlow {
+            0%,100% { box-shadow: 0 4px 16px rgba(16,185,129,0.25), 0 0 0 0 rgba(16,185,129,0.3); }
+            50% { box-shadow: 0 4px 24px rgba(16,185,129,0.4), 0 0 0 6px rgba(16,185,129,0.08); }
+        }
+        @keyframes computeShimmer {
+            0% { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
+        @keyframes resetPulse {
+            0%,100% { border-color: rgba(239,68,68,0.45); }
+            50% { border-color: rgba(239,68,68,0.75); }
+        }
         .stagger-1 { animation-delay: 0.05s; }
         .stagger-2 { animation-delay: 0.10s; }
         .stagger-3 { animation-delay: 0.15s; }
@@ -335,6 +381,226 @@
             color: white !important; font-weight: 300;
             letter-spacing: 0.5px;
             animation: slideInUp 0.8s ease 0.1s both;
+        }
+
+        /* ==================== LANDING HERO ==================== */
+        .hero-section {
+            position: relative; padding: 2rem 1.5rem 1rem; overflow: hidden;
+            border-radius: 20px; margin-bottom: 1.25rem;
+            background: var(--ac-bg-panel); border: 1px solid var(--ac-border);
+            transition: opacity 0.55s cubic-bezier(0.4,0,0.2,1),
+                        transform 0.55s cubic-bezier(0.4,0,0.2,1),
+                        max-height 0.55s cubic-bezier(0.4,0,0.2,1);
+        }
+        .landing-mesh-bg {
+            position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+            border-radius: 20px; z-index: 0;
+        }
+        .landing-mesh-bg svg {
+            position: absolute; width: 100%; height: 100%;
+            opacity: 0.06; animation: meshDrift 30s ease-in-out infinite;
+        }
+        [data-theme="light"] .landing-mesh-bg svg { opacity: 0.04; }
+        .landing-mesh-bg::after {
+            content: ''; position: absolute; left: 0; right: 0; height: 2px; z-index: 1;
+            background: linear-gradient(90deg, transparent, var(--ac-primary) 30%, var(--ac-secondary) 50%, var(--ac-primary) 70%, transparent);
+            box-shadow: 0 0 20px 4px var(--ac-primary-glow);
+            animation: scanLine 8s ease-in-out infinite; opacity: 0.6;
+        }
+        .landing-orb {
+            position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
+            filter: blur(50px); opacity: 0.12;
+        }
+        [data-theme="light"] .landing-orb { opacity: 0.07; }
+        .landing-orb.orb-1 {
+            width: 280px; height: 280px; top: -50px; right: -40px;
+            background: radial-gradient(circle, var(--ac-primary), transparent 70%);
+            animation: orbFloat 15s ease-in-out infinite;
+        }
+        .landing-orb.orb-2 {
+            width: 200px; height: 200px; bottom: 20px; left: -20px;
+            background: radial-gradient(circle, var(--ac-secondary), transparent 70%);
+            animation: orbFloat 20s ease-in-out infinite reverse;
+        }
+        .landing-orb.orb-3 {
+            width: 160px; height: 160px; top: 40%; left: 60%;
+            background: radial-gradient(circle, var(--ac-accent), transparent 70%);
+            animation: orbFloat 18s ease-in-out infinite 4s;
+        }
+        .landing-hero-content {
+            position: relative; z-index: 1; text-align: center; padding: 1rem 1rem 1.5rem;
+        }
+        .landing-hero-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.4rem 1rem; border-radius: 50px;
+            background: linear-gradient(135deg, rgba(14,165,233,0.12), rgba(249,115,22,0.08));
+            border: 1px solid rgba(14,165,233,0.25);
+            color: var(--ac-primary); font-size: 0.78rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1rem;
+            animation: heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s backwards;
+        }
+        .landing-hero-badge .badge-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--ac-primary); animation: nodeGlow 2s ease-in-out infinite;
+        }
+        .landing-hero-content h2 {
+            font-size: 2.2rem; font-weight: 900; margin: 0 0 0.5rem;
+            letter-spacing: -0.02em; line-height: 1.2;
+            animation: heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.2s backwards;
+        }
+        .landing-hero-content h2 .hero-gradient {
+            background: linear-gradient(135deg, var(--ac-primary), var(--ac-secondary), var(--ac-accent), var(--ac-primary));
+            background-size: 300% 300%;
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 6s ease infinite;
+        }
+        .landing-hero-content h2 .hero-plain { color: var(--ac-text); }
+        .landing-hero-sub {
+            font-size: 1rem; color: var(--ac-text-muted); line-height: 1.6;
+            max-width: 560px; margin: 0 auto 1.5rem;
+            animation: heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.35s backwards;
+        }
+        .landing-stats {
+            display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;
+            margin-bottom: 2rem;
+            animation: heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.5s backwards;
+        }
+        .landing-stat {
+            display: flex; flex-direction: column; align-items: center; gap: 0.15rem;
+            padding: 0.5rem 1rem; border-radius: 12px;
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px); min-width: 85px; transition: all 0.3s ease;
+        }
+        .landing-stat:hover {
+            border-color: var(--ac-primary); background: rgba(14,165,233,0.08);
+            transform: translateY(-2px); box-shadow: 0 8px 24px rgba(14,165,233,0.1);
+        }
+        .landing-stat-value {
+            font-size: 1.35rem; font-weight: 900; letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--ac-primary), var(--ac-secondary));
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .landing-stat-label {
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--ac-text-muted);
+        }
+        .landing-divider {
+            display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;
+            animation: heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.6s backwards;
+        }
+        .landing-divider::before, .landing-divider::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--ac-border), transparent);
+        }
+        .landing-divider-text {
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--ac-text-muted);
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.3rem 1rem; border-radius: 20px;
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+        }
+        .landing-divider-text i { font-size: 0.65rem; color: var(--ac-primary); }
+        .hero-section .landing-selection-panel {
+            animation: cardReveal 0.5s cubic-bezier(0.22,1,0.36,1) 0.7s backwards;
+            position: relative; z-index: 1;
+        }
+
+        /* ==================== APP STATE TRANSITIONS ==================== */
+        .aircrafter-app.app-working .hero-section {
+            opacity: 0; transform: translateY(-30px); pointer-events: none;
+            max-height: 0; padding: 0; margin: 0; border: none; overflow: hidden;
+        }
+        .module-tabs-wrapper {
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+        .aircrafter-app:not(.app-working) .module-tabs-wrapper {
+            opacity: 0; max-height: 0; overflow: hidden; pointer-events: none;
+        }
+        .aircrafter-app.app-working .module-tabs-wrapper {
+            opacity: 1;
+            animation: slideInUp 0.5s cubic-bezier(0.22,1,0.36,1) 0.1s backwards;
+        }
+
+        /* ==================== COLLAPSED AIRCRAFT BAR ==================== */
+        .aircraft-collapsed-bar {
+            display: none; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+            padding: 0.65rem 1rem; border-radius: 14px;
+            background: var(--ac-bg-panel); border: 1px solid var(--ac-border);
+            margin-bottom: 0.75rem;
+            animation: slideInUp 0.4s cubic-bezier(0.22,1,0.36,1) backwards;
+        }
+        .aircrafter-app.app-working .aircraft-collapsed-bar { display: flex; }
+        .aircraft-collapsed-bar .acb-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--ac-primary), #0284c7);
+            color: #fff; font-size: 0.9rem; flex-shrink: 0;
+        }
+        .aircraft-collapsed-bar .acb-info {
+            display: flex; flex-direction: column; gap: 0.1rem; flex: 1; min-width: 0;
+        }
+        .aircraft-collapsed-bar .acb-name {
+            font-size: 0.95rem; font-weight: 700; color: var(--ac-text);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .aircraft-collapsed-bar .acb-meta {
+            font-size: 0.75rem; color: var(--ac-text-muted);
+            display: flex; gap: 0.75rem; flex-wrap: wrap;
+        }
+        .aircraft-collapsed-bar .acb-meta span {
+            display: inline-flex; align-items: center; gap: 0.25rem;
+        }
+        .aircraft-collapsed-bar .acb-meta i { font-size: 0.65rem; color: var(--ac-primary); }
+        .aircraft-collapsed-bar .acb-change {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.35rem 0.85rem; border-radius: 8px;
+            font-size: 0.78rem; font-weight: 600;
+            background: rgba(14,165,233,0.1); color: var(--ac-primary);
+            border: 1px solid rgba(14,165,233,0.25);
+            cursor: pointer; transition: all 0.2s ease; white-space: nowrap;
+        }
+        .aircraft-collapsed-bar .acb-change:hover {
+            background: rgba(14,165,233,0.2); border-color: rgba(14,165,233,0.4);
+            transform: translateY(-1px);
+        }
+
+        /* ==================== COMPUTE/RESET BUTTON HIGHLIGHTS ==================== */
+        #param-panel.params-dirty #btn-compute {
+            background:
+                linear-gradient(90deg,
+                    transparent 0%, rgba(255,255,255,0.12) 40%, rgba(255,255,255,0.12) 60%, transparent 100%),
+                linear-gradient(135deg, #10b981, #059669) !important;
+            background-size: 200% 100%, 100% 100%;
+            border: none;
+            color: #fff !important;
+            animation: computeGlow 2.5s ease-in-out infinite, computeShimmer 3s linear infinite;
+            box-shadow: 0 4px 18px rgba(16,185,129,0.3);
+            letter-spacing: 0.02em;
+        }
+        #param-panel.params-dirty #btn-compute:hover {
+            background:
+                linear-gradient(90deg,
+                    transparent 0%, rgba(255,255,255,0.18) 40%, rgba(255,255,255,0.18) 60%, transparent 100%),
+                linear-gradient(135deg, #34d399, #10b981) !important;
+            background-size: 200% 100%, 100% 100%;
+            box-shadow: 0 8px 32px rgba(16,185,129,0.4);
+            transform: translateY(-2px) scale(1.02);
+        }
+        #param-panel.params-dirty #btn-compute .kbd-hint {
+            background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.25);
+            color: rgba(255,255,255,0.85);
+        }
+        #param-panel.params-dirty #btn-reset {
+            background: rgba(239,68,68,0.08) !important;
+            border: 1px solid rgba(239,68,68,0.45) !important;
+            color: #ef4444 !important;
+            animation: resetPulse 2.5s ease-in-out infinite;
+        }
+        #param-panel.params-dirty #btn-reset:hover {
+            background: rgba(239,68,68,0.15) !important;
+            border-color: rgba(239,68,68,0.7) !important;
+            transform: translateY(-1px);
         }
 
         /* ==================== ABOUT MODAL ==================== */
@@ -663,6 +929,9 @@
         .rib-table td input.modified {
             border-color: var(--ac-warning); background: rgba(245, 158, 11, 0.08);
         }
+        .adv-input-group input.modified {
+            border-color: var(--ac-warning) !important; background: rgba(245, 158, 11, 0.08) !important;
+        }
         .rib-table tr:hover td { background: rgba(14, 165, 233, 0.03); }
         .rib-header-cell { font-weight: 700; color: var(--ac-primary-hover) !important; white-space: nowrap; }
         [data-theme="light"] .rib-header-cell { color: #0369a1 !important; }
@@ -927,6 +1196,16 @@
         }
 
         /* ==================== LIGHT MODE OVERRIDES ==================== */
+        [data-theme="light"] .hero-section {
+            background: var(--ac-bg-panel);
+            border-color: var(--ac-border);
+        }
+        [data-theme="light"] .aircraft-collapsed-bar {
+            box-shadow: var(--ac-card-shadow);
+        }
+        [data-theme="light"] .landing-hero-badge {
+            background: linear-gradient(135deg, rgba(14,165,233,0.08), rgba(249,115,22,0.05));
+        }
         [data-theme="light"] .panel {
             box-shadow: var(--ac-card-shadow);
         }
@@ -1119,8 +1398,24 @@
             .charts-row.three-col { grid-template-columns: 1fr; }
             .advanced-grid { grid-template-columns: repeat(2, 1fr); }
             .contact-patch-container { min-height: 400px; padding: 1rem; }
+            .landing-stats { gap: 1rem; }
         }
         @media (max-width: 768px) {
+            .hero-section { padding: 1.5rem 1rem 0.75rem; border-radius: 14px; }
+            .landing-hero-content h2 { font-size: 1.6rem; }
+            .landing-hero-sub { font-size: 0.9rem; }
+            .landing-stats { gap: 0.75rem; }
+            .landing-stat { padding: 0.4rem 0.75rem; min-width: 70px; }
+            .landing-stat-value { font-size: 1.1rem; }
+            .landing-stat-label { font-size: 0.62rem; }
+            .landing-orb { filter: blur(40px); }
+            .landing-orb.orb-1 { width: 180px; height: 180px; }
+            .landing-orb.orb-2 { width: 140px; height: 140px; }
+            .landing-orb.orb-3 { width: 100px; height: 100px; }
+            .aircraft-collapsed-bar { padding: 0.5rem 0.75rem; border-radius: 10px; }
+            .aircraft-collapsed-bar .acb-name { font-size: 0.85rem; }
+            .aircraft-collapsed-bar .acb-meta { font-size: 0.68rem; gap: 0.5rem; }
+            .aircraft-collapsed-bar .acb-change { font-size: 0.72rem; padding: 0.3rem 0.65rem; }
             .aircrafter-app { padding: 0.5rem 0.75rem 1.5rem; padding-top: 2.25rem; }
             /* Collapse header-nav bar; float back-btn into the titleBar row */
             .header-nav {
@@ -1192,6 +1487,7 @@
             .selection-grid { grid-template-columns: 1fr; }
             .panel { padding: 0.85rem 0.9rem; overflow: hidden; max-width: 100%; }
             .panel-title { font-size: 1rem; }
+            .panel-title .kbd-hint { display: none; }
             .inline-stats { gap: 0.35rem; }
             .mini-stat { font-size: 0.82rem; padding: 0.3rem 0.55rem; }
             .contact-patch-container { min-height: 360px; padding: 0.75rem; }
@@ -1214,6 +1510,15 @@
         }
         @media (max-width: 480px) {
             .aircrafter-app { padding: 0.35rem 0.5rem 1rem; padding-top: 2.25rem; }
+            .hero-section { padding: 1rem 0.75rem 0.5rem; border-radius: 12px; margin-bottom: 0.75rem; }
+            .landing-hero-content { padding: 0.5rem 0.5rem 1rem; }
+            .landing-hero-content h2 { font-size: 1.35rem; }
+            .landing-hero-sub { font-size: 0.82rem; margin-bottom: 1rem; }
+            .landing-hero-badge { font-size: 0.7rem; padding: 0.3rem 0.8rem; }
+            .landing-stats { gap: 0.5rem; margin-bottom: 1.25rem; }
+            .landing-stat { min-width: 60px; padding: 0.3rem 0.6rem; }
+            .landing-divider { margin-bottom: 1rem; }
+            .aircraft-collapsed-bar .acb-icon { width: 30px; height: 30px; font-size: 0.75rem; }
             .header-content h1 { font-size: 1.8rem; }
             .header-content p { font-size: 0.92rem; }
             .header-nav { padding: 0.6rem 0.8rem; flex-wrap: wrap; gap: 0.5rem; }
@@ -1376,6 +1681,112 @@
                     </div>
                 </div>
 
+                <!-- ===== HERO LANDING SECTION ===== -->
+                <div class="hero-section" id="hero-section">
+                    <!-- Animated mesh background -->
+                    <div class="landing-mesh-bg">
+                        <svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">
+                            <defs>
+                                <linearGradient id="meshGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--ac-primary)" stop-opacity="0.5"/>
+                                    <stop offset="50%" stop-color="var(--ac-secondary)" stop-opacity="0.3"/>
+                                    <stop offset="100%" stop-color="var(--ac-accent)" stop-opacity="0.5"/>
+                                </linearGradient>
+                            </defs>
+                            <g stroke="url(#meshGrad)" stroke-width="0.5" fill="none" opacity="0.6">
+                                <path d="M0,50 Q100,30 200,55 T400,45 T600,60 T800,40"/>
+                                <path d="M0,100 Q150,80 300,110 T500,90 T700,105 T800,95"/>
+                                <path d="M0,150 Q120,130 250,155 T450,140 T650,160 T800,145"/>
+                                <path d="M0,200 Q180,180 320,210 T520,190 T720,205 T800,195"/>
+                                <path d="M0,250 Q100,230 220,260 T420,240 T620,255 T800,245"/>
+                                <path d="M0,300 Q160,280 300,310 T500,290 T700,305 T800,295"/>
+                                <path d="M0,350 Q130,330 260,360 T460,340 T660,355 T800,345"/>
+                                <!-- Vertical lines -->
+                                <path d="M100,0 Q90,100 110,200 T95,400"/>
+                                <path d="M200,0 Q210,100 195,200 T205,400"/>
+                                <path d="M300,0 Q290,100 310,200 T295,400"/>
+                                <path d="M400,0 Q410,100 395,200 T405,400"/>
+                                <path d="M500,0 Q490,100 510,200 T495,400"/>
+                                <path d="M600,0 Q610,100 595,200 T605,400"/>
+                                <path d="M700,0 Q690,100 710,200 T695,400"/>
+                            </g>
+                            <!-- Stress field nodes -->
+                            <g fill="var(--ac-primary)" opacity="0.4">
+                                <circle cx="100" cy="100" r="3"><animate attributeName="opacity" values="0.2;0.8;0.2" dur="3s" repeatCount="indefinite"/></circle>
+                                <circle cx="300" cy="150" r="3"><animate attributeName="opacity" values="0.3;0.9;0.3" dur="4s" repeatCount="indefinite"/></circle>
+                                <circle cx="500" cy="200" r="3"><animate attributeName="opacity" values="0.2;0.7;0.2" dur="3.5s" repeatCount="indefinite"/></circle>
+                                <circle cx="700" cy="100" r="3"><animate attributeName="opacity" values="0.3;0.8;0.3" dur="2.5s" repeatCount="indefinite"/></circle>
+                                <circle cx="200" cy="300" r="2.5"><animate attributeName="opacity" values="0.2;0.6;0.2" dur="4.5s" repeatCount="indefinite"/></circle>
+                                <circle cx="600" cy="300" r="2.5"><animate attributeName="opacity" values="0.3;0.7;0.3" dur="3.2s" repeatCount="indefinite"/></circle>
+                            </g>
+                        </svg>
+                    </div>
+                    <!-- Floating orbs -->
+                    <div class="landing-orb orb-1"></div>
+                    <div class="landing-orb orb-2"></div>
+                    <div class="landing-orb orb-3"></div>
+                    <!-- Hero content -->
+                    <div class="landing-hero-content">
+                        <div class="landing-hero-badge">
+                            <span class="badge-dot"></span> Contact Stress Analysis Engine
+                        </div>
+                        <h2><span class="hero-gradient">Explore Aircraft Tire</span> <span class="hero-plain">3D Contact Stresses</span></h2>
+                        <p class="landing-hero-sub">Select an aircraft from the FAARFIELD library to compute three-dimensional tire&ndash;pavement contact stress distributions using analytical models.</p>
+                        <div class="landing-stats">
+                            <div class="landing-stat">
+                                <span class="landing-stat-value" id="hero-db-count">—</span>
+                                <span class="landing-stat-label">Aircraft</span>
+                            </div>
+                            <div class="landing-stat">
+                                <span class="landing-stat-value">10</span>
+                                <span class="landing-stat-label">Makes</span>
+                            </div>
+                            <div class="landing-stat">
+                                <span class="landing-stat-value">3D</span>
+                                <span class="landing-stat-label">Surfaces</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Divider -->
+                    <div class="landing-divider">
+                        <span class="landing-divider-text"><i class="fas fa-plane"></i> Select Aircraft</span>
+                    </div>
+                    <!-- Aircraft Selection (landing mode — moved from config tab) -->
+                    <div class="panel landing-selection-panel">
+                        <div class="panel-title"><i class="fas fa-search"></i> Aircraft Selection</div>
+                        <div class="selection-grid">
+                            <div class="filter-group">
+                                <label>Manufacturer</label>
+                                <select id="filter-manufacturer"><option value="all">All Manufacturers</option></select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Aircraft Model</label>
+                                <select id="filter-aircraft"><option value="">— Select Aircraft —</option></select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Search</label>
+                                <input type="text" id="aircraft-search" placeholder="Type to filter..." />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== COLLAPSED AIRCRAFT BAR ===== -->
+                <div class="aircraft-collapsed-bar" id="aircraft-collapsed-bar">
+                    <div class="acb-icon"><i class="fas fa-plane"></i></div>
+                    <div class="acb-info">
+                        <span class="acb-name" id="acb-name">—</span>
+                        <div class="acb-meta">
+                            <span><i class="fas fa-weight-hanging"></i> <span id="acb-load">—</span></span>
+                            <span><i class="fas fa-gauge-high"></i> <span id="acb-pressure">—</span></span>
+                            <span><i class="fas fa-layer-group"></i> <span id="acb-ribs">—</span></span>
+                        </div>
+                    </div>
+                    <button class="acb-change" id="acb-change"><i class="fas fa-exchange-alt"></i> Change Aircraft</button>
+                </div>
+
+                <!-- ===== MODULE TABS + CONTENT WRAPPER ===== -->
+                <div class="module-tabs-wrapper" id="module-tabs-wrapper">
                 <!-- ===== MODULE TABS ===== -->
                 <div class="module-tabs">
                     <button class="module-tab active" data-module="config">
@@ -1396,24 +1807,6 @@
                 <!-- TAB 1: CONFIGURATION (2-col layout)            -->
                 <!-- ============================================= -->
                 <div class="module-content active" id="module-config">
-                    <!-- Aircraft Selection (full width) -->
-                    <div class="panel animate-in">
-                        <div class="panel-title"><i class="fas fa-search"></i> Aircraft Selection</div>
-                        <div class="selection-grid">
-                            <div class="filter-group">
-                                <label>Manufacturer</label>
-                                <select id="filter-manufacturer"><option value="all">All Manufacturers</option></select>
-                            </div>
-                            <div class="filter-group">
-                                <label>Aircraft Model</label>
-                                <select id="filter-aircraft"><option value="">— Select Aircraft —</option></select>
-                            </div>
-                            <div class="filter-group">
-                                <label>Search</label>
-                                <input type="text" id="aircraft-search" placeholder="Type to filter..." />
-                            </div>
-                        </div>
-                    </div>
 
                     <div class="config-layout">
                         <!-- LEFT: Parameters -->
@@ -1422,6 +1815,10 @@
                                 <div class="panel-title">
                                     <i class="fas fa-edit"></i> Input Parameters
                                     <span style="flex:1"></span>
+                                    <button class="btn btn-primary" id="btn-compute" style="padding:0.35rem 0.85rem; font-size:0.8rem;" disabled>
+                                        <i class="fas fa-bolt"></i> Compute
+                                        <span class="kbd-hint">Ctrl+Enter</span>
+                                    </button>
                                     <button class="btn btn-warning" id="btn-reset" style="padding:0.3rem 0.7rem; font-size:0.75rem;">
                                         <i class="fas fa-rotate-left"></i> Reset
                                     </button>
@@ -1500,12 +1897,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="btn-group" style="margin-top:0.8rem;">
-                                    <button class="btn btn-primary" id="btn-compute" style="flex:1;" disabled>
-                                        <i class="fas fa-bolt"></i> Compute Stresses
-                                        <span class="kbd-hint">Ctrl+Enter</span>
-                                    </button>
-                                </div>
+
                             </div>
                         </div>
 
@@ -1678,6 +2070,8 @@
                     </div>
                 </div>
 
+                </div><!-- /module-tabs-wrapper -->
+
             </div>
         </section>
         <div id="footer-placeholder"></div>
@@ -1768,8 +2162,57 @@
     let currentRow = null;
     let defaultParams = null;
     let results = null;
+    let appState = 'landing'; // 'landing' | 'working'
 
     const COLORS = ['#0ea5e9','#f97316','#10b981','#8b5cf6','#ef4444','#06b6d4','#f59e0b','#ec4899'];
+
+    // ==================== APP STATE TRANSITIONS ====================
+    function transitionToWorking() {
+        if (appState === 'working') return;
+        appState = 'working';
+        const app = document.querySelector('.aircrafter-app');
+        const bar = document.getElementById('aircraft-collapsed-bar');
+        // Populate collapsed bar with aircraft info
+        if (currentRow) {
+            document.getElementById('acb-name').textContent = currentRow.name;
+            document.getElementById('acb-load').textContent = (currentRow.P / 1000).toFixed(1) + ' kN';
+            document.getElementById('acb-pressure').textContent = currentRow.TiP.toFixed(3) + ' MPa';
+            const bi = parseList(currentRow.bi_raw);
+            document.getElementById('acb-ribs').textContent = bi.length + ' ribs';
+        }
+        app.classList.add('app-working');
+    }
+
+    function transitionToLanding() {
+        if (appState === 'landing') return;
+        appState = 'landing';
+        const app = document.querySelector('.aircrafter-app');
+        app.classList.remove('app-working');
+        // Reset UI state
+        currentRow = null;
+        defaultParams = null;
+        results = null;
+        // Hide panels
+        document.getElementById('param-panel').style.display = 'none';
+        if (document.getElementById('stats-panel')) document.getElementById('stats-panel').style.display = 'none';
+        if (document.getElementById('quick-results-panel')) document.getElementById('quick-results-panel').style.display = 'none';
+        if (document.getElementById('patch-panel')) document.getElementById('patch-panel').style.display = 'none';
+        // Reset compute button
+        var computeBtn = document.getElementById('btn-compute');
+        if (computeBtn) computeBtn.disabled = true;
+        // Re-show empty states
+        ['stress3d-empty','analysis-empty','summary-empty'].forEach(function(id) {
+            var el = document.getElementById(id); if (el) el.style.display = '';
+        });
+        ['stress3d-content','analysis-content','summary-content'].forEach(function(id) {
+            var el = document.getElementById(id); if (el) el.style.display = 'none';
+        });
+        // Reset aircraft dropdown
+        document.getElementById('filter-aircraft').value = '';
+        // Remove params-dirty
+        var pp = document.getElementById('param-panel');
+        if (pp) pp.classList.remove('params-dirty');
+    }
 
     // ==================== MANUFACTURER MAPPING ====================
     function guessManufacturer(name) {
@@ -1811,6 +2254,8 @@
             }));
 
             document.getElementById('db-count').textContent = aircraftDB.length;
+            var heroCount = document.getElementById('hero-db-count');
+            if (heroCount) heroCount.textContent = aircraftDB.length;
             populateFilters();
             hideLoading();
         } catch (err) {
@@ -1879,7 +2324,8 @@
             P: currentRow.P,
             TiP: Math.round(currentRow.TiP * 1000) / 1000,
             l: currentRow.l,
-            bi: [...bi], al: [...al], sigm_Tip: [...sig], gi: [...gi]
+            bi: [...bi], al: [...al], sigm_Tip: [...sig], gi: [...gi],
+            adv: getAdvancedParams()
         };
 
         // Stage the loading steps with brief delays for visual feedback
@@ -1889,6 +2335,8 @@
             document.getElementById('param-panel').style.display = '';
             document.getElementById('stats-panel').style.display = '';
             document.getElementById('patch-panel').style.display = '';
+            // Enable compute button
+            document.getElementById('btn-compute').disabled = false;
             updateSummaryCards();
         }, 350);
 
@@ -1914,6 +2362,8 @@
             }
             hideSelectionLoading();
             showSuccessFlash();
+            // Transition to working state
+            transitionToWorking();
         }, 1100);
     }
 
@@ -1923,6 +2373,16 @@
         document.getElementById('input-l').value = p.l;
         buildRibTable(p.bi, p.al, p.sigm_Tip);
         buildGrooveTable(p.bi.length, p.gi);
+        if (p.adv) {
+            document.getElementById('adv-ssy').value = p.adv.ssy_factor;
+            document.getElementById('adv-xn').value = p.adv.xn;
+            document.getElementById('adv-nnz').value = p.adv.nnz;
+            document.getElementById('adv-lsx-pos').value = p.adv.lsx_pospk;
+            document.getElementById('adv-lsx-neg').value = p.adv.lsx_negpk;
+            document.getElementById('adv-sx-posmag').value = p.adv.sx_posmag;
+            document.getElementById('adv-sx-negmag').value = p.adv.sx_negmag;
+            document.getElementById('adv-skpb').value = p.adv.skpb;
+        }
         clearModifiedFlags();
     }
 
@@ -2006,29 +2466,64 @@
         document.querySelectorAll('.param-card').forEach(c => c.classList.remove('modified'));
         document.querySelectorAll('.rib-table td input').forEach(i => i.classList.remove('modified'));
         document.querySelectorAll('#groove-table td input').forEach(i => i.classList.remove('modified'));
+        document.querySelectorAll('.adv-input-group input').forEach(i => i.classList.remove('modified'));
     }
 
     function checkModified() {
         if (!defaultParams) return;
         const cur = getCurrentParams();
+        let anyDirty = false;
         ['P', 'TiP', 'l'].forEach(k => {
             const card = document.getElementById('card-' + k);
-            if (Math.abs(cur[k] - defaultParams[k]) > 1e-9) card.classList.add('modified');
+            const dirty = Math.abs(cur[k] - defaultParams[k]) > 1e-9;
+            if (dirty) anyDirty = true;
+            if (dirty) card.classList.add('modified');
             else card.classList.remove('modified');
         });
         document.querySelectorAll('.rib-bi').forEach((inp, i) => {
-            inp.classList.toggle('modified', Math.abs(parseFloat(inp.value) - defaultParams.bi[i]) > 1e-9);
+            const dirty = Math.abs(parseFloat(inp.value) - defaultParams.bi[i]) > 1e-9;
+            if (dirty) anyDirty = true;
+            inp.classList.toggle('modified', dirty);
         });
         document.querySelectorAll('.rib-al').forEach((inp, i) => {
-            inp.classList.toggle('modified', Math.abs(parseFloat(inp.value) - defaultParams.al[i]) > 1e-9);
+            const dirty = Math.abs(parseFloat(inp.value) - defaultParams.al[i]) > 1e-9;
+            if (dirty) anyDirty = true;
+            inp.classList.toggle('modified', dirty);
         });
         document.querySelectorAll('.rib-sig').forEach((inp, i) => {
-            inp.classList.toggle('modified', Math.abs(parseFloat(inp.value) - defaultParams.sigm_Tip[i]) > 1e-9);
+            const dirty = Math.abs(parseFloat(inp.value) - defaultParams.sigm_Tip[i]) > 1e-9;
+            if (dirty) anyDirty = true;
+            inp.classList.toggle('modified', dirty);
         });
         document.querySelectorAll('.groove-gi').forEach((inp, i) => {
             const defaultVal = defaultParams.gi && defaultParams.gi[i] !== undefined ? defaultParams.gi[i] : 10.0;
-            inp.classList.toggle('modified', Math.abs(parseFloat(inp.value) - defaultVal) > 1e-9);
+            const dirty = Math.abs(parseFloat(inp.value) - defaultVal) > 1e-9;
+            if (dirty) anyDirty = true;
+            inp.classList.toggle('modified', dirty);
         });
+        // Advanced settings comparison
+        if (defaultParams.adv) {
+            const curAdv = getAdvancedParams();
+            const advMap = [
+                ['adv-ssy', curAdv.ssy_factor, defaultParams.adv.ssy_factor],
+                ['adv-xn', curAdv.xn, defaultParams.adv.xn],
+                ['adv-nnz', curAdv.nnz, defaultParams.adv.nnz],
+                ['adv-lsx-pos', curAdv.lsx_pospk, defaultParams.adv.lsx_pospk],
+                ['adv-lsx-neg', curAdv.lsx_negpk, defaultParams.adv.lsx_negpk],
+                ['adv-sx-posmag', curAdv.sx_posmag, defaultParams.adv.sx_posmag],
+                ['adv-sx-negmag', curAdv.sx_negmag, defaultParams.adv.sx_negmag],
+                ['adv-skpb', curAdv.skpb, defaultParams.adv.skpb],
+            ];
+            advMap.forEach(([id, cur, def]) => {
+                const dirty = Math.abs(cur - def) > 1e-9;
+                if (dirty) anyDirty = true;
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('modified', dirty);
+            });
+        }
+        // Highlight compute/reset buttons when params are dirty
+        const pp = document.getElementById('param-panel');
+        if (pp) pp.classList.toggle('params-dirty', anyDirty);
     }
 
     // ==================== SUMMARY ====================
@@ -2856,6 +3351,16 @@
                 requestAnimationFrame(() => {
                     hideLoading();
                     showSuccessFlash();
+                    // Update baseline to current computed params
+                    var cp = getCurrentParams();
+                    defaultParams.P = cp.P; defaultParams.TiP = cp.TiP; defaultParams.l = cp.l;
+                    defaultParams.bi = [...cp.bi]; defaultParams.al = [...cp.al];
+                    defaultParams.sigm_Tip = [...cp.sigm_Tip]; defaultParams.gi = [...cp.gi];
+                    defaultParams.adv = getAdvancedParams();
+                    // Clear params-dirty state after successful recompute
+                    var pp = document.getElementById('param-panel');
+                    if (pp) pp.classList.remove('params-dirty');
+                    clearModifiedFlags();
                 });
             } catch (e) {
                 console.error('Compute error:', e);
@@ -3093,6 +3598,11 @@
         // Ripple on all primary buttons
         document.querySelectorAll('.btn-primary').forEach(btn => {
             btn.addEventListener('click', addRipple);
+        });
+
+        // Change Aircraft button (collapsed bar)
+        document.getElementById('acb-change').addEventListener('click', function() {
+            transitionToLanding();
         });
 
         loadDatabase();
