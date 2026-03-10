@@ -150,6 +150,449 @@
             to { opacity: 1; transform: scale(1); }
         }
 
+        /* ==================== LANDING PAGE ANIMATIONS ==================== */
+        @keyframes starTwinkle {
+            0%,100% { opacity:0.2; transform:scale(1); }
+            50%     { opacity:1;   transform:scale(1.4); }
+        }
+        @keyframes nebulaShift {
+            0%   { transform:translate(0,0) scale(1); opacity:0.10; }
+            33%  { transform:translate(15px,-20px) scale(1.05); opacity:0.14; }
+            66%  { transform:translate(-10px,10px) scale(0.97); opacity:0.08; }
+            100% { transform:translate(0,0) scale(1); opacity:0.10; }
+        }
+        @keyframes constellationDrift {
+            0%   { transform:translate(0,0) rotate(0deg); }
+            25%  { transform:translate(6px,-10px) rotate(0.3deg); }
+            50%  { transform:translate(-3px,-5px) rotate(-0.2deg); }
+            75%  { transform:translate(5px,3px) rotate(0.15deg); }
+            100% { transform:translate(0,0) rotate(0deg); }
+        }
+        @keyframes scanLineSpace {
+            0%   { top:-2px; opacity:0; }
+            10%  { opacity:0.6; }
+            90%  { opacity:0.6; }
+            100% { top:100%; opacity:0; }
+        }
+        @keyframes gradientShift {
+            0%   { background-position:0% 50%; }
+            50%  { background-position:100% 50%; }
+            100% { background-position:0% 50%; }
+        }
+        @keyframes heroTextReveal {
+            from { opacity:0; transform:translateY(20px); filter:blur(8px); }
+            to   { opacity:1; transform:translateY(0); filter:blur(0); }
+        }
+        @keyframes cardReveal {
+            from { opacity:0; transform:translateY(50px) scale(0.92); filter:blur(4px); }
+            to   { opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+        }
+        @keyframes borderTrace {
+            0%   { background-position:0% 0%; }
+            100% { background-position:200% 200%; }
+        }
+        @keyframes pulseRingLanding {
+            0%   { transform:scale(0.95); opacity:0.6; }
+            50%  { transform:scale(1.05); opacity:0.2; }
+            100% { transform:scale(0.95); opacity:0.6; }
+        }
+        @keyframes viewSlideIn {
+            from { opacity:0; transform:translateY(24px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        @keyframes viewSlideOut {
+            from { opacity:1; transform:translateY(0); }
+            to   { opacity:0; transform:translateY(-16px); }
+        }
+
+        /* ==================== LANDING PAGE — MODULE SELECTOR ==================== */
+        .landing-section {
+            position:relative;
+            padding:2.5rem 0 1.5rem;
+        }
+
+        /* ── Space-themed starfield background ── */
+        .landing-space-bg {
+            position:absolute; inset:0; overflow:hidden; pointer-events:none;
+            border-radius:24px; z-index:0;
+        }
+        .landing-space-bg canvas {
+            position:absolute; width:100%; height:100%;
+        }
+        .landing-space-bg::after {
+            content:''; position:absolute; left:0; right:0; height:2px; z-index:1;
+            background:linear-gradient(90deg, transparent 0%, var(--frontier-primary) 25%, var(--frontier-info) 50%, var(--frontier-primary) 75%, transparent 100%);
+            box-shadow:0 0 20px 4px var(--frontier-primary-glow), 0 0 60px 8px rgba(24,169,168,0.08);
+            animation:scanLineSpace 10s ease-in-out infinite;
+            opacity:0.5;
+        }
+
+        /* Floating nebula orbs */
+        .landing-nebula {
+            position:absolute; border-radius:50%; pointer-events:none; z-index:0;
+            filter:blur(60px); opacity:0.10;
+        }
+        [data-theme="light"] .landing-nebula { opacity:0.06; }
+        .landing-nebula.neb-1 {
+            width:320px; height:320px; top:-80px; right:-60px;
+            background:radial-gradient(circle, #8b5cf6, transparent 70%);
+            animation:nebulaShift 18s ease-in-out infinite;
+        }
+        .landing-nebula.neb-2 {
+            width:240px; height:240px; bottom:20px; left:-50px;
+            background:radial-gradient(circle, var(--frontier-primary), transparent 70%);
+            animation:nebulaShift 22s ease-in-out infinite reverse;
+        }
+        .landing-nebula.neb-3 {
+            width:180px; height:180px; top:35%; left:50%;
+            background:radial-gradient(circle, var(--frontier-secondary), transparent 70%);
+            animation:nebulaShift 20s ease-in-out infinite 3s;
+        }
+
+        /* ── Hero intro area ── */
+        .landing-hero {
+            position:relative; z-index:1; text-align:center;
+            padding:0 1rem 2rem;
+        }
+        .landing-hero-badge {
+            display:inline-flex; align-items:center; gap:0.5rem;
+            padding:0.45rem 1.1rem; border-radius:50px;
+            background:linear-gradient(135deg, rgba(139,92,246,0.12), rgba(59,130,246,0.08));
+            border:1px solid rgba(139,92,246,0.25);
+            color:#8b5cf6; font-size:0.78rem; font-weight:700;
+            letter-spacing:0.08em; text-transform:uppercase;
+            margin-bottom:1.2rem;
+            animation:heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s backwards;
+        }
+        [data-theme="dark"] .landing-hero-badge { color:#a78bfa; }
+        .landing-hero-badge .badge-dot {
+            width:6px; height:6px; border-radius:50%;
+            background:#8b5cf6;
+            animation:starTwinkle 2s ease-in-out infinite;
+        }
+        .landing-hero h2 {
+            font-size:2.2rem; font-weight:900; margin:0 0 0.6rem;
+            letter-spacing:-0.02em; line-height:1.2;
+            animation:heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.2s backwards;
+        }
+        .landing-hero h2 .hero-gradient {
+            background:linear-gradient(135deg, #8b5cf6, var(--frontier-primary), var(--frontier-info), #8b5cf6);
+            background-size:300% 300%;
+            -webkit-background-clip:text; background-clip:text;
+            -webkit-text-fill-color:transparent;
+            animation:gradientShift 6s ease infinite;
+        }
+        .landing-hero h2 .hero-plain { color:var(--frontier-text); }
+        .landing-hero-sub {
+            font-size:1rem; color:var(--frontier-text-muted); line-height:1.6;
+            max-width:580px; margin:0 auto 1.75rem;
+            animation:heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.35s backwards;
+        }
+
+        /* ── Stats ribbon ── */
+        .landing-stats {
+            display:flex; justify-content:center; gap:2rem; flex-wrap:wrap;
+            margin-bottom:2.5rem;
+            animation:heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.5s backwards;
+        }
+        .landing-stat {
+            display:flex; flex-direction:column; align-items:center; gap:0.15rem;
+            padding:0.6rem 1.2rem; border-radius:12px;
+            background:var(--glass-bg); border:1px solid var(--glass-border);
+            backdrop-filter:blur(10px); min-width:90px;
+            transition:all 0.3s ease;
+        }
+        .landing-stat:hover {
+            border-color:var(--frontier-primary);
+            background:rgba(24,169,168,0.08);
+            transform:translateY(-3px);
+            box-shadow:0 8px 24px rgba(24,169,168,0.1);
+        }
+        .landing-stat-value {
+            font-size:1.45rem; font-weight:900; letter-spacing:-0.02em;
+            background:linear-gradient(135deg, #8b5cf6, var(--frontier-primary));
+            -webkit-background-clip:text; background-clip:text;
+            -webkit-text-fill-color:transparent;
+        }
+        .landing-stat-label {
+            font-size:0.72rem; font-weight:600; text-transform:uppercase;
+            letter-spacing:0.06em; color:var(--frontier-text-muted);
+        }
+
+        /* ── Divider ── */
+        .landing-divider {
+            display:flex; align-items:center; gap:1rem;
+            margin-bottom:2rem;
+            animation:heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.6s backwards;
+        }
+        .landing-divider::before, .landing-divider::after {
+            content:''; flex:1; height:1px;
+            background:linear-gradient(90deg, transparent, var(--frontier-border), transparent);
+        }
+        .landing-divider-text {
+            font-size:0.75rem; font-weight:700; text-transform:uppercase;
+            letter-spacing:0.12em; color:var(--frontier-text-muted);
+            display:flex; align-items:center; gap:0.5rem;
+            padding:0.3rem 1rem; border-radius:20px;
+            background:var(--glass-bg); border:1px solid var(--glass-border);
+        }
+        .landing-divider-text i { font-size:0.65rem; color:#8b5cf6; }
+
+        /* ── Module cards ── */
+        .landing-module-grid {
+            display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+            gap:1.5rem; position:relative; z-index:1;
+        }
+
+        .landing-module-card {
+            position:relative; overflow:hidden; cursor:pointer;
+            padding:0; border-radius:22px;
+            background:var(--frontier-bg-panel);
+            border:1px solid var(--frontier-border);
+            box-shadow:var(--frontier-card-shadow);
+            display:flex; flex-direction:column;
+            transition:all 0.5s cubic-bezier(0.34,1.2,0.64,1);
+            animation:cardReveal 0.65s cubic-bezier(0.22,1,0.36,1) backwards;
+        }
+        .landing-module-card:nth-child(1) { animation-delay:0.7s; }
+        .landing-module-card:nth-child(2) { animation-delay:0.8s; }
+        .landing-module-card:nth-child(3) { animation-delay:0.9s; }
+        .landing-module-card:nth-child(4) { animation-delay:1.0s; }
+
+        /* Animated border gradient on hover */
+        .landing-module-card::before {
+            content:''; position:absolute; inset:-1px; border-radius:23px; z-index:-1;
+            padding:1px;
+            background:conic-gradient(from 0deg, transparent, #8b5cf6, var(--frontier-primary), #8b5cf6, transparent 60%);
+            background-size:200% 200%;
+            -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite:xor; mask-composite:exclude;
+            opacity:0; transition:opacity 0.5s ease;
+            animation:borderTrace 4s linear infinite;
+        }
+        .landing-module-card:hover::before { opacity:1; }
+
+        /* Card accent bar */
+        .landing-card-accent {
+            height:4px; flex-shrink:0;
+            background-size:200% 100%;
+            animation:gradientShift 3s ease infinite;
+            transition:height 0.4s ease;
+        }
+        .landing-module-card:hover .landing-card-accent { height:5px; }
+        .landing-module-card[data-module="rightsizing"] .landing-card-accent {
+            background:linear-gradient(90deg, #8b5cf6, #a78bfa, #8b5cf6);
+        }
+        .landing-module-card[data-module="workflow"] .landing-card-accent {
+            background:linear-gradient(90deg, var(--frontier-primary), #2dd4bf, var(--frontier-primary));
+        }
+        .landing-module-card[data-module="scaling"] .landing-card-accent {
+            background:linear-gradient(90deg, var(--frontier-secondary), #f472b6, var(--frontier-secondary));
+        }
+        .landing-module-card[data-module="cpugpu"] .landing-card-accent {
+            background:linear-gradient(90deg, var(--frontier-accent), #fbbf24, var(--frontier-accent));
+        }
+
+        /* Card body */
+        .landing-card-body {
+            position:relative; z-index:1;
+            padding:1.5rem 1.4rem 1.25rem;
+            display:flex; flex-direction:column; gap:0.75rem;
+            flex:1;
+        }
+
+        .landing-module-card:hover {
+            transform:translateY(-8px) scale(1.01);
+            box-shadow:0 25px 50px rgba(0,0,0,0.2), 0 0 0 1px var(--frontier-border);
+        }
+
+        /* Icon + meta row */
+        .landing-icon-row {
+            display:flex; align-items:center; gap:1rem;
+        }
+        .landing-module-icon {
+            width:54px; height:54px; border-radius:16px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:1.3rem; color:#fff; flex-shrink:0;
+            position:relative;
+            transition:transform 0.4s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.4s ease;
+        }
+        .landing-module-icon::after {
+            content:''; position:absolute; inset:-4px; border-radius:20px;
+            border:2px solid rgba(139,92,246,0.2);
+            animation:pulseRingLanding 3s ease-in-out infinite;
+            pointer-events:none;
+        }
+        .landing-module-card:hover .landing-module-icon {
+            transform:scale(1.1) rotate(-3deg);
+            box-shadow:0 10px 30px rgba(0,0,0,0.3);
+        }
+        .landing-module-icon.icon-rightsizing {
+            background:linear-gradient(145deg, #8b5cf6, #6d28d9);
+            box-shadow:0 6px 20px rgba(139,92,246,0.35);
+        }
+        .landing-module-icon.icon-workflow {
+            background:linear-gradient(145deg, var(--frontier-primary), #0d7377);
+            box-shadow:0 6px 20px rgba(24,169,168,0.35);
+        }
+        .landing-module-icon.icon-workflow::after { border-color:rgba(24,169,168,0.2); }
+        .landing-module-icon.icon-scaling {
+            background:linear-gradient(145deg, var(--frontier-secondary), #a01b3a);
+            box-shadow:0 6px 20px rgba(213,35,73,0.3);
+        }
+        .landing-module-icon.icon-scaling::after { border-color:rgba(213,35,73,0.2); }
+        .landing-module-icon.icon-cpugpu {
+            background:linear-gradient(145deg, var(--frontier-accent), #d97706);
+            box-shadow:0 6px 20px rgba(245,158,11,0.3);
+        }
+        .landing-module-icon.icon-cpugpu::after { border-color:rgba(245,158,11,0.2); }
+
+        .landing-module-meta { display:flex; flex-direction:column; gap:0.1rem; }
+        .landing-module-name {
+            font-size:1.25rem; font-weight:800; color:var(--frontier-text);
+            letter-spacing:-0.01em;
+        }
+        .landing-module-subtitle {
+            font-size:0.82rem; color:var(--frontier-text-muted); font-weight:400;
+        }
+        .landing-module-desc {
+            font-size:0.86rem; color:var(--frontier-text-secondary); line-height:1.6;
+        }
+
+        /* Feature chips */
+        .landing-features {
+            display:flex; gap:0.4rem; flex-wrap:wrap;
+        }
+        .landing-feature-chip {
+            display:inline-flex; align-items:center; gap:0.3rem;
+            padding:0.22rem 0.6rem; border-radius:6px;
+            font-size:0.7rem; font-weight:600;
+            background:rgba(139,92,246,0.08); color:#8b5cf6;
+            border:1px solid rgba(139,92,246,0.15);
+            transition:all 0.2s ease;
+        }
+        .landing-feature-chip i { font-size:0.58rem; }
+        .landing-module-card:hover .landing-feature-chip {
+            background:rgba(139,92,246,0.14);
+            border-color:rgba(139,92,246,0.3);
+        }
+
+        /* Module-specific chip colors */
+        .landing-module-card[data-module="workflow"] .landing-feature-chip {
+            background:rgba(24,169,168,0.08); color:var(--frontier-primary);
+            border-color:rgba(24,169,168,0.15);
+        }
+        .landing-module-card[data-module="workflow"]:hover .landing-feature-chip {
+            background:rgba(24,169,168,0.14); border-color:rgba(24,169,168,0.3);
+        }
+        .landing-module-card[data-module="scaling"] .landing-feature-chip {
+            background:rgba(213,35,73,0.08); color:var(--frontier-secondary);
+            border-color:rgba(213,35,73,0.15);
+        }
+        .landing-module-card[data-module="scaling"]:hover .landing-feature-chip {
+            background:rgba(213,35,73,0.14); border-color:rgba(213,35,73,0.3);
+        }
+        .landing-module-card[data-module="cpugpu"] .landing-feature-chip {
+            background:rgba(245,158,11,0.08); color:var(--frontier-accent);
+            border-color:rgba(245,158,11,0.15);
+        }
+        .landing-module-card[data-module="cpugpu"]:hover .landing-feature-chip {
+            background:rgba(245,158,11,0.14); border-color:rgba(245,158,11,0.3);
+        }
+
+        /* Card footer */
+        .landing-card-footer {
+            display:flex; align-items:center; justify-content:space-between;
+            margin-top:auto; gap:1rem;
+            padding-top:0.7rem; border-top:1px solid var(--glass-border);
+        }
+        .landing-card-status {
+            display:inline-flex; align-items:center; gap:0.3rem;
+            font-size:0.74rem; font-weight:600; color:var(--frontier-text-muted);
+            padding:0.2rem 0.55rem; border-radius:7px;
+            background:var(--glass-bg); border:1px solid var(--glass-border);
+        }
+        .landing-card-status i { font-size:0.62rem; color:var(--frontier-success); }
+        .landing-card-arrow {
+            display:inline-flex; align-items:center; justify-content:center;
+            width:38px; height:38px; border-radius:50%;
+            background:linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color:#fff; font-size:0.8rem;
+            transition:all 0.4s cubic-bezier(0.34,1.2,0.64,1);
+            box-shadow:0 4px 16px rgba(139,92,246,0.3);
+        }
+        .landing-module-card:hover .landing-card-arrow {
+            transform:translateX(5px) scale(1.08);
+            box-shadow:0 8px 24px rgba(139,92,246,0.4);
+        }
+        .landing-module-card[data-module="workflow"] .landing-card-arrow {
+            background:linear-gradient(135deg, var(--frontier-primary), #0e8a89);
+            box-shadow:0 4px 16px var(--frontier-primary-glow);
+        }
+        .landing-module-card[data-module="scaling"] .landing-card-arrow {
+            background:linear-gradient(135deg, var(--frontier-secondary), #a01b3a);
+            box-shadow:0 4px 16px rgba(213,35,73,0.3);
+        }
+        .landing-module-card[data-module="cpugpu"] .landing-card-arrow {
+            background:linear-gradient(135deg, var(--frontier-accent), #d97706);
+            box-shadow:0 4px 16px rgba(245,158,11,0.3);
+        }
+
+        /* ── View transitions ── */
+        .view-container { position:relative; }
+        .view-enter { animation:viewSlideIn 0.5s cubic-bezier(0.34,1.2,0.64,1) forwards; }
+        .view-exit  { animation:viewSlideOut 0.35s cubic-bezier(0.4,0,0.2,1) forwards; }
+
+        /* ── Module tabs in compact mode (after selecting a module) ── */
+        .module-tabs.compact-mode {
+            gap:0.5rem; margin-bottom:1.25rem; justify-content:flex-start;
+        }
+        .module-tabs.compact-mode .module-tab {
+            min-width:auto; max-width:none; flex:0 0 auto;
+            padding:0.55rem 1rem; border-radius:12px;
+            border-width:1px; gap:0.6rem;
+        }
+        .module-tabs.compact-mode .module-tab .icon {
+            width:36px; height:36px; font-size:1rem; border-radius:10px;
+        }
+        .module-tabs.compact-mode .module-tab .info h3 {
+            font-size:0.88rem; margin:0;
+        }
+        .module-tabs.compact-mode .module-tab .info p {
+            display:none;
+        }
+        .module-tabs.compact-mode .module-tab:hover {
+            transform:translateY(-2px) scale(1.01);
+        }
+        .module-tabs.compact-mode .module-tab.active::after {
+            height:2px;
+        }
+
+        /* ── Back to modules button ── */
+        .back-to-modules-btn {
+            display:inline-flex; align-items:center; gap:0.45rem;
+            padding:0.45rem 1rem; border-radius:10px;
+            background:rgba(139,92,246,0.12); color:#8b5cf6;
+            font-size:0.82rem; font-weight:600; letter-spacing:0.02em;
+            border:1px solid rgba(139,92,246,0.25);
+            cursor:pointer; text-decoration:none;
+            transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            margin-bottom:1rem;
+        }
+        [data-theme="dark"] .back-to-modules-btn { color:#a78bfa; }
+        .back-to-modules-btn:hover {
+            background:rgba(139,92,246,0.2); border-color:rgba(139,92,246,0.4);
+            transform:translateX(-3px); box-shadow:0 4px 15px rgba(139,92,246,0.15);
+        }
+        .back-to-modules-btn i { transition:transform 0.3s ease; font-size:0.75rem; }
+        .back-to-modules-btn:hover i { transform:translateX(-3px); }
+
+        /* ── Starfield canvas ── */
+        #starfield-canvas {
+            position:absolute; inset:0; z-index:0;
+        }
+
         @keyframes pulse-ring {
             0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(24, 169, 168, 0.7); }
             70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(24, 169, 168, 0); }
@@ -5153,6 +5596,31 @@
             }
         }
 
+        /* ==================== LANDING PAGE RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .landing-section { padding:1.5rem 0 1rem; }
+            .landing-hero h2 { font-size:1.6rem; }
+            .landing-hero-sub { font-size:0.9rem; }
+            .landing-stats { gap:1rem; }
+            .landing-stat { padding:0.45rem 0.8rem; min-width:70px; }
+            .landing-stat-value { font-size:1.15rem; }
+            .landing-module-grid { grid-template-columns:1fr; gap:1rem; }
+            .landing-module-name { font-size:1.1rem; }
+            .landing-module-desc { font-size:0.82rem; }
+            .module-tabs.compact-mode { gap:0.4rem; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:0.25rem; }
+            .module-tabs.compact-mode .module-tab { padding:0.45rem 0.8rem; min-width:auto; }
+            .module-tabs.compact-mode .module-tab .icon { width:30px; height:30px; font-size:0.85rem; }
+            .module-tabs.compact-mode .module-tab .info h3 { font-size:0.78rem; }
+            .back-to-modules-btn { font-size:0.78rem; padding:0.4rem 0.85rem; }
+        }
+        @media (max-width: 480px) {
+            .landing-hero h2 { font-size:1.35rem; }
+            .landing-stats { gap:0.6rem; }
+            .landing-stat { padding:0.35rem 0.6rem; }
+            .landing-features { gap:0.3rem; }
+            .landing-feature-chip { font-size:0.65rem; padding:0.18rem 0.45rem; }
+        }
+
         /* Disable animations for reduced motion preference */
         @media (prefers-reduced-motion: reduce) {
             *,
@@ -5230,8 +5698,143 @@
                     </div>
                 </div>
 
-                <!-- Module Tabs -->
-                <div class="module-tabs">
+                <!-- LANDING PAGE — MODULE SELECTOR -->
+                <section id="landing-section" class="landing-section">
+                    <!-- Space starfield background -->
+                    <div class="landing-space-bg" aria-hidden="true">
+                        <canvas id="starfield-canvas"></canvas>
+                        <div class="landing-nebula neb-1"></div>
+                        <div class="landing-nebula neb-2"></div>
+                        <div class="landing-nebula neb-3"></div>
+                    </div>
+
+                    <!-- Hero intro -->
+                    <div class="landing-hero">
+                        <div class="landing-hero-badge">
+                            <span class="badge-dot"></span>
+                            <span>New Release</span>
+                        </div>
+                        <h2><span class="hero-plain">Explore </span><span class="hero-gradient">High-Performance Computing</span></h2>
+                        <p class="landing-hero-sub">Select a module to build intuition about HPC concepts through interactive visualizations, simulations, and hands-on experiments — from resource sizing to GPU parallelism.</p>
+
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="landing-divider">
+                        <span class="landing-divider-text"><i class="fas fa-rocket"></i> Available Modules</span>
+                    </div>
+
+                    <!-- Module cards grid -->
+                    <div class="landing-module-grid" id="landing-module-grid">
+
+                        <!-- Rightsizing -->
+                        <div class="landing-module-card" data-module="rightsizing" onclick="openModuleFromLanding('rightsizing')">
+                            <div class="landing-card-accent"></div>
+                            <div class="landing-card-body">
+                                <div class="landing-icon-row">
+                                    <div class="landing-module-icon icon-rightsizing"><i class="fas fa-balance-scale"></i></div>
+                                    <div class="landing-module-meta">
+                                        <span class="landing-module-name">Rightsizing</span>
+                                        <span class="landing-module-subtitle">Match Tasks to Resources</span>
+                                    </div>
+                                </div>
+                                <p class="landing-module-desc">Drag-and-drop computing tasks onto laptops, workstations, or supercomputers to learn which resource fits each workload.</p>
+                                <div class="landing-features">
+                                    <span class="landing-feature-chip"><i class="fas fa-hand-pointer"></i> Drag & Drop</span>
+                                    <span class="landing-feature-chip"><i class="fas fa-laptop"></i> 3 Tiers</span>
+                                    <span class="landing-feature-chip"><i class="fas fa-check-double"></i> Auto-Check</span>
+                                </div>
+                                <div class="landing-card-footer">
+                                    <span class="landing-card-status"><i class="fas fa-circle"></i> Interactive</span>
+                                    <span class="landing-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- HPC Workflow -->
+                        <div class="landing-module-card" data-module="workflow" onclick="openModuleFromLanding('workflow')">
+                            <div class="landing-card-accent"></div>
+                            <div class="landing-card-body">
+                                <div class="landing-icon-row">
+                                    <div class="landing-module-icon icon-workflow"><i class="fas fa-industry"></i></div>
+                                    <div class="landing-module-meta">
+                                        <span class="landing-module-name">HPC Workflow</span>
+                                        <span class="landing-module-subtitle">From Click to Results</span>
+                                    </div>
+                                </div>
+                                <p class="landing-module-desc">Configure job parameters, submit to a simulated cluster, and follow your job through the HPC pipeline in real time.</p>
+                                <div class="landing-features">
+                                    <span class="landing-feature-chip"><i class="fas fa-terminal"></i> Terminal</span>
+                                    <span class="landing-feature-chip"><i class="fas fa-cogs"></i> Pipeline</span>
+                                    <span class="landing-feature-chip"><i class="fas fa-chart-line"></i> Metrics</span>
+                                </div>
+                                <div class="landing-card-footer">
+                                    <span class="landing-card-status"><i class="fas fa-circle"></i> Simulation</span>
+                                    <span class="landing-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scaling -->
+                        <div class="landing-module-card" data-module="scaling" onclick="openModuleFromLanding('scaling')">
+                            <div class="landing-card-accent"></div>
+                            <div class="landing-card-body">
+                                <div class="landing-icon-row">
+                                    <div class="landing-module-icon icon-scaling"><i class="fas fa-users-cog"></i></div>
+                                    <div class="landing-module-meta">
+                                        <span class="landing-module-name">Scaling</span>
+                                        <span class="landing-module-subtitle">Why Optimization Hits a Wall</span>
+                                    </div>
+                                </div>
+                                <p class="landing-module-desc">Explore Amdahl's Law in action — add workers and watch diminishing returns unfold through animated visualizations.</p>
+                                <div class="landing-features">
+                                    <span class="landing-feature-chip"><i class="fas fa-users"></i> Workers</span>
+                                    <span class="landing-feature-chip"><i class="fas fa-chart-area"></i> Speedup</span>
+                                    <span class="landing-feature-chip"><i class="fas fa-tachometer-alt"></i> Efficiency</span>
+                                </div>
+                                <div class="landing-card-footer">
+                                    <span class="landing-card-status"><i class="fas fa-circle"></i> Visual Demo</span>
+                                    <span class="landing-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CPU vs GPU -->
+                        <div class="landing-module-card" data-module="cpugpu" onclick="openModuleFromLanding('cpugpu')">
+                            <div class="landing-card-accent"></div>
+                            <div class="landing-card-body">
+                                <div class="landing-icon-row">
+                                    <div class="landing-module-icon icon-cpugpu"><i class="fas fa-bolt"></i></div>
+                                    <div class="landing-module-meta">
+                                        <span class="landing-module-name">CPU vs GPU</span>
+                                        <span class="landing-module-subtitle">Parallel Processing Power</span>
+                                    </div>
+                                </div>
+                                <p class="landing-module-desc">Race a CPU against a GPU rendering the same image pixel-by-pixel and discover why GPUs dominate parallel workloads.</p>
+                                <div class="landing-features">
+                                    <span class="landing-feature-chip"><i class="fas fa-image"></i> Real-time Render</span>
+                                    <span class="landing-feature-chip"><i class="fas fa-flag-checkered"></i> Race Mode</span>
+                                    <span class="landing-feature-chip"><i class="fas fa-microchip"></i> Side-by-Side</span>
+                                </div>
+                                <div class="landing-card-footer">
+                                    <span class="landing-card-status"><i class="fas fa-circle"></i> Head-to-Head</span>
+                                    <span class="landing-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MODULE VIEW (tabs + content - hidden initially) -->
+                <div id="module-view" style="display:none;">
+
+                <!-- Back to modules button -->
+                <button class="back-to-modules-btn" onclick="showLanding()">
+                    <i class="fas fa-arrow-left"></i> Back to Modules
+                </button>
+
+                <!-- Module Tabs (compact mode when in module view) -->
+                <div class="module-tabs compact-mode">
                     <div class="module-tab active" data-module="rightsizing">
                         <div class="icon"><i class="fas fa-balance-scale"></i></div>
                         <div class="info">
@@ -6038,6 +6641,9 @@
                         </div>
                     </div>
                 </div>
+
+                </div><!-- /#module-view -->
+            </div><!-- /.frontier-app -->
         </section>
 
         <!-- Footer -->
@@ -6080,15 +6686,202 @@
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
-        // ==================== TAB NAVIGATION ====================
-        document.querySelectorAll('.module-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.module-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                
-                const moduleId = tab.dataset.module;
-                document.querySelectorAll('.module-content').forEach(c => c.classList.remove('active'));
-                document.getElementById(`module-${moduleId}`).classList.add('active');
+        // ==================== STARFIELD CANVAS ====================
+        (function initStarfield() {
+            var canvas = document.getElementById('starfield-canvas');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            var stars = [];
+            var shootingStars = [];
+            var animId = null;
+
+            function resize() {
+                var rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+            }
+
+            function createStars() {
+                stars = [];
+                var count = Math.floor((canvas.width * canvas.height) / 2500);
+                for (var i = 0; i < count; i++) {
+                    stars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        r: Math.random() * 1.8 + 0.3,
+                        alpha: Math.random() * 0.7 + 0.3,
+                        speed: Math.random() * 0.02 + 0.005,
+                        phase: Math.random() * Math.PI * 2,
+                        color: ['#ffffff','#a78bfa','#22d3d1','#60a5fa','#f9a8d4'][Math.floor(Math.random()*5)]
+                    });
+                }
+            }
+
+            function draw(t) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Stars
+                for (var i = 0; i < stars.length; i++) {
+                    var s = stars[i];
+                    var a = s.alpha * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                    ctx.fillStyle = s.color;
+                    ctx.globalAlpha = a;
+                    ctx.fill();
+                }
+                // Shooting stars
+                ctx.globalAlpha = 1;
+                for (var j = shootingStars.length - 1; j >= 0; j--) {
+                    var ss = shootingStars[j];
+                    ss.x += ss.vx;
+                    ss.y += ss.vy;
+                    ss.life -= 0.02;
+                    if (ss.life <= 0) { shootingStars.splice(j, 1); continue; }
+                    var grad = ctx.createLinearGradient(ss.x, ss.y, ss.x - ss.vx * 8, ss.y - ss.vy * 8);
+                    grad.addColorStop(0, 'rgba(167,139,250,' + ss.life + ')');
+                    grad.addColorStop(1, 'rgba(167,139,250,0)');
+                    ctx.beginPath();
+                    ctx.moveTo(ss.x, ss.y);
+                    ctx.lineTo(ss.x - ss.vx * 8, ss.y - ss.vy * 8);
+                    ctx.strokeStyle = grad;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+                // Occasional shooting star
+                if (Math.random() < 0.003) {
+                    shootingStars.push({
+                        x: Math.random() * canvas.width * 0.8,
+                        y: Math.random() * canvas.height * 0.3,
+                        vx: 3 + Math.random() * 3,
+                        vy: 1 + Math.random() * 2,
+                        life: 1
+                    });
+                }
+                animId = requestAnimationFrame(draw);
+            }
+
+            function start() {
+                resize();
+                createStars();
+                if (animId) cancelAnimationFrame(animId);
+                animId = requestAnimationFrame(draw);
+            }
+
+            window.addEventListener('resize', function() { resize(); createStars(); });
+            // Start when visible
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', start);
+            } else {
+                start();
+            }
+        })();
+
+        // ==================== LANDING ↔ MODULE TRANSITIONS ====================
+        var _currentView = 'landing'; // 'landing' or a moduleId
+
+        function openModuleFromLanding(moduleId) {
+            var landing = document.getElementById('landing-section');
+            var moduleView = document.getElementById('module-view');
+            // Animate landing out
+            landing.classList.add('view-exit');
+            setTimeout(function() {
+                landing.style.display = 'none';
+                landing.classList.remove('view-exit');
+                // Activate module
+                _activateModule(moduleId);
+                // Show module view
+                moduleView.style.display = '';
+                moduleView.classList.add('view-enter');
+                setTimeout(function() { moduleView.classList.remove('view-enter'); }, 500);
+            }, 350);
+            _currentView = moduleId;
+        }
+
+        function showLanding() {
+            var landing = document.getElementById('landing-section');
+            var moduleView = document.getElementById('module-view');
+            // Animate module view out
+            moduleView.classList.add('view-exit');
+            setTimeout(function() {
+                moduleView.style.display = 'none';
+                moduleView.classList.remove('view-exit');
+                // Show landing
+                landing.style.display = '';
+                landing.classList.add('view-enter');
+                setTimeout(function() { landing.classList.remove('view-enter'); }, 500);
+                // Re-trigger landing card animations
+                _replayLandingAnimations();
+            }, 350);
+            _currentView = 'landing';
+        }
+
+        function _activateModule(moduleId) {
+            // Update tabs
+            document.querySelectorAll('#module-view .module-tab').forEach(function(t) {
+                t.classList.toggle('active', t.dataset.module === moduleId);
+            });
+            // Update content
+            document.querySelectorAll('.module-content').forEach(function(c) { c.classList.remove('active'); });
+            var target = document.getElementById('module-' + moduleId);
+            if (target) target.classList.add('active');
+        }
+
+        function _replayLandingAnimations() {
+            setTimeout(function() {
+                var heroEls = document.querySelectorAll('.landing-hero-badge, .landing-hero h2, .landing-hero-sub, .landing-stats, .landing-divider');
+                heroEls.forEach(function(el) {
+                    el.style.animation = 'none';
+                    void el.offsetWidth;
+                    el.style.animation = '';
+                });
+                document.querySelectorAll('.landing-module-card').forEach(function(c) {
+                    c.style.animation = 'none';
+                    void c.offsetWidth;
+                    c.style.animation = '';
+                });
+            }, 50);
+        }
+
+        // ==================== TAB NAVIGATION (compact mode) ====================
+        document.querySelectorAll('#module-view .module-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                var moduleId = tab.dataset.module;
+                if (tab.classList.contains('active')) return;
+                // Animate content change
+                var current = document.querySelector('.module-content.active');
+                if (current) {
+                    current.style.opacity = '0';
+                    current.style.transform = 'translateY(12px)';
+                    current.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                }
+                setTimeout(function() {
+                    // Clear any leftover inline styles from previous content
+                    if (current) {
+                        current.style.opacity = '';
+                        current.style.transform = '';
+                        current.style.transition = '';
+                    }
+                    _activateModule(moduleId);
+                    var next = document.getElementById('module-' + moduleId);
+                    if (next) {
+                        next.style.animation = 'none';
+                        next.style.opacity = '0';
+                        next.style.transform = 'translateY(20px)';
+                        next.style.transition = 'none';
+                        void next.offsetWidth;
+                        next.style.transition = 'opacity 0.4s ease, transform 0.4s cubic-bezier(0.34,1.2,0.64,1)';
+                        next.style.opacity = '1';
+                        next.style.transform = 'translateY(0)';
+                        // Clean up inline styles after transition
+                        setTimeout(function() {
+                            next.style.animation = '';
+                            next.style.opacity = '';
+                            next.style.transform = '';
+                            next.style.transition = '';
+                        }, 450);
+                    }
+                    _currentView = moduleId;
+                }, 250);
             });
         });
 

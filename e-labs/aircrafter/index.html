@@ -396,11 +396,9 @@
             position: absolute; inset: 0; overflow: hidden; pointer-events: none;
             border-radius: 20px; z-index: 0;
         }
-        .landing-mesh-bg svg {
-            position: absolute; width: 100%; height: 100%;
-            opacity: 0.06; animation: meshDrift 30s ease-in-out infinite;
+        #aircraft-mesh-canvas {
+            position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0;
         }
-        [data-theme="light"] .landing-mesh-bg svg { opacity: 0.04; }
         .landing-mesh-bg::after {
             content: ''; position: absolute; left: 0; right: 0; height: 2px; z-index: 1;
             background: linear-gradient(90deg, transparent, var(--ac-primary) 30%, var(--ac-secondary) 50%, var(--ac-primary) 70%, transparent);
@@ -1685,41 +1683,7 @@
                 <div class="hero-section" id="hero-section">
                     <!-- Animated mesh background -->
                     <div class="landing-mesh-bg">
-                        <svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">
-                            <defs>
-                                <linearGradient id="meshGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="var(--ac-primary)" stop-opacity="0.5"/>
-                                    <stop offset="50%" stop-color="var(--ac-secondary)" stop-opacity="0.3"/>
-                                    <stop offset="100%" stop-color="var(--ac-accent)" stop-opacity="0.5"/>
-                                </linearGradient>
-                            </defs>
-                            <g stroke="url(#meshGrad)" stroke-width="0.5" fill="none" opacity="0.6">
-                                <path d="M0,50 Q100,30 200,55 T400,45 T600,60 T800,40"/>
-                                <path d="M0,100 Q150,80 300,110 T500,90 T700,105 T800,95"/>
-                                <path d="M0,150 Q120,130 250,155 T450,140 T650,160 T800,145"/>
-                                <path d="M0,200 Q180,180 320,210 T520,190 T720,205 T800,195"/>
-                                <path d="M0,250 Q100,230 220,260 T420,240 T620,255 T800,245"/>
-                                <path d="M0,300 Q160,280 300,310 T500,290 T700,305 T800,295"/>
-                                <path d="M0,350 Q130,330 260,360 T460,340 T660,355 T800,345"/>
-                                <!-- Vertical lines -->
-                                <path d="M100,0 Q90,100 110,200 T95,400"/>
-                                <path d="M200,0 Q210,100 195,200 T205,400"/>
-                                <path d="M300,0 Q290,100 310,200 T295,400"/>
-                                <path d="M400,0 Q410,100 395,200 T405,400"/>
-                                <path d="M500,0 Q490,100 510,200 T495,400"/>
-                                <path d="M600,0 Q610,100 595,200 T605,400"/>
-                                <path d="M700,0 Q690,100 710,200 T695,400"/>
-                            </g>
-                            <!-- Stress field nodes -->
-                            <g fill="var(--ac-primary)" opacity="0.4">
-                                <circle cx="100" cy="100" r="3"><animate attributeName="opacity" values="0.2;0.8;0.2" dur="3s" repeatCount="indefinite"/></circle>
-                                <circle cx="300" cy="150" r="3"><animate attributeName="opacity" values="0.3;0.9;0.3" dur="4s" repeatCount="indefinite"/></circle>
-                                <circle cx="500" cy="200" r="3"><animate attributeName="opacity" values="0.2;0.7;0.2" dur="3.5s" repeatCount="indefinite"/></circle>
-                                <circle cx="700" cy="100" r="3"><animate attributeName="opacity" values="0.3;0.8;0.3" dur="2.5s" repeatCount="indefinite"/></circle>
-                                <circle cx="200" cy="300" r="2.5"><animate attributeName="opacity" values="0.2;0.6;0.2" dur="4.5s" repeatCount="indefinite"/></circle>
-                                <circle cx="600" cy="300" r="2.5"><animate attributeName="opacity" values="0.3;0.7;0.3" dur="3.2s" repeatCount="indefinite"/></circle>
-                            </g>
-                        </svg>
+                        <canvas id="aircraft-mesh-canvas"></canvas>
                     </div>
                     <!-- Floating orbs -->
                     <div class="landing-orb orb-1"></div>
@@ -1728,9 +1692,9 @@
                     <!-- Hero content -->
                     <div class="landing-hero-content">
                         <div class="landing-hero-badge">
-                            <span class="badge-dot"></span> Contact Stress Analysis Engine
+                            <span class="badge-dot"></span> New Release
                         </div>
-                        <h2><span class="hero-gradient">Explore Aircraft Tire</span> <span class="hero-plain">3D Contact Stresses</span></h2>
+                        <h2><span class="hero-plain">Explore </span><span class="hero-gradient">3D Contact Stresses</span></h2>
                         <p class="landing-hero-sub">Select an aircraft from the FAARFIELD library to compute three-dimensional tire&ndash;pavement contact stress distributions using analytical models.</p>
                         <div class="landing-stats">
                             <div class="landing-stat">
@@ -2150,6 +2114,377 @@
 <script src="../../assets/js/back-to-top.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <script>
+    // ==================== AIRCRAFT-FEM MESH CANVAS ====================
+    (function initAircraftMesh() {
+        var canvas = document.getElementById('aircraft-mesh-canvas');
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var animId = null;
+        var mouseX = -9999, mouseY = -9999;
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var nodes = [], tris = [], edges = [], contactZones = [], pressureRings = [];
+
+        // Theme observer
+        new MutationObserver(function() {
+            isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+        // AirCrafter palette
+        var C = {
+            sky:    function(a){ return isDark ? 'rgba(14,165,233,'+a+')' : 'rgba(2,132,199,'+a+')'; },
+            orange: function(a){ return isDark ? 'rgba(249,115,22,'+a+')' : 'rgba(234,88,12,'+a+')'; },
+            violet: function(a){ return isDark ? 'rgba(139,92,246,'+a+')' : 'rgba(109,40,217,'+a+')'; },
+            teal:   function(a){ return isDark ? 'rgba(45,212,191,'+a+')' : 'rgba(20,184,166,'+a+')'; }
+        };
+
+        function resize() {
+            var rect = canvas.parentElement.getBoundingClientRect();
+            var dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            buildMesh(rect.width, rect.height);
+        }
+
+        function buildMesh(w, h) {
+            nodes = []; tris = []; edges = []; contactZones = []; pressureRings = [];
+
+            // --- Contact zones (tire footprints) ---
+            var zoneCount = w > 600 ? 3 : 2;
+            var spacing = w / (zoneCount + 1);
+            for (var z = 0; z < zoneCount; z++) {
+                var cx = spacing * (z + 1);
+                var cy = h * 0.45 + Math.sin(z * 2.1) * h * 0.08;
+                var rx = 28 + z * 6;
+                var ry = 18 + z * 4;
+                contactZones.push({ cx: cx, cy: cy, rx: rx, ry: ry, phase: z * 1.5 });
+                // Pressure contour rings
+                for (var r = 1; r <= 4; r++) {
+                    pressureRings.push({
+                        cx: cx, cy: cy,
+                        rx: rx + r * 22, ry: ry + r * 16,
+                        ring: r, zone: z, phase: z * 1.5 + r * 0.3
+                    });
+                }
+            }
+
+            // --- Radial mesh nodes emanating from contact zones ---
+            var cols = Math.ceil(w / 50) + 1;
+            var rows = Math.ceil(h / 50) + 1;
+            var cellW = w / (cols - 1);
+            var cellH = h / (rows - 1);
+
+            for (var r = 0; r < rows; r++) {
+                for (var c = 0; c < cols; c++) {
+                    var bx = c * cellW;
+                    var by = r * cellH;
+                    var onEdge = (r === 0 || r === rows-1 || c === 0 || c === cols-1);
+
+                    // Warp nodes near contact zones for radial feel
+                    var warpX = 0, warpY = 0;
+                    for (var z = 0; z < contactZones.length; z++) {
+                        var zn = contactZones[z];
+                        var dx = bx - zn.cx, dy = by - zn.cy;
+                        var d = Math.sqrt(dx*dx + dy*dy);
+                        if (d > 10 && d < 180) {
+                            var pull = (180 - d) / 180 * 0.15;
+                            warpX += dx / d * pull * 12;
+                            warpY += dy / d * pull * 8;
+                        }
+                    }
+
+                    var jitter = onEdge ? 0 : 0.18;
+                    nodes.push({
+                        ox: bx + warpX + (Math.random()-0.5) * cellW * jitter,
+                        oy: by + warpY + (Math.random()-0.5) * cellH * jitter,
+                        x: 0, y: 0,
+                        phase: Math.random() * Math.PI * 2,
+                        amp: 0.8 + Math.random() * 1.4,
+                        freq: 0.25 + Math.random() * 0.35,
+                        pulsePhase: Math.random() * Math.PI * 2,
+                        pulseSpeed: 0.4 + Math.random() * 1.2
+                    });
+                }
+            }
+
+            // Triangulate
+            var edgeSet = {};
+            function addEdge(a, b) {
+                var key = Math.min(a,b) + '_' + Math.max(a,b);
+                if (!edgeSet[key]) {
+                    edgeSet[key] = true;
+                    edges.push({ a:a, b:b, glow:0, glowTarget:0, glowDecay:0.01+Math.random()*0.015 });
+                }
+            }
+            for (var r = 0; r < rows-1; r++) {
+                for (var c = 0; c < cols-1; c++) {
+                    var tl = r*cols+c, tr = tl+1, bl = (r+1)*cols+c, br = bl+1;
+                    if ((r+c) % 2 === 0) {
+                        tris.push([tl,tr,bl]); tris.push([tr,br,bl]);
+                        addEdge(tl,tr); addEdge(tl,bl); addEdge(tr,bl); addEdge(tr,br); addEdge(br,bl);
+                    } else {
+                        tris.push([tl,tr,br]); tris.push([tl,br,bl]);
+                        addEdge(tl,tr); addEdge(tr,br); addEdge(tl,br); addEdge(br,bl); addEdge(tl,bl);
+                    }
+                }
+            }
+        }
+
+        // Pressure colormap: deep blue → sky blue → orange → bright orange
+        function pressureColor(v, alpha) {
+            var r, g, b;
+            if (v < 0.33)      { var t=v/0.33;     r=Math.round(14*t);  g=Math.round(50+115*t);  b=Math.round(120+113*t); }
+            else if (v < 0.66) { var t=(v-0.33)/0.33; r=Math.round(14+235*t); g=Math.round(165-50*t); b=Math.round(233-211*t); }
+            else               { var t=(v-0.66)/0.34; r=Math.round(249);      g=Math.round(115+40*t); b=Math.round(22); }
+            return 'rgba('+r+','+g+','+b+','+alpha+')';
+        }
+
+        function draw(t) {
+            var ts = t * 0.001;
+            var w = parseFloat(canvas.style.width) || canvas.width;
+            var h = parseFloat(canvas.style.height) || canvas.height;
+            ctx.clearRect(0, 0, w + 1, h + 1);
+
+            // Update node positions
+            for (var i = 0; i < nodes.length; i++) {
+                var n = nodes[i];
+                n.x = n.ox + Math.sin(ts * n.freq + n.phase) * n.amp;
+                n.y = n.oy + Math.cos(ts * n.freq * 0.7 + n.phase * 1.2) * n.amp * 0.6;
+                // Mouse repulsion
+                var dx = n.x - mouseX, dy = n.y - mouseY;
+                var dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 110 && dist > 0) {
+                    var f = (110 - dist) / 110; f = f * f * 7;
+                    n.x += (dx/dist) * f;
+                    n.y += (dy/dist) * f;
+                }
+            }
+
+            // --- Pressure propagation wave (radial from contact zones) ---
+            var wavePhase = (ts * 0.3) % 2.5;
+
+            // --- Draw triangle fills (pressure field) ---
+            var baseFill = isDark ? 0.02 : 0.012;
+            for (var i = 0; i < tris.length; i++) {
+                var tri = tris[i];
+                var a = nodes[tri[0]], b = nodes[tri[1]], c = nodes[tri[2]];
+                var tcx = (a.x+b.x+c.x)/3, tcy = (a.y+b.y+c.y)/3;
+
+                // Distance to nearest contact zone → pressure intensity
+                var minZoneDist = 9999;
+                for (var z = 0; z < contactZones.length; z++) {
+                    var zn = contactZones[z];
+                    var zdx = (tcx - zn.cx)/zn.rx, zdy = (tcy - zn.cy)/zn.ry;
+                    minZoneDist = Math.min(minZoneDist, Math.sqrt(zdx*zdx + zdy*zdy));
+                }
+
+                // Wave ring effect
+                var waveRing = Math.abs(minZoneDist * 0.15 - wavePhase);
+                var waveBoost = waveRing < 0.4 ? (1 - waveRing/0.4) * 0.06 : 0;
+
+                // Mouse boost
+                var mdx = tcx - mouseX, mdy = tcy - mouseY;
+                var mDist = Math.sqrt(mdx*mdx + mdy*mdy);
+                var mBoost = mDist < 130 ? (1-mDist/130) * 0.12 : 0;
+
+                var intensity = Math.max(0, 1 - minZoneDist * 0.12);
+                var fillA = baseFill + intensity * (isDark ? 0.04 : 0.02) + waveBoost * (isDark ? 0.3 : 0.15) + mBoost * (isDark ? 0.04 : 0.02);
+
+                if (fillA > 0.01) {
+                    var pVal = intensity * 0.5 + waveBoost * 2 + Math.sin(ts * 0.3 + minZoneDist * 0.5) * 0.15 + 0.15;
+                    pVal = Math.max(0, Math.min(1, pVal));
+                    ctx.beginPath();
+                    ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y);
+                    ctx.closePath();
+                    ctx.fillStyle = pressureColor(pVal, fillA);
+                    ctx.fill();
+                }
+            }
+
+            // --- Draw pressure contour ellipses ---
+            for (var i = 0; i < pressureRings.length; i++) {
+                var pr = pressureRings[i];
+                var pulse = 0.5 + 0.5 * Math.sin(ts * 0.8 + pr.phase);
+                var rAlpha = (isDark ? 0.035 : 0.018) * (1 - pr.ring * 0.2) * pulse;
+                if (rAlpha > 0.005) {
+                    ctx.beginPath();
+                    ctx.ellipse(pr.cx, pr.cy, pr.rx + Math.sin(ts*0.5+pr.phase)*3, pr.ry + Math.cos(ts*0.4+pr.phase)*2, 0, 0, Math.PI*2);
+                    ctx.strokeStyle = pr.ring <= 2 ? C.sky(rAlpha * 2) : C.orange(rAlpha * 2);
+                    ctx.lineWidth = pr.ring === 1 ? 1.2 : 0.6;
+                    ctx.setLineDash(pr.ring > 2 ? [4,6] : []);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+
+            // --- Draw edges ---
+            var edgeBase = isDark ? 0.055 : 0.03;
+            if (Math.random() < 0.008 && edges.length > 0) {
+                // Random load-path glow
+                var ri = Math.floor(Math.random() * edges.length);
+                edges[ri].glowTarget = 0.3 + Math.random() * 0.3;
+            }
+            for (var i = 0; i < edges.length; i++) {
+                var e = edges[i];
+                var a = nodes[e.a], b = nodes[e.b];
+                if (e.glow < e.glowTarget) e.glow = Math.min(e.glow + e.glowDecay, e.glowTarget);
+                else if (e.glow > 0) { e.glow = Math.max(e.glow - e.glowDecay*0.5, 0); e.glowTarget = Math.max(e.glowTarget - e.glowDecay*0.3, 0); }
+                // Mouse proximity
+                var emx = (a.x+b.x)/2 - mouseX, emy = (a.y+b.y)/2 - mouseY;
+                var eDist = Math.sqrt(emx*emx + emy*emy);
+                var eMouse = eDist < 90 ? (1-eDist/90)*0.15 : 0;
+                // Near-contact-zone edges are brighter
+                var zoneProx = 0;
+                for (var z = 0; z < contactZones.length; z++) {
+                    var zn = contactZones[z];
+                    var zdx = ((a.x+b.x)/2 - zn.cx), zdy = ((a.y+b.y)/2 - zn.cy);
+                    var zd = Math.sqrt(zdx*zdx + zdy*zdy);
+                    if (zd < 100) zoneProx = Math.max(zoneProx, (100-zd)/100 * 0.08);
+                }
+                var alpha = edgeBase + e.glow * 0.2 + eMouse + zoneProx;
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+                ctx.strokeStyle = e.glow > 0.1 ? C.orange(alpha) : C.sky(alpha);
+                ctx.lineWidth = 0.4 + e.glow * 1.0 + eMouse * 0.6;
+                ctx.stroke();
+            }
+
+            // --- Draw nodes ---
+            for (var i = 0; i < nodes.length; i++) {
+                var n = nodes[i];
+                var pulse = 0.3 + 0.3 * Math.sin(ts * n.pulseSpeed + n.pulsePhase);
+                var ndx = n.x - mouseX, ndy = n.y - mouseY;
+                var nDist = Math.sqrt(ndx*ndx + ndy*ndy);
+                var nMouse = nDist < 90 ? (1-nDist/90) : 0;
+                var nr = 0.7 + nMouse * 1.8;
+                var nAlpha = (isDark ? 0.07 : 0.035) * pulse + nMouse * 0.35;
+                if (nAlpha > 0.025) {
+                    ctx.beginPath();
+                    ctx.arc(n.x, n.y, nr, 0, Math.PI*2);
+                    ctx.fillStyle = C.sky(nAlpha);
+                    ctx.fill();
+                    if (nMouse > 0.4) {
+                        ctx.beginPath();
+                        ctx.arc(n.x, n.y, nr + 3, 0, Math.PI*2);
+                        ctx.strokeStyle = C.sky(nMouse * 0.12);
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // --- Contact zone cores (tire footprints) ---
+            for (var z = 0; z < contactZones.length; z++) {
+                var zn = contactZones[z];
+                var zPulse = 0.5 + 0.5 * Math.sin(ts * 1.0 + zn.phase);
+                // Inner ellipse fill
+                ctx.beginPath();
+                ctx.ellipse(zn.cx, zn.cy, zn.rx + Math.sin(ts*0.6)*2, zn.ry + Math.cos(ts*0.5)*1.5, 0, 0, Math.PI*2);
+                ctx.fillStyle = C.orange(isDark ? 0.04 * zPulse : 0.02 * zPulse);
+                ctx.fill();
+                ctx.strokeStyle = C.orange(isDark ? 0.1 * zPulse : 0.05 * zPulse);
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                // Center dot
+                ctx.beginPath();
+                ctx.arc(zn.cx, zn.cy, 2 + zPulse * 0.8, 0, Math.PI*2);
+                ctx.fillStyle = C.orange(isDark ? 0.3 * zPulse : 0.15 * zPulse);
+                ctx.fill();
+            }
+
+            // --- Sensor nodes (spaced highlights) ---
+            var sensorCount = Math.min(8, nodes.length);
+            var sensorStep = Math.floor(nodes.length / sensorCount);
+            for (var i = 0; i < sensorCount; i++) {
+                var si = i * sensorStep;
+                if (si >= nodes.length) break;
+                var sn = nodes[si];
+                var sp = 0.3 + 0.7 * Math.sin(ts * 1.1 + si * 0.7);
+                var sr = 1.5 + sp * 0.8;
+                ctx.beginPath();
+                ctx.arc(sn.x, sn.y, sr, 0, Math.PI*2);
+                ctx.fillStyle = C.violet(sp * (isDark ? 0.15 : 0.07));
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(sn.x, sn.y, sr + 3, 0, Math.PI*2);
+                ctx.strokeStyle = C.violet(sp * (isDark ? 0.06 : 0.025));
+                ctx.lineWidth = 0.6;
+                ctx.stroke();
+            }
+
+            // --- Tiny aircraft silhouette (wireframe, very subtle) ---
+            var planeX = w * 0.82, planeY = h * 0.15;
+            var planeScale = Math.min(w, h) * 0.0009;
+            var planeAlpha = isDark ? 0.05 + 0.025*Math.sin(ts*0.3) : 0.03 + 0.015*Math.sin(ts*0.3);
+            ctx.save();
+            ctx.translate(planeX, planeY);
+            ctx.scale(planeScale, planeScale);
+            ctx.strokeStyle = C.sky(planeAlpha);
+            ctx.lineWidth = 1.5 / planeScale;
+            ctx.beginPath();
+            // Fuselage
+            ctx.moveTo(0, -80); ctx.lineTo(8, -40); ctx.lineTo(8, 60); ctx.lineTo(0, 90);
+            ctx.lineTo(-8, 60); ctx.lineTo(-8, -40); ctx.closePath();
+            ctx.stroke();
+            // Wings
+            ctx.beginPath();
+            ctx.moveTo(-8, 0); ctx.lineTo(-70, 20); ctx.lineTo(-65, 25); ctx.lineTo(-8, 12);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(8, 0); ctx.lineTo(70, 20); ctx.lineTo(65, 25); ctx.lineTo(8, 12);
+            ctx.stroke();
+            // Tail
+            ctx.beginPath();
+            ctx.moveTo(-8, 55); ctx.lineTo(-25, 65); ctx.lineTo(-22, 70); ctx.lineTo(-8, 62);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(8, 55); ctx.lineTo(25, 65); ctx.lineTo(22, 70); ctx.lineTo(8, 62);
+            ctx.stroke();
+            // Engines
+            ctx.beginPath();
+            ctx.ellipse(-35, 15, 4, 8, 0.1, 0, Math.PI*2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.ellipse(35, 15, 4, 8, -0.1, 0, Math.PI*2);
+            ctx.stroke();
+            ctx.restore();
+
+            animId = requestAnimationFrame(draw);
+        }
+
+        // Mouse tracking
+        var section = document.getElementById('hero-section');
+        if (section) {
+            section.addEventListener('mousemove', function(ev) {
+                var rect = canvas.getBoundingClientRect();
+                mouseX = ev.clientX - rect.left;
+                mouseY = ev.clientY - rect.top;
+            });
+            section.addEventListener('mouseleave', function() {
+                mouseX = -9999; mouseY = -9999;
+            });
+        }
+
+        function start() {
+            resize();
+            if (animId) cancelAnimationFrame(animId);
+            animId = requestAnimationFrame(draw);
+        }
+
+        var resizeTimer;
+        window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(resize, 150); });
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', start);
+        } else {
+            start();
+        }
+    })();
+    </script>
 
     <script>
     // ================================================================

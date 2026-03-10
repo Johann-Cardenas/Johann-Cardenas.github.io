@@ -1253,11 +1253,9 @@
             position:absolute; inset:0; overflow:hidden; pointer-events:none;
             border-radius:24px; z-index:0;
         }
-        .landing-mesh-bg svg {
-            position:absolute; width:100%; height:100%;
-            opacity:0.08; animation:meshDrift 30s ease-in-out infinite;
+        #fem-mesh-canvas {
+            position:absolute; inset:0; width:100%; height:100%; z-index:0;
         }
-        [data-theme="light"] .landing-mesh-bg svg { opacity:0.05; }
 
         /* Scanning analysis line */
         .landing-mesh-bg::after {
@@ -1915,69 +1913,7 @@
 
             <!-- Animated mesh background -->
             <div class="landing-mesh-bg" aria-hidden="true">
-                <svg viewBox="0 0 800 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- FEM-style triangular mesh -->
-                    <g stroke="currentColor" stroke-width="0.5" opacity="0.6">
-                        <path d="M0,0 L80,40 L0,80 Z"/><path d="M0,0 L80,40 L160,0 Z"/>
-                        <path d="M160,0 L80,40 L160,80 Z"/><path d="M160,0 L240,40 L160,80 Z"/>
-                        <path d="M160,0 L240,40 L320,0 Z"/><path d="M320,0 L240,40 L320,80 Z"/>
-                        <path d="M320,0 L400,40 L320,80 Z"/><path d="M320,0 L400,40 L480,0 Z"/>
-                        <path d="M480,0 L400,40 L480,80 Z"/><path d="M480,0 L560,40 L480,80 Z"/>
-                        <path d="M480,0 L560,40 L640,0 Z"/><path d="M640,0 L560,40 L640,80 Z"/>
-                        <path d="M640,0 L720,40 L640,80 Z"/><path d="M640,0 L720,40 L800,0 Z"/>
-                        <path d="M0,80 L80,40 L80,120 Z"/><path d="M0,80 L80,120 L0,160 Z"/>
-                        <path d="M80,120 L160,80 L160,160 Z"/><path d="M80,120 L0,160 L160,160 Z"/>
-                        <path d="M160,80 L240,40 L240,120 Z"/><path d="M160,80 L240,120 L160,160 Z"/>
-                        <path d="M240,120 L320,80 L320,160 Z"/><path d="M240,120 L160,160 L320,160 Z"/>
-                        <path d="M320,80 L400,40 L400,120 Z"/><path d="M320,80 L400,120 L320,160 Z"/>
-                        <path d="M400,120 L480,80 L480,160 Z"/><path d="M400,120 L320,160 L480,160 Z"/>
-                        <path d="M480,80 L560,40 L560,120 Z"/><path d="M480,80 L560,120 L480,160 Z"/>
-                        <path d="M560,120 L640,80 L640,160 Z"/><path d="M560,120 L480,160 L640,160 Z"/>
-                        <path d="M640,80 L720,40 L720,120 Z"/><path d="M640,80 L720,120 L640,160 Z"/>
-                        <path d="M720,120 L800,80 L800,160 Z"/><path d="M720,120 L640,160 L800,160 Z"/>
-                        <path d="M0,160 L80,120 L80,200 Z"/><path d="M0,160 L80,200 L0,240 Z"/>
-                        <path d="M80,200 L160,160 L160,240 Z"/><path d="M80,200 L0,240 L160,240 Z"/>
-                        <path d="M160,160 L240,120 L240,200 Z"/><path d="M160,160 L240,200 L160,240 Z"/>
-                        <path d="M240,200 L320,160 L320,240 Z"/><path d="M240,200 L160,240 L320,240 Z"/>
-                        <path d="M320,160 L400,120 L400,200 Z"/><path d="M320,160 L400,200 L320,240 Z"/>
-                        <path d="M400,200 L480,160 L480,240 Z"/><path d="M400,200 L320,240 L480,240 Z"/>
-                        <path d="M480,160 L560,120 L560,200 Z"/><path d="M480,160 L560,200 L480,240 Z"/>
-                        <path d="M560,200 L640,160 L640,240 Z"/><path d="M560,200 L480,240 L640,240 Z"/>
-                        <path d="M640,160 L720,120 L720,200 Z"/><path d="M640,160 L720,200 L640,240 Z"/>
-                        <path d="M720,200 L800,160 L800,240 Z"/><path d="M720,200 L640,240 L800,240 Z"/>
-                        <path d="M0,240 L80,200 L80,280 Z"/><path d="M0,240 L80,280 L0,320 Z"/>
-                        <path d="M80,280 L160,240 L160,320 Z"/><path d="M80,280 L0,320 L160,320 Z"/>
-                        <path d="M160,240 L240,200 L240,280 Z"/><path d="M160,240 L240,280 L160,320 Z"/>
-                        <path d="M240,280 L320,240 L320,320 Z"/><path d="M240,280 L160,320 L320,320 Z"/>
-                        <path d="M320,240 L400,200 L400,280 Z"/><path d="M320,240 L400,280 L320,320 Z"/>
-                        <path d="M400,280 L480,240 L480,320 Z"/><path d="M400,280 L320,320 L480,320 Z"/>
-                        <path d="M480,240 L560,200 L560,280 Z"/><path d="M480,240 L560,280 L480,320 Z"/>
-                        <path d="M560,280 L640,240 L640,320 Z"/><path d="M560,280 L480,320 L640,320 Z"/>
-                        <path d="M640,240 L720,200 L720,280 Z"/><path d="M640,240 L720,280 L640,320 Z"/>
-                        <path d="M720,280 L800,240 L800,320 Z"/><path d="M720,280 L640,320 L800,320 Z"/>
-                        <path d="M0,320 L80,280 L80,360 Z"/><path d="M0,320 L80,360 L0,400 Z"/>
-                        <path d="M80,360 L160,320 L160,400 Z"/><path d="M80,360 L0,400 L160,400 Z"/>
-                        <path d="M160,320 L240,280 L240,360 Z"/><path d="M160,320 L240,360 L160,400 Z"/>
-                        <path d="M240,360 L320,320 L320,400 Z"/><path d="M240,360 L160,400 L320,400 Z"/>
-                        <path d="M320,320 L400,280 L400,360 Z"/><path d="M320,320 L400,360 L320,400 Z"/>
-                        <path d="M400,360 L480,320 L480,400 Z"/><path d="M400,360 L320,400 L480,400 Z"/>
-                        <path d="M480,320 L560,280 L560,360 Z"/><path d="M480,320 L560,360 L480,400 Z"/>
-                        <path d="M560,360 L640,320 L640,400 Z"/><path d="M560,360 L480,400 L640,400 Z"/>
-                        <path d="M640,320 L720,280 L720,360 Z"/><path d="M640,320 L720,360 L640,400 Z"/>
-                        <path d="M720,360 L800,320 L800,400 Z"/><path d="M720,360 L640,400 L800,400 Z"/>
-                    </g>
-                    <!-- Node highlights at key intersections -->
-                    <g fill="currentColor">
-                        <circle cx="80" cy="40" r="2.5" opacity="0.4"><animate attributeName="opacity" values="0.2;0.8;0.2" dur="3s" repeatCount="indefinite"/></circle>
-                        <circle cx="240" cy="120" r="2" opacity="0.3"><animate attributeName="opacity" values="0.15;0.7;0.15" dur="4s" repeatCount="indefinite" begin="0.5s"/></circle>
-                        <circle cx="400" cy="200" r="3" opacity="0.5"><animate attributeName="opacity" values="0.2;1;0.2" dur="3.5s" repeatCount="indefinite" begin="1s"/></circle>
-                        <circle cx="560" cy="120" r="2" opacity="0.3"><animate attributeName="opacity" values="0.1;0.6;0.1" dur="4.5s" repeatCount="indefinite" begin="1.5s"/></circle>
-                        <circle cx="720" cy="200" r="2.5" opacity="0.35"><animate attributeName="opacity" values="0.15;0.75;0.15" dur="3.8s" repeatCount="indefinite" begin="0.8s"/></circle>
-                        <circle cx="160" cy="240" r="2" opacity="0.25"><animate attributeName="opacity" values="0.1;0.55;0.1" dur="5s" repeatCount="indefinite" begin="2s"/></circle>
-                        <circle cx="480" cy="320" r="2.5" opacity="0.3"><animate attributeName="opacity" values="0.15;0.65;0.15" dur="4.2s" repeatCount="indefinite" begin="0.3s"/></circle>
-                        <circle cx="640" cy="360" r="2" opacity="0.2"><animate attributeName="opacity" values="0.1;0.5;0.1" dur="3.2s" repeatCount="indefinite" begin="1.8s"/></circle>
-                    </g>
-                </svg>
+                <canvas id="fem-mesh-canvas"></canvas>
                 <div class="landing-orb orb-1"></div>
                 <div class="landing-orb orb-2"></div>
                 <div class="landing-orb orb-3"></div>
@@ -1987,7 +1923,7 @@
             <div class="landing-hero">
                 <div class="landing-hero-badge">
                     <span class="badge-dot"></span>
-                    <span>Analysis Modules</span>
+                    <span>New Release</span>
                 </div>
                 <h2><span class="hero-plain">Explore </span><span class="hero-gradient">Finite Element</span><span class="hero-plain"> Analysis</span></h2>
                 <p class="landing-hero-sub">Select a pavement analysis module to visualize 3D dynamic finite element response fields, critical strain profiles, and cross-section contour maps.</p>
@@ -2294,6 +2230,266 @@
 <script src="../../assets/js/theme-toggle.js"></script>
 <script src="../../assets/js/back-to-top.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+<script>
+// ==================== DYNAMIC FEM MESH CANVAS ====================
+(function initFEMMesh() {
+    var canvas = document.getElementById('fem-mesh-canvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var nodes = [], triangles = [], edges = [];
+    var mouseX = -9999, mouseY = -9999;
+    var animId = null;
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+    // Watch for theme changes
+    var themeObs = new MutationObserver(function() {
+        isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    });
+    themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    function resize() {
+        var rect = canvas.parentElement.getBoundingClientRect();
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        buildMesh(rect.width, rect.height);
+    }
+
+    // Generate a slightly irregular triangular FEM mesh
+    function buildMesh(w, h) {
+        nodes = []; triangles = []; edges = [];
+        var cols = Math.ceil(w / 55) + 1;
+        var rows = Math.ceil(h / 55) + 1;
+        var cellW = w / (cols - 1);
+        var cellH = h / (rows - 1);
+        // Create nodes with slight randomness
+        for (var r = 0; r < rows; r++) {
+            for (var c = 0; c < cols; c++) {
+                var onEdge = (r === 0 || r === rows-1 || c === 0 || c === cols-1);
+                var jitter = onEdge ? 0 : 0.2;
+                nodes.push({
+                    ox: c * cellW + (Math.random() - 0.5) * cellW * jitter,
+                    oy: r * cellH + (Math.random() - 0.5) * cellH * jitter,
+                    x: 0, y: 0,
+                    phase: Math.random() * Math.PI * 2,
+                    amp: 1.2 + Math.random() * 1.8,
+                    freq: 0.3 + Math.random() * 0.4,
+                    pulsePhase: Math.random() * Math.PI * 2,
+                    pulseSpeed: 0.5 + Math.random() * 1.5
+                });
+            }
+        }
+        // Build triangles (2 per quad) and collect edges
+        var edgeSet = {};
+        function addEdge(a, b) {
+            var key = Math.min(a,b) + '_' + Math.max(a,b);
+            if (!edgeSet[key]) {
+                edgeSet[key] = true;
+                edges.push({ a: a, b: b, glow: 0, glowTarget: 0, glowSpeed: 0.01 + Math.random() * 0.02 });
+            }
+        }
+        for (var r = 0; r < rows - 1; r++) {
+            for (var c = 0; c < cols - 1; c++) {
+                var tl = r * cols + c;
+                var tr = tl + 1;
+                var bl = (r+1) * cols + c;
+                var br = bl + 1;
+                // Alternate diagonal direction for natural mesh look
+                if ((r + c) % 2 === 0) {
+                    triangles.push([tl, tr, bl]);
+                    triangles.push([tr, br, bl]);
+                    addEdge(tl,tr); addEdge(tl,bl); addEdge(tr,bl); addEdge(tr,br); addEdge(br,bl);
+                } else {
+                    triangles.push([tl, tr, br]);
+                    triangles.push([tl, br, bl]);
+                    addEdge(tl,tr); addEdge(tr,br); addEdge(tl,br); addEdge(br,bl); addEdge(tl,bl);
+                }
+            }
+        }
+    }
+
+    // Get stress color from a 0-1 value (blue → teal → green → yellow → red)
+    function stressColor(v, alpha) {
+        var r, g, b;
+        if (v < 0.25)      { var t=v/0.25;     r=0;          g=Math.round(80*t);  b=Math.round(180+75*t); }
+        else if (v < 0.5)  { var t=(v-0.25)/0.25; r=0;       g=Math.round(80+100*t); b=Math.round(255-155*t); }
+        else if (v < 0.75) { var t=(v-0.5)/0.25; r=Math.round(200*t); g=Math.round(180+40*t); b=Math.round(100-100*t); }
+        else               { var t=(v-0.75)/0.25; r=Math.round(200+55*t); g=Math.round(220-140*t); b=0; }
+        return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+    }
+
+    // Teal/primary theme color for edges
+    function edgeColor(alpha) {
+        return isDark ? 'rgba(34,211,209,' + alpha + ')' : 'rgba(24,169,168,' + alpha + ')';
+    }
+    function nodeColor(alpha) {
+        return isDark ? 'rgba(34,211,209,' + alpha + ')' : 'rgba(24,169,168,' + alpha + ')';
+    }
+
+    function draw(t) {
+        var ts = t * 0.001;
+        var w = canvas.style.width ? parseFloat(canvas.style.width) : canvas.width;
+        var h = canvas.style.height ? parseFloat(canvas.style.height) : canvas.height;
+        ctx.clearRect(0, 0, w + 1, h + 1);
+
+        // Update node positions (breathing)
+        for (var i = 0; i < nodes.length; i++) {
+            var n = nodes[i];
+            n.x = n.ox + Math.sin(ts * n.freq + n.phase) * n.amp;
+            n.y = n.oy + Math.cos(ts * n.freq * 0.8 + n.phase * 1.3) * n.amp * 0.7;
+            // Mouse repulsion
+            var dx = n.x - mouseX, dy = n.y - mouseY;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 120 && dist > 0) {
+                var force = (120 - dist) / 120;
+                force = force * force * 8;
+                n.x += (dx / dist) * force;
+                n.y += (dy / dist) * force;
+            }
+        }
+
+        // Stress wave — sweeps diagonally across the mesh
+        var waveCenter = ((ts * 0.15) % 1.6) - 0.3; // 0→1 repeating
+        var waveWidth = 0.35;
+
+        // Draw triangle fills (stress field)
+        var baseAlpha = isDark ? 0.06 : 0.035;
+        for (var i = 0; i < triangles.length; i++) {
+            var tri = triangles[i];
+            var a = nodes[tri[0]], b = nodes[tri[1]], c = nodes[tri[2]];
+            var cx_ = (a.x + b.x + c.x) / 3;
+            var cy_ = (a.y + b.y + c.y) / 3;
+            // Normalized position for stress wave
+            var pos = (cx_ / w) * 0.7 + (cy_ / h) * 0.3;
+            var waveDist = Math.abs(pos - waveCenter);
+            var waveIntensity = waveDist < waveWidth ? (1 - waveDist / waveWidth) : 0;
+            waveIntensity = waveIntensity * waveIntensity;
+            // Mouse proximity boost
+            var mdx = cx_ - mouseX, mdy = cy_ - mouseY;
+            var mDist = Math.sqrt(mdx * mdx + mdy * mdy);
+            var mouseBoost = mDist < 150 ? (1 - mDist / 150) * 0.4 : 0;
+            var fillAlpha = baseAlpha + waveIntensity * (isDark ? 0.14 : 0.08) + mouseBoost * (isDark ? 0.12 : 0.06);
+            var stressVal = (Math.sin(ts * 0.5 + pos * 4) * 0.5 + 0.5) * 0.6 + waveIntensity * 0.4;
+            if (fillAlpha > 0.01) {
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.lineTo(c.x, c.y);
+                ctx.closePath();
+                ctx.fillStyle = stressColor(stressVal, fillAlpha);
+                ctx.fill();
+            }
+        }
+
+        // Draw edges
+        var edgeBaseAlpha = isDark ? 0.12 : 0.07;
+        // Randomly trigger edge glows
+        if (Math.random() < 0.008 && edges.length > 0) {
+            var re = edges[Math.floor(Math.random() * edges.length)];
+            re.glowTarget = 0.6 + Math.random() * 0.4;
+        }
+        for (var i = 0; i < edges.length; i++) {
+            var e = edges[i];
+            var a = nodes[e.a], b = nodes[e.b];
+            // Glow animation
+            if (e.glow < e.glowTarget) { e.glow = Math.min(e.glow + e.glowSpeed, e.glowTarget); }
+            else if (e.glow > 0) { e.glow = Math.max(e.glow - e.glowSpeed * 0.5, 0); e.glowTarget = Math.max(e.glowTarget - e.glowSpeed * 0.3, 0); }
+            // Mouse proximity glow
+            var emx = (a.x + b.x) / 2 - mouseX, emy = (a.y + b.y) / 2 - mouseY;
+            var eDist = Math.sqrt(emx * emx + emy * emy);
+            var eMouseGlow = eDist < 100 ? (1 - eDist / 100) * 0.3 : 0;
+            var alpha = edgeBaseAlpha + e.glow * 0.4 + eMouseGlow;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.strokeStyle = edgeColor(alpha);
+            ctx.lineWidth = 0.5 + e.glow * 1.2 + eMouseGlow * 0.8;
+            ctx.stroke();
+        }
+
+        // Draw nodes
+        for (var i = 0; i < nodes.length; i++) {
+            var n = nodes[i];
+            var pulse = 0.3 + 0.3 * Math.sin(ts * n.pulseSpeed + n.pulsePhase);
+            // Mouse proximity
+            var ndx = n.x - mouseX, ndy = n.y - mouseY;
+            var nDist = Math.sqrt(ndx * ndx + ndy * ndy);
+            var nMouseGlow = nDist < 100 ? (1 - nDist / 100) : 0;
+            var r = 1.0 + nMouseGlow * 2.5;
+            var nAlpha = (isDark ? 0.15 : 0.10) * pulse + nMouseGlow * 0.6;
+            if (nAlpha > 0.03) {
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+                ctx.fillStyle = nodeColor(nAlpha);
+                ctx.fill();
+                // Glow ring on mouse-near nodes
+                if (nMouseGlow > 0.3) {
+                    ctx.beginPath();
+                    ctx.arc(n.x, n.y, r + 3, 0, Math.PI * 2);
+                    ctx.strokeStyle = nodeColor(nMouseGlow * 0.25);
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Highlight a few "sensor" nodes with stronger persistent glow
+        var sensorCount = Math.min(8, nodes.length);
+        var sensorStep = Math.floor(nodes.length / sensorCount);
+        for (var i = 0; i < sensorCount; i++) {
+            var si = i * sensorStep;
+            if (si >= nodes.length) break;
+            var sn = nodes[si];
+            var sp = 0.4 + 0.6 * Math.sin(ts * 1.2 + si);
+            var sr = 2 + sp * 1.5;
+            ctx.beginPath();
+            ctx.arc(sn.x, sn.y, sr, 0, Math.PI * 2);
+            ctx.fillStyle = nodeColor(sp * (isDark ? 0.35 : 0.2));
+            ctx.fill();
+            // outer ring
+            ctx.beginPath();
+            ctx.arc(sn.x, sn.y, sr + 4, 0, Math.PI * 2);
+            ctx.strokeStyle = nodeColor(sp * (isDark ? 0.12 : 0.06));
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        animId = requestAnimationFrame(draw);
+    }
+
+    // Mouse tracking on the landing section
+    var section = document.getElementById('module-section');
+    if (section) {
+        section.addEventListener('mousemove', function(ev) {
+            var rect = canvas.getBoundingClientRect();
+            mouseX = ev.clientX - rect.left;
+            mouseY = ev.clientY - rect.top;
+        });
+        section.addEventListener('mouseleave', function() {
+            mouseX = -9999; mouseY = -9999;
+        });
+    }
+
+    function start() {
+        resize();
+        if (animId) cancelAnimationFrame(animId);
+        animId = requestAnimationFrame(draw);
+    }
+
+    var resizeTimer;
+    window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(function(){ resize(); }, 150); });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start);
+    } else {
+        start();
+    }
+})();
+</script>
 
 <script>
 // ================================================================
