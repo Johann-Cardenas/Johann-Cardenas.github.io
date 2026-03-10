@@ -86,6 +86,68 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse-ring { 0% { box-shadow:0 0 0 0 var(--asp-primary-glow); } 70% { box-shadow:0 0 0 10px transparent; } 100% { box-shadow:0 0 0 0 transparent; } }
 
+        /* ==================== LANDING PAGE ANIMATIONS ==================== */
+        @keyframes meshDrift {
+            0%   { transform:translate(0,0) rotate(0deg); }
+            25%  { transform:translate(8px,-12px) rotate(0.5deg); }
+            50%  { transform:translate(-4px,-6px) rotate(-0.3deg); }
+            75%  { transform:translate(6px,4px) rotate(0.2deg); }
+            100% { transform:translate(0,0) rotate(0deg); }
+        }
+        @keyframes scanLine {
+            0%   { top:-2px; opacity:0; }
+            10%  { opacity:1; }
+            90%  { opacity:1; }
+            100% { top:100%; opacity:0; }
+        }
+        @keyframes nodeGlow {
+            0%,100% { opacity:0.3; transform:scale(1); }
+            50%     { opacity:1;   transform:scale(1.5); }
+        }
+        @keyframes gradientShift {
+            0%   { background-position:0% 50%; }
+            50%  { background-position:100% 50%; }
+            100% { background-position:0% 50%; }
+        }
+        @keyframes landingFadeIn {
+            from { opacity:0; transform:translateY(30px) scale(0.97); }
+            to   { opacity:1; transform:translateY(0) scale(1); }
+        }
+        @keyframes landingSlideUp {
+            from { opacity:0; transform:translateY(40px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        @keyframes heroTextReveal {
+            from { opacity:0; transform:translateY(20px); filter:blur(8px); }
+            to   { opacity:1; transform:translateY(0); filter:blur(0); }
+        }
+        @keyframes counterUp {
+            from { opacity:0; transform:translateY(12px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        @keyframes orbFloat {
+            0%,100% { transform:translate(0,0) scale(1); }
+            33%     { transform:translate(15px,-20px) scale(1.05); }
+            66%     { transform:translate(-10px,10px) scale(0.97); }
+        }
+        @keyframes cardReveal {
+            from { opacity:0; transform:translateY(50px) scale(0.92); filter:blur(4px); }
+            to   { opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+        }
+        @keyframes borderTrace {
+            0%   { background-position:0% 0%; }
+            100% { background-position:200% 200%; }
+        }
+        @keyframes pulseRing {
+            0%   { transform:scale(0.95); opacity:0.6; }
+            50%  { transform:scale(1.05); opacity:0.2; }
+            100% { transform:scale(0.95); opacity:0.6; }
+        }
+        @keyframes meshCardShift {
+            0%   { transform:translate(0,0); }
+            100% { transform:translate(-30px,-20px); }
+        }
+
         /* ==================== SITE CHROME OVERRIDES ==================== */
         #wrapper, #main, .wrapper, main { padding-top:0!important; margin-top:0!important; }
         #header, section#header { display:none!important; }
@@ -1152,9 +1214,648 @@
             content:''; flex:1; height:1px;
             background:linear-gradient(90deg, var(--asp-border), transparent);
         }
+
+        /* ==================== BREADCRUMB NAVIGATION ==================== */
+        .breadcrumb-nav {
+            display:flex; align-items:center; gap:0.5rem;
+            margin-bottom:1.25rem; padding:0.6rem 1rem;
+            background:var(--glass-bg); border:1px solid var(--glass-border);
+            border-radius:12px; font-size:0.85rem;
+            animation:fadeInUp 0.4s ease;
+        }
+        .breadcrumb-item {
+            display:inline-flex; align-items:center; gap:0.35rem;
+            color:var(--asp-text-muted); font-weight:500;
+            transition:color 0.2s ease;
+        }
+        .breadcrumb-item.clickable {
+            cursor:pointer; color:var(--asp-primary);
+        }
+        .breadcrumb-item.clickable:hover {
+            color:#2dd4bf; text-decoration:underline;
+        }
+        .breadcrumb-item.active {
+            color:var(--asp-text); font-weight:700;
+        }
+        .breadcrumb-sep {
+            color:var(--asp-text-muted); opacity:0.5; font-size:0.7rem;
+        }
+
+        /* ==================== MODULE SELECTOR — LANDING PAGE ==================== */
+        .module-section {
+            position:relative;
+            padding:2.5rem 0 1.5rem;
+        }
+        .module-section .panel-title { display:none; } /* replaced by hero */
+
+        /* ── Animated FEM mesh background ── */
+        .landing-mesh-bg {
+            position:absolute; inset:0; overflow:hidden; pointer-events:none;
+            border-radius:24px; z-index:0;
+        }
+        .landing-mesh-bg svg {
+            position:absolute; width:100%; height:100%;
+            opacity:0.08; animation:meshDrift 30s ease-in-out infinite;
+        }
+        [data-theme="light"] .landing-mesh-bg svg { opacity:0.05; }
+
+        /* Scanning analysis line */
+        .landing-mesh-bg::after {
+            content:''; position:absolute; left:0; right:0; height:2px; z-index:1;
+            background:linear-gradient(90deg, transparent 0%, var(--asp-primary) 30%, #2dd4bf 50%, var(--asp-primary) 70%, transparent 100%);
+            box-shadow:0 0 20px 4px var(--asp-primary-glow), 0 0 60px 8px rgba(24,169,168,0.08);
+            animation:scanLine 8s ease-in-out infinite;
+            opacity:0.7;
+        }
+
+        /* Floating orbs (ambient depth) */
+        .landing-orb {
+            position:absolute; border-radius:50%; pointer-events:none; z-index:0;
+            filter:blur(50px); opacity:0.12;
+        }
+        [data-theme="light"] .landing-orb { opacity:0.07; }
+        .landing-orb.orb-1 {
+            width:300px; height:300px; top:-60px; right:-40px;
+            background:radial-gradient(circle, var(--asp-primary), transparent 70%);
+            animation:orbFloat 15s ease-in-out infinite;
+        }
+        .landing-orb.orb-2 {
+            width:200px; height:200px; bottom:20px; left:-30px;
+            background:radial-gradient(circle, var(--asp-accent), transparent 70%);
+            animation:orbFloat 20s ease-in-out infinite reverse;
+        }
+        .landing-orb.orb-3 {
+            width:160px; height:160px; top:40%; left:55%;
+            background:radial-gradient(circle, #2dd4bf, transparent 70%);
+            animation:orbFloat 18s ease-in-out infinite 4s;
+        }
+
+        /* ── Hero intro area ── */
+        .landing-hero {
+            position:relative; z-index:1; text-align:center;
+            padding:0 1rem 2rem;
+        }
+        .landing-hero-badge {
+            display:inline-flex; align-items:center; gap:0.5rem;
+            padding:0.45rem 1.1rem; border-radius:50px;
+            background:linear-gradient(135deg, rgba(24,169,168,0.12), rgba(45,212,191,0.08));
+            border:1px solid rgba(24,169,168,0.25);
+            color:var(--asp-primary); font-size:0.78rem; font-weight:700;
+            letter-spacing:0.08em; text-transform:uppercase;
+            margin-bottom:1.2rem;
+            animation:heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s backwards;
+        }
+        .landing-hero-badge i { font-size:0.7rem; }
+        .landing-hero-badge .badge-dot {
+            width:6px; height:6px; border-radius:50%;
+            background:var(--asp-primary);
+            animation:nodeGlow 2s ease-in-out infinite;
+        }
+        .landing-hero h2 {
+            font-size:2.2rem; font-weight:900; margin:0 0 0.6rem;
+            letter-spacing:-0.02em; line-height:1.2;
+            animation:heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.2s backwards;
+        }
+        .landing-hero h2 .hero-gradient {
+            background:linear-gradient(135deg, var(--asp-primary), #2dd4bf, var(--asp-accent), var(--asp-primary));
+            background-size:300% 300%;
+            -webkit-background-clip:text; background-clip:text;
+            -webkit-text-fill-color:transparent;
+            animation:gradientShift 6s ease infinite;
+        }
+        .landing-hero h2 .hero-plain {
+            color:var(--asp-text);
+        }
+        .landing-hero-sub {
+            font-size:1rem; color:var(--asp-text-muted); line-height:1.6;
+            max-width:560px; margin:0 auto 1.75rem;
+            animation:heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.35s backwards;
+        }
+
+        /* ── Live stats ribbon ── */
+        .landing-stats {
+            display:flex; justify-content:center; gap:2rem; flex-wrap:wrap;
+            margin-bottom:2.5rem;
+            animation:heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.5s backwards;
+        }
+        .landing-stat {
+            display:flex; flex-direction:column; align-items:center; gap:0.15rem;
+            padding:0.6rem 1.2rem; border-radius:12px;
+            background:var(--glass-bg); border:1px solid var(--glass-border);
+            backdrop-filter:blur(10px);
+            min-width:90px;
+            transition:all 0.3s ease;
+        }
+        .landing-stat:hover {
+            border-color:var(--asp-primary);
+            background:rgba(24,169,168,0.08);
+            transform:translateY(-3px);
+            box-shadow:0 8px 24px rgba(24,169,168,0.1);
+        }
+        .landing-stat-value {
+            font-size:1.45rem; font-weight:900; letter-spacing:-0.02em;
+            background:linear-gradient(135deg, var(--asp-primary), #2dd4bf);
+            -webkit-background-clip:text; background-clip:text;
+            -webkit-text-fill-color:transparent;
+        }
+        .landing-stat-label {
+            font-size:0.72rem; font-weight:600; text-transform:uppercase;
+            letter-spacing:0.06em; color:var(--asp-text-muted);
+        }
+
+        /* ── Divider ── */
+        .landing-divider {
+            display:flex; align-items:center; gap:1rem;
+            margin-bottom:2rem;
+            animation:heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.6s backwards;
+        }
+        .landing-divider::before, .landing-divider::after {
+            content:''; flex:1; height:1px;
+            background:linear-gradient(90deg, transparent, var(--asp-border), transparent);
+        }
+        .landing-divider-text {
+            font-size:0.75rem; font-weight:700; text-transform:uppercase;
+            letter-spacing:0.12em; color:var(--asp-text-muted);
+            display:flex; align-items:center; gap:0.5rem;
+            padding:0.3rem 1rem; border-radius:20px;
+            background:var(--glass-bg); border:1px solid var(--glass-border);
+        }
+        .landing-divider-text i { font-size:0.65rem; color:var(--asp-primary); }
+
+        /* ── Module cards — redesigned with depth layers ── */
+        .module-grid {
+            display:grid; grid-template-columns:repeat(auto-fill, minmax(360px, 1fr));
+            gap:1.75rem; position:relative; z-index:1;
+        }
+
+        .module-card {
+            position:relative; overflow:hidden; cursor:pointer;
+            padding:0; border-radius:22px;
+            background:var(--asp-bg-panel);
+            border:1px solid var(--asp-border);
+            box-shadow:var(--asp-card-shadow);
+            display:flex; flex-direction:column;
+            transition:all 0.5s cubic-bezier(0.34,1.2,0.64,1);
+            animation:cardReveal 0.65s cubic-bezier(0.22,1,0.36,1) backwards;
+        }
+        .module-card:nth-child(1) { animation-delay:0.7s; }
+        .module-card:nth-child(2) { animation-delay:0.85s; }
+
+        /* Animated border gradient (replaces ::before top bar) */
+        .module-card::before {
+            content:''; position:absolute; inset:-1px; border-radius:23px; z-index:-1;
+            padding:1px;
+            background:conic-gradient(from 0deg, transparent, var(--asp-primary), #2dd4bf, var(--asp-primary), transparent 60%);
+            background-size:200% 200%;
+            -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite:xor; mask-composite:exclude;
+            opacity:0;
+            transition:opacity 0.5s ease;
+            animation:borderTrace 4s linear infinite;
+        }
+        .module-card:hover::before { opacity:1; }
+
+        .module-card.airfield::before {
+            background:conic-gradient(from 0deg, transparent, var(--asp-accent), #a78bfa, var(--asp-accent), transparent 60%);
+            background-size:200% 200%;
+            animation:borderTrace 6s linear infinite;
+        }
+
+        /* Card mesh overlay texture */
+        .module-card-mesh {
+            position:absolute; inset:0; pointer-events:none; z-index:0;
+            overflow:hidden; border-radius:22px;
+        }
+        .module-card-mesh svg {
+            position:absolute; width:130%; height:130%; top:-15%; left:-15%;
+            opacity:0.035; transition:opacity 0.4s ease;
+            animation:meshCardShift 30s linear infinite alternate;
+        }
+        [data-theme="light"] .module-card-mesh svg { opacity:0.025; }
+        .module-card:hover .module-card-mesh svg { opacity:0.07; }
+
+        /* Card top accent bar (animated gradient) */
+        .module-card-accent {
+            height:4px; flex-shrink:0;
+            background:linear-gradient(90deg, var(--asp-primary), #2dd4bf, var(--asp-primary));
+            background-size:200% 100%;
+            animation:gradientShift 3s ease infinite;
+            transition:height 0.4s ease;
+        }
+        .module-card:hover .module-card-accent { height:5px; }
+        .module-card.airfield .module-card-accent {
+            background:linear-gradient(90deg, var(--asp-accent), #a78bfa, var(--asp-accent));
+            background-size:200% 100%;
+        }
+
+        /* Card body */
+        .module-card-body {
+            position:relative; z-index:1;
+            padding:1.75rem 1.65rem 1.5rem;
+            display:flex; flex-direction:column; gap:0.85rem;
+            flex:1;
+        }
+
+        .module-card:hover {
+            transform:translateY(-8px) scale(1.01);
+            box-shadow:0 25px 50px rgba(0,0,0,0.2), 0 0 0 1px var(--asp-border);
+        }
+        .module-card.highway:hover {
+            border-color:rgba(24,169,168,0.4);
+            box-shadow:0 25px 50px rgba(0,0,0,0.2), 0 0 40px -8px var(--asp-primary-glow);
+        }
+        .module-card.airfield { opacity:0.7; cursor:default; }
+        .module-card.airfield:hover {
+            transform:translateY(-3px) scale(1);
+            box-shadow:var(--asp-card-shadow);
+        }
+
+        /* Icon + meta row */
+        .module-icon-row {
+            display:flex; align-items:center; gap:1rem;
+        }
+        .module-icon {
+            width:58px; height:58px; border-radius:16px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:1.4rem; color:#fff; flex-shrink:0;
+            position:relative;
+            transition:transform 0.4s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.4s ease;
+        }
+        .module-icon::after {
+            content:''; position:absolute; inset:-4px; border-radius:20px;
+            border:2px solid rgba(24,169,168,0.2);
+            animation:pulseRing 3s ease-in-out infinite;
+            pointer-events:none;
+        }
+        .module-card:hover .module-icon {
+            transform:scale(1.1) rotate(-3deg);
+            box-shadow:0 10px 30px rgba(0,0,0,0.3);
+        }
+        .module-icon.highway-icon {
+            background:linear-gradient(145deg, var(--asp-primary), #2dd4bf);
+            box-shadow:0 6px 20px rgba(24,169,168,0.35);
+        }
+        .module-icon.airfield-icon {
+            background:linear-gradient(145deg, var(--asp-accent), #a78bfa);
+            box-shadow:0 6px 20px rgba(139,92,246,0.3);
+        }
+        .module-icon.airfield-icon::after {
+            border-color:rgba(139,92,246,0.2);
+        }
+        .module-meta { display:flex; flex-direction:column; gap:0.15rem; }
+        .module-name {
+            font-size:1.35rem; font-weight:800; color:var(--asp-text);
+            letter-spacing:-0.01em;
+        }
+        .module-subtitle {
+            font-size:0.84rem; color:var(--asp-text-muted); font-weight:400;
+        }
+        .module-desc {
+            font-size:0.88rem; color:var(--asp-text-secondary); line-height:1.65;
+        }
+
+        /* Feature chips */
+        .module-features {
+            display:flex; gap:0.45rem; flex-wrap:wrap;
+        }
+        .module-feature-chip {
+            display:inline-flex; align-items:center; gap:0.3rem;
+            padding:0.25rem 0.65rem; border-radius:6px;
+            font-size:0.72rem; font-weight:600;
+            background:rgba(24,169,168,0.08); color:var(--asp-primary);
+            border:1px solid rgba(24,169,168,0.15);
+            transition:all 0.2s ease;
+        }
+        .module-card:hover .module-feature-chip {
+            background:rgba(24,169,168,0.14);
+            border-color:rgba(24,169,168,0.3);
+        }
+        .module-feature-chip i { font-size:0.6rem; }
+        .module-card.airfield .module-feature-chip {
+            background:rgba(139,92,246,0.08); color:var(--asp-accent);
+            border-color:rgba(139,92,246,0.15);
+        }
+
+        /* Footer */
+        .module-footer {
+            display:flex; align-items:center; justify-content:space-between;
+            margin-top:auto; gap:1rem;
+            padding-top:0.75rem; border-top:1px solid var(--glass-border);
+        }
+        .module-stats {
+            display:flex; gap:0.6rem; flex-wrap:wrap;
+        }
+        .module-stat {
+            display:inline-flex; align-items:center; gap:0.3rem;
+            font-size:0.76rem; font-weight:600; color:var(--asp-text-muted);
+            padding:0.25rem 0.6rem; border-radius:7px;
+            background:var(--glass-bg); border:1px solid var(--glass-border);
+            transition:all 0.2s ease;
+        }
+        .module-card:hover .module-stat {
+            border-color:rgba(24,169,168,0.2);
+        }
+        .module-stat i { font-size:0.65rem; color:var(--asp-primary); }
+        .module-arrow {
+            display:inline-flex; align-items:center; justify-content:center;
+            width:40px; height:40px; border-radius:50%;
+            background:linear-gradient(135deg, var(--asp-primary), #0e8a89);
+            color:#fff; font-size:0.85rem;
+            transition:all 0.4s cubic-bezier(0.34,1.2,0.64,1);
+            box-shadow:0 4px 16px var(--asp-primary-glow);
+            position:relative; overflow:hidden;
+        }
+        .module-arrow::before {
+            content:''; position:absolute; inset:0; border-radius:50%;
+            background:linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+            opacity:0; transition:opacity 0.3s ease;
+        }
+        .module-card:hover .module-arrow {
+            transform:translateX(5px) scale(1.08);
+            box-shadow:0 8px 24px var(--asp-primary-glow);
+        }
+        .module-card:hover .module-arrow::before { opacity:1; }
+        .module-coming-soon {
+            display:inline-flex; align-items:center; gap:0.4rem;
+            padding:0.35rem 0.85rem; border-radius:8px;
+            font-size:0.78rem; font-weight:700; text-transform:uppercase;
+            letter-spacing:0.06em;
+            background:rgba(139,92,246,0.12); color:var(--asp-accent);
+            border:1px solid rgba(139,92,246,0.25);
+        }
+        .module-coming-soon i { font-size:0.7rem; }
+
+        /* ==================== VIEW TRANSITIONS ==================== */
+        .view-container { position:relative; }
+        .view-enter {
+            animation:viewSlideIn 0.5s cubic-bezier(0.34,1.2,0.64,1) forwards;
+        }
+        .view-exit {
+            animation:viewSlideOut 0.35s cubic-bezier(0.4,0,0.2,1) forwards;
+        }
+        @keyframes viewSlideIn {
+            from { opacity:0; transform:translateY(24px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        @keyframes viewSlideOut {
+            from { opacity:1; transform:translateY(0); }
+            to   { opacity:0; transform:translateY(-16px); }
+        }
+
+        /* Staggered card entrance animation */
+        .structure-card.card-enter {
+            animation:cardStagger 0.45s cubic-bezier(0.34,1.2,0.64,1) backwards;
+        }
+        .structure-card.card-enter:nth-child(1) { animation-delay:0.05s; }
+        .structure-card.card-enter:nth-child(2) { animation-delay:0.12s; }
+        .structure-card.card-enter:nth-child(3) { animation-delay:0.19s; }
+        .structure-card.card-enter:nth-child(4) { animation-delay:0.26s; }
+        @keyframes cardStagger {
+            from { opacity:0; transform:translateY(20px) scale(0.96); }
+            to   { opacity:1; transform:translateY(0) scale(1); }
+        }
+
+        /* Module card entrance — handled by .module-card animation-delay above */
+        .module-card.card-enter {
+            animation:cardReveal 0.65s cubic-bezier(0.22,1,0.36,1) backwards;
+        }
+        .module-card.card-enter:nth-child(1) { animation-delay:0.7s; }
+        .module-card.card-enter:nth-child(2) { animation-delay:0.85s; }
+
+        /* Structure selector back-link in module mode */
+        .structure-back-link {
+            display:inline-flex; align-items:center; gap:0.5rem;
+            padding:0.5rem 1rem; border-radius:10px;
+            background:var(--glass-bg); border:1px solid var(--glass-border);
+            color:var(--asp-primary); font-size:0.85rem; font-weight:600;
+            cursor:pointer; transition:all 0.25s ease; margin-bottom:1rem;
+        }
+        .structure-back-link:hover {
+            background:rgba(24,169,168,0.12); border-color:var(--asp-primary);
+            transform:translateX(-3px);
+        }
+        .structure-back-link i { transition:transform 0.25s ease; }
+        .structure-back-link:hover i { transform:translateX(-3px); }
+
+        /* ==================== COLLAPSED SELECTOR BAR ==================== */
+        .selector-collapsed-bar {
+            display:none;
+            align-items:center;
+            gap:1rem;
+            padding:0.85rem 1.25rem;
+            background:var(--glass-bg, rgba(30,41,59,0.55));
+            border:1px solid var(--asp-border);
+            border-radius:var(--asp-radius);
+            backdrop-filter:blur(14px);
+            margin-bottom:1.2rem;
+            transition:all 0.35s cubic-bezier(0.22,1,0.36,1);
+            opacity:0;
+            transform:translateY(-8px);
+        }
+        .selector-collapsed-bar.visible {
+            display:flex;
+            opacity:1;
+            transform:translateY(0);
+        }
+        .selector-collapsed-bar .scb-icon {
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            width:38px;
+            height:38px;
+            border-radius:10px;
+            background:linear-gradient(135deg, var(--asp-primary), var(--asp-primary-glow));
+            color:#fff;
+            font-size:1rem;
+            flex-shrink:0;
+        }
+        .selector-collapsed-bar .scb-info {
+            display:flex;
+            flex-direction:column;
+            gap:0.15rem;
+            flex:1;
+            min-width:0;
+        }
+        .selector-collapsed-bar .scb-name {
+            font-weight:700;
+            font-size:0.95rem;
+            color:var(--asp-text);
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .selector-collapsed-bar .scb-tags {
+            display:flex;
+            gap:0.5rem;
+            font-size:0.78rem;
+            color:var(--asp-text-muted);
+        }
+        .selector-collapsed-bar .scb-tags span {
+            display:inline-flex;
+            align-items:center;
+            gap:0.25rem;
+        }
+        .selector-collapsed-bar .scb-change {
+            display:inline-flex;
+            align-items:center;
+            gap:0.4rem;
+            padding:0.45rem 1rem;
+            border:1px solid var(--asp-primary);
+            border-radius:8px;
+            background:transparent;
+            color:var(--asp-primary);
+            font-size:0.82rem;
+            font-weight:600;
+            cursor:pointer;
+            white-space:nowrap;
+            transition:all 0.2s ease;
+        }
+        .selector-collapsed-bar .scb-change:hover {
+            background:var(--asp-primary);
+            color:#fff;
+            box-shadow:0 0 12px rgba(24,169,168,0.3);
+        }
+        .selector-collapsed-bar .scb-change i {
+            font-size:0.75rem;
+            transition:transform 0.2s ease;
+        }
+        .selector-collapsed-bar .scb-change:hover i {
+            transform:rotate(180deg);
+        }
+
+        /* Selector section collapse/expand transitions */
+        #selector-section {
+            transition:max-height 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease, margin 0.3s ease;
+            overflow:hidden;
+        }
+        #selector-section.collapsed {
+            max-height:0 !important;
+            opacity:0;
+            margin-top:0;
+            margin-bottom:0;
+            padding:0;
+            pointer-events:none;
+        }
+
+        /* ==================== MODULE RESPONSIVE ==================== */
+        @media (max-width:768px) {
+            .module-grid { grid-template-columns:1fr; gap:1.25rem; }
+            .module-card { border-radius:18px; }
+            .module-card-body { padding:1.5rem 1.25rem 1.25rem; }
+            .module-icon { width:48px; height:48px; font-size:1.2rem; border-radius:14px; }
+            .module-icon::after { inset:-3px; border-radius:18px; }
+            .module-name { font-size:1.15rem; }
+            .breadcrumb-nav { font-size:0.8rem; padding:0.5rem 0.75rem; overflow-x:auto; white-space:nowrap; }
+            .selector-collapsed-bar { flex-wrap:wrap; gap:0.75rem; }
+            .selector-collapsed-bar .scb-change { width:100%; justify-content:center; }
+            .landing-hero h2 { font-size:1.65rem; }
+            .landing-hero-sub { font-size:0.9rem; }
+            .landing-stats { gap:0.75rem; }
+            .landing-stat { min-width:75px; padding:0.5rem 0.9rem; }
+            .landing-stat-value { font-size:1.15rem; }
+            .module-features { gap:0.35rem; }
+            .landing-section { padding:1.5rem 0 1rem; }
+        }
+        @media (max-width:480px) {
+            .module-grid { gap:0.75rem; }
+            .module-card-body { padding:1.25rem 1rem 1rem; }
+            .module-footer { flex-direction:column; align-items:flex-start; }
+            .module-name { font-size:1.05rem; }
+            .module-desc { font-size:0.82rem; }
+            .landing-hero h2 { font-size:1.4rem; }
+            .landing-stats { gap:0.5rem; }
+            .landing-stat { min-width:65px; padding:0.4rem 0.7rem; }
+            .landing-stat-value { font-size:1rem; }
+            .landing-stat-label { font-size:0.65rem; }
+        }
     </style>
 </head>
 <body class="asphera is-preload">
+
+<!-- FIXED OVERLAYS (outside #page-wrapper to prevent transform breaking position:fixed) -->
+
+<!-- INITIAL LOADING -->
+<div class="loading-overlay" id="loading-overlay">
+    <div style="text-align:center;">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">Initializing Asphera...</div>
+    </div>
+</div>
+
+<!-- DATA LOADING MODAL -->
+<div class="data-loader" id="data-loader">
+    <div class="data-loader-card">
+        <div class="dl-icon"><i class="fas fa-road dl-spin"></i></div>
+        <div class="dl-title" id="dl-title">Loading Structure</div>
+        <div class="dl-subtitle" id="dl-subtitle">Fetching finite element analysis results<span class="dl-ellipsis">...</span></div>
+        <div class="dl-progress-row">
+            <div class="dl-progress-track"><div class="dl-progress-fill" id="dl-progress"></div></div>
+            <span class="dl-pct" id="dl-pct">0%</span>
+        </div>
+        <div class="dl-steps" id="dl-steps">
+            <div class="dl-step" id="dl-step-0"><i class="fas fa-circle"></i> Structure metadata</div>
+            <div class="dl-step" id="dl-step-1"><i class="fas fa-circle"></i> Depth profiles</div>
+            <div class="dl-step" id="dl-step-2"><i class="fas fa-circle"></i> Cross-section contours</div>
+            <div class="dl-step" id="dl-step-3"><i class="fas fa-circle"></i> 3D point cloud</div>
+            <div class="dl-step" id="dl-step-4"><i class="fas fa-circle"></i> Rendering visualizations</div>
+        </div>
+    </div>
+</div>
+
+<!-- Password Modal Overlay -->
+<div id="password-modal" style="position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(15,23,42,0.96);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);">
+    <form id="password-form" style="background:rgba(255,255,255,0.07);border-radius:22px;padding:2.1em 2.1em 1.7em 2.1em;box-shadow:0 10px 40px 0 rgba(24,169,168,0.18),0 2px 16px 0 rgba(0,0,0,0.18);display:flex;flex-direction:column;align-items:center;min-width:320px;max-width:92vw;backdrop-filter:blur(2px);border:1.5px solid #18a9a8;">
+        <div style="font-size:2em;color:#18a9a8;margin-bottom:0.4em;display:flex;align-items:center;gap:0.3em;">
+            <i class='fas fa-shield-alt' style="color:#18a9a8;"></i>
+            <span style="font-size:0.62em;color:#fff;font-weight:600;letter-spacing:0.04em;">Authentication Required</span>
+        </div>
+        <p style="color:#e2e8f0;font-size:0.97em;margin-bottom:1.1em;text-align:center;max-width:320px;line-height:1.35;">Authorized internal use only.<br>Enter the password to continue.<br><span style='color:#18a9a8;font-size:0.85em;display:block;margin-top:0.4em;'>Contact the administrator if you need access.</span></p>
+        <div style="width:100%;max-width:270px;position:relative;">
+            <input id="password-input" type="password" placeholder="Password" autocomplete="off" style="padding:0.7em 1em 0.7em 1em;font-size:1em;border-radius:9px;border:1.5px solid #18a9a8;background:rgba(255,255,255,0.13);color:#fff;width:100%;outline:none;box-shadow:0 1px 4px rgba(24,169,168,0.07);transition:border 0.2s;background-clip:padding-box;caret-color:#18a9a8;" autofocus />
+        </div>
+        <div style="display:flex; gap:1em; margin-top:1.2em;">
+            <a href="../../index.html" style="background:rgba(255,255,255,0.08);color:#fff;font-weight:600;font-size:0.95em;padding:0.55em 1.5em;border:1px solid rgba(255,255,255,0.2);border-radius:9px;text-decoration:none;transition:all 0.2s;display:flex;align-items:center;gap:0.4em;"><i class="fas fa-home"></i> Home</a>
+            <button type="submit" style="background:linear-gradient(90deg,#18a9a8 60%,#0d7377 100%);color:#fff;font-weight:700;font-size:1em;padding:0.55em 2em;border:none;border-radius:9px;box-shadow:0 2px 8px rgba(24,169,168,0.13);cursor:pointer;transition:background 0.2s,box-shadow 0.2s;letter-spacing:0.03em;">Unlock</button>
+        </div>
+        <div id="password-error" style="color:#ef4444;font-size:0.92em;margin-top:1em;display:none;text-align:center;">Incorrect password. Please try again.</div>
+    </form>
+</div>
+
+<!-- ABOUT MODAL -->
+<div class="about-overlay" id="about-overlay" role="dialog" aria-labelledby="about-title" aria-modal="true" aria-hidden="true">
+    <div class="about-modal">
+        <div class="about-header">
+            <div class="about-icon"><i class="fas fa-road"></i></div>
+            <h2 id="about-title">Asphera</h2>
+        </div>
+        <div class="about-body">
+            <section class="about-section">
+                <h3>Version</h3>
+                <ul class="about-list">
+                    <li><strong>Version:</strong> 1.0 (stable)</li>
+                    <li><strong>Build:</strong> Interactive 3D Pavement Response Visualizer</li>
+                </ul>
+            </section>
+            <section class="about-section">
+                <h3>Credits & Data Sources</h3>
+                <ul class="about-list">
+                    <li>The data presented herein were produced as part of the Illinois Center for Transportation (ICT) and Illinois Department of Transportation (IDOT) project &ldquo;R27-252: Impact of Commercial Electric Vehicles on Flexible Pavement Performance.&rdquo;</li>
+                </ul>
+            </section>
+            <section class="about-section">
+                <h3>Referenced Publications</h3>
+                <ul class="about-list">
+                    <li>Jayme A., Hernandez J., Al-Qadi I., Cardenas J., Hafeez M., and Villamil W. (2025) Impact of Heavy Commercial Electric Vehicles on Flexible Pavements. ICT Project R27-252. Illinois Center for Transportation. ISSN:0197-9191. <a href="https://doi.org/10.36501/0197-9191/25-003" target="_blank" rel="noopener noreferrer">https://doi.org/10.36501/0197-9191/25-003</a>.</li>
+                </ul>
+            </section>
+        </div>
+        <div class="about-footer">
+            <button type="button" class="about-copy-btn" id="about-copy-btn"><i class="fas fa-copy"></i> Copy</button>
+            <button type="button" class="about-close-btn" id="about-close-btn">OK</button>
+        </div>
+    </div>
+</div>
 
 <div id="page-wrapper">
     <section id="header">
@@ -1187,92 +1888,8 @@
         </nav>
     </section>
 
-    <!-- INITIAL LOADING -->
-    <div class="loading-overlay" id="loading-overlay">
-        <div style="text-align:center;">
-            <div class="spinner"></div>
-            <div class="loading-text" id="loading-text">Initializing Asphera...</div>
-        </div>
-    </div>
-
-    <!-- DATA LOADING MODAL -->
-    <div class="data-loader" id="data-loader">
-        <div class="data-loader-card">
-            <div class="dl-icon"><i class="fas fa-road dl-spin"></i></div>
-            <div class="dl-title" id="dl-title">Loading Structure</div>
-            <div class="dl-subtitle" id="dl-subtitle">Fetching finite element analysis results<span class="dl-ellipsis">...</span></div>
-            <div class="dl-progress-row">
-                <div class="dl-progress-track"><div class="dl-progress-fill" id="dl-progress"></div></div>
-                <span class="dl-pct" id="dl-pct">0%</span>
-            </div>
-            <div class="dl-steps" id="dl-steps">
-                <div class="dl-step" id="dl-step-0"><i class="fas fa-circle"></i> Structure metadata</div>
-                <div class="dl-step" id="dl-step-1"><i class="fas fa-circle"></i> Depth profiles</div>
-                <div class="dl-step" id="dl-step-2"><i class="fas fa-circle"></i> Cross-section contours</div>
-                <div class="dl-step" id="dl-step-3"><i class="fas fa-circle"></i> 3D point cloud</div>
-                <div class="dl-step" id="dl-step-4"><i class="fas fa-circle"></i> Rendering visualizations</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Password Modal Overlay (moved to bottom, after app shell) -->
-    <div id="password-modal" style="position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(15,23,42,0.96);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);">
-        <form id="password-form" style="background:rgba(255,255,255,0.07);border-radius:22px;padding:2.1em 2.1em 1.7em 2.1em;box-shadow:0 10px 40px 0 rgba(24,169,168,0.18),0 2px 16px 0 rgba(0,0,0,0.18);display:flex;flex-direction:column;align-items:center;min-width:320px;max-width:92vw;backdrop-filter:blur(2px);border:1.5px solid #18a9a8;">
-            <div style="font-size:2em;color:#18a9a8;margin-bottom:0.4em;display:flex;align-items:center;gap:0.3em;">
-                <i class='fas fa-shield-alt' style="color:#18a9a8;"></i>
-                <span style="font-size:0.62em;color:#fff;font-weight:600;letter-spacing:0.04em;">Authentication Required</span>
-            </div>
-            <p style="color:#e2e8f0;font-size:0.97em;margin-bottom:1.1em;text-align:center;max-width:320px;line-height:1.35;">Authorized internal use only.<br>Enter the password to continue.<br><span style='color:#18a9a8;font-size:0.85em;display:block;margin-top:0.4em;'>Contact the administrator if you need access.</span></p>
-            <div style="width:100%;max-width:270px;position:relative;">
-                <input id="password-input" type="password" placeholder="Password" autocomplete="off" style="padding:0.7em 1em 0.7em 1em;font-size:1em;border-radius:9px;border:1.5px solid #18a9a8;background:rgba(255,255,255,0.13);color:#fff;width:100%;outline:none;box-shadow:0 1px 4px rgba(24,169,168,0.07);transition:border 0.2s;background-clip:padding-box;caret-color:#18a9a8;" autofocus />
-            </div>
-            <div style="display:flex; gap:1em; margin-top:1.2em;">
-                <a href="../../index.html" style="background:rgba(255,255,255,0.08);color:#fff;font-weight:600;font-size:0.95em;padding:0.55em 1.5em;border:1px solid rgba(255,255,255,0.2);border-radius:9px;text-decoration:none;transition:all 0.2s;display:flex;align-items:center;gap:0.4em;"><i class="fas fa-home"></i> Home</a>
-                <button type="submit" style="background:linear-gradient(90deg,#18a9a8 60%,#0d7377 100%);color:#fff;font-weight:700;font-size:1em;padding:0.55em 2em;border:none;border-radius:9px;box-shadow:0 2px 8px rgba(24,169,168,0.13);cursor:pointer;transition:background 0.2s,box-shadow 0.2s;letter-spacing:0.03em;">Unlock</button>
-            </div>
-            <div id="password-error" style="color:#ef4444;font-size:0.92em;margin-top:1em;display:none;text-align:center;">Incorrect password. Please try again.</div>
-        </form>
-    </div>
-
-    <!-- ABOUT MODAL -->
-    <div class="about-overlay" id="about-overlay" role="dialog" aria-labelledby="about-title" aria-modal="true" aria-hidden="true">
-        <div class="about-modal">
-            <div class="about-header">
-                <div class="about-icon"><i class="fas fa-road"></i></div>
-                <h2 id="about-title">Asphera</h2>
-            </div>
-            <div class="about-body">
-                <section class="about-section">
-                    <h3>Version</h3>
-                    <ul class="about-list">
-                        <li><strong>Version:</strong> 1.0 (stable)</li>
-                        <li><strong>Build:</strong> Interactive 3D Pavement Response Visualizer</li>
-                    </ul>
-                </section>
-                <section class="about-section">
-                    <h3>Credits & Data Sources</h3>
-                    <ul class="about-list">
-                        <li>The data presented herein were produced as part of the Illinois Center for Transportation (ICT) and Illinois Department of Transportation (IDOT) project &ldquo;R27-252: Impact of Commercial Electric Vehicles on Flexible Pavement Performance.&rdquo;</li>
-                    </ul>
-                </section>
-                <section class="about-section">
-                    <h3>Referenced Publications</h3>
-                    <ul class="about-list">
-                        <li>Jayme A., Hernandez J., Al-Qadi I., Cardenas J., Hafeez M., and Villamil W. (2025) Impact of Heavy Commercial Electric Vehicles on Flexible Pavements. ICT Project R27-252. Illinois Center for Transportation. ISSN:0197-9191. <a href="https://doi.org/10.36501/0197-9191/25-003" target="_blank" rel="noopener noreferrer">https://doi.org/10.36501/0197-9191/25-003</a>.</li>
-                    </ul>
-                </section>
-            </div>
-            <div class="about-footer">
-                <button type="button" class="about-copy-btn" id="about-copy-btn"><i class="fas fa-copy"></i> Copy</button>
-                <button type="button" class="about-close-btn" id="about-close-btn">OK</button>
-            </div>
-        </div>
-    </div>
-
     <!-- APP SHELL -->
     <div class="asphera-app">
-
-        <!-- HEADER -->
         <header class="app-header">
             <nav class="header-nav">
                 <a href="../../E-Labs.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to E-Labs</a>
@@ -1288,8 +1905,232 @@
             </div>
         </header>
 
-        <!-- STRUCTURE SELECTOR -->
-        <section id="selector-section">
+        <!-- BREADCRUMB NAVIGATION -->
+        <nav class="breadcrumb-nav" id="breadcrumb-nav">
+            <span class="breadcrumb-item clickable" onclick="navigateTo('modules')"><i class="fas fa-th-large"></i> Modules</span>
+        </nav>
+
+        <!-- MODULE SELECTOR — LANDING PAGE -->
+        <section id="module-section" class="module-section">
+
+            <!-- Animated mesh background -->
+            <div class="landing-mesh-bg" aria-hidden="true">
+                <svg viewBox="0 0 800 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- FEM-style triangular mesh -->
+                    <g stroke="currentColor" stroke-width="0.5" opacity="0.6">
+                        <path d="M0,0 L80,40 L0,80 Z"/><path d="M0,0 L80,40 L160,0 Z"/>
+                        <path d="M160,0 L80,40 L160,80 Z"/><path d="M160,0 L240,40 L160,80 Z"/>
+                        <path d="M160,0 L240,40 L320,0 Z"/><path d="M320,0 L240,40 L320,80 Z"/>
+                        <path d="M320,0 L400,40 L320,80 Z"/><path d="M320,0 L400,40 L480,0 Z"/>
+                        <path d="M480,0 L400,40 L480,80 Z"/><path d="M480,0 L560,40 L480,80 Z"/>
+                        <path d="M480,0 L560,40 L640,0 Z"/><path d="M640,0 L560,40 L640,80 Z"/>
+                        <path d="M640,0 L720,40 L640,80 Z"/><path d="M640,0 L720,40 L800,0 Z"/>
+                        <path d="M0,80 L80,40 L80,120 Z"/><path d="M0,80 L80,120 L0,160 Z"/>
+                        <path d="M80,120 L160,80 L160,160 Z"/><path d="M80,120 L0,160 L160,160 Z"/>
+                        <path d="M160,80 L240,40 L240,120 Z"/><path d="M160,80 L240,120 L160,160 Z"/>
+                        <path d="M240,120 L320,80 L320,160 Z"/><path d="M240,120 L160,160 L320,160 Z"/>
+                        <path d="M320,80 L400,40 L400,120 Z"/><path d="M320,80 L400,120 L320,160 Z"/>
+                        <path d="M400,120 L480,80 L480,160 Z"/><path d="M400,120 L320,160 L480,160 Z"/>
+                        <path d="M480,80 L560,40 L560,120 Z"/><path d="M480,80 L560,120 L480,160 Z"/>
+                        <path d="M560,120 L640,80 L640,160 Z"/><path d="M560,120 L480,160 L640,160 Z"/>
+                        <path d="M640,80 L720,40 L720,120 Z"/><path d="M640,80 L720,120 L640,160 Z"/>
+                        <path d="M720,120 L800,80 L800,160 Z"/><path d="M720,120 L640,160 L800,160 Z"/>
+                        <path d="M0,160 L80,120 L80,200 Z"/><path d="M0,160 L80,200 L0,240 Z"/>
+                        <path d="M80,200 L160,160 L160,240 Z"/><path d="M80,200 L0,240 L160,240 Z"/>
+                        <path d="M160,160 L240,120 L240,200 Z"/><path d="M160,160 L240,200 L160,240 Z"/>
+                        <path d="M240,200 L320,160 L320,240 Z"/><path d="M240,200 L160,240 L320,240 Z"/>
+                        <path d="M320,160 L400,120 L400,200 Z"/><path d="M320,160 L400,200 L320,240 Z"/>
+                        <path d="M400,200 L480,160 L480,240 Z"/><path d="M400,200 L320,240 L480,240 Z"/>
+                        <path d="M480,160 L560,120 L560,200 Z"/><path d="M480,160 L560,200 L480,240 Z"/>
+                        <path d="M560,200 L640,160 L640,240 Z"/><path d="M560,200 L480,240 L640,240 Z"/>
+                        <path d="M640,160 L720,120 L720,200 Z"/><path d="M640,160 L720,200 L640,240 Z"/>
+                        <path d="M720,200 L800,160 L800,240 Z"/><path d="M720,200 L640,240 L800,240 Z"/>
+                        <path d="M0,240 L80,200 L80,280 Z"/><path d="M0,240 L80,280 L0,320 Z"/>
+                        <path d="M80,280 L160,240 L160,320 Z"/><path d="M80,280 L0,320 L160,320 Z"/>
+                        <path d="M160,240 L240,200 L240,280 Z"/><path d="M160,240 L240,280 L160,320 Z"/>
+                        <path d="M240,280 L320,240 L320,320 Z"/><path d="M240,280 L160,320 L320,320 Z"/>
+                        <path d="M320,240 L400,200 L400,280 Z"/><path d="M320,240 L400,280 L320,320 Z"/>
+                        <path d="M400,280 L480,240 L480,320 Z"/><path d="M400,280 L320,320 L480,320 Z"/>
+                        <path d="M480,240 L560,200 L560,280 Z"/><path d="M480,240 L560,280 L480,320 Z"/>
+                        <path d="M560,280 L640,240 L640,320 Z"/><path d="M560,280 L480,320 L640,320 Z"/>
+                        <path d="M640,240 L720,200 L720,280 Z"/><path d="M640,240 L720,280 L640,320 Z"/>
+                        <path d="M720,280 L800,240 L800,320 Z"/><path d="M720,280 L640,320 L800,320 Z"/>
+                        <path d="M0,320 L80,280 L80,360 Z"/><path d="M0,320 L80,360 L0,400 Z"/>
+                        <path d="M80,360 L160,320 L160,400 Z"/><path d="M80,360 L0,400 L160,400 Z"/>
+                        <path d="M160,320 L240,280 L240,360 Z"/><path d="M160,320 L240,360 L160,400 Z"/>
+                        <path d="M240,360 L320,320 L320,400 Z"/><path d="M240,360 L160,400 L320,400 Z"/>
+                        <path d="M320,320 L400,280 L400,360 Z"/><path d="M320,320 L400,360 L320,400 Z"/>
+                        <path d="M400,360 L480,320 L480,400 Z"/><path d="M400,360 L320,400 L480,400 Z"/>
+                        <path d="M480,320 L560,280 L560,360 Z"/><path d="M480,320 L560,360 L480,400 Z"/>
+                        <path d="M560,360 L640,320 L640,400 Z"/><path d="M560,360 L480,400 L640,400 Z"/>
+                        <path d="M640,320 L720,280 L720,360 Z"/><path d="M640,320 L720,360 L640,400 Z"/>
+                        <path d="M720,360 L800,320 L800,400 Z"/><path d="M720,360 L640,400 L800,400 Z"/>
+                    </g>
+                    <!-- Node highlights at key intersections -->
+                    <g fill="currentColor">
+                        <circle cx="80" cy="40" r="2.5" opacity="0.4"><animate attributeName="opacity" values="0.2;0.8;0.2" dur="3s" repeatCount="indefinite"/></circle>
+                        <circle cx="240" cy="120" r="2" opacity="0.3"><animate attributeName="opacity" values="0.15;0.7;0.15" dur="4s" repeatCount="indefinite" begin="0.5s"/></circle>
+                        <circle cx="400" cy="200" r="3" opacity="0.5"><animate attributeName="opacity" values="0.2;1;0.2" dur="3.5s" repeatCount="indefinite" begin="1s"/></circle>
+                        <circle cx="560" cy="120" r="2" opacity="0.3"><animate attributeName="opacity" values="0.1;0.6;0.1" dur="4.5s" repeatCount="indefinite" begin="1.5s"/></circle>
+                        <circle cx="720" cy="200" r="2.5" opacity="0.35"><animate attributeName="opacity" values="0.15;0.75;0.15" dur="3.8s" repeatCount="indefinite" begin="0.8s"/></circle>
+                        <circle cx="160" cy="240" r="2" opacity="0.25"><animate attributeName="opacity" values="0.1;0.55;0.1" dur="5s" repeatCount="indefinite" begin="2s"/></circle>
+                        <circle cx="480" cy="320" r="2.5" opacity="0.3"><animate attributeName="opacity" values="0.15;0.65;0.15" dur="4.2s" repeatCount="indefinite" begin="0.3s"/></circle>
+                        <circle cx="640" cy="360" r="2" opacity="0.2"><animate attributeName="opacity" values="0.1;0.5;0.1" dur="3.2s" repeatCount="indefinite" begin="1.8s"/></circle>
+                    </g>
+                </svg>
+                <div class="landing-orb orb-1"></div>
+                <div class="landing-orb orb-2"></div>
+                <div class="landing-orb orb-3"></div>
+            </div>
+
+            <!-- Hero intro -->
+            <div class="landing-hero">
+                <div class="landing-hero-badge">
+                    <span class="badge-dot"></span>
+                    <span>Analysis Modules</span>
+                </div>
+                <h2><span class="hero-plain">Explore </span><span class="hero-gradient">Finite Element</span><span class="hero-plain"> Results</span></h2>
+                <p class="landing-hero-sub">Select a pavement analysis module to visualize 3D dynamic finite element response fields, critical strain profiles, and cross-section contour maps.</p>
+
+                <!-- Live stats -->
+                <div class="landing-stats">
+                    <div class="landing-stat">
+                        <span class="landing-stat-value">2</span>
+                        <span class="landing-stat-label">Modules</span>
+                    </div>
+                    <div class="landing-stat">
+                        <span class="landing-stat-value">4</span>
+                        <span class="landing-stat-label">Structures</span>
+                    </div>
+                    <div class="landing-stat">
+                        <span class="landing-stat-value">144k</span>
+                        <span class="landing-stat-label">FE Nodes</span>
+                    </div>
+                    <div class="landing-stat">
+                        <span class="landing-stat-value">6</span>
+                        <span class="landing-stat-label">Response Fields</span>
+                    </div>
+                    <div class="landing-stat">
+                        <span class="landing-stat-value">18</span>
+                        <span class="landing-stat-label">Timesteps</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section divider -->
+            <div class="landing-divider">
+                <span class="landing-divider-text"><i class="fas fa-cubes"></i> Available Modules</span>
+            </div>
+
+            <!-- Module cards -->
+            <div class="module-grid" id="module-grid">
+                <!-- Highway -->
+                <div class="module-card highway card-enter" onclick="openModule('highway')">
+                    <div class="module-card-mesh" aria-hidden="true">
+                        <svg viewBox="0 0 400 300" fill="none"><g stroke="currentColor" stroke-width="0.4" opacity="0.5">
+                            <path d="M0,0L50,25L0,50Z"/><path d="M0,0L50,25L100,0Z"/><path d="M100,0L50,25L100,50Z"/><path d="M100,0L150,25L100,50Z"/>
+                            <path d="M100,0L150,25L200,0Z"/><path d="M200,0L150,25L200,50Z"/><path d="M200,0L250,25L200,50Z"/><path d="M200,0L250,25L300,0Z"/>
+                            <path d="M300,0L250,25L300,50Z"/><path d="M300,0L350,25L300,50Z"/><path d="M300,0L350,25L400,0Z"/>
+                            <path d="M0,50L50,25L50,75Z"/><path d="M0,50L50,75L0,100Z"/><path d="M50,75L100,50L100,100Z"/><path d="M50,75L0,100L100,100Z"/>
+                            <path d="M100,50L150,25L150,75Z"/><path d="M100,50L150,75L100,100Z"/><path d="M150,75L200,50L200,100Z"/><path d="M150,75L100,100L200,100Z"/>
+                            <path d="M200,50L250,25L250,75Z"/><path d="M200,50L250,75L200,100Z"/><path d="M250,75L300,50L300,100Z"/><path d="M250,75L200,100L300,100Z"/>
+                            <path d="M300,50L350,25L350,75Z"/><path d="M300,50L350,75L300,100Z"/><path d="M350,75L400,50L400,100Z"/><path d="M350,75L300,100L400,100Z"/>
+                            <path d="M0,100L50,75L50,125Z"/><path d="M0,100L50,125L0,150Z"/><path d="M50,125L100,100L100,150Z"/><path d="M50,125L0,150L100,150Z"/>
+                            <path d="M100,100L150,75L150,125Z"/><path d="M100,100L150,125L100,150Z"/><path d="M150,125L200,100L200,150Z"/><path d="M150,125L100,150L200,150Z"/>
+                            <path d="M200,100L250,75L250,125Z"/><path d="M200,100L250,125L200,150Z"/><path d="M250,125L300,100L300,150Z"/><path d="M250,125L200,150L300,150Z"/>
+                            <path d="M300,100L350,75L350,125Z"/><path d="M300,100L350,125L300,150Z"/><path d="M350,125L400,100L400,150Z"/><path d="M350,125L300,150L400,150Z"/>
+                            <path d="M0,150L50,125L50,175Z"/><path d="M0,150L50,175L0,200Z"/><path d="M50,175L100,150L100,200Z"/><path d="M50,175L0,200L100,200Z"/>
+                            <path d="M100,150L150,125L150,175Z"/><path d="M100,150L150,175L100,200Z"/><path d="M150,175L200,150L200,200Z"/><path d="M150,175L100,200L200,200Z"/>
+                            <path d="M200,150L250,125L250,175Z"/><path d="M200,150L250,175L200,200Z"/><path d="M250,175L300,150L300,200Z"/><path d="M250,175L200,200L300,200Z"/>
+                            <path d="M300,150L350,125L350,175Z"/><path d="M300,150L350,175L300,200Z"/><path d="M350,175L400,150L400,200Z"/><path d="M350,175L300,200L400,200Z"/>
+                            <path d="M0,200L50,175L50,225Z"/><path d="M0,200L50,225L0,250Z"/><path d="M50,225L100,200L100,250Z"/><path d="M100,200L150,175L150,225Z"/>
+                            <path d="M100,200L150,225L100,250Z"/><path d="M150,225L200,200L200,250Z"/><path d="M200,200L250,175L250,225Z"/><path d="M200,200L250,225L200,250Z"/>
+                            <path d="M250,225L300,200L300,250Z"/><path d="M300,200L350,175L350,225Z"/><path d="M300,200L350,225L300,250Z"/><path d="M350,225L400,200L400,250Z"/>
+                        </g></svg>
+                    </div>
+                    <div class="module-card-accent"></div>
+                    <div class="module-card-body">
+                        <div class="module-icon-row">
+                            <div class="module-icon highway-icon"><i class="fas fa-road"></i></div>
+                            <div class="module-meta">
+                                <span class="module-name">Highway Pavements</span>
+                                <span class="module-subtitle">Flexible pavement structures</span>
+                            </div>
+                        </div>
+                        <p class="module-desc">Explore dynamic finite element analysis results for highway pavement structures under heavy commercial vehicle loading. Includes full 3D response fields, depth profiles, and cross-section contours.</p>
+                        <div class="module-features">
+                            <span class="module-feature-chip"><i class="fas fa-layer-group"></i> Multi-layer</span>
+                            <span class="module-feature-chip"><i class="fas fa-cube"></i> 3D Response</span>
+                            <span class="module-feature-chip"><i class="fas fa-chart-line"></i> Depth Profiles</span>
+                            <span class="module-feature-chip"><i class="fas fa-th"></i> Contour Maps</span>
+                        </div>
+                        <div class="module-footer">
+                            <div class="module-stats">
+                                <span class="module-stat"><i class="fas fa-folder-open"></i> 4 Structures</span>
+                                <span class="module-stat"><i class="fas fa-database"></i> 144k Nodes</span>
+                                <span class="module-stat"><i class="fas fa-clock"></i> 18 Timesteps</span>
+                            </div>
+                            <span class="module-arrow"><i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Airfield -->
+                <div class="module-card airfield card-enter">
+                    <div class="module-card-mesh" aria-hidden="true">
+                        <svg viewBox="0 0 400 300" fill="none"><g stroke="currentColor" stroke-width="0.4" opacity="0.5">
+                            <path d="M0,0L50,25L0,50Z"/><path d="M0,0L50,25L100,0Z"/><path d="M100,0L50,25L100,50Z"/><path d="M100,0L150,25L100,50Z"/>
+                            <path d="M100,0L150,25L200,0Z"/><path d="M200,0L150,25L200,50Z"/><path d="M200,0L250,25L200,50Z"/><path d="M200,0L250,25L300,0Z"/>
+                            <path d="M300,0L250,25L300,50Z"/><path d="M300,0L350,25L300,50Z"/><path d="M300,0L350,25L400,0Z"/>
+                            <path d="M0,50L50,25L50,75Z"/><path d="M0,50L50,75L0,100Z"/><path d="M50,75L100,50L100,100Z"/><path d="M50,75L0,100L100,100Z"/>
+                            <path d="M100,50L150,25L150,75Z"/><path d="M100,50L150,75L100,100Z"/><path d="M150,75L200,50L200,100Z"/><path d="M150,75L100,100L200,100Z"/>
+                            <path d="M200,50L250,25L250,75Z"/><path d="M200,50L250,75L200,100Z"/><path d="M250,75L300,50L300,100Z"/><path d="M250,75L200,100L300,100Z"/>
+                            <path d="M300,50L350,25L350,75Z"/><path d="M300,50L350,75L300,100Z"/><path d="M350,75L400,50L400,100Z"/><path d="M350,75L300,100L400,100Z"/>
+                            <path d="M0,100L50,75L50,125Z"/><path d="M0,100L50,125L0,150Z"/><path d="M50,125L100,100L100,150Z"/><path d="M50,125L0,150L100,150Z"/>
+                            <path d="M100,100L150,75L150,125Z"/><path d="M100,100L150,125L100,150Z"/><path d="M150,125L200,100L200,150Z"/><path d="M150,125L100,150L200,150Z"/>
+                            <path d="M200,100L250,75L250,125Z"/><path d="M200,100L250,125L200,150Z"/><path d="M250,125L300,100L300,150Z"/><path d="M250,125L200,150L300,150Z"/>
+                        </g></svg>
+                    </div>
+                    <div class="module-card-accent"></div>
+                    <div class="module-card-body">
+                        <div class="module-icon-row">
+                            <div class="module-icon airfield-icon"><i class="fas fa-plane"></i></div>
+                            <div class="module-meta">
+                                <span class="module-name">Airfield Pavements</span>
+                                <span class="module-subtitle">Airport runway &amp; taxiway structures</span>
+                            </div>
+                        </div>
+                        <p class="module-desc">Mechanistic analysis of airfield pavement responses under aircraft gear loading configurations. Supporting research on overload permitting and pavement preservation.</p>
+                        <div class="module-features">
+                            <span class="module-feature-chip"><i class="fas fa-plane-departure"></i> Aircraft Loads</span>
+                            <span class="module-feature-chip"><i class="fas fa-cube"></i> 3D Response</span>
+                            <span class="module-feature-chip"><i class="fas fa-chart-area"></i> Analysis</span>
+                        </div>
+                        <div class="module-footer">
+                            <div class="module-stats">
+                                <span class="module-coming-soon"><i class="fas fa-flask"></i> In Development</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COLLAPSED SELECTOR BAR (shown when a structure is loaded) -->
+        <div class="selector-collapsed-bar" id="selector-collapsed-bar">
+            <div class="scb-icon"><i class="fas fa-road"></i></div>
+            <div class="scb-info">
+                <span class="scb-name" id="scb-name">—</span>
+                <div class="scb-tags">
+                    <span id="scb-load"><i class="fas fa-weight-hanging"></i> —</span>
+                    <span id="scb-accel"><i class="fas fa-tachometer-alt"></i> —</span>
+                    <span id="scb-nodes"><i class="fas fa-database"></i> —</span>
+                </div>
+            </div>
+            <button class="scb-change" onclick="expandSelector()"><i class="fas fa-exchange-alt"></i> Change Structure</button>
+        </div>
+
+        <!-- STRUCTURE SELECTOR (hidden until module chosen) -->
+        <section id="selector-section" style="display:none;">
             <div class="panel-title">
                 <i class="fas fa-folder-open"></i> Select Pavement Structure
                 <span class="info-icon" data-tip="Choose a pavement section to load its 3D finite element analysis results. Each structure contains multi-timestep response data."><i class="fas fa-info"></i></span>
@@ -1492,6 +2333,156 @@ let structureData = null, profilesData = null, contoursData = null, pointcloudDa
 let currentView = 'longitudinal', currentField = 'E11', currentLayer = null;
 let animPlaying = false, animTimer = null;
 let lastViz3dNarrow = null;
+let currentModule = null;  // which module is open ('highway' or null)
+
+// ================================================================
+//  MODULE NAVIGATION
+// ================================================================
+function updateBreadcrumb() {
+    const nav = document.getElementById('breadcrumb-nav');
+    let html = '<span class="breadcrumb-item clickable" onclick="navigateTo(\'modules\')"><i class="fas fa-th-large"></i> Modules</span>';
+    if (currentModule === 'highway') {
+        html += '<span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>';
+        html += '<span class="breadcrumb-item ' + (structureData ? 'clickable" onclick="navigateTo(\'structures\')"' : 'active"') + '><i class="fas fa-road"></i> Highway Pavements</span>';
+    }
+    if (structureData) {
+        const name = STRUCTURES.find(s => s.id === structureData.id)?.name || '';
+        if (name) {
+            html += '<span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span>';
+            html += '<span class="breadcrumb-item active"><i class="fas fa-layer-group"></i> ' + name + '</span>';
+        }
+    }
+    nav.innerHTML = html;
+}
+
+function navigateTo(view) {
+    stopAnimation();
+    if (view === 'modules') {
+        currentModule = null;
+        structureData = null;
+        profilesData = null;
+        contoursData = null;
+        pointcloudData = null;
+        document.getElementById('dashboard').classList.remove('visible');
+        // Reset collapsed state
+        document.getElementById('selector-collapsed-bar').classList.remove('visible');
+        document.getElementById('selector-section').classList.remove('collapsed');
+        document.getElementById('selector-section').style.maxHeight = '';
+        transitionView('module-section', ['selector-section']);
+        updateBreadcrumb();
+        // Re-trigger landing page entrance animations
+        setTimeout(() => {
+            // Hero elements
+            const heroEls = document.querySelectorAll('.landing-hero-badge, .landing-hero h2, .landing-hero-sub, .landing-stats, .landing-divider');
+            heroEls.forEach(el => {
+                el.style.animation = 'none';
+                void el.offsetWidth;
+                el.style.animation = '';
+            });
+            // Module cards
+            document.querySelectorAll('.module-card').forEach((c) => {
+                c.classList.remove('card-enter');
+                void c.offsetWidth;
+                c.classList.add('card-enter');
+            });
+            setTimeout(() => {
+                document.querySelectorAll('.module-card.card-enter').forEach(c => c.classList.remove('card-enter'));
+            }, 900);
+        }, 320);
+    } else if (view === 'structures') {
+        structureData = null;
+        profilesData = null;
+        contoursData = null;
+        pointcloudData = null;
+        document.getElementById('dashboard').classList.remove('visible');
+        // Reset collapsed state
+        document.getElementById('selector-collapsed-bar').classList.remove('visible');
+        document.getElementById('selector-section').classList.remove('collapsed');
+        document.getElementById('selector-section').style.maxHeight = '';
+        transitionView('selector-section', ['module-section']);
+        renderStructureCards();
+        updateBreadcrumb();
+    }
+}
+
+function transitionView(showId, hideIds) {
+    // Hide others first
+    hideIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (id === 'dashboard') {
+            el.classList.remove('visible');
+        } else if (el.style.display !== 'none') {
+            el.classList.add('view-exit');
+            setTimeout(() => {
+                el.style.display = 'none';
+                el.classList.remove('view-exit');
+            }, 350);
+        }
+    });
+    // Show target
+    const showEl = document.getElementById(showId);
+    if (showEl) {
+        setTimeout(() => {
+            showEl.style.display = '';
+            showEl.classList.remove('view-exit');
+            showEl.classList.add('view-enter');
+            setTimeout(() => showEl.classList.remove('view-enter'), 500);
+        }, hideIds.some(id => {
+            const el = document.getElementById(id);
+            return el && el.style.display !== 'none';
+        }) ? 300 : 0);
+    }
+}
+
+function openModule(moduleId) {
+    if (moduleId === 'highway') {
+        currentModule = 'highway';
+        // Reset collapsed bar when entering module
+        document.getElementById('selector-collapsed-bar').classList.remove('visible');
+        document.getElementById('selector-section').classList.remove('collapsed');
+        renderStructureCards();
+        transitionView('selector-section', ['module-section']);
+        updateBreadcrumb();
+    }
+    // 'airfield' module is inactive — do nothing
+}
+
+// ── Selector collapse/expand ──────────────────
+function collapseSelector(structureId) {
+    const s = STRUCTURES.find(st => st.id === structureId);
+    if (!s) return;
+
+    const fmtNodes = (n) => n >= 1000 ? (n / 1000).toFixed(0) + 'k' : String(n);
+
+    // Populate collapsed bar
+    document.getElementById('scb-name').textContent = s.name;
+    document.getElementById('scb-load').innerHTML = '<i class="fas fa-weight-hanging"></i> ' + s.load;
+    document.getElementById('scb-accel').innerHTML = '<i class="fas fa-tachometer-alt"></i> ' + s.acceleration;
+    document.getElementById('scb-nodes').innerHTML = '<i class="fas fa-database"></i> ' + fmtNodes(s.nodeCount) + ' nodes';
+
+    // Collapse the card grid, show the bar
+    const section = document.getElementById('selector-section');
+    section.style.maxHeight = section.scrollHeight + 'px';
+    section.offsetHeight; // force reflow
+    section.classList.add('collapsed');
+
+    const bar = document.getElementById('selector-collapsed-bar');
+    bar.classList.add('visible');
+}
+
+function expandSelector() {
+    // Hide collapsed bar
+    document.getElementById('selector-collapsed-bar').classList.remove('visible');
+
+    // Expand the card grid
+    const section = document.getElementById('selector-section');
+    section.classList.remove('collapsed');
+    section.style.maxHeight = '';
+
+    // Scroll to selector for visibility
+    section.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
 
 // ── Theme helpers ────────────────────────────
 const isDark  = () => document.documentElement.getAttribute('data-theme') === 'dark';
@@ -1515,7 +2506,7 @@ function baseLayout(extra) {
 //  INIT
 // ================================================================
 document.addEventListener('DOMContentLoaded', () => {
-    renderStructureCards();
+    updateBreadcrumb();
     hideLoading();
     window.addEventListener('resize', () => {
         if (!pointcloudData) return;
@@ -1648,7 +2639,7 @@ function renderStructureCards() {
 
     const fmtNodes = (n) => n >= 1000 ? (n / 1000).toFixed(0) + 'k' : String(n);
     document.getElementById('structure-selector').innerHTML = STRUCTURES.map(s => `
-        <div class="structure-card panel" data-id="${s.id}" onclick="selectStructure('${s.id}')">
+        <div class="structure-card panel card-enter" data-id="${s.id}" onclick="selectStructure('${s.id}')">
             <span class="sc-badge"><i class="fas fa-check-circle"></i> Available</span>
             <span class="sc-name"><i class="fas fa-road" style="margin-right:0.4rem;opacity:0.5;"></i>${s.name}</span>
             <div class="sc-tags">
@@ -1657,6 +2648,11 @@ function renderStructureCards() {
             </div>
             <span class="sc-detail"><i class="fas fa-database" style="margin-right:0.25rem;"></i> 3D dynamic FEM &middot; 18 timesteps &middot; ${fmtNodes(s.nodeCount)} nodes</span>
         </div>`).join('');
+
+    // Remove animation class after animation completes to not interfere with hover
+    setTimeout(() => {
+        document.querySelectorAll('.structure-card.card-enter').forEach(c => c.classList.remove('card-enter'));
+    }, 800);
 }
 
 // ── Data-loading modal helpers ────────────────
@@ -1727,6 +2723,8 @@ async function selectStructure(id) {
 
         // Step 0 — Structure metadata (tiny file, instant)
         structureData = await fetch(`${DATA_BASE}/${id}/structure.json`).then(r => r.json());
+        structureData.id = id;  // store id for breadcrumb
+        updateBreadcrumb();
         loaderStep(1, 20);  // 1/5 done
 
         // Step 1 — Depth profiles (small file)
@@ -1760,6 +2758,9 @@ async function selectStructure(id) {
         loaderDone();
         await new Promise(r => setTimeout(r, 350));
         hideLoader();
+
+        // Collapse the structure cards into a compact bar
+        collapseSelector(id);
     } catch (e) {
         console.error('Load failed:', e);
         hideLoader();
@@ -2513,9 +3514,10 @@ function bindControls() {
 function stopAnimation() {
     if (animTimer) clearInterval(animTimer);
     animPlaying = false;
-    document.getElementById('anim-play-icon').className = 'fas fa-play';
-    // Restore static contour
-    renderContour();
+    const playIcon = document.getElementById('anim-play-icon');
+    if (playIcon) playIcon.className = 'fas fa-play';
+    // Restore static contour only if data is loaded
+    if (contoursData) renderContour();
 }
 
 // ── Theme reactivity ─────────────────────────
