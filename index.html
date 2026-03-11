@@ -73,6 +73,14 @@
 
 					<!-- Banner -->
 						<section id="banner">
+							<!-- FEM Mesh Background -->
+							<div class="hero-mesh-bg" aria-hidden="true">
+								<canvas id="hero-fem-canvas"></canvas>
+								<div class="hero-orb orb-1"></div>
+								<div class="hero-orb orb-2"></div>
+								<div class="hero-orb orb-3"></div>
+							</div>
+							<div class="hero-image-layer" aria-hidden="true"></div>
 							<header>
 								<!--<h2>Johann J Cárdenas</h2>
 								<p>Civil/Transportation Engineer, Science Enthusiast</p>-->
@@ -278,6 +286,572 @@
 			<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
 			<script src="assets/js/search.js"></script>
 			<script src="assets/js/back-to-top.js"></script>
+
+			<!-- Hero FEM Mesh Animation -->
+			<script>
+			(function initHeroFEMMesh() {
+				'use strict';
+				var canvas = document.getElementById('hero-fem-canvas');
+				if (!canvas) return;
+				var ctx = canvas.getContext('2d');
+				var nodes = [], triangles = [], edges = [];
+			var mouseX = -9999, mouseY = -9999;
+			var animId = null;
+			var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+			var nodeEdgeMap = {};
+			var signals = [];
+			var propWaves = [];
+			var nodePulses = [];
+			var prevTime = 0;
+			var sigColors = [
+				[45,212,191],
+				[34,211,230],
+				[99,180,241],
+				[45,212,191],
+				[34,230,210]
+			];
+
+				var themeObs = new MutationObserver(function() {
+					isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+				});
+				themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+				function resize() {
+					var rect = canvas.parentElement.getBoundingClientRect();
+					var dpr = Math.min(window.devicePixelRatio || 1, 2);
+					canvas.width = rect.width * dpr;
+					canvas.height = rect.height * dpr;
+					canvas.style.width = rect.width + 'px';
+					canvas.style.height = rect.height + 'px';
+					ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+					buildMesh(rect.width, rect.height);
+				}
+
+				function buildMesh(w, h) {
+					nodes = []; triangles = []; edges = [];
+					var cols = Math.ceil(w / 55) + 1;
+					var rows = Math.ceil(h / 55) + 1;
+					var cellW = w / (cols - 1);
+					var cellH = h / (rows - 1);
+
+					for (var r = 0; r < rows; r++) {
+						for (var c = 0; c < cols; c++) {
+							var onEdge = (r === 0 || r === rows - 1 || c === 0 || c === cols - 1);
+							var jitter = onEdge ? 0 : 0.2;
+							nodes.push({
+								ox: c * cellW + (Math.random() - 0.5) * cellW * jitter,
+								oy: r * cellH + (Math.random() - 0.5) * cellH * jitter,
+								x: 0, y: 0,
+								phase: Math.random() * Math.PI * 2,
+								amp: 1.2 + Math.random() * 1.8,
+								freq: 0.3 + Math.random() * 0.4,
+								pulsePhase: Math.random() * Math.PI * 2,
+								pulseSpeed: 0.5 + Math.random() * 1.5
+							});
+						}
+					}
+
+					var edgeSet = {};
+					function addEdge(a, b) {
+						var key = Math.min(a, b) + '_' + Math.max(a, b);
+						if (!edgeSet[key]) {
+							edgeSet[key] = true;
+							edges.push({ a: a, b: b, glow: 0, glowTarget: 0, glowSpeed: 0.01 + Math.random() * 0.02 });
+						}
+					}
+
+					for (var r = 0; r < rows - 1; r++) {
+					for (var c = 0; c < cols - 1; c++) {
+						var tl = r * cols + c, tr = tl + 1;
+						var bl = (r + 1) * cols + c, br = bl + 1;
+						if ((r + c) % 2 === 0) {
+							triangles.push([tl, tr, bl]); triangles.push([tr, br, bl]);
+							addEdge(tl, tr); addEdge(tl, bl); addEdge(tr, bl); addEdge(tr, br); addEdge(br, bl);
+						} else {
+							triangles.push([tl, tr, br]); triangles.push([tl, br, bl]);
+							addEdge(tl, tr); addEdge(tr, br); addEdge(tl, br); addEdge(br, bl); addEdge(tl, bl);
+						}
+					}
+				}
+				buildAdjacency();
+				signals = [];
+				propWaves = [];
+				nodePulses = [];
+			}
+
+			function buildAdjacency() {
+				nodeEdgeMap = {};
+				for (var i = 0; i < edges.length; i++) {
+					var e = edges[i];
+					if (!nodeEdgeMap[e.a]) nodeEdgeMap[e.a] = [];
+					if (!nodeEdgeMap[e.b]) nodeEdgeMap[e.b] = [];
+					nodeEdgeMap[e.a].push(i);
+					nodeEdgeMap[e.b].push(i);
+				}
+			}
+
+			function spawnSignal() {
+				if (signals.length >= 30) return;
+				var si = Math.floor(Math.random() * nodes.length);
+				var adj = nodeEdgeMap[si];
+				if (!adj || !adj.length) return;
+				var ei = adj[Math.floor(Math.random() * adj.length)];
+				var e = edges[ei];
+				var col = sigColors[Math.floor(Math.random() * sigColors.length)];
+				signals.push({
+					fromNode: si,
+					toNode: e.a === si ? e.b : e.a,
+					progress: 0,
+					speed: 0.6 + Math.random() * 1.6,
+					hops: 6 + Math.floor(Math.random() * 14),
+					trail: [],
+					bright: 0.6 + Math.random() * 0.4,
+					color: col
+				});
+			}
+
+			function spawnWave() {
+				if (propWaves.length >= 5) return;
+				var ni = Math.floor(Math.random() * nodes.length);
+				propWaves.push({
+					cx: nodes[ni].ox,
+					cy: nodes[ni].oy,
+					radius: 0,
+					speed: 80 + Math.random() * 80,
+					maxRadius: 350 + Math.random() * 300,
+					alpha: 0.7,
+					originAlpha: 1.0
+				});
+			}
+
+				function stressColor(v, alpha) {
+					var r, g, b;
+					if (v < 0.33) {
+						var t = v / 0.33;
+						r = 0; g = Math.round(40 + 80 * t); b = Math.round(160 + 60 * t);
+					} else if (v < 0.66) {
+						var t = (v - 0.33) / 0.33;
+						r = 0; g = Math.round(120 + 60 * t); b = Math.round(220 - 50 * t);
+					} else {
+						var t = (v - 0.66) / 0.34;
+						r = Math.round(10 * t); g = Math.round(180 + 31 * t); b = Math.round(170 + 10 * t);
+					}
+					return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+				}
+
+				function edgeColor(alpha) {
+					return 'rgba(34,211,209,' + alpha + ')';
+				}
+				function nodeColor(alpha) {
+					return 'rgba(34,211,209,' + alpha + ')';
+				}
+
+			function draw(t) {
+				var ts = t * 0.001;
+				var dt = prevTime ? Math.min((t - prevTime) * 0.001, 0.05) : 0.016;
+				prevTime = t;
+				var w = parseFloat(canvas.style.width) || canvas.width;
+				var h = parseFloat(canvas.style.height) || canvas.height;
+				ctx.clearRect(0, 0, w + 1, h + 1);
+
+					// Cursor spotlight
+					if (mouseX > 0 && mouseY > 0) {
+						var spotGrad = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, 170);
+						var spotC = '34,211,209';
+						spotGrad.addColorStop(0, 'rgba(' + spotC + ',0.08)');
+						spotGrad.addColorStop(0.4, 'rgba(' + spotC + ',0.03)');
+						spotGrad.addColorStop(1, 'rgba(' + spotC + ',0)');
+						ctx.fillStyle = spotGrad;
+						ctx.fillRect(mouseX - 170, mouseY - 170, 340, 340);
+					}
+
+					// Update node positions
+					for (var i = 0; i < nodes.length; i++) {
+						var n = nodes[i];
+						n.x = n.ox + Math.sin(ts * n.freq + n.phase) * n.amp;
+						n.y = n.oy + Math.cos(ts * n.freq * 0.8 + n.phase * 1.3) * n.amp * 0.7;
+						var dx = n.x - mouseX, dy = n.y - mouseY;
+						var dist = Math.sqrt(dx * dx + dy * dy);
+						if (dist < 120 && dist > 0) {
+							var force = (120 - dist) / 120;
+							force = force * force * 8;
+							n.x += (dx / dist) * force;
+							n.y += (dy / dist) * force;
+						}
+				}
+
+				// Spawn signals and propagation waves
+				if (Math.random() < dt * 3.0) spawnSignal();
+				if (Math.random() < dt * 0.4) spawnWave();
+
+				for (var si = signals.length - 1; si >= 0; si--) {
+					var sig = signals[si];
+					sig.progress += sig.speed * dt;
+					var fn = nodes[sig.fromNode], tn = nodes[sig.toNode];
+					var sp = Math.min(sig.progress, 1);
+					sig.trail.unshift({ x: fn.x + (tn.x - fn.x) * sp, y: fn.y + (tn.y - fn.y) * sp });
+					if (sig.trail.length > 20) sig.trail.pop();
+					if (sig.progress >= 1) {
+						sig.hops--;
+						var cur = sig.toNode;
+						nodePulses.push({ x: nodes[cur].x, y: nodes[cur].y, age: 0, maxAge: 0.35, color: sig.color });
+						if (nodePulses.length > 40) nodePulses.shift();
+						if (sig.hops <= 0) { signals.splice(si, 1); continue; }
+						var adj = nodeEdgeMap[cur];
+						if (!adj || !adj.length) { signals.splice(si, 1); continue; }
+						var ei = adj[Math.floor(Math.random() * adj.length)];
+						var e = edges[ei];
+						sig.fromNode = cur;
+						sig.toNode = e.a === cur ? e.b : e.a;
+						sig.progress = 0;
+					}
+				}
+
+				for (var wi = propWaves.length - 1; wi >= 0; wi--) {
+					var pw = propWaves[wi];
+					pw.radius += pw.speed * dt;
+					pw.alpha = 0.7 * (1 - pw.radius / pw.maxRadius);
+					pw.originAlpha = Math.max((pw.originAlpha || 0) - dt * 0.8, 0);
+					if (pw.radius >= pw.maxRadius) propWaves.splice(wi, 1);
+				}
+
+				for (var pi = nodePulses.length - 1; pi >= 0; pi--) {
+					nodePulses[pi].age += dt;
+					if (nodePulses[pi].age >= nodePulses[pi].maxAge) nodePulses.splice(pi, 1);
+				}
+
+				// Stress wave
+				var waveCenter = ((ts * 0.15) % 1.6) - 0.3;
+				var waveWidth = 0.35;
+
+					// Draw triangle fills
+					var baseAlpha = 0.06;
+					for (var i = 0; i < triangles.length; i++) {
+						var tri = triangles[i];
+						var a = nodes[tri[0]], b = nodes[tri[1]], c = nodes[tri[2]];
+						var cx_ = (a.x + b.x + c.x) / 3;
+						var cy_ = (a.y + b.y + c.y) / 3;
+						var pos = (cx_ / w) * 0.7 + (cy_ / h) * 0.3;
+						var waveDist = Math.abs(pos - waveCenter);
+						var waveIntensity = waveDist < waveWidth ? (1 - waveDist / waveWidth) : 0;
+						waveIntensity = waveIntensity * waveIntensity;
+						var mdx = cx_ - mouseX, mdy = cy_ - mouseY;
+						var mDist = Math.sqrt(mdx * mdx + mdy * mdy);
+						var mouseBoost = mDist < 160 ? (1 - mDist / 160) * 0.5 : 0;
+					var fillAlpha = baseAlpha + waveIntensity * 0.14 + mouseBoost * 0.2;
+					var stressVal = Math.min(
+						(Math.sin(ts * 0.5 + pos * 4) * 0.5 + 0.5) * 0.6 + waveIntensity * 0.4 + mouseBoost * 0.6,
+						1.0
+					);
+					for (var wi = 0; wi < propWaves.length; wi++) {
+						var pw = propWaves[wi];
+						var pwdx = cx_ - pw.cx, pwdy = cy_ - pw.cy;
+						var pwRaw = Math.sqrt(pwdx * pwdx + pwdy * pwdy);
+						var pwDist = Math.abs(pwRaw - pw.radius);
+						if (pwDist < 80) {
+							var pwI = (1 - pwDist / 80) * pw.alpha;
+							fillAlpha += pwI * 0.35;
+							stressVal = Math.min(stressVal + pwI * 0.6, 1.0);
+						}
+						if (pw.radius > 30 && pwRaw < pw.radius) {
+							fillAlpha += (1 - pwRaw / pw.radius) * pw.alpha * 0.012;
+						}
+						if (pw.radius > 40) {
+							var tr1Dist = Math.abs(pwRaw - pw.radius * 0.65);
+							if (tr1Dist < 40) {
+								var tr1I = (1 - tr1Dist / 40) * pw.alpha * 0.5;
+								fillAlpha += tr1I * 0.15;
+								stressVal = Math.min(stressVal + tr1I * 0.2, 1.0);
+							}
+						}
+						if (pw.radius > 80) {
+							var tr2Dist = Math.abs(pwRaw - pw.radius * 0.35);
+							if (tr2Dist < 30) {
+								fillAlpha += (1 - tr2Dist / 30) * pw.alpha * 0.3 * 0.08;
+							}
+						}
+					}
+					if (fillAlpha > 0.01) {
+							ctx.beginPath();
+							ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y);
+							ctx.closePath();
+							ctx.fillStyle = stressColor(stressVal, fillAlpha);
+							ctx.fill();
+						}
+					}
+
+					// Draw edges
+					var edgeBaseAlpha = 0.12;
+					if (Math.random() < 0.008 && edges.length > 0) {
+						var re = edges[Math.floor(Math.random() * edges.length)];
+						re.glowTarget = 0.6 + Math.random() * 0.4;
+					}
+					for (var i = 0; i < edges.length; i++) {
+						var e = edges[i];
+						var a = nodes[e.a], b = nodes[e.b];
+						if (e.glow < e.glowTarget) {
+							e.glow = Math.min(e.glow + e.glowSpeed, e.glowTarget);
+						} else if (e.glow > 0) {
+							e.glow = Math.max(e.glow - e.glowSpeed * 0.5, 0);
+							e.glowTarget = Math.max(e.glowTarget - e.glowSpeed * 0.3, 0);
+						}
+						var emx = (a.x + b.x) / 2 - mouseX, emy = (a.y + b.y) / 2 - mouseY;
+						var eDist = Math.sqrt(emx * emx + emy * emy);
+						var eMouseGlow = eDist < 100 ? (1 - eDist / 100) * 0.3 : 0;
+					var alpha = edgeBaseAlpha + e.glow * 0.4 + eMouseGlow;
+					var extraWidth = 0;
+					for (var wi = 0; wi < propWaves.length; wi++) {
+						var pw = propWaves[wi];
+						var pwex = (a.x + b.x) / 2 - pw.cx, pwey = (a.y + b.y) / 2 - pw.cy;
+						var pweRaw = Math.sqrt(pwex * pwex + pwey * pwey);
+						var pweDist = Math.abs(pweRaw - pw.radius);
+						if (pweDist < 60) {
+							var pweI = (1 - pweDist / 60) * pw.alpha;
+							alpha += pweI * 0.9;
+							extraWidth += pweI * 2.5;
+						}
+						if (pw.radius > 40) {
+							var etr1 = Math.abs(pweRaw - pw.radius * 0.65);
+							if (etr1 < 30) {
+								var etr1I = (1 - etr1 / 30) * pw.alpha * 0.4;
+								alpha += etr1I * 0.4;
+								extraWidth += etr1I * 1.0;
+							}
+						}
+						if (pw.radius > 80) {
+							var etr2 = Math.abs(pweRaw - pw.radius * 0.35);
+							if (etr2 < 20) {
+								var etr2I = (1 - etr2 / 20) * pw.alpha * 0.25;
+								alpha += etr2I * 0.2;
+								extraWidth += etr2I * 0.4;
+							}
+						}
+					}
+					ctx.beginPath();
+					ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+					ctx.strokeStyle = edgeColor(alpha);
+					ctx.lineWidth = 0.5 + e.glow * 1.2 + eMouseGlow * 0.8 + extraWidth;
+						ctx.stroke();
+					}
+
+					// Draw nodes
+					for (var i = 0; i < nodes.length; i++) {
+						var n = nodes[i];
+						var pulse = 0.3 + 0.3 * Math.sin(ts * n.pulseSpeed + n.pulsePhase);
+						var ndx = n.x - mouseX, ndy = n.y - mouseY;
+						var nDist = Math.sqrt(ndx * ndx + ndy * ndy);
+						var nMouseGlow = nDist < 100 ? (1 - nDist / 100) : 0;
+						var r = 1.0 + nMouseGlow * 2.5;
+						var nAlpha = 0.15 * pulse + nMouseGlow * 0.6;
+						if (nAlpha > 0.03) {
+							ctx.beginPath();
+							ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+							ctx.fillStyle = nodeColor(nAlpha);
+							ctx.fill();
+							if (nMouseGlow > 0.15) {
+								ctx.beginPath();
+								ctx.arc(n.x, n.y, r + 3, 0, Math.PI * 2);
+								ctx.strokeStyle = nodeColor(nMouseGlow * 0.3);
+								ctx.lineWidth = 1;
+								ctx.stroke();
+							}
+							if (nMouseGlow > 0.4) {
+								ctx.beginPath();
+								ctx.arc(n.x, n.y, r + 7, 0, Math.PI * 2);
+								ctx.strokeStyle = nodeColor(nMouseGlow * 0.12);
+								ctx.lineWidth = 0.6;
+								ctx.stroke();
+							}
+						}
+					}
+
+					// Sensor nodes
+					var sensorCount = Math.min(8, nodes.length);
+					var sensorStep = Math.floor(nodes.length / sensorCount);
+					for (var i = 0; i < sensorCount; i++) {
+						var si = i * sensorStep;
+						if (si >= nodes.length) break;
+						var sn = nodes[si];
+						var sdx = sn.x - mouseX, sdy = sn.y - mouseY;
+						var sDist = Math.sqrt(sdx * sdx + sdy * sdy);
+						var sMouse = sDist < 130 ? (1 - sDist / 130) : 0;
+						var sp = 0.4 + 0.6 * Math.sin(ts * (1.2 + sMouse * 3) + si);
+						var sr = 2 + sp * 1.5 + sMouse * 2.5;
+						ctx.beginPath();
+						ctx.arc(sn.x, sn.y, sr, 0, Math.PI * 2);
+						ctx.fillStyle = nodeColor((sp + sMouse * 0.5) * 0.35);
+						ctx.fill();
+						ctx.beginPath();
+						ctx.arc(sn.x, sn.y, sr + 4 + sMouse * 3, 0, Math.PI * 2);
+						ctx.strokeStyle = nodeColor((sp + sMouse * 0.3) * 0.12);
+						ctx.lineWidth = 1 + sMouse * 0.5;
+						ctx.stroke();
+					if (sMouse > 0.5) {
+						ctx.beginPath();
+						ctx.arc(sn.x, sn.y, sr + 9 + sMouse * 4, 0, Math.PI * 2);
+						ctx.strokeStyle = nodeColor(sMouse * 0.08);
+						ctx.lineWidth = 0.5;
+						ctx.stroke();
+					}
+				}
+
+				// Propagation wave origin glow
+				for (var wi = 0; wi < propWaves.length; wi++) {
+					var pw = propWaves[wi];
+					var oa = pw.originAlpha || 0;
+					if (oa > 0.02) {
+						var oR = 35 + pw.radius * 0.08;
+						var oGrad = ctx.createRadialGradient(pw.cx, pw.cy, 0, pw.cx, pw.cy, oR);
+						oGrad.addColorStop(0, 'rgba(45,212,191,' + (oa * 0.35) + ')');
+						oGrad.addColorStop(0.5, 'rgba(34,211,230,' + (oa * 0.12) + ')');
+						oGrad.addColorStop(1, 'rgba(45,212,191,0)');
+						ctx.beginPath();
+						ctx.arc(pw.cx, pw.cy, oR, 0, Math.PI * 2);
+						ctx.fillStyle = oGrad;
+						ctx.fill();
+					}
+				}
+
+				// Propagation wave node highlights
+				for (var wi = 0; wi < propWaves.length; wi++) {
+					var pw = propWaves[wi];
+					for (var ni = 0; ni < nodes.length; ni++) {
+						var pn = nodes[ni];
+						var pwndx = pn.x - pw.cx, pwndy = pn.y - pw.cy;
+						var pwnDist = Math.sqrt(pwndx * pwndx + pwndy * pwndy);
+						var pwnRing = Math.abs(pwnDist - pw.radius);
+						if (pwnRing < 50) {
+							var pwnI = (1 - pwnRing / 50) * pw.alpha;
+							ctx.beginPath();
+							ctx.arc(pn.x, pn.y, 2 + pwnI * 4, 0, Math.PI * 2);
+							ctx.fillStyle = 'rgba(45,212,191,' + (pwnI * 0.85) + ')';
+							ctx.fill();
+							if (pwnI > 0.1) {
+								ctx.beginPath();
+								ctx.arc(pn.x, pn.y, 5 + pwnI * 7, 0, Math.PI * 2);
+								ctx.fillStyle = 'rgba(34,211,230,' + (pwnI * 0.2) + ')';
+								ctx.fill();
+							}
+							if (pwnI > 0.25) {
+								ctx.beginPath();
+								ctx.arc(pn.x, pn.y, 10 + pwnI * 10, 0, Math.PI * 2);
+								ctx.fillStyle = 'rgba(99,102,241,' + (pwnI * 0.06) + ')';
+								ctx.fill();
+							}
+						}
+						if (pw.radius > 40) {
+							var trRing = Math.abs(pwnDist - pw.radius * 0.65);
+							if (trRing < 25) {
+								var trI = (1 - trRing / 25) * pw.alpha * 0.4;
+								ctx.beginPath();
+								ctx.arc(pn.x, pn.y, 1.5 + trI * 2.5, 0, Math.PI * 2);
+								ctx.fillStyle = 'rgba(99,102,241,' + (trI * 0.6) + ')';
+								ctx.fill();
+							}
+						}
+						if (pw.radius > 80) {
+							var tr2Ring = Math.abs(pwnDist - pw.radius * 0.35);
+							if (tr2Ring < 18) {
+								var tr2I = (1 - tr2Ring / 18) * pw.alpha * 0.25;
+								ctx.beginPath();
+								ctx.arc(pn.x, pn.y, 1.2 + tr2I * 2, 0, Math.PI * 2);
+								ctx.fillStyle = 'rgba(59,130,246,' + (tr2I * 0.5) + ')';
+								ctx.fill();
+							}
+						}
+					}
+				}
+
+				// Node pulses (signal arrival flashes)
+				for (var pi = 0; pi < nodePulses.length; pi++) {
+					var np = nodePulses[pi];
+					var npP = np.age / np.maxAge;
+					var npF = 1 - npP;
+					var npR = 3 + npP * 12;
+					var npc = np.color;
+					ctx.beginPath();
+					ctx.arc(np.x, np.y, npR, 0, Math.PI * 2);
+					ctx.strokeStyle = 'rgba(' + npc[0] + ',' + npc[1] + ',' + npc[2] + ',' + (npF * 0.6) + ')';
+					ctx.lineWidth = 1.5 * npF;
+					ctx.stroke();
+					if (npF > 0.3) {
+						ctx.beginPath();
+						ctx.arc(np.x, np.y, 2 * npF, 0, Math.PI * 2);
+						ctx.fillStyle = 'rgba(' + npc[0] + ',' + npc[1] + ',' + npc[2] + ',' + (npF * 0.5) + ')';
+						ctx.fill();
+					}
+				}
+
+				// Signal trails and heads
+				for (var si = 0; si < signals.length; si++) {
+					var sig = signals[si];
+					var sc = sig.color;
+					if (sig.trail.length > 1) {
+						for (var tj = 0; tj < sig.trail.length - 1; tj++) {
+							var ta = 1 - tj / sig.trail.length;
+							ctx.beginPath();
+							ctx.moveTo(sig.trail[tj].x, sig.trail[tj].y);
+							ctx.lineTo(sig.trail[tj + 1].x, sig.trail[tj + 1].y);
+							ctx.strokeStyle = 'rgba(' + sc[0] + ',' + sc[1] + ',' + sc[2] + ',' + (ta * 0.5 * sig.bright) + ')';
+							ctx.lineWidth = ta * 2.5;
+							ctx.stroke();
+						}
+					}
+					if (sig.trail.length > 0) {
+						var sh = sig.trail[0];
+						ctx.beginPath();
+						ctx.arc(sh.x, sh.y, 9, 0, Math.PI * 2);
+						ctx.fillStyle = 'rgba(' + sc[0] + ',' + sc[1] + ',' + sc[2] + ',' + (0.12 * sig.bright) + ')';
+						ctx.fill();
+						ctx.beginPath();
+						ctx.arc(sh.x, sh.y, 5, 0, Math.PI * 2);
+						ctx.fillStyle = 'rgba(' + sc[0] + ',' + sc[1] + ',' + sc[2] + ',' + (0.3 * sig.bright) + ')';
+						ctx.fill();
+						ctx.beginPath();
+						ctx.arc(sh.x, sh.y, 2.5, 0, Math.PI * 2);
+						ctx.fillStyle = 'rgba(' + sc[0] + ',' + sc[1] + ',' + sc[2] + ',' + (0.9 * sig.bright) + ')';
+						ctx.fill();
+					}
+				}
+
+				animId = requestAnimationFrame(draw);
+				}
+
+				// Mouse tracking on the banner section
+				var banner = document.getElementById('banner');
+				if (banner) {
+					banner.style.pointerEvents = 'auto';
+					banner.addEventListener('mousemove', function(ev) {
+						var rect = canvas.getBoundingClientRect();
+						mouseX = ev.clientX - rect.left;
+						mouseY = ev.clientY - rect.top;
+					});
+					banner.addEventListener('mouseleave', function() {
+						mouseX = -9999;
+						mouseY = -9999;
+					});
+				}
+
+				function start() {
+					resize();
+					if (animId) cancelAnimationFrame(animId);
+					animId = requestAnimationFrame(draw);
+				}
+
+				var resizeTimer;
+				window.addEventListener('resize', function() {
+					clearTimeout(resizeTimer);
+					resizeTimer = setTimeout(resize, 150);
+				});
+
+				if (document.readyState === 'loading') {
+					document.addEventListener('DOMContentLoaded', start);
+				} else {
+					start();
+				}
+			})();
+			</script>
+
 			<script>
 				// Animation for counters in Research Metrics section
 				document.addEventListener('DOMContentLoaded', function() {
