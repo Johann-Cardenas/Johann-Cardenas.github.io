@@ -27,11 +27,13 @@ sass assets/sass/main.scss assets/css/main.css   # Sass compilation
 Deploy: push to `main` — GitHub Pages auto-builds via Jekyll.
 
 ## Key Architecture Patterns
-- **Component loader** (`assets/js/components.js`): dynamically injects nav, footer, and content from `data/*.json` into every page. Add new pages/sections by editing the JSON files, not by duplicating HTML nav blocks.
+- **Component loader** (`assets/js/components.js`): dynamically injects nav, footer, and content from `data/*.json` into every page. Add new pages/sections by editing the JSON files, not by duplicating HTML nav blocks. Uses an internal `_jsonCache` to prevent duplicate fetches; detects which `#*-placeholder` elements exist on the page and fires only the needed JSON fetches in parallel via `Promise.all()`.
+- **ComponentLoader public API** (`window.ComponentLoader`): exposes `loadJSON(url)` (cached), `getBasePath()`, `generateBlogCard()`, `generateProjectCard()`, `generateNewsCard()`. Other scripts (search.js, blog-enhancements.js) use `ComponentLoader.loadJSON` to get cache hits on already-fetched JSON.
 - **Theme toggle** (`assets/js/theme-toggle.js`): light/dark mode via `data-theme` attribute on `<html>`. Preference stored in `localStorage('theme-preference')`.
-- **Search** (`assets/js/search.js`): client-side Fuse.js search across blog, news, projects.
+- **Search** (`assets/js/search.js`): client-side Fuse.js search across blog, news, projects, publications. Delegates to `ComponentLoader.loadJSON` for cache hits, falls back to raw `fetch`. Builds index lazily on first Ctrl+K open.
 - **Base path helper**: `getBasePath()` in components.js/search.js returns `''` or `'../'` depending on page depth. All internal links are relative.
 - **Blog collection**: Jekyll processes `blog/*.html` with Liquid (`_config.yml`). Blog metadata lives in `data/blog-posts.json`.
+- **Page transitions**: `main.js` intercepts internal link clicks, adds `.page-exit` class, then navigates after 80ms delay.
 
 ## Coding Conventions
 - JS: IIFE pattern `(function(){ 'use strict'; ... })()`, ES6 `async/await` for fetches.
@@ -60,11 +62,12 @@ Deploy: push to `main` — GitHub Pages auto-builds via Jekyll.
 ### Custom JS files (`assets/js/`)
 | File | Purpose | Key exports / API |
 |---|---|---|
-| `components.js` | Dynamic nav, footer, blog/project/news cards from JSON | `getBasePath()`, `loadJSON()`, `generateBlogCard()`, `generateProjectCard()`, `generateNewsCard()` |
-| `search.js` | Fuse.js client-side search overlay (Ctrl/Cmd+K) | Lazy-loads index on first open; searches blog, news, projects |
+| `components.js` | Dynamic nav, footer, blog/project/news cards from JSON; cached parallel fetches | `window.ComponentLoader`: `loadJSON(url)`, `getBasePath()`, `generateBlogCard()`, `generateProjectCard()`, `generateNewsCard()` |
+| `search.js` | Fuse.js client-side search overlay (Ctrl/Cmd+K) | Lazy-loads index on first open; searches blog, news, projects, publications via `data/publications.json` |
+| `blog-enhancements.js` | Blog.html-only: featured post, year grouping, filter bar, sort, year nav, scroll progress, card animations | Uses `ComponentLoader.loadJSON` for cache hits on `blog-posts.json` |
 | `theme-toggle.js` | Light/dark mode toggle | `localStorage('theme-preference')`, applies `data-theme` on `<html>` |
 | `back-to-top.js` | Floating scroll-to-top button | Appears at 80% viewport scroll height |
-| `main.js` | Breakpoint config, dropotron dropdowns, mobile nav panel, scroll animations (IntersectionObserver), page transitions, ripple effects, lazy images | jQuery-based, uses `$.fn.panel()` from util.js |
+| `main.js` | Breakpoint config, dropotron dropdowns, mobile nav panel, scroll animations (IntersectionObserver), page transitions (80ms delay, line ~233), ripple effects, lazy images | jQuery-based, uses `$.fn.panel()` from util.js |
 | `util.js` | jQuery plugins | `$.fn.navList()`, `$.fn.panel()`, `$.fn.placeholder()`, `$.prioritize()` |
 
 ### Script Boot Order (per page `<script>` tags)
@@ -84,6 +87,7 @@ Deploy: push to `main` — GitHub Pages auto-builds via Jekyll.
 | `projects.json` | `projects` | `{ id, title, shortTitle, image, url, excerpt, pis[], advisor, status }` — 4 entries |
 | `news.json` | `items` | `{ id, title, date, dateDisplay, source, url, excerpt, image, tags[] }` |
 | `footer.json` | — | `{ importantDates[], gradStudent, contentLinks[], affiliations[], socialLinks[], contact, copyright }` |
+| `publications.json` | `publications` | `{ title }[]` — 24 entries (extracted from Publications.html for search indexing) |
 | `site-config.json` | `site` | `{ title, logo, favicon, baseUrl, description, previewImage }` + `scripts[]`, `css[]` |
 
 ## Page Inventory
@@ -101,6 +105,22 @@ ACRP_FEM (password-protected), EV_Trucks, FAA_Data, MS_Thesis
 - **Asphera** (`e-labs/asphera/`) — FEM pavement visualizer (Plotly), password-protected
 - **AirCrafter** (`e-labs/aircrafter/`) — Contact stress calculator (Plotly), password-protected
 - **Frontier** (`e-labs/frontier/`) — HPC point-cloud visualization (Three.js/WebGL), public
+
+## Page → Placeholder → JSON Mapping
+Which DOM placeholders each page uses (determines which JSON files `components.js` fetches):
+
+| Page | Placeholders present | JSON fetched |
+|---|---|---|
+| All pages | `#footer-placeholder` | `footer.json` (always) + `navigation.json` (async, for mobile nav rebuild) |
+| `index.html` | `#all-blog-posts-placeholder`, `#all-projects-placeholder` | `blog-posts.json`, `projects.json` |
+| `Blog.html` | `#all-blog-posts-placeholder` | `blog-posts.json` |
+| `Projects.html` | `#all-projects-placeholder` | `projects.json` |
+| `News.html` | `#all-news-placeholder` | `news.json` |
+| `blog/*.html` | `#blog-posts-placeholder` | `blog-posts.json` |
+| `projects/*.html` | `#projects-placeholder` | `projects.json` |
+| Publications, Resume, E-Labs, about-me, 404 | (none beyond footer) | `footer.json` only |
+
+All pages have hardcoded `<nav>` in HTML — no page uses `#nav-placeholder`.
 
 ## Navigation & Site Map
 - **Top nav**: Home | Projects (dropdown→4) | Publications | Resume | Blog | News | E-Labs (dropdown→3)
