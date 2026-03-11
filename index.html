@@ -762,58 +762,6 @@
 					}
 				}
 
-				// Node pulses (signal arrival flashes)
-				for (var pi = 0; pi < nodePulses.length; pi++) {
-					var np = nodePulses[pi];
-					var npP = np.age / np.maxAge;
-					var npF = 1 - npP;
-					var npR = 3 + npP * 12;
-					var npc = np.color;
-					ctx.beginPath();
-					ctx.arc(np.x, np.y, npR, 0, Math.PI * 2);
-					ctx.strokeStyle = 'rgba(' + npc[0] + ',' + npc[1] + ',' + npc[2] + ',' + (npF * 0.6) + ')';
-					ctx.lineWidth = 1.5 * npF;
-					ctx.stroke();
-					if (npF > 0.3) {
-						ctx.beginPath();
-						ctx.arc(np.x, np.y, 2 * npF, 0, Math.PI * 2);
-						ctx.fillStyle = 'rgba(' + npc[0] + ',' + npc[1] + ',' + npc[2] + ',' + (npF * 0.5) + ')';
-						ctx.fill();
-					}
-				}
-
-				// Signal trails and heads
-				for (var si = 0; si < signals.length; si++) {
-					var sig = signals[si];
-					var sc = sig.color;
-					if (sig.trail.length > 1) {
-						for (var tj = 0; tj < sig.trail.length - 1; tj++) {
-							var ta = 1 - tj / sig.trail.length;
-							ctx.beginPath();
-							ctx.moveTo(sig.trail[tj].x, sig.trail[tj].y);
-							ctx.lineTo(sig.trail[tj + 1].x, sig.trail[tj + 1].y);
-							ctx.strokeStyle = 'rgba(' + sc[0] + ',' + sc[1] + ',' + sc[2] + ',' + (ta * 0.5 * sig.bright) + ')';
-							ctx.lineWidth = ta * 2.5;
-							ctx.stroke();
-						}
-					}
-					if (sig.trail.length > 0) {
-						var sh = sig.trail[0];
-						ctx.beginPath();
-						ctx.arc(sh.x, sh.y, 9, 0, Math.PI * 2);
-						ctx.fillStyle = 'rgba(' + sc[0] + ',' + sc[1] + ',' + sc[2] + ',' + (0.12 * sig.bright) + ')';
-						ctx.fill();
-						ctx.beginPath();
-						ctx.arc(sh.x, sh.y, 5, 0, Math.PI * 2);
-						ctx.fillStyle = 'rgba(' + sc[0] + ',' + sc[1] + ',' + sc[2] + ',' + (0.3 * sig.bright) + ')';
-						ctx.fill();
-						ctx.beginPath();
-						ctx.arc(sh.x, sh.y, 2.5, 0, Math.PI * 2);
-						ctx.fillStyle = 'rgba(' + sc[0] + ',' + sc[1] + ',' + sc[2] + ',' + (0.9 * sig.bright) + ')';
-						ctx.fill();
-					}
-				}
-
 				animId = requestAnimationFrame(draw);
 				}
 
@@ -844,6 +792,304 @@
 					resizeTimer = setTimeout(resize, 150);
 				});
 
+				if (document.readyState === 'loading') {
+					document.addEventListener('DOMContentLoaded', start);
+				} else {
+					start();
+				}
+			})();
+			</script>
+
+			<!-- Hero Silhouette Reveal Effect -->
+			<script>
+			(function initHeroLens() {
+				'use strict';
+				var banner = document.getElementById('banner');
+				if (!banner) return;
+
+				var lensCanvas = document.createElement('canvas');
+				lensCanvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;';
+				var heroImgLayer = banner.querySelector('.hero-image-layer');
+				if (heroImgLayer) {
+					heroImgLayer.insertAdjacentElement('afterend', lensCanvas);
+				} else {
+					banner.appendChild(lensCanvas);
+				}
+
+				var lctx = lensCanvas.getContext('2d');
+				var silNodes = [], silTris = [], silEdges = [];
+				var silCenterX = 0, silCenterY = 0, silMaxDist = 1;
+				var BRUSH_R = 40;
+				var mx = -9999, my = -9999;
+				var imgReady = false;
+				var pixelData = null, imgW = 0, imgH = 0;
+				var isOverPortrait = false;
+				var bannerW = 0, bannerH = 0, imgDispW = 0, imgDispH = 0, imgOffX = 0;
+
+				var revealBuf = document.createElement('canvas');
+				var rbCtx = revealBuf.getContext('2d');
+				var RB_SCALE = 0.25;
+				var revealActive = false;
+				var idleFrames = 0;
+				var trail = [];
+				var TRAIL_MAX = 350;
+
+				var heroImg = new Image();
+				heroImg.crossOrigin = 'anonymous';
+				heroImg.onload = function() {
+					var tmp = document.createElement('canvas');
+					tmp.width = heroImg.naturalWidth;
+					tmp.height = heroImg.naturalHeight;
+					var tc = tmp.getContext('2d');
+					tc.drawImage(heroImg, 0, 0);
+					try {
+						pixelData = tc.getImageData(0, 0, tmp.width, tmp.height);
+					} catch(e) { return; }
+					imgW = tmp.width;
+					imgH = tmp.height;
+					imgReady = true;
+					doResize();
+				};
+				heroImg.src = 'images/Hero_Section.png';
+
+				function isSilhouette(px, py) {
+					if (px < 0 || py < 0 || px >= imgW || py >= imgH) return false;
+					var i = (Math.floor(py) * imgW + Math.floor(px)) * 4;
+					return pixelData.data[i + 3] > 80;
+				}
+
+				function checkPortraitHit() {
+					if (mx < 0 || !imgReady) { isOverPortrait = false; return; }
+					var ix = ((mx - imgOffX) / imgDispW) * imgW;
+					var iy = (my / imgDispH) * imgH;
+					isOverPortrait = isSilhouette(ix, iy);
+				}
+
+				function buildMesh() {
+					silNodes = []; silTris = []; silEdges = [];
+					if (!imgReady) return;
+					var aspect = imgW / imgH;
+					imgDispH = bannerH;
+					imgDispW = imgDispH * aspect;
+					imgOffX = (bannerW - imgDispW) / 2;
+					var sp = 12;
+					var cols = Math.ceil(imgDispW / sp), rows = Math.ceil(imgDispH / sp);
+					var map = {};
+					var sumX = 0, sumY = 0, cnt = 0;
+
+					for (var r = 0; r <= rows; r++) {
+						for (var c = 0; c <= cols; c++) {
+							var ix = (c * sp / imgDispW) * imgW, iy = (r * sp / imgDispH) * imgH;
+							if (!isSilhouette(ix, iy)) continue;
+							var onEdge = (r === 0 || r === rows || c === 0 || c === cols);
+							var jt = onEdge ? 0 : 0.2;
+							var nx = imgOffX + c * sp + (Math.random() - 0.5) * sp * jt;
+							var ny = r * sp + (Math.random() - 0.5) * sp * jt;
+							map[r + '_' + c] = silNodes.length;
+							silNodes.push({ x: nx, y: ny });
+							sumX += nx; sumY += ny; cnt++;
+						}
+					}
+					silCenterX = cnt ? sumX / cnt : bannerW / 2;
+					silCenterY = cnt ? sumY / cnt : bannerH / 2;
+					silMaxDist = 1;
+					for (var i = 0; i < silNodes.length; i++) {
+						var dx = silNodes[i].x - silCenterX, dy = silNodes[i].y - silCenterY;
+						var d = Math.sqrt(dx * dx + dy * dy);
+						if (d > silMaxDist) silMaxDist = d;
+					}
+
+					var edgeSet = {};
+					function addE(a, b) {
+						var k = Math.min(a, b) + '_' + Math.max(a, b);
+						if (!edgeSet[k]) { edgeSet[k] = true; silEdges.push([a, b]); }
+					}
+					for (var r = 0; r < rows; r++) {
+						for (var c = 0; c < cols; c++) {
+							var tl = map[r + '_' + c], tr = map[r + '_' + (c + 1)];
+							var bl = map[(r + 1) + '_' + c], br = map[(r + 1) + '_' + (c + 1)];
+							if ((r + c) % 2 === 0) {
+								if (tl !== undefined && tr !== undefined && bl !== undefined) {
+									silTris.push([tl, tr, bl]);
+									addE(tl, tr); addE(tr, bl); addE(tl, bl);
+								}
+								if (tr !== undefined && br !== undefined && bl !== undefined) {
+									silTris.push([tr, br, bl]);
+									addE(tr, br); addE(br, bl); addE(tr, bl);
+								}
+							} else {
+								if (tl !== undefined && tr !== undefined && br !== undefined) {
+									silTris.push([tl, tr, br]);
+									addE(tl, tr); addE(tr, br); addE(tl, br);
+								}
+								if (tl !== undefined && br !== undefined && bl !== undefined) {
+									silTris.push([tl, br, bl]);
+									addE(tl, br); addE(br, bl); addE(tl, bl);
+								}
+							}
+						}
+					}
+				}
+
+				function stressCol(v, a) {
+					var r, g, b;
+					if (v < 0.33) {
+						var t = v / 0.33;
+						r = 0; g = Math.round(40 + 80 * t); b = Math.round(160 + 60 * t);
+					} else if (v < 0.66) {
+						var t = (v - 0.33) / 0.33;
+						r = 0; g = Math.round(120 + 60 * t); b = Math.round(220 - 50 * t);
+					} else {
+						var t = (v - 0.66) / 0.34;
+						r = Math.round(10 * t); g = Math.round(180 + 31 * t); b = Math.round(170 + 10 * t);
+					}
+					return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+				}
+
+				function doResize() {
+					var rect = banner.getBoundingClientRect();
+					bannerW = rect.width;
+					bannerH = rect.height;
+					var dpr = Math.min(window.devicePixelRatio || 1, 2);
+					lensCanvas.width = bannerW * dpr;
+					lensCanvas.height = bannerH * dpr;
+					lensCanvas.style.width = bannerW + 'px';
+					lensCanvas.style.height = bannerH + 'px';
+					lctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+					revealBuf.width = Math.ceil(bannerW * RB_SCALE);
+					revealBuf.height = Math.ceil(bannerH * RB_SCALE);
+					buildMesh();
+					trail = [];
+					revealActive = false;
+				}
+
+				function draw() {
+					var w = bannerW, h = bannerH;
+					lctx.clearRect(0, 0, w + 1, h + 1);
+
+					if (!imgReady || silNodes.length === 0) {
+						requestAnimationFrame(draw);
+						return;
+					}
+
+					checkPortraitHit();
+
+					rbCtx.globalCompositeOperation = 'destination-out';
+					rbCtx.fillStyle = 'rgba(0,0,0,0.014)';
+					rbCtx.fillRect(0, 0, revealBuf.width, revealBuf.height);
+					rbCtx.globalCompositeOperation = 'source-over';
+
+					if (isOverPortrait && mx > 0) {
+						revealActive = true;
+						idleFrames = 0;
+						var sx = mx * RB_SCALE, sy = my * RB_SCALE, sr = BRUSH_R * RB_SCALE;
+						var grad = rbCtx.createRadialGradient(sx, sy, 0, sx, sy, sr);
+						grad.addColorStop(0, 'rgba(255,255,255,0.22)');
+						grad.addColorStop(0.45, 'rgba(255,255,255,0.1)');
+						grad.addColorStop(1, 'rgba(255,255,255,0)');
+						rbCtx.fillStyle = grad;
+						rbCtx.beginPath();
+						rbCtx.arc(sx, sy, sr, 0, Math.PI * 2);
+						rbCtx.fill();
+
+						trail.push({ x: mx, y: my });
+						if (trail.length > TRAIL_MAX) trail.shift();
+					} else {
+						idleFrames++;
+						if (idleFrames > 400) {
+							revealActive = false;
+							trail = [];
+						}
+					}
+
+					if (!revealActive || trail.length === 0) {
+						requestAnimationFrame(draw);
+						return;
+					}
+
+					var tMinX = trail[0].x, tMinY = trail[0].y;
+					var tMaxX = tMinX, tMaxY = tMinY;
+					for (var i = 1; i < trail.length; i++) {
+						if (trail[i].x < tMinX) tMinX = trail[i].x;
+						if (trail[i].y < tMinY) tMinY = trail[i].y;
+						if (trail[i].x > tMaxX) tMaxX = trail[i].x;
+						if (trail[i].y > tMaxY) tMaxY = trail[i].y;
+					}
+					tMinX -= BRUSH_R + 15; tMinY -= BRUSH_R + 15;
+					tMaxX += BRUSH_R + 15; tMaxY += BRUSH_R + 15;
+
+					lctx.beginPath();
+					for (var i = 0; i < silTris.length; i++) {
+						var tri = silTris[i];
+						var a = silNodes[tri[0]], b = silNodes[tri[1]], c = silNodes[tri[2]];
+						var cx_ = (a.x + b.x + c.x) / 3, cy_ = (a.y + b.y + c.y) / 3;
+						if (cx_ < tMinX || cx_ > tMaxX || cy_ < tMinY || cy_ > tMaxY) continue;
+						lctx.moveTo(a.x, a.y); lctx.lineTo(b.x, b.y); lctx.lineTo(c.x, c.y); lctx.closePath();
+					}
+					lctx.fillStyle = 'rgba(15,23,42,0.92)';
+					lctx.fill();
+
+					for (var i = 0; i < silTris.length; i++) {
+						var tri = silTris[i];
+						var a = silNodes[tri[0]], b = silNodes[tri[1]], c = silNodes[tri[2]];
+						var cx_ = (a.x + b.x + c.x) / 3, cy_ = (a.y + b.y + c.y) / 3;
+						if (cx_ < tMinX || cx_ > tMaxX || cy_ < tMinY || cy_ > tMaxY) continue;
+						var sdx = cx_ - silCenterX, sdy = cy_ - silCenterY;
+						var stress = Math.min(Math.sqrt(sdx * sdx + sdy * sdy) / silMaxDist, 1.0);
+						lctx.beginPath();
+						lctx.moveTo(a.x, a.y); lctx.lineTo(b.x, b.y); lctx.lineTo(c.x, c.y);
+						lctx.closePath();
+						lctx.fillStyle = stressCol(stress, 0.12);
+						lctx.fill();
+					}
+
+					lctx.lineWidth = 0.5;
+					for (var i = 0; i < silEdges.length; i++) {
+						var e = silEdges[i];
+						var a = silNodes[e[0]], b = silNodes[e[1]];
+						var emx = (a.x + b.x) / 2, emy = (a.y + b.y) / 2;
+						if (emx < tMinX || emx > tMaxX || emy < tMinY || emy > tMaxY) continue;
+						lctx.beginPath();
+						lctx.moveTo(a.x, a.y); lctx.lineTo(b.x, b.y);
+						lctx.strokeStyle = 'rgba(34,211,209,0.22)';
+						lctx.stroke();
+					}
+
+					for (var i = 0; i < silNodes.length; i++) {
+						var n = silNodes[i];
+						if (n.x < tMinX || n.x > tMaxX || n.y < tMinY || n.y > tMaxY) continue;
+						lctx.beginPath();
+						lctx.arc(n.x, n.y, 0.9, 0, Math.PI * 2);
+						lctx.fillStyle = 'rgba(34,211,209,0.4)';
+						lctx.fill();
+					}
+
+					lctx.globalCompositeOperation = 'destination-in';
+					lctx.drawImage(revealBuf, 0, 0, w, h);
+					lctx.globalCompositeOperation = 'source-over';
+
+					requestAnimationFrame(draw);
+				}
+
+				banner.addEventListener('mousemove', function(ev) {
+					var rect = lensCanvas.getBoundingClientRect();
+					mx = ev.clientX - rect.left;
+					my = ev.clientY - rect.top;
+				});
+				banner.addEventListener('mouseleave', function() {
+					mx = -9999; my = -9999;
+				});
+
+				var rt;
+				window.addEventListener('resize', function() {
+					clearTimeout(rt);
+					rt = setTimeout(doResize, 150);
+				});
+
+				function start() {
+					doResize();
+					requestAnimationFrame(draw);
+				}
 				if (document.readyState === 'loading') {
 					document.addEventListener('DOMContentLoaded', start);
 				} else {

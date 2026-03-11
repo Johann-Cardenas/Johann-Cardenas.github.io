@@ -750,6 +750,11 @@ body.homepage #main .container .row > .col-12:first-child {
 	--about-map-border: rgba(24, 169, 168, 0.15);
 	box-shadow: 0 8px 32px rgba(0,0,0,0.35);
 }
+@media (min-width: 1025px) {
+	body.homepage #header #banner {
+		padding: 10em 0;
+	}
+}
 @media (min-width: 737px) and (max-width: 1024px) {
 	body.homepage #intro {
 		display: none;
@@ -759,7 +764,7 @@ body.homepage #main .container .row > .col-12:first-child {
 		margin-bottom: 0;
 	}
 	body.homepage #header #banner {
-		padding: 16em 0 1.25em 0;
+		padding: 17.6em 0 1.25em 0;
 		background-size: cover;
 		background-position: center center;
 	}
