@@ -20,12 +20,18 @@
 
     const basePath = getBasePath();
 
-    // Load JSON data
+    // JSON fetch cache — prevents duplicate network requests across components
+    const _jsonCache = {};
+
+    // Load JSON data (with cache)
     async function loadJSON(url) {
+        if (_jsonCache[url]) return _jsonCache[url];
         try {
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.json();
+            const data = await response.json();
+            _jsonCache[url] = data;
+            return data;
         } catch (error) {
             console.error('Error loading JSON:', error);
             return null;
@@ -411,77 +417,75 @@
     async function initComponents() {
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
         const currentPageUrl = window.location.pathname;
-        
-        // Load navigation
-        const navData = await loadJSON(`${basePath}data/navigation.json`);
+        const imageBasePath = basePath || '';
+
+        // Detect which placeholders exist BEFORE fetching
         const navElement = document.getElementById('nav-placeholder');
-        if (navElement && navData) {
-            // Replace the placeholder with navigation HTML (h1 + nav)
-            const navHTML = generateNavigation(navData, currentPage);
-            navElement.outerHTML = navHTML;
-        }
-
-        // Always rebuild mobile nav panel if navData is available
-        // (supports both placeholder-based and inlined nav)
-        if (navData) {
-            rebuildMobileNav(navData, currentPage);
-        }
-
-        // Load footer
-        const footerData = await loadJSON(`${basePath}data/footer.json`);
         const footerElement = document.getElementById('footer-placeholder');
-        if (footerElement && footerData) {
-            footerElement.outerHTML = generateFooter(footerData);
-        }
-
-        // Load blog posts (for blog pages)
         const blogPostsElement = document.getElementById('blog-posts-placeholder');
-        if (blogPostsElement) {
-            const blogData = await loadJSON(`${basePath}data/blog-posts.json`);
-            const imageBasePath = basePath || '';
-            if (blogData) {
-                blogPostsElement.outerHTML = generateBlogPosts(blogData, currentPageUrl, imageBasePath);
-            }
-        }
-
-        // Load all blog posts (for listing pages like Blog.html and index.html)
         const allBlogPostsElement = document.getElementById('all-blog-posts-placeholder');
-        if (allBlogPostsElement) {
-            const blogData = await loadJSON(`${basePath}data/blog-posts.json`);
-            const imageBasePath = basePath || '';
-            if (blogData) {
-                allBlogPostsElement.outerHTML = generateAllBlogPosts(blogData, imageBasePath);
-            }
-        }
-
-        // Load projects (for project pages)
         const projectsElement = document.getElementById('projects-placeholder');
-        if (projectsElement) {
-            const projectsData = await loadJSON(`${basePath}data/projects.json`);
-            const imageBasePath = basePath || '';
-            if (projectsData) {
-                projectsElement.outerHTML = generateProjects(projectsData, currentPageUrl, imageBasePath);
-            }
-        }
-
-        // Load all projects (for listing pages like Projects.html and index.html)
         const allProjectsElement = document.getElementById('all-projects-placeholder');
-        if (allProjectsElement) {
-            const projectsData = await loadJSON(`${basePath}data/projects.json`);
-            const imageBasePath = basePath || '';
-            if (projectsData) {
-                allProjectsElement.outerHTML = generateAllProjects(projectsData, imageBasePath);
-            }
+        const allNewsElement = document.getElementById('all-news-placeholder');
+
+        const needBlog = !!(blogPostsElement || allBlogPostsElement);
+        const needProjects = !!(projectsElement || allProjectsElement);
+        const needNews = !!allNewsElement;
+
+        // Build parallel fetch list — only request JSON that this page actually needs
+        const fetches = {};
+        fetches.footer = loadJSON(`${basePath}data/footer.json`);
+        if (navElement) fetches.nav = loadJSON(`${basePath}data/navigation.json`);
+        if (needBlog) fetches.blog = loadJSON(`${basePath}data/blog-posts.json`);
+        if (needProjects) fetches.projects = loadJSON(`${basePath}data/projects.json`);
+        if (needNews) fetches.news = loadJSON(`${basePath}data/news.json`);
+
+        // Fire all fetches in parallel
+        const keys = Object.keys(fetches);
+        const values = await Promise.all(keys.map(k => fetches[k]));
+        const data = {};
+        keys.forEach((k, i) => { data[k] = values[i]; });
+
+        // Non-blocking: rebuild mobile nav asynchronously (all pages have hardcoded <nav>)
+        loadJSON(`${basePath}data/navigation.json`).then(navData => {
+            if (navData) rebuildMobileNav(navData, currentPage);
+        });
+
+        // --- DOM processing (order unchanged: nav → footer → blog → projects → news) ---
+
+        // Nav placeholder (rarely used — most pages have hardcoded nav)
+        if (navElement && data.nav) {
+            navElement.outerHTML = generateNavigation(data.nav, currentPage);
         }
 
-        // Load all news items (for News.html)
-        const allNewsElement = document.getElementById('all-news-placeholder');
-        if (allNewsElement) {
-            const newsData = await loadJSON(`${basePath}data/news.json`);
-            const imageBasePath = basePath || '';
-            if (newsData) {
-                allNewsElement.outerHTML = generateAllNews(newsData, imageBasePath);
-            }
+        // Footer
+        if (footerElement && data.footer) {
+            footerElement.outerHTML = generateFooter(data.footer);
+        }
+
+        // Blog posts (sidebar on individual blog pages)
+        if (blogPostsElement && data.blog) {
+            blogPostsElement.outerHTML = generateBlogPosts(data.blog, currentPageUrl, imageBasePath);
+        }
+
+        // All blog posts (listing pages like Blog.html and index.html)
+        if (allBlogPostsElement && data.blog) {
+            allBlogPostsElement.outerHTML = generateAllBlogPosts(data.blog, imageBasePath);
+        }
+
+        // Projects (sidebar on individual project pages)
+        if (projectsElement && data.projects) {
+            projectsElement.outerHTML = generateProjects(data.projects, currentPageUrl, imageBasePath);
+        }
+
+        // All projects (listing pages like Projects.html and index.html)
+        if (allProjectsElement && data.projects) {
+            allProjectsElement.outerHTML = generateAllProjects(data.projects, imageBasePath);
+        }
+
+        // All news items (News.html)
+        if (allNewsElement && data.news) {
+            allNewsElement.outerHTML = generateAllNews(data.news, imageBasePath);
         }
     }
 

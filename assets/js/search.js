@@ -14,20 +14,28 @@
     }
     var base = getBasePath();
 
-    async function loadJSON(url) {
-        try {
-            var r = await fetch(url);
-            if (!r.ok) throw new Error(r.status);
-            return r.json();
-        } catch (_) { return null; }
+    function loadJSON(url) {
+        if (window.ComponentLoader && window.ComponentLoader.loadJSON) {
+            return window.ComponentLoader.loadJSON(url);
+        }
+        return fetch(url).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; });
     }
 
     /* ── build search index ── */
     async function buildIndex() {
         var items = [];
-        var blogs = await loadJSON(base + 'data/blog-posts.json');
-        var news  = await loadJSON(base + 'data/news.json');
-        var proj  = await loadJSON(base + 'data/projects.json');
+
+        // Fetch all data sources in parallel (cache hits from components.js when available)
+        var results = await Promise.all([
+            loadJSON(base + 'data/blog-posts.json'),
+            loadJSON(base + 'data/news.json'),
+            loadJSON(base + 'data/projects.json'),
+            loadJSON(base + 'data/publications.json')
+        ]);
+        var blogs = results[0];
+        var news  = results[1];
+        var proj  = results[2];
+        var pubs  = results[3];
 
         if (blogs && blogs.posts) {
             blogs.posts.forEach(function (p) {
@@ -66,16 +74,10 @@
                 });
             });
         }
-
-        // Scrape publications from page if on publications page, or from a fetch
-        try {
-            var pubURL = base + 'Publications.html';
-            var html = await (await fetch(pubURL)).text();
-            var parser = new DOMParser();
-            var doc = parser.parseFromString(html, 'text/html');
-            doc.querySelectorAll('.pub-list li').forEach(function (li) {
+        if (pubs && pubs.publications) {
+            pubs.publications.forEach(function (p) {
                 items.push({
-                    title: li.textContent.trim().substring(0, 160),
+                    title: p.title,
                     excerpt: '',
                     url: base + 'Publications.html',
                     category: 'Publication',
@@ -83,7 +85,7 @@
                     icon: 'fas fa-book'
                 });
             });
-        } catch (_) {}
+        }
 
         return items;
     }

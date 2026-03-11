@@ -230,7 +230,7 @@
 			document.getElementById('page-wrapper').classList.add('page-exit');
 			setTimeout(function() {
 				window.location.href = dest;
-			}, 180);
+			}, 80);
 		});
 
 })(jQuery);
