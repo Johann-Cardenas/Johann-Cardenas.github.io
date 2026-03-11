@@ -17,11 +17,20 @@
 			small:   [ null,      '736px'  ]
 		});
 
-	// Play initial animations on page load.
-		$window.on('load', function() {
+	// Enable animations once DOM is ready (no waiting for images/fonts).
+		$(document).ready(function() {
 			window.setTimeout(function() {
 				$body.removeClass('is-preload');
-			}, 100);
+			}, 10);
+		});
+
+	// Handle bfcache restoration (back/forward navigation).
+		window.addEventListener('pageshow', function(e) {
+			if (e.persisted) {
+				$body.removeClass('is-preload');
+				var pw = document.getElementById('page-wrapper');
+				if (pw) pw.classList.remove('page-exit');
+			}
 		});
 
 	// Dropdowns.

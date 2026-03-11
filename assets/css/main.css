@@ -4137,41 +4137,15 @@ ul.social li a:focus-visible {
 
 /* =====================================================
    PAGE TRANSITION ANIMATIONS
-   Crisp slide-reveal on enter, slide-away on exit
+   Page content renders immediately. is-preload briefly
+   suppresses CSS transitions/animations so initial style
+   application doesn't flicker. Removed on DOMContentLoaded.
    ===================================================== */
-@keyframes pageSlideIn {
-	from {
-		opacity: 0;
-		transform: translateY(12px);
-	}
-	40% {
-		opacity: 1;
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-#page-wrapper {
-	animation: pageSlideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
 
 #page-wrapper.page-exit {
 	opacity: 0;
 	transform: translateY(-8px);
 	transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-/* Navigation should appear instantly */
-#header {
-	animation: none;
-	opacity: 1;
-}
-
-/* Stagger main content slightly after header */
-#main {
-	animation: pageSlideIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.04s both;
 }
 
 /* ===== THEME TOGGLE BUTTON ===== */
