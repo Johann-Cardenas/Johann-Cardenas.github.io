@@ -544,7 +544,7 @@ body.homepage #main .container .row > .col-12:first-child {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.4rem;
-	margin-top: 0.15rem;
+	margin-top: 0.45rem;
 }
 .about-stat-badge {
 	display: inline-flex;
