@@ -2993,6 +2993,14 @@
 
     const COLORS = ['#0ea5e9','#f97316','#10b981','#8b5cf6','#ef4444','#06b6d4','#f59e0b','#ec4899'];
 
+    // ==================== UTILITY FUNCTIONS ====================
+    function debounce(fn, ms) {
+        let t; return function(...a) { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), ms); };
+    }
+    function arrMax(a) { let m = -Infinity; for (let i = 0; i < a.length; i++) if (a[i] > m) m = a[i]; return m; }
+    function arrMin(a) { let m = Infinity; for (let i = 0; i < a.length; i++) if (a[i] < m) m = a[i]; return m; }
+    function arrMaxAbs(a) { let m = 0; for (let i = 0; i < a.length; i++) { const v = Math.abs(a[i]); if (v > m) m = v; } return m; }
+
     // ==================== APP STATE TRANSITIONS ====================
     function transitionToWorking() {
         if (appState === 'working') return;
@@ -3019,6 +3027,7 @@
         currentRow = null;
         defaultParams = null;
         results = null;
+        initializedPlots.clear();
         // Hide panels
         document.getElementById('param-panel').style.display = 'none';
         if (document.getElementById('stats-panel')) document.getElementById('stats-panel').style.display = 'none';
@@ -3094,12 +3103,14 @@
 
     // ==================== FILTERS ====================
     function populateFilters() {
-        const mfrs = [...new Set(aircraftDB.map(a => a.manufacturer))].sort();
+        const countByMfr = new Map();
+        aircraftDB.forEach(a => countByMfr.set(a.manufacturer, (countByMfr.get(a.manufacturer) || 0) + 1));
+        const mfrs = [...countByMfr.keys()].sort();
         const mfrSelect = document.getElementById('filter-manufacturer');
         mfrSelect.innerHTML = '<option value="all">All Manufacturers</option>';
         mfrs.forEach(m => {
             const opt = document.createElement('option');
-            opt.value = m; opt.textContent = m + ' (' + aircraftDB.filter(a => a.manufacturer === m).length + ')';
+            opt.value = m; opt.textContent = m + ' (' + countByMfr.get(m) + ')';
             mfrSelect.appendChild(opt);
         });
         updateAircraftDropdown();
@@ -3151,8 +3162,9 @@
             adv: getAdvancedParams()
         };
 
-        // Stage the loading steps with brief delays for visual feedback
-        setTimeout(() => {
+        // Execute all phases synchronously in next frame
+        requestAnimationFrame(() => {
+            // Phase 1: Apply parameters
             updateSelectionStep(0);
             applyParams(defaultParams);
             document.getElementById('param-panel').style.display = '';
@@ -3160,18 +3172,15 @@
             document.getElementById('reliability-panel').style.display = '';
             document.getElementById('patch-gear-layout').style.display = '';
             updateReliabilityPanel();
-            // Enable compute button
             document.getElementById('btn-compute').disabled = false;
             updateSummaryCards();
-        }, 350);
 
-        setTimeout(() => {
+            // Phase 2: Draw SVGs
             updateSelectionStep(1);
             drawContactPatch();
             drawGearConfig();
-        }, 700);
 
-        setTimeout(() => {
+            // Phase 3: Compute stresses
             updateSelectionStep(2);
             try {
                 results = computeStresses();
@@ -3186,11 +3195,14 @@
             } catch (e) {
                 console.error('Compute error:', e);
             }
-            hideSelectionLoading();
-            showSuccessFlash();
-            // Transition to working state
-            transitionToWorking();
-        }, 1100);
+
+            // Hide overlay with brief CSS fade
+            requestAnimationFrame(() => {
+                hideSelectionLoading();
+                showSuccessFlash();
+                transitionToWorking();
+            });
+        });
     }
 
     function applyParams(p) {
@@ -3426,7 +3438,7 @@
 
         let defs = '<defs>';
         // Gradient defs per rib
-        const maxAl = Math.max(...p.al);
+        const maxAl = arrMax(p.al);
         p.bi.forEach((_, i) => {
             const c = ribColors[i % ribColors.length];
             const alpha = 0.18 + 0.5 * (p.al[i] / (maxAl || 1));
@@ -3872,9 +3884,13 @@
     // ================================================================
     //  PLOTLY THEME & CONFIG
     // ================================================================
+    let _cachedTheme = null, _cachedThemeSrc = null;
     function getPlotlyTheme() {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        return {
+        const src = document.documentElement.getAttribute('data-theme');
+        if (_cachedTheme && _cachedThemeSrc === src) return _cachedTheme;
+        const isDark = src === 'dark';
+        _cachedThemeSrc = src;
+        _cachedTheme = {
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: isDark ? 'rgba(30,41,59,0.5)' : 'rgba(233,239,245,0.6)',
             font: { color: isDark ? '#f1f5f9' : '#0f172a', family: 'Source Sans Pro, sans-serif', size: isMobile() ? 11 : 14 },
@@ -3890,9 +3906,17 @@
             hoverlabel: { font: { color: isDark ? '#0f172a' : '#0f172a', size: 13 }, bgcolor: isDark ? '#f1f5f9' : '#ffffff', bordercolor: isDark ? '#546a84' : '#8896a4' },
             margin: mobileMargin({ l: 55, r: 25, t: 35, b: 50 }),
         };
+        return _cachedTheme;
     }
     const plotlyConfig = { responsive: true, displayModeBar: true, displaylogo: false,
         modeBarButtonsToRemove: ['toImage', 'sendDataToCloud'] };
+
+    const initializedPlots = new Set();
+    function plotlyRender(id, data, layout, config) {
+        const fn = initializedPlots.has(id) ? Plotly.react : Plotly.newPlot;
+        fn(id, data, layout, config);
+        initializedPlots.add(id);
+    }
 
     function isMobile() { return window.innerWidth <= 768; }
     function mobileMargin(desktop) {
@@ -3910,8 +3934,8 @@
         const { title, colorscale, symmetric, compact } = opts;
         const flat = matrix.flat();
         let cmin, cmax;
-        if (symmetric) { const vm = Math.max(...flat.map(Math.abs)); cmin = -vm; cmax = vm; }
-        else { cmin = Math.min(...flat); cmax = Math.max(...flat); }
+        if (symmetric) { const vm = arrMaxAbs(flat); cmin = -vm; cmax = vm; }
+        else { cmin = arrMin(flat); cmax = arrMax(flat); }
 
         const surface = {
             type: 'surface', x: axdist, y: ribCenters, z: matrix,
@@ -3940,7 +3964,7 @@
             title: compact ? '' : { text: opts.fullTitle || '', font: { size: 13 } },
             margin: m
         };
-        Plotly.newPlot(containerId, [surface], layout, plotlyConfig);
+        plotlyRender(containerId, [surface], layout, plotlyConfig);
     }
 
     function renderHeatmap(containerId, matrix, axdist, ribLabels, opts) {
@@ -3948,8 +3972,8 @@
         const { title, colorscale, symmetric } = opts;
         const flat = matrix.flat();
         let zmin, zmax, zmid;
-        if (symmetric) { const vm = Math.max(...flat.map(Math.abs)); zmin = -vm; zmax = vm; zmid = 0; }
-        else { zmin = Math.min(...flat); zmax = Math.max(...flat); }
+        if (symmetric) { const vm = arrMaxAbs(flat); zmin = -vm; zmax = vm; zmid = 0; }
+        else { zmin = arrMin(flat); zmax = arrMax(flat); }
 
         // Add value annotations
         const annotations = [];
@@ -3975,7 +3999,7 @@
             yaxis: { ...theme.yaxis, title: '', autorange: 'reversed' },
             margin: mobileMargin({ l: 90, r: 25, t: 20, b: 60 })
         };
-        Plotly.newPlot(containerId, [trace], layout, plotlyConfig);
+        plotlyRender(containerId, [trace], layout, plotlyConfig);
     }
 
     // Per-rib curve palette — tuned for legibility on both themes
@@ -4003,7 +4027,7 @@
         let critIdx = 0, critPeak = 0;
         for (let i = 0; i < numRibs; i++) {
             const key = 'Rib ' + (i + 1);
-            const peak = Math.max(...theoryDict[key].map(Math.abs));
+            const peak = arrMaxAbs(theoryDict[key]);
             if (peak > critPeak) { critPeak = peak; critIdx = i; }
         }
 
@@ -4079,12 +4103,12 @@
 
         if (symmetric) {
             const allY = traces.flatMap(t => t.y || []);
-            const vmax = Math.max(...allY.map(Math.abs)) * 1.2;
+            const vmax = arrMaxAbs(allY) * 1.2;
             layout.yaxis.range = [-vmax, vmax];
             layout.shapes = [{ type: 'line', x0: 0, x1: 1, xref: 'paper', y0: 0, y1: 0,
                 line: { color: isDark ? 'rgba(148,163,184,0.35)' : 'rgba(100,100,100,0.3)', width: 1, dash: 'dash' } }];
         }
-        Plotly.newPlot(containerId, traces, layout, plotlyConfig);
+        plotlyRender(containerId, traces, layout, plotlyConfig);
     }
 
     function renderBarChart(containerId, values, labels, opts) {
@@ -4112,14 +4136,14 @@
         };
 
         // Compute x-range with room for outside text
-        const xMax = Math.max(...revValues) * 1.25;
+        const xMax = arrMax(revValues) * 1.25;
         const layout = {
             ...theme,
             xaxis: { ...theme.xaxis, title, range: [0, xMax] },
             yaxis: { ...theme.yaxis, categoryorder: 'array', categoryarray: revLabels },
             margin: mobileMargin({ l: 65, r: 70, t: 15, b: 55 })
         };
-        Plotly.newPlot(containerId, [trace], layout, plotlyConfig);
+        plotlyRender(containerId, [trace], layout, plotlyConfig);
     }
 
     // ---- COMBINED STRESS OVERLAY ----
@@ -4146,7 +4170,7 @@
             shapes: [{ type: 'line', x0: 0, x1: 1, xref: 'paper', y0: 0, y1: 0,
                 line: { color: 'rgba(100,100,100,0.35)', width: 1, dash: 'dash' } }]
         };
-        Plotly.newPlot(containerId, traces, layout, plotlyConfig);
+        plotlyRender(containerId, traces, layout, plotlyConfig);
     }
 
     function renderPeakComparison(containerId, r) {
@@ -4156,9 +4180,9 @@
         const peakZ = [], peakX = [], peakY = [];
         for (let i = r.numRibs - 1; i >= 0; i--) {
             const key = 'Rib ' + (i + 1);
-            peakZ.push(Math.max(...r.SSZ[key]));
-            peakX.push(Math.max(...r.SSX[key].map(Math.abs)));
-            peakY.push(Math.max(...r.SSY[key]));
+            peakZ.push(arrMax(r.SSZ[key]));
+            peakX.push(arrMaxAbs(r.SSX[key]));
+            peakY.push(arrMax(r.SSY[key]));
         }
         const traces = [
             { type: 'bar', name: 'Max σz', y: ribNames, x: peakZ, orientation: 'h',
@@ -4171,7 +4195,7 @@
                 marker: { color: 'rgba(16,185,129,0.7)', line: { color: '#10b981', width: 1.5 } },
                 text: peakY.map(v => v.toFixed(3)), textposition: 'outside', textfont: { size: mobileFontSize(11) } },
         ];
-        const xMax = Math.max(...peakZ, ...peakX, ...peakY) * 1.2;
+        const xMax = Math.max(arrMax(peakZ), arrMax(peakX), arrMax(peakY)) * 1.2;
         const layout = {
             ...theme, barmode: 'group',
             xaxis: { ...theme.xaxis, title: 'Peak Stress [MPa]', range: [0, xMax] },
@@ -4179,7 +4203,7 @@
             legend: { orientation: 'h', y: -0.18, x: 0.5, xanchor: 'center', font: { size: 13 } },
             margin: mobileMargin({ l: 65, r: 65, t: 15, b: 80 })
         };
-        Plotly.newPlot(containerId, traces, layout, plotlyConfig);
+        plotlyRender(containerId, traces, layout, plotlyConfig);
     }
 
     function renderEqBar(containerId, r) {
@@ -4209,7 +4233,7 @@
             annotations: [{ x: idealLoad, y: r.numRibs - 0.5, text: 'Ideal (' + (idealLoad / 1000).toFixed(1) + ' kN)',
                 showarrow: false, yshift: 12, font: { size: 8, color: '#f59e0b' } }]
         };
-        Plotly.newPlot(containerId, [trace], layout, plotlyConfig);
+        plotlyRender(containerId, [trace], layout, plotlyConfig);
     }
 
     // ================================================================
@@ -4233,17 +4257,20 @@
         const ribCenters = r.bi.map((w, i) => cumW[i] + w / 2 - totalW / 2);
 
         if (mod === 'config') {
-            // Small 3D tiles (overview) + quick results
+            // Small 3D tiles (overview) — render immediately
             render3DSurface('chart-3d-ssz-sm', r.sszMat, r.axdist, ribCenters, ribLabels,
                 { title: 'σz', colorscale: 'YlOrRd', symmetric: false, compact: true });
             render3DSurface('chart-3d-ssx-sm', r.ssxMat, r.axdist, ribCenters, ribLabels,
                 { title: 'σx', colorscale: 'RdBu', symmetric: true, compact: true });
             render3DSurface('chart-3d-ssy-sm', r.ssyMat, r.axdist, ribCenters, ribLabels,
                 { title: 'σy', colorscale: 'YlOrRd', symmetric: false, compact: true });
-            renderBarChart('chart-bar-load', r.al, ribNames, { title: 'Load Factor (αl)', color: 'orange' });
-            renderBarChart('chart-bar-stress', r.sigm_Tip, ribNames, { title: 'Stress Factor (σTip) [MPa]', color: 'blue' });
-            renderBarChart('chart-bar-width', r.bi, ribNames, { title: 'Width [mm]', color: 'green' });
             buildQuickResults(r);
+            // Defer bar charts to next frame
+            requestAnimationFrame(() => {
+                renderBarChart('chart-bar-load', r.al, ribNames, { title: 'Load Factor (αl)', color: 'orange' });
+                renderBarChart('chart-bar-stress', r.sigm_Tip, ribNames, { title: 'Stress Factor (σTip) [MPa]', color: 'blue' });
+                renderBarChart('chart-bar-width', r.bi, ribNames, { title: 'Width [mm]', color: 'green' });
+            });
             chartsNeedRerender.config = false;
         }
         if (mod === 'stress3d') {
@@ -4254,24 +4281,28 @@
             render3DSurface('chart-3d-ssy', r.ssyMat, r.axdist, ribCenters, ribLabels,
                 { title: 'σy', fullTitle: currentRow.name + ' — Transverse σy', colorscale: 'YlOrRd', symmetric: false });
             const flat_sz = r.sszMat.flat(), flat_sx = r.ssxMat.flat(), flat_sy = r.ssyMat.flat();
-            document.getElementById('ssz-subtitle').textContent = `Range: ${Math.min(...flat_sz).toFixed(3)} to ${Math.max(...flat_sz).toFixed(3)} MPa`;
-            document.getElementById('ssx-subtitle').textContent = `Range: ${Math.min(...flat_sx).toFixed(3)} to ${Math.max(...flat_sx).toFixed(3)} MPa`;
-            document.getElementById('ssy-subtitle').textContent = `Range: ${Math.min(...flat_sy).toFixed(3)} to ${Math.max(...flat_sy).toFixed(3)} MPa`;
+            document.getElementById('ssz-subtitle').textContent = `Range: ${arrMin(flat_sz).toFixed(3)} to ${arrMax(flat_sz).toFixed(3)} MPa`;
+            document.getElementById('ssx-subtitle').textContent = `Range: ${arrMin(flat_sx).toFixed(3)} to ${arrMax(flat_sx).toFixed(3)} MPa`;
+            document.getElementById('ssy-subtitle').textContent = `Range: ${arrMin(flat_sy).toFixed(3)} to ${arrMax(flat_sy).toFixed(3)} MPa`;
             chartsNeedRerender.stress3d = false;
             observeChartPanels();
         }
         if (mod === 'analysis') {
+            // Render heatmaps immediately (most important)
             renderHeatmap('chart-hm-ssz', r.sszMat, r.axdist, ribLabels, { title: 'σz', colorscale: 'YlOrRd', symmetric: false });
             renderHeatmap('chart-hm-ssx', r.ssxMat, r.axdist, ribLabels, { title: 'σx', colorscale: 'RdBu', symmetric: true });
             renderHeatmap('chart-hm-ssy', r.ssyMat, r.axdist, ribLabels, { title: 'σy', colorscale: 'YlOrRd', symmetric: false });
-            renderRibCurves('chart-rib-ssz', r.SSZ, r.asz, r.xdist, r.axdist, ribLabels, { title: 'σz', symmetric: false });
-            renderRibCurves('chart-rib-ssx', r.SSX, r.asx, r.xdist, r.axdist, ribLabels, { title: 'σx', symmetric: true });
-            renderRibCurves('chart-rib-ssy', r.SSY, r.asy, r.xdist, r.axdist, ribLabels, { title: 'σy', symmetric: false });
-            renderCombinedRib('chart-combined-rib1', r, 0);
-            renderPeakComparison('chart-peak-comparison', r);
-            renderEqBar('chart-eq-bar', r);
+            // Defer remaining charts to next frame
+            requestAnimationFrame(() => {
+                renderRibCurves('chart-rib-ssz', r.SSZ, r.asz, r.xdist, r.axdist, ribLabels, { title: 'σz', symmetric: false });
+                renderRibCurves('chart-rib-ssx', r.SSX, r.asx, r.xdist, r.axdist, ribLabels, { title: 'σx', symmetric: true });
+                renderRibCurves('chart-rib-ssy', r.SSY, r.asy, r.xdist, r.axdist, ribLabels, { title: 'σy', symmetric: false });
+                renderCombinedRib('chart-combined-rib1', r, 0);
+                renderPeakComparison('chart-peak-comparison', r);
+                renderEqBar('chart-eq-bar', r);
+                observeChartPanels();
+            });
             chartsNeedRerender.analysis = false;
-            observeChartPanels();
         }
         if (mod === 'summary') {
             buildSummaryTab(r);
@@ -4322,9 +4353,9 @@
         let matHtml = '<table class="results-table"><thead><tr><th>Rib</th><th>Width</th><th>α<sub>l</sub></th><th>σ<sub>Tip</sub></th><th>Max σ<sub>z</sub></th><th>Max |σ<sub>x</sub>|</th><th>Max σ<sub>y</sub></th><th>Eq Load</th></tr></thead><tbody>';
         for (let i = 0; i < r.numRibs; i++) {
             const key = 'Rib ' + (i + 1);
-            const maxSz = Math.max(...r.SSZ[key]).toFixed(4);
-            const maxSx = Math.max(...r.SSX[key].map(Math.abs)).toFixed(4);
-            const maxSy = Math.max(...r.SSY[key]).toFixed(4);
+            const maxSz = arrMax(r.SSZ[key]).toFixed(4);
+            const maxSx = arrMaxAbs(r.SSX[key]).toFixed(4);
+            const maxSy = arrMax(r.SSY[key]).toFixed(4);
             matHtml += `<tr class="rib-row"><td>${ribNames[i]}</td><td class="val">${r.bi[i]}</td><td class="val">${r.al[i].toFixed(4)}</td><td class="val">${r.sigm_Tip[i].toFixed(4)}</td><td class="val" style="color:var(--ac-danger)">${maxSz}</td><td class="val" style="color:var(--ac-primary)">${maxSx}</td><td class="val" style="color:var(--ac-success)">${maxSy}</td><td class="val">${(r.eqPerRib[i] / 1000).toFixed(3)} kN</td></tr>`;
         }
         matHtml += '</tbody></table>';
@@ -4382,9 +4413,9 @@
                 r.al[i],
                 r.sigm_Tip[i],
                 r.eqPerRib[i],
-                Math.max(...r.SSZ[key]),
-                Math.max(...r.SSX[key].map(Math.abs)),
-                Math.max(...r.SSY[key])
+                arrMax(r.SSZ[key]),
+                arrMaxAbs(r.SSX[key]),
+                arrMax(r.SSY[key])
             ]);
         }
         paramData.push([]);
@@ -4467,19 +4498,15 @@
     // ================================================================
     function computeAndRender() {
         if (!currentRow) return;
-        showLoading('Computing stress distributions...', true);
+        showLoading('Computing stress distributions...', false);
 
         requestAnimationFrame(() => {
             try {
-                setProgress(20, 'Computing stress distributions...');
                 results = computeStresses();
-                setProgress(50, 'Updating summaries...');
                 updateEquilibriumBadge();
                 updateSummaryCards();
-                setProgress(75, 'Rendering charts...');
                 Object.keys(chartsNeedRerender).forEach(k => chartsNeedRerender[k] = true);
                 renderChartsForModule(getActiveModule());
-                setProgress(100, 'Complete!');
                 ['stress3d-empty','analysis-empty','summary-empty'].forEach(id =>
                     document.getElementById(id).style.display = 'none');
                 ['stress3d-content','analysis-content','summary-content'].forEach(id =>
@@ -4584,12 +4611,13 @@
             const step = selectionOverlay.querySelector('#sel-step-' + i);
             if (step) { step.className = 'loading-step done'; step.querySelector('i').className = 'fas fa-check-circle'; }
         });
-        setTimeout(() => {
-            if (selectionOverlay) {
-                selectionOverlay.classList.remove('visible');
-                setTimeout(() => { if (selectionOverlay) { selectionOverlay.remove(); selectionOverlay = null; } }, 300);
-            }
-        }, 400);
+        selectionOverlay.classList.remove('visible');
+        selectionOverlay.addEventListener('transitionend', function handler() {
+            selectionOverlay.removeEventListener('transitionend', handler);
+            if (selectionOverlay) { selectionOverlay.remove(); selectionOverlay = null; }
+        });
+        // Fallback: remove after 300ms if transitionend doesn't fire
+        setTimeout(() => { if (selectionOverlay) { selectionOverlay.remove(); selectionOverlay = null; } }, 300);
     }
 
     function showSuccessFlash(msg) {
@@ -4766,11 +4794,11 @@
         });
 
         // Parameter modification detection
+        const debouncedRedrawSVGs = debounce(() => { drawContactPatch(); drawGearConfig(); }, 150);
         document.getElementById('param-panel').addEventListener('input', function() {
             checkModified();
             updateSummaryCards();
-            drawContactPatch();
-            drawGearConfig();
+            debouncedRedrawSVGs();
         });
 
         // Load-change → prompt to scale contact length
@@ -4839,28 +4867,36 @@
                 localStorage.setItem('aircrafter-theme', next);
                 localStorage.setItem('theme-preference', next);
                 setTimeout(function() { if (appContainer) appContainer.classList.remove('theme-transitioning'); }, 500);
+                // Invalidate theme cache on toggle
+                _cachedTheme = null;
                 if (results) {
-                    // Fast relayout: update theme colors on existing plots without full re-render
+                    // Fast relayout: only update visible charts in active module
                     const theme = getPlotlyTheme();
-                    document.querySelectorAll('.js-plotly-plot').forEach(el => {
-                        try {
-                            Plotly.relayout(el, {
-                                'paper_bgcolor': theme.paper_bgcolor,
-                                'plot_bgcolor': theme.plot_bgcolor,
-                                'font.color': theme.font.color,
-                                'xaxis.gridcolor': theme.xaxis ? theme.xaxis.gridcolor : undefined,
-                                'yaxis.gridcolor': theme.yaxis ? theme.yaxis.gridcolor : undefined,
-                                'xaxis.linecolor': theme.xaxis ? theme.xaxis.linecolor : undefined,
-                                'yaxis.linecolor': theme.yaxis ? theme.yaxis.linecolor : undefined,
-                                'xaxis.zerolinecolor': theme.xaxis ? theme.xaxis.zerolinecolor : undefined,
-                                'yaxis.zerolinecolor': theme.yaxis ? theme.yaxis.zerolinecolor : undefined,
-                                'xaxis.color': theme.font.color,
-                                'yaxis.color': theme.font.color,
-                                'hoverlabel.font.color': theme.hoverlabel.font.color,
-                                'hoverlabel.bgcolor': theme.hoverlabel.bgcolor,
-                                'hoverlabel.bordercolor': theme.hoverlabel.bordercolor
-                            });
-                        } catch (_) { /* skip non-initialized plots */ }
+                    const activeMod = document.getElementById('module-' + getActiveModule());
+                    const relayoutUpdate = {
+                        'paper_bgcolor': theme.paper_bgcolor,
+                        'plot_bgcolor': theme.plot_bgcolor,
+                        'font.color': theme.font.color,
+                        'xaxis.gridcolor': theme.xaxis ? theme.xaxis.gridcolor : undefined,
+                        'yaxis.gridcolor': theme.yaxis ? theme.yaxis.gridcolor : undefined,
+                        'xaxis.linecolor': theme.xaxis ? theme.xaxis.linecolor : undefined,
+                        'yaxis.linecolor': theme.yaxis ? theme.yaxis.linecolor : undefined,
+                        'xaxis.zerolinecolor': theme.xaxis ? theme.xaxis.zerolinecolor : undefined,
+                        'yaxis.zerolinecolor': theme.yaxis ? theme.yaxis.zerolinecolor : undefined,
+                        'xaxis.color': theme.font.color,
+                        'yaxis.color': theme.font.color,
+                        'hoverlabel.font.color': theme.hoverlabel.font.color,
+                        'hoverlabel.bgcolor': theme.hoverlabel.bgcolor,
+                        'hoverlabel.bordercolor': theme.hoverlabel.bordercolor
+                    };
+                    if (activeMod) {
+                        activeMod.querySelectorAll('.js-plotly-plot').forEach(el => {
+                            try { Plotly.relayout(el, relayoutUpdate); } catch (_) {}
+                        });
+                    }
+                    // Mark other tabs as needing re-render
+                    Object.keys(chartsNeedRerender).forEach(k => {
+                        if (k !== getActiveModule()) chartsNeedRerender[k] = true;
                     });
                 }
                 drawContactPatch();
