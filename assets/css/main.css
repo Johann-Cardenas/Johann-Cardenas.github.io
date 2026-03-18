@@ -509,6 +509,12 @@
 	width: auto;
 	object-fit: contain;
 	max-width: 90%;
+	transition: transform 0.3s ease, filter 0.3s ease;
+	filter: grayscale(30%);
+}
+.sponsor-card:hover img {
+	filter: grayscale(0%);
+	transform: scale(1.08);
 }
 .sponsor-card span {
 	font-size: 0.88rem;
@@ -2174,6 +2180,10 @@ body.Publications .pub-article .pub-section:first-of-type {
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
+	transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.news-tag:hover {
+	transform: translateY(-1px);
 }
 
 .tag-featured { background: linear-gradient(135deg, #18a9a8 0%, #0d7d7c 100%); color: #fff; }
@@ -2448,6 +2458,10 @@ body.Publications .pub-article .pub-section:first-of-type {
 	padding: 4px 9px;
 	border-radius: 4px;
 	font-size: 0.75rem;
+	transition: transform 0.2s ease, background 0.2s ease;
+}
+.app-card .tag:hover {
+	transform: translateY(-1px);
 }
 
 /* Default Launch App button (teal-green) */
@@ -7622,6 +7636,12 @@ input, select, textarea {
 .animate-on-scroll.delay-4 { transition-delay: 0.08s; }
 .animate-on-scroll.delay-5 { transition-delay: 0.1s; }
 
+/* GPU compositor hints */
+.animate-on-scroll { will-change: opacity, transform; }
+.hero-orb { will-change: transform; }
+#page-wrapper { will-change: opacity, transform; }
+.back-to-top { will-change: opacity, transform; }
+
 /* Enhanced Card Hover Effects */
 .project-card,
 .blog-card,
@@ -7685,16 +7705,18 @@ a:not(.button):not(.image):not(.icon) {
 a:not(.button):not(.image):not(.icon)::after {
 	content: '';
 	position: absolute;
-	width: 0;
+	width: 100%;
 	height: 2px;
 	bottom: -2px;
 	left: 0;
 	background-color: var(--accent-primary);
-	transition: width 0.3s ease;
+	transform: scaleX(0);
+	transform-origin: left;
+	transition: transform 0.3s ease;
 }
 
 a:not(.button):not(.image):not(.icon):hover::after {
-	width: 100%;
+	transform: scaleX(1);
 }
 
 /* Navigation link animations */
@@ -7733,6 +7755,14 @@ ul.social li a:hover {
 	transform: translateY(-0px);
 	background: var(--accent-primary) !important;
 	box-shadow: var(--shadow-lg);
+}
+
+/* Footer social icon enhanced hover */
+#footer ul.social li a {
+	transition: background 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#footer ul.social li a:hover {
+	transform: translateY(-3px) scale(1.1);
 }
 
 /* Featured icon pulse on hover */
@@ -7839,6 +7869,91 @@ html {
 	scroll-behavior: smooth;
 }
 
+/* ===== SCROLL-DRIVEN PROGRESS BARS ===== */
+@keyframes scrollProgress {
+	from { width: 0%; }
+	to   { width: 100%; }
+}
+
+.pub-scroll-progress,
+.blog-scroll-progress,
+.resume-scroll-progress {
+	animation: scrollProgress linear;
+	animation-timeline: scroll();
+}
+
+/* ===== CARD GRID STAGGER DELAYS ===== */
+.project-grid .project-card-modern:nth-child(3n+1),
+.blog-grid .blog-card-modern:nth-child(3n+1),
+.news-grid .news-card-modern:nth-child(3n+1) { transition-delay: 0s; }
+
+.project-grid .project-card-modern:nth-child(3n+2),
+.blog-grid .blog-card-modern:nth-child(3n+2),
+.news-grid .news-card-modern:nth-child(3n+2) { transition-delay: 0.06s; }
+
+.project-grid .project-card-modern:nth-child(3n+3),
+.blog-grid .blog-card-modern:nth-child(3n+3),
+.news-grid .news-card-modern:nth-child(3n+3) { transition-delay: 0.12s; }
+
+.apps-grid .app-card:nth-child(1) { transition-delay: 0s; }
+.apps-grid .app-card:nth-child(2) { transition-delay: 0.08s; }
+.apps-grid .app-card:nth-child(3) { transition-delay: 0.16s; }
+.apps-grid .app-card:nth-child(4) { transition-delay: 0.24s; }
+
+/* ===== VIEW TRANSITIONS ===== */
+@view-transition {
+	navigation: auto;
+}
+
+::view-transition-old(root) {
+	animation: 150ms ease-out both vt-fade-out;
+}
+::view-transition-new(root) {
+	animation: 200ms ease-in both vt-fade-in;
+}
+
+@keyframes vt-fade-out {
+	from { opacity: 1; transform: translateY(0); }
+	to   { opacity: 0; transform: translateY(-8px); }
+}
+@keyframes vt-fade-in {
+	from { opacity: 0; transform: translateY(8px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Keep header/nav stable during transition */
+#header h1 { view-transition-name: site-title; }
+#nav { view-transition-name: site-nav; }
+
+::view-transition-old(site-title),
+::view-transition-new(site-title),
+::view-transition-old(site-nav),
+::view-transition-new(site-nav) {
+	animation: none;
+	mix-blend-mode: normal;
+}
+
+/* ===== @STARTING-STYLE: STAT CARDS ===== */
+.pub-stat-card {
+	opacity: 1; transform: translateY(0) scale(1);
+	transition: opacity 0.4s ease, transform 0.4s ease;
+	@starting-style { opacity: 0; transform: translateY(16px) scale(0.95); }
+}
+.pub-stat-card:nth-child(1) { transition-delay: 0s; }
+.pub-stat-card:nth-child(2) { transition-delay: 0.08s; }
+.pub-stat-card:nth-child(3) { transition-delay: 0.16s; }
+.pub-stat-card:nth-child(4) { transition-delay: 0.24s; }
+
+.resume-stat-card {
+	opacity: 1; transform: translateY(0);
+	transition: opacity 0.4s ease, transform 0.4s ease;
+	@starting-style { opacity: 0; transform: translateY(16px); }
+}
+.resume-stat-card:nth-child(1) { transition-delay: 0s; }
+.resume-stat-card:nth-child(2) { transition-delay: 0.1s; }
+.resume-stat-card:nth-child(3) { transition-delay: 0.2s; }
+.resume-stat-card:nth-child(4) { transition-delay: 0.3s; }
+
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
 	*,
@@ -7849,10 +7964,24 @@ html {
 		transition-duration: 0.01ms !important;
 		scroll-behavior: auto !important;
 	}
-	
+
 	.animate-on-scroll {
 		opacity: 1;
 		transform: none;
+	}
+
+	img[data-src] {
+		opacity: 1;
+		transition: none;
+	}
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation-duration: 0.01ms !important;
+	}
+	.pub-scroll-progress,
+	.blog-scroll-progress,
+	.resume-scroll-progress {
+		animation: none;
 	}
 }
 

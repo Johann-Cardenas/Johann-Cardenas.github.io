@@ -11,6 +11,7 @@
 		<title>Page Not Found | Johann J Cardenas</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<meta name="view-transition" content="same-origin">
 		<meta name="description" content="Page not found — return to Johann J. Cardenas's portfolio to explore research, publications, and engineering tools." />
 
 		<!-- Favicon & Apple Touch Icon -->
@@ -111,6 +112,42 @@
 				border: none;
 				border-radius: 2px;
 				margin: 0 auto 2rem auto;
+			}
+
+			/* @starting-style entry animations */
+			.error-code {
+				opacity: 1; transform: scale(1);
+				transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+				@starting-style { opacity: 0; transform: scale(0.8); }
+			}
+			.error-title {
+				opacity: 1; transform: translateY(0);
+				transition: opacity 0.4s ease 0.15s, transform 0.4s ease 0.15s;
+				@starting-style { opacity: 0; transform: translateY(12px); }
+			}
+			.error-divider {
+				opacity: 1; transform: scaleX(1);
+				transition: opacity 0.3s ease 0.25s, transform 0.4s ease 0.25s;
+				@starting-style { opacity: 0; transform: scaleX(0); }
+			}
+			.error-message {
+				opacity: 1; transform: translateY(0);
+				transition: opacity 0.4s ease 0.3s, transform 0.4s ease 0.3s;
+				@starting-style { opacity: 0; transform: translateY(12px); }
+			}
+			.error-nav a {
+				opacity: 1; transform: translateY(0);
+				@starting-style { opacity: 0; transform: translateY(10px); }
+			}
+			.error-nav a:nth-child(1) { transition: opacity 0.3s ease 0.35s, transform 0.3s ease 0.35s, all 0.25s ease; }
+			.error-nav a:nth-child(2) { transition: opacity 0.3s ease 0.4s, transform 0.3s ease 0.4s, all 0.25s ease; }
+			.error-nav a:nth-child(3) { transition: opacity 0.3s ease 0.45s, transform 0.3s ease 0.45s, all 0.25s ease; }
+			.error-nav a:nth-child(4) { transition: opacity 0.3s ease 0.5s, transform 0.3s ease 0.5s, all 0.25s ease; }
+
+			@media (prefers-reduced-motion: reduce) {
+				.error-code, .error-title, .error-divider, .error-message, .error-nav a {
+					transition: none !important;
+				}
 			}
 
 			@media screen and (max-width: 736px) {

@@ -13,6 +13,7 @@
 		<title>Johann J Cardenas | Resume</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<meta name="view-transition" content="same-origin">
 		<meta name="description" content="Resume of Johann J. Cardenas — education, professional experience, skills, and achievements in civil and transportation engineering." />
 
 		<!-- Favicon & Apple Touch Icon -->
@@ -519,22 +520,24 @@
 		(function() {
 			'use strict';
 
-			// Scroll Progress Bar
-			var progressBar = document.getElementById('scrollProgress');
-			if (progressBar) {
-				var ticking = false;
-				window.addEventListener('scroll', function() {
-					if (!ticking) {
-						requestAnimationFrame(function() {
-							var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-							var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-							var scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-							progressBar.style.width = scrollPercent + '%';
-							ticking = false;
-						});
-						ticking = true;
-					}
-				});
+			// Scroll Progress Bar (JS fallback for browsers without scroll-driven animations)
+			if (!CSS.supports('animation-timeline', 'scroll()')) {
+				var progressBar = document.getElementById('scrollProgress');
+				if (progressBar) {
+					var ticking = false;
+					window.addEventListener('scroll', function() {
+						if (!ticking) {
+							requestAnimationFrame(function() {
+								var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+								var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+								var scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+								progressBar.style.width = scrollPercent + '%';
+								ticking = false;
+							});
+							ticking = true;
+						}
+					});
+				}
 			}
 
 			// TOC Active State + Smooth Scroll + Visibility

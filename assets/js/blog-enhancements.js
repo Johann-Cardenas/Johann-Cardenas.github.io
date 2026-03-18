@@ -215,20 +215,22 @@
 				}
 			}, { passive: true });
 
-			/* ── 6. Scroll Progress Bar ── */
-			var progressBar = document.getElementById('blogScrollProgress');
-			var progTicking = false;
-			function updateProgress() {
-				var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-				var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-				var pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-				progressBar.style.width = pct + '%';
-				progTicking = false;
+			/* ── 6. Scroll Progress Bar (JS fallback for browsers without scroll-driven animations) ── */
+			if (!CSS.supports('animation-timeline', 'scroll()')) {
+				var progressBar = document.getElementById('blogScrollProgress');
+				var progTicking = false;
+				function updateProgress() {
+					var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+					var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+					var pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+					progressBar.style.width = pct + '%';
+					progTicking = false;
+				}
+				window.addEventListener('scroll', function () {
+					if (!progTicking) { requestAnimationFrame(updateProgress); progTicking = true; }
+				}, { passive: true });
+				updateProgress();
 			}
-			window.addEventListener('scroll', function () {
-				if (!progTicking) { requestAnimationFrame(updateProgress); progTicking = true; }
-			}, { passive: true });
-			updateProgress();
 
 			/* ── 7. Scroll Reveal ── */
 			var revealEls = document.querySelectorAll('.blog-featured, .blog-filter-bar');

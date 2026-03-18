@@ -110,7 +110,11 @@
 				'ul.divided li',
 				'.row > [class*="col-"]',
 				'.cv-block',
-				'.cv-entry'
+				'.cv-entry',
+				'.app-card',
+				'.news-card-modern',
+				'.project-card-modern',
+				'.blog-card-modern'
 			].join(', ');
 
 			$(animateElements).each(function(index) {
@@ -210,6 +214,8 @@
 	}
 
 	// Page transition: slide-out before navigating to internal links
+	// Only use manual page-exit if View Transitions API not supported
+	if (!document.startViewTransition && !CSS.supports('view-transition-name', 'none')) {
 		$(document).on('click', 'a[href]', function(e) {
 			var href = this.getAttribute('href');
 			// Skip external links, anchors, javascript:, mailto:, tel:, and new-tab links
@@ -230,5 +236,6 @@
 				window.location.href = dest;
 			}, 80);
 		});
+	}
 
 })(jQuery);

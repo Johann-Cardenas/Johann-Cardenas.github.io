@@ -13,6 +13,7 @@
 		<title>Johann J Cardenas | Publications</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<meta name="view-transition" content="same-origin">
 		<meta name="description" content="Academic publications by Johann J. Cardenas — peer-reviewed journal articles and conference papers on transportation engineering." />
 
 		<!-- Favicon & Apple Touch Icon -->
@@ -374,19 +375,21 @@
 			(function () {
 				'use strict';
 
-				/* ── 1. Scroll Progress Bar ── */
-				var progressBar = document.getElementById('pubScrollProgress');
-				var ticking = false;
-				function updateProgress() {
-					var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-					var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-					var pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-					progressBar.style.width = pct + '%';
-					ticking = false;
+				/* ── 1. Scroll Progress Bar (JS fallback for browsers without scroll-driven animations) ── */
+				if (!CSS.supports('animation-timeline', 'scroll()')) {
+					var progressBar = document.getElementById('pubScrollProgress');
+					var ticking = false;
+					function updateProgress() {
+						var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+						var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+						var pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+						progressBar.style.width = pct + '%';
+						ticking = false;
+					}
+					window.addEventListener('scroll', function () {
+						if (!ticking) { requestAnimationFrame(updateProgress); ticking = true; }
+					}, { passive: true });
 				}
-				window.addEventListener('scroll', function () {
-					if (!ticking) { requestAnimationFrame(updateProgress); ticking = true; }
-				}, { passive: true });
 
 				/* ── 2. Floating TOC ── */
 				var tocNav = document.getElementById('pubToc');
