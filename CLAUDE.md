@@ -1,5 +1,18 @@
 # CLAUDE.md — Project Guide
 
+## Multi-Agent Coordination (MANDATORY)
+Multiple Claude Code instances may run on this repo simultaneously. You MUST follow this protocol:
+
+1. **On startup**: Read `.claude/agents.md` to see what other agents are doing and which files they own.
+2. **Before starting work**: Add your block to `.claude/agents.md` with your ID, task, and the files you plan to edit. Use the format in that file's comment.
+3. **Never edit files claimed by another active agent.** If you need to touch a file another agent owns, note it in your block under `Notes` and wait, or coordinate with the user.
+4. **When your task is done**: Remove your block from `.claude/agents.md`. If no agents remain, restore the "No agents currently active." line.
+5. **If you update your scope** (new files, changed task): Update your block immediately.
+
+Failing to follow this protocol risks merge conflicts and lost work.
+
+---
+
 ## What This Is
 Personal academic portfolio & research tools site (GitHub Pages + Jekyll).
 Owner: Johann Cardenas — PhD, civil/transportation engineering.
