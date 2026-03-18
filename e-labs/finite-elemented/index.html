@@ -152,6 +152,17 @@
             0%, 100% { stroke-opacity: 0.3; }
             50% { stroke-opacity: 0.8; }
         }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes rippleEffect {
+            to { transform: scale(4); opacity: 0; }
+        }
 
         /* ==================== LANDING PAGE ==================== */
         .landing-section {
@@ -569,6 +580,19 @@
             -ms-overflow-style: none; scrollbar-width: none;
         }
         .module-tabs-wrapper::-webkit-scrollbar { display: none; }
+        .module-tabs-wrapper { position: relative; }
+        .module-tabs-wrapper::after {
+            content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 40px;
+            background: linear-gradient(90deg, transparent, var(--fe-bg));
+            pointer-events: none; opacity: 1; transition: opacity 0.3s ease; z-index: 2;
+        }
+        .module-tabs-wrapper.scrolled-end::after { opacity: 0; }
+        .module-tabs-wrapper::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 40px;
+            background: linear-gradient(270deg, transparent, var(--fe-bg));
+            pointer-events: none; opacity: 0; transition: opacity 0.3s ease; z-index: 2;
+        }
+        .module-tabs-wrapper.scrolled-start::before { opacity: 1; }
         .module-tabs.compact-mode {
             display: flex; gap: 0.5rem; justify-content: flex-start;
             min-width: max-content;
@@ -715,17 +739,18 @@
         }
         .progress-dot {
             width: 10px; height: 10px; border-radius: 50%;
-            background: var(--fe-border);
+            background: var(--fe-border); background-clip: content-box;
             transition: all 0.3s ease; cursor: pointer;
+            padding: 17px; box-sizing: content-box;
+            margin: -17px -8.5px; position: relative;
         }
         .progress-dot.visited {
-            background: var(--fe-primary);
+            background-color: var(--fe-primary); background-clip: content-box;
             box-shadow: 0 0 8px var(--fe-primary-glow);
         }
         .progress-dot.active {
-            background: var(--fe-primary);
-            transform: scale(1.3);
-            box-shadow: 0 0 12px var(--fe-primary-glow);
+            background-color: var(--fe-primary); background-clip: content-box;
+            transform: scale(1.3); box-shadow: 0 0 12px var(--fe-primary-glow);
         }
 
         /* ==================== MODULE CONTENT ==================== */
@@ -946,6 +971,12 @@
             font-size: 1.2rem; color: var(--fe-border); margin: 0 0.5rem;
             align-self: center;
         }
+        .stepper-step { cursor: pointer; transition: all 0.2s ease; }
+        .stepper-step:not(.active):hover .stepper-icon {
+            border-color: var(--fe-primary); color: var(--fe-primary);
+            transform: scale(1.08); box-shadow: 0 0 10px var(--fe-primary-glow);
+        }
+        .stepper-step:not(.active):hover .stepper-label { color: var(--fe-primary); }
 
         /* Element gallery */
         .element-gallery {
@@ -1018,7 +1049,7 @@
         .accordion-body {
             max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
         }
-        .accordion.open .accordion-body { max-height: 2000px; }
+        .accordion.open .accordion-body { max-height: 80vh; }
         .accordion-content {
             padding: 1rem; color: var(--fe-text-secondary);
             font-size: 0.88rem; line-height: 1.7;
@@ -1032,7 +1063,7 @@
             font-size: 1.4rem; font-weight: 700; font-family: 'Courier New', monospace;
             background: var(--fe-bg-alt); border: 2px solid var(--fe-border);
             color: var(--fe-text); padding: 0.6rem 1rem; border-radius: 10px;
-            width: 220px; text-transform: uppercase; letter-spacing: 0.1em;
+            width: min(220px, 100%); text-transform: uppercase; letter-spacing: 0.1em;
             outline: none; transition: border-color 0.3s ease;
         }
         .decoder-input input:focus { border-color: var(--fe-primary); }
@@ -1069,16 +1100,19 @@
         .quiz-option.correct {
             border-color: var(--fe-success); background: rgba(16, 185, 129, 0.1);
             color: var(--fe-success);
+            animation: fadeInScale 0.35s cubic-bezier(0.34,1.2,0.64,1);
         }
         .quiz-option.incorrect {
             border-color: var(--fe-danger); background: rgba(239, 68, 68, 0.1);
             color: var(--fe-danger);
+            animation: fadeInScale 0.35s cubic-bezier(0.34,1.2,0.64,1);
         }
         .quiz-option.disabled { pointer-events: none; }
         .quiz-score {
             text-align: center; padding: 1.5rem;
             background: var(--fe-bg-panel); border-radius: 14px;
             border: 1px solid var(--fe-border);
+            animation: fadeInScale 0.5s cubic-bezier(0.34,1.2,0.64,1);
         }
         .quiz-score .score-value {
             font-size: 3rem; font-weight: 900;
@@ -1171,20 +1205,111 @@
         }
         .skip-link:focus { top: 0; }
 
+        /* --- Info icons (Asphera pattern) --- */
+        .info-icon {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: var(--fe-primary-glow); color: var(--fe-primary);
+            font-size: 0.6rem; cursor: help; transition: all 0.2s ease;
+            margin-left: 0.25rem; flex-shrink: 0; vertical-align: middle;
+        }
+        .info-icon:hover {
+            background: var(--fe-primary); color: #fff; transform: scale(1.15);
+        }
+
+        /* --- CSS Tooltips (AirCrafter pattern) --- */
+        .tooltip-trigger { position: relative; cursor: help; }
+        .tooltip-trigger::after {
+            content: attr(data-tooltip);
+            position: absolute; bottom: 100%; left: 50%;
+            transform: translateX(-50%) translateY(-4px);
+            background: #1e293b; color: #e2e8f0;
+            padding: 0.35rem 0.7rem; border-radius: 6px;
+            font-size: 0.72rem; white-space: nowrap;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s ease; z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+        .tooltip-trigger:hover::after, .tooltip-trigger:focus::after { opacity: 1; }
+        .tooltip-trigger.tooltip-wide::after { white-space: normal; width: 240px; text-align: center; }
+        [data-theme="light"] .tooltip-trigger::after { background: #334155; }
+
+        /* --- Decoder segment staggered fade-in --- */
+        .decoder-segment { animation: fadeIn 0.3s ease backwards; }
+        .decoder-segment:nth-child(1) { animation-delay: 0ms; }
+        .decoder-segment:nth-child(2) { animation-delay: 80ms; }
+        .decoder-segment:nth-child(3) { animation-delay: 160ms; }
+        .decoder-segment:nth-child(4) { animation-delay: 240ms; }
+        .decoder-segment:nth-child(5) { animation-delay: 320ms; }
+
+        /* --- Richardson result animation --- */
+        #rich-result:not(:empty) { animation: slideInUp 0.4s cubic-bezier(0.34,1.2,0.64,1); }
+
+        /* --- Drag-node cursor --- */
+        #drag-mesh-canvas { cursor: grab; }
+        #drag-mesh-canvas:active { cursor: grabbing; }
+
+        /* --- Button loading + ripple --- */
+        .btn { position: relative; overflow: hidden; }
+        .btn .ripple {
+            position: absolute; border-radius: 50%; background: rgba(255,255,255,0.3);
+            transform: scale(0); animation: rippleEffect 0.6s linear; pointer-events: none;
+        }
+        .btn.is-loading { opacity: 0.7; pointer-events: none; }
+        .btn.is-loading::after {
+            content: ''; display: inline-block; width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+            border-radius: 50%; animation: rotate 0.6s linear infinite; margin-left: 0.4rem;
+        }
+
+        /* --- Quiz progress bar --- */
+        .quiz-progress {
+            display: flex; align-items: center; gap: 0.75rem;
+            margin-bottom: 1rem; padding: 0.6rem 1rem;
+            background: var(--fe-bg-alt); border-radius: 10px; border: 1px solid var(--fe-border);
+        }
+        .quiz-progress-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--fe-border); overflow: hidden; }
+        .quiz-progress-fill {
+            height: 100%; border-radius: 3px; width: 0%;
+            background: linear-gradient(90deg, var(--fe-primary), var(--fe-secondary));
+            transition: width 0.4s cubic-bezier(0.34,1.2,0.64,1);
+        }
+        .quiz-progress-text { font-size: 0.82rem; font-weight: 700; color: var(--fe-text); white-space: nowrap; }
+
+        /* --- Plotly 3D hint overlay --- */
+        .plotly-hint {
+            position: absolute; top: 0.5rem; right: 0.5rem;
+            display: flex; align-items: center; gap: 0.35rem;
+            padding: 0.3rem 0.65rem; border-radius: 6px;
+            background: rgba(0,0,0,0.6); color: #e2e8f0;
+            font-size: 0.7rem; font-weight: 600; opacity: 0.85;
+            z-index: 5; pointer-events: none;
+            transition: opacity 2s ease 4s;
+        }
+        .plotly-hint.faded { opacity: 0; }
+
+        /* --- Enhanced hover states --- */
+        .element-shape:hover svg { transform: scale(1.08); transition: transform 0.3s ease; }
+        .flow-node:hover { box-shadow: 0 0 16px var(--fe-primary-glow); }
+        .flow-node.decision:hover { box-shadow: 0 0 16px rgba(59, 130, 246, 0.3); }
+
         /* ==================== RESPONSIVE ==================== */
         @media (max-width: 1200px) {
             .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 900px) {
+            .comparison-cols { grid-template-columns: 1fr; }
         }
         @media (max-width: 768px) {
             .fe-app { padding: 0.5rem 1rem 1.5rem; }
             .app-header h1 { font-size: 2rem; }
             .landing-hero h2 { font-size: 1.6rem; }
             .landing-module-grid { grid-template-columns: 1fr; }
-            .grid-2, .grid-3, .grid-4, .comparison-cols { grid-template-columns: 1fr; }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
             .stepper { flex-wrap: wrap; }
             .landing-stats { gap: 1rem; }
             .header-badges { display: none; }
-            .decoder-input input { width: 160px; font-size: 1.1rem; }
+            .decoder-input input { width: min(160px, 100%); font-size: 1.1rem; }
         }
         @media (max-width: 480px) {
             .app-header h1 { font-size: 1.6rem; }
@@ -1325,9 +1450,9 @@
                                 </div>
                                 <p class="landing-module-desc">Discover how FEA breaks complex problems into simple pieces — from continuous domains to discrete solutions.</p>
                                 <div class="landing-features">
-                                    <span class="landing-feature-chip"><i class="fas fa-play-circle"></i> Animation</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-book"></i> Glossary</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-list-ol"></i> Process</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Watch FEA steps animated on canvas"><i class="fas fa-play-circle"></i> Animation</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Key FEA terms explained interactively"><i class="fas fa-book"></i> Glossary</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Step-by-step FEA workflow stepper"><i class="fas fa-list-ol"></i> Process</span>
                                 </div>
                                 <div class="landing-card-footer">
                                     <span class="landing-card-status"><i class="fas fa-circle"></i> Beginner</span>
@@ -1349,9 +1474,9 @@
                                 </div>
                                 <p class="landing-module-desc">Generate meshes interactively, compare structured vs unstructured, and drag nodes to see quality metrics update live.</p>
                                 <div class="landing-features">
-                                    <span class="landing-feature-chip"><i class="fas fa-draw-polygon"></i> Generator</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-chart-bar"></i> Metrics</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-hand-pointer"></i> Drag</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Create meshes with different shapes and densities"><i class="fas fa-draw-polygon"></i> Generator</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Live element quality measurements"><i class="fas fa-chart-bar"></i> Metrics</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Move nodes and watch metrics update"><i class="fas fa-hand-pointer"></i> Drag</span>
                                 </div>
                                 <div class="landing-card-footer">
                                     <span class="landing-card-status"><i class="fas fa-circle"></i> Interactive</span>
@@ -1373,9 +1498,9 @@
                                 </div>
                                 <p class="landing-module-desc">Explore element families from 1D bars to 3D hexahedra. Visualize shape functions as interactive 3D surfaces.</p>
                                 <div class="landing-features">
-                                    <span class="landing-feature-chip"><i class="fas fa-filter"></i> Dimension Filter</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-chart-area"></i> 3D Plots</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-table"></i> Comparison</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Filter elements by 1D, 2D, or 3D"><i class="fas fa-filter"></i> Dimension Filter</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Interactive shape function surface plots"><i class="fas fa-chart-area"></i> 3D Plots</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Side-by-side element property table"><i class="fas fa-table"></i> Comparison</span>
                                 </div>
                                 <div class="landing-card-footer">
                                     <span class="landing-card-status"><i class="fas fa-circle"></i> Catalog</span>
@@ -1397,9 +1522,9 @@
                                 </div>
                                 <p class="landing-module-desc">Compare h-refinement (more elements) vs p-refinement (higher order) side-by-side with live convergence tracking.</p>
                                 <div class="landing-features">
-                                    <span class="landing-feature-chip"><i class="fas fa-columns"></i> Side-by-Side</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-sliders-h"></i> Sliders</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-chart-line"></i> Convergence</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Compare both refinement strategies visually"><i class="fas fa-columns"></i> Side-by-Side</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Control mesh density and polynomial order"><i class="fas fa-sliders-h"></i> Sliders</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Live convergence rate comparison chart"><i class="fas fa-chart-line"></i> Convergence</span>
                                 </div>
                                 <div class="landing-card-footer">
                                     <span class="landing-card-status"><i class="fas fa-circle"></i> Comparison</span>
@@ -1421,9 +1546,9 @@
                                 </div>
                                 <p class="landing-module-desc">See how element polynomial order affects accuracy. Compare linear, quadratic, and cubic elements on a cantilever beam.</p>
                                 <div class="landing-features">
-                                    <span class="landing-feature-chip"><i class="fas fa-toggle-on"></i> Order Toggle</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-draw-polygon"></i> Visualization</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-bullseye"></i> Accuracy</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Switch between linear, quadratic, cubic"><i class="fas fa-toggle-on"></i> Order Toggle</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="See node placement for each order"><i class="fas fa-draw-polygon"></i> Visualization</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Compare error rates on beam problem"><i class="fas fa-bullseye"></i> Accuracy</span>
                                 </div>
                                 <div class="landing-card-footer">
                                     <span class="landing-card-status"><i class="fas fa-circle"></i> Analysis</span>
@@ -1445,9 +1570,9 @@
                                 </div>
                                 <p class="landing-module-desc">Run convergence studies, understand Richardson extrapolation, and learn about common pitfalls like mesh dependence.</p>
                                 <div class="landing-features">
-                                    <span class="landing-feature-chip"><i class="fas fa-play"></i> Run Study</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-calculator"></i> Extrapolation</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-exclamation-triangle"></i> Pitfalls</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Animated mesh convergence sequence"><i class="fas fa-play"></i> Run Study</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Richardson extrapolation calculator"><i class="fas fa-calculator"></i> Extrapolation</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Common convergence failure modes"><i class="fas fa-exclamation-triangle"></i> Pitfalls</span>
                                 </div>
                                 <div class="landing-card-footer">
                                     <span class="landing-card-status"><i class="fas fa-circle"></i> Study</span>
@@ -1469,9 +1594,9 @@
                                 </div>
                                 <p class="landing-module-desc">Decode Abaqus element names, browse element families, and follow an interactive selection flowchart.</p>
                                 <div class="landing-features">
-                                    <span class="landing-feature-chip"><i class="fas fa-search"></i> Decoder</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-sitemap"></i> Flowchart</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-th-list"></i> Browser</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Type an element name to decode it"><i class="fas fa-search"></i> Decoder</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Decision tree for element selection"><i class="fas fa-sitemap"></i> Flowchart</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Browse Abaqus element families"><i class="fas fa-th-list"></i> Browser</span>
                                 </div>
                                 <div class="landing-card-footer">
                                     <span class="landing-card-status"><i class="fas fa-circle"></i> Reference</span>
@@ -1493,9 +1618,9 @@
                                 </div>
                                 <p class="landing-module-desc">Compare element performance, learn best practices by domain, avoid common mistakes, and test your knowledge with a quiz.</p>
                                 <div class="landing-features">
-                                    <span class="landing-feature-chip"><i class="fas fa-table"></i> Matrix</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-chart-scatter"></i> Performance</span>
-                                    <span class="landing-feature-chip"><i class="fas fa-graduation-cap"></i> Quiz</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Element comparison across 6 criteria"><i class="fas fa-table"></i> Matrix</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Speed vs accuracy scatter plot"><i class="fas fa-chart-scatter"></i> Performance</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="10-question knowledge test"><i class="fas fa-graduation-cap"></i> Quiz</span>
                                 </div>
                                 <div class="landing-card-footer">
                                     <span class="landing-card-status"><i class="fas fa-circle"></i> Assessment</span>
@@ -1565,7 +1690,7 @@
                             <h3>From Continuous to Discrete</h3>
                             <p>Watch how a continuous domain gets discretized into a mesh, then solved to reveal the stress distribution.</p>
                             <div class="canvas-container" style="height:280px;">
-                                <canvas id="intro-canvas" width="800" height="280"></canvas>
+                                <canvas id="intro-canvas" width="800" height="280" role="img" aria-label="Animation: continuous domain discretized into finite element mesh"></canvas>
                             </div>
                             <div style="display:flex;justify-content:center;gap:1rem;margin-top:1rem;">
                                 <button class="btn btn-primary" onclick="FE.introAnim.play()"><i class="fas fa-play"></i> Play Animation</button>
@@ -1628,17 +1753,17 @@
                         <div class="panel">
                             <h3>The FEA Process</h3>
                             <div class="stepper">
-                                <div class="stepper-step active">
+                                <div class="stepper-step active" data-step="0">
                                     <div class="stepper-icon"><i class="fas fa-pencil-ruler"></i></div>
                                     <span class="stepper-label">Pre-processing</span>
                                 </div>
                                 <span class="stepper-arrow"><i class="fas fa-arrow-right"></i></span>
-                                <div class="stepper-step">
+                                <div class="stepper-step" data-step="1">
                                     <div class="stepper-icon"><i class="fas fa-cogs"></i></div>
                                     <span class="stepper-label">Solving</span>
                                 </div>
                                 <span class="stepper-arrow"><i class="fas fa-arrow-right"></i></span>
-                                <div class="stepper-step">
+                                <div class="stepper-step" data-step="2">
                                     <div class="stepper-icon"><i class="fas fa-chart-area"></i></div>
                                     <span class="stepper-label">Post-processing</span>
                                 </div>
@@ -1673,7 +1798,7 @@
                                 <span class="slider-value" id="mesh-density-val">6</span>
                             </div>
                             <div class="canvas-container" style="height:400px;">
-                                <canvas id="mesh-canvas" width="800" height="400"></canvas>
+                                <canvas id="mesh-canvas" width="800" height="400" role="img" aria-label="Interactive mesh generator visualization"></canvas>
                             </div>
                             <!-- Quality metrics -->
                             <div class="grid-3" style="margin-top:1rem;">
@@ -1683,11 +1808,11 @@
                                 </div>
                                 <div class="stat-card">
                                     <div class="stat-value" id="mesh-aspect-ratio">0</div>
-                                    <div class="stat-label">Avg Aspect Ratio</div>
+                                    <div class="stat-label">Avg Aspect Ratio <span class="info-icon tooltip-trigger" data-tooltip="Longest/shortest edge ratio. Ideal: 1.0. Above 3 = poor."><i class="fas fa-info"></i></span></div>
                                 </div>
                                 <div class="stat-card">
                                     <div class="stat-value" id="mesh-skewness">0</div>
-                                    <div class="stat-label">Avg Skewness</div>
+                                    <div class="stat-label">Avg Skewness <span class="info-icon tooltip-trigger" data-tooltip="Deviation from ideal shape. 0 = perfect, >0.5 = poor quality."><i class="fas fa-info"></i></span></div>
                                 </div>
                             </div>
                         </div>
@@ -1699,7 +1824,7 @@
                                 <div class="comparison-col">
                                     <h3><i class="fas fa-th" style="color:var(--fe-secondary);"></i> Structured</h3>
                                     <div class="canvas-container" style="height:200px;">
-                                        <canvas id="structured-mesh-canvas" width="380" height="200"></canvas>
+                                        <canvas id="structured-mesh-canvas" width="380" height="200" role="img" aria-label="Structured mesh example with regular grid pattern"></canvas>
                                     </div>
                                     <ul style="font-size:0.85rem;color:var(--fe-text-secondary);margin-top:0.75rem;">
                                         <li>Regular connectivity pattern</li>
@@ -1711,7 +1836,7 @@
                                 <div class="comparison-col">
                                     <h3><i class="fas fa-project-diagram" style="color:var(--fe-primary);"></i> Unstructured</h3>
                                     <div class="canvas-container" style="height:200px;">
-                                        <canvas id="unstructured-mesh-canvas" width="380" height="200"></canvas>
+                                        <canvas id="unstructured-mesh-canvas" width="380" height="200" role="img" aria-label="Unstructured mesh with irregular triangulation"></canvas>
                                     </div>
                                     <ul style="font-size:0.85rem;color:var(--fe-text-secondary);margin-top:0.75rem;">
                                         <li>Irregular connectivity</li>
@@ -1755,16 +1880,16 @@
                             <h3>Drag-Node Quality Demo</h3>
                             <p>Drag the interior node to see how element quality metrics change in real-time.</p>
                             <div class="canvas-container" style="height:300px;">
-                                <canvas id="drag-mesh-canvas" width="800" height="300"></canvas>
+                                <canvas id="drag-mesh-canvas" width="800" height="300" role="img" aria-label="Drag the center node to see mesh quality change"></canvas>
                             </div>
                             <div class="grid-2" style="margin-top:1rem;">
                                 <div class="stat-card">
                                     <div class="stat-value" id="drag-aspect">1.00</div>
-                                    <div class="stat-label">Aspect Ratio</div>
+                                    <div class="stat-label">Aspect Ratio <span class="info-icon tooltip-trigger" data-tooltip="Longest/shortest edge ratio. Ideal: 1.0. Above 3 = poor."><i class="fas fa-info"></i></span></div>
                                 </div>
                                 <div class="stat-card">
                                     <div class="stat-value" id="drag-skew">0.00</div>
-                                    <div class="stat-label">Skewness</div>
+                                    <div class="stat-label">Skewness <span class="info-icon tooltip-trigger" data-tooltip="Deviation from ideal shape. 0 = perfect, >0.5 = poor quality."><i class="fas fa-info"></i></span></div>
                                 </div>
                             </div>
                         </div>
@@ -1798,7 +1923,10 @@
                                 <button class="toggle-btn" onclick="FE.elements.showShapeFunc('q4')">Q4</button>
                                 <button class="toggle-btn" onclick="FE.elements.showShapeFunc('q8')">Q8</button>
                             </div>
-                            <div class="plotly-container" id="shape-func-plot" style="height:400px;"></div>
+                            <div style="position:relative;">
+                                <div class="plotly-hint" id="plotly-hint-shape"><i class="fas fa-hand-pointer"></i> Drag to rotate · Scroll to zoom</div>
+                                <div class="plotly-container" id="shape-func-plot" style="height:400px;"></div>
+                            </div>
                         </div>
 
                         <!-- Comparison table -->
@@ -1806,13 +1934,13 @@
                             <h3>Element Comparison</h3>
                             <table class="comparison-table">
                                 <thead>
-                                    <tr><th>Element</th><th>Dim</th><th>Nodes</th><th>DOFs/Node</th><th>Order</th><th>Best For</th><th>Accuracy</th><th>Cost</th></tr>
+                                    <tr><th>Element</th><th>Dim</th><th>Nodes</th><th><span class="tooltip-trigger" data-tooltip="Degrees of Freedom: unknowns solved at each node">DOFs/Node</span></th><th>Order</th><th>Best For</th><th>Accuracy</th><th>Cost</th></tr>
                                 </thead>
                                 <tbody>
                                     <tr><td>Bar2</td><td>1D</td><td>2</td><td>1</td><td>Linear</td><td>Trusses</td><td><span class="badge badge-yellow">Medium</span></td><td><span class="badge badge-green">Low</span></td></tr>
                                     <tr><td>Beam2</td><td>1D</td><td>2</td><td>2</td><td>Cubic</td><td>Frames</td><td><span class="badge badge-green">High</span></td><td><span class="badge badge-green">Low</span></td></tr>
-                                    <tr><td>CST (Tri3)</td><td>2D</td><td>3</td><td>2</td><td>Linear</td><td>Simple shapes</td><td><span class="badge badge-red">Low</span></td><td><span class="badge badge-green">Low</span></td></tr>
-                                    <tr><td>LST (Tri6)</td><td>2D</td><td>6</td><td>2</td><td>Quadratic</td><td>Curved boundaries</td><td><span class="badge badge-green">High</span></td><td><span class="badge badge-yellow">Medium</span></td></tr>
+                                    <tr><td><span class="tooltip-trigger" data-tooltip="Constant Strain Triangle">CST</span> (Tri3)</td><td>2D</td><td>3</td><td>2</td><td>Linear</td><td>Simple shapes</td><td><span class="badge badge-red">Low</span></td><td><span class="badge badge-green">Low</span></td></tr>
+                                    <tr><td><span class="tooltip-trigger" data-tooltip="Linear Strain Triangle">LST</span> (Tri6)</td><td>2D</td><td>6</td><td>2</td><td>Quadratic</td><td>Curved boundaries</td><td><span class="badge badge-green">High</span></td><td><span class="badge badge-yellow">Medium</span></td></tr>
                                     <tr><td>Q4</td><td>2D</td><td>4</td><td>2</td><td>Linear</td><td>Planar problems</td><td><span class="badge badge-yellow">Medium</span></td><td><span class="badge badge-green">Low</span></td></tr>
                                     <tr><td>Q8</td><td>2D</td><td>8</td><td>2</td><td>Quadratic</td><td>Stress concentration</td><td><span class="badge badge-green">High</span></td><td><span class="badge badge-yellow">Medium</span></td></tr>
                                     <tr><td>Tet4</td><td>3D</td><td>4</td><td>3</td><td>Linear</td><td>Complex 3D shapes</td><td><span class="badge badge-red">Low</span></td><td><span class="badge badge-green">Low</span></td></tr>
@@ -1837,7 +1965,7 @@
                                 <h3><i class="fas fa-th" style="color:var(--fe-secondary);"></i> h-Refinement</h3>
                                 <p style="font-size:0.88rem;color:var(--fe-text-secondary);">Subdivide elements into smaller ones. The polynomial order stays the same, but you get more elements to capture variation. Like using more pixels in an image.</p>
                                 <div class="canvas-container" style="height:200px;">
-                                    <canvas id="hp-canvas-h" width="380" height="200"></canvas>
+                                    <canvas id="hp-canvas-h" width="380" height="200" role="img" aria-label="h-refinement: mesh subdivision visualization"></canvas>
                                 </div>
                                 <div class="slider-control">
                                     <label>Elements:</label>
@@ -1849,7 +1977,7 @@
                                 <h3><i class="fas fa-superscript" style="color:var(--fe-accent);"></i> p-Refinement</h3>
                                 <p style="font-size:0.88rem;color:var(--fe-text-secondary);">Increase the polynomial order of shape functions within existing elements. Like increasing color depth — same pixels, more information per pixel.</p>
                                 <div class="canvas-container" style="height:200px;">
-                                    <canvas id="hp-canvas-p" width="380" height="200"></canvas>
+                                    <canvas id="hp-canvas-p" width="380" height="200" role="img" aria-label="p-refinement: polynomial order visualization"></canvas>
                                 </div>
                                 <div class="slider-control">
                                     <label>Order:</label>
@@ -1883,7 +2011,7 @@
                                 <button class="toggle-btn" onclick="FE.complexity.setOrder(3)">Cubic</button>
                             </div>
                             <div class="canvas-container" style="height:280px;">
-                                <canvas id="complexity-canvas" width="800" height="280"></canvas>
+                                <canvas id="complexity-canvas" width="800" height="280" role="img" aria-label="Element polynomial order node placement"></canvas>
                             </div>
                             <div class="grid-3" style="margin-top:1rem;">
                                 <div class="stat-card">
@@ -1932,7 +2060,7 @@
                             <h3>Mesh Refinement Sequence</h3>
                             <p>Watch the FEA solution approach the exact value as the mesh is refined.</p>
                             <div class="canvas-container" style="height:200px;">
-                                <canvas id="convergence-anim-canvas" width="800" height="200"></canvas>
+                                <canvas id="convergence-anim-canvas" width="800" height="200" role="img" aria-label="Animated mesh refinement convergence sequence"></canvas>
                             </div>
                         </div>
 
@@ -1941,6 +2069,10 @@
                             <h3>h-Convergence Study</h3>
                             <p>Click "Run Study" to progressively refine the mesh and watch the error decrease.</p>
                             <button class="btn btn-primary" id="h-conv-run-btn" onclick="FE.convergence.runHStudy()"><i class="fas fa-play"></i> Run Study</button>
+                            <p style="font-size:0.78rem;color:var(--fe-text-muted);margin-top:0.5rem;">
+                                <span class="info-icon tooltip-trigger tooltip-wide" data-tooltip="Log-log plots reveal power-law convergence as straight lines. Slope = convergence rate."><i class="fas fa-info"></i></span>
+                                Results shown on log-log scale
+                            </p>
                             <div class="plotly-container" id="h-convergence-plot" style="height:350px;margin-top:1rem;"></div>
                         </div>
 
@@ -1949,6 +2081,10 @@
                             <h3>p-Convergence Study</h3>
                             <p>Increase polynomial order on a fixed mesh and observe exponential convergence.</p>
                             <button class="btn btn-primary" id="p-conv-run-btn" onclick="FE.convergence.runPStudy()"><i class="fas fa-play"></i> Run Study</button>
+                            <p style="font-size:0.78rem;color:var(--fe-text-muted);margin-top:0.5rem;">
+                                <span class="info-icon tooltip-trigger tooltip-wide" data-tooltip="Log-log plots reveal power-law convergence as straight lines. Slope = convergence rate."><i class="fas fa-info"></i></span>
+                                Results shown on log-log scale
+                            </p>
                             <div class="plotly-container" id="p-convergence-plot" style="height:350px;margin-top:1rem;"></div>
                         </div>
 
@@ -2074,14 +2210,14 @@
                                     <h3><i class="fas fa-th" style="color:var(--fe-secondary);"></i> Full Integration</h3>
                                     <p style="font-size:0.85rem;color:var(--fe-text-secondary);">Uses enough Gauss points to integrate the stiffness matrix exactly. Can suffer from <strong>shear locking</strong> in bending-dominated problems.</p>
                                     <div class="canvas-container" style="height:150px;">
-                                        <canvas id="integration-full-canvas" width="300" height="150"></canvas>
+                                        <canvas id="integration-full-canvas" width="300" height="150" role="img" aria-label="Full 2x2 Gauss integration points"></canvas>
                                     </div>
                                 </div>
                                 <div class="comparison-col">
                                     <h3><i class="fas fa-border-none" style="color:var(--fe-primary);"></i> Reduced Integration</h3>
                                     <p style="font-size:0.85rem;color:var(--fe-text-secondary);">Uses fewer Gauss points. Avoids locking but can develop <strong>hourglass modes</strong> — zero-energy deformation patterns.</p>
                                     <div class="canvas-container" style="height:150px;">
-                                        <canvas id="integration-reduced-canvas" width="300" height="150"></canvas>
+                                        <canvas id="integration-reduced-canvas" width="300" height="150" role="img" aria-label="Reduced integration with single center point"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -2232,6 +2368,10 @@
                         <div class="panel">
                             <h3><i class="fas fa-graduation-cap"></i> Test Your Knowledge</h3>
                             <p>10 questions to test your understanding of FEA element selection.</p>
+                            <div class="quiz-progress" id="quiz-progress" style="display:none;">
+                                <span class="quiz-progress-text" id="quiz-progress-text">0 / 10</span>
+                                <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quiz-progress-fill"></div></div>
+                            </div>
                             <div id="quiz-container"></div>
                             <div id="quiz-score" style="display:none;"></div>
                         </div>
@@ -2394,6 +2534,22 @@
                 _switchModule(moduleId);
             });
         });
+
+        // Tab scroll fade indicators
+        (function() {
+            var wrapper = document.querySelector('.module-tabs-wrapper');
+            if (!wrapper) return;
+            function checkScroll() {
+                var sl = wrapper.scrollLeft, max = wrapper.scrollWidth - wrapper.clientWidth;
+                wrapper.classList.toggle('scrolled-start', sl > 10);
+                wrapper.classList.toggle('scrolled-end', sl >= max - 10);
+            }
+            wrapper.addEventListener('scroll', checkScroll);
+            new MutationObserver(function() {
+                if (document.getElementById('module-view').style.display !== 'none') setTimeout(checkScroll, 100);
+            }).observe(document.getElementById('module-view'), { attributes: true, attributeFilter: ['style'] });
+            checkScroll();
+        })();
 
         // ==================== BACKGROUND MESH ANIMATION ====================
         (function initBgMesh() {
@@ -2833,16 +2989,18 @@
             // Stepper interactivity
             var steps = document.querySelectorAll('#module-intro .stepper-step');
             var stepDetails = [
-                '<p><strong>Pre-processing:</strong> Define geometry, create the mesh, assign material properties and boundary conditions. This is where you set up the problem — the quality of your mesh directly affects accuracy.</p>',
-                '<p><strong>Solving:</strong> The solver assembles the global stiffness matrix [K]{u} = {F} and solves for the unknown nodal displacements. This is computationally intensive — direct solvers (Gaussian elimination) or iterative methods are used.</p>',
-                '<p><strong>Post-processing:</strong> Extract stresses, strains, and displacements from the nodal solution. Visualize results with contour plots, deformed shapes, and animations. Verify results make physical sense.</p>'
+                '<p><strong>Pre-processing:</strong> Define geometry, create the mesh, assign material properties and boundary conditions. Mesh quality directly affects accuracy.</p>',
+                '<p><strong>Solving:</strong> The solver assembles global stiffness matrices, applies boundary conditions, and solves [K]{u}={F}. This step is mostly automatic.</p>',
+                '<p><strong>Post-processing:</strong> Visualize and interpret results — stress contours, deformation plots, reaction forces. Verify results make physical sense.</p>'
             ];
             steps.forEach(function(step, idx) {
-                step.style.cursor = 'pointer';
                 step.addEventListener('click', function() {
                     steps.forEach(function(s) { s.classList.remove('active'); });
                     step.classList.add('active');
-                    document.getElementById('stepper-detail').innerHTML = stepDetails[idx];
+                    var detail = document.getElementById('stepper-detail');
+                    detail.innerHTML = stepDetails[idx];
+                    detail.style.animation = 'none'; void detail.offsetWidth;
+                    detail.style.animation = 'slideInUp 0.3s ease';
                 });
             });
         }
@@ -2850,8 +3008,10 @@
         // Glossary
         FE.showGlossary = function(term) {
             var detail = document.getElementById('glossary-detail');
-            var items = document.querySelectorAll('.glossary-item');
-            items.forEach(function(it) { it.classList.toggle('active', it.dataset.term === term); });
+            document.querySelectorAll('.glossary-item').forEach(function(it) { it.classList.toggle('active', it.dataset.term === term); });
+            if (detail.classList.contains('visible')) {
+                detail.style.animation = 'none'; void detail.offsetWidth;
+            }
 
             var glossaryData = {
                 node: '<h4>Node</h4><p>A point in the mesh where element corners meet. Nodes are where the unknowns (displacements, temperatures) are computed. The collection of all nodal values defines the approximate solution.</p>',
@@ -2863,6 +3023,7 @@
 
             detail.innerHTML = glossaryData[term] || '';
             detail.classList.add('visible');
+            detail.style.animation = 'slideInUp 0.3s ease';
         };
 
         // ==================== MODULE 2: MESHING ====================
@@ -3196,6 +3357,10 @@
             };
 
             Plotly.newPlot('shape-func-plot', traces, layout, { responsive: true });
+            setTimeout(function() {
+                var hint = document.getElementById('plotly-hint-shape');
+                if (hint) hint.classList.add('faded');
+            }, 5000);
         }
 
         // ==================== MODULE 4: h vs p ====================
@@ -3559,6 +3724,9 @@
 
             FE.convergence = {
                 runHStudy: function() {
+                    var btn = document.getElementById('h-conv-run-btn');
+                    if (btn.classList.contains('is-loading')) return;
+                    btn.classList.add('is-loading');
                     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
                     var bgColor = isDark ? '#1e293b' : '#f1f5f9';
                     var textColor = isDark ? '#cbd5e1' : '#64748b';
@@ -3587,7 +3755,7 @@
 
                     var idx = 0;
                     var interval = setInterval(function() {
-                        if (idx >= elems.length) { clearInterval(interval); return; }
+                        if (idx >= elems.length) { clearInterval(interval); btn.classList.remove('is-loading'); return; }
                         Plotly.extendTraces('h-convergence-plot', {
                             x: [[elems[idx]]], y: [[errors[idx]]]
                         }, [0]);
@@ -3595,6 +3763,9 @@
                     }, 400);
                 },
                 runPStudy: function() {
+                    var btn = document.getElementById('p-conv-run-btn');
+                    if (btn.classList.contains('is-loading')) return;
+                    btn.classList.add('is-loading');
                     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
                     var bgColor = isDark ? '#1e293b' : '#f1f5f9';
                     var textColor = isDark ? '#cbd5e1' : '#64748b';
@@ -3618,7 +3789,7 @@
 
                     var idx = 0;
                     var interval = setInterval(function() {
-                        if (idx >= orders.length) { clearInterval(interval); return; }
+                        if (idx >= orders.length) { clearInterval(interval); btn.classList.remove('is-loading'); return; }
                         Plotly.extendTraces('p-convergence-plot', {
                             x: [[orders[idx]]], y: [[errors[idx]]]
                         }, [0]);
@@ -3626,6 +3797,8 @@
                     }, 500);
                 },
                 richardson: function() {
+                    var resultEl = document.getElementById('rich-result');
+                    resultEl.innerHTML = ''; void resultEl.offsetWidth;
                     var f1 = parseFloat(document.getElementById('rich-f1').value);
                     var f2 = parseFloat(document.getElementById('rich-f2').value);
                     var r = 2; // refinement ratio
@@ -3824,6 +3997,10 @@
             var answered = 0;
             var container = document.getElementById('quiz-container');
             container.innerHTML = '';
+            var progressEl = document.getElementById('quiz-progress');
+            var progressText = document.getElementById('quiz-progress-text');
+            var progressFill = document.getElementById('quiz-progress-fill');
+            if (progressEl) { progressEl.style.display = 'flex'; progressFill.style.width = '0%'; progressText.textContent = '0 / ' + questions.length; }
 
             questions.forEach(function(q, qi) {
                 var qDiv = document.createElement('div');
@@ -3846,6 +4023,7 @@
                             allOpts[q.ans].classList.add('correct');
                         }
                         answered++;
+                        if (progressText) { progressText.textContent = answered + ' / ' + questions.length; progressFill.style.width = (answered / questions.length * 100) + '%'; }
                         if (answered === questions.length) {
                             var scoreDiv = document.getElementById('quiz-score');
                             scoreDiv.style.display = 'block';
@@ -3858,6 +4036,23 @@
                 container.appendChild(qDiv);
             });
         }
+
+        // Button ripple effect
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.btn');
+            if (!btn || btn.classList.contains('is-loading')) return;
+            var existing = btn.querySelector('.ripple');
+            if (existing) existing.remove();
+            var ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            var rect = btn.getBoundingClientRect();
+            var size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+            ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+            btn.appendChild(ripple);
+            setTimeout(function() { ripple.remove(); }, 600);
+        });
 
         // ==================== UTILITY ====================
         function var_color(name) {
