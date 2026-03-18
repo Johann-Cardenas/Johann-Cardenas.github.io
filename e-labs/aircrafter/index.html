@@ -781,6 +781,7 @@
             color: #fff !important; font-weight: 600; font-size: 0.92rem;
             cursor: pointer; transition: all 0.3s ease;
             display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+            flex-wrap: wrap;
             position: relative; overflow: hidden;
             box-shadow: none;
             z-index: 1;
@@ -1058,6 +1059,18 @@
             color: white;
         }
         .btn-warning:hover { transform: translateY(-1px); }
+        .btn[disabled], .btn:disabled {
+            opacity: 0.45; cursor: not-allowed; filter: grayscale(0.3);
+            pointer-events: none; transform: none !important; box-shadow: none !important;
+        }
+        .btn:focus-visible {
+            outline: 2px solid var(--ac-primary); outline-offset: 2px;
+            box-shadow: 0 0 0 4px var(--ac-primary-glow);
+        }
+        .module-tab:focus-visible, .viz-tab:focus-visible {
+            outline: 2px solid var(--ac-primary); outline-offset: -2px;
+            box-shadow: 0 0 0 3px var(--ac-primary-glow);
+        }
         .btn-outline {
             background: transparent !important; border: 1px solid var(--ac-border);
             color: var(--ac-text-secondary) !important;
@@ -1278,6 +1291,10 @@
         }
         .empty-state p:nth-child(3) { animation-delay: 0.15s; }
         .empty-state p:nth-child(4) { animation-delay: 0.3s; }
+        .empty-state kbd {
+            font-size: 0.82rem; background: var(--ac-bg-panel); border: 1px solid var(--ac-border);
+            padding: 0.1rem 0.4rem; border-radius: 4px; font-family: monospace;
+        }
 
         /* ==================== ADVANCED SETTINGS ==================== */
         .advanced-toggle {
@@ -1325,8 +1342,9 @@
             color: var(--ac-text-muted) !important; cursor: pointer;
             font-size: 0.92rem; font-weight: 600;
             transition: all 0.3s ease; font-family: inherit;
-            box-shadow: none;
+            box-shadow: none; position: relative;
         }
+        .viz-tab.tooltip-trigger { text-decoration: none; cursor: pointer; }
         .viz-tab:hover { border-color: var(--ac-primary); color: var(--ac-text) !important; background: rgba(14, 165, 233, 0.08) !important; }
         .viz-tab.active {
             background: var(--ac-primary) !important; color: white !important; border-color: var(--ac-primary);
@@ -1335,7 +1353,11 @@
         .viz-content.active { display: block; }
 
         /* ==================== TOOLTIPS ==================== */
-        .tooltip-trigger { position: relative; cursor: help; }
+        .tooltip-trigger {
+            position: relative; cursor: help;
+            text-decoration: underline; text-decoration-style: dotted;
+            text-decoration-color: var(--ac-text-muted); text-underline-offset: 2px;
+        }
         .tooltip-trigger::after {
             content: attr(data-tooltip);
             position: absolute; bottom: 100%; left: 50%;
@@ -1353,6 +1375,32 @@
         .tooltip-trigger:hover::after {
             opacity: 1;
             transform: translateX(-50%) translateY(-4px) scale(1);
+        }
+        .adv-input-group .tooltip-trigger::after {
+            left: 0; transform: translateX(0) translateY(4px) scale(0.92);
+            max-width: 220px; white-space: normal;
+        }
+        .adv-input-group .tooltip-trigger:hover::after {
+            transform: translateX(0) translateY(-4px) scale(1);
+        }
+
+        /* ==================== PANEL HELPER TEXT ==================== */
+        .panel-helper {
+            font-size: 0.82rem; color: var(--ac-text-muted);
+            margin: -0.15rem 0 0.4rem 0; line-height: 1.4;
+        }
+
+        /* ==================== TAB DESCRIPTIONS ==================== */
+        .module-tab .tab-desc {
+            display: block; font-size: 0.68rem; opacity: 0.7;
+            font-weight: 400; margin-top: 1px;
+        }
+
+        /* ==================== CHART SUBTITLE (empty) ==================== */
+
+        /* ==================== FLASH HINT ==================== */
+        .flash-hint {
+            display: block; font-size: 0.75rem; opacity: 0.85; margin-top: 2px;
         }
 
         /* ==================== SUCCESS FLASH ==================== */
@@ -1676,6 +1724,7 @@
             .module-tabs { flex-wrap: wrap; }
             .module-tab { font-size: 0.82rem; padding: 0.55rem 0.6rem; }
             .module-tab i { display: none; }
+            .module-tab .tab-desc { display: none; }
             .params-grid { grid-template-columns: 1fr; }
             .selection-grid { grid-template-columns: 1fr; }
             .panel { padding: 0.85rem 0.9rem; overflow: hidden; max-width: 100%; }
@@ -1826,6 +1875,15 @@
                     </div>
                     <div class="about-body">
                         <section class="about-section">
+                            <h3>How to Use</h3>
+                            <ol class="about-list">
+                                <li><strong>Select Aircraft</strong> — Choose a manufacturer and model from the FAARFIELD library.</li>
+                                <li><strong>Review Parameters</strong> — Check auto-populated load, pressure, and rib geometry. Adjust if needed.</li>
+                                <li><strong>Compute</strong> — Click Compute (or Ctrl+Enter) to run the stress analysis.</li>
+                                <li><strong>Explore Results</strong> — Use the tabs to visualize 3D surfaces, distributions, and export data.</li>
+                            </ol>
+                        </section>
+                        <section class="about-section">
                             <h3>Version</h3>
                             <ul class="about-list">
                                 <li><strong>Version:</strong> 2.0 (stable)</li>
@@ -1909,7 +1967,7 @@
                             <span class="badge-dot"></span> New Release
                         </div>
                         <h2><span class="hero-plain">Explore </span><span class="hero-gradient">3D Contact Stresses</span></h2>
-                        <p class="landing-hero-sub">Select an aircraft from the FAARFIELD library to compute three-dimensional tire&ndash;pavement contact stress distributions using analytical models.</p>
+                        <p class="landing-hero-sub">Select an aircraft from FAA's FAARFIELD pavement design library to compute three-dimensional tire&ndash;pavement contact stress distributions using analytical models.</p>
                         <div class="landing-stats">
                             <div class="landing-stat">
                                 <span class="landing-stat-value" id="hero-db-count">—</span>
@@ -1969,15 +2027,19 @@
                 <div class="module-tabs">
                     <button class="module-tab active" data-module="config">
                         <i class="fas fa-sliders-h"></i> Configuration
+                        <span class="tab-desc">Input parameters & patch geometry</span>
                     </button>
                     <button class="module-tab" data-module="stress3d">
                         <i class="fas fa-cube"></i> 3D Stress Surfaces
+                        <span class="tab-desc">Interactive 3D stress visualizations</span>
                     </button>
                     <button class="module-tab" data-module="analysis">
                         <i class="fas fa-chart-area"></i> Distribution Analysis
+                        <span class="tab-desc">Heatmaps, curves & rib comparisons</span>
                     </button>
                     <button class="module-tab" data-module="summary">
                         <i class="fas fa-table-list"></i> Results Summary
+                        <span class="tab-desc">Tabular data & Excel export</span>
                     </button>
                 </div>
 
@@ -2042,35 +2104,35 @@
                                 <div class="advanced-body" id="adv-body">
                                     <div class="advanced-grid">
                                         <div class="adv-input-group">
-                                            <label>SSY Factor</label>
+                                            <label class="tooltip-trigger" data-tooltip="Transverse stress shape factor — fraction of tire pressure applied as σy">SSY Factor</label>
                                             <input type="number" id="adv-ssy" value="0.40" step="0.01" />
                                         </div>
                                         <div class="adv-input-group">
-                                            <label>Elements (xn)</label>
+                                            <label class="tooltip-trigger" data-tooltip="Number of evaluation points along the contact length for stress computation">Elements (xn)</label>
                                             <input type="number" id="adv-xn" value="10" min="4" max="100" step="1" />
                                         </div>
                                         <div class="adv-input-group">
-                                            <label>Partitions (nnz)</label>
+                                            <label class="tooltip-trigger" data-tooltip="Number of subdivisions per rib for load averaging">Partitions (nnz)</label>
                                             <input type="number" id="adv-nnz" value="2" min="1" max="4" step="1" />
                                         </div>
                                         <div class="adv-input-group">
-                                            <label>SSX Pos Peak</label>
+                                            <label class="tooltip-trigger" data-tooltip="Normalized position (0–1) of the positive longitudinal stress peak">SSX Pos Peak</label>
                                             <input type="number" id="adv-lsx-pos" value="0.20" step="0.01" />
                                         </div>
                                         <div class="adv-input-group">
-                                            <label>SSX Neg Peak</label>
+                                            <label class="tooltip-trigger" data-tooltip="Normalized position (0–1) of the negative longitudinal stress peak">SSX Neg Peak</label>
                                             <input type="number" id="adv-lsx-neg" value="0.85" step="0.01" />
                                         </div>
                                         <div class="adv-input-group">
-                                            <label>SSX Pos Mag</label>
+                                            <label class="tooltip-trigger" data-tooltip="Positive peak magnitude of longitudinal stress as a fraction of tire pressure">SSX Pos Mag</label>
                                             <input type="number" id="adv-sx-posmag" value="0.20" step="0.01" />
                                         </div>
                                         <div class="adv-input-group">
-                                            <label>SSX Neg Mag</label>
+                                            <label class="tooltip-trigger" data-tooltip="Negative peak magnitude of longitudinal stress (use negative value)">SSX Neg Mag</label>
                                             <input type="number" id="adv-sx-negmag" value="-0.15" step="0.01" />
                                         </div>
                                         <div class="adv-input-group">
-                                            <label>Transition (skpb)</label>
+                                            <label class="tooltip-trigger" data-tooltip="Smoothing transition parameter controlling the blend between rib stress regions (0–1)">Transition (skpb)</label>
                                             <input type="number" id="adv-skpb" value="0.60" step="0.01" />
                                         </div>
                                     </div>
@@ -2089,7 +2151,7 @@
                                 <div class="inline-stats" id="inline-stats">
                                     <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-primary)"><i class="fas fa-plane"></i></span> <span class="ms-value" id="stat-aircraft">—</span></div>
                                     <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-secondary)"><i class="fas fa-weight-hanging"></i></span> <span class="ms-value" id="stat-load">—</span> <span class="ms-label">kN</span></div>
-                                    <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-info)"><i class="fas fa-gauge-high"></i></span> <span class="ms-value" id="stat-pressure">—</span></div>
+                                    <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-info)"><i class="fas fa-gauge-high"></i></span> <span class="ms-value" id="stat-pressure">—</span> <span class="ms-label">MPa</span></div>
                                     <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-accent)"><i class="fas fa-ruler-horizontal"></i></span> <span class="ms-value" id="stat-length">—</span> <span class="ms-label">mm</span></div>
                                     <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-highlight)"><i class="fas fa-arrows-left-right"></i></span> <span class="ms-value" id="stat-width">—</span> <span class="ms-label">mm</span></div>
                                     <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-success)"><i class="fas fa-layer-group"></i></span> <span class="ms-value" id="stat-ribs">—</span> <span class="ms-label">ribs</span></div>
@@ -2099,11 +2161,13 @@
 
                             <div class="panel animate-in stagger-3" id="quick-results-panel" style="display:none;">
                                 <div class="panel-title"><i class="fas fa-clipboard-check"></i> Equilibrium Check</div>
+                                <div class="panel-helper">Verifies that computed vertical contact forces sum to the applied wheel load.</div>
                                 <div id="quick-results-body"></div>
                             </div>
 
                             <div class="panel animate-in stagger-4" id="reliability-panel" style="display:none;">
                                 <div class="panel-title"><i class="fas fa-shield-halved"></i> Rib Classification</div>
+                                <div class="panel-helper">ML-predicted rib count based on tire geometry, with classification confidence.</div>
                                 <div class="inline-stats" id="reliability-stats">
                                     <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-info)"><i class="fas fa-layer-group"></i></span> <span class="ms-value" id="stat-est-ribs">—</span> <span class="ms-label">predicted ribs</span></div>
                                     <div class="mini-stat"><span class="ms-icon" style="color:var(--ac-secondary)"><i class="fas fa-flask"></i></span> <span class="ms-value" id="stat-rib-method">—</span></div>
@@ -2117,12 +2181,14 @@
                     <div class="patch-gear-layout" id="patch-gear-layout" style="display:none;">
                         <div class="panel animate-in stagger-5" id="patch-panel">
                             <div class="panel-title"><i class="fas fa-shoe-prints"></i> Contact Patch</div>
+                            <div class="panel-helper">Tire footprint showing rib layout, widths, and groove positions.</div>
                             <div class="contact-patch-container">
                                 <svg id="contact-patch-svg" viewBox="0 0 375 370" xmlns="http://www.w3.org/2000/svg"></svg>
                             </div>
                         </div>
                         <div class="panel animate-in stagger-6" id="gear-panel">
                             <div class="panel-title"><i class="fas fa-cogs"></i> Gear Configuration</div>
+                            <div class="panel-helper">Wheel arrangement on the landing gear assembly.</div>
                             <div class="gear-config-container">
                                 <svg id="gear-config-svg" xmlns="http://www.w3.org/2000/svg"></svg>
                             </div>
@@ -2138,8 +2204,8 @@
                     <div id="stress3d-empty" class="empty-state">
                         <div class="empty-glow"></div>
                         <i class="fas fa-cube"></i>
-                        <p><strong>No Data Yet</strong></p>
-                        <p>Select an aircraft and compute stresses first.</p>
+                        <p><strong>3D Surfaces Await</strong></p>
+                        <p>Select an aircraft and press <kbd>Compute</kbd> to generate interactive 3D stress surfaces.</p>
                     </div>
                     <div id="stress3d-content" style="display:none;">
                         <div class="viz-tabs" id="surface-tabs">
@@ -2189,15 +2255,15 @@
                     <div id="analysis-empty" class="empty-state">
                         <div class="empty-glow"></div>
                         <i class="fas fa-chart-area"></i>
-                        <p><strong>No Data Yet</strong></p>
-                        <p>Select an aircraft and compute stresses first.</p>
+                        <p><strong>Analysis Ready</strong></p>
+                        <p>Compute stresses to view heatmaps, per-rib curves, and property comparisons.</p>
                     </div>
                     <div id="analysis-content" style="display:none;">
                         <div class="viz-tabs">
-                            <button class="viz-tab active" data-viz="combined"><i class="fas fa-layer-group"></i> Combined</button>
-                            <button class="viz-tab" data-viz="heatmaps"><i class="fas fa-th"></i> Heatmaps</button>
-                            <button class="viz-tab" data-viz="ribcurves"><i class="fas fa-chart-line"></i> Per-Rib Curves</button>
-                            <button class="viz-tab" data-viz="ribprops"><i class="fas fa-chart-bar"></i> Rib Properties</button>
+                            <button class="viz-tab active tooltip-trigger" data-viz="combined" data-tooltip="σz, σx, σy overlay for the critical rib and peak stress comparison"><i class="fas fa-layer-group"></i> Combined</button>
+                            <button class="viz-tab tooltip-trigger" data-viz="heatmaps" data-tooltip="Color-mapped stress grids across ribs and contact length"><i class="fas fa-th"></i> Heatmaps</button>
+                            <button class="viz-tab tooltip-trigger" data-viz="ribcurves" data-tooltip="Individual stress profiles for each rib along the contact length"><i class="fas fa-chart-line"></i> Per-Rib Curves</button>
+                            <button class="viz-tab tooltip-trigger" data-viz="ribprops" data-tooltip="Bar charts of load factor, stress factor, and contact width per rib"><i class="fas fa-chart-bar"></i> Rib Properties</button>
                         </div>
                         <!-- Combined Stress Comparison -->
                         <div class="viz-content active" id="viz-combined">
@@ -2215,9 +2281,9 @@
                         <!-- Heatmaps -->
                         <div class="viz-content" id="viz-heatmaps">
                             <div class="charts-row three-col">
-                                <div class="chart-panel"><div class="chart-header"><div class="chart-title"><i class="fas fa-th"></i> σ<sub>z</sub> Heatmap</div></div><div class="chart-body chart-body-short" id="chart-hm-ssz"></div></div>
-                                <div class="chart-panel"><div class="chart-header"><div class="chart-title"><i class="fas fa-th"></i> σ<sub>x</sub> Heatmap</div></div><div class="chart-body chart-body-short" id="chart-hm-ssx"></div></div>
-                                <div class="chart-panel"><div class="chart-header"><div class="chart-title"><i class="fas fa-th"></i> σ<sub>y</sub> Heatmap</div></div><div class="chart-body chart-body-short" id="chart-hm-ssy"></div></div>
+                                <div class="chart-panel"><div class="chart-header"><div><div class="chart-title"><i class="fas fa-th"></i> σ<sub>z</sub> Heatmap</div><div class="chart-subtitle">Vertical stress intensity across ribs and contact length</div></div></div><div class="chart-body chart-body-short" id="chart-hm-ssz"></div></div>
+                                <div class="chart-panel"><div class="chart-header"><div><div class="chart-title"><i class="fas fa-th"></i> σ<sub>x</sub> Heatmap</div><div class="chart-subtitle">Longitudinal stress intensity across ribs and contact length</div></div></div><div class="chart-body chart-body-short" id="chart-hm-ssx"></div></div>
+                                <div class="chart-panel"><div class="chart-header"><div><div class="chart-title"><i class="fas fa-th"></i> σ<sub>y</sub> Heatmap</div><div class="chart-subtitle">Transverse stress intensity across ribs and contact length</div></div></div><div class="chart-body chart-body-short" id="chart-hm-ssy"></div></div>
                             </div>
                         </div>
                         <!-- Per-Rib Curves -->
@@ -2231,9 +2297,9 @@
                         <!-- Rib Properties -->
                         <div class="viz-content" id="viz-ribprops">
                             <div class="charts-row three-col">
-                                <div class="chart-panel"><div class="chart-header"><div class="chart-title"><i class="fas fa-chart-bar"></i> Load Factor</div></div><div class="chart-body chart-body-short" id="chart-bar-load"></div></div>
-                                <div class="chart-panel"><div class="chart-header"><div class="chart-title"><i class="fas fa-chart-bar"></i> Stress Factor</div></div><div class="chart-body chart-body-short" id="chart-bar-stress"></div></div>
-                                <div class="chart-panel"><div class="chart-header"><div class="chart-title"><i class="fas fa-chart-bar"></i> Contact Width</div></div><div class="chart-body chart-body-short" id="chart-bar-width"></div></div>
+                                <div class="chart-panel"><div class="chart-header"><div><div class="chart-title"><i class="fas fa-chart-bar"></i> Load Factor</div><div class="chart-subtitle">Fraction of total load carried by each rib (αl)</div></div></div><div class="chart-body chart-body-short" id="chart-bar-load"></div></div>
+                                <div class="chart-panel"><div class="chart-header"><div><div class="chart-title"><i class="fas fa-chart-bar"></i> Stress Factor</div><div class="chart-subtitle">Rib contact pressure relative to inflation pressure (σTip)</div></div></div><div class="chart-body chart-body-short" id="chart-bar-stress"></div></div>
+                                <div class="chart-panel"><div class="chart-header"><div><div class="chart-title"><i class="fas fa-chart-bar"></i> Contact Width</div><div class="chart-subtitle">Transverse width of each rib's contact zone</div></div></div><div class="chart-body chart-body-short" id="chart-bar-width"></div></div>
                             </div>
                         </div>
                     </div>
@@ -2247,7 +2313,7 @@
                         <div class="empty-glow"></div>
                         <i class="fas fa-table-list"></i>
                         <p><strong>No Results Yet</strong></p>
-                        <p>Compute stresses to see the full results table.</p>
+                        <p>Compute stresses to see the full results table and export to Excel.</p>
                     </div>
                     <div id="summary-content" style="display:none;">
                         <div style="display:flex; justify-content:flex-end; margin-bottom:0.6rem;">
@@ -2258,10 +2324,12 @@
                         <div class="charts-row two-col">
                             <div class="panel">
                                 <div class="panel-title"><i class="fas fa-table"></i> Stress Distribution Matrix</div>
+                                <div class="panel-helper">Peak stress values (σz, σx, σy) and equilibrium load for each rib.</div>
                                 <div id="summary-matrix-body"></div>
                             </div>
                             <div class="panel">
                                 <div class="panel-title"><i class="fas fa-scale-balanced"></i> Equilibrium Verification</div>
+                                <div class="panel-helper">Per-rib force balance showing how closely computed loads match the applied load.</div>
                                 <div id="summary-eq-body"></div>
                                 <div class="chart-body chart-body-short" id="chart-eq-bar" style="margin-top:0.5rem;"></div>
                             </div>
@@ -3018,11 +3086,26 @@
         app.classList.add('app-working');
     }
 
+    function replayHeroAnimations() {
+        const hero = document.getElementById('hero-section');
+        if (!hero) return;
+        const animated = hero.querySelectorAll(
+            '.landing-hero-badge, .landing-hero-content h2, .landing-hero-sub, .landing-stats, .landing-divider, .landing-selection-panel'
+        );
+        animated.forEach(el => {
+            el.style.animation = 'none';
+            el.offsetHeight; // force reflow
+            el.style.animation = '';
+        });
+    }
+
     function transitionToLanding() {
         if (appState === 'landing') return;
         appState = 'landing';
         const app = document.querySelector('.aircrafter-app');
         app.classList.remove('app-working');
+        // Replay hero entrance animations
+        replayHeroAnimations();
         // Reset UI state
         currentRow = null;
         defaultParams = null;
@@ -4623,7 +4706,7 @@
     function showSuccessFlash(msg) {
         const flash = document.createElement('div');
         flash.className = 'success-flash';
-        flash.innerHTML = '<i class="fas fa-check-circle"></i> ' + (msg || 'Stresses computed successfully');
+        flash.innerHTML = '<i class="fas fa-check-circle"></i> ' + (msg || 'Stresses computed successfully') + '<span class="flash-hint">Explore the other tabs for charts and data</span>';
         document.body.appendChild(flash);
         setTimeout(() => { flash.style.opacity = '0'; }, 1800);
         setTimeout(() => flash.remove(), 2200);
