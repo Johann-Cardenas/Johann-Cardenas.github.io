@@ -209,8 +209,6 @@
 		});
 	}
 
-// Password modal logic removed: Aircrafter and Asphera are now direct access.
-
 	// Page transition: slide-out before navigating to internal links
 		$(document).on('click', 'a[href]', function(e) {
 			var href = this.getAttribute('href');

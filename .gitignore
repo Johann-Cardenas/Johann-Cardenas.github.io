@@ -10,3 +10,12 @@ __pycache__/
 # OS generated files
 Thumbs.db
 .DS_Store
+
+# Jekyll build output
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+# Sass source maps
+*.css.map

@@ -41,7 +41,7 @@ Push to `main` triggers GitHub Pages auto-deploy.
 
 ## Do NOT Edit — Vendored / Auto-Generated
 - `pdfjs/` — entire directory is vendored PDF.js
-- `assets/js/jquery.min.js`, `three.min.js`, `globe.gl.min.js`, `breakpoints.min.js`, `browser.min.js`
+- `assets/js/jquery.min.js`, `three.min.js`, `globe.gl.min.js`, `breakpoints.min.js`
 - `assets/webfonts/` — Font Awesome icons
 
 ## E-Labs Python Scripts

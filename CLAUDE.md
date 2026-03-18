@@ -43,7 +43,7 @@ Deploy: push to `main` — GitHub Pages auto-builds via Jekyll.
 
 ## Do Not Edit (Auto-Generated / Vendored)
 - `pdfjs/` — vendored PDF.js build
-- `assets/js/jquery.min.js`, `three.min.js`, `globe.gl.min.js`, `breakpoints.min.js`, `browser.min.js`, `jquery.dropotron.min.js` — third-party minified libs
+- `assets/js/jquery.min.js`, `three.min.js`, `globe.gl.min.js`, `breakpoints.min.js`, `jquery.dropotron.min.js` — third-party minified libs
 - `assets/webfonts/` — Font Awesome
 
 ---
@@ -73,7 +73,7 @@ Deploy: push to `main` — GitHub Pages auto-builds via Jekyll.
 ### Script Boot Order (per page `<script>` tags)
 1. Inline theme init (prevents FOUC) — sets `data-theme` from localStorage
 2. `components.js` (DOMContentLoaded → loads nav + footer + cards)
-3. `jquery.min.js` → `jquery.dropotron.min.js` → `browser.min.js` → `breakpoints.min.js` → `util.js` → `main.js`
+3. `jquery.min.js` → `jquery.dropotron.min.js` → `breakpoints.min.js` → `util.js` → `main.js`
 4. `theme-toggle.js` (creates toggle button)
 5. `fuse.js` (CDN) → `search.js`
 6. `back-to-top.js`
@@ -84,7 +84,7 @@ Deploy: push to `main` — GitHub Pages auto-builds via Jekyll.
 |---|---|---|
 | `navigation.json` | — | `{ logo: {text, url}, menu[]: {name, url, type, children[]?} }` |
 | `blog-posts.json` | `posts` | `{ id, title, date, dateDisplay, image, url, excerpt, readTime, comments, buttonText }` — 12 entries |
-| `projects.json` | `projects` | `{ id, title, shortTitle, image, url, excerpt, pis[], advisor, status }` — 4 entries |
+| `projects.json` | `projects` | `{ id, title, shortTitle, image, url, excerpt, pis[], advisor, status }` — 4 entries. `pis` = other principal investigators; `advisor` = faculty advisor. Variation across entries is intentional (some projects solo under advisor, others have multiple PIs). |
 | `news.json` | `items` | `{ id, title, date, dateDisplay, source, url, excerpt, image, tags[] }` |
 | `footer.json` | — | `{ importantDates[], gradStudent, contentLinks[], affiliations[], socialLinks[], contact, copyright }` |
 | `publications.json` | `publications` | `{ title }[]` — 24 entries (extracted from Publications.html for search indexing) |
@@ -93,7 +93,7 @@ Deploy: push to `main` — GitHub Pages auto-builds via Jekyll.
 ## Page Inventory
 
 ### Root pages
-`index.html` (homepage), `Blog.html`, `Projects.html`, `Publications.html`, `Resume.html`, `E-Labs.html`, `News.html`, `about-me.html`, `404.html`
+`index.html` (homepage), `Blog.html`, `Projects.html`, `Publications.html`, `Resume.html`, `E-Labs.html`, `News.html`, `404.html`
 
 ### Blog posts (`blog/`) — 12 entries
 ASCE2025, ATLAS, Datathon2024, Fulbright, Graduation, ISAP2024, TRB2022-2026, Visit_FAA
@@ -118,7 +118,7 @@ Which DOM placeholders each page uses (determines which JSON files `components.j
 | `News.html` | `#all-news-placeholder` | `news.json` |
 | `blog/*.html` | `#blog-posts-placeholder` | `blog-posts.json` |
 | `projects/*.html` | `#projects-placeholder` | `projects.json` |
-| Publications, Resume, E-Labs, about-me, 404 | (none beyond footer) | `footer.json` only |
+| Publications, Resume, E-Labs, 404 | (none beyond footer) | `footer.json` only |
 
 All pages have hardcoded `<nav>` in HTML — no page uses `#nav-placeholder`.
 

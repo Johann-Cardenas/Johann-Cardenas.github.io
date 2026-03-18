@@ -10,4 +10,14 @@ collections:
 include:
   - blog
 
+# Exclude non-deployable files from Jekyll build
+exclude:
+  - README.md
+  - LICENSE.txt
+  - CLAUDE.md
+  - .github/
+  - "*.py"
+  - "*.pkl.bz2"
+  - node_modules/
+
 # Other default config options can go here

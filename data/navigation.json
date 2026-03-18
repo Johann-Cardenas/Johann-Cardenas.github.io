@@ -59,7 +59,8 @@
       "children": [
         { "name": "AirCrafter", "url": "e-labs/aircrafter/index.html" },
         { "name": "Frontier", "url": "e-labs/frontier/index.html" },
-        { "name": "Asphera", "url": "e-labs/asphera/index.html" }
+        { "name": "Asphera", "url": "e-labs/asphera/index.html" },
+        { "name": "Finite-Elemented", "url": "e-labs/finite-elemented/index.html" }
       ]
     }
   ]

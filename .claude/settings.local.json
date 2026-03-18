@@ -1,22 +1,14 @@
 {
   "permissions": {
     "allow": [
+      "Edit",
+      "Write",
+      "Read",
+      "Bash",
+      "Glob",
+      "Grep",
       "WebFetch(domain:127.0.0.1)",
-      "Bash(bundle exec:*)",
-      "Bash(curl:*)",
-      "Bash(rm:*)",
-      "Bash(start:*)",
-      "Bash(npx:*)",
-      "Bash(du:*)",
-      "Bash(for file in index.html Blog.html Projects.html)",
-      "Bash(do echo \"=== $file ===\")",
-      "Read(//c/Users/johan/Box/05 Repositories/Johann-Cardenas.github.io/**)",
-      "Bash(done)",
-      "Bash(grep:*)",
-      "Bash(wc:*)",
-      "Bash(sort:*)",
-      "Bash(xargs ls:*)",
-      "Bash(ls:*)"
+      "Skill(update-config)"
     ]
   }
 }

@@ -43,8 +43,7 @@ The repository is organized into clear functional domains, utilizing a modular s
 ├── e-labs/               # Interactive laboratory sub-modules
 ├── images/               # Optimized media (projects, news, blog)
 ├── index.html            # Website landing page
-├── about-me.html         # Bio and interactive globe component
-├── [other-pages].html    # Resume, Contact, Publications, etc.
+├── [other-pages].html    # Resume, Publications, etc.
 ```
 
 ### **🎨 Color Scheme**
