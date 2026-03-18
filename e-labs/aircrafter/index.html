@@ -1866,68 +1866,6 @@
         </section>
 
         <section id="main">
-            <!-- ABOUT MODAL -->
-            <div class="about-overlay" id="about-overlay" role="dialog" aria-labelledby="about-title" aria-modal="true" aria-hidden="true">
-                <div class="about-modal">
-                    <div class="about-header">
-                        <div class="about-icon"><i class="fas fa-plane"></i></div>
-                        <h2 id="about-title">AirCrafter</h2>
-                    </div>
-                    <div class="about-body">
-                        <section class="about-section">
-                            <h3>How to Use</h3>
-                            <ol class="about-list">
-                                <li><strong>Select Aircraft</strong> — Choose a manufacturer and model from the FAARFIELD library.</li>
-                                <li><strong>Review Parameters</strong> — Check auto-populated load, pressure, and rib geometry. Adjust if needed.</li>
-                                <li><strong>Compute</strong> — Click Compute (or Ctrl+Enter) to run the stress analysis.</li>
-                                <li><strong>Explore Results</strong> — Use the tabs to visualize 3D surfaces, distributions, and export data.</li>
-                            </ol>
-                        </section>
-                        <section class="about-section">
-                            <h3>Version</h3>
-                            <ul class="about-list">
-                                <li><strong>Version:</strong> 2.0 (stable)</li>
-                                <li><strong>Build:</strong> Aircraft Tire Contact Stress Analysis Engine</li>
-                            </ul>
-                        </section>
-                        <section class="about-section">
-                            <h3>Credits & Data Sources</h3>
-                            <ul class="about-list">
-                                <li>The data presented herein were produced as part of the Illinois Center for Transportation (ICT) and Federal Aviation Administration (FAA) project &ldquo;R27-203: Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis.&rdquo;</li>
-                            </ul>
-                        </section>
-                        <section class="about-section">
-                            <h3>Referenced Publications</h3>
-                            <ul class="about-list">
-                                <li>Hernandez, J. A., A. Gamez, I. L. Al-Qadi, and M. De Beer. Analytical Approach for Predicting Three-Dimensional Tire&ndash;Pavement Contact Load. Transportation Research Record: Journal of the Transportation Research Board, Vol. 2456, No. 1, 2014, pp. 75&ndash;84. <a href="https://doi.org/10.3141/2456-08" target="_blank" rel="noopener noreferrer">https://doi.org/10.3141/2456-08</a>.</li>
-                                <li>Al-Qadi, I., Jayme, A., Zhou, Q., Cardenas J., Singh, A. and Liu, F. (2026) Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis. Volume II. ICT-R27-203. Illinois Center for Transportation. Accepted [Under Review].</li>
-                            </ul>
-                        </section>
-                    </div>
-                    <div class="about-footer">
-                        <button type="button" class="about-copy-btn" id="about-copy-btn"><i class="fas fa-copy"></i> Copy</button>
-                        <button type="button" class="about-close-btn" id="about-close-btn">OK</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Load-Adjust Confirmation Dialog -->
-            <div class="load-confirm-overlay" id="load-confirm-overlay">
-                <div class="load-confirm-card">
-                    <h4><i class="fas fa-exclamation-triangle"></i> Adjust Contact Length?</h4>
-                    <p>Changing the wheel load requires scaling the contact length to maintain physical consistency. Contact width is held constant (tire carcass constraint), while contact length scales linearly with load at fixed inflation pressure.</p>
-                    <div class="lc-values">
-                        <span class="lc-val" id="lc-old-l"></span>
-                        <span class="lc-arrow"><i class="fas fa-arrow-right"></i></span>
-                        <span class="lc-val" id="lc-new-l"></span>
-                    </div>
-                    <div class="load-confirm-btns">
-                        <button type="button" class="lc-cancel" id="lc-cancel">No, keep length</button>
-                        <button type="button" class="lc-confirm" id="lc-confirm">Yes, adjust length</button>
-                    </div>
-                </div>
-            </div>
-
             <div class="aircrafter-app">
 
                 <!-- ===== HEADER ===== -->
@@ -2342,6 +2280,68 @@
             </div>
         </section>
         <div id="footer-placeholder"></div>
+    </div>
+
+    <!-- ABOUT MODAL (outside #page-wrapper to avoid will-change breaking position:fixed) -->
+    <div class="about-overlay" id="about-overlay" role="dialog" aria-labelledby="about-title" aria-modal="true" aria-hidden="true">
+        <div class="about-modal">
+            <div class="about-header">
+                <div class="about-icon"><i class="fas fa-plane"></i></div>
+                <h2 id="about-title">AirCrafter</h2>
+            </div>
+            <div class="about-body">
+                <section class="about-section">
+                    <h3>How to Use</h3>
+                    <ol class="about-list">
+                        <li><strong>Select Aircraft</strong> — Choose a manufacturer and model from the FAARFIELD library.</li>
+                        <li><strong>Review Parameters</strong> — Check auto-populated load, pressure, and rib geometry. Adjust if needed.</li>
+                        <li><strong>Compute</strong> — Click Compute (or Ctrl+Enter) to run the stress analysis.</li>
+                        <li><strong>Explore Results</strong> — Use the tabs to visualize 3D surfaces, distributions, and export data.</li>
+                    </ol>
+                </section>
+                <section class="about-section">
+                    <h3>Version</h3>
+                    <ul class="about-list">
+                        <li><strong>Version:</strong> 2.0 (stable)</li>
+                        <li><strong>Build:</strong> Aircraft Tire Contact Stress Analysis Engine</li>
+                    </ul>
+                </section>
+                <section class="about-section">
+                    <h3>Credits & Data Sources</h3>
+                    <ul class="about-list">
+                        <li>The data presented herein were produced as part of the Illinois Center for Transportation (ICT) and Federal Aviation Administration (FAA) project &ldquo;R27-203: Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis.&rdquo;</li>
+                    </ul>
+                </section>
+                <section class="about-section">
+                    <h3>Referenced Publications</h3>
+                    <ul class="about-list">
+                        <li>Hernandez, J. A., A. Gamez, I. L. Al-Qadi, and M. De Beer. Analytical Approach for Predicting Three-Dimensional Tire&ndash;Pavement Contact Load. Transportation Research Record: Journal of the Transportation Research Board, Vol. 2456, No. 1, 2014, pp. 75&ndash;84. <a href="https://doi.org/10.3141/2456-08" target="_blank" rel="noopener noreferrer">https://doi.org/10.3141/2456-08</a>.</li>
+                        <li>Al-Qadi, I., Jayme, A., Zhou, Q., Cardenas J., Singh, A. and Liu, F. (2026) Building Machine-learning-based Prediction Models for Computationally Efficient Airfield Pavement Analysis. Volume II. ICT-R27-203. Illinois Center for Transportation. Accepted [Under Review].</li>
+                    </ul>
+                </section>
+            </div>
+            <div class="about-footer">
+                <button type="button" class="about-copy-btn" id="about-copy-btn"><i class="fas fa-copy"></i> Copy</button>
+                <button type="button" class="about-close-btn" id="about-close-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load-Adjust Confirmation Dialog (outside #page-wrapper to avoid will-change breaking position:fixed) -->
+    <div class="load-confirm-overlay" id="load-confirm-overlay">
+        <div class="load-confirm-card">
+            <h4><i class="fas fa-exclamation-triangle"></i> Adjust Contact Length?</h4>
+            <p>Changing the wheel load requires scaling the contact length to maintain physical consistency. Contact width is held constant (tire carcass constraint), while contact length scales linearly with load at fixed inflation pressure.</p>
+            <div class="lc-values">
+                <span class="lc-val" id="lc-old-l"></span>
+                <span class="lc-arrow"><i class="fas fa-arrow-right"></i></span>
+                <span class="lc-val" id="lc-new-l"></span>
+            </div>
+            <div class="load-confirm-btns">
+                <button type="button" class="lc-cancel" id="lc-cancel">No, keep length</button>
+                <button type="button" class="lc-confirm" id="lc-confirm">Yes, adjust length</button>
+            </div>
+        </div>
     </div>
 
     <!-- Loading Overlay -->
@@ -3040,6 +3040,9 @@
         var resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(resize, 150); });
 
+        // Expose restart so transitionToLanding() can re-init after hero re-expands
+        window.restartMeshCanvas = start;
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', start);
         } else {
@@ -3104,6 +3107,8 @@
         appState = 'landing';
         const app = document.querySelector('.aircrafter-app');
         app.classList.remove('app-working');
+        // Restart canvas animation (hero was collapsed to 0×0 while in working state)
+        requestAnimationFrame(() => { if (window.restartMeshCanvas) window.restartMeshCanvas(); });
         // Replay hero entrance animations
         replayHeroAnimations();
         // Reset UI state
