@@ -2617,11 +2617,11 @@
                                         </div>
                                         <div class="fem-control-group">
                                             <label class="fem-control-label">Elements</label>
-                                            <input type="number" class="fem-control-input" id="ip-axle-elements" value="25" min="1" step="1" style="width:55px;" />
+                                            <input type="number" class="fem-control-input" id="ip-axle-elements" value="13" min="1" step="1" style="width:55px;" />
                                         </div>
                                         <div class="fem-control-group">
                                             <label class="fem-control-label">Elem. Width</label>
-                                            <span class="fem-chip" id="ip-axle-elem-width" style="margin-top:2px;">39.0 mm</span>
+                                            <span class="fem-chip" id="ip-axle-elem-width" style="margin-top:2px;">75.0 mm</span>
                                         </div>
                                     </div>
                                 </div>
@@ -2769,13 +2769,9 @@
     <script src="../../assets/js/util.js"></script>
         <script src="../../assets/js/main.js"></script>
         <script>
-        // Password Modal Logic — TEMPORARILY DISABLED FOR DEVELOPMENT
+        // Password Modal Logic
         (function() {
             var modal = document.getElementById('password-modal');
-            // DEV BYPASS: auto-hide modal immediately
-            if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
-            return;
-            /* --- ORIGINAL CODE (uncomment to re-enable) ---
             var form = document.getElementById('password-form');
             var input = document.getElementById('password-input');
             var error = document.getElementById('password-error');
@@ -2812,7 +2808,6 @@
                     e.preventDefault();
                 }
             }, true);
-            --- END ORIGINAL CODE ---*/
             document.addEventListener('keydown', function(e) {
                 if (!allowed && !modal.contains(document.activeElement)) {
                     if (e.key !== 'Tab' && e.key !== 'Enter') e.preventDefault();
