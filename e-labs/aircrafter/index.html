@@ -2275,7 +2275,10 @@
                                     </div>
                                     <div class="param-card" id="card-l">
                                         <div class="label tooltip-trigger" data-tooltip="Contact patch length along rolling direction">l — Contact Length</div>
-                                        <input type="number" id="input-l" step="any" />
+                                        <div style="position:relative;">
+                                            <input type="number" id="input-l" step="any" style="padding-right:1.6rem;" />
+                                            <i class="fas fa-circle-info tooltip-trigger" data-tooltip="This value is an exact approximation. Round as convenient to a multiple of the element size." style="position:absolute; right:6px; top:50%; transform:translateY(-50%); font-size:0.78em; opacity:0.55; cursor:help; pointer-events:auto; z-index:1;"></i>
+                                        </div>
                                         <div class="unit-row"><span class="unit">mm</span><span class="unit-eng-wrapper"><input type="number" class="unit-eng-input" id="eng-l" step="any" /><span class="unit-eng-label">in</span></span></div>
                                     </div>
                                 </div>
