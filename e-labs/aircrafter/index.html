@@ -7316,7 +7316,8 @@
             }
             drawFEMGrid();
             updateProgressBar(stepVal);
-            updateOutputTables();
+            // Output tables are NOT updated here — they are computed once
+            // at Load Step 0 and should remain fixed regardless of slider position.
         });
 
         // Output tabs
