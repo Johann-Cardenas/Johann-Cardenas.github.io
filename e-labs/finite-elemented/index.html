@@ -1331,9 +1331,150 @@
             transform: scale(1.1);
             box-shadow: 0 6px 20px rgba(0,0,0,0.2);
         }
+
+        /* ==================== ACCESSIBILITY ==================== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+        @media (prefers-contrast: high) {
+            .panel, .module-tab, .btn, .landing-module-card,
+            .element-card, .glossary-term, .quiz-option {
+                border-width: 2px;
+            }
+            .glass { backdrop-filter: none; background: var(--fe-bg-panel); }
+        }
+
+        /* ==================== SCROLL PROGRESS BAR ==================== */
+        .scroll-progress {
+            position: fixed; top: 0; left: 0; height: 3px; z-index: 99999;
+            background: linear-gradient(90deg, var(--fe-primary), var(--fe-secondary), var(--fe-accent));
+            background-size: 200% 100%;
+            animation: gradientShift 3s ease infinite;
+            width: 0%; transition: width 0.1s linear;
+            box-shadow: 0 0 8px var(--fe-primary-glow);
+            pointer-events: none;
+        }
+
+        /* ==================== TOAST NOTIFICATIONS ==================== */
+        .toast-container {
+            position: fixed; top: 1.25rem; right: 1.25rem; z-index: 100000;
+            display: flex; flex-direction: column; gap: 0.65rem;
+            pointer-events: none; max-width: 380px;
+        }
+        .toast {
+            pointer-events: auto; display: flex; align-items: flex-start; gap: 0.75rem;
+            padding: 0.85rem 1.1rem; border-radius: 14px;
+            background: var(--fe-bg-panel); border: 1px solid var(--fe-border);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            animation: toastIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+            color: var(--fe-text); font-size: 0.88rem; line-height: 1.4;
+            max-width: 100%; overflow: hidden;
+        }
+        .toast.toast-exit {
+            animation: toastOut 0.3s cubic-bezier(0.55, 0, 1, 0.45) both;
+        }
+        .toast-icon {
+            flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.82rem;
+        }
+        .toast-success .toast-icon { background: rgba(16,185,129,0.15); color: var(--fe-success); }
+        .toast-error .toast-icon { background: rgba(239,68,68,0.15); color: var(--fe-danger); }
+        .toast-info .toast-icon { background: rgba(224,70,104,0.15); color: var(--fe-primary); }
+        .toast-warning .toast-icon { background: rgba(245,158,11,0.15); color: var(--fe-warning); }
+        .toast-body { flex: 1; min-width: 0; }
+        .toast-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 0.15rem; }
+        .toast-message { font-size: 0.8rem; color: var(--fe-text-muted); }
+        .toast-close {
+            flex-shrink: 0; background: none; border: none; color: var(--fe-text-muted);
+            cursor: pointer; padding: 0.2rem; font-size: 0.82rem; opacity: 0.6;
+            transition: opacity 0.2s; border-radius: 6px;
+        }
+        .toast-close:hover { opacity: 1; background: var(--glass-bg); }
+        .toast-progress {
+            position: absolute; bottom: 0; left: 0; height: 3px;
+            border-radius: 0 0 14px 14px;
+            animation: toastProgress var(--toast-duration, 4s) linear both;
+        }
+        .toast-success .toast-progress { background: var(--fe-success); }
+        .toast-error .toast-progress { background: var(--fe-danger); }
+        .toast-info .toast-progress { background: var(--fe-primary); }
+        .toast-warning .toast-progress { background: var(--fe-warning); }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(40px) scale(0.95); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0) scale(1); max-height: 120px; margin-bottom: 0; }
+            to { opacity: 0; transform: translateX(40px) scale(0.95); max-height: 0; margin-bottom: -0.65rem; padding: 0; }
+        }
+        @keyframes toastProgress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        @media (max-width: 480px) {
+            .toast-container { top: 0.75rem; right: 0.75rem; left: 0.75rem; max-width: none; }
+        }
+
+        /* ==================== KEYBOARD SHORTCUTS OVERLAY ==================== */
+        .shortcuts-overlay {
+            position: fixed; inset: 0; z-index: 100002;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .shortcuts-overlay.active { display: flex; opacity: 1; }
+        .shortcuts-modal {
+            background: var(--fe-bg-panel); border: 1px solid var(--fe-border);
+            border-radius: 20px; padding: 2rem; max-width: 520px; width: 90%;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+        }
+        .shortcuts-modal h3 {
+            font-size: 1.15rem; font-weight: 800; margin: 0 0 1.25rem;
+            display: flex; align-items: center; gap: 0.6rem; color: var(--fe-text);
+        }
+        .shortcuts-modal h3 i { color: var(--fe-primary); }
+        .shortcut-group { margin-bottom: 1rem; }
+        .shortcut-group-title {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; color: var(--fe-text-muted); margin-bottom: 0.5rem;
+        }
+        .shortcut-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.5rem 0; border-bottom: 1px solid rgba(128,128,128,0.1);
+        }
+        .shortcut-row:last-child { border-bottom: none; }
+        .shortcut-label { font-size: 0.88rem; color: var(--fe-text-secondary); }
+        .shortcut-keys { display: flex; gap: 0.3rem; }
+        .kbd {
+            background: var(--fe-bg); border: 1px solid var(--fe-border);
+            border-radius: 6px; padding: 0.2rem 0.55rem; font-size: 0.75rem;
+            font-weight: 600; color: var(--fe-text); font-family: 'Source Sans Pro', monospace;
+            box-shadow: 0 2px 0 var(--fe-border);
+        }
+        .shortcuts-close {
+            margin-top: 1.25rem; width: 100%; padding: 0.6rem;
+            background: var(--glass-bg); border: 1px solid var(--fe-border);
+            border-radius: 10px; color: var(--fe-text-muted); font-size: 0.85rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .shortcuts-close:hover { background: var(--fe-primary); color: white; border-color: var(--fe-primary); }
     </style>
 </head>
 <body class="is-preload">
+    <!-- Accessibility: Skip Link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <!-- Scroll Progress Indicator -->
+    <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
     <div id="page-wrapper">
 
         <!-- Hidden Header (for main.css compatibility) -->
@@ -1370,7 +1511,7 @@
 
         <!-- Main App -->
         <section id="main">
-            <div class="fe-app">
+            <div class="fe-app" id="main-content" tabindex="-1">
                 <!-- App Header -->
                 <div class="app-header">
                     <div class="header-nav">
@@ -2397,6 +2538,40 @@
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
     <script src="../../assets/js/search.js"></script>
     <script src="../../assets/js/back-to-top.js"></script>
+
+    <!-- KEYBOARD SHORTCUTS OVERLAY -->
+    <div class="shortcuts-overlay" id="shortcuts-overlay" role="dialog" aria-label="Keyboard shortcuts" aria-modal="true">
+        <div class="shortcuts-modal">
+            <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
+            <div class="shortcut-group">
+                <div class="shortcut-group-title">General</div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Show this panel</span>
+                    <div class="shortcut-keys"><span class="kbd">?</span></div>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Back to landing page</span>
+                    <div class="shortcut-keys"><span class="kbd">Esc</span></div>
+                </div>
+            </div>
+            <div class="shortcut-group">
+                <div class="shortcut-group-title">Navigation</div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Navigate to module 1–8</span>
+                    <div class="shortcut-keys"><span class="kbd">1</span> – <span class="kbd">8</span></div>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Next module</span>
+                    <div class="shortcut-keys"><span class="kbd">→</span></div>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Previous module</span>
+                    <div class="shortcut-keys"><span class="kbd">←</span></div>
+                </div>
+            </div>
+            <button class="shortcuts-close" id="shortcuts-close">Close <span class="kbd" style="margin-left:0.5rem;">Esc</span></button>
+        </div>
+    </div>
 
     <script>
     // ==================== FINITE-ELEMENTED APP LOGIC ====================
@@ -4029,6 +4204,7 @@
                             scoreDiv.style.display = 'block';
                             scoreDiv.innerHTML = '<div class="quiz-score"><div class="score-value">' + score + '/' + questions.length + '</div><p style="color:var(--fe-text-secondary);margin-top:0.5rem;">' +
                                 (score >= 8 ? 'Excellent! You really know your elements.' : score >= 5 ? 'Good job! Review the modules for the ones you missed.' : 'Keep learning! Go through the modules again.') + '</p></div>';
+                            if (typeof FEToast === 'function') FEToast(score >= 8 ? 'success' : score >= 5 ? 'info' : 'warning', 'Quiz Complete', 'You scored ' + score + '/' + questions.length + '.', 4000);
                         }
                     });
                     optsDiv.appendChild(optEl);
@@ -4075,6 +4251,116 @@
         };
         document.body.appendChild(themeBtn);
 
+    })();
+
+    // ===== Scroll Progress Indicator =====
+    (function() {
+        var bar = document.getElementById('scroll-progress');
+        if (!bar) return;
+        function updateProgress() {
+            var scrollTop = window.scrollY || document.documentElement.scrollTop;
+            var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            var pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            bar.style.width = pct + '%';
+        }
+        window.addEventListener('scroll', updateProgress, { passive: true });
+        updateProgress();
+    })();
+
+    // ===== Toast Notification System =====
+    (function() {
+        var container = document.getElementById('toast-container');
+        if (!container) return;
+        var ICONS = {
+            success: 'fa-check',
+            error: 'fa-xmark',
+            info: 'fa-info',
+            warning: 'fa-exclamation'
+        };
+        window.FEToast = function(type, title, message, duration) {
+            duration = duration || 4000;
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + type;
+            toast.style.position = 'relative';
+            toast.style.setProperty('--toast-duration', duration + 'ms');
+            toast.innerHTML =
+                '<div class="toast-icon"><i class="fas ' + (ICONS[type] || ICONS.info) + '"></i></div>' +
+                '<div class="toast-body">' +
+                    '<div class="toast-title">' + title + '</div>' +
+                    (message ? '<div class="toast-message">' + message + '</div>' : '') +
+                '</div>' +
+                '<button class="toast-close" aria-label="Dismiss"><i class="fas fa-xmark"></i></button>' +
+                '<div class="toast-progress"></div>';
+            container.appendChild(toast);
+            var closeBtn = toast.querySelector('.toast-close');
+            function dismiss() {
+                toast.classList.add('toast-exit');
+                setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
+            }
+            closeBtn.addEventListener('click', dismiss);
+            setTimeout(dismiss, duration);
+        };
+    })();
+
+    // ===== Keyboard Shortcuts =====
+    (function() {
+        var overlay = document.getElementById('shortcuts-overlay');
+        var closeBtn = document.getElementById('shortcuts-close');
+        if (!overlay) return;
+
+        function openShortcuts() {
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeShortcuts() {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', closeShortcuts);
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) closeShortcuts(); });
+
+        var MODULES = ['intro','meshing','elements','hpmethod','complexity','convergence','abaqus','proscons'];
+        document.addEventListener('keydown', function(e) {
+            var tag = (e.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
+
+            // ? opens shortcuts
+            if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+                if (overlay.classList.contains('active')) closeShortcuts();
+                else openShortcuts();
+                return;
+            }
+            // Escape closes shortcuts or goes to landing
+            if (e.key === 'Escape') {
+                if (overlay.classList.contains('active')) { closeShortcuts(); return; }
+            }
+            // 1-8 switch modules
+            var num = parseInt(e.key);
+            if (num >= 1 && num <= 8 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                var tabName = MODULES[num - 1];
+                var tab = document.querySelector('.module-tab[data-module="' + tabName + '"]');
+                if (tab && tab.offsetParent !== null) {
+                    e.preventDefault();
+                    tab.click();
+                }
+                return;
+            }
+            // Arrow keys for next/prev module
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                var activeTabs = document.querySelectorAll('.module-tab');
+                var activeIdx = -1;
+                activeTabs.forEach(function(t, i) { if (t.classList.contains('active')) activeIdx = i; });
+                if (activeIdx >= 0) {
+                    var nextIdx = e.key === 'ArrowRight' ? activeIdx + 1 : activeIdx - 1;
+                    if (nextIdx >= 0 && nextIdx < activeTabs.length) {
+                        e.preventDefault();
+                        activeTabs[nextIdx].click();
+                    }
+                }
+            }
+        });
     })();
     </script>
 </body>

@@ -1741,7 +1741,9 @@
                         transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
             z-index: 100;
         }
-        .tooltip-trigger:hover::after {
+        .tooltip-trigger:hover::after,
+        .tooltip-trigger:focus::after,
+        .tooltip-trigger:focus-within::after {
             opacity: 1;
             transform: translateX(-50%) translateY(-4px) scale(1);
         }
@@ -1749,7 +1751,9 @@
             left: 0; transform: translateX(0) translateY(4px) scale(0.92);
             max-width: 220px; white-space: normal;
         }
-        .adv-input-group .tooltip-trigger:hover::after {
+        .adv-input-group .tooltip-trigger:hover::after,
+        .adv-input-group .tooltip-trigger:focus::after,
+        .adv-input-group .tooltip-trigger:focus-within::after {
             transform: translateX(0) translateY(-4px) scale(1);
         }
 
@@ -2251,10 +2255,166 @@
         @media (max-width: 480px) {
             .js-plotly-plot .plotly .modebar { transform: scale(0.65); transform-origin: top right; }
         }
+
+        /* ==================== ACCESSIBILITY ==================== */
+        .skip-link {
+            position: absolute; top: -50px; left: 0; padding: 10px 18px;
+            background: var(--ac-primary); color: #fff; z-index: 100001;
+            font-size: 0.9rem; font-weight: 600; border-radius: 0 0 10px 0;
+            transition: top 0.3s ease; text-decoration: none;
+            box-shadow: 0 2px 8px var(--ac-primary-glow);
+        }
+        .skip-link:focus { top: 0; outline: none; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+        @media (prefers-contrast: high) {
+            .panel, .param-card, .module-tab, .viz-tab, .chart-panel,
+            .btn, .aircraft-collapsed-bar, .hero-section, .about-modal {
+                border-width: 2px;
+            }
+            .glass { backdrop-filter: none; background: var(--ac-bg-panel); }
+        }
+
+        /* ==================== SCROLL PROGRESS BAR ==================== */
+        .scroll-progress {
+            position: fixed; top: 0; left: 0; height: 3px; z-index: 99999;
+            background: linear-gradient(90deg, var(--ac-primary), var(--ac-secondary), var(--ac-accent));
+            background-size: 200% 100%;
+            animation: gradientShift 3s ease infinite;
+            width: 0%; transition: width 0.1s linear;
+            box-shadow: 0 0 8px var(--ac-primary-glow);
+            pointer-events: none;
+        }
+
+        /* ==================== TOAST NOTIFICATIONS ==================== */
+        .toast-container {
+            position: fixed; top: 1.25rem; right: 1.25rem; z-index: 100000;
+            display: flex; flex-direction: column; gap: 0.65rem;
+            pointer-events: none; max-width: 380px;
+        }
+        .toast {
+            pointer-events: auto; display: flex; align-items: flex-start; gap: 0.75rem;
+            padding: 0.85rem 1.1rem; border-radius: 14px;
+            background: var(--ac-bg-panel); border: 1px solid var(--ac-border);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            animation: toastIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+            color: var(--ac-text); font-size: 0.88rem; line-height: 1.4;
+            max-width: 100%; overflow: hidden;
+        }
+        .toast.toast-exit {
+            animation: toastOut 0.3s cubic-bezier(0.55, 0, 1, 0.45) both;
+        }
+        .toast-icon {
+            flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.82rem;
+        }
+        .toast-success .toast-icon { background: rgba(16,185,129,0.15); color: var(--ac-success); }
+        .toast-error .toast-icon { background: rgba(239,68,68,0.15); color: var(--ac-danger); }
+        .toast-info .toast-icon { background: rgba(14,165,233,0.15); color: var(--ac-primary); }
+        .toast-warning .toast-icon { background: rgba(245,158,11,0.15); color: var(--ac-warning); }
+        .toast-body { flex: 1; min-width: 0; }
+        .toast-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 0.15rem; }
+        .toast-message { font-size: 0.8rem; color: var(--ac-text-muted); }
+        .toast-close {
+            flex-shrink: 0; background: none; border: none; color: var(--ac-text-muted);
+            cursor: pointer; padding: 0.2rem; font-size: 0.82rem; opacity: 0.6;
+            transition: opacity 0.2s; border-radius: 6px;
+        }
+        .toast-close:hover { opacity: 1; background: var(--glass-bg); }
+        .toast-progress {
+            position: absolute; bottom: 0; left: 0; height: 3px;
+            border-radius: 0 0 14px 14px;
+            animation: toastProgress var(--toast-duration, 4s) linear both;
+        }
+        .toast-success .toast-progress { background: var(--ac-success); }
+        .toast-error .toast-progress { background: var(--ac-danger); }
+        .toast-info .toast-progress { background: var(--ac-primary); }
+        .toast-warning .toast-progress { background: var(--ac-warning); }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(40px) scale(0.95); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0) scale(1); max-height: 120px; margin-bottom: 0; }
+            to { opacity: 0; transform: translateX(40px) scale(0.95); max-height: 0; margin-bottom: -0.65rem; padding: 0; }
+        }
+        @keyframes toastProgress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        @media (max-width: 480px) {
+            .toast-container { top: 0.75rem; right: 0.75rem; left: 0.75rem; max-width: none; }
+        }
+
+        /* ==================== KEYBOARD SHORTCUTS OVERLAY ==================== */
+        .shortcuts-overlay {
+            position: fixed; inset: 0; z-index: 100002;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .shortcuts-overlay.active { display: flex; opacity: 1; }
+        .shortcuts-modal {
+            background: var(--ac-bg-panel); border: 1px solid var(--ac-border);
+            border-radius: 20px; padding: 2rem; max-width: 520px; width: 90%;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+            animation: scaleIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .shortcuts-modal h3 {
+            font-size: 1.15rem; font-weight: 800; margin: 0 0 1.25rem;
+            display: flex; align-items: center; gap: 0.6rem; color: var(--ac-text);
+        }
+        .shortcuts-modal h3 i { color: var(--ac-primary); }
+        .shortcut-group { margin-bottom: 1rem; }
+        .shortcut-group-title {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; color: var(--ac-text-muted); margin-bottom: 0.5rem;
+        }
+        .shortcut-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.5rem 0; border-bottom: 1px solid rgba(128,128,128,0.1);
+        }
+        .shortcut-row:last-child { border-bottom: none; }
+        .shortcut-label { font-size: 0.88rem; color: var(--ac-text-secondary); }
+        .shortcut-keys { display: flex; gap: 0.3rem; }
+        .kbd {
+            background: var(--ac-bg); border: 1px solid var(--ac-border);
+            border-radius: 6px; padding: 0.2rem 0.55rem; font-size: 0.75rem;
+            font-weight: 600; color: var(--ac-text); font-family: 'Source Sans Pro', monospace;
+            box-shadow: 0 2px 0 var(--ac-border);
+        }
+        .shortcuts-close {
+            margin-top: 1.25rem; width: 100%; padding: 0.6rem;
+            background: var(--glass-bg); border: 1px solid var(--ac-border);
+            border-radius: 10px; color: var(--ac-text-muted); font-size: 0.85rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .shortcuts-close:hover { background: var(--ac-primary); color: white; border-color: var(--ac-primary); }
+
+        /* ==================== ENHANCED MODULE TABS MOBILE ==================== */
+        @media (max-width: 768px) {
+            .module-tabs-wrapper { padding-bottom: 0; }
+        }
     </style>
 </head>
 
 <body>
+    <!-- Accessibility: Skip Link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <!-- Scroll Progress Indicator -->
+    <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
             <!-- Password Modal Overlay -->
             <div id="password-modal" style="position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(15,23,42,0.96);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);">
                 <form id="password-form" style="background:rgba(255,255,255,0.07);border-radius:22px;padding:2.1em 2.1em 1.7em 2.1em;box-shadow:0 10px 40px 0 rgba(24,169,168,0.18),0 2px 16px 0 rgba(0,0,0,0.18);display:flex;flex-direction:column;align-items:center;min-width:320px;max-width:92vw;backdrop-filter:blur(2px);border:1.5px solid #18a9a8;">
@@ -2311,7 +2471,7 @@
         </section>
 
         <section id="main">
-            <div class="aircrafter-app">
+            <div class="aircrafter-app" id="main-content" tabindex="-1">
 
                 <!-- ===== HEADER ===== -->
                 <div class="app-header">
@@ -2899,6 +3059,48 @@
             </div>
         </section>
         <div id="footer-placeholder"></div>
+    </div>
+
+    <!-- KEYBOARD SHORTCUTS OVERLAY -->
+    <div class="shortcuts-overlay" id="shortcuts-overlay" role="dialog" aria-label="Keyboard shortcuts" aria-modal="true">
+        <div class="shortcuts-modal">
+            <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
+            <div class="shortcut-group">
+                <div class="shortcut-group-title">General</div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Show this panel</span>
+                    <div class="shortcut-keys"><span class="kbd">?</span></div>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Compute stresses</span>
+                    <div class="shortcut-keys"><span class="kbd">Ctrl</span><span class="kbd">Enter</span></div>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Search aircraft</span>
+                    <div class="shortcut-keys"><span class="kbd">/</span></div>
+                </div>
+            </div>
+            <div class="shortcut-group">
+                <div class="shortcut-group-title">Navigation</div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Configuration tab</span>
+                    <div class="shortcut-keys"><span class="kbd">1</span></div>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Analysis tab</span>
+                    <div class="shortcut-keys"><span class="kbd">2</span></div>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Results Summary tab</span>
+                    <div class="shortcut-keys"><span class="kbd">3</span></div>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Input Preparation tab</span>
+                    <div class="shortcut-keys"><span class="kbd">4</span></div>
+                </div>
+            </div>
+            <button class="shortcuts-close" id="shortcuts-close">Close <span class="kbd" style="margin-left:0.5rem;">Esc</span></button>
+        </div>
     </div>
 
     <!-- ABOUT MODAL (outside #page-wrapper to avoid will-change breaking position:fixed) -->
@@ -3924,8 +4126,10 @@
                     document.getElementById(id).style.display = 'none');
                 ['analysis-content','summary-content','inputprep-content'].forEach(id =>
                     document.getElementById(id).style.display = '');
+                if (typeof AirCrafterToast === 'function') AirCrafterToast('success', 'Computation Complete', 'Stress distributions calculated for all ribs.', 3500);
             } catch (e) {
                 console.error('Compute error:', e);
+                if (typeof AirCrafterToast === 'function') AirCrafterToast('error', 'Computation Failed', e.message || 'An unexpected error occurred.', 5000);
             }
 
             // Hide overlay with brief CSS fade
@@ -5246,6 +5450,7 @@
         const safeName = aircraftName.replace(/[^a-zA-Z0-9_\- ]/g, '').replace(/\s+/g, '_');
         XLSX.writeFile(wb, 'AirCrafter_' + safeName + '.xlsx');
         showSuccessFlash('Exported to Excel!');
+        if (typeof AirCrafterToast === 'function') AirCrafterToast('success', 'Excel Exported', 'AirCrafter_' + safeName + '.xlsx downloaded.', 3500);
     }
 
     // ================================================================
@@ -6681,10 +6886,11 @@
                     var pp = document.getElementById('param-panel');
                     if (pp) pp.classList.remove('params-dirty');
                     clearModifiedFlags();
+                    if (typeof AirCrafterToast === 'function') AirCrafterToast('success', 'Recomputed', 'Stress distributions updated.', 3000);
                 });
             } catch (e) {
                 console.error('Compute error:', e);
-                alert('Compute error: ' + e.message);
+                if (typeof AirCrafterToast === 'function') AirCrafterToast('error', 'Compute Error', e.message || 'An unexpected error occurred.', 5000);
                 hideLoading();
             }
         });
@@ -7443,6 +7649,113 @@
             });
         }, 200);
     });
+
+    // ===== Scroll Progress Indicator =====
+    (function() {
+        var bar = document.getElementById('scroll-progress');
+        if (!bar) return;
+        function updateProgress() {
+            var scrollTop = window.scrollY || document.documentElement.scrollTop;
+            var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            var pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            bar.style.width = pct + '%';
+        }
+        window.addEventListener('scroll', updateProgress, { passive: true });
+        updateProgress();
+    })();
+
+    // ===== Toast Notification System =====
+    (function() {
+        var container = document.getElementById('toast-container');
+        if (!container) return;
+        var ICONS = {
+            success: 'fa-check',
+            error: 'fa-xmark',
+            info: 'fa-info',
+            warning: 'fa-exclamation'
+        };
+        window.AirCrafterToast = function(type, title, message, duration) {
+            duration = duration || 4000;
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + type;
+            toast.style.position = 'relative';
+            toast.style.setProperty('--toast-duration', duration + 'ms');
+            toast.innerHTML =
+                '<div class="toast-icon"><i class="fas ' + (ICONS[type] || ICONS.info) + '"></i></div>' +
+                '<div class="toast-body">' +
+                    '<div class="toast-title">' + title + '</div>' +
+                    (message ? '<div class="toast-message">' + message + '</div>' : '') +
+                '</div>' +
+                '<button class="toast-close" aria-label="Dismiss"><i class="fas fa-xmark"></i></button>' +
+                '<div class="toast-progress"></div>';
+            container.appendChild(toast);
+            var closeBtn = toast.querySelector('.toast-close');
+            function dismiss() {
+                toast.classList.add('toast-exit');
+                setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
+            }
+            closeBtn.addEventListener('click', dismiss);
+            setTimeout(dismiss, duration);
+        };
+    })();
+
+    // ===== Keyboard Shortcuts =====
+    (function() {
+        var overlay = document.getElementById('shortcuts-overlay');
+        var closeBtn = document.getElementById('shortcuts-close');
+        if (!overlay) return;
+
+        function openShortcuts() {
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeShortcuts() {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', closeShortcuts);
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) closeShortcuts(); });
+
+        var moduleTabs = ['config', 'analysis', 'summary', 'inputprep'];
+        document.addEventListener('keydown', function(e) {
+            // Don't trigger when typing in inputs
+            var tag = (e.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
+
+            // ? opens shortcuts
+            if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+                if (overlay.classList.contains('active')) closeShortcuts();
+                else openShortcuts();
+                return;
+            }
+            // Escape closes shortcuts
+            if (e.key === 'Escape' && overlay.classList.contains('active')) {
+                closeShortcuts();
+                return;
+            }
+            // / focuses aircraft search
+            if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+                var search = document.getElementById('aircraft-search');
+                if (search && search.offsetParent !== null) {
+                    e.preventDefault();
+                    search.focus();
+                }
+                return;
+            }
+            // 1-4 switch module tabs
+            var num = parseInt(e.key);
+            if (num >= 1 && num <= 4 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                var tabName = moduleTabs[num - 1];
+                var tab = document.querySelector('.module-tab[data-module="' + tabName + '"]');
+                if (tab && tab.offsetParent !== null) {
+                    e.preventDefault();
+                    tab.click();
+                }
+            }
+        });
+    })();
     </script>
 </body>
 </html>

@@ -5641,9 +5641,133 @@
                 border-width: 2px;
             }
         }
+
+        /* ==================== SCROLL PROGRESS BAR ==================== */
+        .scroll-progress {
+            position: fixed; top: 0; left: 0; height: 3px; z-index: 99999;
+            background: linear-gradient(90deg, var(--frontier-primary), var(--frontier-secondary), var(--frontier-accent));
+            background-size: 200% 100%;
+            animation: shimmer 3s ease infinite;
+            width: 0%; transition: width 0.1s linear;
+            box-shadow: 0 0 8px var(--frontier-primary-glow);
+            pointer-events: none;
+        }
+
+        /* ==================== TOAST NOTIFICATIONS ==================== */
+        .toast-container {
+            position: fixed; top: 1.25rem; right: 1.25rem; z-index: 100000;
+            display: flex; flex-direction: column; gap: 0.65rem;
+            pointer-events: none; max-width: 380px;
+        }
+        .toast {
+            pointer-events: auto; display: flex; align-items: flex-start; gap: 0.75rem;
+            padding: 0.85rem 1.1rem; border-radius: 14px;
+            background: var(--frontier-bg-panel); border: 1px solid var(--frontier-border);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            animation: toastIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+            color: var(--frontier-text); font-size: 0.88rem; line-height: 1.4;
+            max-width: 100%; overflow: hidden;
+        }
+        .toast.toast-exit {
+            animation: toastOut 0.3s cubic-bezier(0.55, 0, 1, 0.45) both;
+        }
+        .toast-icon {
+            flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.82rem;
+        }
+        .toast-success .toast-icon { background: rgba(16,185,129,0.15); color: var(--frontier-success); }
+        .toast-error .toast-icon { background: rgba(239,68,68,0.15); color: var(--frontier-danger); }
+        .toast-info .toast-icon { background: rgba(24,169,168,0.15); color: var(--frontier-primary); }
+        .toast-warning .toast-icon { background: rgba(245,158,11,0.15); color: var(--frontier-warning); }
+        .toast-body { flex: 1; min-width: 0; }
+        .toast-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 0.15rem; }
+        .toast-message { font-size: 0.8rem; color: var(--frontier-text-muted); }
+        .toast-close {
+            flex-shrink: 0; background: none; border: none; color: var(--frontier-text-muted);
+            cursor: pointer; padding: 0.2rem; font-size: 0.82rem; opacity: 0.6;
+            transition: opacity 0.2s; border-radius: 6px;
+        }
+        .toast-close:hover { opacity: 1; background: var(--glass-bg); }
+        .toast-progress {
+            position: absolute; bottom: 0; left: 0; height: 3px;
+            border-radius: 0 0 14px 14px;
+            animation: toastProgress var(--toast-duration, 4s) linear both;
+        }
+        .toast-success .toast-progress { background: var(--frontier-success); }
+        .toast-error .toast-progress { background: var(--frontier-danger); }
+        .toast-info .toast-progress { background: var(--frontier-primary); }
+        .toast-warning .toast-progress { background: var(--frontier-warning); }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(40px) scale(0.95); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0) scale(1); max-height: 120px; margin-bottom: 0; }
+            to { opacity: 0; transform: translateX(40px) scale(0.95); max-height: 0; margin-bottom: -0.65rem; padding: 0; }
+        }
+        @keyframes toastProgress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        @media (max-width: 480px) {
+            .toast-container { top: 0.75rem; right: 0.75rem; left: 0.75rem; max-width: none; }
+        }
+
+        /* ==================== KEYBOARD SHORTCUTS OVERLAY ==================== */
+        .shortcuts-overlay {
+            position: fixed; inset: 0; z-index: 100002;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .shortcuts-overlay.active { display: flex; opacity: 1; }
+        .shortcuts-modal {
+            background: var(--frontier-bg-panel); border: 1px solid var(--frontier-border);
+            border-radius: 20px; padding: 2rem; max-width: 520px; width: 90%;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+        }
+        .shortcuts-modal h3 {
+            font-size: 1.15rem; font-weight: 800; margin: 0 0 1.25rem;
+            display: flex; align-items: center; gap: 0.6rem; color: var(--frontier-text);
+        }
+        .shortcuts-modal h3 i { color: var(--frontier-primary); }
+        .shortcut-group { margin-bottom: 1rem; }
+        .shortcut-group-title {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; color: var(--frontier-text-muted); margin-bottom: 0.5rem;
+        }
+        .shortcut-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.5rem 0; border-bottom: 1px solid rgba(128,128,128,0.1);
+        }
+        .shortcut-row:last-child { border-bottom: none; }
+        .shortcut-label { font-size: 0.88rem; color: var(--frontier-text-secondary); }
+        .shortcut-keys { display: flex; gap: 0.3rem; }
+        .kbd {
+            background: var(--frontier-bg); border: 1px solid var(--frontier-border);
+            border-radius: 6px; padding: 0.2rem 0.55rem; font-size: 0.75rem;
+            font-weight: 600; color: var(--frontier-text); font-family: 'Source Sans Pro', monospace;
+            box-shadow: 0 2px 0 var(--frontier-border);
+        }
+        .shortcuts-close {
+            margin-top: 1.25rem; width: 100%; padding: 0.6rem;
+            background: var(--glass-bg); border: 1px solid var(--frontier-border);
+            border-radius: 10px; color: var(--frontier-text-muted); font-size: 0.85rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .shortcuts-close:hover { background: var(--frontier-primary); color: white; border-color: var(--frontier-primary); }
     </style>
 </head>
 <body class="Frontier is-preload">
+    <!-- Accessibility: Skip Link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <!-- Scroll Progress Indicator -->
+    <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
     <div id="page-wrapper">
         <!-- Header -->
         <section id="header">
@@ -5679,7 +5803,7 @@
 
         <!-- Main App -->
         <section id="main">
-            <div class="frontier-app">
+            <div class="frontier-app" id="main-content" tabindex="-1">
                 <!-- App Header -->
                 <div class="app-header">
                     <div class="header-nav">
@@ -6651,6 +6775,43 @@
         <div id="footer-placeholder"></div>
     </div>
 
+    <!-- KEYBOARD SHORTCUTS OVERLAY -->
+    <div class="shortcuts-overlay" id="shortcuts-overlay" role="dialog" aria-label="Keyboard shortcuts" aria-modal="true">
+        <div class="shortcuts-modal">
+            <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
+            <div class="shortcut-group">
+                <div class="shortcut-group-title">General</div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Show this panel</span>
+                    <div class="shortcut-keys"><span class="kbd">?</span></div>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Back to modules</span>
+                    <div class="shortcut-keys"><span class="kbd">Esc</span></div>
+                </div>
+            </div>
+            <div class="shortcut-group">
+                <div class="shortcut-group-title">Navigation</div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Navigate to module 1–4</span>
+                    <div class="shortcut-keys"><span class="kbd">1</span> – <span class="kbd">4</span></div>
+                </div>
+            </div>
+            <div class="shortcut-group">
+                <div class="shortcut-group-title">Interactions</div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Run / Submit</span>
+                    <div class="shortcut-keys"><span class="kbd">Enter</span></div>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-label">Reset / Clear</span>
+                    <div class="shortcut-keys"><span class="kbd">R</span></div>
+                </div>
+            </div>
+            <button class="shortcuts-close" id="shortcuts-close">Close <span class="kbd" style="margin-left:0.5rem;">Esc</span></button>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="../../assets/js/components.js"></script>
     <script src="../../assets/js/jquery.min.js"></script>
@@ -7319,6 +7480,11 @@
 
                 var total = RS_TASKS.length;
                 var pct = Math.round((results.correct / total) * 100);
+                if (typeof FrontierToast === 'function') {
+                    if (results.correct === total) FrontierToast('success', 'Perfect Score!', 'All tasks correctly assigned.', 4000);
+                    else if (results.correct >= total * 0.75) FrontierToast('info', 'Great Work!', results.correct + '/' + total + ' correct. Check the red cards.', 4000);
+                    else FrontierToast('warning', 'Keep Trying', results.correct + '/' + total + ' correct. Compare requirements with resources.', 4000);
+                }
                 var concept = results.correct === total
                     ? '<i class="fas fa-trophy"></i> Perfect! You matched every task to its best computing resource.'
                     : results.correct >= total * 0.75
@@ -8961,6 +9127,102 @@
             setTimeout(moveBackBtn, 100);
         }
         window.addEventListener('resize', moveBackBtn);
+    })();
+
+    // ===== Scroll Progress Indicator =====
+    (function() {
+        var bar = document.getElementById('scroll-progress');
+        if (!bar) return;
+        function updateProgress() {
+            var scrollTop = window.scrollY || document.documentElement.scrollTop;
+            var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            var pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            bar.style.width = pct + '%';
+        }
+        window.addEventListener('scroll', updateProgress, { passive: true });
+        updateProgress();
+    })();
+
+    // ===== Toast Notification System =====
+    (function() {
+        var container = document.getElementById('toast-container');
+        if (!container) return;
+        var ICONS = {
+            success: 'fa-check',
+            error: 'fa-xmark',
+            info: 'fa-info',
+            warning: 'fa-exclamation'
+        };
+        window.FrontierToast = function(type, title, message, duration) {
+            duration = duration || 4000;
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + type;
+            toast.style.position = 'relative';
+            toast.style.setProperty('--toast-duration', duration + 'ms');
+            toast.innerHTML =
+                '<div class="toast-icon"><i class="fas ' + (ICONS[type] || ICONS.info) + '"></i></div>' +
+                '<div class="toast-body">' +
+                    '<div class="toast-title">' + title + '</div>' +
+                    (message ? '<div class="toast-message">' + message + '</div>' : '') +
+                '</div>' +
+                '<button class="toast-close" aria-label="Dismiss"><i class="fas fa-xmark"></i></button>' +
+                '<div class="toast-progress"></div>';
+            container.appendChild(toast);
+            var closeBtn = toast.querySelector('.toast-close');
+            function dismiss() {
+                toast.classList.add('toast-exit');
+                setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
+            }
+            closeBtn.addEventListener('click', dismiss);
+            setTimeout(dismiss, duration);
+        };
+    })();
+
+    // ===== Keyboard Shortcuts =====
+    (function() {
+        var overlay = document.getElementById('shortcuts-overlay');
+        var closeBtn = document.getElementById('shortcuts-close');
+        if (!overlay) return;
+
+        function openShortcuts() {
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeShortcuts() {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', closeShortcuts);
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) closeShortcuts(); });
+
+        document.addEventListener('keydown', function(e) {
+            var tag = (e.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
+
+            // ? opens shortcuts
+            if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+                if (overlay.classList.contains('active')) closeShortcuts();
+                else openShortcuts();
+                return;
+            }
+            // Escape closes shortcuts
+            if (e.key === 'Escape' && overlay.classList.contains('active')) {
+                closeShortcuts();
+                return;
+            }
+            // 1-4 switch modules
+            var modules = document.querySelectorAll('.module-tab');
+            var num = parseInt(e.key);
+            if (num >= 1 && num <= modules.length && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                var tab = modules[num - 1];
+                if (tab && tab.offsetParent !== null) {
+                    e.preventDefault();
+                    tab.click();
+                }
+            }
+        });
     })();
     </script>
 </body>
