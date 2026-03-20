@@ -4051,6 +4051,12 @@
         currentRow = aircraftDB.find(a => a.name === name);
         if (!currentRow) return;
 
+        // Always reset to Configuration tab when selecting a new aircraft
+        var configTab = document.querySelector('.module-tab[data-module="config"]');
+        if (configTab && !configTab.classList.contains('active')) {
+            configTab.click();
+        }
+
         // Show modern selection loading overlay
         showSelectionLoading(currentRow.name);
 
