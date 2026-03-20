@@ -1777,29 +1777,7 @@
             display: block; font-size: 0.75rem; opacity: 0.85; margin-top: 2px;
         }
 
-        /* ==================== SUCCESS FLASH ==================== */
-        .success-flash {
-            position: fixed; top: 1rem; right: 1rem; z-index: 10000;
-            background: var(--ac-success); color: white;
-            padding: 0.6rem 1.2rem; border-radius: 10px;
-            font-weight: 600; font-size: 0.88rem;
-            display: flex; align-items: center; gap: 0.5rem;
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-            animation: scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-            transition: opacity 0.4s ease;
-            overflow: hidden;
-        }
-        .success-flash i { animation: successPulse 0.5s ease 0.2s; }
-        .success-flash::after {
-            content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
-            background: rgba(255,255,255,0.4);
-            transform-origin: left;
-            animation: drainBar 2s linear forwards;
-        }
-        @keyframes drainBar {
-            from { transform: scaleX(1); }
-            to { transform: scaleX(0); }
-        }
+        /* Success flash removed — replaced by toast notification system */
 
         /* ==================== KEYBOARD SHORTCUT HINT ==================== */
         .kbd-hint {
@@ -4135,7 +4113,6 @@
             // Hide overlay with brief CSS fade
             requestAnimationFrame(() => {
                 hideSelectionLoading();
-                showSuccessFlash();
                 transitionToWorking();
             });
         });
@@ -5449,7 +5426,6 @@
         // Generate and download
         const safeName = aircraftName.replace(/[^a-zA-Z0-9_\- ]/g, '').replace(/\s+/g, '_');
         XLSX.writeFile(wb, 'AirCrafter_' + safeName + '.xlsx');
-        showSuccessFlash('Exported to Excel!');
         if (typeof AirCrafterToast === 'function') AirCrafterToast('success', 'Excel Exported', 'AirCrafter_' + safeName + '.xlsx downloaded.', 3500);
     }
 
@@ -6732,7 +6708,7 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            showSuccessFlash('Downloaded stress_inputs.zip!');
+            if (typeof AirCrafterToast === 'function') AirCrafterToast('success', 'ZIP Downloaded', 'stress_inputs.zip saved.', 3500);
         });
     }
 
@@ -6875,7 +6851,6 @@
                 observeChartPanels();
                 requestAnimationFrame(() => {
                     hideLoading();
-                    showSuccessFlash();
                     // Update baseline to current computed params
                     var cp = getCurrentParams();
                     defaultParams.P = cp.P; defaultParams.TiP = cp.TiP; defaultParams.l = cp.l;
@@ -7054,14 +7029,7 @@
         }, 250);
     }
 
-    function showSuccessFlash(msg) {
-        const flash = document.createElement('div');
-        flash.className = 'success-flash';
-        flash.innerHTML = '<i class="fas fa-check-circle"></i> ' + (msg || 'Stresses computed successfully') + '<span class="flash-hint">Explore the other tabs for charts and data</span>';
-        document.body.appendChild(flash);
-        setTimeout(() => { flash.style.opacity = '0'; }, 1800);
-        setTimeout(() => flash.remove(), 2200);
-    }
+    // showSuccessFlash removed — replaced by AirCrafterToast system
 
     // Ripple effect for buttons (double-wave)
     function addRipple(e) {
