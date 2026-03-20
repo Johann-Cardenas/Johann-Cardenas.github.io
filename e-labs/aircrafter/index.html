@@ -1273,6 +1273,88 @@
             color: var(--ac-primary);
         }
         .selection-loading-card .loading-step.done i { color: var(--ac-success); }
+        /* Analysis Tab Loading Card */
+        .analysis-loading-card {
+            background: var(--ac-bg-panel); border: 1px solid var(--ac-border);
+            border-radius: 20px; padding: 2rem 2.5rem; text-align: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4), 0 0 80px var(--ac-primary-glow);
+            animation: scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-width: 340px; max-width: 420px; position: relative; overflow: hidden;
+        }
+        .analysis-loading-card::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 200%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(14,165,233,0.04), transparent);
+            animation: analysisShimmer 2s ease-in-out infinite;
+        }
+        @keyframes analysisShimmer { 0% { left: -100%; } 100% { left: 100%; } }
+        .analysis-loading-icon {
+            position: relative; width: 56px; height: 56px; margin: 0 auto 1rem;
+        }
+        .analysis-loading-icon .icon-ring {
+            position: absolute; inset: 0; border-radius: 50%;
+            border: 2.5px solid var(--ac-border);
+            border-top-color: var(--ac-primary); border-right-color: var(--ac-secondary);
+            animation: rotate 1s linear infinite;
+            filter: drop-shadow(0 0 8px var(--ac-primary-glow));
+        }
+        .analysis-loading-icon .icon-center {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; color: var(--ac-primary);
+            animation: analysisPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes analysisPulse {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.12); opacity: 1; }
+        }
+        .analysis-loading-title {
+            font-size: 1.15rem; font-weight: 800; color: var(--ac-text); margin-bottom: 0.2rem;
+            letter-spacing: -0.02em;
+        }
+        .analysis-loading-sub {
+            font-size: 0.78rem; color: var(--ac-text-muted); margin-bottom: 1rem;
+        }
+        .analysis-loading-steps {
+            text-align: left; margin: 0.8rem 0;
+        }
+        .analysis-loading-step {
+            display: flex; align-items: center; gap: 0.55rem;
+            padding: 0.32rem 0; font-size: 0.85rem; color: var(--ac-text-muted);
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            opacity: 0.45;
+        }
+        .analysis-loading-step i {
+            width: 18px; text-align: center; font-size: 0.82rem;
+            transition: all 0.35s ease;
+        }
+        .analysis-loading-step.active {
+            color: var(--ac-text); font-weight: 600; opacity: 1;
+            transform: translateX(4px);
+        }
+        .analysis-loading-step.active i { color: var(--ac-primary); }
+        .analysis-loading-step.done {
+            color: var(--ac-success); opacity: 0.8;
+            transform: translateX(0);
+        }
+        .analysis-loading-step.done i { color: var(--ac-success); }
+        .analysis-progress-track {
+            width: 100%; height: 4px; background: var(--ac-border);
+            border-radius: 2px; overflow: hidden; margin-top: 1rem;
+            position: relative;
+        }
+        .analysis-progress-fill {
+            height: 100%; width: 0%; border-radius: 2px;
+            background: linear-gradient(90deg, var(--ac-primary), var(--ac-secondary), #a78bfa);
+            background-size: 200% 100%;
+            animation: gradientShift 1.5s ease infinite;
+            transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .analysis-loading-card.exit {
+            animation: analysisExit 0.35s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+        }
+        @keyframes analysisExit {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.92) translateY(8px); }
+        }
         .progress-container { width: 100%; margin: 0.4rem 0 0.6rem; }
         .progress-bar-track {
             width: 100%; height: 6px; background: var(--ac-border);
@@ -1610,6 +1692,33 @@
             font-weight: 700; color: var(--ac-primary);
             background: var(--ac-bg-alt); border: 1px solid var(--ac-border);
             border-radius: 6px; padding: 0.15rem 0.4rem;
+        }
+        .fem-slider-phase {
+            font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.5rem;
+            border-radius: 6px; white-space: nowrap;
+        }
+        .fem-slider-phase.phase-main { background: rgba(14,165,233,0.15); color: var(--ac-primary); }
+        .fem-slider-phase.phase-exit { background: rgba(245,158,11,0.15); color: var(--ac-warning); }
+        .fem-slider-phase.phase-init { background: rgba(16,185,129,0.15); color: var(--ac-success); }
+        .fem-lpa-legend {
+            display: flex; gap: 1rem; align-items: center; padding: 0.3rem 0;
+            font-size: 0.75rem; color: var(--ac-text-muted);
+        }
+        .fem-legend-item { display: flex; align-items: center; gap: 0.3rem; }
+        .fem-legend-swatch {
+            display: inline-block; width: 14px; height: 10px; border-radius: 3px;
+        }
+        .fem-progress-bar {
+            position: relative; height: 6px; border-radius: 3px; display: flex;
+            overflow: hidden; background: var(--ac-border); margin-top: 0.3rem;
+        }
+        .fem-progress-seg {
+            height: 100%; transition: width 0.2s ease;
+        }
+        .fem-progress-marker {
+            position: absolute; top: -1px; width: 2px; height: 8px;
+            background: var(--ac-text); border-radius: 1px;
+            transition: left 0.2s ease; z-index: 2;
         }
 
         /* ==================== TOOLTIPS ==================== */
@@ -1983,7 +2092,7 @@
             .header-content h1 .plane-icon { font-size: 1.6rem; }
             .header-content p { font-size: 1.05rem; }
             .module-tabs { flex-wrap: wrap; }
-            .module-tab { font-size: 0.82rem; padding: 0.55rem 0.6rem; }
+            .module-tab { font-size: 0.82rem; padding: 0.55rem 0.6rem; min-height: 44px; }
             .module-tab i { display: none; }
             .module-tab .tab-desc { display: none; }
             .params-grid { grid-template-columns: 1fr; }
@@ -1993,8 +2102,9 @@
             .panel-title .kbd-hint { display: none; }
             .inline-stats { gap: 0.35rem; }
             .mini-stat { font-size: 0.82rem; padding: 0.3rem 0.55rem; }
-            .contact-patch-container { min-height: 360px; padding: 0.75rem; }
-            #contact-patch-svg { min-height: 320px; }
+            .contact-patch-container { min-height: 300px; padding: 0.5rem; }
+            #contact-patch-svg { min-height: 260px; }
+            #gear-config-svg { min-height: 260px; }
             .chart-panel { overflow: hidden; max-width: 100%; }
             .chart-body { min-height: 350px; }
             .chart-body-tall { min-height: 420px; }
@@ -2005,11 +2115,49 @@
             #summary-matrix-body { overflow-x: auto; }
             .rib-table td input { width: 65px; font-size: 0.82rem; }
             .advanced-grid { grid-template-columns: repeat(2, 1fr); }
-            .viz-tab { font-size: 0.82rem; padding: 0.4rem 0.65rem; }
+            .viz-tabs {
+                flex-wrap: nowrap; overflow-x: auto;
+                -webkit-overflow-scrolling: touch; scrollbar-width: none;
+                gap: 0.3rem; padding-bottom: 2px;
+            }
+            .viz-tabs::-webkit-scrollbar { display: none; }
+            .viz-tab {
+                font-size: 0.8rem; padding: 0.45rem 0.7rem;
+                white-space: nowrap; flex-shrink: 0; min-height: 40px;
+            }
+            .viz-tab.tooltip-trigger::after { display: none; }
             .btn { font-size: 0.92rem; padding: 0.55rem 1rem; }
             .loading-card { min-width: 240px; padding: 1.5rem 1.8rem; }
             .selection-loading-card { min-width: 260px; padding: 1.5rem 1.8rem; }
-            #btn-export-xlsx { font-size: 0.8rem !important; padding: 0.4rem 0.8rem !important; }
+            .analysis-loading-card { min-width: 260px; padding: 1.5rem 1.8rem; }
+            #btn-export-xlsx { font-size: 0.8rem !important; padding: 0.4rem 0.8rem !important; width: 100%; justify-content: center; }
+            .panel-helper { font-size: 0.78rem; }
+            .fem-controls { gap: 0.5rem; }
+            .fem-control-input { width: 70px; }
+            .fem-input-with-unit .fem-control-input { width: 60px; }
+            .fem-controls-right {
+                margin-left: 0; width: 100%; align-items: flex-start;
+                border-top: 1px solid var(--ac-border); padding-top: 0.5rem; margin-top: 0.25rem;
+            }
+            .fem-controls-right .fem-controls {
+                display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; width: 100%;
+            }
+            .fem-toggle-btn { padding: 0.3rem 0.65rem; font-size: 0.8rem; }
+            .fem-grid-axis-y { min-width: 32px; }
+            .fem-chip { font-size: 0.72rem; padding: 0.2rem 0.5rem; }
+            .fem-slider-row { gap: 0.4rem; }
+            .fem-slider-label { font-size: 0.72rem; }
+            .fem-slider-value { font-size: 0.85rem; min-width: 2em; padding: 0.1rem 0.3rem; }
+            .fem-slider-phase { font-size: 0.65rem; padding: 0.1rem 0.4rem; }
+            .fem-lpa-legend { font-size: 0.68rem; gap: 0.5rem; }
+            .fem-output-table-wrap { max-height: 320px; }
+            .fem-output-table { font-size: 0.7rem; }
+            .fem-output-table th { font-size: 0.62rem; padding: 0.25rem 0.3rem; }
+            .fem-output-table td { padding: 0.15rem 0.3rem; }
+            .fem-grid-title-row { flex-direction: column; align-items: stretch; }
+            .fem-grid-right-controls { width: 100%; }
+            .surface-btn { padding: 0.4rem 0.85rem; font-size: 0.82rem; min-height: 36px; }
+            .param-card input { min-height: 40px; }
         }
         @media (max-width: 480px) {
             .aircrafter-app { padding: 0.35rem 0.5rem 1rem; padding-top: 2.25rem; }
@@ -2043,19 +2191,55 @@
             .header-badges .header-badge i {
                 font-size: 0.6rem !important;
             }
-            .module-tab { font-size: 0.75rem; padding: 0.45rem 0.4rem; flex: 1 1 45%; }
+            /* Module tabs: icon + short label in 2x2 grid */
+            .module-tab {
+                font-size: 0; padding: 0.5rem 0.3rem; flex: 1 1 45%;
+                min-height: 44px; flex-direction: column; gap: 0.15rem;
+            }
+            .module-tab i {
+                display: inline-flex !important; font-size: 1rem;
+            }
+            .module-tab .tab-badge { display: none; }
+            .module-tab::after {
+                content: attr(data-short); font-size: 0.68rem; font-weight: 500;
+            }
             .param-card .label { font-size: 0.75rem; }
             .param-card input { font-size: 1.1rem; }
-            .contact-patch-container { min-height: 280px; }
+            .contact-patch-container { min-height: 220px; }
+            #contact-patch-svg { min-height: 200px; }
+            #gear-config-svg { min-height: 220px; }
             .advanced-grid { grid-template-columns: 1fr 1fr; gap: 0.4rem; }
             .selection-loading-card { min-width: 220px; }
-            .chart-body { min-height: 300px; }
-            .chart-body-tall { min-height: 360px; }
-            .chart-body-short { min-height: 260px; }
+            .analysis-loading-card { min-width: 200px; max-width: 90vw; padding: 1.2rem 1.2rem; }
+            .analysis-loading-title { font-size: 1rem; }
+            .analysis-loading-sub { font-size: 0.72rem; }
+            .analysis-loading-step { font-size: 0.78rem; }
+            .chart-body { min-height: 260px; }
+            .chart-body-tall { min-height: 320px; }
+            .chart-body-short { min-height: 220px; }
             .chart-header { padding: 0.4rem 0.6rem; flex-wrap: wrap; gap: 0.3rem; }
             .chart-title { font-size: 0.88rem; }
             .chart-subtitle { font-size: 0.75rem; }
-            .viz-tabs { flex-wrap: wrap; gap: 0.25rem; }
+            /* Viz tabs: horizontal scroll strip */
+            .viz-tabs { gap: 0.2rem; }
+            .viz-tab { font-size: 0.75rem; padding: 0.4rem 0.55rem; }
+            .viz-tab i { margin-right: 0.15rem; }
+            /* Input Preparation controls */
+            .fem-control-input { width: 55px !important; font-size: 0.82rem; }
+            .fem-input-with-unit .fem-control-input { width: 50px !important; }
+            .fem-controls-right .fem-controls { grid-template-columns: repeat(2, 1fr); }
+            .fem-toggle-btn { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+            .fem-grid-axis-y { min-width: 26px; }
+            .fem-chip { font-size: 0.68rem; padding: 0.15rem 0.4rem; }
+            .fem-control-label { font-size: 0.65rem; }
+            /* Results Summary polish */
+            .panel-helper { font-size: 0.72rem; margin-bottom: 0.3rem; }
+            /* Surface selector touch targets */
+            .surface-selector { width: 100%; }
+            .surface-btn { flex: 1; text-align: center; padding: 0.4rem 0.5rem; font-size: 0.78rem; }
+            /* Rib table inputs */
+            .rib-table td input { width: 55px; font-size: 0.78rem; padding: 0.25rem 0.25rem; }
+            .rib-table th { font-size: 0.68rem; padding: 0.35rem 0.3rem; }
         }
 
         /* ===== Plotly mobile fixes ===== */
@@ -2224,19 +2408,19 @@
                 <div class="module-tabs-wrapper" id="module-tabs-wrapper">
                 <!-- ===== MODULE TABS ===== -->
                 <div class="module-tabs">
-                    <button class="module-tab active" data-module="config">
+                    <button class="module-tab active" data-module="config" data-short="Config">
                         <i class="fas fa-sliders-h"></i> Configuration
                         <span class="tab-desc">Input parameters & patch geometry</span>
                     </button>
-                    <button class="module-tab" data-module="analysis">
+                    <button class="module-tab" data-module="analysis" data-short="Analysis">
                         <i class="fas fa-cube"></i> Analysis
                         <span class="tab-desc">3D surfaces, heatmaps and curves</span>
                     </button>
-                    <button class="module-tab" data-module="summary">
+                    <button class="module-tab" data-module="summary" data-short="Results">
                         <i class="fas fa-table-list"></i> Results Summary
                         <span class="tab-desc">Tabular data & Excel export</span>
                     </button>
-                    <button class="module-tab" data-module="inputprep">
+                    <button class="module-tab" data-module="inputprep" data-short="Inputs">
                         <i class="fas fa-drafting-compass"></i> Input Preparation
                         <span class="tab-desc">Pavement model mapping</span>
                     </button>
@@ -2543,6 +2727,13 @@
                         <!-- Grid Controls -->
                         <div class="fem-controls">
                             <div class="fem-control-group">
+                                <label class="fem-control-label">Approach</label>
+                                <div class="fem-toggle-group" id="approach-toggle">
+                                    <button type="button" class="fem-toggle-btn active" data-approach="standard">Standard</button>
+                                    <button type="button" class="fem-toggle-btn" data-approach="lpa">Load Pass</button>
+                                </div>
+                            </div>
+                            <div class="fem-control-group">
                                 <label class="fem-control-label">Gear Configuration</label>
                                 <div class="fem-toggle-group" id="gear-config-toggle">
                                     <button type="button" class="fem-toggle-btn active" data-gear="D">D</button>
@@ -2567,7 +2758,19 @@
                             </div>
                             <div class="fem-control-group">
                                 <label class="fem-control-label">Elements</label>
-                                <input type="number" class="fem-control-input" id="ip-elements" readonly style="width:65px;" />
+                                <input type="number" class="fem-control-input" id="ip-elements" readonly />
+                            </div>
+                            <!-- LPA-only controls -->
+                            <div class="fem-control-group lpa-only-control" id="lpa-fullconfig-group" style="display:none;">
+                                <label class="fem-control-label">Full Config Steps <i class="fas fa-circle-info tooltip-trigger" data-tooltip="Number of steps when full gear configuration is manifested (nstep_fullconfig)."></i></label>
+                                <input type="number" class="fem-control-input" id="ip-nstep-fullconfig" value="10" min="1" step="1" />
+                            </div>
+                            <div class="fem-control-group lpa-only-control" id="lpa-exit-group" style="display:none;">
+                                <label class="fem-control-label">Exit Load</label>
+                                <div class="fem-toggle-group" id="exit-load-toggle">
+                                    <button type="button" class="fem-toggle-btn active" data-exit="Y">Y</button>
+                                    <button type="button" class="fem-toggle-btn" data-exit="N">N</button>
+                                </div>
                             </div>
                             <!-- Pavement Model Geometry (right-aligned in same row) -->
                             <div class="fem-controls-right">
@@ -2620,7 +2823,7 @@
                                         </div>
                                         <div class="fem-control-group">
                                             <label class="fem-control-label">Elements</label>
-                                            <input type="number" class="fem-control-input" id="ip-axle-elements" value="13" min="1" step="1" style="width:55px;" />
+                                            <input type="number" class="fem-control-input" id="ip-axle-elements" value="13" min="1" step="1" />
                                         </div>
                                         <div class="fem-control-group">
                                             <label class="fem-control-label">Elem. Width</label>
@@ -2646,7 +2849,16 @@
                                 <label class="fem-slider-label">Load Step</label>
                                 <input type="range" class="fem-slider" id="fem-load-step-slider" min="0" max="0" value="0" step="1" />
                                 <span class="fem-slider-value" id="fem-load-step-value">0</span>
+                                <span class="fem-slider-phase" id="fem-load-step-phase" style="display:none;"></span>
                             </div>
+                            <!-- LPA Legend (hidden by default) -->
+                            <div class="fem-lpa-legend" id="fem-lpa-legend" style="display:none;">
+                                <span class="fem-legend-item"><span class="fem-legend-swatch" style="background:rgba(14,165,233,0.35);border:1px solid rgba(14,165,233,0.7);"></span> Contact</span>
+                                <span class="fem-legend-item"><span class="fem-legend-swatch" style="background:rgba(16,185,129,0.30);border:1px solid rgba(16,185,129,0.65);"></span> Transition</span>
+                                <span class="fem-legend-item"><span class="fem-legend-swatch" style="background:rgba(139,92,246,0.30);border:1px solid rgba(139,92,246,0.65);"></span> Tandem</span>
+                                <span class="fem-legend-item"><span class="fem-legend-swatch" style="background:rgba(236,72,153,0.30);border:1px solid rgba(236,72,153,0.65);"></span> Tridem</span>
+                            </div>
+                            <div class="fem-progress-bar" id="fem-progress-bar"></div>
                         </div>
                         <!-- Outputs Section -->
                         <div class="panel animate-in" id="fem-outputs-panel" style="display:none;">
@@ -2853,21 +3065,30 @@
         };
 
         // App-themed colormap: sky blue (#0ea5e9) → orange (#f97316) → violet (#8b5cf6)
-        function stressColormap(v, alpha) {
-            v = Math.max(0, Math.min(1, v));
-            var r, g, b;
-            if (v < 0.5) {
-                var t = v / 0.5;
-                r = Math.round(14 + (249 - 14) * t);
-                g = Math.round(165 + (115 - 165) * t);
-                b = Math.round(233 + (22 - 233) * t);
-            } else {
-                var t = (v - 0.5) / 0.5;
-                r = Math.round(249 + (139 - 249) * t);
-                g = Math.round(115 + (92 - 115) * t);
-                b = Math.round(22 + (246 - 22) * t);
+        // Precomputed 256-entry RGB lookup table for performance
+        var _cmapLUT = new Array(256);
+        (function() {
+            for (var i = 0; i < 256; i++) {
+                var v = i / 255;
+                var r, g, b;
+                if (v < 0.5) {
+                    var t = v / 0.5;
+                    r = Math.round(14 + (249 - 14) * t);
+                    g = Math.round(165 + (115 - 165) * t);
+                    b = Math.round(233 + (22 - 233) * t);
+                } else {
+                    var t = (v - 0.5) / 0.5;
+                    r = Math.round(249 + (139 - 249) * t);
+                    g = Math.round(115 + (92 - 115) * t);
+                    b = Math.round(22 + (246 - 22) * t);
+                }
+                _cmapLUT[i] = r + ',' + g + ',' + b;
             }
-            return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+        })();
+
+        function stressColormap(v, alpha) {
+            var idx = v <= 0 ? 0 : v >= 1 ? 255 : (v * 255 + 0.5) | 0;
+            return 'rgba(' + _cmapLUT[idx] + ',' + alpha + ')';
         }
 
         // Center fade: elements near canvas center are nearly invisible,
@@ -2875,8 +3096,11 @@
         function centerFade(px, py, w, h) {
             var nx = (px / w - 0.5) * 2; // -1..1
             var ny = (py / h - 0.5) * 2;
-            var d = Math.sqrt(nx * nx + ny * ny); // 0 center, ~1.4 corners
-            return Math.min(1.0, Math.max(0.05, (d - 0.2) * 1.4));
+            var d2 = nx * nx + ny * ny;
+            // Early exits avoid sqrt for ~60-70% of calls (center/edge cases)
+            if (d2 <= 0.04) return 0.05;   // d <= 0.2 → clamped to min
+            if (d2 >= 0.836) return 1.0;   // d >= ~0.914 → clamped to max
+            return (Math.sqrt(d2) - 0.2) * 1.4;
         }
 
         function resize() {
@@ -3089,6 +3313,9 @@
             });
         }
 
+        // Pre-allocated array for per-node zone distances (avoids allocation per frame)
+        var _nodeZoneDist = new Float32Array(nodes.length);
+
         function draw(t) {
             var ts = t * 0.001;
             var w = parseFloat(canvas.style.width) || canvas.width;
@@ -3100,6 +3327,18 @@
                 var n = nodes[i];
                 n.x = n.ox + Math.sin(ts * n.freq + n.phase) * n.amp;
                 n.y = n.oy + Math.cos(ts * n.freq * 0.7 + n.phase * 1.2) * n.amp * 0.6;
+            }
+
+            // Precompute per-node minimum zone distance (reused by tri/edge/node loops)
+            for (var i = 0; i < nodes.length; i++) {
+                var n = nodes[i], minD = 9999;
+                for (var z = 0; z < contactZones.length; z++) {
+                    var zn = contactZones[z];
+                    var zdx = (n.x - zn.cx), zdy = (n.y - zn.cy);
+                    var d = Math.sqrt(zdx * zdx + zdy * zdy);
+                    if (d < minD) minD = d;
+                }
+                _nodeZoneDist[i] = minD;
             }
 
             // Horizontal sweep waves (side to side, replacing concentric ripples)
@@ -3256,13 +3495,8 @@
                 var eDist = Math.sqrt(edx * edx + edy * edy);
                 var eMouse = eDist < 80 ? (1 - eDist / 80) * 0.3 : 0;
 
-                // Zone proximity
-                var nearestZoneDist = 9999;
-                for (var z = 0; z < contactZones.length; z++) {
-                    var zn = contactZones[z];
-                    var zd = Math.sqrt((emx - zn.cx) * (emx - zn.cx) + (emy - zn.cy) * (emy - zn.cy));
-                    if (zd < nearestZoneDist) nearestZoneDist = zd;
-                }
+                // Zone proximity (approximated via cached node distances)
+                var nearestZoneDist = (_nodeZoneDist[e.a] + _nodeZoneDist[e.b]) / 2;
                 var zoneProx = nearestZoneDist < 120 ? (120 - nearestZoneDist) / 120 * 0.15 : 0;
 
                 var alpha = (edgeBase + e.glow * 0.4 + zoneProx + cascadeGlow) * cf + eMouse;
@@ -3289,11 +3523,7 @@
                 var nAlpha = (isDark ? 0.22 : 0.14) * pulse * cf + nMouse * 0.5;
                 if (nAlpha < 0.008) continue;
 
-                var nMinZD = 9999;
-                for (var z = 0; z < contactZones.length; z++) {
-                    var zn = contactZones[z];
-                    nMinZD = Math.min(nMinZD, Math.sqrt((n.x - zn.cx) * (n.x - zn.cx) + (n.y - zn.cy) * (n.y - zn.cy)));
-                }
+                var nMinZD = _nodeZoneDist[i];
                 var nodeStress = Math.max(0, Math.min(1, 1 - nMinZD / 250));
 
                 ctx.beginPath();
@@ -3450,7 +3680,8 @@
         var resizeTimer;
         window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(resize, 150); });
 
-        // Expose restart so transitionToLanding() can re-init after hero re-expands
+        // Expose stop/restart so working mode can halt the invisible animation
+        window.stopMeshCanvas = function() { if (animId) { cancelAnimationFrame(animId); animId = null; } };
         window.restartMeshCanvas = start;
 
         if (document.readyState === 'loading') {
@@ -3497,6 +3728,8 @@
             document.getElementById('acb-ribs').textContent = bi.length + ' ribs';
         }
         app.classList.add('app-working');
+        // Stop the hero canvas animation — it's invisible while collapsed
+        if (window.stopMeshCanvas) window.stopMeshCanvas();
     }
 
     function replayHeroAnimations() {
@@ -3685,6 +3918,7 @@
                 updateEquilibriumBadge();
                 updateSummaryCards();
                 Object.keys(chartsNeedRerender).forEach(k => chartsNeedRerender[k] = true);
+                Object.keys(vizNeedRerender).forEach(k => vizNeedRerender[k] = true);
                 renderChartsForModule(getActiveModule());
                 ['analysis-empty','summary-empty','inputprep-empty'].forEach(id =>
                     document.getElementById(id).style.display = 'none');
@@ -4752,6 +4986,7 @@
     //  RENDER ALL CHARTS
     // ================================================================
     let chartsNeedRerender = { analysis: true, summary: true, config: true, inputprep: true };
+    let vizNeedRerender = { surfaces: true, combined: true, heatmaps: true, ribcurves: true, ribprops: true };
 
     function getActiveModule() {
         const active = document.querySelector('.module-tab.active');
@@ -4773,7 +5008,25 @@
             chartsNeedRerender.config = false;
         }
         if (mod === 'analysis') {
-            // 3D Surfaces — full-size singles + small overview
+            // Determine active viz sub-tab — only render charts for it
+            var activeViz = document.querySelector('#module-analysis .viz-tab[data-viz].active');
+            var vizKey = activeViz ? activeViz.dataset.viz : 'surfaces';
+            renderVizSubTab(vizKey, r, ribLabels, ribNames, ribCenters);
+            chartsNeedRerender.analysis = false;
+        }
+        if (mod === 'summary') {
+            buildSummaryTab(r);
+            chartsNeedRerender.summary = false;
+        }
+        if (mod === 'inputprep') {
+            buildFEMGrid(r);
+            chartsNeedRerender.inputprep = false;
+        }
+    }
+
+    function renderVizSubTab(vizKey, r, ribLabels, ribNames, ribCenters) {
+        if (!vizNeedRerender[vizKey]) return;
+        if (vizKey === 'surfaces') {
             render3DSurface('chart-3d-ssz-sm', r.sszMat, r.axdist, ribCenters, ribLabels,
                 { title: 'σz', colorscale: 'YlOrRd', symmetric: false, compact: true });
             render3DSurface('chart-3d-ssx-sm', r.ssxMat, r.axdist, ribCenters, ribLabels,
@@ -4790,38 +5043,31 @@
             document.getElementById('ssz-subtitle').textContent = `Range: ${arrMin(flat_sz).toFixed(3)} to ${arrMax(flat_sz).toFixed(3)} MPa`;
             document.getElementById('ssx-subtitle').textContent = `Range: ${arrMin(flat_sx).toFixed(3)} to ${arrMax(flat_sx).toFixed(3)} MPa`;
             document.getElementById('ssy-subtitle').textContent = `Range: ${arrMin(flat_sy).toFixed(3)} to ${arrMax(flat_sy).toFixed(3)} MPa`;
-            // Heatmaps
+        } else if (vizKey === 'heatmaps') {
             renderHeatmap('chart-hm-ssz', r.sszMat, r.axdist, ribLabels, { title: 'σz', colorscale: 'YlOrRd', symmetric: false });
             renderHeatmap('chart-hm-ssx', r.ssxMat, r.axdist, ribLabels, { title: 'σx', colorscale: 'RdBu', symmetric: true });
             renderHeatmap('chart-hm-ssy', r.ssyMat, r.axdist, ribLabels, { title: 'σy', colorscale: 'YlOrRd', symmetric: false });
-            // Defer remaining charts to next frame
-            requestAnimationFrame(() => {
-                renderRibCurves('chart-rib-ssz', r.SSZ, r.asz, r.xdist, r.axdist, ribLabels, { title: 'σz', symmetric: false });
-                renderRibCurves('chart-rib-ssx', r.SSX, r.asx, r.xdist, r.axdist, ribLabels, { title: 'σx', symmetric: true });
-                renderRibCurves('chart-rib-ssy', r.SSY, r.asy, r.xdist, r.axdist, ribLabels, { title: 'σy', symmetric: false });
-                renderCombinedRib('chart-combined-rib1', r, 0);
-                renderPeakComparison('chart-peak-comparison', r);
-                renderBarChart('chart-bar-load', r.al, ribNames, { title: 'Load Factor (αl)', color: 'orange' });
-                renderBarChart('chart-bar-stress', r.sigm_Tip, ribNames, { title: 'Stress Factor (σTip) [MPa]', color: 'blue' });
-                renderBarChart('chart-bar-width', r.bi, ribNames, { title: 'Width [mm]', color: 'green' });
-                renderEqBar('chart-eq-bar', r);
-                observeChartPanels();
-            });
-            chartsNeedRerender.analysis = false;
+        } else if (vizKey === 'ribcurves') {
+            renderRibCurves('chart-rib-ssz', r.SSZ, r.asz, r.xdist, r.axdist, ribLabels, { title: 'σz', symmetric: false });
+            renderRibCurves('chart-rib-ssx', r.SSX, r.asx, r.xdist, r.axdist, ribLabels, { title: 'σx', symmetric: true });
+            renderRibCurves('chart-rib-ssy', r.SSY, r.asy, r.xdist, r.axdist, ribLabels, { title: 'σy', symmetric: false });
+        } else if (vizKey === 'combined') {
+            renderCombinedRib('chart-combined-rib1', r, 0);
+            renderPeakComparison('chart-peak-comparison', r);
+        } else if (vizKey === 'ribprops') {
+            renderBarChart('chart-bar-load', r.al, ribNames, { title: 'Load Factor (αl)', color: 'orange' });
+            renderBarChart('chart-bar-stress', r.sigm_Tip, ribNames, { title: 'Stress Factor (σTip) [MPa]', color: 'blue' });
+            renderBarChart('chart-bar-width', r.bi, ribNames, { title: 'Width [mm]', color: 'green' });
+            renderEqBar('chart-eq-bar', r);
         }
-        if (mod === 'summary') {
-            buildSummaryTab(r);
-            chartsNeedRerender.summary = false;
-        }
-        if (mod === 'inputprep') {
-            buildFEMGrid(r);
-            chartsNeedRerender.inputprep = false;
-        }
+        vizNeedRerender[vizKey] = false;
+        observeChartPanels();
     }
 
     function renderAllCharts() {
         if (!results) return;
         Object.keys(chartsNeedRerender).forEach(k => chartsNeedRerender[k] = true);
+        Object.keys(vizNeedRerender).forEach(k => vizNeedRerender[k] = true);
         renderChartsForModule(getActiveModule());
     }
 
@@ -5021,6 +5267,17 @@
     // Standalone calculation (no rebuild trigger — avoids circular call)
     function updateIPElementsCalc() {
         if (!_femGrid || !_femGrid._results) return;
+
+        if (getActiveApproach() === 'lpa') {
+            var lpa = computeLPAParams();
+            if (lpa) {
+                document.getElementById('ip-elements').value = lpa.totalElements;
+                document.getElementById('ip-load-steps').value = lpa.totalSteps;
+            }
+            return;
+        }
+
+        // Standard approach
         var gear = document.querySelector('#gear-config-toggle .fem-toggle-btn.active');
         var gearKey = gear ? gear.dataset.gear : 'D';
         var cfg = ({ 'D': { nAxles: 1 }, '2D': { nAxles: 2 }, '3D': { nAxles: 3 } })[gearKey] || { nAxles: 1 };
@@ -5062,6 +5319,192 @@
             }
         }
         return { rowWidths: rowWidths, rowTypes: rowTypes, rowLabels: rowLabels, rowRibIndex: rowRibIndex, rowPartIndex: rowPartIndex };
+    }
+
+    // ==================== LOAD PASS APPROACH (LPA) ====================
+
+    function getActiveApproach() {
+        var btn = document.querySelector('#approach-toggle .fem-toggle-btn.active');
+        return btn ? btn.dataset.approach : 'standard';
+    }
+
+    function isExitLoadEnabled() {
+        var btn = document.querySelector('#exit-load-toggle .fem-toggle-btn.active');
+        return btn ? btn.dataset.exit === 'Y' : true;
+    }
+
+    function computeLPAParams() {
+        if (!_femGrid || !_femGrid._results) return null;
+        var r = _femGrid._results;
+        var elx = _femGrid.elemSize;
+        var h = r.l;      // contact length (mm)
+        var nh = r.xn;    // contact elements
+        var t_inc = parseInt(document.getElementById('ip-step-shift').value) || 3;
+        var tSpace = parseFloat(document.getElementById('ip-tandem-spacing').value) || 0;
+        var nstep_fullconfig = parseInt(document.getElementById('ip-nstep-fullconfig').value) || 10;
+
+        var gear = document.querySelector('#gear-config-toggle .fem-toggle-btn.active');
+        var gearKey = gear ? gear.dataset.gear : 'D';
+        var ntire_add = ({ 'D': 0, '2D': 1, '3D': 2 })[gearKey] || 0;
+        var naxle = 1;
+
+        var exitEnabled = isExitLoadEnabled();
+
+        // Wheel path length
+        var X = (naxle + ntire_add) * h + (ntire_add * tSpace) + (nstep_fullconfig + 1) * (elx * t_inc);
+
+        // Main moving load steps
+        var footprint = naxle * h + (naxle - 1) * tSpace;
+        var nSteps = Math.floor(((X - footprint) / elx) / t_inc + 1);
+
+        // Exit steps
+        var nSteps_exit = 0;
+        if (exitEnabled) {
+            nSteps_exit = Math.floor(((naxle + ntire_add) * ((h / elx) + t_inc) + ntire_add * (tSpace / elx)) / t_inc);
+        }
+
+        var totalSteps = nSteps + nSteps_exit;
+        var totalElements = Math.round(X / elx);
+
+        return {
+            X: X, nSteps: nSteps, nSteps_exit: nSteps_exit,
+            totalSteps: totalSteps, totalElements: totalElements,
+            naxle: naxle, ntire_add: ntire_add,
+            h: h, nh: nh, elx: elx, t_inc: t_inc,
+            tSpace: tSpace, nstep_fullconfig: nstep_fullconfig,
+            exitEnabled: exitEnabled
+        };
+    }
+
+    /**
+     * Compute tire positions for a given LPA step.
+     * Returns array of tire objects with contactStart/End and transStart/End (column indices).
+     */
+    function computeLPATirePositions(step) {
+        var lpa = _femGrid.lpa;
+        if (!lpa) return [];
+
+        var t_inc = lpa.t_inc;
+        var nh = lpa.nh;
+        var elx = lpa.elx;
+        var tSpace = lpa.tSpace;
+        var ntire_add = lpa.ntire_add;
+        var nSteps = lpa.nSteps;
+        var COLS = _femGrid.cols;
+        var xLocCol = nh + t_inc; // full imprint width in elements
+
+        var tires = [];
+
+        // Primary tire: shifts by t_inc columns each step
+        var primaryStart = step * t_inc;
+        if (primaryStart < COLS) {
+            var cEnd = Math.min(primaryStart + nh, COLS);
+            var tEnd = Math.min(primaryStart + xLocCol, COLS);
+            tires.push({
+                id: 0, label: 'Primary',
+                contactStart: primaryStart, contactEnd: cEnd,
+                transStart: cEnd, transEnd: tEnd
+            });
+        }
+
+        // Helper: compute entrance for an additional tire
+        function addTire(tireId, label, cutoff) {
+            var cutoffElems = cutoff / elx;
+            // How many original columns are available: check_dist[ii] > cutoff
+            var maxIdx = 1 + step * t_inc - cutoffElems;
+            var nAvailable = Math.max(0, Math.min(xLocCol, Math.floor(maxIdx) + 1));
+            if (nAvailable <= 0) return;
+
+            if (nAvailable < xLocCol) {
+                // Partial entrance: tire covers [0, nAvailable)
+                var cc = Math.min(nAvailable, nh);
+                tires.push({
+                    id: tireId, label: label,
+                    contactStart: 0, contactEnd: cc,
+                    transStart: cc, transEnd: nAvailable,
+                    partial: true
+                });
+            } else {
+                // Fully entered — now shifting
+                var stepFull = Math.ceil((xLocCol - 1 + cutoffElems) / t_inc);
+                var shiftSteps = step - stepFull;
+                var tStart = Math.max(0, (shiftSteps + 1) * t_inc);
+                if (tStart < COLS) {
+                    var tcEnd = Math.min(tStart + nh, COLS);
+                    var ttEnd = Math.min(tStart + xLocCol, COLS);
+                    tires.push({
+                        id: tireId, label: label,
+                        contactStart: tStart, contactEnd: tcEnd,
+                        transStart: tcEnd, transEnd: ttEnd,
+                        partial: false
+                    });
+                }
+            }
+        }
+
+        // 2nd tire (ntire_add >= 1)
+        if (ntire_add >= 1) {
+            var ttspace = tSpace - (t_inc * elx);
+            var cutoff2 = ttspace + elx;
+            addTire(1, 'Tandem', cutoff2);
+        }
+
+        // 3rd tire (ntire_add >= 2)
+        if (ntire_add >= 2) {
+            var ttspace3 = tSpace - (t_inc * elx);
+            var cutoff3 = (ntire_add * ttspace3) + ((nh + t_inc) * elx) + elx;
+            addTire(2, 'Tridem', cutoff3);
+        }
+
+        return tires;
+    }
+
+    function updateLPAPhaseLabel(step) {
+        var phaseEl = document.getElementById('fem-load-step-phase');
+        if (!phaseEl || !_femGrid || !_femGrid.lpa) return;
+        var lpa = _femGrid.lpa;
+        if (step === 0) {
+            phaseEl.textContent = 'Initial';
+            phaseEl.className = 'fem-slider-phase phase-init';
+        } else if (step < lpa.nSteps) {
+            phaseEl.textContent = 'Main (' + step + '/' + lpa.nSteps + ')';
+            phaseEl.className = 'fem-slider-phase phase-main';
+        } else {
+            phaseEl.textContent = 'Exit (' + (step - lpa.nSteps + 1) + '/' + lpa.nSteps_exit + ')';
+            phaseEl.className = 'fem-slider-phase phase-exit';
+        }
+    }
+
+    function updateProgressBar(step) {
+        var bar = document.getElementById('fem-progress-bar');
+        if (!bar || !_femGrid) return;
+        var approach = _femGrid.approach;
+        var totalSteps = parseInt(document.getElementById('fem-load-step-slider').max) || 0;
+        if (totalSteps <= 0) { bar.innerHTML = ''; return; }
+
+        if (approach === 'lpa' && _femGrid.lpa) {
+            var lpa = _femGrid.lpa;
+            var initSteps = 1;
+            var mainSteps = lpa.nSteps;
+            var exitSteps = lpa.nSteps_exit;
+            var total = initSteps + mainSteps + exitSteps;
+            // Guard: use actual total if mismatch
+            if (total !== totalSteps + 1) total = totalSteps + 1;
+            var initPct = (initSteps / total * 100).toFixed(2);
+            var mainPct = (mainSteps / total * 100).toFixed(2);
+            var exitPct = (exitSteps / total * 100).toFixed(2);
+            var markerPct = (step / totalSteps * 100).toFixed(2);
+            bar.innerHTML =
+                '<div class="fem-progress-seg" style="width:' + initPct + '%;background:rgba(16,185,129,0.5);"></div>' +
+                '<div class="fem-progress-seg" style="width:' + mainPct + '%;background:rgba(14,165,233,0.5);"></div>' +
+                '<div class="fem-progress-seg" style="width:' + exitPct + '%;background:rgba(245,158,11,0.5);"></div>' +
+                '<div class="fem-progress-marker" style="left:' + markerPct + '%;"></div>';
+        } else {
+            var pct = (step / totalSteps * 100).toFixed(2);
+            bar.innerHTML =
+                '<div class="fem-progress-seg" style="width:' + pct + '%;background:rgba(14,165,233,0.5);"></div>' +
+                '<div class="fem-progress-marker" style="left:' + pct + '%;"></div>';
+        }
     }
 
     function rebuildFEMGrid() {
@@ -5128,6 +5571,10 @@
         _femGrid.tireRowCount = tire.rowWidths.length; // rows in one tire imprint
         _femGrid.xn = r.xn; // contact imprint length in elements
 
+        // Store approach mode
+        var approach = getActiveApproach();
+        _femGrid.approach = approach;
+
         // Gear axle info for highlighting
         var gear = document.querySelector('#gear-config-toggle .fem-toggle-btn.active');
         var gearKey = gear ? gear.dataset.gear : 'D';
@@ -5137,6 +5584,13 @@
         _femGrid.nAxles = nAxles;
         _femGrid.tandemElems = tandemElems;
 
+        // LPA-specific state
+        if (approach === 'lpa') {
+            _femGrid.lpa = computeLPAParams();
+        } else {
+            _femGrid.lpa = null;
+        }
+
         // Update load step slider
         var loadSteps = parseInt(document.getElementById('ip-load-steps').value) || 18;
         var slider = document.getElementById('fem-load-step-slider');
@@ -5144,13 +5598,33 @@
         if (parseInt(slider.value) > loadSteps) slider.value = 0;
         document.getElementById('fem-load-step-value').textContent = slider.value;
 
-        // 2D array [row][col]
-        _femGrid.cells = [];
-        for (var row = 0; row < ROWS; row++) {
-            _femGrid.cells[row] = [];
-            for (var col = 0; col < COLS; col++) {
-                _femGrid.cells[row][col] = { row: row, col: col, type: rowTypes[row], width: rowWidths[row], value: null };
+        // Update LPA phase indicator & legend
+        var phaseEl = document.getElementById('fem-load-step-phase');
+        var legendEl = document.getElementById('fem-lpa-legend');
+        if (approach === 'lpa' && _femGrid.lpa) {
+            phaseEl.style.display = '';
+            legendEl.style.display = '';
+            updateLPAPhaseLabel(parseInt(slider.value));
+            // Restore LPA legend content
+            legendEl.innerHTML =
+                '<span class="fem-legend-item"><span class="fem-legend-swatch" style="background:rgba(14,165,233,0.35);border:1px solid rgba(14,165,233,0.7);"></span> Contact</span>' +
+                '<span class="fem-legend-item"><span class="fem-legend-swatch" style="background:rgba(16,185,129,0.30);border:1px solid rgba(16,185,129,0.65);"></span> Transition</span>' +
+                '<span class="fem-legend-item"><span class="fem-legend-swatch" style="background:rgba(139,92,246,0.30);border:1px solid rgba(139,92,246,0.65);"></span> Tandem</span>' +
+                '<span class="fem-legend-item"><span class="fem-legend-swatch" style="background:rgba(236,72,153,0.30);border:1px solid rgba(236,72,153,0.65);"></span> Tridem</span>';
+        } else {
+            phaseEl.style.display = 'none';
+            // Standard legend
+            legendEl.style.display = '';
+            var stdLegendHTML =
+                '<span class="fem-legend-item"><span class="fem-legend-swatch" style="background:rgba(14,165,233,0.30);border:1px solid rgba(14,165,233,0.6);"></span> Contact</span>' +
+                '<span class="fem-legend-item"><span class="fem-legend-swatch" style="background:rgba(245,158,11,0.25);border:1px solid rgba(245,158,11,0.55);border-style:dashed;"></span> Next Step</span>';
+            var nAxlesLeg = _femGrid.nAxles || 1;
+            if (nAxlesLeg > 1) {
+                for (var ali = 0; ali < nAxlesLeg; ali++) {
+                    stdLegendHTML += '<span class="fem-legend-item"><strong style="color:var(--ac-primary);font-size:0.8em;">A' + (ali + 1) + '</strong> Axle ' + (ali + 1) + '</span>';
+                }
             }
+            legendEl.innerHTML = stdLegendHTML;
         }
 
         // Update panel helper text
@@ -5161,18 +5635,32 @@
             var desc = COLS + ' \u00D7 ' + ROWS + ' element grid (' + numRibs + ' ribs \u00D7 ' + nnz + ' partitions + ' + (numRibs - 1) + ' grooves';
             if (isFullMode) desc += ' + spacing + mirrored tire';
             desc += '). Element length: ' + elemSize + ' mm.';
+            if (approach === 'lpa' && _femGrid.lpa) {
+                var lpa = _femGrid.lpa;
+                desc += ' LPA: X=' + lpa.X.toFixed(0) + ' mm, ' + lpa.nSteps + ' main + ' + lpa.nSteps_exit + ' exit steps.';
+            }
             helperEl.textContent = desc;
         }
 
         // Info chips
         var infoEl = document.getElementById('fem-grid-info');
-        infoEl.innerHTML =
+        var chipsHTML =
             '<span class="fem-chip"><i class="fas fa-ruler-combined"></i> Element length: <strong>' + elemSize + ' mm</strong></span>' +
             '<span class="fem-chip"><i class="fas fa-border-all"></i> Grid: <strong>' + COLS + ' \u00D7 ' + ROWS + '</strong> (' + (COLS * ROWS) + ' elements)</span>' +
             '<span class="fem-chip"><i class="fas fa-calculator"></i> L/xn = ' + r.l.toFixed(1) + '/' + r.xn + ' = ' + (r.l / r.xn).toFixed(2) + ' \u2192 <strong>' + elemSize + ' mm</strong></span>';
+        if (approach === 'lpa' && _femGrid.lpa) {
+            var lpa = _femGrid.lpa;
+            chipsHTML += '<span class="fem-chip"><i class="fas fa-road"></i> X: <strong>' + lpa.X.toFixed(0) + ' mm</strong></span>';
+            chipsHTML += '<span class="fem-chip"><i class="fas fa-shoe-prints"></i> ntire_add: <strong>' + lpa.ntire_add + '</strong></span>';
+            chipsHTML += '<span class="fem-chip"><i class="fas fa-forward"></i> Steps: <strong>' + lpa.nSteps + ' + ' + lpa.nSteps_exit + '</strong></span>';
+        }
+        infoEl.innerHTML = chipsHTML;
 
         // Render canvas
         drawFEMGrid();
+
+        // Progress bar
+        updateProgressBar(parseInt(slider.value));
 
         // Axis labels
         buildFEMAxes();
@@ -5234,14 +5722,25 @@
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, canvasW, canvasH);
 
-        // Fill cells per row
+        // Fill rows (grid lines drawn afterward provide cell boundaries)
         for (var row = 0; row < ROWS; row++) {
             var y = rowPxY[row], h = rowPxH[row];
-            var fill = rowTypes[row] === 'groove' ? grooveFill : (rowTypes[row] === 'spacing' ? spacingFill : ribFill);
-            for (var col = 0; col < COLS; col++) {
-                ctx.fillStyle = fill;
-                ctx.fillRect(col * cellPxW + 0.5, y + 0.5, cellPxW - 1, h - 1);
+            ctx.fillStyle = rowTypes[row] === 'groove' ? grooveFill : (rowTypes[row] === 'spacing' ? spacingFill : ribFill);
+            ctx.fillRect(0, y, canvasW, h);
+        }
+
+        // Row type sidebar indicators
+        var sidebarW = 4;
+        for (var rs = 0; rs < ROWS; rs++) {
+            var sy = rowPxY[rs], sh = rowPxH[rs];
+            if (rowTypes[rs] === 'rib') {
+                ctx.fillStyle = isDark ? '#0284c7' : '#0ea5e9';
+            } else if (rowTypes[rs] === 'groove') {
+                ctx.fillStyle = isDark ? '#d97706' : '#f59e0b';
+            } else {
+                ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
             }
+            ctx.fillRect(0, sy, sidebarW, sh);
         }
 
         // Vertical grid lines — minor
@@ -5275,6 +5774,18 @@
         }
         ctx.stroke();
 
+        // Rib/groove boundary glow (soft under-layer)
+        ctx.strokeStyle = isDark ? 'rgba(14,165,233,0.10)' : 'rgba(14,165,233,0.08)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        for (var rg = 1; rg < ROWS; rg++) {
+            if (rowTypes[rg] !== rowTypes[rg - 1]) {
+                ctx.moveTo(0, rowPxY[rg] + 0.5);
+                ctx.lineTo(canvasW, rowPxY[rg] + 0.5);
+            }
+        }
+        ctx.stroke();
+
         // Rib/groove boundary lines (thicker, accented)
         ctx.strokeStyle = ribBorder;
         ctx.lineWidth = 1.2;
@@ -5296,62 +5807,197 @@
         var nAxles = _femGrid.nAxles || 1;
         var tandemElems = _femGrid.tandemElems || 0;
 
-        // Each axle's contact patch offset relative to the gear origin:
-        // Axle 0 at 0, axle 1 at xn + tandemElems, axle 2 at 2*(xn + tandemElems), ...
-        var axleOffsets = [];
-        for (var a = 0; a < nAxles; a++) {
-            axleOffsets.push(a * (xn + tandemElems));
-        }
-
-        // Gear origin shifts by stepShift per load step
-        var gearOrigin = loadStep * stepShift;
-
-        // Colors: blue for current contact, amber for next-step preview
-        var hlFill = isDark ? 'rgba(14,165,233,0.22)' : 'rgba(14,165,233,0.16)';
-        var hlBorder = isDark ? 'rgba(14,165,233,0.6)' : 'rgba(14,165,233,0.5)';
-        var nxFill = isDark ? 'rgba(245,158,11,0.18)' : 'rgba(245,158,11,0.14)';
-        var nxBorder = isDark ? 'rgba(245,158,11,0.55)' : 'rgba(245,158,11,0.45)';
-
-        // Helper to draw one highlighted rectangle with given colors
+        // Helper to draw one highlighted rectangle with gradient fill
         function drawHL(cStart, cEnd, rStart, rEnd, fill, stroke) {
             if (cStart >= COLS || cEnd <= cStart || rEnd > ROWS) return;
             if (cEnd > COLS) cEnd = COLS;
             if (cStart < 0) cStart = 0;
             var px1 = cStart * cellPxW, px2 = cEnd * cellPxW;
             var py1 = rowPxY[rStart], py2 = rowPxY[rEnd];
-            ctx.fillStyle = fill;
+            // Gradient fill — intensified alpha at edges
+            var grad = ctx.createLinearGradient(px1, py1, px1, py2);
+            var m = fill.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+            if (m) {
+                var ai = Math.min(parseFloat(m[4]) + 0.1, 1);
+                var intense = 'rgba(' + m[1] + ',' + m[2] + ',' + m[3] + ',' + ai + ')';
+                grad.addColorStop(0, intense);
+                grad.addColorStop(0.4, fill);
+                grad.addColorStop(0.6, fill);
+                grad.addColorStop(1, intense);
+            } else {
+                grad.addColorStop(0, fill);
+                grad.addColorStop(1, fill);
+            }
+            ctx.fillStyle = grad;
             ctx.fillRect(px1, py1, px2 - px1, py2 - py1);
             ctx.strokeStyle = stroke;
             ctx.lineWidth = 1.5;
             ctx.strokeRect(px1 + 0.5, py1 + 0.5, px2 - px1 - 1, py2 - py1 - 1);
         }
 
+        // Helper: draw centered label pill on a zone
+        function drawZoneLabel(text, px1, py1, pw, ph, color) {
+            var cx = px1 + pw / 2, cy = py1 + ph / 2;
+            ctx.font = 'bold 9px sans-serif';
+            var tw = ctx.measureText(text).width;
+            var pad = 4;
+            ctx.fillStyle = isDark ? 'rgba(15,23,42,0.7)' : 'rgba(255,255,255,0.75)';
+            ctx.beginPath();
+            ctx.roundRect(cx - tw / 2 - pad, cy - 7, tw + pad * 2, 14, 4);
+            ctx.fill();
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(text, cx, cy);
+        }
+
+        // Helper: draw directional arrow (chevron) at leading edge
+        function drawDirectionArrow(x, yMid, size, color) {
+            ctx.save();
+            ctx.globalAlpha = 0.7;
+            ctx.beginPath();
+            ctx.moveTo(x - size, yMid - size);
+            ctx.lineTo(x, yMid);
+            ctx.lineTo(x - size, yMid + size);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Helper: draw 45° hatched lines over a rectangle
+        function drawHatchedRect(px1, py1, pw, ph, color) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(px1, py1, pw, ph);
+            ctx.clip();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            var maxDim = pw + ph;
+            for (var d = -maxDim; d < maxDim; d += 5) {
+                ctx.moveTo(px1 + d, py1);
+                ctx.lineTo(px1 + d + ph, py1 + ph);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
         var loadStepsMax = parseInt(document.getElementById('fem-load-step-slider').max) || 0;
 
-        for (var ai = 0; ai < nAxles; ai++) {
-            var cs = gearOrigin + axleOffsets[ai];
-            var ce = cs + xn;
+        // Colors
+        var hlFill = isDark ? 'rgba(14,165,233,0.22)' : 'rgba(14,165,233,0.16)';
+        var hlBorder = isDark ? 'rgba(14,165,233,0.6)' : 'rgba(14,165,233,0.5)';
+        var nxFill = isDark ? 'rgba(245,158,11,0.18)' : 'rgba(245,158,11,0.14)';
+        var nxBorder = isDark ? 'rgba(245,158,11,0.55)' : 'rgba(245,158,11,0.45)';
 
-            // Next-step preview: stepShift elements to the right of the contact patch
-            // Only show if not at the last load step
-            if (loadStep < loadStepsMax) {
-                var nsStart = ce;
-                var nsEnd = ce + stepShift;
-                drawHL(nsStart, nsEnd, 0, tireRowCount, nxFill, nxBorder);
-                if (_femGrid.isFullMode) {
-                    var spElem = parseInt(document.getElementById('ip-axle-elements').value) || 25;
-                    drawHL(nsStart, nsEnd, tireRowCount + spElem, tireRowCount + spElem + tireRowCount, nxFill, nxBorder);
+        if (_femGrid.approach === 'lpa' && _femGrid.lpa) {
+            // ---- LPA highlight ----
+            var transFill = isDark ? 'rgba(16,185,129,0.20)' : 'rgba(16,185,129,0.14)';
+            var transBorder = isDark ? 'rgba(16,185,129,0.55)' : 'rgba(16,185,129,0.45)';
+            var tandemFill = isDark ? 'rgba(139,92,246,0.20)' : 'rgba(139,92,246,0.14)';
+            var tandemBorder = isDark ? 'rgba(139,92,246,0.55)' : 'rgba(139,92,246,0.45)';
+            var tridemFill = isDark ? 'rgba(236,72,153,0.20)' : 'rgba(236,72,153,0.14)';
+            var tridemBorder = isDark ? 'rgba(236,72,153,0.55)' : 'rgba(236,72,153,0.45)';
+
+            var tirePositions = computeLPATirePositions(loadStep);
+            var lpaLabels = ['P', 'T', 'Td'];
+
+            for (var ti = 0; ti < tirePositions.length; ti++) {
+                var tp = tirePositions[ti];
+                var cFill, cBorder, tFill, tBorder;
+                if (tp.id === 0) {
+                    cFill = hlFill; cBorder = hlBorder;
+                } else if (tp.id === 1) {
+                    cFill = tandemFill; cBorder = tandemBorder;
+                } else {
+                    cFill = tridemFill; cBorder = tridemBorder;
+                }
+                tFill = transFill; tBorder = transBorder;
+
+                // Draw transition zone first (underneath)
+                if (tp.transEnd > tp.transStart) {
+                    drawHL(tp.transStart, tp.transEnd, 0, tireRowCount, tFill, tBorder);
+                    // Hatched pattern over transition zones
+                    var tpx1 = Math.max(0, tp.transStart) * cellPxW;
+                    var tpx2 = Math.min(tp.transEnd, COLS) * cellPxW;
+                    drawHatchedRect(tpx1, rowPxY[0], tpx2 - tpx1, rowPxY[tireRowCount] - rowPxY[0], isDark ? 'rgba(16,185,129,0.25)' : 'rgba(16,185,129,0.20)');
+                    if (_femGrid.isFullMode) {
+                        var spElem = parseInt(document.getElementById('ip-axle-elements').value) || 25;
+                        drawHL(tp.transStart, tp.transEnd, tireRowCount + spElem, tireRowCount + spElem + tireRowCount, tFill, tBorder);
+                        var fpy1 = rowPxY[tireRowCount + spElem];
+                        var fpy2 = rowPxY[tireRowCount + spElem + tireRowCount];
+                        drawHatchedRect(tpx1, fpy1, tpx2 - tpx1, fpy2 - fpy1, isDark ? 'rgba(16,185,129,0.25)' : 'rgba(16,185,129,0.20)');
+                    }
+                }
+                // Draw contact zone (on top)
+                if (tp.contactEnd > tp.contactStart) {
+                    drawHL(tp.contactStart, tp.contactEnd, 0, tireRowCount, cFill, cBorder);
+                    // Label & arrow on contact zone
+                    var cpx1 = Math.max(0, tp.contactStart) * cellPxW;
+                    var cpx2 = Math.min(tp.contactEnd, COLS) * cellPxW;
+                    var cpy1 = rowPxY[0], cpy2 = rowPxY[tireRowCount];
+                    drawZoneLabel(lpaLabels[tp.id] || 'P', cpx1, cpy1, cpx2 - cpx1, cpy2 - cpy1, cBorder);
+                    drawDirectionArrow(cpx2 - 3, cpy1 + (cpy2 - cpy1) / 2, 5, cBorder);
+                    if (_femGrid.isFullMode) {
+                        var spElem2 = parseInt(document.getElementById('ip-axle-elements').value) || 25;
+                        drawHL(tp.contactStart, tp.contactEnd, tireRowCount + spElem2, tireRowCount + spElem2 + tireRowCount, cFill, cBorder);
+                        var fcy1 = rowPxY[tireRowCount + spElem2];
+                        var fcy2 = rowPxY[tireRowCount + spElem2 + tireRowCount];
+                        drawZoneLabel(lpaLabels[tp.id] || 'P', cpx1, fcy1, cpx2 - cpx1, fcy2 - fcy1, cBorder);
+                        drawDirectionArrow(cpx2 - 3, fcy1 + (fcy2 - fcy1) / 2, 5, cBorder);
+                    }
                 }
             }
-
-            // Current contact imprint (drawn after so it's on top)
-            drawHL(cs, ce, 0, tireRowCount, hlFill, hlBorder);
-            if (_femGrid.isFullMode) {
-                var spacingElems = parseInt(document.getElementById('ip-axle-elements').value) || 25;
-                var t2Start = tireRowCount + spacingElems;
-                var t2End = t2Start + tireRowCount;
-                drawHL(cs, ce, t2Start, t2End, hlFill, hlBorder);
+            // Cache tire positions for tooltip
+            _femGrid._tirePositions = tirePositions;
+        } else {
+            // ---- Standard highlight ----
+            var axleOffsets = [];
+            for (var a = 0; a < nAxles; a++) {
+                axleOffsets.push(a * (xn + tandemElems));
             }
+            var gearOrigin = loadStep * stepShift;
+            var stdTirePositions = [];
+
+            for (var ai = 0; ai < nAxles; ai++) {
+                var cs = gearOrigin + axleOffsets[ai];
+                var ce = cs + xn;
+
+                // Next-step preview — dashed border
+                if (loadStep < loadStepsMax) {
+                    var nsStart = ce;
+                    var nsEnd = ce + stepShift;
+                    ctx.setLineDash([4, 3]);
+                    drawHL(nsStart, nsEnd, 0, tireRowCount, nxFill, nxBorder);
+                    if (_femGrid.isFullMode) {
+                        var spElem = parseInt(document.getElementById('ip-axle-elements').value) || 25;
+                        drawHL(nsStart, nsEnd, tireRowCount + spElem, tireRowCount + spElem + tireRowCount, nxFill, nxBorder);
+                    }
+                    ctx.setLineDash([]);
+                }
+
+                // Current contact imprint (drawn after so it's on top)
+                drawHL(cs, ce, 0, tireRowCount, hlFill, hlBorder);
+                // Label & arrow
+                var scpx1 = Math.max(0, cs) * cellPxW;
+                var scpx2 = Math.min(ce, COLS) * cellPxW;
+                var scpy1 = rowPxY[0], scpy2 = rowPxY[tireRowCount];
+                var stdLabel = nAxles === 1 ? 'P' : ('A' + (ai + 1));
+                drawZoneLabel(stdLabel, scpx1, scpy1, scpx2 - scpx1, scpy2 - scpy1, hlBorder);
+                drawDirectionArrow(scpx2 - 3, scpy1 + (scpy2 - scpy1) / 2, 5, hlBorder);
+                if (_femGrid.isFullMode) {
+                    var spacingElems = parseInt(document.getElementById('ip-axle-elements').value) || 25;
+                    var t2Start = tireRowCount + spacingElems;
+                    var t2End = t2Start + tireRowCount;
+                    drawHL(cs, ce, t2Start, t2End, hlFill, hlBorder);
+                    var sfcy1 = rowPxY[t2Start], sfcy2 = rowPxY[t2End];
+                    drawZoneLabel(stdLabel, scpx1, sfcy1, scpx2 - scpx1, sfcy2 - sfcy1, hlBorder);
+                    drawDirectionArrow(scpx2 - 3, sfcy1 + (sfcy2 - sfcy1) / 2, 5, hlBorder);
+                }
+                stdTirePositions.push({ id: ai, contactStart: cs, contactEnd: ce, label: stdLabel });
+            }
+            // Cache for tooltip
+            _femGrid._tirePositions = stdTirePositions;
         }
 
         // Outer border
@@ -5492,10 +6138,140 @@
         _femGrid.yRef = yRef;
     }
 
+    var _hlCache = { key: null, result: null };
+
+    function getLPAHighlightedElements() {
+        var lpa = _femGrid.lpa;
+        var COLS = _femGrid.cols, ROWS = _femGrid.rows;
+        var loadStep = parseInt(document.getElementById('fem-load-step-slider').value) || 0;
+        var nh = lpa.nh;
+        var t_inc = lpa.t_inc;
+        var xLocCol = nh + t_inc;
+
+        // Cache key for LPA
+        var cacheKey = 'lpa_' + loadStep + '_' + nh + '_' + t_inc + '_' + COLS + '_' + ROWS + '_' + (_femGrid.isFullMode ? 1 : 0);
+        if (_hlCache.key === cacheKey && _hlCache.result) return _hlCache.result;
+
+        // Primary tire position at this step
+        var primaryStart = loadStep * t_inc;
+        var cols = [];
+        for (var c = primaryStart; c < Math.min(primaryStart + xLocCol, COLS); c++) {
+            if (c >= 0) cols.push(c);
+        }
+        var contactCols = [];
+        for (var c2 = primaryStart; c2 < Math.min(primaryStart + nh, COLS); c2++) {
+            if (c2 >= 0) contactCols.push(c2);
+        }
+
+        // Collect rib row indices
+        var tireRowCount = _femGrid.tireRowCount || ROWS;
+        var rowTypes = _femGrid.rowTypes;
+        var ribRowIndices = [];
+        for (var r = 0; r < tireRowCount; r++) {
+            if (rowTypes[r] === 'rib') ribRowIndices.push(r);
+        }
+        if (_femGrid.isFullMode) {
+            var spacingElems = parseInt(document.getElementById('ip-axle-elements').value) || 25;
+            var t2Start = tireRowCount + spacingElems;
+            var t2End = t2Start + tireRowCount;
+            if (t2End <= ROWS) {
+                for (var r2 = t2Start; r2 < t2End; r2++) {
+                    if (rowTypes[r2] === 'rib') ribRowIndices.push(r2);
+                }
+            }
+        }
+
+        var colCentroids = _femGrid.colCentroids;
+        var rowCentroidsZ = _femGrid.rowCentroidsZ;
+        var rowRibIndex = _femGrid.rowRibIndex;
+        var rowPartIndex = _femGrid.rowPartIndex;
+        var results = _femGrid._results;
+        var nnz = results.nnz || 2;
+        var nRows = ribRowIndices.length;
+        var nCols = cols.length;
+        var nContactCols = contactCols.length;
+
+        // Build coordinate matrices for all xLocCol columns
+        var xMat = new Array(nRows);
+        var zMat = new Array(nRows);
+        for (var ri = 0; ri < nRows; ri++) {
+            xMat[ri] = new Float64Array(nCols);
+            zMat[ri] = new Float64Array(nCols);
+            var zVal = rowCentroidsZ[ribRowIndices[ri]];
+            for (var ci = 0; ci < nCols; ci++) {
+                xMat[ri][ci] = colCentroids[cols[ci]];
+                zMat[ri][ci] = zVal;
+            }
+        }
+
+        // Build stress matrices for all xLocCol columns
+        // Contact cols (0..nh-1): direct stress from results
+        // Transition cols (nh..nh+t_inc-1): stress borrowed from col [k - t_inc]
+        var slMat = new Array(nRows);
+        var stMat = new Array(nRows);
+        var svMat = new Array(nRows);
+        var nearZero = 0.00001;
+
+        for (var ri = 0; ri < nRows; ri++) {
+            slMat[ri] = new Float64Array(nCols);
+            stMat[ri] = new Float64Array(nCols);
+            svMat[ri] = new Float64Array(nCols);
+
+            var gridRow = ribRowIndices[ri];
+            var ribIdx = rowRibIndex[gridRow];
+            var partIdx = rowPartIndex[gridRow];
+            var ribKey = 'Rib ' + (ribIdx + 1);
+
+            var aszRib = results.asz[ribKey];
+            var asxRib = results.asx[ribKey];
+            var asyRib = results.asy[ribKey];
+
+            for (var ci = 0; ci < nCols; ci++) {
+                // ci is index into cols[] array; localIdx = position within the xLocCol imprint
+                var localIdx = ci; // 0..xLocCol-1
+                var stressIdx;
+                if (localIdx < nh) {
+                    stressIdx = localIdx; // direct contact element
+                } else {
+                    stressIdx = localIdx - t_inc; // transition: borrow from k - t_inc
+                }
+
+                if (aszRib && stressIdx >= 0 && stressIdx < nh) {
+                    svMat[ri][ci] = aszRib[stressIdx];
+                    slMat[ri][ci] = asxRib[stressIdx];
+                    if (partIdx === 0) {
+                        stMat[ri][ci] = asyRib[stressIdx];
+                    } else if (partIdx === nnz - 1) {
+                        stMat[ri][ci] = -1.0 * asyRib[stressIdx];
+                    } else {
+                        stMat[ri][ci] = nearZero;
+                    }
+                }
+            }
+        }
+
+        var result = {
+            ribRows: ribRowIndices, cols: cols, contactCols: contactCols,
+            stressCols: contactCols, xMat: xMat, zMat: zMat,
+            slMat: slMat, stMat: stMat, svMat: svMat,
+            nRows: nRows, nCols: nCols, nContactCols: nContactCols,
+            nStressCols: nContactCols, nStressRows: nRows,
+            isLPA: true
+        };
+        _hlCache.key = cacheKey;
+        _hlCache.result = result;
+        return result;
+    }
+
     function getHighlightedElements() {
         // Returns matrices: xMat, zMat, slMat, stMat, svMat
         // Rows = rib elements in transverse dir, Cols = contact + next-step columns
         if (!_femGrid || !_femGrid.colCentroids) return { ribRows: [], cols: [], xMat: [], zMat: [], slMat: [], stMat: [], svMat: [], nRows: 0, nCols: 0 };
+
+        // LPA branch: outputs for primary tire's nh + t_inc columns
+        if (_femGrid.approach === 'lpa' && _femGrid.lpa) {
+            return getLPAHighlightedElements();
+        }
 
         var COLS = _femGrid.cols, ROWS = _femGrid.rows;
         var loadStep = parseInt(document.getElementById('fem-load-step-slider').value) || 0;
@@ -5506,6 +6282,11 @@
         var tandemElems = _femGrid.tandemElems || 0;
         var loadStepsMax = parseInt(document.getElementById('fem-load-step-slider').max) || 0;
         var nnz = _femGrid._results.nnz || 2;
+        var isFullMode = _femGrid.isFullMode || false;
+
+        // Cache key: return previous result if inputs unchanged
+        var cacheKey = loadStep + '_' + stepShift + '_' + xn + '_' + COLS + '_' + ROWS + '_' + nAxles + '_' + tandemElems + '_' + (isFullMode ? 1 : 0);
+        if (_hlCache.key === cacheKey && _hlCache.result) return _hlCache.result;
 
         var gearOrigin = loadStep * stepShift;
 
@@ -5615,7 +6396,10 @@
             }
         }
 
-        return { ribRows: ribRowIndices, cols: cols, contactCols: contactCols, stressCols: stressCols, xMat: xMat, zMat: zMat, slMat: slMat, stMat: stMat, svMat: svMat, nRows: nRows, nCols: nCols, nContactCols: nContactCols, nStressCols: nStressCols, nStressRows: nStressRows };
+        var result = { ribRows: ribRowIndices, cols: cols, contactCols: contactCols, stressCols: stressCols, xMat: xMat, zMat: zMat, slMat: slMat, stMat: stMat, svMat: svMat, nRows: nRows, nCols: nCols, nContactCols: nContactCols, nStressCols: nStressCols, nStressRows: nStressRows };
+        _hlCache.key = cacheKey;
+        _hlCache.result = result;
+        return result;
     }
 
     // Number formatting for text files
@@ -5721,11 +6505,18 @@
         var zip = new JSZip();
         var folder = zip.folder('stress');
 
+        // In LPA, xLoc/zLoc are a × (nh + t_inc) but sL/sT/sV are a × nh (contact only)
+        var stressRows = hl.nStressRows;
+        var stressCols = hl.nStressCols;
+        if (hl.isLPA && _femGrid.lpa) {
+            stressCols = hl.nContactCols; // only contact columns (without transition)
+        }
+
         folder.file('xLoc.txt', matToTxt(hl.xMat, hl.nRows, hl.nCols, fmtCoord));
         folder.file('zLoc.txt', matToTxt(hl.zMat, hl.nRows, hl.nCols, fmtCoord));
-        folder.file('sL.txt', matToTxt(hl.slMat, hl.nStressRows, hl.nStressCols, fmtStress));
-        folder.file('sT.txt', matToTxt(hl.stMat, hl.nStressRows, hl.nStressCols, fmtStress));
-        folder.file('sV.txt', matToTxt(hl.svMat, hl.nStressRows, hl.nStressCols, fmtStress));
+        folder.file('sL.txt', matToTxt(hl.slMat, stressRows, stressCols, fmtStress));
+        folder.file('sT.txt', matToTxt(hl.stMat, stressRows, stressCols, fmtStress));
+        folder.file('sV.txt', matToTxt(hl.svMat, stressRows, stressCols, fmtStress));
 
         zip.generateAsync({ type: 'blob' }).then(function(blob) {
             var url = URL.createObjectURL(blob);
@@ -5779,8 +6570,41 @@
             var yStart = _femGrid.rowCumY[row], yEnd = _femGrid.rowCumY[row + 1];
             var label = _femGrid.rowLabels[row];
             var w = _femGrid.rowWidths[row];
-            tooltip.innerHTML = '<strong>(' + (row + 1) + ', ' + (col + 1) + ')</strong> ' + label +
+            var html = '<strong>(' + (row + 1) + ', ' + (col + 1) + ')</strong> ' + label +
                 ' &nbsp;x: ' + xStart + '\u2013' + xEnd + ' mm &nbsp;y: ' + yStart.toFixed(1) + '\u2013' + yEnd.toFixed(1) + ' mm &nbsp;w: ' + w.toFixed(1) + ' mm';
+            // Zone context
+            if (_femGrid._tirePositions) {
+                var zoneColors = { contact: '#0ea5e9', transition: '#10b981', 'next step': '#f59e0b' };
+                for (var zi = 0; zi < _femGrid._tirePositions.length; zi++) {
+                    var zp = _femGrid._tirePositions[zi];
+                    if (col >= zp.contactStart && col < zp.contactEnd) {
+                        var zLabel = zp.label || (['Primary', 'Tandem', 'Tridem'][zp.id] || 'Contact');
+                        html += ' &nbsp;<span style="color:#0ea5e9;">\u25CF</span> Contact (' + zLabel + ')';
+                        break;
+                    }
+                    if (zp.transStart !== undefined && col >= zp.transStart && col < zp.transEnd) {
+                        html += ' &nbsp;<span style="color:#10b981;">\u25CF</span> Transition';
+                        break;
+                    }
+                }
+                // Standard: check next-step zone
+                if (_femGrid.approach !== 'lpa') {
+                    var ssShift = parseInt(document.getElementById('ip-step-shift').value) || 3;
+                    var sStep = parseInt(document.getElementById('fem-load-step-slider').value) || 0;
+                    var sMax = parseInt(document.getElementById('fem-load-step-slider').max) || 0;
+                    if (sStep < sMax) {
+                        for (var si = 0; si < _femGrid._tirePositions.length; si++) {
+                            var sp = _femGrid._tirePositions[si];
+                            var nsS = sp.contactEnd, nsE = sp.contactEnd + ssShift;
+                            if (col >= nsS && col < nsE) {
+                                html += ' &nbsp;<span style="color:#f59e0b;">\u25CF</span> Next Step';
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            tooltip.innerHTML = html;
             // Position tooltip
             var pxX = (col + 0.5) * _femGrid._cellPxW / _femGrid._canvasW * 100;
             var pxY = rowPxY[row];
@@ -5829,6 +6653,7 @@
                 updateEquilibriumBadge();
                 updateSummaryCards();
                 Object.keys(chartsNeedRerender).forEach(k => chartsNeedRerender[k] = true);
+                Object.keys(vizNeedRerender).forEach(k => vizNeedRerender[k] = true);
                 renderChartsForModule(getActiveModule());
                 ['analysis-empty','summary-empty','inputprep-empty'].forEach(id =>
                     document.getElementById(id).style.display = 'none');
@@ -5943,6 +6768,86 @@
         setTimeout(() => { if (selectionOverlay) { selectionOverlay.remove(); selectionOverlay = null; } }, 300);
     }
 
+    // ==================== ANALYSIS TAB LOADING ====================
+    var _analysisOverlay = null;
+    var _analysisStepTimers = [];
+    var _analysisStepsDef = [
+        { icon: 'fa-microchip',   text: 'Initializing renderer...' },
+        { icon: 'fa-cube',        text: 'Building 3D surfaces...' },
+        { icon: 'fa-chart-line',  text: 'Rendering distributions...' },
+        { icon: 'fa-layer-group', text: 'Finalizing layout...' }
+    ];
+
+    function showAnalysisLoading(vizLabel) {
+        hideAnalysisLoading(true); // clear any existing
+        var overlay = document.createElement('div');
+        overlay.className = 'loading-overlay';
+        overlay.id = 'analysis-loading-overlay';
+        overlay.innerHTML =
+            '<div class="analysis-loading-card">' +
+                '<div class="analysis-loading-icon">' +
+                    '<div class="icon-ring"></div>' +
+                    '<div class="icon-center"><i class="fas fa-chart-area"></i></div>' +
+                '</div>' +
+                '<div class="analysis-loading-title">Preparing Visualizations</div>' +
+                '<div class="analysis-loading-sub">' + (vizLabel || 'Rendering charts and surfaces') + '</div>' +
+                '<div class="analysis-loading-steps">' +
+                    _analysisStepsDef.map(function(s, i) {
+                        return '<div class="analysis-loading-step' + (i === 0 ? ' active' : '') + '" id="astep-' + i + '">' +
+                            '<i class="fas ' + (i === 0 ? 'fa-spinner fa-spin' : s.icon) + '"></i>' +
+                            '<span>' + s.text + '</span></div>';
+                    }).join('') +
+                '</div>' +
+                '<div class="analysis-progress-track"><div class="analysis-progress-fill" id="analysis-progress-fill"></div></div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+        _analysisOverlay = overlay;
+        requestAnimationFrame(function() { overlay.classList.add('visible'); });
+        // Animate fake progress steps
+        _analysisStepTimers = [];
+        var delays = [180, 400, 700];
+        var pcts  = [25, 55, 85];
+        delays.forEach(function(delay, idx) {
+            var t = setTimeout(function() {
+                if (!_analysisOverlay) return;
+                // Complete previous step
+                var prev = _analysisOverlay.querySelector('#astep-' + idx);
+                if (prev) { prev.className = 'analysis-loading-step done'; prev.querySelector('i').className = 'fas fa-check-circle'; }
+                // Activate next step
+                var next = _analysisOverlay.querySelector('#astep-' + (idx + 1));
+                if (next) { next.className = 'analysis-loading-step active'; next.querySelector('i').className = 'fas fa-spinner fa-spin'; }
+                // Update progress
+                var fill = document.getElementById('analysis-progress-fill');
+                if (fill) fill.style.width = pcts[idx] + '%';
+            }, delay);
+            _analysisStepTimers.push(t);
+        });
+    }
+
+    function hideAnalysisLoading(immediate) {
+        _analysisStepTimers.forEach(clearTimeout);
+        _analysisStepTimers = [];
+        if (!_analysisOverlay) return;
+        var overlay = _analysisOverlay;
+        _analysisOverlay = null;
+        if (immediate) { overlay.remove(); return; }
+        // Complete all steps
+        _analysisStepsDef.forEach(function(_, i) {
+            var step = overlay.querySelector('#astep-' + i);
+            if (step) { step.className = 'analysis-loading-step done'; step.querySelector('i').className = 'fas fa-check-circle'; }
+        });
+        var fill = overlay.querySelector('#analysis-progress-fill');
+        if (fill) fill.style.width = '100%';
+        // Exit animation after brief pause
+        setTimeout(function() {
+            var card = overlay.querySelector('.analysis-loading-card');
+            if (card) card.classList.add('exit');
+            overlay.style.transition = 'opacity 0.3s ease';
+            overlay.style.opacity = '0';
+            setTimeout(function() { overlay.remove(); }, 350);
+        }, 250);
+    }
+
     function showSuccessFlash(msg) {
         const flash = document.createElement('div');
         flash.className = 'success-flash';
@@ -6045,7 +6950,18 @@
                 el.classList.add('active');
                 // Lazy render: if this tab's charts need re-rendering, do it now
                 if (results && chartsNeedRerender[mod]) {
-                    requestAnimationFrame(() => renderChartsForModule(mod));
+                    var vizLabels = { analysis: 'Rendering charts and surfaces', summary: 'Building summary report', inputprep: 'Constructing FEM grid' };
+                    if (mod === 'analysis' || mod === 'summary') {
+                        showAnalysisLoading(vizLabels[mod]);
+                        requestAnimationFrame(function() {
+                            setTimeout(function() {
+                                renderChartsForModule(mod);
+                                requestAnimationFrame(function() { hideAnalysisLoading(); });
+                            }, 60);
+                        });
+                    } else {
+                        requestAnimationFrame(() => renderChartsForModule(mod));
+                    }
                 }
                 setTimeout(() => window.dispatchEvent(new Event('resize')), 80);
             });
@@ -6065,6 +6981,25 @@
                 var vizEl = parent.querySelector('#viz-' + this.dataset.viz);
                 vizEl.style.setProperty('--tab-anim', dir);
                 vizEl.classList.add('active');
+                // Lazy render: if this viz sub-tab's charts need rendering, do it now
+                var vizKey = this.dataset.viz;
+                if (results && vizNeedRerender[vizKey]) {
+                    const r = results;
+                    const ribLabels = r.bi.map((w, i) => `Rib ${i + 1} (${w} mm)`);
+                    const ribNames = r.bi.map((_, i) => `Rib ${i + 1}`);
+                    const cumW = [0];
+                    r.bi.forEach(w => cumW.push(cumW[cumW.length - 1] + w));
+                    const totalW = cumW[cumW.length - 1];
+                    const ribCenters = r.bi.map((w, i) => cumW[i] + w / 2 - totalW / 2);
+                    var vizLabels = { surfaces: 'Building 3D stress surfaces', heatmaps: 'Rendering heat maps', ribcurves: 'Plotting rib distributions', combined: 'Composing combined view', ribprops: 'Computing rib properties' };
+                    showAnalysisLoading(vizLabels[vizKey] || 'Rendering charts');
+                    requestAnimationFrame(function() {
+                        setTimeout(function() {
+                            renderVizSubTab(vizKey, r, ribLabels, ribNames, ribCenters);
+                            requestAnimationFrame(function() { hideAnalysisLoading(); });
+                        }, 60);
+                    });
+                }
                 setTimeout(() => window.dispatchEvent(new Event('resize')), 120);
             });
         });
@@ -6103,18 +7038,58 @@
             rebuildFEMGrid();
         }
 
+        // Approach toggle (Standard / Load Pass)
+        function applyApproachUI() {
+            var isLPA = getActiveApproach() === 'lpa';
+            // Show/hide LPA-only controls
+            document.querySelectorAll('.lpa-only-control').forEach(function(el) {
+                el.style.display = isLPA ? '' : 'none';
+            });
+            // In LPA, Load Steps is computed (readonly)
+            ipLoadSteps.readOnly = isLPA;
+            ipLoadSteps.style.opacity = isLPA ? '0.6' : '1';
+            // Recalculate
+            updateIPElements();
+        }
+
+        document.querySelectorAll('#approach-toggle .fem-toggle-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('#approach-toggle .fem-toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                applyApproachUI();
+            });
+        });
+
+        // LPA-specific controls
+        document.getElementById('ip-nstep-fullconfig').addEventListener('input', function() {
+            if (getActiveApproach() === 'lpa') updateIPElements();
+        });
+        document.querySelectorAll('#exit-load-toggle .fem-toggle-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('#exit-load-toggle .fem-toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                if (getActiveApproach() === 'lpa') updateIPElements();
+            });
+        });
+
         document.querySelectorAll('#gear-config-toggle .fem-toggle-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('#gear-config-toggle .fem-toggle-btn').forEach(function(b) { b.classList.remove('active'); });
                 this.classList.add('active');
-                var cfg = gearConfig[this.dataset.gear] || gearConfig['D'];
-                ipLoadSteps.value = cfg.loadSteps;
+                if (getActiveApproach() !== 'lpa') {
+                    var cfg = gearConfig[this.dataset.gear] || gearConfig['D'];
+                    ipLoadSteps.value = cfg.loadSteps;
+                }
                 updateIPElements();
             });
         });
 
         ipStepShift.addEventListener('input', updateIPElements);
-        ipLoadSteps.addEventListener('input', updateIPElements);
+        ipLoadSteps.addEventListener('input', function() {
+            // In LPA mode, ignore manual edits to load steps (it's computed)
+            if (getActiveApproach() === 'lpa') return;
+            updateIPElements();
+        });
         ipTandemSpacing.addEventListener('input', updateIPElements);
 
         // H/F toggle and axle spacing controls
@@ -6155,7 +7130,12 @@
         var femSliderValue = document.getElementById('fem-load-step-value');
         femSlider.addEventListener('input', function() {
             femSliderValue.textContent = this.value;
+            var stepVal = parseInt(this.value);
+            if (_femGrid && _femGrid.approach === 'lpa' && _femGrid.lpa) {
+                updateLPAPhaseLabel(stepVal);
+            }
             drawFEMGrid();
+            updateProgressBar(stepVal);
             updateOutputTables();
         });
 
@@ -6362,6 +7342,7 @@
                     Object.keys(chartsNeedRerender).forEach(k => {
                         if (k !== getActiveModule()) chartsNeedRerender[k] = true;
                     });
+                    Object.keys(vizNeedRerender).forEach(k => vizNeedRerender[k] = true);
                 }
                 drawContactPatch();
                 drawGearConfig();
