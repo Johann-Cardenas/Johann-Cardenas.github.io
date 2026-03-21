@@ -1,21 +1,33 @@
-# IDE Settings
-.idea/
-.vscode/
+# Claude Code
+.claude/
+.mcp.json
 
-# Python Cache
-.mypy_cache/
-__pycache__/
-*.py[cod]
-
-# OS generated files
-Thumbs.db
-.DS_Store
-
-# Jekyll build output
+# Jekyll
 _site/
 .sass-cache/
 .jekyll-cache/
 .jekyll-metadata
 
-# Sass source maps
-*.css.map
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Python (preprocessing scripts)
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Environment
+*.env
+!.env.example
+
+# Logs
+*.log
