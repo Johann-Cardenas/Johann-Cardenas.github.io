@@ -20,4 +20,6 @@ exclude:
   - "*.pkl.bz2"
   - node_modules/
 
-# Other default config options can go here
+# Plugins
+plugins:
+  - jekyll-sitemap

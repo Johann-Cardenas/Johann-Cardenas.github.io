@@ -41,6 +41,7 @@
 		<link rel="stylesheet" href="assets/css/homepage.css" />
 	</head>
 	<body class="homepage is-preload">
+		<a href="#main" class="skip-link">Skip to main content</a>
 		<div id="page-wrapper">
 
 			<!-- Header -->
@@ -1218,13 +1219,28 @@
 				});
 			</script>
 
-		<!-- Globe libraries (defer: download in parallel, execute after HTML parsed, before DOMContentLoaded) -->
-		<script src="assets/js/three.min.js" defer></script>
-		<script src="assets/js/globe.gl.min.js" defer></script>
+		<!-- Globe libraries (lazy-loaded via IntersectionObserver — saves 2.4 MB on initial load) -->
 		<script>
-			window.addEventListener('DOMContentLoaded', function () {
+			(function () {
 				var mapDiv = document.getElementById('about-me-map');
-				if (!mapDiv || typeof Globe !== 'function') return;
+				if (!mapDiv || !('IntersectionObserver' in window)) return;
+				var observer = new IntersectionObserver(function (entries) {
+					if (!entries[0].isIntersecting) return;
+					observer.disconnect();
+					var threeScript = document.createElement('script');
+					threeScript.src = 'assets/js/three.min.js';
+					threeScript.onload = function () {
+						var globeScript = document.createElement('script');
+						globeScript.src = 'assets/js/globe.gl.min.js';
+						globeScript.onload = function () { initGlobe(mapDiv); };
+						document.head.appendChild(globeScript);
+					};
+					document.head.appendChild(threeScript);
+				}, { rootMargin: '300px' });
+				observer.observe(mapDiv);
+			})();
+			function initGlobe(mapDiv) {
+				if (typeof Globe !== 'function') return;
 				function getGlobeSize() {
 					return {
 						width: mapDiv.offsetWidth,
@@ -1349,7 +1365,7 @@
 					globe.width(s.width);
 					globe.height(s.height);
 				});
-			});
+			}
 		</script>
 
 		<!-- Research Projects: show first 3, collapse the rest -->

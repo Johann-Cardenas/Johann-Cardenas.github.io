@@ -38,45 +38,6 @@
         }
     }
 
-    // Generate navigation HTML
-    function generateNavigation(navData, currentPage) {
-        if (!navData) return '';
-
-        const logo = navData.logo || { text: 'Johann Cardenas', url: 'index.html' };
-        let html = `
-                <h1><a href="${basePath}${logo.url}">${logo.text}</a></h1>
-                <nav id="nav">
-                    <ul>`;
-
-        navData.menu.forEach(item => {
-            const isCurrent = currentPage === item.url || currentPage.endsWith(item.url);
-            const currentClass = isCurrent ? ' class="current"' : '';
-            
-            if (item.type === 'dropdown' && item.children) {
-                html += `
-                        <li${currentClass}>
-                            <a href="${basePath}${item.url}">${item.name}</a>
-                            <ul>`;
-                item.children.forEach(child => {
-                    html += `
-                                <li><a href="${basePath}${child.url}">${child.name}</a></li>`;
-                });
-                html += `
-                            </ul>
-                        </li>`;
-            } else {
-                html += `
-                        <li${currentClass}><a href="${basePath}${item.url}">${item.name}</a></li>`;
-            }
-        });
-
-        html += `
-                    </ul>
-                </nav>`;
-
-        return html;
-    }
-
     /**
      * Generate mobile nav panel HTML with grouped dropdowns so subsections
      * can be hidden by default and shown on hover (mobile side menu).
@@ -199,6 +160,11 @@
         return html;
     }
 
+    // Convert image path to WebP equivalent
+    function toWebP(src) {
+        return src.replace(/\.(jpe?g|png)$/i, '.webp');
+    }
+
     // Generate blog post card HTML (E-Labs/News style: image on top, content below)
     function generateBlogCard(post, imageBasePath = '') {
         const readTimeBadge = post.readTime
@@ -208,7 +174,10 @@
             <article class="blog-card-modern">
                 <div class="blog-card-image">
                     <a href="${basePath}${post.url}">
-                        <img src="${imageBasePath}${post.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" />
+                        <picture>
+                            <source srcset="${toWebP(imageBasePath + post.image)}" type="image/webp">
+                            <img src="${imageBasePath}${post.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" />
+                        </picture>
                     </a>
                 </div>
                 <div class="blog-card-content">
@@ -234,11 +203,12 @@
         // Info icon for both
         const infoIconML = `<span class="project-info-icon" tabindex="0"><i class="fas fa-info-circle"></i><span class="project-info-tooltip">The final report of this project is still under review and the results will become available once the document is published.</span></span>`;
         const infoIconOverload = `<span class="project-info-icon" tabindex="0"><i class="fas fa-info-circle"></i><span class="project-info-tooltip">This project is active, but access to the results is not yet enabled. Please check back soon for updates.</span></span>`;
+        const pictureTag = `<picture><source srcset="${toWebP(imageBasePath + project.image)}" type="image/webp"><img src="${imageBasePath}${project.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" /></picture>`;
         const imageSection = isMLProject
-            ? `<div class="project-card-image">${infoIconML}<img src="${imageBasePath}${project.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" />${statusTag}</div>`
+            ? `<div class="project-card-image">${infoIconML}${pictureTag}${statusTag}</div>`
             : isOverloadProject
-                ? `<div class="project-card-image">${infoIconOverload}<img src="${imageBasePath}${project.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" />${statusTag}</div>`
-                : `<div class="project-card-image"><a href="${basePath}${project.url}"><img src="${imageBasePath}${project.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" /></a>${statusTag}</div>`;
+                ? `<div class="project-card-image">${infoIconOverload}${pictureTag}${statusTag}</div>`
+                : `<div class="project-card-image"><a href="${basePath}${project.url}">${pictureTag}</a>${statusTag}</div>`;
         const titleSection = (isMLProject || isOverloadProject)
             ? `<h3>${project.title}</h3>`
             : `<h3><a href="${basePath}${project.url}">${project.title}</a></h3>`;
@@ -347,7 +317,10 @@
         const imageSection = newsItem.image
             ? `<div class="news-card-image">
                     <a href="${newsItem.url}" target="_blank" rel="noopener noreferrer">
-                        <img src="${imageBasePath}${newsItem.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" />
+                        <picture>
+                            <source srcset="${toWebP(imageBasePath + newsItem.image)}" type="image/webp">
+                            <img src="${imageBasePath}${newsItem.image}" alt="" loading="lazy" decoding="async" fetchpriority="low" />
+                        </picture>
                     </a>
                 </div>`
             : '';
@@ -383,34 +356,32 @@
 
     // Rebuild mobile navigation panel after dynamic nav loading
     function rebuildMobileNav(navData, currentPage) {
-        var attempts = 0;
-        var maxAttempts = 20; // Try for up to 2 seconds (20 * 100ms)
-        
-        var checkInterval = setInterval(function() {
-            attempts++;
-            
-            // Check if jQuery and navPanel are available
-            if (typeof jQuery !== 'undefined') {
-                var $navPanel = jQuery('#navPanel');
-                // Prefer grouped panel HTML from navData (hover-to-show subs) when available
-                if (navData && currentPage != null && $navPanel.length) {
-                    $navPanel.find('nav').html(generateMobileNavPanel(navData, currentPage));
-                    clearInterval(checkInterval);
-                    return;
-                }
-                var $nav = jQuery('#nav');
-                if ($nav.length && $navPanel.length && jQuery.fn.navList && $nav.find('li').length > 0) {
-                    $navPanel.find('nav').html($nav.navList());
-                    clearInterval(checkInterval);
-                    return;
-                }
+        function tryRebuild() {
+            if (typeof jQuery === 'undefined') return false;
+            var $navPanel = jQuery('#navPanel');
+            if (navData && currentPage != null && $navPanel.length) {
+                $navPanel.find('nav').html(generateMobileNavPanel(navData, currentPage));
+                return true;
             }
-            
-            // Stop trying after max attempts
-            if (attempts >= maxAttempts) {
-                clearInterval(checkInterval);
+            var $nav = jQuery('#nav');
+            if ($nav.length && $navPanel.length && jQuery.fn.navList && $nav.find('li').length > 0) {
+                $navPanel.find('nav').html($nav.navList());
+                return true;
             }
-        }, 100); // Check every 100ms
+            return false;
+        }
+
+        // Try immediately — jQuery and navPanel may already be ready
+        if (tryRebuild()) return;
+
+        // Otherwise, observe the DOM for navPanel insertion
+        var observer = new MutationObserver(function() {
+            if (tryRebuild()) observer.disconnect();
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // Safety timeout: stop observing after 3 seconds
+        setTimeout(function() { observer.disconnect(); }, 3000);
     }
 
     // Initialize components
@@ -420,7 +391,6 @@
         const imageBasePath = basePath || '';
 
         // Detect which placeholders exist BEFORE fetching
-        const navElement = document.getElementById('nav-placeholder');
         const footerElement = document.getElementById('footer-placeholder');
         const blogPostsElement = document.getElementById('blog-posts-placeholder');
         const allBlogPostsElement = document.getElementById('all-blog-posts-placeholder');
@@ -435,7 +405,6 @@
         // Build parallel fetch list — only request JSON that this page actually needs
         const fetches = {};
         fetches.footer = loadJSON(`${basePath}data/footer.json`);
-        if (navElement) fetches.nav = loadJSON(`${basePath}data/navigation.json`);
         if (needBlog) fetches.blog = loadJSON(`${basePath}data/blog-posts.json`);
         if (needProjects) fetches.projects = loadJSON(`${basePath}data/projects.json`);
         if (needNews) fetches.news = loadJSON(`${basePath}data/news.json`);
@@ -451,12 +420,7 @@
             if (navData) rebuildMobileNav(navData, currentPage);
         });
 
-        // --- DOM processing (order unchanged: nav → footer → blog → projects → news) ---
-
-        // Nav placeholder (rarely used — most pages have hardcoded nav)
-        if (navElement && data.nav) {
-            navElement.outerHTML = generateNavigation(data.nav, currentPage);
-        }
+        // --- DOM processing (footer → blog → projects → news) ---
 
         // Footer
         if (footerElement && data.footer) {

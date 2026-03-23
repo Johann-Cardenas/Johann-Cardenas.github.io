@@ -5,9 +5,7 @@
 	/// Vendor prefixes.
 	/// @var {list}
 	$vendor-prefixes: (
-		'-moz-',
 		'-webkit-',
-		'-ms-',
 		''
 	);
 
@@ -325,9 +323,7 @@
 	/// @param {string} $name Name.
 	@mixin keyframes($name) {
 
-		@-moz-keyframes #{$name} { @content; }
 		@-webkit-keyframes #{$name} { @content; }
-		@-ms-keyframes #{$name} { @content; }
 		@keyframes #{$name} { @content; }
 
 	}

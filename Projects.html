@@ -21,7 +21,7 @@
 		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 
 		<!-- Preload critical banner image -->
-		<link rel="preload" as="image" href="images/Projects_Banner.jpg" fetchpriority="high" />
+		<link rel="preload" as="image" href="images/Projects_Banner.webp" type="image/webp" fetchpriority="high" />
 
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,6 +43,7 @@
 
 	</head>
 	<body class="Projects is-preload">
+		<a href="#main" class="skip-link">Skip to main content</a>
 		<div id="page-wrapper">
 
 			<!-- Header -->
@@ -85,7 +86,10 @@
 							<!-- Projects Banner Hero -->
 							<div class="project-banner">
 								<div class="project-banner-image">
-									<img src="images/Projects_Banner.jpg" alt="Research Projects" decoding="async" fetchpriority="high" />
+									<picture>
+										<source srcset="images/Projects_Banner.webp" type="image/webp">
+										<img src="images/Projects_Banner.jpg" alt="Research Projects" decoding="async" fetchpriority="high" />
+									</picture>
 								</div>
 								<div class="project-banner-content">
 									<h2>Research Projects</h2>

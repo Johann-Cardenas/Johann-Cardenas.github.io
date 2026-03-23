@@ -5,7 +5,7 @@
 @import 'libs/breakpoints';
 @import 'libs/html-grid';
 @import url("fontawesome-all.min.css");
-@import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,900,300italic");
+@import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,900,300italic&display=swap");
 
 /*
 	Dopetrope by HTML5 UP
@@ -427,7 +427,7 @@
 		border: 0;
 		border-radius: 5px;
 		background: #d52349;
-		color: #fff !important;
+		color: #fff;
 		font-weight: 700;
 		outline: 0;
 		font-size: 1.1em;
@@ -889,7 +889,7 @@
 				&.current {
 					> a {
 						background: #d52349;
-						color: #fff !important;
+						color: #fff;
 						font-weight: 700;
 					}
 				}
@@ -1680,4 +1680,25 @@
 				padding: 40px 0 20px 0;
 			}
 
+	}
+
+/* Skip Link (accessibility) */
+
+	.skip-link {
+		position: absolute;
+		top: -100%;
+		left: 1rem;
+		z-index: 100000;
+		padding: 0.75rem 1.5rem;
+		background: var(--accent-primary, #18a9a8);
+		color: #fff;
+		font-weight: 700;
+		border-radius: 0 0 6px 6px;
+		text-decoration: none;
+		transition: top 0.2s ease;
+
+		&:focus {
+			top: 0;
+			outline: none;
+		}
 	}

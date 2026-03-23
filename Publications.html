@@ -21,7 +21,7 @@
 		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 
 		<!-- Preload banner (reuse Blog banner; add images/Publications_Banner.jpg to override) -->
-		<link rel="preload" as="image" href="images/Publications_Banner.jpg" fetchpriority="high" />
+		<link rel="preload" as="image" href="images/Publications_Banner.webp" type="image/webp" fetchpriority="high" />
 
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,6 +43,7 @@
 
 	</head>
 	<body class="Publications is-preload">
+		<a href="#main" class="skip-link">Skip to main content</a>
 
 		<!-- Scroll Progress Bar -->
 		<div class="pub-scroll-progress" id="pubScrollProgress"></div>
@@ -100,7 +101,10 @@
 								<!-- Banner -->
 								<div class="publications-banner">
 									<div class="publications-banner-image">
+									<picture>
+										<source srcset="images/Publications_Banner.webp" type="image/webp">
 										<img src="images/Publications_Banner.jpg" alt="" decoding="async" fetchpriority="high" />
+									</picture>
 									</div>
 									<div class="publications-banner-content">
 										<h2>Publications</h2>

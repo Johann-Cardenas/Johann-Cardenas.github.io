@@ -21,7 +21,7 @@
 		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 
 		<!-- Preload critical banner image -->
-		<link rel="preload" as="image" href="images/Blog_Banner.jpg" fetchpriority="high" />
+		<link rel="preload" as="image" href="images/Blog_Banner.webp" type="image/webp" fetchpriority="high" />
 
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,6 +43,7 @@
 
 	</head>
 	<body class="Blog is-preload">
+		<a href="#main" class="skip-link">Skip to main content</a>
 
 		<!-- Scroll Progress Bar -->
 		<div class="blog-scroll-progress" id="blogScrollProgress"></div>
@@ -92,7 +93,10 @@
 							<!-- Blog Banner Hero (E-Labs style with gradient overlay) -->
 							<div class="blog-banner">
 								<div class="blog-banner-image">
-									<img src="images/Blog_Banner.jpg" alt="Asphaltemia Blog" decoding="async" fetchpriority="high" />
+									<picture>
+										<source srcset="images/Blog_Banner.webp" type="image/webp">
+										<img src="images/Blog_Banner.jpg" alt="Asphaltemia Blog" decoding="async" fetchpriority="high" />
+									</picture>
 								</div>
 								<div class="blog-banner-content">
 									<h2>Welcome to Asphaltemia!</h2>
