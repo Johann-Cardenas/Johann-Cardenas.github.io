@@ -717,22 +717,6 @@
             box-shadow: 0 0 0 3px var(--frontier-primary-glow);
         }
 
-        /* Skip to content link for screen readers */
-        .skip-link {
-            position: absolute;
-            top: -40px;
-            left: 0;
-            background: var(--frontier-primary);
-            color: white;
-            padding: 8px 16px;
-            z-index: 100;
-            transition: top 0.3s ease;
-            border-radius: 0 0 8px 0;
-        }
-
-        .skip-link:focus {
-            top: 0;
-        }
 
         * {
             box-sizing: border-box;
@@ -5762,7 +5746,6 @@
 </head>
 <body class="Frontier is-preload">
     <!-- Accessibility: Skip Link -->
-    <a href="#main-content" class="skip-link">Skip to main content</a>
     <!-- Scroll Progress Indicator -->
     <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
     <!-- Toast Notification Container -->

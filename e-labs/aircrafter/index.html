@@ -2234,15 +2234,6 @@
             .js-plotly-plot .plotly .modebar { transform: scale(0.65); transform-origin: top right; }
         }
 
-        /* ==================== ACCESSIBILITY ==================== */
-        .skip-link {
-            position: absolute; top: -50px; left: 0; padding: 10px 18px;
-            background: var(--ac-primary); color: #fff; z-index: 100001;
-            font-size: 0.9rem; font-weight: 600; border-radius: 0 0 10px 0;
-            transition: top 0.3s ease; text-decoration: none;
-            box-shadow: 0 2px 8px var(--ac-primary-glow);
-        }
-        .skip-link:focus { top: 0; outline: none; }
 
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -2387,7 +2378,6 @@
 
 <body>
     <!-- Accessibility: Skip Link -->
-    <a href="#main-content" class="skip-link">Skip to main content</a>
     <!-- Scroll Progress Indicator -->
     <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
     <!-- Toast Notification Container -->
