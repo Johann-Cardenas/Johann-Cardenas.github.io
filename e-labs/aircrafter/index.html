@@ -5689,6 +5689,7 @@
 
     function rebuildFEMGrid() {
         if (!_femGrid) return;
+        _hlCache.key = null;
         var elemSize = _femGrid.elemSize;
         var r = _femGrid._results;
         var COLS = parseInt(document.getElementById('ip-elements').value) || 54;
@@ -6278,6 +6279,7 @@
 
     function computeCentroids() {
         if (!_femGrid || !_femGrid.rowCumY) return;
+        _hlCache.key = null;
         var COLS = _femGrid.cols, ROWS = _femGrid.rows;
         var elemSize = _femGrid.elemSize;
         var rowCumY = _femGrid.rowCumY;
