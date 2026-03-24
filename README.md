@@ -41,7 +41,7 @@ The repository is organized into clear functional domains, utilizing a modular s
 ├── blog/                 # Blog post collections (Liquid-processed)
 ├── projects/             # Detailed project portfolios
 ├── e-labs/               # Interactive laboratory sub-modules
-├── images/               # Optimized media (projects, news, blog)
+├── images/               # Optimized media in WebP format (projects, news, blog)
 ├── index.html            # Website landing page
 ├── [other-pages].html    # Resume, Publications, etc.
 ```
@@ -70,7 +70,7 @@ The website features a dual-theme system (Light/Dark) designed for high readabil
 - [ ] **Internationalization (i18n):** Add support for multiple languages (Spanish/English) using static routing or client-side localization.
 - [ ] **Interactive Data Dashboards:** Develop complex visualizations for research data using client-side libraries like D3.js or Plotly.
 - [ ] **Dark Mode Auto-Detection:** Automatically toggle the theme based on the user's system preferences using CSS/JavaScript media queries.
-- [ ] **Performance Optimization:** Further optimize image assets and implement lazy-loading for heavy media elements to improve LCP (Largest Contentful Paint).
+- [x] **Performance Optimization:** Migrated all image assets to WebP (~70% size reduction); lazy-loading already in place for media elements.
 
 ---
 
@@ -92,4 +92,4 @@ Specific software components and scripts may be subject to different terms:
 - **Python Scripts:** Internal research use license (see individual file headers).
 
 ---
-*Last Updated: February 2026*
+*Last Updated: March 2026*

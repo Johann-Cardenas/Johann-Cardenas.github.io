@@ -4384,7 +4384,6 @@ input, select, textarea {
 
 	body {
 		background: var(--bg-body);
-		background-image: url("images/bg02.png");
 	}
 
 		body.is-preload *, body.is-preload *:before, body.is-preload *:after {
