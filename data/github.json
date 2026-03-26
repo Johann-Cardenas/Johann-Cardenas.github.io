@@ -1,0 +1,1593 @@
+{
+  "user": "Johann-Cardenas",
+  "fetchedAt": "2026-03-26T17:50:15.025Z",
+  "totals": {
+    "repos": 13,
+    "commits": 1268,
+    "languages": 15,
+    "contributors": 27
+  },
+  "repos": [
+    {
+      "name": "Johann-Cardenas.github.io",
+      "fullName": "Johann-Cardenas/Johann-Cardenas.github.io",
+      "description": "My GitHub Pages static website.",
+      "url": "https://github.com/Johann-Cardenas/Johann-Cardenas.github.io",
+      "language": "JavaScript",
+      "stars": 1,
+      "forks": 0,
+      "size": 514192,
+      "updatedAt": "2026-03-24T04:48:29Z",
+      "commitCount": 280,
+      "languages": [
+        {
+          "name": "JavaScript",
+          "bytes": 4174208,
+          "color": "#f1e05a"
+        },
+        {
+          "name": "Fluent",
+          "bytes": 2278437,
+          "color": "#8b8b8b"
+        },
+        {
+          "name": "HTML",
+          "bytes": 1754104,
+          "color": "#e34c26"
+        },
+        {
+          "name": "CSS",
+          "bytes": 571797,
+          "color": "#563d7c"
+        },
+        {
+          "name": "Python",
+          "bytes": 68548,
+          "color": "#3572A5"
+        },
+        {
+          "name": "SCSS",
+          "bytes": 43017,
+          "color": "#c6538c"
+        }
+      ],
+      "sparkline": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        9,
+        31,
+        6,
+        6,
+        0,
+        10,
+        34,
+        35,
+        0,
+        20,
+        15,
+        19,
+        4
+      ],
+      "contributors": []
+    },
+    {
+      "name": "FAARFIELD-2.1.1",
+      "fullName": "Johann-Cardenas/FAARFIELD-2.1.1",
+      "description": "",
+      "url": "https://github.com/Johann-Cardenas/FAARFIELD-2.1.1",
+      "language": "Visual Basic .NET",
+      "stars": 0,
+      "forks": 0,
+      "size": 183162,
+      "updatedAt": "2026-03-21T17:53:48Z",
+      "commitCount": 21,
+      "languages": [
+        {
+          "name": "Visual Basic .NET",
+          "bytes": 6302597,
+          "color": "#945db7"
+        },
+        {
+          "name": "HTML",
+          "bytes": 123836,
+          "color": "#e34c26"
+        },
+        {
+          "name": "CSS",
+          "bytes": 9136,
+          "color": "#563d7c"
+        }
+      ],
+      "sparkline": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        1,
+        3,
+        2,
+        12,
+        0
+      ],
+      "contributors": [
+        {
+          "login": "claude",
+          "avatar": "https://avatars.githubusercontent.com/u/81847?v=4",
+          "commits": 2
+        },
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 21
+        }
+      ]
+    },
+    {
+      "name": "ACRP-Lab",
+      "fullName": "Johann-Cardenas/ACRP-Lab",
+      "description": "Jupyter notebooks to pre and post-process aircraft tire contact stresses and airfield flexible pavement data.",
+      "url": "https://github.com/Johann-Cardenas/ACRP-Lab",
+      "language": "Jupyter Notebook",
+      "stars": 1,
+      "forks": 0,
+      "size": 12613,
+      "updatedAt": "2026-03-18T06:46:58Z",
+      "commitCount": 17,
+      "languages": [
+        {
+          "name": "Jupyter Notebook",
+          "bytes": 3631457,
+          "color": "#DA5B0B"
+        }
+      ],
+      "sparkline": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        10,
+        2,
+        0,
+        1,
+        0,
+        0,
+        0,
+        4,
+        0
+      ],
+      "contributors": [
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 17
+        }
+      ]
+    },
+    {
+      "name": "Johann-Cardenas",
+      "fullName": "Johann-Cardenas/Johann-Cardenas",
+      "description": "My personal repository",
+      "url": "https://github.com/Johann-Cardenas/Johann-Cardenas",
+      "language": null,
+      "stars": 0,
+      "forks": 0,
+      "size": 116,
+      "updatedAt": "2026-03-10T22:47:13Z",
+      "commitCount": 47,
+      "languages": [],
+      "sparkline": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "contributors": [
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 45
+        }
+      ]
+    },
+    {
+      "name": "TrafficLens",
+      "fullName": "Johann-Cardenas/TrafficLens",
+      "description": "Interactive traffic trajectory visualization and analysis tool",
+      "url": "https://github.com/Johann-Cardenas/TrafficLens",
+      "language": "Python",
+      "stars": 0,
+      "forks": 1,
+      "size": 63,
+      "updatedAt": "2025-10-22T17:22:18Z",
+      "commitCount": 13,
+      "languages": [
+        {
+          "name": "Python",
+          "bytes": 88926,
+          "color": "#3572A5"
+        }
+      ],
+      "sparkline": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        2,
+        5,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "contributors": [
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 13
+        }
+      ]
+    },
+    {
+      "name": "DesignLab",
+      "fullName": "Johann-Cardenas/DesignLab",
+      "description": "A hub for cutting-edge ideas in flexible pavement design. Includes tools that generate detailed visualizations of pavement cross-sections.",
+      "url": "https://github.com/Johann-Cardenas/DesignLab",
+      "language": "Jupyter Notebook",
+      "stars": 0,
+      "forks": 0,
+      "size": 8996,
+      "updatedAt": "2024-12-01T05:54:51Z",
+      "commitCount": 22,
+      "languages": [
+        {
+          "name": "Jupyter Notebook",
+          "bytes": 8325875,
+          "color": "#DA5B0B"
+        },
+        {
+          "name": "Python",
+          "bytes": 27138,
+          "color": "#3572A5"
+        }
+      ],
+      "sparkline": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "contributors": [
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 22
+        }
+      ]
+    },
+    {
+      "name": "ABQ-Scripting",
+      "fullName": "Johann-Cardenas/ABQ-Scripting",
+      "description": "Python scripts to create input files, extract and analyze information from output databases, using the Abaqus scripting interface.",
+      "url": "https://github.com/Johann-Cardenas/ABQ-Scripting",
+      "language": "Python",
+      "stars": 0,
+      "forks": 0,
+      "size": 3628,
+      "updatedAt": "2024-11-09T05:46:43Z",
+      "commitCount": 44,
+      "languages": [
+        {
+          "name": "Python",
+          "bytes": 436820,
+          "color": "#3572A5"
+        },
+        {
+          "name": "Jupyter Notebook",
+          "bytes": 347134,
+          "color": "#DA5B0B"
+        },
+        {
+          "name": "Fortran",
+          "bytes": 21691,
+          "color": "#8b8b8b"
+        },
+        {
+          "name": "Shell",
+          "bytes": 2582,
+          "color": "#89e051"
+        },
+        {
+          "name": "MATLAB",
+          "bytes": 360,
+          "color": "#8b8b8b"
+        }
+      ],
+      "sparkline": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "contributors": [
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 44
+        }
+      ]
+    },
+    {
+      "name": "Need-for-Compute",
+      "fullName": "Johann-Cardenas/Need-for-Compute",
+      "description": "\"Need for Compute\" includes NCSA Parallel Computing Workshops. Whether you're looking for scalability or simply make your code run faster, you're in the right place.",
+      "url": "https://github.com/Johann-Cardenas/Need-for-Compute",
+      "language": "Jupyter Notebook",
+      "stars": 0,
+      "forks": 0,
+      "size": 248936,
+      "updatedAt": "2024-11-04T05:56:00Z",
+      "commitCount": 38,
+      "languages": [
+        {
+          "name": "Jupyter Notebook",
+          "bytes": 11847342,
+          "color": "#DA5B0B"
+        },
+        {
+          "name": "Python",
+          "bytes": 700111,
+          "color": "#3572A5"
+        },
+        {
+          "name": "Fortran",
+          "bytes": 76325,
+          "color": "#8b8b8b"
+        },
+        {
+          "name": "JavaScript",
+          "bytes": 73906,
+          "color": "#f1e05a"
+        },
+        {
+          "name": "C++",
+          "bytes": 44262,
+          "color": "#f34b7d"
+        },
+        {
+          "name": "Shell",
+          "bytes": 25367,
+          "color": "#89e051"
+        },
+        {
+          "name": "Batchfile",
+          "bytes": 9898,
+          "color": "#8b8b8b"
+        },
+        {
+          "name": "Makefile",
+          "bytes": 5313,
+          "color": "#427819"
+        }
+      ],
+      "sparkline": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "contributors": [
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 36
+        }
+      ]
+    },
+    {
+      "name": "Chroma-Haven",
+      "fullName": "Johann-Cardenas/Chroma-Haven",
+      "description": "A wealth of wavelengths. Find pre-set and built-in color palettes to boost scientific visualization. ",
+      "url": "https://github.com/Johann-Cardenas/Chroma-Haven",
+      "language": "Jupyter Notebook",
+      "stars": 0,
+      "forks": 1,
+      "size": 10962,
+      "updatedAt": "2024-11-02T06:22:03Z",
+      "commitCount": 29,
+      "languages": [
+        {
+          "name": "Jupyter Notebook",
+          "bytes": 4019863,
+          "color": "#DA5B0B"
+        },
+        {
+          "name": "Python",
+          "bytes": 16004,
+          "color": "#3572A5"
+        }
+      ],
+      "sparkline": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "contributors": [
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 28
+        }
+      ]
+    },
+    {
+      "name": "ai-science-training-series",
+      "fullName": "Johann-Cardenas/ai-science-training-series",
+      "description": "",
+      "url": "https://github.com/Johann-Cardenas/ai-science-training-series",
+      "language": "Jupyter Notebook",
+      "stars": 0,
+      "forks": 0,
+      "size": 408569,
+      "updatedAt": "2024-10-31T05:06:10Z",
+      "commitCount": 734,
+      "languages": [
+        {
+          "name": "Jupyter Notebook",
+          "bytes": 10919139,
+          "color": "#DA5B0B"
+        },
+        {
+          "name": "Python",
+          "bytes": 134004,
+          "color": "#3572A5"
+        },
+        {
+          "name": "Shell",
+          "bytes": 16851,
+          "color": "#89e051"
+        }
+      ],
+      "sparkline": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "contributors": [
+        {
+          "login": "bethcerny",
+          "avatar": "https://avatars.githubusercontent.com/u/43181711?v=4",
+          "commits": 1
+        },
+        {
+          "login": "FilippoSimini",
+          "avatar": "https://avatars.githubusercontent.com/u/22484769?v=4",
+          "commits": 2
+        },
+        {
+          "login": "kjschmidt913",
+          "avatar": "https://avatars.githubusercontent.com/u/16869564?v=4",
+          "commits": 2
+        },
+        {
+          "login": "coreyjadams",
+          "avatar": "https://avatars.githubusercontent.com/u/6619961?v=4",
+          "commits": 2
+        },
+        {
+          "login": "keceli",
+          "avatar": "https://avatars.githubusercontent.com/u/2112375?v=4",
+          "commits": 2
+        },
+        {
+          "login": "akvasan2",
+          "avatar": "https://avatars.githubusercontent.com/u/22225762?v=4",
+          "commits": 3
+        },
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 4
+        },
+        {
+          "login": "shawnrosofsky",
+          "avatar": "https://avatars.githubusercontent.com/u/20646072?v=4",
+          "commits": 4
+        },
+        {
+          "login": "pbalapra",
+          "avatar": "https://avatars.githubusercontent.com/u/4725597?v=4",
+          "commits": 6
+        },
+        {
+          "login": "sshilpika",
+          "avatar": "https://avatars.githubusercontent.com/u/9967469?v=4",
+          "commits": 8
+        },
+        {
+          "login": "WardLT",
+          "avatar": "https://avatars.githubusercontent.com/u/7003149?v=4",
+          "commits": 11
+        },
+        {
+          "login": "tanwimallick",
+          "avatar": "https://avatars.githubusercontent.com/u/12083510?v=4",
+          "commits": 12
+        },
+        {
+          "login": "masalim2",
+          "avatar": "https://avatars.githubusercontent.com/u/20962771?v=4",
+          "commits": 14
+        },
+        {
+          "login": "sraskar",
+          "avatar": "https://avatars.githubusercontent.com/u/2463455?v=4",
+          "commits": 16
+        },
+        {
+          "login": "vksastry",
+          "avatar": "https://avatars.githubusercontent.com/u/88804132?v=4",
+          "commits": 17
+        },
+        {
+          "login": "khanx169",
+          "avatar": "https://avatars.githubusercontent.com/u/10308920?v=4",
+          "commits": 18
+        },
+        {
+          "login": "CarloGraziani",
+          "avatar": "https://avatars.githubusercontent.com/u/11160521?v=4",
+          "commits": 20
+        },
+        {
+          "login": "mngom2",
+          "avatar": "https://avatars.githubusercontent.com/u/50598247?v=4",
+          "commits": 22
+        },
+        {
+          "login": "venkat-1",
+          "avatar": "https://avatars.githubusercontent.com/u/5497635?v=4",
+          "commits": 25
+        },
+        {
+          "login": "memani1",
+          "avatar": "https://avatars.githubusercontent.com/u/15612272?v=4",
+          "commits": 26
+        },
+        {
+          "login": "architvasan",
+          "avatar": "https://avatars.githubusercontent.com/u/125404521?v=4",
+          "commits": 30
+        },
+        {
+          "login": "BethanyL",
+          "avatar": "https://avatars.githubusercontent.com/u/9046040?v=4",
+          "commits": 46
+        },
+        {
+          "login": "saforem2",
+          "avatar": "https://avatars.githubusercontent.com/u/5234251?v=4",
+          "commits": 53
+        },
+        {
+          "login": "felker",
+          "avatar": "https://avatars.githubusercontent.com/u/1410981?v=4",
+          "commits": 79
+        },
+        {
+          "login": "zhenghh04",
+          "avatar": "https://avatars.githubusercontent.com/u/5777773?v=4",
+          "commits": 79
+        },
+        {
+          "login": "jtchilders",
+          "avatar": "https://avatars.githubusercontent.com/u/10742392?v=4",
+          "commits": 105
+        }
+      ]
+    },
+    {
+      "name": "Datathon-2024",
+      "fullName": "Johann-Cardenas/Datathon-2024",
+      "description": "8th annual Illinois Statistics Datathon. Hosted by the Department of Statistics and Illini Stat Club in partnership with Synchrony Financial",
+      "url": "https://github.com/Johann-Cardenas/Datathon-2024",
+      "language": "HTML",
+      "stars": 0,
+      "forks": 0,
+      "size": 123612,
+      "updatedAt": "2024-10-27T19:52:16Z",
+      "commitCount": 15,
+      "languages": [
+        {
+          "name": "HTML",
+          "bytes": 9797281,
+          "color": "#e34c26"
+        },
+        {
+          "name": "Jupyter Notebook",
+          "bytes": 2290398,
+          "color": "#DA5B0B"
+        },
+        {
+          "name": "CSS",
+          "bytes": 915,
+          "color": "#563d7c"
+        }
+      ],
+      "sparkline": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "contributors": [
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 15
+        }
+      ]
+    },
+    {
+      "name": "CIML-SDSC",
+      "fullName": "Johann-Cardenas/CIML-SDSC",
+      "description": "Cyberinfrastructure-Enabled Machine Learning Summer Institute 2024 at the San Diego Supercomputer Center (SDSC)",
+      "url": "https://github.com/Johann-Cardenas/CIML-SDSC",
+      "language": "Jupyter Notebook",
+      "stars": 0,
+      "forks": 0,
+      "size": 59354,
+      "updatedAt": "2024-06-27T21:07:36Z",
+      "commitCount": 5,
+      "languages": [
+        {
+          "name": "Jupyter Notebook",
+          "bytes": 8466739,
+          "color": "#DA5B0B"
+        },
+        {
+          "name": "Python",
+          "bytes": 38414,
+          "color": "#3572A5"
+        },
+        {
+          "name": "Shell",
+          "bytes": 17725,
+          "color": "#89e051"
+        },
+        {
+          "name": "R",
+          "bytes": 2167,
+          "color": "#198CE7"
+        }
+      ],
+      "sparkline": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "contributors": [
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 5
+        }
+      ]
+    },
+    {
+      "name": "RLab",
+      "fullName": "Johann-Cardenas/RLab",
+      "description": "The world of R. A curated collection of workshops designed to transform beginners into adept users and propel advanced practitioners into R mastery.",
+      "url": "https://github.com/Johann-Cardenas/RLab",
+      "language": "HTML",
+      "stars": 0,
+      "forks": 0,
+      "size": 19458,
+      "updatedAt": "2024-03-28T05:01:42Z",
+      "commitCount": 3,
+      "languages": [
+        {
+          "name": "HTML",
+          "bytes": 1966837,
+          "color": "#e34c26"
+        },
+        {
+          "name": "R",
+          "bytes": 3837,
+          "color": "#198CE7"
+        },
+        {
+          "name": "Jupyter Notebook",
+          "bytes": 1311,
+          "color": "#DA5B0B"
+        }
+      ],
+      "sparkline": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "contributors": [
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 3
+        }
+      ]
+    }
+  ],
+  "weeklyCommits": [
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    3,
+    2,
+    5,
+    0,
+    0,
+    1,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    9,
+    33,
+    6,
+    6,
+    10,
+    16,
+    34,
+    36,
+    1,
+    23,
+    18,
+    35,
+    4
+  ],
+  "recentCommits": [
+    {
+      "repo": "Johann-Cardenas.github.io",
+      "sha": "29c6137",
+      "message": "perf: migrate all images to WebP and remove legacy JPG/PNG files",
+      "author": "Johann-Cardenas",
+      "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+      "date": "2026-03-24T04:42:21Z"
+    },
+    {
+      "repo": "Johann-Cardenas.github.io",
+      "sha": "533450b",
+      "message": "fix(aircrafter): invalidate output table cache when inputs change",
+      "author": "Johann-Cardenas",
+      "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+      "date": "2026-03-23T20:47:31Z"
+    },
+    {
+      "repo": "Johann-Cardenas.github.io",
+      "sha": "b46ae5d",
+      "message": "style: remove \"Skip to main content\" button from all pages",
+      "author": "Johann-Cardenas",
+      "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+      "date": "2026-03-23T16:33:09Z"
+    },
+    {
+      "repo": "Johann-Cardenas.github.io",
+      "sha": "966f89b",
+      "message": "perf: implement full site audit — optimize assets, accessibility, SEO, and CSS",
+      "author": "Johann-Cardenas",
+      "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+      "date": "2026-03-23T14:29:42Z"
+    },
+    {
+      "repo": "Johann-Cardenas.github.io",
+      "sha": "b08d17d",
+      "message": "chore: add Conventional Commits spec and update gitignore",
+      "author": "Johann-Cardenas",
+      "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+      "date": "2026-03-21T17:31:33Z"
+    },
+    {
+      "repo": "FAARFIELD-2.1.1",
+      "sha": "977c370",
+      "message": "chore: add Conventional Commits spec and update gitignore",
+      "author": "Johann-Cardenas",
+      "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+      "date": "2026-03-21T17:31:10Z"
+    },
+    {
+      "repo": "FAARFIELD-2.1.1",
+      "sha": "ccadb91",
+      "message": "docs(log): add detailed change log with computation integrity verification",
+      "author": "Johann-Cardenas",
+      "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+      "date": "2026-03-20T21:05:50Z"
+    },
+    {
+      "repo": "FAARFIELD-2.1.1",
+      "sha": "d005ed4",
+      "message": "<update>: Remove coordinates of evaluation points from gear layout",
+      "author": "Johann-Cardenas",
+      "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+      "date": "2026-03-20T06:47:41Z"
+    }
+  ],
+  "languages": [
+    {
+      "name": "Jupyter Notebook",
+      "bytes": 49849258,
+      "pct": 63.4,
+      "color": "#DA5B0B"
+    },
+    {
+      "name": "HTML",
+      "bytes": 13642058,
+      "pct": 17.3,
+      "color": "#e34c26"
+    },
+    {
+      "name": "Visual Basic .NET",
+      "bytes": 6302597,
+      "pct": 8,
+      "color": "#945db7"
+    },
+    {
+      "name": "JavaScript",
+      "bytes": 4248114,
+      "pct": 5.4,
+      "color": "#f1e05a"
+    },
+    {
+      "name": "Fluent",
+      "bytes": 2278437,
+      "pct": 2.9,
+      "color": "#8b8b8b"
+    },
+    {
+      "name": "Python",
+      "bytes": 1509965,
+      "pct": 1.9,
+      "color": "#3572A5"
+    },
+    {
+      "name": "CSS",
+      "bytes": 581848,
+      "pct": 0.7,
+      "color": "#563d7c"
+    },
+    {
+      "name": "Fortran",
+      "bytes": 98016,
+      "pct": 0.1,
+      "color": "#8b8b8b"
+    },
+    {
+      "name": "Other",
+      "bytes": 171379,
+      "pct": 0.2,
+      "color": "#8b8b8b"
+    }
+  ],
+  "contributors": [
+    {
+      "login": "Johann-Cardenas",
+      "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+      "commits": 253
+    },
+    {
+      "login": "jtchilders",
+      "avatar": "https://avatars.githubusercontent.com/u/10742392?v=4",
+      "commits": 105
+    },
+    {
+      "login": "felker",
+      "avatar": "https://avatars.githubusercontent.com/u/1410981?v=4",
+      "commits": 79
+    },
+    {
+      "login": "zhenghh04",
+      "avatar": "https://avatars.githubusercontent.com/u/5777773?v=4",
+      "commits": 79
+    },
+    {
+      "login": "saforem2",
+      "avatar": "https://avatars.githubusercontent.com/u/5234251?v=4",
+      "commits": 53
+    },
+    {
+      "login": "BethanyL",
+      "avatar": "https://avatars.githubusercontent.com/u/9046040?v=4",
+      "commits": 46
+    },
+    {
+      "login": "architvasan",
+      "avatar": "https://avatars.githubusercontent.com/u/125404521?v=4",
+      "commits": 30
+    },
+    {
+      "login": "memani1",
+      "avatar": "https://avatars.githubusercontent.com/u/15612272?v=4",
+      "commits": 26
+    },
+    {
+      "login": "venkat-1",
+      "avatar": "https://avatars.githubusercontent.com/u/5497635?v=4",
+      "commits": 25
+    },
+    {
+      "login": "mngom2",
+      "avatar": "https://avatars.githubusercontent.com/u/50598247?v=4",
+      "commits": 22
+    },
+    {
+      "login": "CarloGraziani",
+      "avatar": "https://avatars.githubusercontent.com/u/11160521?v=4",
+      "commits": 20
+    },
+    {
+      "login": "khanx169",
+      "avatar": "https://avatars.githubusercontent.com/u/10308920?v=4",
+      "commits": 18
+    },
+    {
+      "login": "vksastry",
+      "avatar": "https://avatars.githubusercontent.com/u/88804132?v=4",
+      "commits": 17
+    },
+    {
+      "login": "sraskar",
+      "avatar": "https://avatars.githubusercontent.com/u/2463455?v=4",
+      "commits": 16
+    },
+    {
+      "login": "masalim2",
+      "avatar": "https://avatars.githubusercontent.com/u/20962771?v=4",
+      "commits": 14
+    },
+    {
+      "login": "tanwimallick",
+      "avatar": "https://avatars.githubusercontent.com/u/12083510?v=4",
+      "commits": 12
+    },
+    {
+      "login": "WardLT",
+      "avatar": "https://avatars.githubusercontent.com/u/7003149?v=4",
+      "commits": 11
+    },
+    {
+      "login": "sshilpika",
+      "avatar": "https://avatars.githubusercontent.com/u/9967469?v=4",
+      "commits": 8
+    },
+    {
+      "login": "pbalapra",
+      "avatar": "https://avatars.githubusercontent.com/u/4725597?v=4",
+      "commits": 6
+    },
+    {
+      "login": "shawnrosofsky",
+      "avatar": "https://avatars.githubusercontent.com/u/20646072?v=4",
+      "commits": 4
+    }
+  ]
+}

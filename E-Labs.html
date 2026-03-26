@@ -86,8 +86,8 @@
 								<h2>Welcome Aboard!</h2>
 								<p>
                                     These are some client-side interactive applications designed
-									to provide intuitive learning experiences. 
-									These apps run entirely in your browser, requiring no server-side processing 
+									to provide intuitive learning experiences.
+									These apps run entirely in your browser, requiring no server-side processing
 									or installation.
 								</p>
 							</div>
@@ -96,17 +96,22 @@
 							<div class="apps-grid">
 
 								<!-- AirCrafter App Card -->
-								<div class="app-card">
-									<div class="image-container">
-										<img src="images/e-labs/E-Labs_Aircrafter.webp" alt="AirCrafter Preview" />
+								<div class="app-card" data-animation="aircrafter">
+									<div class="app-card__animated-bg">
+										<canvas class="app-card__canvas"></canvas>
+										<img class="app-card__banner" src="images/e-labs/E-Labs_Aircrafter.webp" alt="AirCrafter Preview" />
 										<span class="status-badge private">Private</span>
+										<div class="app-card__hover-text">
+											<span class="verb">Explore</span>
+											<span class="gradient-noun" data-app="aircrafter">Contact Stresses</span>
+										</div>
 									</div>
 									<div class="content">
 										<h3>AirCrafter</h3>
 										<p class="description">
-											Interactive platform to analyze the influence of aircraft tire 
-											loading parameters on its contact stress distribution. Explore how different 
-											tire types, gear configurations, inflation pressures, and load conditions 
+											Interactive platform to analyze the influence of aircraft tire
+											loading parameters on its contact stress distribution. Explore how different
+											tire types, gear configurations, inflation pressures, and load conditions
                                             affect the three-dimensional components of the contact stress tensor.
 										</p>
 										<div class="tags">
@@ -122,16 +127,21 @@
 								</div>
 
 								<!-- Frontier App Card -->
-								<div class="app-card">
-									<div class="image-container">
-										<img src="images/e-labs/E-Labs_Frontier.webp" alt="Frontier Preview" />
+								<div class="app-card" data-animation="frontier">
+									<div class="app-card__animated-bg">
+										<canvas class="app-card__canvas"></canvas>
+										<img class="app-card__banner" src="images/e-labs/E-Labs_Frontier.webp" alt="Frontier Preview" />
 										<span class="status-badge public">Public</span>
+										<div class="app-card__hover-text">
+											<span class="verb">Explore</span>
+											<span class="gradient-noun" data-app="frontier">High Performance Computing</span>
+										</div>
 									</div>
 									<div class="content">
 										<h3>Frontier</h3>
 										<p class="description">
-											A hands-on, user-friendly High Performance Computing intuition engine. 
-                                            Build understanding of processing power,  parallel computing concepts, 
+											A hands-on, user-friendly High Performance Computing intuition engine.
+                                            Build understanding of processing power,  parallel computing concepts,
 											job scheduling, and distributed systems through interactive simulations.
 										</p>
 										<div class="tags">
@@ -147,17 +157,22 @@
 								</div>
 
 								<!-- Asphera App Card -->
-								<div class="app-card">
-									<div class="image-container">
-										<img src="images/e-labs/E-Labs_Asphera.webp" alt="Asphera Preview" />
+								<div class="app-card" data-animation="asphera">
+									<div class="app-card__animated-bg">
+										<canvas class="app-card__canvas"></canvas>
+										<img class="app-card__banner" src="images/e-labs/E-Labs_Asphera.webp" alt="Asphera Preview" />
 										<span class="status-badge private">Private</span>
+										<div class="app-card__hover-text">
+											<span class="verb">Visualize</span>
+											<span class="gradient-noun" data-app="asphera">3D Pavement Responses</span>
+										</div>
 									</div>
 									<div class="content">
 										<h3>Asphera</h3>
 										<p class="description">
-											Interactive flexible pavement analysis tool for exploring the 
-											richness of finite element modeling results. 
-											Visualize three-dimensional, spatial, and time-dependent stress, strain, 
+											Interactive flexible pavement analysis tool for exploring the
+											richness of finite element modeling results.
+											Visualize three-dimensional, spatial, and time-dependent stress, strain,
 											and deflection distributions across pavement structures.
 										</p>
 										<div class="tags">
@@ -173,10 +188,15 @@
 								</div>
 
 								<!-- Finite-Elemented App Card -->
-								<div class="app-card">
-									<div class="image-container">
-										<img src="images/e-labs/E-Labs_Finite-Elemented.webp" alt="Finite-Elemented Preview" />
+								<div class="app-card" data-animation="finite-elemented">
+									<div class="app-card__animated-bg">
+										<canvas class="app-card__canvas"></canvas>
+										<img class="app-card__banner" src="images/e-labs/E-Labs_Finite-Elemented.webp" alt="Finite-Elemented Preview" />
 										<span class="status-badge public">Public</span>
+										<div class="app-card__hover-text">
+											<span class="verb">Learn</span>
+											<span class="gradient-noun" data-app="finite-elemented">Finite Element Analysis</span>
+										</div>
 									</div>
 									<div class="content">
 										<h3>Finite-Elemented</h3>
@@ -200,6 +220,9 @@
 
 							</div>
 
+							<!-- GitHub Developer Dashboard -->
+							<div id="github-dashboard"></div>
+
 						</div>
 					</div>
 				</section>
@@ -220,6 +243,8 @@
 			<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
 			<script src="assets/js/search.js"></script>
 			<script src="assets/js/back-to-top.js"></script>
+			<script src="assets/js/e-labs-canvas.js"></script>
+			<script src="assets/js/e-labs-github.js"></script>
 
 	</body>
 </html>
