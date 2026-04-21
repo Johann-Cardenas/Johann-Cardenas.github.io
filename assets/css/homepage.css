@@ -481,7 +481,7 @@ body.homepage #main .container .row > .col-12:first-child {
 	max-width: 100%;
 	text-align: justify;
 	text-justify: inter-word;
-	font-size: var(--fs-sm);
+	font-size: var(--fs-xs);
 	line-height: 1.7;
 	color: var(--text-primary, #333);
 }
@@ -740,7 +740,7 @@ body.homepage #main .container .row > .col-12:first-child {
 		flex: 1 1 100% !important;
 	}
 	#about-me .about-card p {
-		font-size: 1.02rem;
+		font-size: var(--fs-sm);
 		line-height: 1.6;
 	}
 	.about-card-header h3 {
@@ -782,7 +782,7 @@ body.homepage #main .container .row > .col-12:first-child {
 		flex: 1 1 100% !important;
 	}
 	#about-me .about-card p {
-		font-size: 0.88rem;
+		font-size: var(--fs-xs);
 		line-height: 1.5;
 	}
 	.about-card-header h3 {
