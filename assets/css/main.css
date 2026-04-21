@@ -4026,8 +4026,8 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 	--accent-secondary-hover: #4f46e5;
 	--accent-secondary-glow: rgba(99, 102, 241, 0.3);
 	
-	/* Theme transition duration */
-	--theme-transition: 0.35s;
+	/* Theme transition (Phase 2: harmonized to motion tokens — was 0.35s default-ease) */
+	--theme-transition: var(--dur-4) var(--ease-out-quart);
 	
 	/* Shadows for depth */
 	--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -4515,12 +4515,13 @@ html.theme-transition,
 html.theme-transition *,
 html.theme-transition *::before,
 html.theme-transition *::after {
-	transition: background-color var(--theme-transition) ease,
-				color var(--theme-transition) ease,
-				border-color var(--theme-transition) ease,
-				box-shadow var(--theme-transition) ease,
-				fill var(--theme-transition) ease,
-				stroke var(--theme-transition) ease !important;
+	/* --theme-transition now resolves to "<duration> <easing>" — do not append a timing function */
+	transition: background-color var(--theme-transition),
+				color var(--theme-transition),
+				border-color var(--theme-transition),
+				box-shadow var(--theme-transition),
+				fill var(--theme-transition),
+				stroke var(--theme-transition) !important;
 }
 
 /* =====================================================

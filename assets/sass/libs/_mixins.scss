@@ -76,3 +76,112 @@
 	@return url("data:image/svg+xml;charset=utf8,#{$svg}");
 
 }
+
+// ===========================================================================
+// Phase 2 — Motion, elevation, type, and a11y mixins
+// ===========================================================================
+// These mixins consume the runtime CSS custom properties defined on :root
+// in assets/css/main.css (and mirrored in libs/_tokens.scss). They are
+// dormant under the current build setup (main.css is hand-edited, never
+// compiled from Sass) but kept consistent for any future Sass reactivation.
+// ===========================================================================
+
+/// Apply one of four elevation levels backed by the existing --shadow-* tokens.
+/// @param {string} $level - one of: sm, md, lg, xl
+@mixin elevation($level: md) {
+	@if $level == sm        { box-shadow: var(--shadow-sm); }
+	@else if $level == md   { box-shadow: var(--shadow-md); }
+	@else if $level == lg   { box-shadow: var(--shadow-lg); }
+	@else if $level == xl   { box-shadow: var(--shadow-xl); }
+	@else if $level == none { box-shadow: none; }
+	@else {
+		@error "elevation(): unknown level `#{$level}`. Use sm, md, lg, xl, or none.";
+	}
+}
+
+/// Standardized card hover treatment — lift + elevated shadow + accent border.
+/// Pair with a base card transition declaration on the unhovered state.
+@mixin card-hover {
+	transform: translateY(-4px);
+	@include elevation(lg);
+	border-color: color-mix(in oklch, var(--accent-primary) 35%, var(--border-light));
+}
+
+/// Standard transition for a card so its hover state animates correctly.
+/// Apply on the base (non-hover) selector.
+@mixin card-transition {
+	transition:
+		transform     var(--dur-3) var(--ease-out-quart),
+		box-shadow    var(--dur-3) var(--ease-out-quart),
+		border-color  var(--dur-3) var(--ease-out-quart);
+}
+
+/// Apply the global focus ring as a box-shadow halo. Inherits radius
+/// from the focused element so it follows pills, circles, and rectangles.
+@mixin focus-ring {
+	outline: none;
+	box-shadow: var(--focus-ring);
+	border-radius: inherit;
+}
+
+/// Wrap decorative animation declarations so they're suppressed for users
+/// with prefers-reduced-motion: reduce. Functional fades (opacity-only)
+/// should typically NOT be wrapped — only motion (transform, position).
+/// @content - declarations to apply only when motion is allowed
+@mixin reduced-motion-safe {
+	@media (prefers-reduced-motion: no-preference) {
+		@content;
+	}
+}
+
+/// Inverse — content applies only when reduced-motion is requested.
+/// @content - declarations to apply only under prefers-reduced-motion: reduce
+@mixin reduced-motion {
+	@media (prefers-reduced-motion: reduce) {
+		@content;
+	}
+}
+
+/// Apply a step from the fluid type scale defined in Phase 3.
+/// Tokens (--fs-*) are introduced when typography lands; until then,
+/// callers fall back to the explicit value passed.
+/// @param {string} $step - one of: xs, sm, base, md, lg, xl, 2xl, 3xl
+/// @param {number} $line-height - optional explicit line-height
+@mixin type-scale($step: base, $line-height: null) {
+	$valid: (xs, sm, base, md, lg, xl, '2xl', '3xl');
+	@if not index($valid, $step) {
+		@error "type-scale(): unknown step `#{$step}`. Use one of #{$valid}.";
+	}
+	font-size: var(--fs-#{$step});
+	@if $line-height != null {
+		line-height: $line-height;
+	}
+}
+
+/// Vertical rhythm for long-form prose (article body, blog/project posts).
+/// Sets baseline spacing between block children, heading top margins,
+/// and a sensible reading measure.
+@mixin prose-rhythm {
+	max-width: 72ch;
+	line-height: var(--lh-relaxed, 1.75);
+
+	> * + * {
+		margin-top: var(--space-5);
+	}
+
+	> h2 + *, > h3 + *, > h4 + * {
+		margin-top: var(--space-4);
+	}
+
+	> h2 {
+		margin-top: var(--space-8);
+	}
+
+	> h3 {
+		margin-top: var(--space-7);
+	}
+
+	> h4 {
+		margin-top: var(--space-6);
+	}
+}
