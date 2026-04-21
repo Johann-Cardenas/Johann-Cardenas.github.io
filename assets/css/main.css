@@ -122,6 +122,57 @@
    For "tablet and down": @media screen and (max-width: 980px) { ... }
 */
 
+/* ===== @font-face — self-hosted variable fonts (Phase 3) =====
+   Source: Fontsource CDN, Latin subset, variable-weight.
+   All face declarations use font-display: swap so text renders
+   immediately in the fallback (system-ui) and flips to the real
+   face once loaded. No FOIT. */
+
+@font-face {
+	font-family: 'Inter Variable';
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: swap;
+	src: url('../fonts/inter-var.woff2') format('woff2-variations'),
+	     url('../fonts/inter-var.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Inter Variable';
+	font-style: italic;
+	font-weight: 100 900;
+	font-display: swap;
+	src: url('../fonts/inter-var-italic.woff2') format('woff2-variations'),
+	     url('../fonts/inter-var-italic.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Source Serif 4 Variable';
+	font-style: normal;
+	font-weight: 200 900;
+	font-display: swap;
+	src: url('../fonts/source-serif-4-var.woff2') format('woff2-variations'),
+	     url('../fonts/source-serif-4-var.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Source Serif 4 Variable';
+	font-style: italic;
+	font-weight: 200 900;
+	font-display: swap;
+	src: url('../fonts/source-serif-4-var-italic.woff2') format('woff2-variations'),
+	     url('../fonts/source-serif-4-var-italic.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'JetBrains Mono Variable';
+	font-style: normal;
+	font-weight: 100 800;
+	font-display: swap;
+	src: url('../fonts/jetbrains-mono-var.woff2') format('woff2-variations'),
+	     url('../fonts/jetbrains-mono-var.woff2') format('woff2');
+}
+
 :root {
 	/* Breakpoint values (for JS or calc; not valid in @media) */
 	--bp-mobile-max: 736px;
@@ -179,6 +230,35 @@
 
 	/* Focus ring — single source of truth (resolves to brand teal w/ alpha) */
 	--focus-ring: 0 0 0 3px color-mix(in oklch, var(--accent-primary, #18a9a8) 55%, transparent);
+
+	/* ===== Typography tokens (Phase 3) ===== */
+
+	/* Font families — self-hosted variable fonts with system fallbacks */
+	--font-sans:  'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	--font-serif: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+	--font-mono:  'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+	/* Fluid type scale — clamp(min, preferred, max).
+	   Smoothly interpolates across viewport widths; replaces breakpoint jumps. */
+	--fs-xs:   clamp(0.75rem,  0.72rem + 0.15vw, 0.8125rem); /* 12 → 13 */
+	--fs-sm:   clamp(0.875rem, 0.84rem + 0.18vw, 0.9375rem); /* 14 → 15 */
+	--fs-base: clamp(1rem,     0.94rem + 0.30vw, 1.0625rem); /* 16 → 17 */
+	--fs-md:   clamp(1.125rem, 1.05rem + 0.40vw, 1.25rem);   /* 18 → 20 */
+	--fs-lg:   clamp(1.25rem,  1.12rem + 0.60vw, 1.5rem);    /* 20 → 24 */
+	--fs-xl:   clamp(1.5rem,   1.30rem + 1.00vw, 2rem);      /* 24 → 32 */
+	--fs-2xl:  clamp(1.875rem, 1.55rem + 1.60vw, 2.75rem);   /* 30 → 44 */
+	--fs-3xl:  clamp(2.25rem,  1.80rem + 2.40vw, 3.75rem);   /* 36 → 60 */
+
+	/* Line-height scale */
+	--lh-tight:   1.15;
+	--lh-snug:    1.35;
+	--lh-normal:  1.6;
+	--lh-relaxed: 1.75;
+
+	/* Letter-spacing (tracking) scale */
+	--tracking-tight:  -0.02em;
+	--tracking-normal: 0;
+	--tracking-wide:   0.04em;
 }
 
 /* ===== banners.css (inlined) ===== */
@@ -779,7 +859,7 @@ body.entry-page #main .blog-grid {
 	margin-bottom: 1rem;
 	flex: 1;
 	text-align: justify;
-	font-size: 1rem;
+	font-size: var(--fs-sm);
 }
 
 .project-card-content .project-excerpt {
@@ -1693,19 +1773,20 @@ body.Publications .pub-article .pub-section:first-of-type {
 }
 
 .pub-stat-card i {
-	font-size: 1.2rem;
+	font-size: 1rem;
 	color: var(--accent-primary);
 	opacity: 0.8;
 }
 
 .pub-stat-value {
-	font-size: 1.5rem;
+	font-size: 2.5rem;
 	font-weight: 900;
+	letter-spacing: var(--tracking-tight);
 	background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
-	line-height: 1.2;
+	line-height: 1.15;
 }
 
 .pub-stat-label {
@@ -1720,6 +1801,10 @@ body.Publications .pub-article .pub-section:first-of-type {
 	.pub-stats {
 		grid-template-columns: repeat(2, 1fr);
 		max-width: 100%;
+	}
+	/* 2-col layout gives each card more room — numerals can grow further. */
+	.pub-stat-value {
+		font-size: 2.75rem;
 	}
 }
 
@@ -2577,7 +2662,7 @@ body.Publications .pub-article .pub-section:first-of-type {
 	margin-bottom: 1rem;
 	flex: 1;
 	text-align: justify;
-	font-size: 1.05rem;
+	font-size: var(--fs-sm);
 }
 
 .app-card .tags {
@@ -3110,7 +3195,7 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 
 .resume-bio p {
 	margin: 0;
-	font-size: 1.05rem;
+	font-size: var(--fs-sm);
 	line-height: 1.8;
 	color: var(--resume-text, #333);
 	text-align: center;
@@ -3461,19 +3546,20 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 }
 
 .resume-stat-card i {
-	font-size: 1.2rem;
+	font-size: 1rem;
 	color: var(--accent-primary);
 	opacity: 0.8;
 }
 
 .resume-stat-value {
-	font-size: 1.5rem;
+	font-size: 2.5rem;
 	font-weight: 900;
+	letter-spacing: var(--tracking-tight);
 	background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
-	line-height: 1.2;
+	line-height: 1.15;
 }
 
 .resume-stat-label {
@@ -3918,6 +4004,10 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 		grid-template-columns: repeat(2, 1fr);
 		max-width: 100%;
 	}
+	/* 2-col layout gives each card more room — numerals can grow further. */
+	.resume-stat-value {
+		font-size: 2.75rem;
+	}
 
 	.cv-block-timeline .cv-entry {
 		padding-left: 2rem;
@@ -3962,7 +4052,7 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 		max-width: 860px;
 	}
 	.resume-bio p {
-		font-size: 1.08rem;
+		font-size: var(--fs-base);
 		line-height: 1.85;
 	}
 	.resume-contact-bar {
@@ -4001,7 +4091,7 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 	.resume-hero-tagline { font-size: 0.9rem; }
 	.resume-contact-bar { flex-direction: row; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.8rem; justify-content: center; }
 	.resume-contact-bar a { white-space: nowrap; }
-	.resume-bio p { font-size: 0.875rem; line-height: 1.65; }
+	.resume-bio p { font-size: var(--fs-sm); line-height: 1.65; }
 	.resume-cv-header { flex-direction: column; align-items: flex-start; }
 	.resume-cv-buttons { flex-direction: column; }
 	.cv-entry-header { flex-direction: column; align-items: flex-start; }
@@ -4136,19 +4226,20 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 }
 
 .metric-icon {
-	font-size: 2.8em;
+	font-size: 2.3em;
 	color: var(--accent-primary);
 	margin-bottom: 0.6em;
 	transition: all 0.4s ease;
 }
 
 .metric-value {
-	font-size: 2.8em;
+	font-size: 3.5em;
 	font-weight: 800;
 	color: var(--text-primary);
 	margin-bottom: 0.1em;
 	line-height: 1.1;
-	font-family: 'Source Sans Pro', sans-serif;
+	letter-spacing: var(--tracking-tight);
+	font-family: var(--font-sans);
 	background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -4420,6 +4511,11 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 	.metrics-band, .stack-container {
 		max-width: 90%;
 	}
+	/* Tablet: cards are ~2x wider than desktop (2-col vs 4-col), so the
+	   numerals need extra size to retain visual dominance. */
+	.metric-value {
+		font-size: 4em;
+	}
 }
 
 @media screen and (max-width: 736px) {
@@ -4430,11 +4526,13 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 	.metric-card {
 		padding: 1.5em 0.8em;
 	}
+	/* Mobile: still 2-col grid, narrower viewport. Raised from 2em so the
+	   metrics remain eye-catching on small screens. */
 	.metric-value {
-		font-size: 2em;
+		font-size: 3em;
 	}
 	.metric-icon {
-		font-size: 2em;
+		font-size: 1.7em;
 	}
 }
 
@@ -4813,6 +4911,12 @@ input, select, textarea {
 
 	html {
 		box-sizing: border-box;
+		/* Nails the rem baseline so --fs-* tokens and em units resolve predictably.
+		   Was implicit browser default (typically 16px); stated explicitly here. */
+		font-size: 16px;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		text-rendering: optimizeLegibility;
 	}
 
 	*, *:before, *:after {
@@ -4835,16 +4939,34 @@ input, select, textarea {
 		}
 
 	body, input, textarea, select {
-		font-family: 'Source Sans Pro';
+		font-family: var(--font-sans);
 		font-weight: 300;
 		color: var(--text-secondary);
-		font-size: 14pt;
-		line-height: 1.75em;
+		font-size: var(--fs-base);
+		line-height: var(--lh-relaxed);
+		/* Inter stylistic alternates: single-story 'a' (ss01), single-story 'g' (cv11) */
+		font-feature-settings: "ss01", "cv11";
 	}
 
 	strong, b {
 		color: var(--text-primary);
 		font-weight: 400;
+	}
+
+	/* ===== Typography feature settings (Phase 3) ===== */
+
+	/* Tabular numerals on data-heavy pages so year/ID columns line up vertically.
+	   Without this, Inter uses proportional figures which stagger in tables. */
+	body.Publications,
+	body.Resume {
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* Code, samples, keyboard hints: monospaced, ligatures off for predictability. */
+	code, pre, kbd, samp, tt {
+		font-family: var(--font-mono);
+		font-variant-ligatures: none;
+		font-feature-settings: normal;
 	}
 
 	i, em {
@@ -7168,6 +7290,14 @@ input, select, textarea {
 		padding-right: 1.5em;
 		margin-right: -1px;
 	}
+	/* Rebalance footer columns on desktop so long affiliation names
+	   ("Universidad Nacional Mayor de San Marcos", "University of Illinois, Urbana-Champaign")
+	   fit on a single line. Content links are short — it can afford to give up width. */
+	@media (min-width: 981px) {
+		#footer .row > .footer-block-1 { width: 25%; }
+		#footer .row > .footer-block-2 { width: 41.66667%; }
+		#footer .row > .footer-block-3 { width: 33.33333%; }
+	}
 	#footer.footer-modern header h2 {
 		letter-spacing: 0.1em;
 		font-weight: 700;
@@ -7210,6 +7340,12 @@ input, select, textarea {
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 		color: rgba(255, 255, 255, 0.7);
+	}
+	/* Keep address (organization/street/city), mail, and phone each on a
+	   single line so "Illinois Center for Transportation" doesn't wrap
+	   in the narrower Connect column. */
+	#footer.footer-modern ul.contact li p {
+		white-space: nowrap;
 	}
 	#footer .footer-copyright-wrap {
 		opacity: 0;

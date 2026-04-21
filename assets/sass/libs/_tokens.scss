@@ -58,4 +58,32 @@
 
 	/* Focus ring — single source of truth */
 	--focus-ring: 0 0 0 3px color-mix(in oklch, var(--accent-primary, #18a9a8) 55%, transparent);
+
+	/* ===== Typography tokens (Phase 3) ===== */
+
+	/* Font families — self-hosted variable fonts with system fallbacks */
+	--font-sans:  'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	--font-serif: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+	--font-mono:  'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+	/* Fluid type scale */
+	--fs-xs:   clamp(0.75rem,  0.72rem + 0.15vw, 0.8125rem);
+	--fs-sm:   clamp(0.875rem, 0.84rem + 0.18vw, 0.9375rem);
+	--fs-base: clamp(1rem,     0.94rem + 0.30vw, 1.0625rem);
+	--fs-md:   clamp(1.125rem, 1.05rem + 0.40vw, 1.25rem);
+	--fs-lg:   clamp(1.25rem,  1.12rem + 0.60vw, 1.5rem);
+	--fs-xl:   clamp(1.5rem,   1.30rem + 1.00vw, 2rem);
+	--fs-2xl:  clamp(1.875rem, 1.55rem + 1.60vw, 2.75rem);
+	--fs-3xl:  clamp(2.25rem,  1.80rem + 2.40vw, 3.75rem);
+
+	/* Line-height scale */
+	--lh-tight:   1.15;
+	--lh-snug:    1.35;
+	--lh-normal:  1.6;
+	--lh-relaxed: 1.75;
+
+	/* Letter-spacing (tracking) scale */
+	--tracking-tight:  -0.02em;
+	--tracking-normal: 0;
+	--tracking-wide:   0.04em;
 }

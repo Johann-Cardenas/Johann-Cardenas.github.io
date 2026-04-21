@@ -35,9 +35,8 @@
 
 
 		<link rel="stylesheet" href="assets/css/main.css" />
-		<link rel="preconnect" href="https://fonts.googleapis.com">
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,900,300italic&display=swap">
+		<link rel="preload" href="/assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+		<link rel="preload" href="/assets/fonts/source-serif-4-var.woff2" as="font" type="font/woff2" crossorigin>
 		<link rel="stylesheet" href="assets/css/homepage.css" />
 	</head>
 	<body class="homepage is-preload">
@@ -1357,7 +1356,7 @@
 				var legend = document.createElement('div');
 				legend.id = 'about-me-globe-legend';
 				legend.className = 'about-me-globe-legend-overlay';
-				legend.innerHTML = 'Drag to explore. Hover over for details.';
+				legend.innerHTML = '<span>Drag to explore.</span> <span>Hover over for details.</span>';
 				mapDiv.appendChild(legend);
 				window.addEventListener('resize', function() {
 					var s = getGlobeSize();

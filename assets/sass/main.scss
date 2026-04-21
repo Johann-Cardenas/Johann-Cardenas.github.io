@@ -5,8 +5,11 @@
 @import 'libs/vendor';
 @import 'libs/breakpoints';
 @import 'libs/html-grid';
+@import 'base/fonts';
 @import url("fontawesome-all.min.css");
-@import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,900,300italic&display=swap");
+/* Phase 3: Google Fonts @import removed — fonts are now self-hosted
+   variable WOFF2s declared in assets/sass/base/_fonts.scss and
+   mirrored in assets/css/main.css. */
 
 /*
 	Dopetrope by HTML5 UP
