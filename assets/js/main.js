@@ -232,9 +232,11 @@
 			e.preventDefault();
 			var dest = this.href;
 			document.getElementById('page-wrapper').classList.add('page-exit');
+			// 200ms matches --dur-3 in CSS so the fade finishes cleanly before
+			// navigation, instead of flashing 80ms then cutting to the new page.
 			setTimeout(function() {
 				window.location.href = dest;
-			}, 80);
+			}, 200);
 		});
 	}
 

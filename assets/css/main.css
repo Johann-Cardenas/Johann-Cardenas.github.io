@@ -2509,7 +2509,7 @@ body.Publications .pub-article .pub-section:first-of-type {
 	background: rgba(0, 0, 0, 0.6);
 	backdrop-filter: blur(16px) saturate(1.2);
 	opacity: 0; pointer-events: none;
-	transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: opacity 0.35s var(--ease-out-quart);
 }
 .private-modal-overlay.open { opacity: 1; pointer-events: all; }
 .private-modal {
@@ -2521,7 +2521,7 @@ body.Publications .pub-article .pub-section:first-of-type {
 	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.06);
 	transform: translateY(24px) scale(0.96);
 	opacity: 0;
-	transition: transform 0.4s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.35s ease, box-shadow 0.4s ease;
+	transition: transform 0.4s var(--ease-spring), opacity 0.35s ease, box-shadow 0.4s ease;
 }
 .private-modal-overlay.open .private-modal {
 	transform: translateY(0) scale(1);
@@ -4287,7 +4287,7 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 	padding: 1.2em;
 	border-radius: 1em;
 	text-align: center;
-	transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	transition: all 0.4s var(--ease-spring);
 	border: 1px solid var(--border-light);
 	border-bottom: 4px solid var(--accent-primary);
 	box-shadow: var(--shadow-sm);
@@ -4440,7 +4440,7 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 
 .stack-segment {
 	height: 100%;
-	transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: all 0.5s var(--ease-out-quart);
 	position: relative;
 	transform-origin: left;
 }
@@ -4547,7 +4547,7 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 .animate-pop-in {
 	opacity: 0;
 	transform: translateY(20px) scale(0.9);
-	animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+	animation: popIn 0.2s var(--ease-spring) forwards;
 }
 
 @keyframes popIn {
@@ -4572,7 +4572,7 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 
 /* Progress bar animation */
 .stack-segment {
-	animation: growWidth 0.6s cubic-bezier(0.645, 0.045, 0.355, 1.000) forwards;
+	animation: growWidth 0.6s var(--ease-in-out-quart) forwards;
 }
 
 @keyframes growWidth {
@@ -4778,7 +4778,9 @@ ul.social li a:focus-visible {
 #page-wrapper.page-exit {
 	opacity: 0;
 	transform: translateY(-8px);
-	transition: opacity 0.18s ease, transform 0.18s ease;
+	transition:
+		opacity   var(--dur-3) var(--ease-out-quart),
+		transform var(--dur-3) var(--ease-out-quart);
 }
 
 /* ===== THEME TOGGLE BUTTON ===== */
@@ -4798,7 +4800,7 @@ ul.social li a:focus-visible {
 	background: #0f172a;
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3),
 				0 0 0 1px rgba(255, 255, 255, 0.05);
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: all 0.3s var(--ease-out-quart);
 	overflow: hidden;
 	padding: 0;
 }
@@ -4841,7 +4843,7 @@ ul.social li a:focus-visible {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: all 0.4s var(--ease-out-quart);
 }
 
 .theme-toggle__sun i,
@@ -7288,7 +7290,7 @@ input, select, textarea {
 	width: 0;
 	background: var(--accent-primary);
 	border-radius: 1px;
-	transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+	transition: width 0.3s var(--ease-out-quart);
 }
 #footer a:not(.button):not(.icon):not(.brands):hover::after {
 	width: 100%;
@@ -7364,7 +7366,7 @@ input, select, textarea {
 	}
 	#footer .footer-block {
 		opacity: 0;
-		animation: footerBlockFadeIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+		animation: footerBlockFadeIn 0.7s var(--ease-out-quart) forwards;
 	}
 	#footer .footer-block-1 { animation-delay: 0.06s; }
 	#footer .footer-block-2 { animation-delay: 0.16s; }
@@ -7438,7 +7440,7 @@ input, select, textarea {
 	}
 	#footer .footer-copyright-wrap {
 		opacity: 0;
-		animation: footerCopyrightFadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards;
+		animation: footerCopyrightFadeIn 0.5s var(--ease-out-quart) 0.4s forwards;
 	}
 	#footer .footer-copyright-wrap::before {
 		content: '';
@@ -7773,10 +7775,10 @@ input, select, textarea {
 				-webkit-transform: translateX(-275px);
 				-ms-transform: translateX(-275px);
 				transform: translateX(-275px);
-				-moz-transition: -moz-transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-				-webkit-transition: -webkit-transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-				-ms-transition: -ms-transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-				transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+				-moz-transition: -moz-transform 0.35s var(--ease-out-quart);
+				-webkit-transition: -webkit-transform 0.35s var(--ease-out-quart);
+				-ms-transition: -ms-transform 0.35s var(--ease-out-quart);
+				transition: transform 0.35s var(--ease-out-quart);
 				display: block;
 				height: 100%;
 				left: 0;
@@ -8278,11 +8280,22 @@ input, select, textarea {
 	50% { opacity: 1; }
 }
 
-/* Scroll Animation Classes – minimal duration for immediate reveal on fast scroll */
+/* Scroll Animation Classes – more deliberate reveal so the motion reads as intentional */
 .animate-on-scroll {
 	opacity: 0;
 	transform: translateY(12px);
-	transition: opacity 0.14s ease-out, transform 0.14s ease-out;
+	transition:
+		opacity   var(--dur-5) var(--ease-out-expo),
+		transform var(--dur-5) var(--ease-out-expo);
+}
+
+/* Respect prefers-reduced-motion: keep the opacity fade, kill the translate
+   so users who opted out aren't jolted by motion. */
+@media (prefers-reduced-motion: reduce) {
+	.animate-on-scroll {
+		transform: none;
+		transition: opacity var(--dur-3) linear;
+	}
 }
 
 .animate-on-scroll.visible {
@@ -8307,8 +8320,8 @@ input, select, textarea {
 .project-card,
 .blog-card,
 .box {
-	transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-				box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: transform 0.3s var(--ease-out-quart), 
+				box-shadow 0.3s var(--ease-out-quart);
 }
 
 .project-card:hover,
@@ -8340,7 +8353,7 @@ button {
 
 /* Social icon hover animations */
 ul.social li a {
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: all 0.3s var(--ease-out-quart);
 }
 
 ul.social li a:hover {
@@ -8351,7 +8364,7 @@ ul.social li a:hover {
 
 /* Footer social icon enhanced hover */
 #footer ul.social li a {
-	transition: background 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+	transition: background 0.2s ease, transform 0.25s var(--ease-spring);
 }
 #footer ul.social li a:hover {
 	transform: translateY(-3px) scale(1.1);
@@ -8372,7 +8385,7 @@ form input[type=email],
 form input[type=password],
 form select,
 form textarea {
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: all 0.3s var(--ease-out-quart);
 }
 
 form input[type=text]:focus,
@@ -8937,7 +8950,7 @@ html {
 	            0 0 0 1px rgba(0, 0, 0, 0.06);
 	overflow: hidden;
 	transform: translateY(-12px) scale(0.97);
-	transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: transform 0.25s var(--ease-out-quart);
 	display: flex;
 	flex-direction: column;
 	max-height: 70vh;
@@ -9130,7 +9143,7 @@ html {
 	background: #0f172a;
 	color: #e2e8f0;
 	cursor: pointer;
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: all 0.3s var(--ease-out-quart);
 	font-size: 1rem;
 	padding: 0;
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3),
@@ -9233,7 +9246,7 @@ html {
 	opacity: 0;
 	visibility: hidden;
 	transform: translateY(12px);
-	transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: all 0.35s var(--ease-out-quart);
 	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25),
 	            0 0 0 1px rgba(255, 255, 255, 0.05);
 }
