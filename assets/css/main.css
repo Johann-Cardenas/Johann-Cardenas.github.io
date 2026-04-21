@@ -10098,6 +10098,44 @@ html {
 	}
 }
 
+/* ===== Entry-page figure utilities =====
+   Scoped layout helpers for repetitive inline styling on blog and
+   project post pages. Used together with the prose class to
+   replace per-tag style="" attributes with a shared class contract. */
+
+body.entry-page .entry-fig-container {
+	display: flex;
+	justify-content: center;
+}
+
+body.entry-page .entry-fig-img {
+	display: block;
+	width: 100%;
+	height: auto;
+	margin: 0 auto;
+}
+
+body.entry-page .entry-fig-half {
+	flex: 1 1 0;
+	max-width: 50%;
+	margin: 0;
+	text-align: center;
+}
+
+body.entry-page .entry-fig-fixed {
+	margin: 0;
+	text-align: center;
+	width: clamp(320px, 50vw, 650px);
+}
+
+body.entry-page .entry-fig-row {
+	display: flex;
+	gap: 1rem;
+	align-items: flex-start;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
 /* ===== Prose v2 — minimal rhythm & figcaption styling =====
    Additive defaults for article bodies on blog/project posts.
    Keeps Inter throughout (no serif switch — prior pilot reverted).
