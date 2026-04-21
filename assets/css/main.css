@@ -4708,12 +4708,17 @@ html.theme-transition *::after {
 
 /* =====================================================
    KEYBOARD FOCUS STYLES
-   Visible focus ring for keyboard navigation (focus-visible)
+   Visible focus ring for keyboard navigation (focus-visible).
+   Phase 8: the global ring now resolves through --focus-ring (an
+   alpha-blended teal halo defined in :root). box-shadow beats
+   outline for rounded elements because it follows border-radius
+   naturally. Element-specific overrides below add per-component
+   polish (offset, secondary glow, etc.).
    ===================================================== */
 *:focus-visible {
-	outline: 2px solid var(--accent-primary);
-	outline-offset: 2px;
-	border-radius: 4px;
+	outline: none;
+	box-shadow: var(--focus-ring);
+	border-radius: inherit;
 }
 
 /* Nav links */

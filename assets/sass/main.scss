@@ -272,8 +272,10 @@
 			background: #fff;
 			width: 100%;
 
-			&:focus {
-				box-shadow: inset 0px 0px 1px 1px #43bff0;
+			&:focus-visible {
+				box-shadow: var(--focus-ring);
+				border-color: var(--accent-primary);
+				outline: none;
 			}
 		}
 

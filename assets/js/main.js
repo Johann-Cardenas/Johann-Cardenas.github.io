@@ -40,6 +40,25 @@
 			alignment: 'center'
 		});
 
+		// Phase 8: announce submenu triggers to assistive tech and keep
+		// aria-expanded in sync with dropotron's show/hide (which toggles
+		// the sub-<ul> display property).
+		$('#nav > ul > li').each(function() {
+			var $li = $(this);
+			var $sub = $li.children('ul');
+			if (!$sub.length) return;
+			var $trigger = $li.children('a').first();
+			$trigger.attr('aria-haspopup', 'menu');
+			$trigger.attr('aria-expanded', 'false');
+			// Observe display changes on the sub-<ul> to toggle aria-expanded.
+			if (window.MutationObserver) {
+				new MutationObserver(function() {
+					var isOpen = $sub.is(':visible');
+					$trigger.attr('aria-expanded', isOpen ? 'true' : 'false');
+				}).observe($sub[0], { attributes: true, attributeFilter: ['style', 'class'] });
+			}
+		});
+
 	// Nav.
 
 		// Title Bar.
