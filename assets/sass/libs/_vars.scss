@@ -20,3 +20,64 @@
 // Palette.
 	$palette: (
 	);
+
+// ===== Design tokens (Phase 1) =====
+// Compile-time mirrors of the CSS custom properties emitted by
+// libs/_tokens.scss → :root in main.css. Use these in mixins or
+// any future Sass that needs values at compile time. Runtime
+// consumers should read the CSS custom properties directly so
+// they respect [data-theme] cascades.
+
+// Spacing — 4px base, t-shirt scale.
+	$space: (
+		0: 0,
+		1: 0.25rem,
+		2: 0.5rem,
+		3: 0.75rem,
+		4: 1rem,
+		5: 1.5rem,
+		6: 2rem,
+		7: 3rem,
+		8: 4rem,
+		9: 6rem
+	);
+
+// Radius scale.
+	$radius: (
+		xs:    4px,
+		sm:    6px,
+		md:    10px,
+		lg:    14px,
+		xl:    20px,
+		'2xl': 28px,
+		full:  9999px
+	);
+
+// Motion durations.
+	$dur: (
+		1: 100ms,
+		2: 150ms,
+		3: 200ms,
+		4: 300ms,
+		5: 500ms,
+		6: 700ms
+	);
+
+// Motion easings.
+	$ease: (
+		out-quart:    cubic-bezier(0.25, 1, 0.5, 1),
+		out-expo:     cubic-bezier(0.16, 1, 0.3, 1),
+		in-out-quart: cubic-bezier(0.76, 0, 0.24, 1),
+		spring:       cubic-bezier(0.34, 1.56, 0.64, 1)
+	);
+
+// Z-index scale.
+	$z: (
+		base:     0,
+		dropdown: 1000,
+		sticky:   1100,
+		nav:      1200,
+		overlay:  1300,
+		modal:    1400,
+		toast:    1500
+	);
