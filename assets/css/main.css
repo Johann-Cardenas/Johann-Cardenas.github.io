@@ -7461,17 +7461,53 @@ input, select, textarea {
 		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
 		margin: 2.5em 0 2em 0;
 	}
+
+	/* ===== Copyright pill — upgraded style (same layout) =====
+	   Surface: subtle vertical gradient + inset top highlight for depth.
+	   Hover: teal halo + lift. Typography: tabular figures for the
+	   year, small-caps treatment on "All rights reserved" for an
+	   editorial feel. */
+
 	#footer .footer-copyright ul.links {
-		border-radius: 999px;
-		box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.06);
-		transition: box-shadow 0.35s ease, transform 0.2s ease;
+		border-radius: var(--radius-full);
+		background:
+			linear-gradient(180deg,
+				color-mix(in oklch, var(--bg-dropdown) 92%, #fff 8%),
+				var(--bg-dropdown)
+			);
+		box-shadow:
+			0 2px 12px rgba(0, 0, 0, 0.22),
+			inset 0 1px 0 rgba(255, 255, 255, 0.07);
+		transition:
+			box-shadow var(--dur-4) var(--ease-out-quart),
+			transform  var(--dur-3) var(--ease-out-quart);
 	}
+
 	#footer .footer-copyright:hover ul.links {
-		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 20px rgba(24, 169, 168, 0.08);
+		box-shadow:
+			0 6px 24px rgba(0, 0, 0, 0.3),
+			inset 0 1px 0 rgba(255, 255, 255, 0.1),
+			0 0 24px color-mix(in oklch, var(--accent-primary) 22%, transparent);
 		transform: translateY(-1px);
 	}
+
+	#footer .footer-copyright .links li {
+		font-variant-numeric: tabular-nums;
+		letter-spacing: 0.015em;
+	}
+	#footer .footer-copyright .links li:first-child {
+		font-variant-caps: all-small-caps;
+		letter-spacing: 0.08em;
+		font-weight: 500;
+	}
 	#footer .footer-copyright .links li a {
-		transition: color 0.2s ease, opacity 0.2s ease;
+		letter-spacing: var(--tracking-wide);
+		text-decoration: none;
+		transition: color var(--dur-2) var(--ease-out-quart);
+	}
+	#footer .footer-copyright .links li a:hover {
+		color: var(--accent-primary);
+		text-decoration: none;
 	}
 	/* Social icons: subtle glow on hover, size unchanged */
 	#footer.footer-modern ul.social li a.icon.brands {
