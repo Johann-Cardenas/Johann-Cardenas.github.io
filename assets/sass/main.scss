@@ -125,7 +125,7 @@
 	}
 
 	body, input, textarea, select {
-		font-family: 'Source Sans Pro';
+		font-family: var(--font-sans);
 		font-weight: 300;
 		color: #5d5d5d;
 		font-size: 14pt;

@@ -5019,13 +5019,7 @@ input, select, textarea {
 	}
 
 		body.is-preload *, body.is-preload *:before, body.is-preload *:after {
-			-moz-animation: none !important;
-			-webkit-animation: none !important;
-			-ms-animation: none !important;
 			animation: none !important;
-			-moz-transition: none !important;
-			-webkit-transition: none !important;
-			-ms-transition: none !important;
 			transition: none !important;
 		}
 
@@ -5103,9 +5097,6 @@ input, select, textarea {
 	a {
 		color: var(--accent-primary);
 		text-decoration: underline;
-		-moz-transition: color .25s ease-in-out;
-		-webkit-transition: color .25s ease-in-out;
-		-ms-transition: color .25s ease-in-out;
 		transition: color .25s ease-in-out;
 	}
 
@@ -6416,9 +6407,6 @@ input, select, textarea {
 		background: var(--bg-input);
 		color: var(--text-primary);
 		width: 100%;
-		-moz-transition: all .25s ease-in-out;
-		-webkit-transition: all .25s ease-in-out;
-		-ms-transition: all .25s ease-in-out;
 		transition: all .25s ease-in-out;
 	}
 
@@ -6535,9 +6523,6 @@ input, select, textarea {
 		border-radius: 8px;
 		padding: 2.75em 1.75em 2.75em 1.75em;
 		box-shadow: var(--card-shadow);
-		-moz-transition: box-shadow .3s ease-in-out, transform .3s ease-in-out;
-		-webkit-transition: box-shadow .3s ease-in-out, transform .3s ease-in-out;
-		-ms-transition: box-shadow .3s ease-in-out, transform .3s ease-in-out;
 		transition: box-shadow .3s ease-in-out, transform .3s ease-in-out;
 	}
 
@@ -6927,9 +6912,6 @@ input, select, textarea {
 				border-radius: 8px;
 				background: var(--text-secondary);
 				box-shadow: var(--shadow-sm);
-				-moz-transition: all .25s ease-in-out;
-				-webkit-transition: all .25s ease-in-out;
-				-ms-transition: all .25s ease-in-out;
 				transition: all .25s ease-in-out;
 			}
 
@@ -7685,9 +7667,6 @@ input, select, textarea {
 				-webkit-backface-visibility: hidden;
 				-ms-backface-visibility: hidden;
 				backface-visibility: hidden;
-				-moz-transition: -moz-transform 0.5s ease;
-				-webkit-transition: -webkit-transform 0.5s ease;
-				-ms-transition: -ms-transform 0.5s ease;
 				transition: transform 0.5s ease;
 				padding-bottom: 1px;
 			}
@@ -7697,9 +7676,6 @@ input, select, textarea {
 				-webkit-backface-visibility: hidden;
 				-ms-backface-visibility: hidden;
 				backface-visibility: hidden;
-				-moz-transition: -moz-transform 0.5s ease;
-				-webkit-transition: -webkit-transform 0.5s ease;
-				-ms-transition: -ms-transform 0.5s ease;
 				transition: transform 0.5s ease;
 				display: block;
 				height: 44px;
@@ -7780,9 +7756,6 @@ input, select, textarea {
 				-webkit-transform: translateX(-275px);
 				-ms-transform: translateX(-275px);
 				transform: translateX(-275px);
-				-moz-transition: -moz-transform 0.35s var(--ease-out-quart);
-				-webkit-transition: -webkit-transform 0.35s var(--ease-out-quart);
-				-ms-transition: -ms-transform 0.35s var(--ease-out-quart);
 				transition: transform 0.35s var(--ease-out-quart);
 				display: block;
 				height: 100%;
@@ -7834,8 +7807,6 @@ input, select, textarea {
 					font-style: italic;
 					font-weight: 450;
 					letter-spacing: 0.02em;
-					-moz-transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
-					-webkit-transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
 					transition: background-color 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
 				}
 
@@ -7918,8 +7889,6 @@ input, select, textarea {
 					color: rgba(255, 255, 255, 0.5);
 					cursor: pointer;
 					border-radius: 8px;
-					-moz-transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-					-webkit-transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 					transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 					font-size: 0.65em;
 				}
