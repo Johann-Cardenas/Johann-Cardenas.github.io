@@ -261,6 +261,70 @@
 	--tracking-wide:   0.04em;
 }
 
+/* ===== Skeleton loading (Phase 5) =====
+   Placeholder cards rendered synchronously before JSON hydration.
+   Prevents "blank void" flash on slow networks. Real cards swap in
+   via outerHTML once fetches resolve — browser paint handles the
+   visual transition. */
+
+@keyframes skeleton-pulse {
+	0%, 100% { opacity: 1; }
+	50%      { opacity: 0.55; }
+}
+
+@keyframes skeleton-shimmer {
+	0%   { background-position: -200% 0; }
+	100% { background-position:  200% 0; }
+}
+
+.is-skeleton {
+	pointer-events: none;
+	user-select: none;
+}
+
+.skeleton-block,
+.skeleton-bar {
+	background: linear-gradient(
+		90deg,
+		color-mix(in oklch, var(--text-primary) 6%, transparent) 25%,
+		color-mix(in oklch, var(--text-primary) 12%, transparent) 50%,
+		color-mix(in oklch, var(--text-primary) 6%, transparent) 75%
+	);
+	background-size: 200% 100%;
+	animation:
+		skeleton-shimmer 1.4s var(--ease-in-out-quart) infinite,
+		skeleton-pulse   1.8s var(--ease-in-out-quart) infinite;
+	border-radius: var(--radius-sm);
+}
+
+.skeleton-block {
+	width: 100%;
+	aspect-ratio: 16 / 10;
+	border-radius: 0;
+}
+
+.skeleton-bar {
+	height: 0.9em;
+	margin: 0 0 var(--space-3) 0;
+}
+
+.skeleton-bar--title  { height: 1.2em; width: 85%; margin-bottom: var(--space-4); }
+.skeleton-bar--meta   { height: 0.75em; width: 40%; margin-bottom: var(--space-3); }
+.skeleton-bar--text   { width: 100%; }
+.skeleton-bar--text-short { width: 70%; }
+.skeleton-bar--button { height: 2em; width: 40%; border-radius: var(--radius-md); margin-top: var(--space-4); margin-bottom: 0; }
+
+/* News card is square — skeleton matches. */
+.news-card-modern.is-skeleton .skeleton-block { aspect-ratio: 1 / 1; }
+
+@media (prefers-reduced-motion: reduce) {
+	.skeleton-block,
+	.skeleton-bar {
+		animation: none;
+		background: color-mix(in oklch, var(--text-primary) 8%, transparent);
+	}
+}
+
 /* ===== banners.css (inlined) ===== */
 /*
    Shared hero/banner styles for Blog, Projects, Publications, and Resume landing pages.

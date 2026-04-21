@@ -354,6 +354,76 @@
         return html;
     }
 
+    // ===== Skeleton loading (Phase 5) =====
+    // Placeholder markup rendered synchronously before JSON hydration.
+    // Real cards swap into the same DOM slot once fetches resolve.
+    // All skeletons carry aria-busy="true" so assistive tech reports
+    // the loading state.
+
+    function generateSkeletonBlogGrid(count, id) {
+        let cards = '';
+        for (let i = 0; i < count; i++) {
+            cards += `
+                <article class="blog-card-modern is-skeleton" aria-busy="true" aria-live="polite">
+                    <div class="blog-card-image"><div class="skeleton-block"></div></div>
+                    <div class="blog-card-content">
+                        <div class="skeleton-bar skeleton-bar--title"></div>
+                        <div class="skeleton-bar skeleton-bar--meta"></div>
+                        <div class="skeleton-bar skeleton-bar--text"></div>
+                        <div class="skeleton-bar skeleton-bar--text-short"></div>
+                        <div class="skeleton-bar skeleton-bar--button"></div>
+                    </div>
+                </article>`;
+        }
+        return `<div class="blog-grid"${id ? ` id="${id}"` : ''}>${cards}</div>`;
+    }
+
+    function generateSkeletonProjectGrid(count, id) {
+        let cards = '';
+        for (let i = 0; i < count; i++) {
+            cards += `
+                <article class="project-card-modern is-skeleton" aria-busy="true" aria-live="polite">
+                    <div class="project-card-image"><div class="skeleton-block"></div></div>
+                    <div class="project-card-content">
+                        <div class="skeleton-bar skeleton-bar--title"></div>
+                        <div class="skeleton-bar skeleton-bar--text"></div>
+                        <div class="skeleton-bar skeleton-bar--text"></div>
+                        <div class="skeleton-bar skeleton-bar--text-short"></div>
+                        <div class="skeleton-bar skeleton-bar--button"></div>
+                    </div>
+                </article>`;
+        }
+        return `<div class="project-grid"${id ? ` id="${id}"` : ''}>${cards}</div>`;
+    }
+
+    function generateSkeletonNewsGrid(count, id) {
+        let cards = '';
+        for (let i = 0; i < count; i++) {
+            cards += `
+                <article class="news-card-modern is-skeleton" aria-busy="true" aria-live="polite">
+                    <div class="news-card-image"><div class="skeleton-block"></div></div>
+                    <div class="news-card-content">
+                        <div class="skeleton-bar skeleton-bar--title"></div>
+                        <div class="skeleton-bar skeleton-bar--meta"></div>
+                        <div class="skeleton-bar skeleton-bar--text"></div>
+                        <div class="skeleton-bar skeleton-bar--text-short"></div>
+                    </div>
+                </article>`;
+        }
+        return `<div class="news-grid"${id ? ` id="${id}"` : ''}>${cards}</div>`;
+    }
+
+    // Replace a placeholder element with skeleton HTML and return the new
+    // DOM reference. The original captured reference is detached after
+    // outerHTML assignment; preserving the ID lets us re-acquire it so
+    // the subsequent real-data swap targets the right slot.
+    function paintSkeleton(placeholderEl, skeletonHtml) {
+        if (!placeholderEl) return null;
+        const id = placeholderEl.id;
+        placeholderEl.outerHTML = skeletonHtml;
+        return id ? document.getElementById(id) : null;
+    }
+
     // Rebuild mobile navigation panel after dynamic nav loading
     function rebuildMobileNav(navData, currentPage) {
         function tryRebuild() {
@@ -402,6 +472,14 @@
         const needProjects = !!(projectsElement || allProjectsElement);
         const needNews = !!allNewsElement;
 
+        // Phase 5: paint skeletons into large card-grid placeholders BEFORE awaiting
+        // fetches so users on slow networks don't see a blank void. paintSkeleton
+        // re-acquires the DOM reference so the later real-data swap hits the new
+        // skeleton slot, not the detached placeholder.
+        const skelBlogEl     = paintSkeleton(allBlogPostsElement,  generateSkeletonBlogGrid(6,    allBlogPostsElement && allBlogPostsElement.id));
+        const skelProjectsEl = paintSkeleton(allProjectsElement,   generateSkeletonProjectGrid(4, allProjectsElement && allProjectsElement.id));
+        const skelNewsEl     = paintSkeleton(allNewsElement,       generateSkeletonNewsGrid(6,    allNewsElement && allNewsElement.id));
+
         // Build parallel fetch list — only request JSON that this page actually needs
         const fetches = {};
         fetches.footer = loadJSON(`${basePath}data/footer.json`);
@@ -432,9 +510,12 @@
             blogPostsElement.outerHTML = generateBlogPosts(data.blog, currentPageUrl, imageBasePath);
         }
 
-        // All blog posts (listing pages like Blog.html and index.html)
-        if (allBlogPostsElement && data.blog) {
-            allBlogPostsElement.outerHTML = generateAllBlogPosts(data.blog, imageBasePath);
+        // All blog posts (listing pages like Blog.html and index.html).
+        // Target the skeleton slot first; fall back to the original placeholder
+        // if skeleton injection was skipped (e.g., missing ID).
+        const blogTarget = skelBlogEl || allBlogPostsElement;
+        if (blogTarget && data.blog) {
+            blogTarget.outerHTML = generateAllBlogPosts(data.blog, imageBasePath);
         }
 
         // Projects (sidebar on individual project pages)
@@ -443,13 +524,15 @@
         }
 
         // All projects (listing pages like Projects.html and index.html)
-        if (allProjectsElement && data.projects) {
-            allProjectsElement.outerHTML = generateAllProjects(data.projects, imageBasePath);
+        const projectsTarget = skelProjectsEl || allProjectsElement;
+        if (projectsTarget && data.projects) {
+            projectsTarget.outerHTML = generateAllProjects(data.projects, imageBasePath);
         }
 
         // All news items (News.html)
-        if (allNewsElement && data.news) {
-            allNewsElement.outerHTML = generateAllNews(data.news, imageBasePath);
+        const newsTarget = skelNewsEl || allNewsElement;
+        if (newsTarget && data.news) {
+            newsTarget.outerHTML = generateAllNews(data.news, imageBasePath);
         }
     }
 
