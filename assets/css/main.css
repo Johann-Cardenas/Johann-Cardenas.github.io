@@ -731,8 +731,8 @@
 .blog-grid,
 .project-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-	gap: 1.75rem;
+	grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+	gap: var(--space-5);
 	margin-top: 0;
 	width: 100%;
 	max-width: 100%;
@@ -758,8 +758,11 @@ body.entry-page #main .blog-grid {
 	background: var(--blog-card-bg, #fff);
 	border-radius: 12px;
 	overflow: hidden;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-	transition: transform 0.3s ease, box-shadow 0.3s ease;
+	box-shadow: var(--shadow-sm);
+	transition:
+		transform    var(--dur-3) var(--ease-out-quart),
+		box-shadow   var(--dur-3) var(--ease-out-quart),
+		border-color var(--dur-3) var(--ease-out-quart);
 	display: flex;
 	flex-direction: column;
 	border: 1px solid var(--blog-card-border, transparent);
@@ -773,29 +776,43 @@ body.entry-page #main .blog-grid {
 .blog-card-modern:hover,
 .project-card-modern:hover {
 	transform: translateY(-4px);
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-	border-color: var(--blog-card-border-hover, transparent);
+	box-shadow: var(--shadow-lg);
+	border-color: var(--blog-card-border-hover, color-mix(in oklch, var(--accent-primary) 35%, var(--border-light)));
 }
 
 .project-card-modern:hover {
-	border-color: var(--project-card-border-hover, transparent);
+	border-color: var(--project-card-border-hover, color-mix(in oklch, var(--accent-primary) 35%, var(--border-light)));
 }
 
 /* Card image */
-.blog-card-image,
-.project-card-image {
+.blog-card-image {
 	position: relative;
 	width: 100%;
 	overflow: hidden;
 }
 
-.blog-card-image img,
-.project-card-image img {
+.project-card-image {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 10;
+	overflow: hidden;
+}
+
+.blog-card-image img {
 	width: 100%;
 	height: auto;
 	display: block;
 	vertical-align: top;
-	transition: transform 0.3s ease;
+	transition: transform var(--dur-5) var(--ease-out-quart);
+}
+
+.project-card-image img {
+	width: 100%;
+	height: 100%;
+	display: block;
+	vertical-align: top;
+	object-fit: cover;
+	transition: transform var(--dur-5) var(--ease-out-quart);
 }
 
 .blog-card-modern:hover .blog-card-image img,
@@ -2226,8 +2243,11 @@ body.Publications .pub-article .pub-section:first-of-type {
 	background: var(--news-card-bg, #fff);
 	border-radius: 12px;
 	overflow: hidden;
-	box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-	transition: transform 0.3s ease, box-shadow 0.3s ease;
+	box-shadow: var(--shadow-sm);
+	transition:
+		transform    var(--dur-3) var(--ease-out-quart),
+		box-shadow   var(--dur-3) var(--ease-out-quart),
+		border-color var(--dur-3) var(--ease-out-quart);
 	display: flex;
 	flex-direction: column;
 	border: 1px solid var(--news-card-border, transparent);
@@ -2235,8 +2255,8 @@ body.Publications .pub-article .pub-section:first-of-type {
 
 .news-card-modern:hover {
 	transform: translateY(-4px);
-	box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-	border-color: var(--news-card-border-hover, transparent);
+	box-shadow: var(--shadow-lg);
+	border-color: var(--news-card-border-hover, color-mix(in oklch, var(--accent-primary) 35%, var(--border-light)));
 }
 
 .news-card-image {
@@ -2250,7 +2270,7 @@ body.Publications .pub-article .pub-section:first-of-type {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
-	transition: transform 0.3s ease;
+	transition: transform var(--dur-5) var(--ease-out-quart);
 }
 
 .news-card-modern:hover .news-card-image img {
@@ -6512,19 +6532,30 @@ input, select, textarea {
 		text-decoration: none;
 		cursor: pointer;
 		border: 0;
-		border-radius: 8px;
+		border-radius: var(--radius-md);
 		background: var(--text-primary);
 		color: #fff !important;
 		font-weight: 700;
 		outline: 0;
 		font-size: 1.1em;
-		padding: 0.65em 1.5em 0.65em 1.5em;
+		padding: var(--space-3) var(--space-5);
 		text-align: center;
 		box-shadow: var(--shadow-sm);
-		-moz-transition: all .25s ease-in-out;
-		-webkit-transition: all .25s ease-in-out;
-		-ms-transition: all .25s ease-in-out;
-		transition: all .25s ease-in-out;
+		transition: all var(--dur-2) var(--ease-out-quart);
+	}
+
+	input[type="button"]:disabled,
+	input[type="submit"]:disabled,
+	input[type="reset"]:disabled,
+	button:disabled,
+	.button:disabled,
+	.button.disabled,
+	.button[aria-disabled="true"] {
+		opacity: 0.5;
+		cursor: not-allowed;
+		pointer-events: none;
+		transform: none !important;
+		box-shadow: var(--shadow-sm) !important;
 	}
 
 		input[type="button"]:hover,
@@ -7015,14 +7046,11 @@ input, select, textarea {
 				}
 
 				#nav > ul > li > a {
-					border-radius: 8px;
+					border-radius: var(--radius-md);
 					color: var(--text-nav);
 					text-decoration: none;
 					padding: 0.6em 1.2em 0.6em 1.2em;
-					-moz-transition: all .25s ease-in-out;
-					-webkit-transition: all .25s ease-in-out;
-					-ms-transition: all .25s ease-in-out;
-					transition: all .25s ease-in-out;
+					transition: all var(--dur-3) var(--ease-out-quart);
 					outline: 0;
 				}
 
@@ -7039,7 +7067,7 @@ input, select, textarea {
 				}
 
 	.dropotron {
-		border-radius: 8px;
+		border-radius: var(--radius-md);
 		background-color: var(--bg-dropdown);
 		padding: 1.25em 1.5em 1.25em 1.5em;
 		font-style: italic;
@@ -7054,10 +7082,7 @@ input, select, textarea {
 		.dropotron a, .dropotron span {
 			color: #aaa;
 			text-decoration: none;
-			-moz-transition: color .25s ease-in-out;
-			-webkit-transition: color .25s ease-in-out;
-			-ms-transition: color .25s ease-in-out;
-			transition: color .25s ease-in-out;
+			transition: color var(--dur-3) var(--ease-out-quart);
 		}
 
 		.dropotron li {
@@ -8229,7 +8254,7 @@ input, select, textarea {
 				0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
-/* Enhanced Button Animations */
+/* Button container behavior (needed for ripple click effect below) */
 .button,
 input[type="button"],
 input[type="submit"],
@@ -8237,86 +8262,17 @@ input[type="reset"],
 button {
 	position: relative;
 	overflow: hidden;
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+/* Phase 4: removed the shimmer ::before pseudo — it competed with the
+   hover lift+shadow. Ripple click feedback (.ripple) remains. */
 
-.button::before,
-input[type="button"]::before,
-input[type="submit"]::before,
-input[type="reset"]::before,
-button::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: -100%;
-	width: 100%;
-	height: 100%;
-	background: linear-gradient(
-		90deg,
-		transparent,
-		rgba(255, 255, 255, 0.2),
-		transparent
-	);
-	transition: left 0.5s ease;
-}
+/* Phase 4: removed the scaleX underline-on-hover animation for text links.
+   Color change on :hover is enough feedback; the animated underline competed
+   visually with the nav underline indicator and card hover lifts. */
 
-.button:hover::before,
-input[type="button"]:hover::before,
-input[type="submit"]:hover::before,
-input[type="reset"]:hover::before,
-button:hover::before {
-	left: 100%;
-}
-
-/* Link hover underline animation */
-a:not(.button):not(.image):not(.icon) {
-	position: relative;
-	text-decoration: none;
-}
-
-a:not(.button):not(.image):not(.icon)::after {
-	content: '';
-	position: absolute;
-	width: 100%;
-	height: 2px;
-	bottom: -2px;
-	left: 0;
-	background-color: var(--accent-primary);
-	transform: scaleX(0);
-	transform-origin: left;
-	transition: transform 0.3s ease;
-}
-
-a:not(.button):not(.image):not(.icon):hover::after {
-	transform: scaleX(1);
-}
-
-/* Navigation link animations */
-#nav > ul > li > a {
-	position: relative;
-	overflow: hidden;
-}
-
-#nav > ul > li > a::after {
-	content: '';
-	position: absolute;
-	bottom: 0;
-	left: 50%;
-	width: 0;
-	height: 2px;
-	background: var(--accent-primary);
-	transition: all 0.3s ease;
-	transform: translateX(-50%);
-}
-
-#nav > ul > li:hover > a::after,
-#nav > ul > li.active > a::after {
-	width: 80%;
-}
-
-#nav > ul > li.current > a::after {
-	display: none;
-}
+/* Phase 4: removed the animated underline on nav items — the teal fill
+   (#nav > ul > li:hover > a / .current) is already a clear active-state
+   signal. The underline competed with it visually. */
 
 /* Social icon hover animations */
 ul.social li a {
@@ -8400,16 +8356,7 @@ img[data-src].loaded {
 	opacity: 1;
 }
 
-/* Button ripple effect */
-.button,
-input[type="button"],
-input[type="submit"],
-input[type="reset"],
-button {
-	position: relative;
-	overflow: hidden;
-}
-
+/* Button ripple effect — container declarations moved to the earlier block */
 .ripple {
 	position: absolute;
 	border-radius: 50%;
@@ -8994,22 +8941,30 @@ html {
 	align-items: center;
 	gap: 14px;
 	padding: 12px 14px;
-	border-radius: 10px;
+	border-radius: var(--radius-md);
+	border-left: 3px solid transparent;
 	text-decoration: none;
 	color: var(--text-primary, #1e293b);
-	transition: background 0.15s ease;
+	transition:
+		background   var(--dur-2) var(--ease-out-quart),
+		transform    var(--dur-2) var(--ease-out-quart),
+		box-shadow   var(--dur-2) var(--ease-out-quart),
+		border-color var(--dur-2) var(--ease-out-quart);
 	cursor: pointer;
 }
 
 .search-result-item:hover,
 .search-result-item.highlighted {
 	background: var(--bg-secondary, #f1f5f9);
+	transform: translateX(4px);
+	box-shadow: var(--shadow-sm);
+	border-left-color: var(--accent-primary);
 }
 
 .search-result-icon {
 	width: 38px;
 	height: 38px;
-	border-radius: 10px;
+	border-radius: var(--radius-md);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -9084,10 +9039,10 @@ html {
 
 .search-footer kbd {
 	display: inline-block;
-	font-size: 0.65rem;
-	font-family: inherit;
+	font-size: var(--fs-xs);
+	font-family: var(--font-mono);
 	padding: 1px 5px;
-	border-radius: 4px;
+	border-radius: var(--radius-xs);
 	background: var(--bg-secondary, #f1f5f9);
 	border: 1px solid var(--border-light, rgba(0, 0, 0, 0.1));
 	margin: 0 2px;
