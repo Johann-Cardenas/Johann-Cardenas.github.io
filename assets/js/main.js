@@ -101,10 +101,16 @@
 	const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 	if (!prefersReducedMotion) {
-		// Intersection Observer for scroll animations – trigger early so fast scroll doesn’t outrun them
+		// Phase 9: tightened from threshold 0.01 + rootMargin 280px-below.
+		// The old config fired when the element was still 280px out of view,
+		// so cards would reveal before the user had a chance to see them
+		// enter the viewport — reveal felt accidental rather than intentional.
+		// New config: element must be ~15% intersecting AND 80px inside the
+		// bottom edge before reveal fires. Pairs with the slower --dur-5
+		// reveal timing (Phase 7) for a deliberate scroll feel.
 		const observerOptions = {
-			threshold: 0.01,
-			rootMargin: '0px 0px 280px 0px' // trigger when element is 280px below viewport
+			threshold: 0.15,
+			rootMargin: '0px 0px -80px 0px'
 		};
 
 		const animationObserver = new IntersectionObserver((entries) => {
