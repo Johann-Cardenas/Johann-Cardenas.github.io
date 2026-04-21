@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Avoid indexing the vendored PDF viewer
+Disallow: /pdfjs/
+
+# Avoid indexing preprocessing scripts inside e-labs
+Disallow: /e-labs/asphera/preprocess_*.py
+
+Sitemap: https://www.johanncardenas.com/sitemap.xml

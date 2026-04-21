@@ -10098,3 +10098,77 @@ html {
 	}
 }
 
+/* ===== Prose v2 — minimal rhythm & figcaption styling =====
+   Additive defaults for article bodies on blog/project posts.
+   Keeps Inter throughout (no serif switch — prior pilot reverted).
+   Existing inline style="" attributes in posts continue to win
+   via specificity; these rules fill in the gaps where no inline
+   override exists. Scoped specificity
+   (body.entry-page article.box.post.prose) matches the pre-existing
+   .box.post selector so tokens/margins can actually override. */
+
+body.entry-page article.box.post.prose > p,
+body.entry-page article.box.post.prose .row > [class*="col-"] p {
+	text-align: justify;
+	text-justify: inter-word;
+	margin: 0 0 var(--space-4) 0;
+	line-height: var(--lh-relaxed);
+}
+
+/* figcaption styling (Phase 10 stripped <h1> inside figcaption;
+   now we give figcaptions their own identity). */
+body.entry-page article.box.post.prose figcaption {
+	font-size: var(--fs-sm);
+	font-style: italic;
+	color: var(--text-secondary);
+	text-align: center;
+	margin-top: var(--space-2);
+	letter-spacing: 0;
+}
+
+body.entry-page article.box.post.prose figure {
+	margin: var(--space-5) 0;
+}
+
+/* Subsection headings inside posts — consistent breathing room
+   above, tighter below so they lead into their paragraph. */
+body.entry-page article.box.post.prose .entry-subtitle,
+body.entry-page article.box.post.prose > h3,
+body.entry-page article.box.post.prose > h4 {
+	margin: var(--space-7) 0 var(--space-3) 0;
+	letter-spacing: var(--tracking-tight);
+}
+
+/* Inline code, pre blocks — tokenized. */
+body.entry-page article.box.post.prose code {
+	padding: 0.15em 0.4em;
+	background: var(--bg-code, #f1f5f9);
+	border-radius: var(--radius-xs);
+	font-size: 0.9em;
+	font-family: var(--font-mono);
+}
+
+body.entry-page article.box.post.prose pre {
+	background: var(--bg-code, #f1f5f9);
+	padding: var(--space-4);
+	border-radius: var(--radius-md);
+	overflow-x: auto;
+	margin: var(--space-5) 0;
+	font-family: var(--font-mono);
+}
+
+body.entry-page article.box.post.prose pre code {
+	padding: 0;
+	background: transparent;
+	border-radius: 0;
+}
+
+/* Blockquote — accent left border, italic, muted. */
+body.entry-page article.box.post.prose blockquote {
+	border-left: 3px solid var(--accent-primary);
+	padding: var(--space-2) 0 var(--space-2) var(--space-4);
+	margin: var(--space-5) 0;
+	font-style: italic;
+	color: var(--text-secondary);
+}
+
