@@ -33,7 +33,12 @@ This repository implements a dual-purpose architecture: a high-performance stati
 
 ### **Backend / Scripts**
 
-Python utilities for pavement FEM data processing live under `e-labs/asphera/` and project-specific folders. See individual script headers for specifics.
+*   **Python utilities** for pavement FEM data processing live under `e-labs/asphera/` and project-specific folders. See individual script headers for specifics.
+*   **`scripts/fetch-github-data.mjs`** — Node script that regenerates `data/github.json`, the static payload that powers the GitHub Developer Dashboard on the E-Labs page (stat cards, 52-week activity heatmap, recent-activity feed, codebase composition). Uses synchronous REST + GraphQL endpoints only (the async `/stats/*` endpoints proved unreliable). Reads the GitHub token from `GITHUB_TOKEN` env var first, then git credential manager, then falls back to unauthenticated (60 req/hr). Re-run on demand:
+
+    ```bash
+    node scripts/fetch-github-data.mjs
+    ```
 
 ---
 
@@ -59,6 +64,7 @@ Python utilities for pavement FEM data processing live under `e-labs/asphera/` a
 ├── images/               # Optimized WebP media
 ├── documents/            # PDFs (resume, etc.)
 ├── pdfjs/                # Vendored PDF.js viewer (do-not-edit)
+├── scripts/              # Build / content-refresh utilities (fetch-github-data.mjs)
 ├── index.html            # Landing page
 └── [top-level pages].html  # About, Resume, Blog, Projects, Publications, News, E-Labs, 404
 ```
@@ -123,6 +129,7 @@ Foundational runtime tokens declared on `:root` in `main.css`. Full list lives i
 - [ ] **Dark Mode Auto-Detection:** Automatic theme selection from `prefers-color-scheme` on first load.
 - [ ] **Prose component rollout:** Strip per-paragraph inline margins on blog/project posts; migrate table styling to scoped classes.
 - [ ] **Unused-CSS sweep:** Integrate PurgeCSS for a safe dead-selector pass on the ~10k-line `main.css`.
+- [ ] **Automate GitHub dashboard refresh:** Schedule `fetch-github-data.mjs` via GitHub Actions so `data/github.json` rebuilds weekly without manual runs.
 
 ---
 
