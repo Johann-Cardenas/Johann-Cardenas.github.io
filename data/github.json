@@ -1,11 +1,11 @@
 {
   "user": "Johann-Cardenas",
-  "fetchedAt": "2026-03-26T17:50:15.025Z",
+  "fetchedAt": "2026-04-22T05:06:23.308Z",
   "totals": {
     "repos": 13,
-    "commits": 1268,
+    "commits": 1286,
     "languages": 15,
-    "contributors": 27
+    "contributors": 26
   },
   "repos": [
     {
@@ -16,13 +16,13 @@
       "language": "JavaScript",
       "stars": 1,
       "forks": 0,
-      "size": 514192,
-      "updatedAt": "2026-03-24T04:48:29Z",
-      "commitCount": 280,
+      "size": 514745,
+      "updatedAt": "2026-04-21T22:09:32Z",
+      "commitCount": 298,
       "languages": [
         {
           "name": "JavaScript",
-          "bytes": 4174208,
+          "bytes": 4223744,
           "color": "#f1e05a"
         },
         {
@@ -32,12 +32,12 @@
         },
         {
           "name": "HTML",
-          "bytes": 1754104,
+          "bytes": 1756455,
           "color": "#e34c26"
         },
         {
           "name": "CSS",
-          "bytes": 571797,
+          "bytes": 594215,
           "color": "#563d7c"
         },
         {
@@ -47,7 +47,7 @@
         },
         {
           "name": "SCSS",
-          "bytes": 43017,
+          "bytes": 54433,
           "color": "#c6538c"
         }
       ],
@@ -88,24 +88,30 @@
         0,
         0,
         0,
-        0,
-        0,
-        0,
-        9,
-        31,
-        6,
-        6,
-        0,
-        10,
-        34,
-        35,
-        0,
-        20,
+        36,
+        4,
+        12,
+        1,
+        4,
         15,
-        19,
-        4
+        40,
+        21,
+        0,
+        31,
+        7,
+        20,
+        1,
+        0,
+        0,
+        17
       ],
-      "contributors": []
+      "contributors": [
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 298
+        }
+      ]
     },
     {
       "name": "FAARFIELD-2.1.1",
@@ -177,24 +183,19 @@
         0,
         0,
         0,
-        0,
-        0,
-        0,
         3,
-        0,
         0,
         1,
+        0,
         3,
-        2,
-        12,
+        10,
+        4,
+        0,
+        0,
+        0,
         0
       ],
       "contributors": [
-        {
-          "login": "claude",
-          "avatar": "https://avatars.githubusercontent.com/u/81847?v=4",
-          "commits": 2
-        },
         {
           "login": "Johann-Cardenas",
           "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
@@ -260,18 +261,18 @@
         0,
         0,
         0,
-        0,
-        0,
-        0,
-        0,
-        10,
         2,
+        10,
         0,
         1,
         0,
         0,
         0,
-        4,
+        2,
+        2,
+        0,
+        0,
+        0,
         0
       ],
       "contributors": [
@@ -295,9 +296,6 @@
       "commitCount": 47,
       "languages": [],
       "sparkline": [
-        1,
-        0,
-        0,
         0,
         0,
         0,
@@ -338,13 +336,16 @@
         2,
         0,
         0,
-        0,
         1,
         0,
         0,
         0,
         0,
         1,
+        0,
+        0,
+        0,
+        0,
         0,
         0
       ],
@@ -352,7 +353,7 @@
         {
           "login": "Johann-Cardenas",
           "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
-          "commits": 45
+          "commits": 47
         }
       ]
     },
@@ -393,18 +394,18 @@
         0,
         0,
         0,
-        0,
-        0,
-        0,
-        3,
-        2,
+        5,
         5,
         0,
         0,
         1,
         0,
         1,
+        0,
         1,
+        0,
+        0,
+        0,
         0,
         0,
         0,
@@ -732,7 +733,7 @@
         {
           "login": "Johann-Cardenas",
           "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
-          "commits": 36
+          "commits": 38
         }
       ]
     },
@@ -817,7 +818,7 @@
         {
           "login": "Johann-Cardenas",
           "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
-          "commits": 28
+          "commits": 29
         }
       ]
     },
@@ -905,23 +906,118 @@
       ],
       "contributors": [
         {
-          "login": "bethcerny",
-          "avatar": "https://avatars.githubusercontent.com/u/43181711?v=4",
-          "commits": 1
+          "login": "jtchilders",
+          "avatar": "https://avatars.githubusercontent.com/u/10742392?v=4",
+          "commits": 110
         },
         {
-          "login": "FilippoSimini",
-          "avatar": "https://avatars.githubusercontent.com/u/22484769?v=4",
-          "commits": 2
+          "login": "zhenghh04",
+          "avatar": "https://avatars.githubusercontent.com/u/5777773?v=4",
+          "commits": 86
         },
         {
-          "login": "kjschmidt913",
-          "avatar": "https://avatars.githubusercontent.com/u/16869564?v=4",
-          "commits": 2
+          "login": "felker",
+          "avatar": "https://avatars.githubusercontent.com/u/1410981?v=4",
+          "commits": 81
+        },
+        {
+          "login": "saforem2",
+          "avatar": "https://avatars.githubusercontent.com/u/5234251?v=4",
+          "commits": 80
+        },
+        {
+          "login": "BethanyL",
+          "avatar": "https://avatars.githubusercontent.com/u/9046040?v=4",
+          "commits": 55
+        },
+        {
+          "login": "architvasan",
+          "avatar": "https://avatars.githubusercontent.com/u/125404521?v=4",
+          "commits": 31
+        },
+        {
+          "login": "memani1",
+          "avatar": "https://avatars.githubusercontent.com/u/15612272?v=4",
+          "commits": 26
+        },
+        {
+          "login": "venkat-1",
+          "avatar": "https://avatars.githubusercontent.com/u/5497635?v=4",
+          "commits": 25
+        },
+        {
+          "login": "CarloGraziani",
+          "avatar": "https://avatars.githubusercontent.com/u/11160521?v=4",
+          "commits": 23
+        },
+        {
+          "login": "mngom2",
+          "avatar": "https://avatars.githubusercontent.com/u/50598247?v=4",
+          "commits": 22
+        },
+        {
+          "login": "vksastry",
+          "avatar": "https://avatars.githubusercontent.com/u/88804132?v=4",
+          "commits": 18
+        },
+        {
+          "login": "khanx169",
+          "avatar": "https://avatars.githubusercontent.com/u/10308920?v=4",
+          "commits": 18
+        },
+        {
+          "login": "sraskar",
+          "avatar": "https://avatars.githubusercontent.com/u/2463455?v=4",
+          "commits": 16
+        },
+        {
+          "login": "WardLT",
+          "avatar": "https://avatars.githubusercontent.com/u/7003149?v=4",
+          "commits": 15
+        },
+        {
+          "login": "masalim2",
+          "avatar": "https://avatars.githubusercontent.com/u/20962771?v=4",
+          "commits": 14
+        },
+        {
+          "login": "tanwimallick",
+          "avatar": "https://avatars.githubusercontent.com/u/12083510?v=4",
+          "commits": 13
+        },
+        {
+          "login": "sshilpika",
+          "avatar": "https://avatars.githubusercontent.com/u/9967469?v=4",
+          "commits": 8
+        },
+        {
+          "login": "pbalapra",
+          "avatar": "https://avatars.githubusercontent.com/u/4725597?v=4",
+          "commits": 6
+        },
+        {
+          "login": "shawnrosofsky",
+          "avatar": "https://avatars.githubusercontent.com/u/20646072?v=4",
+          "commits": 4
+        },
+        {
+          "login": "Johann-Cardenas",
+          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
+          "commits": 4
+        },
+        {
+          "login": "akvasan2",
+          "avatar": "https://avatars.githubusercontent.com/u/22225762?v=4",
+          "commits": 3
         },
         {
           "login": "coreyjadams",
           "avatar": "https://avatars.githubusercontent.com/u/6619961?v=4",
+          "commits": 3
+        },
+        {
+          "login": "FilippoSimini",
+          "avatar": "https://avatars.githubusercontent.com/u/22484769?v=4",
           "commits": 2
         },
         {
@@ -930,109 +1026,14 @@
           "commits": 2
         },
         {
-          "login": "akvasan2",
-          "avatar": "https://avatars.githubusercontent.com/u/22225762?v=4",
-          "commits": 3
+          "login": "kjschmidt913",
+          "avatar": "https://avatars.githubusercontent.com/u/16869564?v=4",
+          "commits": 2
         },
         {
-          "login": "Johann-Cardenas",
-          "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
-          "commits": 4
-        },
-        {
-          "login": "shawnrosofsky",
-          "avatar": "https://avatars.githubusercontent.com/u/20646072?v=4",
-          "commits": 4
-        },
-        {
-          "login": "pbalapra",
-          "avatar": "https://avatars.githubusercontent.com/u/4725597?v=4",
-          "commits": 6
-        },
-        {
-          "login": "sshilpika",
-          "avatar": "https://avatars.githubusercontent.com/u/9967469?v=4",
-          "commits": 8
-        },
-        {
-          "login": "WardLT",
-          "avatar": "https://avatars.githubusercontent.com/u/7003149?v=4",
-          "commits": 11
-        },
-        {
-          "login": "tanwimallick",
-          "avatar": "https://avatars.githubusercontent.com/u/12083510?v=4",
-          "commits": 12
-        },
-        {
-          "login": "masalim2",
-          "avatar": "https://avatars.githubusercontent.com/u/20962771?v=4",
-          "commits": 14
-        },
-        {
-          "login": "sraskar",
-          "avatar": "https://avatars.githubusercontent.com/u/2463455?v=4",
-          "commits": 16
-        },
-        {
-          "login": "vksastry",
-          "avatar": "https://avatars.githubusercontent.com/u/88804132?v=4",
-          "commits": 17
-        },
-        {
-          "login": "khanx169",
-          "avatar": "https://avatars.githubusercontent.com/u/10308920?v=4",
-          "commits": 18
-        },
-        {
-          "login": "CarloGraziani",
-          "avatar": "https://avatars.githubusercontent.com/u/11160521?v=4",
-          "commits": 20
-        },
-        {
-          "login": "mngom2",
-          "avatar": "https://avatars.githubusercontent.com/u/50598247?v=4",
-          "commits": 22
-        },
-        {
-          "login": "venkat-1",
-          "avatar": "https://avatars.githubusercontent.com/u/5497635?v=4",
-          "commits": 25
-        },
-        {
-          "login": "memani1",
-          "avatar": "https://avatars.githubusercontent.com/u/15612272?v=4",
-          "commits": 26
-        },
-        {
-          "login": "architvasan",
-          "avatar": "https://avatars.githubusercontent.com/u/125404521?v=4",
-          "commits": 30
-        },
-        {
-          "login": "BethanyL",
-          "avatar": "https://avatars.githubusercontent.com/u/9046040?v=4",
-          "commits": 46
-        },
-        {
-          "login": "saforem2",
-          "avatar": "https://avatars.githubusercontent.com/u/5234251?v=4",
-          "commits": 53
-        },
-        {
-          "login": "felker",
-          "avatar": "https://avatars.githubusercontent.com/u/1410981?v=4",
-          "commits": 79
-        },
-        {
-          "login": "zhenghh04",
-          "avatar": "https://avatars.githubusercontent.com/u/5777773?v=4",
-          "commits": 79
-        },
-        {
-          "login": "jtchilders",
-          "avatar": "https://avatars.githubusercontent.com/u/10742392?v=4",
-          "commits": 105
+          "login": "bethcerny",
+          "avatar": "https://avatars.githubusercontent.com/u/43181711?v=4",
+          "commits": 1
         }
       ]
     },
@@ -1313,7 +1314,6 @@
     }
   ],
   "weeklyCommits": [
-    1,
     0,
     0,
     0,
@@ -1332,16 +1332,14 @@
     0,
     0,
     0,
-    0,
-    0,
-    3,
-    2,
+    5,
     5,
     0,
     0,
     1,
     0,
     1,
+    0,
     1,
     0,
     0,
@@ -1352,60 +1350,63 @@
     0,
     0,
     0,
-    9,
-    33,
-    6,
-    6,
-    10,
-    16,
-    34,
     36,
-    1,
-    23,
+    6,
+    12,
+    3,
+    15,
     18,
+    41,
+    22,
+    0,
     35,
-    4
+    19,
+    26,
+    1,
+    0,
+    0,
+    17
   ],
   "recentCommits": [
     {
       "repo": "Johann-Cardenas.github.io",
-      "sha": "29c6137",
-      "message": "perf: migrate all images to WebP and remove legacy JPG/PNG files",
+      "sha": "5ae83e6",
+      "message": "docs: refresh README to reflect the design-system and SEO work",
       "author": "Johann-Cardenas",
       "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
-      "date": "2026-03-24T04:42:21Z"
+      "date": "2026-04-21T22:09:06Z"
     },
     {
       "repo": "Johann-Cardenas.github.io",
-      "sha": "533450b",
-      "message": "fix(aircrafter): invalidate output table cache when inputs change",
+      "sha": "2838d5d",
+      "message": "style(footer): upgrade copyright pill — editorial polish, no underline",
       "author": "Johann-Cardenas",
       "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
-      "date": "2026-03-23T20:47:31Z"
+      "date": "2026-04-21T22:07:07Z"
     },
     {
       "repo": "Johann-Cardenas.github.io",
-      "sha": "b46ae5d",
-      "message": "style: remove \"Skip to main content\" button from all pages",
+      "sha": "4b8a427",
+      "message": "style(content): paragraph justify strip + list utility classes",
       "author": "Johann-Cardenas",
       "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
-      "date": "2026-03-23T16:33:09Z"
+      "date": "2026-04-21T18:58:29Z"
     },
     {
       "repo": "Johann-Cardenas.github.io",
-      "sha": "966f89b",
-      "message": "perf: implement full site audit — optimize assets, accessibility, SEO, and CSS",
+      "sha": "08c9e00",
+      "message": "style(content): OG URL normalization, image dimensions, figure utility classes",
       "author": "Johann-Cardenas",
       "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
-      "date": "2026-03-23T14:29:42Z"
+      "date": "2026-04-21T17:04:52Z"
     },
     {
       "repo": "Johann-Cardenas.github.io",
-      "sha": "b08d17d",
-      "message": "chore: add Conventional Commits spec and update gitignore",
+      "sha": "8b137d4",
+      "message": "style(content): prose v2, canonical URLs, robots.txt",
       "author": "Johann-Cardenas",
       "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
-      "date": "2026-03-21T17:31:33Z"
+      "date": "2026-04-21T16:56:24Z"
     },
     {
       "repo": "FAARFIELD-2.1.1",
@@ -1436,12 +1437,12 @@
     {
       "name": "Jupyter Notebook",
       "bytes": 49849258,
-      "pct": 63.4,
+      "pct": 63.3,
       "color": "#DA5B0B"
     },
     {
       "name": "HTML",
-      "bytes": 13642058,
+      "bytes": 13644409,
       "pct": 17.3,
       "color": "#e34c26"
     },
@@ -1453,8 +1454,8 @@
     },
     {
       "name": "JavaScript",
-      "bytes": 4248114,
-      "pct": 5.4,
+      "bytes": 4297650,
+      "pct": 5.5,
       "color": "#f1e05a"
     },
     {
@@ -1471,8 +1472,8 @@
     },
     {
       "name": "CSS",
-      "bytes": 581848,
-      "pct": 0.7,
+      "bytes": 604266,
+      "pct": 0.8,
       "color": "#563d7c"
     },
     {
@@ -1483,7 +1484,7 @@
     },
     {
       "name": "Other",
-      "bytes": 171379,
+      "bytes": 182795,
       "pct": 0.2,
       "color": "#8b8b8b"
     }
@@ -1492,37 +1493,37 @@
     {
       "login": "Johann-Cardenas",
       "avatar": "https://avatars.githubusercontent.com/u/63623246?v=4",
-      "commits": 253
+      "commits": 556
     },
     {
       "login": "jtchilders",
       "avatar": "https://avatars.githubusercontent.com/u/10742392?v=4",
-      "commits": 105
-    },
-    {
-      "login": "felker",
-      "avatar": "https://avatars.githubusercontent.com/u/1410981?v=4",
-      "commits": 79
+      "commits": 110
     },
     {
       "login": "zhenghh04",
       "avatar": "https://avatars.githubusercontent.com/u/5777773?v=4",
-      "commits": 79
+      "commits": 86
+    },
+    {
+      "login": "felker",
+      "avatar": "https://avatars.githubusercontent.com/u/1410981?v=4",
+      "commits": 81
     },
     {
       "login": "saforem2",
       "avatar": "https://avatars.githubusercontent.com/u/5234251?v=4",
-      "commits": 53
+      "commits": 80
     },
     {
       "login": "BethanyL",
       "avatar": "https://avatars.githubusercontent.com/u/9046040?v=4",
-      "commits": 46
+      "commits": 55
     },
     {
       "login": "architvasan",
       "avatar": "https://avatars.githubusercontent.com/u/125404521?v=4",
-      "commits": 30
+      "commits": 31
     },
     {
       "login": "memani1",
@@ -1535,14 +1536,19 @@
       "commits": 25
     },
     {
+      "login": "CarloGraziani",
+      "avatar": "https://avatars.githubusercontent.com/u/11160521?v=4",
+      "commits": 23
+    },
+    {
       "login": "mngom2",
       "avatar": "https://avatars.githubusercontent.com/u/50598247?v=4",
       "commits": 22
     },
     {
-      "login": "CarloGraziani",
-      "avatar": "https://avatars.githubusercontent.com/u/11160521?v=4",
-      "commits": 20
+      "login": "vksastry",
+      "avatar": "https://avatars.githubusercontent.com/u/88804132?v=4",
+      "commits": 18
     },
     {
       "login": "khanx169",
@@ -1550,14 +1556,14 @@
       "commits": 18
     },
     {
-      "login": "vksastry",
-      "avatar": "https://avatars.githubusercontent.com/u/88804132?v=4",
-      "commits": 17
-    },
-    {
       "login": "sraskar",
       "avatar": "https://avatars.githubusercontent.com/u/2463455?v=4",
       "commits": 16
+    },
+    {
+      "login": "WardLT",
+      "avatar": "https://avatars.githubusercontent.com/u/7003149?v=4",
+      "commits": 15
     },
     {
       "login": "masalim2",
@@ -1567,12 +1573,7 @@
     {
       "login": "tanwimallick",
       "avatar": "https://avatars.githubusercontent.com/u/12083510?v=4",
-      "commits": 12
-    },
-    {
-      "login": "WardLT",
-      "avatar": "https://avatars.githubusercontent.com/u/7003149?v=4",
-      "commits": 11
+      "commits": 13
     },
     {
       "login": "sshilpika",

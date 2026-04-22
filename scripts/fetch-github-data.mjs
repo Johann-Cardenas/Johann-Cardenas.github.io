@@ -5,8 +5,17 @@
  *
  * Usage:  node scripts/fetch-github-data.mjs
  *
- * Authentication: reads token from git credential manager (GitHub Desktop).
- * Falls back to unauthenticated (60 req/hr rate limit).
+ * Authentication:
+ *   1. GITHUB_TOKEN env var (preferred — survives credential-manager hiccups).
+ *   2. Fallback: git credential manager (GitHub Desktop).
+ *   3. Last resort: unauthenticated (60 req/hr rate limit).
+ *
+ * Design note:
+ *   Uses synchronous REST + GraphQL endpoints only. The async /stats/commit_activity
+ *   and /stats/contributors endpoints were abandoned — they frequently return 202
+ *   for hours at a time, leaving the heatmap and contributors list empty. Weekly
+ *   activity is now derived client-side by bucketing /commits?since=<52w>, and
+ *   contributors come from the synchronous /contributors endpoint.
  */
 import { execSync } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
@@ -20,6 +29,8 @@ const USER = 'Johann-Cardenas';
 /* ── Helpers ────────────────────────────────────────────── */
 
 function getToken() {
+  // Prefer explicit env var so CI / ad-hoc runs don't depend on credential manager state.
+  if (process.env.GITHUB_TOKEN) return process.env.GITHUB_TOKEN.trim();
   try {
     const out = execSync(
       "printf 'protocol=https\\nhost=github.com\\n' | git credential fill",
@@ -44,22 +55,44 @@ async function api(path) {
   return res.json();
 }
 
-async function apiRetry(path, attempts = 8, delay = 5000) {
-  for (let i = 0; i < attempts; i++) {
-    const res = await fetch(
-      path.startsWith('http') ? path : `https://api.github.com${path}`,
-      { headers }
-    );
-    if (res.status === 202) {
-      console.log(`  ⏳ 202 Accepted, retrying in ${delay / 1000}s... (${path})`);
-      await new Promise(r => setTimeout(r, delay));
-      continue;
-    }
-    if (!res.ok) throw new Error(`${res.status} ${res.statusText}: ${path}`);
-    return res.json();
+/**
+ * Paginate a GitHub REST endpoint via Link header. Accumulates all pages.
+ * 409 (empty repo) returns []. Other errors throw.
+ */
+async function apiPaginated(path) {
+  const out = [];
+  let url = path.startsWith('http') ? path : `https://api.github.com${path}`;
+  while (url) {
+    const res = await fetch(url, { headers });
+    if (res.status === 409) return out; // empty / no default branch
+    if (res.status === 204) return out; // no content (e.g. contributors on empty repo)
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}: ${url}`);
+    const json = await res.json();
+    if (Array.isArray(json)) out.push(...json);
+    const link = res.headers.get('link') || '';
+    const next = link.split(',').find(p => /rel="next"/.test(p));
+    const m = next && next.match(/<([^>]+)>/);
+    url = m ? m[1] : null;
   }
-  console.warn(`  ⚠ Gave up after ${attempts} attempts: ${path}`);
-  return null;
+  return out;
+}
+
+/**
+ * Bucket commits into 52 weekly slots. Week 0 starts `weekStartMs` and each
+ * subsequent week is +7 days. Matches the layout the UI expects (52-cell grid
+ * ending at "now").
+ */
+function bucketWeekly(commits, weekStartMs) {
+  const weekly = new Array(52).fill(0);
+  const WEEK_MS = 7 * 24 * 3600 * 1000;
+  for (const c of commits) {
+    const dateStr = c.commit?.author?.date || c.commit?.committer?.date;
+    if (!dateStr) continue;
+    const t = new Date(dateStr).getTime();
+    const idx = Math.floor((t - weekStartMs) / WEEK_MS);
+    if (idx >= 0 && idx < 52) weekly[idx]++;
+  }
+  return weekly;
 }
 
 /** GitHub language color map (top languages) */
@@ -122,13 +155,19 @@ async function main() {
   console.log('Fetching commit counts (GraphQL)...');
   const commitCounts = await fetchCommitCounts(repoNames);
 
-  // 3. Per-repo: languages, weekly activity, contributors
+  // 3. Per-repo: languages, weekly activity, contributors, recent commits
   console.log('Fetching per-repo stats...');
   const repos = [];
   const allLangs = {};
   const weeklyOrgCommits = new Array(52).fill(0);
   const contributorMap = new Map();
   const recentCommitsAll = [];
+
+  // Week 0 for the 52-cell heatmap starts 52 weeks ago; indices 0..51 correspond
+  // to week-of-year positions in the UI grid.
+  const WEEK_MS = 7 * 24 * 3600 * 1000;
+  const weekStartMs = Date.now() - 52 * WEEK_MS;
+  const sinceIso = new Date(weekStartMs).toISOString();
 
   for (const raw of rawRepos) {
     const name = raw.name;
@@ -137,32 +176,46 @@ async function main() {
     // Languages
     let langs = {};
     try { langs = await api(`/repos/${USER}/${name}/languages`); }
-    catch (e) { console.warn(' langs failed'); }
+    catch { console.warn(' langs failed'); }
 
-    // Accumulate org-wide
     for (const [lang, bytes] of Object.entries(langs)) {
       allLangs[lang] = (allLangs[lang] || 0) + bytes;
     }
 
-    // Weekly commit activity (52 weeks)
-    let weeklyCommits = [];
-    const activity = await apiRetry(`/repos/${USER}/${name}/stats/commit_activity`);
-    if (Array.isArray(activity)) {
-      weeklyCommits = activity.map(w => ({ week: w.week, total: w.total }));
-      activity.forEach((w, i) => { weeklyOrgCommits[i] += w.total; });
+    // Commits in the last 52 weeks — one paginated fetch powers both the
+    // heatmap (bucketed weekly) and the recent-activity feed (top 5 by date).
+    let last52wCommits = [];
+    try {
+      last52wCommits = await apiPaginated(
+        `/repos/${USER}/${name}/commits?per_page=100&since=${encodeURIComponent(sinceIso)}`
+      );
+    } catch (e) {
+      console.warn(` commits failed: ${e.message}`);
     }
 
-    // Sparkline (just the totals array)
-    const sparkline = weeklyCommits.map(w => w.total);
+    const sparkline = bucketWeekly(last52wCommits, weekStartMs);
+    sparkline.forEach((v, i) => { weeklyOrgCommits[i] += v; });
 
-    // Contributors
-    const contribs = await apiRetry(`/repos/${USER}/${name}/stats/contributors`);
+    // Most recent 5 commits for the global feed (commits are returned newest-first).
+    for (const c of last52wCommits.slice(0, 5)) {
+      recentCommitsAll.push({
+        repo: name,
+        sha: c.sha.slice(0, 7),
+        message: (c.commit?.message || '').split('\n')[0].slice(0, 80),
+        author: c.author?.login || c.commit?.author?.name || 'unknown',
+        avatar: c.author?.avatar_url || '',
+        date: c.commit?.author?.date || ''
+      });
+    }
+
+    // Contributors — synchronous endpoint, returns all-time commit counts.
     const repoContribs = [];
-    if (Array.isArray(contribs)) {
+    try {
+      const contribs = await apiPaginated(`/repos/${USER}/${name}/contributors?per_page=100`);
       for (const c of contribs) {
-        const login = c.author?.login || 'unknown';
-        const avatar = c.author?.avatar_url || '';
-        const total = c.total || 0;
+        const login = c.login || 'unknown';
+        const avatar = c.avatar_url || '';
+        const total = c.contributions || 0;
         repoContribs.push({ login, avatar, commits: total });
 
         if (contributorMap.has(login)) {
@@ -171,22 +224,9 @@ async function main() {
           contributorMap.set(login, { login, avatar, commits: total });
         }
       }
+    } catch (e) {
+      console.warn(` contributors failed: ${e.message}`);
     }
-
-    // Recent commits (last 5 per repo)
-    try {
-      const commits = await api(`/repos/${USER}/${name}/commits?per_page=5`);
-      for (const c of commits) {
-        recentCommitsAll.push({
-          repo: name,
-          sha: c.sha.slice(0, 7),
-          message: (c.commit?.message || '').split('\n')[0].slice(0, 80),
-          author: c.author?.login || c.commit?.author?.name || 'unknown',
-          avatar: c.author?.avatar_url || '',
-          date: c.commit?.author?.date || ''
-        });
-      }
-    } catch {}
 
     // Enrich languages with colors
     const langEntries = Object.entries(langs).map(([lang, bytes]) => ({
