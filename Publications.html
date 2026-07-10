@@ -406,6 +406,7 @@
 					window.addEventListener('scroll', function () {
 						if (!ticking) { requestAnimationFrame(updateProgress); ticking = true; }
 					}, { passive: true });
+					updateProgress();
 				}
 
 				/* ── 2. Floating TOC ── */
@@ -664,8 +665,6 @@
 					revealEls.forEach(function (el) { el.classList.add('pub-visible'); });
 				}
 
-				// Initial call
-				updateProgress();
 			})();
 			</script>
 
