@@ -35,6 +35,23 @@
     }
 
     /**
+     * Keep the browser chrome (mobile address bar) in sync with the
+     * site's manual theme. The static <meta media="..."> tags follow the
+     * OS scheme, which can disagree with the data-theme the user picked.
+     */
+    function syncThemeColor(theme) {
+        const color = theme === THEME_DARK ? '#111827' : '#ffffff';
+        let metas = document.querySelectorAll('meta[name="theme-color"]');
+        if (!metas.length) {
+            const meta = document.createElement('meta');
+            meta.setAttribute('name', 'theme-color');
+            document.head.appendChild(meta);
+            metas = [meta];
+        }
+        metas.forEach((meta) => meta.setAttribute('content', color));
+    }
+
+    /**
      * Apply theme to the document
      */
     function applyTheme(theme, withTransition = false) {
@@ -43,7 +60,7 @@
         if (withTransition) {
             // Add transition class for smooth animation
             html.classList.add(TRANSITION_CLASS);
-            
+
             // Remove transition class after animation completes
             setTimeout(() => {
                 html.classList.remove(TRANSITION_CLASS);
@@ -52,12 +69,16 @@
 
         // Set the theme attribute
         html.setAttribute('data-theme', theme);
+        syncThemeColor(theme);
 
-        // Update toggle button aria-label if it exists
+        // Update toggle button labels if it exists
         const toggle = document.querySelector('.theme-toggle');
         if (toggle) {
             toggle.setAttribute('aria-label',
                 theme === THEME_DARK ? 'Switch to light mode' : 'Switch to dark mode'
+            );
+            toggle.setAttribute('data-tooltip',
+                theme === THEME_DARK ? 'Switch to Light Mode' : 'Switch to Dark Mode'
             );
         }
 
@@ -66,12 +87,52 @@
     }
 
     /**
-     * Toggle between light and dark themes
+     * Toggle between light and dark themes.
+     * When the View Transitions API is available (and the user hasn't
+     * asked for reduced motion), the new theme sweeps out from the toggle
+     * button as an expanding circle (see html.theme-vt rules in main.css).
+     * Falls back to the original class-based fade everywhere else.
      */
     function toggleTheme() {
         const currentTheme = document.documentElement.getAttribute('data-theme') || THEME_LIGHT;
         const newTheme = currentTheme === THEME_DARK ? THEME_LIGHT : THEME_DARK;
-        applyTheme(newTheme, true);
+
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (typeof document.startViewTransition !== 'function' || reducedMotion) {
+            applyTheme(newTheme, true);
+            return;
+        }
+
+        const html = document.documentElement;
+        const toggle = document.querySelector('.theme-toggle');
+        // Reveal origin: center of the toggle button (viewport coords).
+        let x = window.innerWidth / 2;
+        let y = window.innerHeight / 2;
+        if (toggle) {
+            const rect = toggle.getBoundingClientRect();
+            x = rect.left + rect.width / 2;
+            y = rect.top + rect.height / 2;
+        }
+        // Radius that guarantees the circle covers the whole viewport.
+        const r = Math.hypot(
+            Math.max(x, window.innerWidth - x),
+            Math.max(y, window.innerHeight - y)
+        );
+
+        html.classList.add('theme-vt');
+        html.style.setProperty('--vt-x', x + 'px');
+        html.style.setProperty('--vt-y', y + 'px');
+        html.style.setProperty('--vt-r', r + 'px');
+
+        const transition = document.startViewTransition(() => {
+            applyTheme(newTheme, false);
+        });
+        transition.finished.finally(() => {
+            html.classList.remove('theme-vt');
+            html.style.removeProperty('--vt-x');
+            html.style.removeProperty('--vt-y');
+            html.style.removeProperty('--vt-r');
+        });
     }
 
     /**

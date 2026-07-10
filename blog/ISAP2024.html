@@ -54,6 +54,20 @@
 			}
 		}
 		</script>
+		<!-- Phase 12: instant navigations — hover-triggered prefetch of internal pages (progressive enhancement) -->
+		<link rel="preconnect" href="https://cdn.jsdelivr.net">
+		<script type="speculationrules">
+		{
+			"prefetch": [{
+				"where": { "and": [
+					{ "href_matches": "/*" },
+					{ "not": { "href_matches": "/documents/*" } },
+					{ "not": { "href_matches": "/pdfjs/*" } }
+				]},
+				"eagerness": "moderate"
+			}]
+		}
+		</script>
 	</head>
 
 	<body class="entry-page ISAP2024 is-preload">
@@ -305,16 +319,16 @@
 		</div>
 
 		<!-- Scripts -->
-			<script src="../assets/js/components.js"></script>
-			<script src="../assets/js/jquery.min.js"></script>
-			<script src="../assets/js/jquery.dropotron.min.js"></script>
-			<script src="../assets/js/breakpoints.min.js"></script>
-			<script src="../assets/js/util.js"></script>
-			<script src="../assets/js/main.js"></script>
-			<script src="../assets/js/theme-toggle.js"></script>
-			<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
-			<script src="../assets/js/search.js"></script>
-			<script src="../assets/js/back-to-top.js"></script>
+			<script src="../assets/js/components.js" defer></script>
+			<script src="../assets/js/jquery.min.js" defer></script>
+			<script src="../assets/js/jquery.dropotron.min.js" defer></script>
+			<script src="../assets/js/breakpoints.min.js" defer></script>
+			<script src="../assets/js/util.js" defer></script>
+			<script src="../assets/js/main.js" defer></script>
+			<script src="../assets/js/theme-toggle.js" defer></script>
+			<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0" defer></script>
+			<script src="../assets/js/search.js" defer></script>
+			<script src="../assets/js/back-to-top.js" defer></script>
 
 	</body>
 </html>

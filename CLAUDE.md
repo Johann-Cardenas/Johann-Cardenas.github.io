@@ -164,12 +164,15 @@ All commits MUST follow the [Conventional Commits](https://www.conventionalcommi
 | `e-labs-github.js` | E-Labs-only: renders the GitHub Developer Dashboard (stat cards with animated counters/rings, 52-week activity heatmap, recent-commit feed, codebase composition bar) from static `data/github.json`. No runtime API calls. | Uses `ComponentLoader.loadJSON` for cache hits; falls back to raw `fetch` |
 
 ### Script Boot Order (per page `<script>` tags)
-1. Inline theme init (prevents FOUC) — sets `data-theme` from localStorage
+All external scripts carry `defer` (Phase 12) — they no longer block HTML parsing but still execute in document order:
+1. Inline theme init in `<head>` (prevents FOUC) — sets `data-theme` from localStorage
 2. `components.js` (DOMContentLoaded → loads nav + footer + cards)
 3. `jquery.min.js` → `jquery.dropotron.min.js` → `breakpoints.min.js` → `util.js` → `main.js`
-4. `theme-toggle.js` (creates toggle button)
+4. `theme-toggle.js` (creates toggle button; circular View Transition reveal on toggle, syncs `<meta theme-color>`)
 5. `fuse.js` (CDN) → `search.js`
 6. `back-to-top.js`
+
+Every page `<head>` also carries a `<script type="speculationrules">` block (hover-triggered prefetch of internal pages, excluding `/documents/` and `/pdfjs/`) and a preconnect to `cdn.jsdelivr.net`. Inline page scripts must NOT rely on jQuery/ComponentLoader at parse time (they are deferred).
 
 ## Data Schemas (`data/`)
 

@@ -39,6 +39,7 @@
 		<link rel="preload" href="/assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 		<link rel="preload" href="/assets/fonts/source-serif-4-var.woff2" as="font" type="font/woff2" crossorigin>
 		<link rel="stylesheet" href="assets/css/homepage.css" />
+		<link rel="preload" as="image" href="images/Hero_Section.webp" fetchpriority="high">
 
 		<!-- Theme color for mobile browser chrome -->
 		<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
@@ -89,6 +90,20 @@
 				"Pavement Performance Prediction",
 				"Machine Learning for Transportation"
 			]
+		}
+		</script>
+		<!-- Phase 12: instant navigations — hover-triggered prefetch of internal pages (progressive enhancement) -->
+		<link rel="preconnect" href="https://cdn.jsdelivr.net">
+		<script type="speculationrules">
+		{
+			"prefetch": [{
+				"where": { "and": [
+					{ "href_matches": "/*" },
+					{ "not": { "href_matches": "/documents/*" } },
+					{ "not": { "href_matches": "/pdfjs/*" } }
+				]},
+				"eagerness": "moderate"
+			}]
 		}
 		</script>
 	</head>
@@ -328,16 +343,16 @@
 		</div>
 
 		<!-- Scripts -->
-			<script src="assets/js/components.js"></script>
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/jquery.dropotron.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/util.js"></script>
-			<script src="assets/js/main.js"></script>
-			<script src="assets/js/theme-toggle.js"></script>
-			<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
-			<script src="assets/js/search.js"></script>
-			<script src="assets/js/back-to-top.js"></script>
+			<script src="assets/js/components.js" defer></script>
+			<script src="assets/js/jquery.min.js" defer></script>
+			<script src="assets/js/jquery.dropotron.min.js" defer></script>
+			<script src="assets/js/breakpoints.min.js" defer></script>
+			<script src="assets/js/util.js" defer></script>
+			<script src="assets/js/main.js" defer></script>
+			<script src="assets/js/theme-toggle.js" defer></script>
+			<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0" defer></script>
+			<script src="assets/js/search.js" defer></script>
+			<script src="assets/js/back-to-top.js" defer></script>
 
 			<!-- Hero FEM Mesh Animation -->
 			<script>
@@ -887,7 +902,9 @@
 				var TRAIL_MAX = 350;
 
 				var heroImg = new Image();
-				heroImg.crossOrigin = 'anonymous';
+				// Same-origin image: no crossOrigin attr, so this request shares
+				// the cache entry with the CSS background and the head preload
+				// (a CORS-mode request would force a second network fetch).
 				heroImg.onload = function() {
 					var tmp = document.createElement('canvas');
 					tmp.width = heroImg.naturalWidth;
