@@ -17,6 +17,9 @@ Desktop.ini
 .vscode/
 .idea/
 
+# Playwright MCP artifacts
+.playwright-mcp/
+
 # Python (preprocessing scripts)
 __pycache__/
 *.pyc
@@ -31,7 +34,3 @@ __pycache__/
 
 # Logs
 *.log
-
-# Legacy image formats (use .webp only)
-images/**/*.jpg
-images/**/*.png
