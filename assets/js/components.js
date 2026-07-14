@@ -6,16 +6,15 @@
 (function() {
     'use strict';
 
-    // Get base path based on current page location
+    // Get base path based on current page location.
+    // Depth-based: works for root pages, blog/, projects/, and two-level
+    // e-labs app pages alike (site is served from the domain root).
     function getBasePath() {
-        const path = window.location.pathname;
-        if (path === '/' || path.endsWith('index.html')) {
-            return '';
-        } else if (path.includes('/blog/') || path.includes('/projects/')) {
-            return '../';
-        } else {
-            return '';
+        const segments = window.location.pathname.split('/').filter(Boolean);
+        if (segments.length && segments[segments.length - 1].includes('.')) {
+            segments.pop(); // drop the file name
         }
+        return '../'.repeat(segments.length);
     }
 
     const basePath = getBasePath();
