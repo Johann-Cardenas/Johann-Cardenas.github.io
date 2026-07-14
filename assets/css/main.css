@@ -2505,20 +2505,6 @@ body.Publications .pub-article .pub-section:first-of-type {
 	}
 }
 
-/* ===== e-labs.css (inlined) ===== */
-.app-card .launch-btn.private-launch {
-	background: linear-gradient(135deg, #dc2626, #f87171) !important;
-}
-.app-card .launch-btn.private-launch:hover {
-	background: linear-gradient(135deg, #b91c1c, #ef4444) !important;
-}
-
-[data-theme="dark"] .app-card .launch-btn.private-launch {
-	background: linear-gradient(135deg, #b91c1c, #ef4444) !important;
-}
-[data-theme="dark"] .app-card .launch-btn.private-launch:hover {
-	background: linear-gradient(135deg, #991b1b, #f87171) !important;
-}
 /* ==================== PRIVATE MODAL ==================== */
 .private-modal-overlay {
 	position: fixed; inset: 0; z-index: 12000;
@@ -2728,6 +2714,7 @@ body.Publications .pub-article .pub-section:first-of-type {
 	position: absolute;
 	top: 12px;
 	right: 12px;
+	z-index: 3; /* above banner (1) and hover text (2) */
 	background: rgba(24, 169, 168, 0.9);
 	color: #fff;
 	padding: 4px 12px;
@@ -2804,14 +2791,6 @@ body.Publications .pub-article .pub-section:first-of-type {
 	cursor: pointer;
 	transition: all var(--dur-3) var(--ease-out-quart);
 	text-decoration: none;
-}
-
-/* Aircrafter & Asphera: override to grey for disabled */
-.app-card.aircrafter .launch-btn,
-.app-card.asphera .launch-btn,
-.app-card .launch-btn.disabled {
-	background: #404040;
-	color: #888;
 }
 
 .app-card .launch-btn:hover {
@@ -8533,6 +8512,7 @@ html {
 .apps-grid .app-card:nth-child(2) { transition-delay: 0.08s; }
 .apps-grid .app-card:nth-child(3) { transition-delay: 0.16s; }
 .apps-grid .app-card:nth-child(4) { transition-delay: 0.24s; }
+.apps-grid .app-card:nth-child(5) { transition-delay: 0.32s; }
 
 /* ===== VIEW TRANSITIONS ===== */
 @view-transition {

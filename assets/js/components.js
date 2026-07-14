@@ -19,6 +19,12 @@
 
     const basePath = getBasePath();
 
+    // Resolve a nav/footer URL: absolute URLs (external apps) pass through,
+    // relative URLs get the depth-based prefix.
+    function resolveUrl(url) {
+        return /^https?:\/\//.test(url) ? url : basePath + url;
+    }
+
     // JSON fetch cache — prevents duplicate network requests across components
     const _jsonCache = {};
 
@@ -49,19 +55,19 @@
             if (item.type === 'dropdown' && item.children && item.children.length) {
                 html += '<div class="nav-panel-group">';
                 html += '<div class="nav-panel-head">';
-                html += '<a class="link depth-0" href="' + basePath + item.url + '">' +
+                html += '<a class="link depth-0" href="' + resolveUrl(item.url) + '">' +
                     '<span class="indent-0"></span>' + item.name + '</a>';
                 html += '<span class="nav-panel-trigger" role="button" tabindex="0" aria-label="Show submenu">&#9660;</span>';
                 html += '</div>';
                 html += '<div class="nav-panel-subs">';
                 item.children.forEach(function(child) {
-                    html += '<a class="link depth-1" href="' + basePath + child.url + '">' +
+                    html += '<a class="link depth-1" href="' + resolveUrl(child.url) + '">' +
                         '<span class="indent-1"></span>' + child.name + '</a>';
                 });
                 html += '</div></div>';
             } else {
                 // Disable links for top-level if needed (none currently)
-                html += '<a class="link depth-0" href="' + basePath + item.url + '">' +
+                html += '<a class="link depth-0" href="' + resolveUrl(item.url) + '">' +
                     '<span class="indent-0"></span>' + item.name + '</a>';
             }
         });
