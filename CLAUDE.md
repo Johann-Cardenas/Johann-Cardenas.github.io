@@ -203,7 +203,7 @@ ACRP_FEM (password-protected), EV_Trucks, FAA_Data, MS_Thesis
 - **AirCrafter** (`e-labs/aircrafter/`) — Contact stress calculator (Plotly), password-protected
 - **Frontier** (`e-labs/frontier/`) — HPC intuition engine (Canvas 2D), public
 - **Finite-Elemented** (`e-labs/finite-elemented/`) — FEA educational platform, public
-- **Cross-Section Studio** (`e-labs/cross-section-studio/`) — Procedural 3D pavement cross-section renderer (Three.js ES modules via CDN import map; `index.html` + `styles.css` + `app.js`), public. Deterministic seeded procedural PBR textures for 11 FAA materials, true-to-scale layer stack with fixed-display infinite subgrade, ortho/persp cameras, lighting presets, PNG/JPEG export up to 8K, `.pavement.json` project save/load, undo/redo, templates (built-in + localStorage user templates)
+- **Cross-Section Studio** (`e-labs/cross-section-studio/`) — Procedural 3D pavement cross-section renderer (Three.js ES modules via CDN import map; `index.html` + `styles.css` + `app.js`), public. Deterministic seeded procedural PBR textures (1024px tiles, material dims in mm via `TILE_MM`/`PX` constants) for 18 materials grouped Asphalt/Concrete/Base/Subgrade, true-to-scale layer stack with fixed-display infinite subgrade, viewport click-to-select with edge outline, insert-layer-between-rows UI, ortho/persp cameras (persp default), lighting presets, PNG/JPEG export up to 8K, `.pavement.json` project save/load, undo/redo, Airfield + Highway template groups (built-in + localStorage user templates)
 
 ## Page → Placeholder → JSON Mapping
 Which DOM placeholders each page uses (determines which JSON files `components.js` fetches):

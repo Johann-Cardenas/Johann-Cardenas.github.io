@@ -38,10 +38,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     function seededRng(key) { return mulberry32(xmur3(key)()); }
 
     /* ========================================================
-       1. Material definitions (FAA presets)
-       Texture canvas is 512 px == 512 mm of material.
+       1. Material definitions (FAA + highway presets)
+       One texture tile covers TILE_MM of material and is
+       rendered at TEX_SIZE px — all material dimensions
+       (aggregate radii, cracks, strata) are given in mm.
        ======================================================== */
-    const TEX_SIZE = 512;          // px and mm per tile
+    const TEX_SIZE = 1024;             // texture resolution (px per tile)
+    const TILE_MM = 512;               // physical size of one tile (mm)
+    const PX = TEX_SIZE / TILE_MM;     // px per mm
     const MATERIALS = {
         p401: {
             name: 'Asphalt Concrete', spec: 'FAA P-401',
@@ -112,10 +116,67 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
             aggs: [{ cover: 0.18, rMin: 1.5, rMax: 3.5, colors: ['#9a8e7c', '#7f7362'], angular: false }],
             streaks: { count: 26, color: '#e9e4d8', alpha: 0.18 },
             noise: 16, rough: 0.9, heightAgg: 0.3, normal: 0.7
+        },
+        sma: {
+            name: 'Stone Matrix Asphalt', spec: 'SMA surface course',
+            base: '#26282c', mottle: { colors: ['#1f2124', '#2e3135'], count: 30, alpha: 0.09 },
+            aggs: [{ cover: 0.52, rMin: 4, rMax: 9, colors: ['#3c4046', '#2e3237', '#484d54', '#33373c'], angular: true, edge: 0.25 }],
+            speckle: { count: 900, rMin: 0.4, rMax: 1.1, colors: ['#8f959c', '#6a7076'], alpha: 0.5 },
+            noise: 11, rough: 0.6, topRough: 0.5, heightAgg: 0.6, normal: 1.0
+        },
+        ogfc: {
+            name: 'Open-Graded Friction Course', spec: 'OGFC / porous asphalt',
+            base: '#1c1e21', mottle: { colors: ['#17191b', '#232629'], count: 24, alpha: 0.1 },
+            aggs: [{ cover: 0.58, rMin: 5, rMax: 10, colors: ['#34383e', '#2a2e33', '#3e434a'], angular: true, edge: 0.3 }],
+            voids: { count: 460, rMin: 1.2, rMax: 3.2, alpha: 0.55 },
+            noise: 10, rough: 0.95, heightAgg: 0.95, normal: 1.4
+        },
+        binder: {
+            name: 'HMA Binder Course', spec: 'Intermediate course',
+            base: '#33363b', mottle: { colors: ['#2a2d31', '#3d4147'], count: 32, alpha: 0.09 },
+            aggs: [{ cover: 0.42, rMin: 3, rMax: 8, colors: ['#4d525a', '#2c3034', '#5a606a', '#3e4349'], angular: true, edge: 0.18 }],
+            noise: 12, rough: 0.6, heightAgg: 0.5, normal: 0.95
+        },
+        atb: {
+            name: 'Asphalt-Treated Base', spec: 'ATB / black base',
+            base: '#3a3c3e', mottle: { colors: ['#313335', '#454749'], count: 30, alpha: 0.1 },
+            aggs: [{ cover: 0.58, rMin: 5, rMax: 12, colors: ['#565a5e', '#43474b', '#66696d', '#4b4f53'], angular: true, edge: 0.24 }],
+            noise: 13, rough: 0.75, heightAgg: 0.75, normal: 1.1
+        },
+        fdr: {
+            name: 'Full-Depth Reclamation', spec: 'FDR / recycled base',
+            base: '#6e6353', mottle: { colors: ['#615748', '#7b6f5e'], count: 34, alpha: 0.11 },
+            aggs: [
+                { cover: 0.3, rMin: 4, rMax: 12, colors: ['#3a3835', '#2f2d2a', '#454340'], angular: true, edge: 0.2 },
+                { cover: 0.28, rMin: 3, rMax: 9, colors: ['#a08b6a', '#8d7a5c', '#b19c7b'], angular: true, edge: 0.18 }
+            ],
+            noise: 16, rough: 0.9, heightAgg: 0.7, normal: 1.05
+        },
+        clay: {
+            name: 'Clay Subgrade', spec: 'High-plasticity soil',
+            base: '#8a5f3f', mottle: { colors: ['#7c5435', '#996b49', '#70492c'], count: 46, alpha: 0.12 },
+            aggs: [{ cover: 0.1, rMin: 1, rMax: 2.5, colors: ['#9c6f4c', '#774f30'], angular: false }],
+            strata: { bands: 5, alpha: 0.07 },
+            fissures: { count: 10, color: '#4a2f1a', alpha: 0.5, width: 1.6 },
+            noise: 18, rough: 1.0, heightAgg: 0.2, normal: 0.8
+        },
+        rock: {
+            name: 'Weathered Bedrock', spec: 'Rock / residual soil',
+            base: '#7a766f', mottle: { colors: ['#6d6963', '#87837c', '#5f5b55'], count: 38, alpha: 0.12 },
+            aggs: [{ cover: 0.16, rMin: 2, rMax: 6, colors: ['#8d8982', '#6a665f', '#94908a'], angular: true }],
+            strata: { bands: 9, alpha: 0.12 },
+            fissures: { count: 14, color: '#3f3c37', alpha: 0.45, width: 1.3 },
+            noise: 14, rough: 0.85, heightAgg: 0.35, normal: 0.9
         }
     };
 
-    const MATERIAL_ORDER = ['p401', 'p209', 'p154', 'subgrade', 'pcc', 'ctb', 'lcb', 'oga', 'rca', 'ssand', 'lts'];
+    const MATERIAL_GROUPS = [
+        { label: 'Asphalt', keys: ['p401', 'sma', 'ogfc', 'binder', 'atb'] },
+        { label: 'Concrete', keys: ['pcc', 'lcb', 'ctb'] },
+        { label: 'Base & Subbase', keys: ['p209', 'p154', 'oga', 'rca', 'fdr', 'ssand'] },
+        { label: 'Subgrade & Soil', keys: ['lts', 'subgrade', 'clay', 'rock'] }
+    ];
+    const MATERIAL_ORDER = MATERIAL_GROUPS.flatMap(g => g.keys);
 
     /* ========================================================
        2. Procedural texture factory (seeded, cached)
@@ -162,15 +223,31 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         d.fillStyle = def.base; d.fillRect(0, 0, S, S);
         h.fillStyle = 'rgb(128,128,128)'; h.fillRect(0, 0, S, S);
 
-        // --- low-frequency mottling
+        // --- mottling at two scales (large patches + mid-frequency variation)
         if (def.mottle) {
-            for (let i = 0; i < def.mottle.count; i++) {
-                const x = rng() * S, y = rng() * S, r = 40 + rng() * 110;
-                const g = d.createRadialGradient(x, y, 0, x, y, r);
-                const c = def.mottle.colors[Math.floor(rng() * def.mottle.colors.length)];
-                g.addColorStop(0, c); g.addColorStop(1, 'rgba(0,0,0,0)');
-                d.globalAlpha = def.mottle.alpha; d.fillStyle = g;
-                d.fillRect(x - r, y - r, r * 2, r * 2);
+            const passes = [
+                { count: def.mottle.count, rMin: 40, rMax: 150, alpha: def.mottle.alpha, relief: true },
+                { count: Math.round(def.mottle.count * 2.2), rMin: 8, rMax: 34, alpha: def.mottle.alpha * 0.85, relief: false }
+            ];
+            for (const pass of passes) {
+                for (let i = 0; i < pass.count; i++) {
+                    const x = rng() * S, y = rng() * S;
+                    const r = (pass.rMin + rng() * (pass.rMax - pass.rMin)) * PX;
+                    const g = d.createRadialGradient(x, y, 0, x, y, r);
+                    const c = def.mottle.colors[Math.floor(rng() * def.mottle.colors.length)];
+                    g.addColorStop(0, c); g.addColorStop(1, 'rgba(0,0,0,0)');
+                    d.globalAlpha = pass.alpha; d.fillStyle = g;
+                    d.fillRect(x - r, y - r, r * 2, r * 2);
+                    if (pass.relief) {
+                        // gentle large-scale undulation in the height field
+                        const hv2 = 128 + Math.round((rng() - 0.5) * 16);
+                        const hg = h.createRadialGradient(x, y, 0, x, y, r);
+                        hg.addColorStop(0, `rgba(${hv2},${hv2},${hv2},0.5)`);
+                        hg.addColorStop(1, `rgba(${hv2},${hv2},${hv2},0)`);
+                        h.fillStyle = hg;
+                        h.fillRect(x - r, y - r, r * 2, r * 2);
+                    }
+                }
             }
             d.globalAlpha = 1;
         }
@@ -179,7 +256,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (def.strata) {
             for (let i = 0; i < def.strata.bands; i++) {
                 const y = (i + 0.3 + rng() * 0.4) * (S / def.strata.bands);
-                const bh = 8 + rng() * 22;
+                const bh = (8 + rng() * 22) * PX;
                 d.globalAlpha = def.strata.alpha;
                 d.fillStyle = rng() > 0.5 ? '#000000' : '#ffffff';
                 d.fillRect(0, y, S, bh);
@@ -190,29 +267,43 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         }
 
         // --- aggregates (drawn with 4-way wrap for seamless tiling)
-        (def.aggs || []).forEach(agg => {
-            const rAvg = (agg.rMin + agg.rMax) / 2;
+        (def.aggs || []).forEach((agg, ai) => {
+            const rMinPx = agg.rMin * PX, rMaxPx = agg.rMax * PX;
+            const rAvg = (rMinPx + rMaxPx) / 2;
             const count = Math.floor((S * S * agg.cover) / (Math.PI * rAvg * rAvg));
             for (let i = 0; i < count; i++) {
                 const x = rng() * S, y = rng() * S;
-                const r = agg.rMin + rng() * (agg.rMax - agg.rMin);
+                const r = rMinPx + rng() * (rMaxPx - rMinPx);
                 const col = jitterColor(agg.colors[Math.floor(rng() * agg.colors.length)], rng, 14);
                 const hv = Math.round(128 + (def.heightAgg || 0.5) * (36 + rng() * 52));
+                const shadeAng = rng() * Math.PI * 2;
+                const sx = Math.cos(shadeAng) * r, sy = Math.sin(shadeAng) * r;
                 // draw the identical polygon at wrapped offsets for seamless tiling
                 const seedsX = [x, x - S, x + S], seedsY = [y, y - S, y + S];
                 for (const ox of seedsX) for (const oy of seedsY) {
                     if (ox < -r * 2 || ox > S + r * 2 || oy < -r * 2 || oy > S + r * 2) continue;
-                    const pr = seededRng('poly:' + key + ':' + i);
+                    const pr = seededRng('poly:' + key + ':' + ai + ':' + i);
                     drawPoly(d, pr, ox, oy, r, agg.angular);
                     d.fillStyle = col; d.fill();
+                    // directional shading — makes each particle read as a lit 3-D stone
+                    const lg = d.createLinearGradient(ox - sx, oy - sy, ox + sx, oy + sy);
+                    lg.addColorStop(0, 'rgba(255,255,255,0.20)');
+                    lg.addColorStop(0.55, 'rgba(255,255,255,0)');
+                    lg.addColorStop(1, 'rgba(0,0,0,0.24)');
+                    d.fillStyle = lg; d.fill();
                     if (agg.edge) {
                         d.strokeStyle = 'rgba(0,0,0,' + agg.edge + ')';
                         d.lineWidth = Math.max(0.6, r * 0.06);
                         d.stroke();
                     }
-                    const hr = seededRng('poly:' + key + ':' + i);
+                    const hr = seededRng('poly:' + key + ':' + ai + ':' + i);
                     drawPoly(h, hr, ox, oy, r, agg.angular);
-                    h.fillStyle = `rgb(${hv},${hv},${hv})`; h.fill();
+                    // rounded relief: bright crown falling off toward the matrix plane
+                    const hEdge = Math.round(128 + (hv - 128) * 0.25);
+                    const hg = h.createRadialGradient(ox - r * 0.25, oy - r * 0.25, r * 0.1, ox, oy, r);
+                    hg.addColorStop(0, `rgb(${hv},${hv},${hv})`);
+                    hg.addColorStop(1, `rgb(${hEdge},${hEdge},${hEdge})`);
+                    h.fillStyle = hg; h.fill();
                 }
             }
         });
@@ -221,11 +312,57 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (def.voids) {
             for (let i = 0; i < def.voids.count; i++) {
                 const x = rng() * S, y = rng() * S;
-                const r = def.voids.rMin + rng() * (def.voids.rMax - def.voids.rMin);
+                const r = (def.voids.rMin + rng() * (def.voids.rMax - def.voids.rMin)) * PX;
                 d.beginPath(); d.arc(x, y, r, 0, Math.PI * 2);
                 d.fillStyle = 'rgba(0,0,0,' + def.voids.alpha + ')'; d.fill();
                 h.beginPath(); h.arc(x, y, r, 0, Math.PI * 2);
                 h.fillStyle = 'rgb(70,70,70)'; h.fill();
+            }
+        }
+
+        // --- fine mineral speckle (SMA mastic, dusted surfaces)
+        if (def.speckle) {
+            const sp = def.speckle;
+            for (let i = 0; i < sp.count; i++) {
+                const x = rng() * S, y = rng() * S;
+                const r = (sp.rMin + rng() * (sp.rMax - sp.rMin)) * PX;
+                d.globalAlpha = sp.alpha * (0.4 + rng() * 0.6);
+                d.fillStyle = sp.colors[Math.floor(rng() * sp.colors.length)];
+                d.beginPath(); d.arc(x, y, r, 0, Math.PI * 2); d.fill();
+            }
+            d.globalAlpha = 1;
+        }
+
+        // --- desiccation cracks / rock fractures (wrapped for tiling)
+        if (def.fissures) {
+            const f = def.fissures;
+            for (let i = 0; i < f.count; i++) {
+                const pts = [];
+                let cx = rng() * S, cy = rng() * S, ang = rng() * Math.PI * 2;
+                pts.push([cx, cy]);
+                const segs = 5 + Math.floor(rng() * 7);
+                for (let sgi = 0; sgi < segs; sgi++) {
+                    ang += (rng() - 0.5) * 1.1;
+                    const len = (14 + rng() * 34) * PX;
+                    cx += Math.cos(ang) * len; cy += Math.sin(ang) * len;
+                    pts.push([cx, cy]);
+                }
+                const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+                const minX = Math.min(...xs), maxX = Math.max(...xs);
+                const minY = Math.min(...ys), maxY = Math.max(...ys);
+                for (const ox of [0, -S, S]) for (const oy of [0, -S, S]) {
+                    if (maxX + ox < 0 || minX + ox > S || maxY + oy < 0 || minY + oy > S) continue;
+                    const trace = (ctx, style, width, alpha) => {
+                        ctx.globalAlpha = alpha; ctx.strokeStyle = style;
+                        ctx.lineWidth = width; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                        ctx.beginPath();
+                        ctx.moveTo(pts[0][0] + ox, pts[0][1] + oy);
+                        for (let p = 1; p < pts.length; p++) ctx.lineTo(pts[p][0] + ox, pts[p][1] + oy);
+                        ctx.stroke(); ctx.globalAlpha = 1;
+                    };
+                    trace(d, f.color, f.width * PX, f.alpha);
+                    trace(h, 'rgb(70,70,70)', f.width * PX * 1.4, 0.8);
+                }
             }
         }
 
@@ -234,11 +371,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
             d.strokeStyle = def.streaks.color;
             for (let i = 0; i < def.streaks.count; i++) {
                 d.globalAlpha = def.streaks.alpha * (0.5 + rng() * 0.5);
-                d.lineWidth = 0.8 + rng() * 1.6;
-                const y0 = rng() * S, x0 = rng() * S, len = 30 + rng() * 90;
+                d.lineWidth = (0.8 + rng() * 1.6) * PX;
+                const y0 = rng() * S, x0 = rng() * S, len = (30 + rng() * 90) * PX;
                 d.beginPath();
                 d.moveTo(x0, y0);
-                d.quadraticCurveTo(x0 + len / 2, y0 + (rng() - 0.5) * 14, x0 + len, y0 + (rng() - 0.5) * 8);
+                d.quadraticCurveTo(x0 + len / 2, y0 + (rng() - 0.5) * 14 * PX, x0 + len, y0 + (rng() - 0.5) * 8 * PX);
                 d.stroke();
             }
             d.globalAlpha = 1;
@@ -298,14 +435,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
             const t = new THREE.CanvasTexture(canvas);
             t.wrapS = t.wrapT = THREE.RepeatWrapping;
             if (srgb) t.colorSpace = THREE.SRGBColorSpace;
-            t.anisotropy = 4;
+            t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy() || 8);
             return t;
         }
 
         // --- thumbnail
         const thumb = document.createElement('canvas');
-        thumb.width = 96; thumb.height = 72;
-        thumb.getContext('2d').drawImage(dCan, 0, 0, 256, 192, 0, 0, 96, 72);
+        thumb.width = 144; thumb.height = 108;
+        thumb.getContext('2d').drawImage(dCan, 0, 0, S / 2, (S / 2) * 0.75, 0, 0, 144, 108);
 
         texCache[key] = {
             map: makeTex(dCan, true),
@@ -331,8 +468,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
 
     const DEFAULTS = {
-        section: { width: 3000, length: 4500, recessX: 350, recessZ: 350, subgradeDisplay: 400 },
-        camera: { mode: 'ortho', azimuth: 45, elevation: 35.264, fov: 35 },
+        section: { width: 1600, length: 1400, recessX: 150, recessZ: 0, subgradeDisplay: 500 },
+        camera: { mode: 'persp', azimuth: 45, elevation: 35.264, fov: 35 },
         lighting: {
             preset: 'studio', key: 2.4, ambient: 1.1,
             azimuth: 38, elevation: 55, shadowOpacity: 0.35, shadowSoftness: 4, groundShadow: true
@@ -360,28 +497,56 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     const TEMPLATES = {
         'faa-flexible': {
-            name: 'FAA Flexible Pavement',
+            name: 'FAA Flexible Pavement', group: 'Airfield',
             layers: [['P-401 Asphalt Concrete', 'p401', 75], ['P-209 Crushed Aggregate Base', 'p209', 150], ['P-154 Granular Subbase', 'p154', 510]]
         },
         'faa-rigid': {
-            name: 'FAA Rigid Pavement',
+            name: 'FAA Rigid Pavement', group: 'Airfield',
             layers: [['P-501 Concrete Slab', 'pcc', 350], ['P-306 Lean Concrete Base', 'lcb', 150], ['P-154 Granular Subbase', 'p154', 250]]
         },
-        'hwy-flexible': {
-            name: 'Highway Flexible Pavement',
-            layers: [['Asphalt Concrete', 'p401', 200], ['Aggregate Base', 'p209', 300], ['Granular Subbase', 'p154', 300]]
-        },
         'apt-flexible': {
-            name: 'Airport Flexible (Stabilized)',
+            name: 'Airport Flexible (Stabilized)', group: 'Airfield',
             layers: [['P-401 Asphalt Concrete', 'p401', 125], ['P-304 Cement-Treated Base', 'ctb', 200], ['P-209 Crushed Aggregate Base', 'p209', 250], ['P-154 Granular Subbase', 'p154', 300]]
         },
         'apt-rigid': {
-            name: 'Airport Rigid Pavement',
+            name: 'Airport Rigid Pavement', group: 'Airfield',
             layers: [['P-501 Concrete Slab', 'pcc', 400], ['P-304 Cement-Treated Base', 'ctb', 150], ['P-154 Granular Subbase', 'p154', 250]]
         },
+        'hwy-flexible': {
+            name: 'Conventional Flexible Highway', group: 'Highway',
+            layers: [['HMA Surface Course', 'p401', 50], ['HMA Binder Course', 'binder', 75], ['Aggregate Base', 'p209', 200], ['Granular Subbase', 'p154', 300]]
+        },
+        'hwy-interstate': {
+            name: 'Interstate Deep-Strength HMA', group: 'Highway',
+            layers: [['SMA Surface Course', 'sma', 50], ['HMA Binder Course', 'binder', 75], ['Asphalt-Treated Base', 'atb', 150], ['Aggregate Base', 'p209', 150]]
+        },
+        'hwy-perpetual': {
+            name: 'Perpetual Pavement', group: 'Highway',
+            layers: [['SMA Surface Course', 'sma', 40], ['HMA Binder Course', 'binder', 100], ['HMA Base Course', 'p401', 150], ['Rich-Bottom Fatigue Layer', 'p401', 75], ['Aggregate Base', 'p209', 150]]
+        },
+        'hwy-jpcp': {
+            name: 'JPCP Rigid Highway', group: 'Highway',
+            layers: [['JPCP Concrete Slab', 'pcc', 280], ['Cement-Treated Base', 'ctb', 100], ['Granular Subbase', 'p154', 150]]
+        },
+        'hwy-crcp': {
+            name: 'CRCP Rigid Highway', group: 'Highway',
+            layers: [['CRCP Concrete Slab', 'pcc', 330], ['Asphalt-Treated Base', 'atb', 100], ['Granular Subbase', 'p154', 150]]
+        },
         'composite': {
-            name: 'Composite Pavement',
-            layers: [['P-401 Asphalt Overlay', 'p401', 100], ['P-501 Concrete Slab', 'pcc', 300], ['P-209 Crushed Aggregate Base', 'p209', 150]]
+            name: 'Composite (HMA over PCC)', group: 'Highway',
+            layers: [['HMA Overlay', 'p401', 100], ['Existing JPCP Slab', 'pcc', 250], ['Aggregate Base', 'p209', 150]]
+        },
+        'hwy-lowvol': {
+            name: 'Low-Volume Road', group: 'Highway',
+            layers: [['HMA Surface', 'p401', 75], ['Aggregate Base', 'p209', 200], ['Lime-Treated Subgrade', 'lts', 300]]
+        },
+        'hwy-porous': {
+            name: 'Permeable Pavement (Reservoir)', group: 'Highway',
+            layers: [['Porous Asphalt (OGFC)', 'ogfc', 100], ['Choke Stone', 'p209', 50], ['Open-Graded Stone Reservoir', 'oga', 300]]
+        },
+        'hwy-fdr': {
+            name: 'FDR Rehabilitation', group: 'Highway',
+            layers: [['HMA Overlay', 'p401', 100], ['Full-Depth Reclamation', 'fdr', 250]]
         }
     };
 
@@ -443,6 +608,28 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     let sectionGroup = null;
     const sceneInfo = { center: new THREE.Vector3(), radius: 2, totalDepth: 0 };
 
+    // Selected-layer outline (viewport feedback; hidden during export)
+    const selOutline = new THREE.LineSegments(
+        new THREE.BufferGeometry(),
+        new THREE.LineBasicMaterial({ color: 0x22d3d1, transparent: true, opacity: 0.85 })
+    );
+    selOutline.visible = false;
+    selOutline.renderOrder = 2;
+    scene.add(selOutline);
+
+    function updateSelectionOutline() {
+        let mesh = null;
+        if (sectionGroup) {
+            sectionGroup.traverse(o => { if (o.isMesh && o.userData.layerId === selectedId) mesh = o; });
+        }
+        if (!mesh) { selOutline.visible = false; return; }
+        selOutline.geometry.dispose();
+        selOutline.geometry = new THREE.EdgesGeometry(mesh.geometry);
+        selOutline.position.copy(mesh.position);
+        selOutline.scale.setScalar(1.004);
+        selOutline.visible = true;
+    }
+
     function disposeGroup(group) {
         group.traverse(obj => {
             if (obj.isMesh) {
@@ -467,7 +654,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         const rough = layer.roughness != null ? layer.roughness
             : (isTop && def.topRough != null ? def.topRough : def.rough);
         const nStr = (layer.normalStrength != null ? layer.normalStrength : def.normal);
-        const tile = TEX_SIZE * (layer.texScale || 1);
+        const tile = TILE_MM * (layer.texScale || 1);
         const m = new THREE.MeshStandardMaterial({
             map: cloneTex(texs.map, repX / tile, repY / tile),
             normalMap: cloneTex(texs.normalMap, repX / tile, repY / tile),
@@ -548,6 +735,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
         updateLightRig();
         updateHud();
+        updateSelectionOutline();
     }
 
     /* ========================================================
@@ -706,6 +894,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         const prevBg = scene.background;
         const prevPR = renderer.getPixelRatio();
         const prevW = canvas.width / prevPR, prevH = canvas.height / prevPR;
+        const prevSelVis = selOutline.visible;
+        selOutline.visible = false;              // selection highlight never appears in exports
 
         if (fmt === 'png-alpha') scene.background = null;
         else if (fmt === 'jpeg' && !scene.background) scene.background = new THREE.Color('#ffffff');
@@ -722,6 +912,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
         // restore
         scene.background = prevBg;
+        selOutline.visible = prevSelVis;
         renderer.setPixelRatio(prevPR);
         renderer.setSize(prevW, prevH, false);
         resize();
@@ -846,7 +1037,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         secRecessX: $('xs-sec-recess-x'), secRecessZ: $('xs-sec-recess-z'),
         secSubgrade: $('xs-sec-subgrade'),
         camProj: $('xs-cam-proj'), camAz: $('xs-cam-az'), camEl: $('xs-cam-el'),
-        camFov: $('xs-cam-fov'), camIso: $('xs-cam-iso'), camFit: $('xs-cam-fit'),
+        camFov: $('xs-cam-fov'), camIso: $('xs-cam-iso'), camFront: $('xs-cam-front'), camFit: $('xs-cam-fit'),
         lightPreset: $('xs-light-preset'), lightKey: $('xs-light-key'), lightAmb: $('xs-light-amb'),
         lightAz: $('xs-light-az'), lightEl: $('xs-light-el'),
         shadowOp: $('xs-shadow-op'), shadowSoft: $('xs-shadow-soft'), groundShadow: $('xs-ground-shadow'),
@@ -886,6 +1077,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         ui.secRecessX.value = s.recessX; ui.secRecessZ.value = s.recessZ;
         ui.secSubgrade.value = s.subgradeDisplay;
         ui.camProj.value = c.mode; ui.camAz.value = c.azimuth; ui.camEl.value = c.elevation; ui.camFov.value = c.fov;
+        ui.camFov.disabled = c.mode !== 'persp';
         ui.lightPreset.value = L.preset; ui.lightKey.value = L.key; ui.lightAmb.value = L.ambient;
         ui.lightAz.value = L.azimuth; ui.lightEl.value = L.elevation;
         ui.shadowOp.value = L.shadowOpacity; ui.shadowSoft.value = L.shadowSoftness;
@@ -896,9 +1088,23 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
 
     /* ---------------- Layer manager ---------------- */
+    function materialOptionsHtml(current) {
+        return MATERIAL_GROUPS.map(g =>
+            `<optgroup label="${g.label}">` +
+            g.keys.map(k => `<option value="${k}" ${k === current ? 'selected' : ''}>${MATERIALS[k].name}</option>`).join('') +
+            '</optgroup>').join('');
+    }
+
     function renderLayerRows() {
         ui.layerRows.innerHTML = '';
         state.layers.forEach((layer, idx) => {
+            if (idx > 0) {
+                const ins = document.createElement('div');
+                ins.className = 'xs-layer-insert';
+                ins.dataset.idx = idx;
+                ins.innerHTML = `<button class="xs-insert-btn" type="button" title="Insert a layer here"><i class="fas fa-plus"></i><span>Insert layer</span></button>`;
+                ui.layerRows.appendChild(ins);
+            }
             const def = MATERIALS[layer.material] || MATERIALS.subgrade;
             const texs = generateMaterial(layer.material in MATERIALS ? layer.material : 'subgrade');
             const row = document.createElement('div');
@@ -924,7 +1130,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
                 </div>
                 <div class="xs-layer-mat-cell">
                     <select class="xs-select" data-act="material" ${lockAttr} style="max-width:100%">
-                        ${MATERIAL_ORDER.map(k => `<option value="${k}" ${k === layer.material ? 'selected' : ''}>${MATERIALS[k].name}</option>`).join('')}
+                        ${materialOptionsHtml(layer.material)}
                     </select>
                 </div>
                 <div class="xs-layer-thick">
@@ -944,6 +1150,15 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
 
     ui.layerRows.addEventListener('click', e => {
+        const insBtn = e.target.closest('.xs-insert-btn');
+        if (insBtn) {
+            const at = parseInt(insBtn.parentElement.dataset.idx, 10);
+            const nl = makeLayer('New Layer', 'p209', 150);
+            state.layers.splice(at, 0, nl);
+            selectedId = nl.id;
+            rebuildSection(); renderLayerRows(); renderMaterialEditor(); pushHistory();
+            return;
+        }
         const row = e.target.closest('.xs-layer-row');
         if (!row) return;
         const layer = state.layers.find(l => l.id === row.dataset.id);
@@ -1017,32 +1232,74 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         rebuildSection(); renderLayerRows(); renderMaterialEditor(); pushHistory();
     });
 
+    /* ---------------- Viewport click-to-select ---------------- */
+    const raycaster = new THREE.Raycaster();
+    let pointerDownAt = null;
+    canvas.addEventListener('pointerdown', e => {
+        if (e.button === 0) pointerDownAt = { x: e.clientX, y: e.clientY };
+    });
+    canvas.addEventListener('pointerup', e => {
+        if (!pointerDownAt || e.button !== 0) { pointerDownAt = null; return; }
+        const dx = e.clientX - pointerDownAt.x, dy = e.clientY - pointerDownAt.y;
+        pointerDownAt = null;
+        if (dx * dx + dy * dy > 36) return;              // treat as orbit drag, not a click
+        const rect = canvas.getBoundingClientRect();
+        const ndc = new THREE.Vector2(
+            ((e.clientX - rect.left) / rect.width) * 2 - 1,
+            -((e.clientY - rect.top) / rect.height) * 2 + 1
+        );
+        raycaster.setFromCamera(ndc, activeCam);
+        const hit = raycaster.intersectObjects(sectionGroup ? sectionGroup.children : [], false)
+            .find(hh => hh.object.isMesh && hh.object.userData.layerId);
+        if (!hit) return;
+        if (selectedId !== hit.object.userData.layerId) {
+            selectedId = hit.object.userData.layerId;
+            renderLayerRows();
+            renderMaterialEditor();
+        }
+    });
+
     /* ---------------- Material editor ---------------- */
     function buildMaterialGrid() {
         ui.matGrid.innerHTML = '';
-        MATERIAL_ORDER.forEach(key => {
-            const texs = generateMaterial(key);
-            const tile = document.createElement('button');
-            tile.type = 'button';
-            tile.className = 'xs-mat-tile';
-            tile.dataset.key = key;
-            tile.innerHTML = `
-                <span class="xs-mat-thumb" style="background-image:url('${texs.thumbUrl}')"></span>
-                <span class="xs-mat-label">${MATERIALS[key].name}</span>`;
-            tile.title = MATERIALS[key].spec;
-            tile.addEventListener('click', () => {
-                const layer = selectedLayer();
-                if (!layer || layer.locked) { toast(layer ? 'Layer is locked' : 'Select a layer first'); return; }
-                layer.material = key;
-                layer.roughness = null; layer.normalStrength = null;
-                rebuildSection(); renderLayerRows(); renderMaterialEditor(); pushHistory();
+        const pending = [];
+        MATERIAL_GROUPS.forEach(group => {
+            const lab = document.createElement('div');
+            lab.className = 'xs-mat-group-label';
+            lab.textContent = group.label;
+            ui.matGrid.appendChild(lab);
+            group.keys.forEach(key => {
+                const tile = document.createElement('button');
+                tile.type = 'button';
+                tile.className = 'xs-mat-tile';
+                tile.dataset.key = key;
+                tile.innerHTML = `
+                    <span class="xs-mat-thumb"></span>
+                    <span class="xs-mat-label">${MATERIALS[key].name}</span>`;
+                tile.title = MATERIALS[key].spec;
+                tile.addEventListener('click', () => {
+                    const layer = selectedLayer();
+                    if (!layer || layer.locked) { toast(layer ? 'Layer is locked' : 'Select a layer first'); return; }
+                    layer.material = key;
+                    layer.roughness = null; layer.normalStrength = null;
+                    rebuildSection(); renderLayerRows(); renderMaterialEditor(); pushHistory();
+                });
+                ui.matGrid.appendChild(tile);
+                pending.push([key, tile.querySelector('.xs-mat-thumb')]);
             });
-            ui.matGrid.appendChild(tile);
         });
+        // generate thumbnails one per tick so 18 hi-res materials don't block boot
+        (function fillNext() {
+            if (!pending.length) return;
+            const [key, thumbEl] = pending.shift();
+            thumbEl.style.backgroundImage = `url('${generateMaterial(key).thumbUrl}')`;
+            setTimeout(fillNext, 0);
+        })();
     }
 
     function renderMaterialEditor() {
         const layer = selectedLayer();
+        updateSelectionOutline();
         ui.matGrid.querySelectorAll('.xs-mat-tile').forEach(t =>
             t.classList.toggle('is-active', !!layer && t.dataset.key === layer.material));
         if (!layer) { ui.selTag.textContent = 'No layer selected'; return; }
@@ -1101,6 +1358,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     /* ---------------- Camera inputs ---------------- */
     ui.camProj.addEventListener('change', () => {
         state.camera.mode = ui.camProj.value;
+        ui.camFov.disabled = state.camera.mode !== 'persp';
         applyCameraFromState(false);
     });
     ui.camAz.addEventListener('input', () => { state.camera.azimuth = parseFloat(ui.camAz.value); applyCameraFromState(false); });
@@ -1109,6 +1367,11 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     ui.camIso.addEventListener('click', () => {
         state.camera.azimuth = 45; state.camera.elevation = 35.264; state.camera.mode = ui.camProj.value;
         ui.camAz.value = 45; ui.camEl.value = 35.264;
+        applyCameraFromState(true);
+    });
+    ui.camFront.addEventListener('click', () => {
+        state.camera.azimuth = 0; state.camera.elevation = 10;
+        ui.camAz.value = 0; ui.camEl.value = 10;
         applyCameraFromState(true);
     });
     ui.camFit.addEventListener('click', () => applyCameraFromState(true));
@@ -1156,12 +1419,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     /* ---------------- Toolbar ---------------- */
     function populateTemplates() {
         ui.template.innerHTML = '<option value="" disabled selected>Templates…</option>';
-        const gBuilt = document.createElement('optgroup'); gBuilt.label = 'Built-in';
+        const groups = {};
         Object.keys(TEMPLATES).forEach(k => {
-            const o = document.createElement('option'); o.value = k; o.textContent = TEMPLATES[k].name;
-            gBuilt.appendChild(o);
+            const g = TEMPLATES[k].group || 'Built-in';
+            (groups[g] = groups[g] || []).push(k);
         });
-        ui.template.appendChild(gBuilt);
+        Object.keys(groups).forEach(gName => {
+            const og = document.createElement('optgroup'); og.label = gName;
+            groups[gName].forEach(k => {
+                const o = document.createElement('option'); o.value = k; o.textContent = TEMPLATES[k].name;
+                og.appendChild(o);
+            });
+            ui.template.appendChild(og);
+        });
 
         const saved = JSON.parse(localStorage.getItem('xs-user-templates') || '{}');
         const names = Object.keys(saved);
@@ -1244,7 +1514,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         renderLayerRows();
         renderMaterialEditor();
         pushHistory();
-        toast('Reset to FAA flexible defaults');
+        toast('Reset to defaults');
     });
 
     /* ========================================================

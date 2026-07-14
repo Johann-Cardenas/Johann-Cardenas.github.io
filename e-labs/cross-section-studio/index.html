@@ -17,7 +17,7 @@
     <!-- Social Sharing: Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Cross-Section Studio | Pavement Section Renderer">
-    <meta property="og:description" content="Interactive 3D studio for building publication-quality FAA pavement cross sections with true-to-scale layers and physically based materials.">
+    <meta property="og:description" content="Interactive 3D studio for building publication-quality airfield and highway pavement cross sections with true-to-scale layers and physically based materials.">
     <meta property="og:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_Cross-Section-Studio.webp">
     <meta property="og:url" content="https://www.johanncardenas.com/e-labs/cross-section-studio/index.html">
 
@@ -88,8 +88,8 @@
                             <i class="fas fa-arrow-left"></i> Back to E-Labs
                         </a>
                         <div class="header-badges">
-                            <span class="header-badge"><i class="fas fa-cubes"></i> 11 FAA Materials</span>
-                            <span class="header-badge"><i class="fas fa-code-branch"></i> v1.0</span>
+                            <span class="header-badge"><i class="fas fa-cubes"></i> 18 Materials</span>
+                            <span class="header-badge"><i class="fas fa-code-branch"></i> v1.1</span>
                         </div>
                     </div>
                     <div class="header-content">
@@ -97,7 +97,7 @@
                             <span class="xs-icon"><i class="fas fa-layer-group"></i></span>
                             <span>Cross-Section <span class="highlight">Studio</span></span>
                         </h1>
-                        <p>Procedural renderer for publication-quality 3D pavement cross sections — deterministic, true to scale, engineering-grade.</p>
+                        <p>Procedural renderer for publication-quality 3D pavement cross sections — airfield &amp; highway, deterministic, true to scale.</p>
                     </div>
                 </div>
 
@@ -179,6 +179,7 @@
                                 </div>
                                 <div class="xs-mini-btn-row">
                                     <button id="xs-cam-iso" class="xs-btn" title="Engineering isometric view"><i class="fas fa-cube"></i> Isometric</button>
+                                    <button id="xs-cam-front" class="xs-btn" title="Front section view"><i class="fas fa-square-full"></i> Front</button>
                                     <button id="xs-cam-fit" class="xs-btn" title="Fit section in view"><i class="fas fa-expand"></i> Fit</button>
                                 </div>
                             </div>
@@ -295,7 +296,7 @@
                     <div class="xs-viewport" id="xs-viewport">
                         <canvas id="xs-canvas" aria-label="3D pavement cross-section viewport"></canvas>
                         <div class="xs-hud" id="xs-hud">—</div>
-                        <div class="xs-hud-right" id="xs-hud-right">orbit: drag · zoom: wheel · pan: right-drag</div>
+                        <div class="xs-hud-right" id="xs-hud-right">orbit: drag · zoom: wheel · pan: right-drag · select: click layer</div>
                     </div>
 
                     <!-- Right sidebar: material editor -->

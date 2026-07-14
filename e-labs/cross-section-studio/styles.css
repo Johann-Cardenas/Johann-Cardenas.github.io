@@ -493,7 +493,58 @@
 
 .xs-layers-head .xs-spacer { flex: 1; }
 
-.xs-layer-rows { display: flex; flex-direction: column; gap: 0.3rem; }
+.xs-layer-rows { display: flex; flex-direction: column; gap: 0.2rem; }
+
+/* Insert-a-layer-here affordance between rows */
+.xs-layer-insert {
+    position: relative;
+    height: 12px;
+    margin: -6px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    z-index: 1;
+}
+
+.xs-layer-insert:hover,
+.xs-layer-insert:focus-within { opacity: 1; }
+
+.xs-layer-insert::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 50%;
+    height: 2px;
+    margin-top: -1px;
+    background: var(--xs-primary);
+    border-radius: 1px;
+}
+
+.xs-app .xs-insert-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.08rem 0.6rem;
+    border: 1px solid var(--xs-primary);
+    border-radius: 999px;
+    background: var(--xs-bg);
+    color: var(--xs-primary) !important;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.5;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.xs-app .xs-insert-btn:hover {
+    background: var(--xs-primary);
+    color: #fff !important;
+}
 
 .xs-layer-row {
     display: grid;
@@ -642,11 +693,24 @@
     width: 100%;
     aspect-ratio: 4 / 3;
     border-radius: 5px;
+    background-color: var(--xs-bg-inset);
     background-size: cover;
     background-position: center;
     border: 1px solid var(--xs-border);
     margin-bottom: 0.25rem;
 }
+
+.xs-mat-group-label {
+    grid-column: 1 / -1;
+    margin: 0.45rem 0 -0.1rem;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--xs-text-muted);
+}
+
+.xs-mat-group-label:first-child { margin-top: 0.1rem; }
 
 .xs-app .xs-mat-tile .xs-mat-label {
     display: block;
