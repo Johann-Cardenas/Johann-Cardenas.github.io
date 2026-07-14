@@ -82,7 +82,7 @@ assets/js/           Frontend JS (components.js, search.js, theme-toggle.js, etc
 data/                JSON content store (navigation, blog-posts, news, projects, footer, site-config, github)
 blog/                Individual blog post HTML (Liquid-processed by Jekyll)
 projects/            Detailed project pages
-e-labs/              Interactive web apps (Asphera, AirCrafter, Frontier) + Python preprocessing
+e-labs/              Interactive web apps (Asphera, AirCrafter, Frontier, Finite-Elemented, Cross-Section Studio) + Python preprocessing
 images/              All media assets organized by section
 documents/           PDFs (resume, etc.)
 scripts/             Build / content-refresh utilities (fetch-github-data.mjs)
@@ -101,7 +101,7 @@ Deploy: push to `main` — GitHub Pages auto-builds via Jekyll.
 - **ComponentLoader public API** (`window.ComponentLoader`): exposes `loadJSON(url)` (cached), `getBasePath()`, `generateBlogCard()`, `generateProjectCard()`, `generateNewsCard()`. Other scripts (search.js, blog-enhancements.js) use `ComponentLoader.loadJSON` to get cache hits on already-fetched JSON.
 - **Theme toggle** (`assets/js/theme-toggle.js`): light/dark mode via `data-theme` attribute on `<html>`. Preference stored in `localStorage('theme-preference')`.
 - **Search** (`assets/js/search.js`): client-side Fuse.js search across blog, news, projects, publications. Delegates to `ComponentLoader.loadJSON` for cache hits, falls back to raw `fetch`. Builds index lazily on first Ctrl+K open.
-- **Base path helper**: `getBasePath()` in components.js/search.js returns `''` or `'../'` depending on page depth. All internal links are relative.
+- **Base path helper**: `getBasePath()` in components.js is depth-based — returns `'../'` repeated once per directory level (`''` root, `'../'` blog/projects, `'../../'` e-labs apps). search.js has its own copy. All internal links are relative.
 - **Blog collection**: Jekyll processes `blog/*.html` with Liquid (`_config.yml`). Blog metadata lives in `data/blog-posts.json`.
 - **Page transitions**: `main.js` intercepts internal link clicks, adds `.page-exit` class, then navigates after 80ms delay.
 
@@ -201,7 +201,9 @@ ACRP_FEM (password-protected), EV_Trucks, FAA_Data, MS_Thesis
 ### E-Labs apps (`e-labs/`)
 - **Asphera** (`e-labs/asphera/`) — FEM pavement visualizer (Plotly), password-protected
 - **AirCrafter** (`e-labs/aircrafter/`) — Contact stress calculator (Plotly), password-protected
-- **Frontier** (`e-labs/frontier/`) — HPC point-cloud visualization (Three.js/WebGL), public
+- **Frontier** (`e-labs/frontier/`) — HPC intuition engine (Canvas 2D), public
+- **Finite-Elemented** (`e-labs/finite-elemented/`) — FEA educational platform, public
+- **Cross-Section Studio** (`e-labs/cross-section-studio/`) — Procedural 3D pavement cross-section renderer (Three.js ES modules via CDN import map; `index.html` + `styles.css` + `app.js`), public. Deterministic seeded procedural PBR textures for 11 FAA materials, true-to-scale layer stack with fixed-display infinite subgrade, ortho/persp cameras, lighting presets, PNG/JPEG export up to 8K, `.pavement.json` project save/load, undo/redo, templates (built-in + localStorage user templates)
 
 ## Page → Placeholder → JSON Mapping
 Which DOM placeholders each page uses (determines which JSON files `components.js` fetches):
@@ -221,7 +223,7 @@ Which DOM placeholders each page uses (determines which JSON files `components.j
 All pages have hardcoded `<nav>` in HTML — no page uses `#nav-placeholder`.
 
 ## Navigation & Site Map
-- **Top nav**: Home | Projects (dropdown→4) | Publications | Resume | Blog | News | E-Labs (dropdown→3)
+- **Top nav**: Home | Projects (dropdown→4) | Publications | Resume | Blog | News | E-Labs (dropdown→5: AirCrafter, Frontier, Asphera, Finite-Elemented, Cross-Section Studio)
 - All pages share: hardcoded `<nav>` in HTML + dynamic footer via `#footer-placeholder`
 - Subdirectory pages (`blog/`, `projects/`, `e-labs/`) use `../` relative paths for assets
 

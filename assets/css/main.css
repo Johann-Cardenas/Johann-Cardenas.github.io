@@ -2720,6 +2720,9 @@ body.Publications .pub-article .pub-section:first-of-type {
 .gradient-noun[data-app="finite-elemented"] {
 	background-image: linear-gradient(90deg, #22d3d1, #6366f1, #a78bfa, #22d3d1);
 }
+.gradient-noun[data-app="cross-section-studio"] {
+	background-image: linear-gradient(90deg, #d4a556, #18a9a8, #8a7355, #d4a556);
+}
 
 .app-card .status-badge {
 	position: absolute;

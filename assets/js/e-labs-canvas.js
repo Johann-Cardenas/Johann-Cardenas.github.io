@@ -555,13 +555,119 @@
   };
 
   /* ===========================================================
+     Engine 5: Cross-Section Studio — isometric layered block
+     Stepped pavement layers assemble and a light sweep passes.
+     =========================================================== */
+  var crossSectionStudio = {
+    init: function (w, h) {
+      // top face color / side shade pairs, top layer first
+      return {
+        layers: [
+          { top: '#3e434a', side: '#2b2f34', t: 0.16 },  // asphalt
+          { top: '#b59a76', side: '#8a7355', t: 0.22 },  // crushed base
+          { top: '#b8b5ad', side: '#93908a', t: 0.30 },  // subbase
+          { top: '#87694a', side: '#6a5136', t: 0.32 }   // subgrade
+        ],
+        speckles: (function () {
+          var s = [];
+          for (var i = 0; i < 90; i++) {
+            s.push({ x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 1.4 });
+          }
+          return s;
+        })()
+      };
+    },
+    draw: function (ctx, st, w, h, ts) {
+      var t = ts * 0.001;
+      ctx.fillStyle = '#0b1220';
+      ctx.fillRect(0, 0, w, h);
+
+      var cx = w * 0.5, baseY = h * 0.78;
+      var bw = Math.min(w * 0.6, 240);      // block width (screen)
+      var iso = 0.42;                        // isometric slope
+      var totalH = h * 0.52;
+      var step = bw * 0.09;                  // per-layer recess
+
+      var y = baseY;
+      for (var i = st.layers.length - 1; i >= 0; i--) {
+        var L = st.layers[i];
+        var lh = totalH * L.t;
+        var halfW = bw / 2 - (st.layers.length - 1 - i) * step;
+        // assemble: layers drop in with phase offset, loops every 6s
+        var phase = Math.max(0, Math.min(1, (t % 6) * 1.6 - (st.layers.length - 1 - i) * 0.35));
+        var ease = 1 - Math.pow(1 - phase, 3);
+        var yOff = (1 - ease) * -30;
+        var yTop = y - lh + yOff;
+
+        // side face (right)
+        ctx.fillStyle = L.side;
+        ctx.globalAlpha = ease;
+        ctx.beginPath();
+        ctx.moveTo(cx, yTop + halfW * iso);
+        ctx.lineTo(cx + halfW, yTop);
+        ctx.lineTo(cx + halfW, yTop + lh);
+        ctx.lineTo(cx, yTop + lh + halfW * iso);
+        ctx.closePath();
+        ctx.fill();
+
+        // side face (left, slightly darker)
+        ctx.fillStyle = L.side;
+        ctx.beginPath();
+        ctx.moveTo(cx, yTop + halfW * iso);
+        ctx.lineTo(cx - halfW, yTop);
+        ctx.lineTo(cx - halfW, yTop + lh);
+        ctx.lineTo(cx, yTop + lh + halfW * iso);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.fill();
+
+        // top face
+        ctx.fillStyle = L.top;
+        ctx.beginPath();
+        ctx.moveTo(cx, yTop - halfW * iso);
+        ctx.lineTo(cx + halfW, yTop);
+        ctx.lineTo(cx, yTop + halfW * iso);
+        ctx.lineTo(cx - halfW, yTop);
+        ctx.closePath();
+        ctx.fill();
+
+        // sweep highlight on the top face
+        var sweep = ((t * 0.35 + i * 0.12) % 1);
+        var sx = cx - halfW + sweep * halfW * 2;
+        var grad = ctx.createLinearGradient(sx - 24, 0, sx + 24, 0);
+        grad.addColorStop(0, 'rgba(34,211,209,0)');
+        grad.addColorStop(0.5, 'rgba(34,211,209,0.18)');
+        grad.addColorStop(1, 'rgba(34,211,209,0)');
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        y = yTop - (i === 0 ? 0 : 2);       // thin joint line gap
+      }
+
+      // aggregate speckles over the whole block silhouette
+      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = '#e2e8f0';
+      for (var k = 0; k < st.speckles.length; k++) {
+        var sp = st.speckles[k];
+        ctx.beginPath();
+        ctx.arc(cx - bw / 2 + sp.x * bw, baseY - totalH + sp.y * totalH, sp.r, 0, 6.2832);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+  };
+
+  /* ===========================================================
      Controller: DPR-aware sizing, hover-gated rAF loop
      =========================================================== */
   var engines = {
     'asphera': asphera,
     'aircrafter': aircrafter,
     'frontier': frontier,
-    'finite-elemented': finiteElemented
+    'finite-elemented': finiteElemented,
+    'cross-section-studio': crossSectionStudio
   };
 
   function initCard(card) {

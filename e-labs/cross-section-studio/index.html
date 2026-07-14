@@ -1,0 +1,377 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <script>
+        (function() {
+            // Follow the global site theme; default to dark like other E-Labs apps
+            var theme = localStorage.getItem('theme-preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme-preference', theme);
+        })();
+    </script>
+    <title>Cross-Section Studio | Pavement Section Renderer</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+    <!-- Social Sharing: Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Cross-Section Studio | Pavement Section Renderer">
+    <meta property="og:description" content="Interactive 3D studio for building publication-quality FAA pavement cross sections with true-to-scale layers and physically based materials.">
+    <meta property="og:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_Cross-Section-Studio.webp">
+    <meta property="og:url" content="https://www.johanncardenas.com/e-labs/cross-section-studio/index.html">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Cross-Section Studio | Pavement Section Renderer">
+    <meta name="twitter:description" content="Interactive 3D studio for building publication-quality FAA pavement cross sections.">
+    <meta name="twitter:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_Cross-Section-Studio.webp">
+
+    <link rel="stylesheet" href="../../assets/css/main.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="canonical" href="https://www.johanncardenas.com/e-labs/cross-section-studio/">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body class="CrossSectionStudio is-preload">
+    <div id="page-wrapper">
+
+        <!-- Header -->
+        <section id="header">
+            <h1><a href="../../index.html">Johann Cardenas</a></h1>
+            <nav id="nav">
+                <ul>
+                    <li><a href="../../index.html">Home</a></li>
+                    <li>
+                        <a href="../../Projects.html">Projects</a>
+                        <ul>
+                            <li><a href="../../projects/ACRP_FEM.html">ME Overload Permitting for Airfields</a></li>
+                            <li><a href="../../projects/EV_Trucks.html">Impact of HDEVs on Flexible Pavements</a></li>
+                            <li><a href="../../projects/FAA_Data.html">ML-Based Models for Airfield Pavements</a></li>
+                            <li><a href="../../projects/MS_Thesis.html">Impact of DWL on Flexible Pavements</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="../../Publications.html">Publications</a></li>
+                    <li><a href="../../Resume.html">Resume</a></li>
+                    <li><a href="../../Blog.html">Blog</a></li>
+                    <li><a href="../../News.html">News</a></li>
+                    <li class="current">
+                        <a href="../../E-Labs.html">E-Labs</a>
+                        <ul>
+                            <li><a href="../../e-labs/aircrafter/index.html">AirCrafter</a></li>
+                            <li><a href="../../e-labs/frontier/index.html">Frontier</a></li>
+                            <li><a href="../../e-labs/asphera/index.html">Asphera</a></li>
+                            <li><a href="../../e-labs/finite-elemented/index.html">Finite-Elemented</a></li>
+                            <li><a href="../../e-labs/cross-section-studio/index.html">Cross-Section Studio</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </section>
+
+        <!-- Main App -->
+        <section id="main">
+            <div class="xs-app" id="main-content" tabindex="-1">
+
+                <!-- App Header -->
+                <div class="app-header">
+                    <div class="header-nav">
+                        <a href="../../E-Labs.html" class="back-btn">
+                            <i class="fas fa-arrow-left"></i> Back to E-Labs
+                        </a>
+                        <div class="header-badges">
+                            <span class="header-badge"><i class="fas fa-cubes"></i> 11 FAA Materials</span>
+                            <span class="header-badge"><i class="fas fa-code-branch"></i> v1.0</span>
+                        </div>
+                    </div>
+                    <div class="header-content">
+                        <h1>
+                            <span class="xs-icon"><i class="fas fa-layer-group"></i></span>
+                            <span>Cross-Section <span class="highlight">Studio</span></span>
+                        </h1>
+                        <p>Procedural renderer for publication-quality 3D pavement cross sections — deterministic, true to scale, engineering-grade.</p>
+                    </div>
+                </div>
+
+                <!-- Studio -->
+                <div class="xs-studio">
+
+                    <!-- Toolbar -->
+                    <div class="xs-toolbar">
+                        <select id="xs-template" class="xs-select" title="Section templates" aria-label="Section templates">
+                            <option value="" disabled selected>Templates…</option>
+                        </select>
+                        <span class="xs-tool-sep"></span>
+                        <button id="xs-undo" class="xs-btn" title="Undo (Ctrl+Z)"><i class="fas fa-undo"></i></button>
+                        <button id="xs-redo" class="xs-btn" title="Redo (Ctrl+Y)"><i class="fas fa-redo"></i></button>
+                        <span class="xs-tool-sep"></span>
+                        <button id="xs-open" class="xs-btn" title="Open project (.pavement.json)"><i class="fas fa-folder-open"></i> Open</button>
+                        <button id="xs-save" class="xs-btn" title="Save project (.pavement.json)"><i class="fas fa-save"></i> Save</button>
+                        <input type="file" id="xs-file-input" accept=".json,application/json" hidden>
+                        <span class="xs-spacer"></span>
+                        <button id="xs-reset" class="xs-btn xs-btn--danger" title="Reset to default section"><i class="fas fa-rotate-left"></i> Reset</button>
+                        <button id="xs-export" class="xs-btn xs-btn--primary" title="Export image"><i class="fas fa-camera"></i> Export</button>
+                    </div>
+
+                    <!-- Left sidebar: project controls -->
+                    <aside class="xs-panel xs-left">
+                        <details open>
+                            <summary><i class="fas fa-vector-square"></i> Section Geometry</summary>
+                            <div class="xs-group">
+                                <div class="xs-field">
+                                    <label for="xs-sec-width">Width</label>
+                                    <input type="number" id="xs-sec-width" class="xs-num" min="500" max="20000" step="50">
+                                    <span class="xs-unit">mm</span>
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-sec-length">Length</label>
+                                    <input type="number" id="xs-sec-length" class="xs-num" min="500" max="20000" step="50">
+                                    <span class="xs-unit">mm</span>
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-sec-recess-x">Step (length)</label>
+                                    <input type="number" id="xs-sec-recess-x" class="xs-num" min="0" max="2000" step="25">
+                                    <span class="xs-unit">mm</span>
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-sec-recess-z">Step (width)</label>
+                                    <input type="number" id="xs-sec-recess-z" class="xs-num" min="0" max="2000" step="25">
+                                    <span class="xs-unit">mm</span>
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-sec-subgrade">Subgrade display</label>
+                                    <input type="number" id="xs-sec-subgrade" class="xs-num" min="50" max="2000" step="25">
+                                    <span class="xs-unit">mm</span>
+                                </div>
+                                <p class="xs-field-note">Layer heights are exact engineering thicknesses. The infinite subgrade uses a fixed visualization thickness only.</p>
+                            </div>
+                        </details>
+
+                        <details open>
+                            <summary><i class="fas fa-video"></i> Camera</summary>
+                            <div class="xs-group">
+                                <div class="xs-field">
+                                    <label for="xs-cam-proj">Projection</label>
+                                    <select id="xs-cam-proj" class="xs-select">
+                                        <option value="ortho">Orthographic</option>
+                                        <option value="persp">Perspective</option>
+                                    </select>
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-cam-az">Azimuth</label>
+                                    <input type="range" id="xs-cam-az" class="xs-range" min="-180" max="180" step="1">
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-cam-el">Elevation</label>
+                                    <input type="range" id="xs-cam-el" class="xs-range" min="2" max="88" step="0.5">
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-cam-fov">Field of view</label>
+                                    <input type="range" id="xs-cam-fov" class="xs-range" min="15" max="70" step="1">
+                                </div>
+                                <div class="xs-mini-btn-row">
+                                    <button id="xs-cam-iso" class="xs-btn" title="Engineering isometric view"><i class="fas fa-cube"></i> Isometric</button>
+                                    <button id="xs-cam-fit" class="xs-btn" title="Fit section in view"><i class="fas fa-expand"></i> Fit</button>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details>
+                            <summary><i class="fas fa-lightbulb"></i> Lighting</summary>
+                            <div class="xs-group">
+                                <div class="xs-field">
+                                    <label for="xs-light-preset">Preset</label>
+                                    <select id="xs-light-preset" class="xs-select">
+                                        <option value="studio">Studio</option>
+                                        <option value="daylight">Daylight</option>
+                                        <option value="softbox">Softbox</option>
+                                        <option value="threepoint">Three-point</option>
+                                    </select>
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-light-key">Key intensity</label>
+                                    <input type="range" id="xs-light-key" class="xs-range" min="0" max="5" step="0.1">
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-light-amb">Ambient</label>
+                                    <input type="range" id="xs-light-amb" class="xs-range" min="0" max="3" step="0.1">
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-light-az">Light azimuth</label>
+                                    <input type="range" id="xs-light-az" class="xs-range" min="-180" max="180" step="1">
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-light-el">Light elevation</label>
+                                    <input type="range" id="xs-light-el" class="xs-range" min="10" max="85" step="1">
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-shadow-op">Shadow opacity</label>
+                                    <input type="range" id="xs-shadow-op" class="xs-range" min="0" max="1" step="0.05">
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-shadow-soft">Shadow softness</label>
+                                    <input type="range" id="xs-shadow-soft" class="xs-range" min="0" max="12" step="0.5">
+                                </div>
+                                <div class="xs-field">
+                                    <label class="xs-check" for="xs-ground-shadow">
+                                        <input type="checkbox" id="xs-ground-shadow"> Ground shadow
+                                    </label>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details>
+                            <summary><i class="fas fa-fill-drip"></i> Background</summary>
+                            <div class="xs-group">
+                                <div class="xs-field">
+                                    <label for="xs-bg-mode">Mode</label>
+                                    <select id="xs-bg-mode" class="xs-select">
+                                        <option value="white">Publication white</option>
+                                        <option value="color">Custom color</option>
+                                        <option value="transparent">Transparent</option>
+                                    </select>
+                                </div>
+                                <div class="xs-field" id="xs-bg-color-field">
+                                    <label for="xs-bg-color">Color</label>
+                                    <input type="color" id="xs-bg-color" class="xs-color" value="#f1f5f9">
+                                </div>
+                            </div>
+                        </details>
+
+                        <details>
+                            <summary><i class="fas fa-file-export"></i> Export</summary>
+                            <div class="xs-group">
+                                <div class="xs-field">
+                                    <label for="xs-exp-format">Format</label>
+                                    <select id="xs-exp-format" class="xs-select">
+                                        <option value="png">PNG</option>
+                                        <option value="png-alpha">PNG (transparent)</option>
+                                        <option value="jpeg">JPEG</option>
+                                    </select>
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-exp-size">Resolution</label>
+                                    <select id="xs-exp-size" class="xs-select">
+                                        <option value="1600x1200">1600 × 1200</option>
+                                        <option value="2400x1800" selected>2400 × 1800 (300 dpi @ 8×6 in)</option>
+                                        <option value="3600x2700">3600 × 2700 (600 dpi @ 6×4.5 in)</option>
+                                        <option value="1920x1080">1920 × 1080</option>
+                                        <option value="3840x2160">3840 × 2160</option>
+                                        <option value="custom">Custom…</option>
+                                    </select>
+                                </div>
+                                <div class="xs-field" id="xs-exp-custom" hidden>
+                                    <label>W × H</label>
+                                    <input type="number" id="xs-exp-w" class="xs-num" min="256" max="8192" value="2400" style="width:64px">
+                                    <input type="number" id="xs-exp-h" class="xs-num" min="256" max="8192" value="1800" style="width:64px">
+                                </div>
+                                <p class="xs-field-note">Exports re-render the current view at full resolution. Transparent PNG ignores the background.</p>
+                            </div>
+                        </details>
+
+                        <details>
+                            <summary><i class="fas fa-file-signature"></i> Project Info</summary>
+                            <div class="xs-group">
+                                <div class="xs-field"><label for="xs-meta-name" style="flex:0 0 46px">Title</label>
+                                    <input type="text" id="xs-meta-name" class="xs-text" placeholder="FAA Flexible Section A">
+                                </div>
+                                <div class="xs-field"><label for="xs-meta-author" style="flex:0 0 46px">Author</label>
+                                    <input type="text" id="xs-meta-author" class="xs-text" placeholder="Author">
+                                </div>
+                                <textarea id="xs-meta-notes" class="xs-textarea" placeholder="Notes stored in the project file…"></textarea>
+                            </div>
+                        </details>
+                    </aside>
+
+                    <!-- Viewport -->
+                    <div class="xs-viewport" id="xs-viewport">
+                        <canvas id="xs-canvas" aria-label="3D pavement cross-section viewport"></canvas>
+                        <div class="xs-hud" id="xs-hud">—</div>
+                        <div class="xs-hud-right" id="xs-hud-right">orbit: drag · zoom: wheel · pan: right-drag</div>
+                    </div>
+
+                    <!-- Right sidebar: material editor -->
+                    <aside class="xs-panel xs-right">
+                        <span class="xs-selected-layer-tag" id="xs-sel-tag">No layer selected</span>
+                        <details open>
+                            <summary><i class="fas fa-swatchbook"></i> Material Library</summary>
+                            <div class="xs-group">
+                                <div class="xs-mat-grid" id="xs-mat-grid"></div>
+                            </div>
+                        </details>
+                        <details open>
+                            <summary><i class="fas fa-sliders-h"></i> Material Properties</summary>
+                            <div class="xs-group">
+                                <div class="xs-field">
+                                    <label for="xs-mat-tint">Tint</label>
+                                    <input type="color" id="xs-mat-tint" class="xs-color" value="#ffffff">
+                                    <button class="xs-icon-btn" id="xs-mat-tint-reset" title="Reset tint"><i class="fas fa-eraser"></i></button>
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-mat-bright">Brightness</label>
+                                    <input type="range" id="xs-mat-bright" class="xs-range" min="0.5" max="1.5" step="0.01">
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-mat-rough">Roughness</label>
+                                    <input type="range" id="xs-mat-rough" class="xs-range" min="0.05" max="1" step="0.01">
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-mat-scale">Texture scale</label>
+                                    <input type="range" id="xs-mat-scale" class="xs-range" min="0.25" max="4" step="0.05">
+                                </div>
+                                <div class="xs-field">
+                                    <label for="xs-mat-normal">Relief strength</label>
+                                    <input type="range" id="xs-mat-normal" class="xs-range" min="0" max="2.5" step="0.05">
+                                </div>
+                                <div class="xs-mini-btn-row">
+                                    <button id="xs-mat-reset" class="xs-btn"><i class="fas fa-rotate-left"></i> Reset material</button>
+                                </div>
+                                <p class="xs-field-note">Textures are procedural and seeded — the same settings always reproduce the exact same figure.</p>
+                            </div>
+                        </details>
+                    </aside>
+
+                    <!-- Bottom: layer manager -->
+                    <div class="xs-layers">
+                        <div class="xs-layers-head">
+                            <h3><i class="fas fa-bars-staggered"></i> Layer Structure</h3>
+                            <span class="xs-layers-total" id="xs-layers-total"></span>
+                            <span class="xs-spacer"></span>
+                            <button id="xs-add-layer" class="xs-btn"><i class="fas fa-plus"></i> Add layer</button>
+                        </div>
+                        <div class="xs-layer-rows" id="xs-layer-rows"></div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <div id="footer-placeholder"></div>
+
+    </div>
+
+    <div class="xs-toast-wrap" id="xs-toast-wrap"></div>
+
+    <!-- App -->
+    <script type="module" src="app.js"></script>
+
+    <!-- Site scripts -->
+    <script src="../../assets/js/components.js"></script>
+    <script src="../../assets/js/jquery.min.js"></script>
+    <script src="../../assets/js/jquery.dropotron.min.js"></script>
+    <script src="../../assets/js/breakpoints.min.js"></script>
+    <script src="../../assets/js/util.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/theme-toggle.js"></script>
+    <script src="../../assets/js/back-to-top.js"></script>
+</body>
+</html>
