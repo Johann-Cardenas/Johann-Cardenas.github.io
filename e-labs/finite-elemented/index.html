@@ -37,11 +37,11 @@
     <style>
         /* ==================== THEME VARIABLES ==================== */
         :root {
-            --fe-primary: #e04668;
-            --fe-primary-hover: #c73d5b;
-            --fe-primary-glow: rgba(224, 70, 104, 0.3);
-            --fe-secondary: #3b82f6;
-            --fe-secondary-hover: #2563eb;
+            --fe-primary: #0d9488;
+            --fe-primary-hover: #0f766e;
+            --fe-primary-glow: rgba(13, 148, 136, 0.3);
+            --fe-secondary: #6366f1;
+            --fe-secondary-hover: #4f46e5;
             --fe-accent: #f59e0b;
             --fe-success: #10b981;
             --fe-warning: #f59e0b;
@@ -181,27 +181,8 @@
             position: absolute; width: 100%; height: 100%;
         }
 
-        /* Floating orbs */
-        .landing-orb {
-            position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
-            filter: blur(60px); opacity: 0.10;
-        }
-        [data-theme="light"] .landing-orb { opacity: 0.06; }
-        .landing-orb.orb-1 {
-            width: 320px; height: 320px; top: -80px; right: -60px;
-            background: radial-gradient(circle, var(--fe-primary), transparent 70%);
-            animation: float 18s ease-in-out infinite;
-        }
-        .landing-orb.orb-2 {
-            width: 240px; height: 240px; bottom: 20px; left: -50px;
-            background: radial-gradient(circle, var(--fe-secondary), transparent 70%);
-            animation: float 22s ease-in-out infinite reverse;
-        }
-        .landing-orb.orb-3 {
-            width: 180px; height: 180px; top: 35%; left: 50%;
-            background: radial-gradient(circle, var(--fe-accent), transparent 70%);
-            animation: float 20s ease-in-out infinite 3s;
-        }
+        /* Floating orbs — removed in the v2 sober restyle */
+        .landing-orb { display: none; }
 
         /* Hero area */
         .landing-hero {
@@ -210,14 +191,14 @@
         .landing-hero-badge {
             display: inline-flex; align-items: center; gap: 0.5rem;
             padding: 0.45rem 1.1rem; border-radius: 50px;
-            background: linear-gradient(135deg, rgba(224, 70, 104, 0.12), rgba(59, 130, 246, 0.08));
-            border: 1px solid rgba(224, 70, 104, 0.25);
+            background: linear-gradient(135deg, rgba(13, 148, 136, 0.12), rgba(59, 130, 246, 0.08));
+            border: 1px solid rgba(13, 148, 136, 0.25);
             color: var(--fe-primary); font-size: 0.78rem; font-weight: 700;
             letter-spacing: 0.08em; text-transform: uppercase;
             margin-bottom: 1.2rem;
             animation: heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s backwards;
         }
-        [data-theme="dark"] .landing-hero-badge { color: #f472b6; }
+        [data-theme="dark"] .landing-hero-badge { color: #2dd4bf; }
         .landing-hero-badge .badge-dot {
             width: 6px; height: 6px; border-radius: 50%;
             background: var(--fe-primary);
@@ -229,11 +210,9 @@
             animation: heroTextReveal 0.7s cubic-bezier(0.22,1,0.36,1) 0.2s backwards;
         }
         .landing-hero h2 .hero-gradient {
-            background: linear-gradient(135deg, var(--fe-primary), var(--fe-secondary), var(--fe-accent), var(--fe-primary));
-            background-size: 300% 300%;
+            background: linear-gradient(120deg, #0d9488 0%, #6366f1 100%);
             -webkit-background-clip: text; background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: gradientShift 6s ease infinite;
         }
         .landing-hero h2 .hero-plain { color: var(--fe-text); }
         .landing-hero-sub {
@@ -257,9 +236,9 @@
         }
         .landing-stat:hover {
             border-color: var(--fe-primary);
-            background: rgba(224, 70, 104, 0.08);
+            background: rgba(13, 148, 136, 0.08);
             transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(224, 70, 104, 0.1);
+            box-shadow: 0 8px 24px rgba(13, 148, 136, 0.1);
         }
         .landing-stat-value {
             font-size: 1.45rem; font-weight: 900; letter-spacing: -0.02em;
@@ -315,55 +294,22 @@
         .landing-module-card:nth-child(6) { animation-delay: 1.2s; }
         .landing-module-card:nth-child(7) { animation-delay: 1.3s; }
         .landing-module-card:nth-child(8) { animation-delay: 1.4s; }
+        .landing-module-card:nth-child(9) { animation-delay: 1.5s; }
+        .landing-module-card:nth-child(10) { animation-delay: 1.6s; }
+        .landing-module-card:nth-child(11) { animation-delay: 1.7s; }
+        .landing-module-card:nth-child(12) { animation-delay: 1.8s; }
 
-        /* Animated border gradient on hover */
-        .landing-module-card::before {
-            content: ''; position: absolute; inset: -1px; border-radius: 23px; z-index: -1;
-            padding: 1px;
-            background: conic-gradient(from 0deg, transparent, var(--fe-primary), var(--fe-secondary), var(--fe-primary), transparent 60%);
-            background-size: 200% 200%;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor; mask-composite: exclude;
-            opacity: 0; transition: opacity 0.5s ease;
-            animation: borderTrace 4s linear infinite;
-        }
-        .landing-module-card:hover::before { opacity: 1; }
+        /* Sober restyle: no animated border trace */
+        .landing-module-card::before { content: none; }
 
-        /* Card accent bar */
+        /* Card accent bar — unified, static (sober restyle) */
         .landing-card-accent {
-            height: 4px; flex-shrink: 0;
-            background-size: 200% 100%;
-            animation: gradientShift 3s ease infinite;
-            transition: height 0.4s ease;
+            height: 3px; flex-shrink: 0;
+            background: linear-gradient(90deg, #0d9488, #6366f1);
+            opacity: 0.55;
+            transition: opacity 0.4s ease;
         }
-        .landing-module-card:hover .landing-card-accent { height: 5px; }
-
-        /* Per-module accent colors */
-        .landing-module-card[data-module="intro"] .landing-card-accent {
-            background: linear-gradient(90deg, var(--fe-primary), #f472b6, var(--fe-primary));
-        }
-        .landing-module-card[data-module="meshing"] .landing-card-accent {
-            background: linear-gradient(90deg, var(--fe-secondary), #60a5fa, var(--fe-secondary));
-        }
-        .landing-module-card[data-module="elements"] .landing-card-accent {
-            background: linear-gradient(90deg, #8b5cf6, #a78bfa, #8b5cf6);
-        }
-        .landing-module-card[data-module="hpmethod"] .landing-card-accent {
-            background: linear-gradient(90deg, var(--fe-accent), #fbbf24, var(--fe-accent));
-        }
-        .landing-module-card[data-module="complexity"] .landing-card-accent {
-            background: linear-gradient(90deg, var(--fe-success), #34d399, var(--fe-success));
-        }
-        .landing-module-card[data-module="convergence"] .landing-card-accent {
-            background: linear-gradient(90deg, #06b6d4, #22d3ee, #06b6d4);
-        }
-        .landing-module-card[data-module="abaqus"] .landing-card-accent {
-            background: linear-gradient(90deg, #f97316, #fb923c, #f97316);
-        }
-        .landing-module-card[data-module="proscons"] .landing-card-accent {
-            background: linear-gradient(90deg, #ec4899, #f472b6, #ec4899);
-        }
+        .landing-module-card:hover .landing-card-accent { opacity: 1; }
 
         /* Card body */
         .landing-card-body {
@@ -373,8 +319,9 @@
             flex: 1;
         }
         .landing-module-card:hover {
-            transform: translateY(-8px) scale(1.01);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.2), 0 0 0 1px var(--fe-border);
+            transform: translateY(-5px);
+            border-color: rgba(13, 148, 136, 0.45);
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
         }
 
         /* Icon + meta row */
@@ -388,8 +335,7 @@
         }
         .landing-module-icon::after {
             content: ''; position: absolute; inset: -4px; border-radius: 20px;
-            border: 2px solid rgba(224, 70, 104, 0.2);
-            animation: pulseRingLanding 3s ease-in-out infinite;
+            border: 1px solid var(--fe-border);
             pointer-events: none;
         }
         .landing-module-card:hover .landing-module-icon {
@@ -397,46 +343,15 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        /* Per-module icon colors */
-        .landing-module-icon.icon-intro {
-            background: linear-gradient(145deg, var(--fe-primary), #b83b56);
-            box-shadow: 0 6px 20px rgba(224, 70, 104, 0.35);
+        /* Uniform module icon — graphite chip, teal glyph (sober restyle) */
+        .landing-module-icon {
+            background: linear-gradient(150deg, #334155, #0f172a);
+            box-shadow: 0 5px 16px rgba(15, 23, 42, 0.32);
+            color: #5eead4;
         }
-        .landing-module-icon.icon-meshing {
-            background: linear-gradient(145deg, var(--fe-secondary), #1d4ed8);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);
+        [data-theme="light"] .landing-module-icon {
+            background: linear-gradient(150deg, #1e293b, #0f172a);
         }
-        .landing-module-icon.icon-meshing::after { border-color: rgba(59, 130, 246, 0.2); }
-        .landing-module-icon.icon-elements {
-            background: linear-gradient(145deg, #8b5cf6, #6d28d9);
-            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35);
-        }
-        .landing-module-icon.icon-elements::after { border-color: rgba(139, 92, 246, 0.2); }
-        .landing-module-icon.icon-hpmethod {
-            background: linear-gradient(145deg, var(--fe-accent), #d97706);
-            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
-        }
-        .landing-module-icon.icon-hpmethod::after { border-color: rgba(245, 158, 11, 0.2); }
-        .landing-module-icon.icon-complexity {
-            background: linear-gradient(145deg, var(--fe-success), #059669);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
-        }
-        .landing-module-icon.icon-complexity::after { border-color: rgba(16, 185, 129, 0.2); }
-        .landing-module-icon.icon-convergence {
-            background: linear-gradient(145deg, #06b6d4, #0891b2);
-            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.3);
-        }
-        .landing-module-icon.icon-convergence::after { border-color: rgba(6, 182, 212, 0.2); }
-        .landing-module-icon.icon-abaqus {
-            background: linear-gradient(145deg, #f97316, #ea580c);
-            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.3);
-        }
-        .landing-module-icon.icon-abaqus::after { border-color: rgba(249, 115, 22, 0.2); }
-        .landing-module-icon.icon-proscons {
-            background: linear-gradient(145deg, #ec4899, #db2777);
-            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.3);
-        }
-        .landing-module-icon.icon-proscons::after { border-color: rgba(236, 72, 153, 0.2); }
 
         .landing-module-meta { display: flex; flex-direction: column; gap: 0.1rem; }
         .landing-module-name {
@@ -456,65 +371,14 @@
             display: inline-flex; align-items: center; gap: 0.3rem;
             padding: 0.22rem 0.6rem; border-radius: 6px;
             font-size: 0.7rem; font-weight: 600;
-            background: rgba(224, 70, 104, 0.08); color: var(--fe-primary);
-            border: 1px solid rgba(224, 70, 104, 0.15);
+            background: rgba(13, 148, 136, 0.08); color: var(--fe-primary);
+            border: 1px solid rgba(13, 148, 136, 0.15);
             transition: all 0.2s ease;
         }
         .landing-feature-chip i { font-size: 0.58rem; }
         .landing-module-card:hover .landing-feature-chip {
-            background: rgba(224, 70, 104, 0.14);
-            border-color: rgba(224, 70, 104, 0.3);
-        }
-
-        /* Per-module chip colors */
-        .landing-module-card[data-module="meshing"] .landing-feature-chip {
-            background: rgba(59, 130, 246, 0.08); color: var(--fe-secondary);
-            border-color: rgba(59, 130, 246, 0.15);
-        }
-        .landing-module-card[data-module="meshing"]:hover .landing-feature-chip {
-            background: rgba(59, 130, 246, 0.14); border-color: rgba(59, 130, 246, 0.3);
-        }
-        .landing-module-card[data-module="elements"] .landing-feature-chip {
-            background: rgba(139, 92, 246, 0.08); color: #8b5cf6;
-            border-color: rgba(139, 92, 246, 0.15);
-        }
-        .landing-module-card[data-module="elements"]:hover .landing-feature-chip {
-            background: rgba(139, 92, 246, 0.14); border-color: rgba(139, 92, 246, 0.3);
-        }
-        .landing-module-card[data-module="hpmethod"] .landing-feature-chip {
-            background: rgba(245, 158, 11, 0.08); color: var(--fe-accent);
-            border-color: rgba(245, 158, 11, 0.15);
-        }
-        .landing-module-card[data-module="hpmethod"]:hover .landing-feature-chip {
-            background: rgba(245, 158, 11, 0.14); border-color: rgba(245, 158, 11, 0.3);
-        }
-        .landing-module-card[data-module="complexity"] .landing-feature-chip {
-            background: rgba(16, 185, 129, 0.08); color: var(--fe-success);
-            border-color: rgba(16, 185, 129, 0.15);
-        }
-        .landing-module-card[data-module="complexity"]:hover .landing-feature-chip {
-            background: rgba(16, 185, 129, 0.14); border-color: rgba(16, 185, 129, 0.3);
-        }
-        .landing-module-card[data-module="convergence"] .landing-feature-chip {
-            background: rgba(6, 182, 212, 0.08); color: #06b6d4;
-            border-color: rgba(6, 182, 212, 0.15);
-        }
-        .landing-module-card[data-module="convergence"]:hover .landing-feature-chip {
-            background: rgba(6, 182, 212, 0.14); border-color: rgba(6, 182, 212, 0.3);
-        }
-        .landing-module-card[data-module="abaqus"] .landing-feature-chip {
-            background: rgba(249, 115, 22, 0.08); color: #f97316;
-            border-color: rgba(249, 115, 22, 0.15);
-        }
-        .landing-module-card[data-module="abaqus"]:hover .landing-feature-chip {
-            background: rgba(249, 115, 22, 0.14); border-color: rgba(249, 115, 22, 0.3);
-        }
-        .landing-module-card[data-module="proscons"] .landing-feature-chip {
-            background: rgba(236, 72, 153, 0.08); color: #ec4899;
-            border-color: rgba(236, 72, 153, 0.15);
-        }
-        .landing-module-card[data-module="proscons"]:hover .landing-feature-chip {
-            background: rgba(236, 72, 153, 0.14); border-color: rgba(236, 72, 153, 0.3);
+            background: rgba(13, 148, 136, 0.14);
+            border-color: rgba(13, 148, 136, 0.3);
         }
 
         /* Card footer */
@@ -536,42 +400,12 @@
             background: linear-gradient(135deg, var(--fe-primary), var(--fe-primary-hover));
             color: #fff; font-size: 0.8rem;
             transition: all 0.4s cubic-bezier(0.34,1.2,0.64,1);
-            box-shadow: 0 4px 16px rgba(224, 70, 104, 0.3);
+            box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
         }
         .landing-module-card:hover .landing-card-arrow {
             transform: translateX(5px) scale(1.08);
-            box-shadow: 0 8px 24px rgba(224, 70, 104, 0.4);
+            box-shadow: 0 8px 24px rgba(13, 148, 136, 0.4);
         }
-        /* Per-module arrow colors */
-        .landing-module-card[data-module="meshing"] .landing-card-arrow {
-            background: linear-gradient(135deg, var(--fe-secondary), #1d4ed8);
-            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
-        }
-        .landing-module-card[data-module="elements"] .landing-card-arrow {
-            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-            box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
-        }
-        .landing-module-card[data-module="hpmethod"] .landing-card-arrow {
-            background: linear-gradient(135deg, var(--fe-accent), #d97706);
-            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
-        }
-        .landing-module-card[data-module="complexity"] .landing-card-arrow {
-            background: linear-gradient(135deg, var(--fe-success), #059669);
-            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
-        }
-        .landing-module-card[data-module="convergence"] .landing-card-arrow {
-            background: linear-gradient(135deg, #06b6d4, #0891b2);
-            box-shadow: 0 4px 16px rgba(6, 182, 212, 0.3);
-        }
-        .landing-module-card[data-module="abaqus"] .landing-card-arrow {
-            background: linear-gradient(135deg, #f97316, #ea580c);
-            box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3);
-        }
-        .landing-module-card[data-module="proscons"] .landing-card-arrow {
-            background: linear-gradient(135deg, #ec4899, #db2777);
-            box-shadow: 0 4px 16px rgba(236, 72, 153, 0.3);
-        }
-
         /* View transitions */
         .view-container { position: relative; }
         .view-enter { animation: viewSlideIn 0.5s cubic-bezier(0.34,1.2,0.64,1) forwards; }
@@ -624,35 +458,36 @@
         }
         .module-tabs.compact-mode .module-tab.active {
             border-color: var(--fe-primary);
-            background: rgba(224, 70, 104, 0.08);
+            background: rgba(13, 148, 136, 0.08);
             box-shadow: 0 0 12px var(--fe-primary-glow);
         }
 
         /* Tab icon backgrounds */
-        .tab-icon-intro { background: linear-gradient(145deg, var(--fe-primary), #b83b56); }
-        .tab-icon-meshing { background: linear-gradient(145deg, var(--fe-secondary), #1d4ed8); }
-        .tab-icon-elements { background: linear-gradient(145deg, #8b5cf6, #6d28d9); }
-        .tab-icon-hpmethod { background: linear-gradient(145deg, var(--fe-accent), #d97706); }
-        .tab-icon-complexity { background: linear-gradient(145deg, var(--fe-success), #059669); }
-        .tab-icon-convergence { background: linear-gradient(145deg, #06b6d4, #0891b2); }
-        .tab-icon-abaqus { background: linear-gradient(145deg, #f97316, #ea580c); }
-        .tab-icon-proscons { background: linear-gradient(145deg, #ec4899, #db2777); }
+        /* Uniform tab icons — graphite chip, teal glyph (sober restyle) */
+        .module-tab .icon {
+            background: linear-gradient(150deg, #334155, #0f172a);
+            color: #5eead4;
+        }
+        .module-tab.active .icon {
+            background: linear-gradient(150deg, #0f766e, #134e4a);
+            color: #ccfbf1;
+        }
 
         /* Back to modules button */
         .back-to-modules-btn {
             display: inline-flex; align-items: center; gap: 0.45rem;
             padding: 0.45rem 1rem; border-radius: 10px;
-            background: rgba(224, 70, 104, 0.12); color: var(--fe-primary);
+            background: rgba(13, 148, 136, 0.12); color: var(--fe-primary);
             font-size: 0.82rem; font-weight: 600; letter-spacing: 0.02em;
-            border: 1px solid rgba(224, 70, 104, 0.25);
+            border: 1px solid rgba(13, 148, 136, 0.25);
             cursor: pointer; text-decoration: none;
             transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
             margin-bottom: 1rem;
         }
-        [data-theme="dark"] .back-to-modules-btn { color: #f472b6; }
+        [data-theme="dark"] .back-to-modules-btn { color: #2dd4bf; }
         .back-to-modules-btn:hover {
-            background: rgba(224, 70, 104, 0.2); border-color: rgba(224, 70, 104, 0.4);
-            transform: translateX(-3px); box-shadow: 0 4px 15px rgba(224, 70, 104, 0.15);
+            background: rgba(13, 148, 136, 0.2); border-color: rgba(13, 148, 136, 0.4);
+            transform: translateX(-3px); box-shadow: 0 4px 15px rgba(13, 148, 136, 0.15);
         }
         .back-to-modules-btn i { transition: transform 0.3s ease; font-size: 0.75rem; }
         .back-to-modules-btn:hover i { transform: translateX(-3px); }
@@ -687,7 +522,7 @@
             background:
                 radial-gradient(circle at 20% 80%, var(--fe-primary-glow) 0%, transparent 40%),
                 radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.2) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(224, 70, 104, 0.1) 0%, transparent 60%);
+                radial-gradient(circle at 50% 50%, rgba(13, 148, 136, 0.1) 0%, transparent 60%);
             pointer-events: none;
             animation: headerGlow 8s ease-in-out infinite alternate;
         }
@@ -726,7 +561,7 @@
         }
         .app-header h1 .fe-icon { color: var(--fe-primary) !important; margin-right: 0.3rem; }
         .app-header h1 .highlight {
-            background: linear-gradient(135deg, var(--fe-primary), #f472b6);
+            background: linear-gradient(135deg, var(--fe-primary), #2dd4bf);
             -webkit-background-clip: text; background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -831,7 +666,7 @@
         }
         .btn-secondary:hover {
             border-color: var(--fe-primary);
-            background: rgba(224, 70, 104, 0.05);
+            background: rgba(13, 148, 136, 0.05);
         }
 
         /* Slider controls */
@@ -924,12 +759,12 @@
         }
         .glossary-item:hover {
             border-color: var(--fe-primary);
-            background: rgba(224, 70, 104, 0.05);
+            background: rgba(13, 148, 136, 0.05);
             transform: translateY(-2px);
         }
         .glossary-item.active {
             border-color: var(--fe-primary);
-            background: rgba(224, 70, 104, 0.1);
+            background: rgba(13, 148, 136, 0.1);
         }
         .glossary-item h5 {
             font-size: 0.88rem; font-weight: 700; margin: 0;
@@ -998,7 +833,7 @@
         }
         .element-shape.active {
             border-color: var(--fe-primary);
-            background: rgba(224, 70, 104, 0.08);
+            background: rgba(13, 148, 136, 0.08);
         }
         .element-shape svg {
             width: 80px; height: 80px; margin-bottom: 0.5rem;
@@ -1026,7 +861,7 @@
             color: var(--fe-text-secondary);
         }
         .comparison-table tr:hover td {
-            background: rgba(224, 70, 104, 0.04);
+            background: rgba(13, 148, 136, 0.04);
         }
 
         /* Accordion */
@@ -1039,7 +874,7 @@
         }
         .accordion-header:hover {
             border-color: var(--fe-primary);
-            background: rgba(224, 70, 104, 0.05);
+            background: rgba(13, 148, 136, 0.05);
         }
         .accordion-header h4 {
             font-size: 0.9rem; font-weight: 700; margin: 0;
@@ -1098,7 +933,7 @@
         }
         .quiz-option:hover {
             border-color: var(--fe-primary);
-            background: rgba(224, 70, 104, 0.05);
+            background: rgba(13, 148, 136, 0.05);
         }
         .quiz-option.correct {
             border-color: var(--fe-success); background: rgba(16, 185, 129, 0.1);
@@ -1166,7 +1001,7 @@
             background: rgba(59, 130, 246, 0.1); border-color: var(--fe-secondary);
         }
         .flow-node.answer {
-            background: rgba(224, 70, 104, 0.1); border-color: var(--fe-primary);
+            background: rgba(13, 148, 136, 0.1); border-color: var(--fe-primary);
         }
         .flow-arrow {
             font-size: 1.2rem; color: var(--fe-text-muted);
@@ -1184,7 +1019,9 @@
         /* Mesh canvas */
         #mesh-canvas, #intro-canvas, #hp-canvas-h, #hp-canvas-p,
         #complexity-canvas, #convergence-anim-canvas,
-        #integration-canvas, #drag-mesh-canvas {
+        #integration-canvas, #drag-mesh-canvas,
+        #bar1d-canvas, #assembly-canvas, #iso-parent-canvas, #iso-phys-canvas,
+        #gauss-canvas, #bcplay-canvas, #sparsity-canvas, #lab-canvas {
             background: var(--fe-bg-alt);
         }
 
@@ -1287,6 +1124,46 @@
         .element-shape:hover svg { transform: scale(1.08); transition: transform 0.3s ease; }
         .flow-node:hover { box-shadow: 0 0 16px var(--fe-primary-glow); }
         .flow-node.decision:hover { box-shadow: 0 0 16px rgba(59, 130, 246, 0.3); }
+
+        /* ==================== v2.0 ADDITIONS ==================== */
+
+        /* Equation blocks */
+        .fe-eq {
+            font-family: Georgia, 'Times New Roman', serif; font-style: italic;
+            font-size: 1.02rem; color: var(--fe-text);
+            background: var(--fe-bg-panel); border: 1px solid var(--fe-border);
+            border-left: 3px solid var(--fe-primary); border-radius: 10px;
+            padding: 0.9rem 1.2rem; margin: 1rem 0; text-align: center;
+            overflow-x: auto;
+        }
+        .fe-eq-label {
+            display: block; font-style: normal; font-family: 'Source Sans Pro', sans-serif;
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+            text-transform: uppercase; color: var(--fe-text-muted); margin-bottom: 0.45rem;
+        }
+        .fe-frac {
+            display: inline-flex; flex-direction: column; vertical-align: middle;
+            margin: 0 0.2em; line-height: 1.2; font-size: 0.92em;
+        }
+        .fe-frac > span:first-child { border-bottom: 1.5px solid currentColor; padding: 0 0.3em; }
+        .fe-frac > span:last-child { padding: 0 0.3em; }
+        .fe-matrix {
+            display: inline-grid; gap: 0.1em 0.8em; padding: 0.25em 0.55em;
+            border-left: 2px solid currentColor; border-right: 2px solid currentColor;
+            border-radius: 8px; vertical-align: middle; margin: 0 0.3em;
+            font-style: normal; font-family: 'Courier New', monospace; font-size: 0.9em;
+        }
+        .fe-matrix span { text-align: center; }
+
+        /* Draggable / clickable canvas cursors */
+        #iso-phys-canvas { cursor: grab; }
+        #iso-phys-canvas:active { cursor: grabbing; }
+        #bcplay-canvas { cursor: pointer; }
+
+        /* Verdict badge inside stat cards */
+        .stat-card .stat-value.verdict-good { background: none; -webkit-text-fill-color: var(--fe-success); }
+        .stat-card .stat-value.verdict-warn { background: none; -webkit-text-fill-color: var(--fe-warning); }
+        .stat-card .stat-value.verdict-bad  { background: none; -webkit-text-fill-color: var(--fe-danger); }
 
         /* ==================== RESPONSIVE ==================== */
         @media (max-width: 1200px) {
@@ -1514,8 +1391,8 @@
                             <i class="fas fa-arrow-left"></i> Back to E-Labs
                         </a>
                         <div class="header-badges">
-                            <span class="header-badge"><i class="fas fa-cubes"></i> 8 Modules</span>
-                            <span class="header-badge"><i class="fas fa-code-branch"></i> v1.0</span>
+                            <span class="header-badge"><i class="fas fa-cubes"></i> 12 Modules</span>
+                            <span class="header-badge"><i class="fas fa-code-branch"></i> v2.0</span>
                         </div>
                     </div>
                     <div class="header-content">
@@ -1546,16 +1423,16 @@
                             <span>Interactive Learning</span>
                         </div>
                         <h2><span class="hero-plain">Master </span><span class="hero-gradient">Finite Element Analysis</span></h2>
-                        <p class="landing-hero-sub">Build deep intuition for FEA concepts through interactive visualizations, hands-on experiments, and real-time simulations — from meshing to convergence.</p>
+                        <p class="landing-hero-sub">Build deep intuition for computational mechanics through interactive visualizations, hands-on experiments, and real-time simulations — from weak forms and meshing all the way to a live 2D stress solver running in your browser.</p>
 
                         <!-- Stats -->
                         <div class="landing-stats">
                             <div class="landing-stat">
-                                <span class="landing-stat-value">8</span>
+                                <span class="landing-stat-value">12</span>
                                 <span class="landing-stat-label">Modules</span>
                             </div>
                             <div class="landing-stat">
-                                <span class="landing-stat-value">20+</span>
+                                <span class="landing-stat-value">35+</span>
                                 <span class="landing-stat-label">Interactives</span>
                             </div>
                             <div class="landing-stat">
@@ -1592,6 +1469,30 @@
                                 </div>
                                 <div class="landing-card-footer">
                                     <span class="landing-card-status"><i class="fas fa-circle"></i> Beginner</span>
+                                    <span class="landing-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Math of FEM -->
+                        <div class="landing-module-card" data-module="mathfem" onclick="openModuleFromLanding('mathfem')">
+                            <div class="landing-card-accent"></div>
+                            <div class="landing-card-body">
+                                <div class="landing-icon-row">
+                                    <div class="landing-module-icon icon-mathfem"><i class="fas fa-square-root-alt"></i></div>
+                                    <div class="landing-module-meta">
+                                        <span class="landing-module-name">Math of FEM</span>
+                                        <span class="landing-module-subtitle">From Physics to Equations</span>
+                                    </div>
+                                </div>
+                                <p class="landing-module-desc">Follow the full pipeline — strong form, weak form, element matrices, assembly — and solve a 1D bar live while you watch K being built.</p>
+                                <div class="landing-features">
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Live 1D FEM solver vs exact solution"><i class="fas fa-wave-square"></i> 1D Solver</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Watch element matrices assemble into K step by step"><i class="fas fa-border-all"></i> Assembly</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Strong form, weak form, and stiffness derivation"><i class="fas fa-square-root-alt"></i> Theory</span>
+                                </div>
+                                <div class="landing-card-footer">
+                                    <span class="landing-card-status"><i class="fas fa-circle"></i> Foundation</span>
                                     <span class="landing-card-arrow"><i class="fas fa-arrow-right"></i></span>
                                 </div>
                             </div>
@@ -1640,6 +1541,30 @@
                                 </div>
                                 <div class="landing-card-footer">
                                     <span class="landing-card-status"><i class="fas fa-circle"></i> Catalog</span>
+                                    <span class="landing-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Isoparametric Mapping -->
+                        <div class="landing-module-card" data-module="isopar" onclick="openModuleFromLanding('isopar')">
+                            <div class="landing-card-accent"></div>
+                            <div class="landing-card-body">
+                                <div class="landing-icon-row">
+                                    <div class="landing-module-icon icon-isopar"><i class="fas fa-vector-square"></i></div>
+                                    <div class="landing-module-meta">
+                                        <span class="landing-module-name">Isoparametric</span>
+                                        <span class="landing-module-subtitle">Mapping & Integration</span>
+                                    </div>
+                                </div>
+                                <p class="landing-module-desc">Drag element corners and watch the Jacobian respond — then discover why n Gauss points integrate degree 2n−1 exactly.</p>
+                                <div class="landing-features">
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Drag corners, see det J live, invert the element"><i class="fas fa-hand-pointer"></i> Jacobian</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Gauss quadrature accuracy experiment"><i class="fas fa-bullseye"></i> Quadrature</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Common integration rules per element type"><i class="fas fa-table"></i> Rules</span>
+                                </div>
+                                <div class="landing-card-footer">
+                                    <span class="landing-card-status"><i class="fas fa-circle"></i> Core Theory</span>
                                     <span class="landing-card-arrow"><i class="fas fa-arrow-right"></i></span>
                                 </div>
                             </div>
@@ -1717,6 +1642,54 @@
                             </div>
                         </div>
 
+                        <!-- 9. Solving the System -->
+                        <div class="landing-module-card" data-module="solver" onclick="openModuleFromLanding('solver')">
+                            <div class="landing-card-accent"></div>
+                            <div class="landing-card-body">
+                                <div class="landing-icon-row">
+                                    <div class="landing-module-icon icon-solver"><i class="fas fa-microchip"></i></div>
+                                    <div class="landing-module-meta">
+                                        <span class="landing-module-name">Solving the System</span>
+                                        <span class="landing-module-subtitle">BCs, Sparsity & Solvers</span>
+                                    </div>
+                                </div>
+                                <p class="landing-module-desc">Un-pin a structure and watch K go singular. Explore sparsity patterns, bandwidth, and the direct-vs-iterative solver trade-off.</p>
+                                <div class="landing-features">
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Toggle supports and see rigid-body modes"><i class="fas fa-thumbtack"></i> BC Playground</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Node numbering vs matrix bandwidth"><i class="fas fa-border-all"></i> Sparsity</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Direct vs iterative solver scaling"><i class="fas fa-chart-line"></i> Cost</span>
+                                </div>
+                                <div class="landing-card-footer">
+                                    <span class="landing-card-status"><i class="fas fa-circle"></i> Under the Hood</span>
+                                    <span class="landing-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 10. 2D Stress Lab -->
+                        <div class="landing-module-card" data-module="stresslab" onclick="openModuleFromLanding('stresslab')">
+                            <div class="landing-card-accent"></div>
+                            <div class="landing-card-body">
+                                <div class="landing-icon-row">
+                                    <div class="landing-module-icon icon-stresslab"><i class="fas fa-fire"></i></div>
+                                    <div class="landing-module-meta">
+                                        <span class="landing-module-name">2D Stress Lab</span>
+                                        <span class="landing-module-subtitle">A Real FEM Solver</span>
+                                    </div>
+                                </div>
+                                <p class="landing-module-desc">The capstone: a full plane-stress FEM solver running live in your browser. Mesh it, load it, and watch von Mises contours respond instantly.</p>
+                                <div class="landing-features">
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Cantilever, simply-supported beam, L-bracket"><i class="fas fa-cube"></i> 3 Structures</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="von Mises and component stress contours"><i class="fas fa-fire"></i> Contours</span>
+                                    <span class="landing-feature-chip tooltip-trigger" data-tooltip="Q4 vs T3, checked against beam theory"><i class="fas fa-balance-scale"></i> Verification</span>
+                                </div>
+                                <div class="landing-card-footer">
+                                    <span class="landing-card-status"><i class="fas fa-circle"></i> Capstone</span>
+                                    <span class="landing-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 7. Abaqus Library -->
                         <div class="landing-module-card" data-module="abaqus" onclick="openModuleFromLanding('abaqus')">
                             <div class="landing-card-accent"></div>
@@ -1783,6 +1756,10 @@
                                 <div class="icon tab-icon-intro"><i class="fas fa-question-circle"></i></div>
                                 <div class="info"><h3>What is FEA?</h3></div>
                             </div>
+                            <div class="module-tab" data-module="mathfem">
+                                <div class="icon tab-icon-mathfem"><i class="fas fa-square-root-alt"></i></div>
+                                <div class="info"><h3>Math of FEM</h3></div>
+                            </div>
                             <div class="module-tab" data-module="meshing">
                                 <div class="icon tab-icon-meshing"><i class="fas fa-th"></i></div>
                                 <div class="info"><h3>Meshing</h3></div>
@@ -1790,6 +1767,10 @@
                             <div class="module-tab" data-module="elements">
                                 <div class="icon tab-icon-elements"><i class="fas fa-shapes"></i></div>
                                 <div class="info"><h3>Element Types</h3></div>
+                            </div>
+                            <div class="module-tab" data-module="isopar">
+                                <div class="icon tab-icon-isopar"><i class="fas fa-vector-square"></i></div>
+                                <div class="info"><h3>Isoparametric</h3></div>
                             </div>
                             <div class="module-tab" data-module="hpmethod">
                                 <div class="icon tab-icon-hpmethod"><i class="fas fa-expand-arrows-alt"></i></div>
@@ -1802,6 +1783,14 @@
                             <div class="module-tab" data-module="convergence">
                                 <div class="icon tab-icon-convergence"><i class="fas fa-crosshairs"></i></div>
                                 <div class="info"><h3>Convergence</h3></div>
+                            </div>
+                            <div class="module-tab" data-module="solver">
+                                <div class="icon tab-icon-solver"><i class="fas fa-microchip"></i></div>
+                                <div class="info"><h3>Solvers</h3></div>
+                            </div>
+                            <div class="module-tab" data-module="stresslab">
+                                <div class="icon tab-icon-stresslab"><i class="fas fa-fire"></i></div>
+                                <div class="info"><h3>2D Stress Lab</h3></div>
                             </div>
                             <div class="module-tab" data-module="abaqus">
                                 <div class="icon tab-icon-abaqus"><i class="fas fa-book-open"></i></div>
@@ -1881,6 +1870,22 @@
                                     <h5><i class="fas fa-circle" style="font-size:0.5rem;color:var(--fe-success);margin-right:0.3rem;"></i> Stiffness Matrix</h5>
                                     <p>Relates forces to displacements</p>
                                 </div>
+                                <div class="glossary-item" data-term="weakform" onclick="FE.showGlossary('weakform')">
+                                    <h5><i class="fas fa-circle" style="font-size:0.5rem;color:#6366f1;margin-right:0.3rem;"></i> Weak Form</h5>
+                                    <p>Integral restatement of the PDE</p>
+                                </div>
+                                <div class="glossary-item" data-term="jacobian" onclick="FE.showGlossary('jacobian')">
+                                    <h5><i class="fas fa-circle" style="font-size:0.5rem;color:#14b8a6;margin-right:0.3rem;"></i> Jacobian</h5>
+                                    <p>Maps parent to physical element</p>
+                                </div>
+                                <div class="glossary-item" data-term="gausspoint" onclick="FE.showGlossary('gausspoint')">
+                                    <h5><i class="fas fa-circle" style="font-size:0.5rem;color:#0ea5e9;margin-right:0.3rem;"></i> Gauss Point</h5>
+                                    <p>Where integrals are sampled</p>
+                                </div>
+                                <div class="glossary-item" data-term="isoparametric" onclick="FE.showGlossary('isoparametric')">
+                                    <h5><i class="fas fa-circle" style="font-size:0.5rem;color:#ec4899;margin-right:0.3rem;"></i> Isoparametric</h5>
+                                    <p>Same functions for shape & solution</p>
+                                </div>
                             </div>
                             <div class="glossary-detail" id="glossary-detail"></div>
                         </div>
@@ -1906,6 +1911,111 @@
                             </div>
                             <div id="stepper-detail" class="panel" style="margin-top:1rem;background:var(--fe-bg-alt);">
                                 <p><strong>Pre-processing:</strong> Define geometry, create the mesh, assign material properties and boundary conditions. This is where you set up the problem — the quality of your mesh directly affects accuracy.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ==================== MODULE: MATH OF FEM ==================== -->
+                    <div class="module-content" id="module-mathfem">
+                        <div class="panel">
+                            <h2><i class="fas fa-square-root-alt"></i> From Physics to Equations</h2>
+                            <p>Every FEM run — no matter how complex — ends up solving the same thing: a big linear system <strong>K u = F</strong>. This module shows where that system comes from, using the simplest structural problem there is: an axial bar. Master this pipeline once and every other element type is just "more of the same."</p>
+                            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;justify-content:center;margin-top:1rem;">
+                                <span class="landing-feature-chip">Physics (PDE)</span><i class="fas fa-arrow-right" style="color:var(--fe-text-muted);"></i>
+                                <span class="landing-feature-chip">Weak form</span><i class="fas fa-arrow-right" style="color:var(--fe-text-muted);"></i>
+                                <span class="landing-feature-chip">Element matrices</span><i class="fas fa-arrow-right" style="color:var(--fe-text-muted);"></i>
+                                <span class="landing-feature-chip">Assembly</span><i class="fas fa-arrow-right" style="color:var(--fe-text-muted);"></i>
+                                <span class="landing-feature-chip">Solve K u = F</span><i class="fas fa-arrow-right" style="color:var(--fe-text-muted);"></i>
+                                <span class="landing-feature-chip">Stresses</span>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <h3>The Model Problem: An Axial Bar</h3>
+                            <p>A bar of stiffness <em>EA</em>, fixed at the left end, stretched by a distributed load <em>q(x)</em> and/or an end force <em>P</em>. Equilibrium of an infinitesimal slice gives the <strong>strong form</strong> — a differential equation that must hold at <em>every single point</em>:</p>
+                            <div class="fe-eq"><span class="fe-eq-label">Strong form</span>EA&thinsp;u&Prime;(x) + q(x) = 0,&emsp;u(0) = 0,&emsp;EA&thinsp;u&prime;(L) = P</div>
+                            <p>That pointwise requirement is too strict for simple approximations. Multiply by a <em>test function</em> v(x), integrate over the bar, and shift one derivative onto v using integration by parts. The result is the <strong>weak form</strong> — it only asks the equation to hold "on average":</p>
+                            <div class="fe-eq"><span class="fe-eq-label">Weak form</span>&int;<sub>0</sub><sup>L</sup> EA&thinsp;u&prime;&thinsp;v&prime;&thinsp;dx = &int;<sub>0</sub><sup>L</sup> q&thinsp;v&thinsp;dx + P&thinsp;v(L)&emsp;<span class="op">for all admissible v</span></div>
+                            <p>Now approximate u(x) inside each element with shape functions (<em>Galerkin's method</em> uses the same functions for u and v). For a 2-node linear element of length L<sub>e</sub>, the weak form evaluates to a tiny 2×2 system — the <strong>element stiffness matrix</strong>:</p>
+                            <div class="fe-eq"><span class="fe-eq-label">Element stiffness (linear bar)</span>k<sup>e</sup> = <span class="fe-frac"><span>EA</span><span>L<sub>e</sub></span></span> <span class="fe-matrix" style="grid-template-columns:auto auto;"><span>1</span><span>&minus;1</span><span>&minus;1</span><span>1</span></span></div>
+                            <div class="info-card" style="margin-top:1rem;">
+                                <p style="margin:0;"><i class="fas fa-lightbulb" style="color:var(--fe-accent);margin-right:0.4rem;"></i><strong>Why bother with the weak form?</strong> It halves the derivative order the approximation must support (piecewise-linear functions become legal), it makes force boundary conditions appear automatically in the right-hand side, and it produces symmetric matrices. It is <em>the</em> reason FEM works.</p>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <h3>Interactive 1D FEM Solver</h3>
+                            <p>Solve the bar live. Pick a load case, an element order, and a mesh — then compare the FEM solution (solid) against the exact solution (dashed). Watch the axial force plot: linear elements give a <em>staircase</em> of constant force per element, with jumps between elements.</p>
+                            <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;">
+                                <div class="toggle-group" id="bar1d-load-toggle" style="margin-bottom:0;">
+                                    <button class="toggle-btn" data-load="end" onclick="FE.bar1d.setLoad('end')">End Load P</button>
+                                    <button class="toggle-btn active" data-load="uniform" onclick="FE.bar1d.setLoad('uniform')">Uniform q</button>
+                                    <button class="toggle-btn" data-load="tri" onclick="FE.bar1d.setLoad('tri')">Triangular q</button>
+                                </div>
+                                <div class="toggle-group" id="bar1d-order-toggle" style="margin-bottom:0;">
+                                    <button class="toggle-btn active" data-order="1" onclick="FE.bar1d.setOrder(1)">Linear</button>
+                                    <button class="toggle-btn" data-order="2" onclick="FE.bar1d.setOrder(2)">Quadratic</button>
+                                </div>
+                            </div>
+                            <div class="slider-control">
+                                <label>Elements</label>
+                                <input type="range" min="1" max="16" value="3" id="bar1d-n-slider" oninput="FE.bar1d.setN(this.value)">
+                                <span class="slider-value" id="bar1d-n-val">3</span>
+                            </div>
+                            <div class="canvas-container" style="height:110px;">
+                                <canvas id="bar1d-canvas" width="860" height="110" role="img" aria-label="Bar schematic with mesh nodes and applied load"></canvas>
+                            </div>
+                            <div class="grid-2" style="margin-top:1rem;">
+                                <div class="plotly-container" id="bar1d-disp-plot" style="height:320px;"></div>
+                                <div class="plotly-container" id="bar1d-force-plot" style="height:320px;"></div>
+                            </div>
+                            <div class="grid-3" style="margin-top:1rem;">
+                                <div class="stat-card">
+                                    <div class="stat-value" id="bar1d-dofs">3</div>
+                                    <div class="stat-label">Free DOFs</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="bar1d-uerr">—</div>
+                                    <div class="stat-label">Displacement L2 error</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="bar1d-serr">—</div>
+                                    <div class="stat-label">Axial force L2 error</div>
+                                </div>
+                            </div>
+                            <div class="info-card" style="margin-top:1rem;">
+                                <p style="margin:0;"><i class="fas fa-magic" style="color:var(--fe-primary);margin-right:0.4rem;"></i><strong>A 1D surprise:</strong> the FEM answer is <em>exact at the nodes</em> for this problem — even with one element! The error lives between the nodes, and in the force plot. This nodal exactness is special to 1D problems; in 2D/3D everything is approximate, which is why convergence studies matter.</p>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <h3>Watch the Assembly</h3>
+                            <p>Each element only knows about its own two nodes. Assembly <em>scatters</em> every 2×2 element matrix into the global K at the rows/columns of the element's nodes. Where two elements share a node, their contributions <strong>add</strong> — that overlap is exactly what ties the elements together into one structure.</p>
+                            <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1rem;">
+                                <button class="btn btn-primary" id="assembly-step-btn" onclick="FE.assembly.step()"><i class="fas fa-shoe-prints"></i> Add Next Element</button>
+                                <button class="btn btn-secondary" id="assembly-play-btn" onclick="FE.assembly.play()"><i class="fas fa-play"></i> Auto-Play</button>
+                                <button class="btn btn-secondary" onclick="FE.assembly.reset()"><i class="fas fa-undo"></i> Reset</button>
+                            </div>
+                            <div class="canvas-container" style="height:360px;">
+                                <canvas id="assembly-canvas" width="860" height="360" role="img" aria-label="Step-by-step assembly of the global stiffness matrix"></canvas>
+                            </div>
+                            <p style="margin-top:0.75rem;color:var(--fe-text-secondary);font-size:0.9rem;" id="assembly-caption">Press <strong>Add Next Element</strong> to scatter k<sup>e</sup> of element 1 into the global matrix (values in units of EA/L<sub>e</sub>).</p>
+                        </div>
+
+                        <div class="panel">
+                            <h3>Boundary Conditions: Essential vs Natural</h3>
+                            <div class="comparison-cols">
+                                <div class="comparison-col">
+                                    <h3><i class="fas fa-thumbtack" style="color:var(--fe-secondary);"></i> Essential (Dirichlet)</h3>
+                                    <p>Prescribed <strong>displacements</strong> — supports, clamps, symmetry planes. They are enforced by <em>modifying the equations</em>: the constrained rows/columns are removed (or penalized) before solving. Without enough of them, K is singular and the structure floats — see the <em>Solving the System</em> module.</p>
+                                </div>
+                                <div class="comparison-col">
+                                    <h3><i class="fas fa-arrows-alt" style="color:var(--fe-accent);"></i> Natural (Neumann)</h3>
+                                    <p>Prescribed <strong>forces / tractions / pressures</strong>. The weak form absorbs them automatically into the load vector F — no equation surgery needed. That P·v(L) term in the weak form above? That is a natural BC doing its job.</p>
+                                </div>
+                            </div>
+                            <div class="info-card" style="margin-top:1rem;">
+                                <p style="margin:0;"><i class="fas fa-info-circle" style="color:var(--fe-info);margin-right:0.4rem;"></i>After solving, the <strong>reactions</strong> at essential BCs are recovered by plugging the solution back into the constrained rows of K u &minus; F. Checking that reactions balance the applied loads is the cheapest sanity check in FEA.</p>
                             </div>
                         </div>
                     </div>
@@ -2085,6 +2195,118 @@
                                     <tr><td>Hex20</td><td>3D</td><td>20</td><td>3</td><td>Quadratic</td><td>High-accuracy 3D</td><td><span class="badge badge-green">High</span></td><td><span class="badge badge-red">High</span></td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <!-- ==================== MODULE: ISOPARAMETRIC ==================== -->
+                    <div class="module-content" id="module-isopar">
+                        <div class="panel">
+                            <h2><i class="fas fa-vector-square"></i> Isoparametric Mapping & Numerical Integration</h2>
+                            <p>Real meshes are full of stretched, skewed, wonky elements — yet all the element math is derived on one <em>perfect</em> square: the <strong>parent element</strong>, living in natural coordinates (ξ, η) ∈ [−1, 1]². A mapping built from the element's own shape functions carries everything from parent to physical space. That trick — using the <em>same</em> functions for geometry and solution — is what "isoparametric" means, and it is how every commercial FE code works.</p>
+                        </div>
+
+                        <div class="panel">
+                            <h3>Mapping Explorer — Drag the Corners!</h3>
+                            <p>The right element is the <em>physical</em> element: <strong>drag its corner nodes</strong>. The color field shows det&thinsp;J across the element. Squash a corner past the diagonal and det&thinsp;J goes negative — the element folds over itself, and any FE solver will refuse it.</p>
+                            <div class="grid-2">
+                                <div>
+                                    <div class="canvas-container" style="height:300px;">
+                                        <canvas id="iso-parent-canvas" width="410" height="300" role="img" aria-label="Parent element with Gauss points in natural coordinates"></canvas>
+                                    </div>
+                                    <p style="text-align:center;font-size:0.82rem;color:var(--fe-text-muted);margin-top:0.4rem;">Parent element (ξ, η) with Gauss points</p>
+                                </div>
+                                <div>
+                                    <div class="canvas-container" style="height:300px;">
+                                        <canvas id="iso-phys-canvas" width="410" height="300" role="img" aria-label="Physical element with draggable corners colored by Jacobian determinant"></canvas>
+                                    </div>
+                                    <p style="text-align:center;font-size:0.82rem;color:var(--fe-text-muted);margin-top:0.4rem;">Physical element (x, y) — drag the corners</p>
+                                </div>
+                            </div>
+                            <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;margin-top:0.75rem;">
+                                <div class="toggle-group" id="iso-quad-toggle" style="margin-bottom:0;">
+                                    <button class="toggle-btn" data-q="1" onclick="FE.isopar.setQuad(1)">1×1</button>
+                                    <button class="toggle-btn active" data-q="2" onclick="FE.isopar.setQuad(2)">2×2</button>
+                                    <button class="toggle-btn" data-q="3" onclick="FE.isopar.setQuad(3)">3×3</button>
+                                </div>
+                                <button class="btn btn-secondary" onclick="FE.isopar.reset()"><i class="fas fa-undo"></i> Reset Element</button>
+                            </div>
+                            <div class="grid-3" style="margin-top:1rem;">
+                                <div class="stat-card">
+                                    <div class="stat-value" id="iso-minj">—</div>
+                                    <div class="stat-label">min det J</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="iso-maxj">—</div>
+                                    <div class="stat-label">max det J</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value verdict-good" id="iso-verdict">Good</div>
+                                    <div class="stat-label">Element health</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <h3>The Jacobian</h3>
+                            <p>The Jacobian matrix collects how physical coordinates change with natural ones. It converts shape-function derivatives (computed on the parent) into physical derivatives, and its determinant rescales every integral:</p>
+                            <div class="fe-eq"><span class="fe-eq-label">Jacobian</span>J = <span class="fe-matrix" style="grid-template-columns:auto auto;"><span>&part;x/&part;ξ</span><span>&part;y/&part;ξ</span><span>&part;x/&part;η</span><span>&part;y/&part;η</span></span>&emsp;,&emsp;dΩ = det&thinsp;J&thinsp;dξ&thinsp;dη</div>
+                            <p>A healthy element keeps det&thinsp;J positive and roughly uniform. Rules of thumb: corner angles between <strong>45° and 135°</strong>, aspect ratios below ~5 (below ~3 in regions of interest), and min/max det&thinsp;J ratio above ~0.2. This is exactly what the mesh-quality metrics in the <em>Meshing</em> module are protecting.</p>
+                        </div>
+
+                        <div class="panel">
+                            <h3>Gauss Quadrature Lab</h3>
+                            <p>FE integrals are evaluated numerically: sample the integrand at <em>n</em> magic points, multiply by magic weights, sum. Gauss chose both points and weights optimally — <strong>n points integrate any polynomial up to degree 2n−1 exactly</strong>. Try it:</p>
+                            <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;">
+                                <div class="toggle-group" id="gauss-func-toggle" style="margin-bottom:0;">
+                                    <button class="toggle-btn" data-f="lin" onclick="FE.gauss.setFunc('lin')">1 + x</button>
+                                    <button class="toggle-btn active" data-f="cubic" onclick="FE.gauss.setFunc('cubic')">x³ + x² + 1</button>
+                                    <button class="toggle-btn" data-f="quintic" onclick="FE.gauss.setFunc('quintic')">x⁵ + x⁴ + x</button>
+                                    <button class="toggle-btn" data-f="cos" onclick="FE.gauss.setFunc('cos')">cos 2x</button>
+                                </div>
+                            </div>
+                            <div class="slider-control">
+                                <label>Gauss points</label>
+                                <input type="range" min="1" max="4" value="1" id="gauss-n-slider" oninput="FE.gauss.setN(this.value)">
+                                <span class="slider-value" id="gauss-n-val">1</span>
+                            </div>
+                            <div class="canvas-container" style="height:300px;">
+                                <canvas id="gauss-canvas" width="860" height="300" role="img" aria-label="Gauss quadrature sampling of a function"></canvas>
+                            </div>
+                            <div class="grid-3" style="margin-top:1rem;">
+                                <div class="stat-card">
+                                    <div class="stat-value" id="gauss-exact">—</div>
+                                    <div class="stat-label">Exact integral</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="gauss-approx">—</div>
+                                    <div class="stat-label">Quadrature result</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="gauss-err">—</div>
+                                    <div class="stat-label">Error</div>
+                                </div>
+                            </div>
+                            <div class="info-card" style="margin-top:1rem;">
+                                <p style="margin:0;"><i class="fas fa-lightbulb" style="color:var(--fe-accent);margin-right:0.4rem;"></i>Notice: 2 points nail the cubic <em>exactly</em> (2·2−1 = 3), but the quintic needs 3. And cos 2x is never exact — only increasingly accurate. This is why a 2×2 rule fully integrates a Q4 stiffness matrix, and why using fewer points ("reduced integration") is cheaper but risks the hourglass modes covered in the Abaqus module.</p>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <h3>Common Quadrature Rules</h3>
+                            <table class="comparison-table">
+                                <thead>
+                                    <tr><th>Element</th><th>Full integration</th><th>Reduced</th><th>Watch out for</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Q4 quad</td><td>2×2</td><td>1 point</td><td>Hourglassing when reduced</td></tr>
+                                    <tr><td>Q8 quad</td><td>3×3</td><td>2×2</td><td>Reduced is usually the sweet spot</td></tr>
+                                    <tr><td>T3 triangle</td><td>1 point</td><td>—</td><td>Constant strain — needs fine meshes</td></tr>
+                                    <tr><td>T6 triangle</td><td>3 points</td><td>—</td><td>—</td></tr>
+                                    <tr><td>C3D8 hex</td><td>2×2×2</td><td>1 point</td><td>Hourglassing when reduced</td></tr>
+                                    <tr><td>C3D20 hex</td><td>3×3×3</td><td>2×2×2</td><td>Cost grows fast in 3D</td></tr>
+                                </tbody>
+                            </table>
+                            <p style="margin-top:0.75rem;">Stresses are evaluated <em>at the Gauss points</em> — that is where they are most accurate (superconvergence). Values you see plotted at nodes have been extrapolated and averaged, which is exactly why nodal stress contours can hide discontinuities between elements.</p>
                         </div>
                     </div>
 
@@ -2272,6 +2494,214 @@
                                     <p>Low-order fully-integrated elements can artificially stiffen in bending or near-incompressible situations. The cure: use reduced integration (e.g., C3D8R instead of C3D8), or switch to higher-order elements. Reduced integration requires hourglass control to prevent zero-energy modes.</p>
                                 </div></div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- ==================== MODULE: SOLVING THE SYSTEM ==================== -->
+                    <div class="module-content" id="module-solver">
+                        <div class="panel">
+                            <h2><i class="fas fa-microchip"></i> Solving the System</h2>
+                            <p>Assembly hands you K u = F — often with millions of unknowns. This module covers the three things every analyst must understand about that system: it is <strong>singular until you constrain it</strong>, it is <strong>extremely sparse</strong>, and the choice between <strong>direct and iterative solvers</strong> decides whether your job takes minutes or days.</p>
+                        </div>
+
+                        <div class="panel">
+                            <h3>Rigid-Body Modes — Click the Nodes!</h3>
+                            <p>A chain of 4 springs, loaded at the right end. <strong>Click any node to pin / un-pin it.</strong> Remove all pins and K becomes singular — a uniform translation costs zero energy, so the structure floats away and no solver on Earth can give you an answer.</p>
+                            <div class="canvas-container" style="height:270px;">
+                                <canvas id="bcplay-canvas" width="860" height="270" role="img" aria-label="Spring chain with clickable supports"></canvas>
+                            </div>
+                            <div class="slider-control">
+                                <label>End load F</label>
+                                <input type="range" min="-2" max="2" step="0.1" value="1" id="bcplay-f-slider" oninput="FE.bcplay.setF(this.value)">
+                                <span class="slider-value" id="bcplay-f-val">1.0</span>
+                            </div>
+                            <div class="grid-3">
+                                <div class="stat-card">
+                                    <div class="stat-value" id="bcplay-pins">1</div>
+                                    <div class="stat-label">Pinned DOFs</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value verdict-good" id="bcplay-status">SOLVABLE</div>
+                                    <div class="stat-label">System status</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="bcplay-umax">—</div>
+                                    <div class="stat-label">Max displacement</div>
+                                </div>
+                            </div>
+                            <div class="info-card" style="margin-top:1rem;">
+                                <p style="margin:0;"><i class="fas fa-exclamation-triangle" style="color:var(--fe-warning);margin-right:0.4rem;"></i>The classic Abaqus error <em>"numerical singularity … zero pivot"</em> is exactly this: a body (or a whole part) with a free rigid-body mode. In 2D each body needs 3 constrained DOFs; in 3D, 6. Under-constrained contact models are the most common real-world culprit.</p>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <h3>Sparsity & Bandwidth</h3>
+                            <p>Each node only talks to its neighbors, so almost every K entry is <strong>zero</strong>. How the nonzeros cluster depends purely on <em>node numbering</em> — and for direct solvers, the cost scales with the square of the <strong>bandwidth</strong>. Same mesh, same physics, wildly different matrix:</p>
+                            <div class="grid-2">
+                                <div>
+                                    <div class="canvas-container" style="height:420px;">
+                                        <canvas id="sparsity-canvas" width="420" height="420" role="img" aria-label="Sparsity pattern of the stiffness matrix"></canvas>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="toggle-group" id="sparsity-order-toggle">
+                                        <button class="toggle-btn active" data-o="row" onclick="FE.sparsity.setOrder('row')">Row-by-Row</button>
+                                        <button class="toggle-btn" data-o="rb" onclick="FE.sparsity.setOrder('rb')">Red-Black</button>
+                                        <button class="toggle-btn" data-o="rand" onclick="FE.sparsity.setOrder('rand')">Random</button>
+                                    </div>
+                                    <div class="slider-control">
+                                        <label>Grid size</label>
+                                        <input type="range" min="4" max="14" value="8" id="sparsity-n-slider" oninput="FE.sparsity.setN(this.value)">
+                                        <span class="slider-value" id="sparsity-n-val">8</span>
+                                    </div>
+                                    <div class="grid-2" style="gap:1rem;">
+                                        <div class="stat-card">
+                                            <div class="stat-value" id="sparsity-dim">64</div>
+                                            <div class="stat-label">Matrix size N</div>
+                                        </div>
+                                        <div class="stat-card">
+                                            <div class="stat-value" id="sparsity-nnz">—</div>
+                                            <div class="stat-label">Nonzeros</div>
+                                        </div>
+                                        <div class="stat-card">
+                                            <div class="stat-value" id="sparsity-fill">—</div>
+                                            <div class="stat-label">Density</div>
+                                        </div>
+                                        <div class="stat-card">
+                                            <div class="stat-value" id="sparsity-bw">—</div>
+                                            <div class="stat-label">Half-bandwidth</div>
+                                        </div>
+                                    </div>
+                                    <p style="margin-top:1rem;color:var(--fe-text-secondary);font-size:0.9rem;">Solvers reorder automatically (reverse Cuthill–McKee, nested dissection…), but the lesson stands: <strong>connectivity, not size, shapes the cost</strong>. A million-DOF model with a tight band solves faster than a 100k-DOF model with a terrible one.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <h3>Direct vs Iterative Solvers</h3>
+                            <div class="comparison-cols">
+                                <div class="comparison-col">
+                                    <h3><i class="fas fa-bolt" style="color:var(--fe-secondary);"></i> Direct (LU / Cholesky)</h3>
+                                    <p>Factorize once, solve exactly (to round-off). Robust — doesn't care about conditioning. Memory hungry: factorization creates <em>fill-in</em>. The default choice below ~2–5M DOFs, and for models with many load cases (one factorization, many cheap back-substitutions).</p>
+                                </div>
+                                <div class="comparison-col">
+                                    <h3><i class="fas fa-sync" style="color:var(--fe-accent);"></i> Iterative (PCG / Multigrid)</h3>
+                                    <p>Start from a guess, improve until the residual is small. Tiny memory footprint and scales beautifully in parallel — but convergence depends on <em>conditioning</em>, so a good preconditioner is everything. The only practical option for very large 3D solid models.</p>
+                                </div>
+                            </div>
+                            <div class="plotly-container" id="solver-cost-plot" style="height:360px;margin-top:1.25rem;"></div>
+                            <p style="margin-top:0.6rem;font-size:0.82rem;color:var(--fe-text-muted);">Illustrative scaling for a 2D mesh (bandwidth b ≈ √N). Actual constants vary by implementation and hardware.</p>
+                        </div>
+
+                        <div class="panel">
+                            <h3>Conditioning: When Solvers Struggle</h3>
+                            <ul style="color:var(--fe-text-secondary);line-height:1.9;margin-left:1.2rem;">
+                                <li><strong>Stiffness contrast</strong> — steel bonded to rubber (E ratio ~10⁵) makes K ill-conditioned. Expect slow iterative convergence and noisy stresses at the interface.</li>
+                                <li><strong>Degenerate elements</strong> — slivers and needles (see the Meshing module) create near-zero pivots. One terrible element can poison the whole solve.</li>
+                                <li><strong>Inconsistent units</strong> — mixing mm with GPa-scale moduli produces absurd magnitude spreads. Pick one consistent unit system and never look back.</li>
+                                <li><strong>Precision</strong> — FE solvers use double precision for a reason: a condition number of 10¹⁰ eats ~10 of your 16 significant digits.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- ==================== MODULE: 2D STRESS LAB ==================== -->
+                    <div class="module-content" id="module-stresslab">
+                        <div class="panel">
+                            <h2><i class="fas fa-fire"></i> 2D Stress Lab — A Real FEM Solver</h2>
+                            <p>Everything from the previous modules, working together: this page meshes a structure, builds Q4 or T3 element matrices with Gauss integration, assembles a banded global K, applies boundary conditions, solves with a Cholesky factorization, and recovers stresses — <strong>live, in pure JavaScript, every time you move a slider</strong>. This is the same pipeline Abaqus runs, just a few million DOFs smaller.</p>
+                        </div>
+
+                        <div class="panel">
+                            <h3>Simulation Setup</h3>
+                            <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;">
+                                <div class="toggle-group" id="lab-preset-toggle" style="margin-bottom:0;">
+                                    <button class="toggle-btn active" data-p="cant" onclick="FE.lab.setPreset('cant')">Cantilever</button>
+                                    <button class="toggle-btn" data-p="ssb" onclick="FE.lab.setPreset('ssb')">Simply Supported</button>
+                                    <button class="toggle-btn" data-p="lbrk" onclick="FE.lab.setPreset('lbrk')">L-Bracket</button>
+                                </div>
+                                <div class="toggle-group" id="lab-elem-toggle" style="margin-bottom:0;">
+                                    <button class="toggle-btn active" data-e="q4" onclick="FE.lab.setElem('q4')">Q4 Quads</button>
+                                    <button class="toggle-btn" data-e="t3" onclick="FE.lab.setElem('t3')">T3 Triangles</button>
+                                </div>
+                                <div class="toggle-group" id="lab-form-toggle" style="margin-bottom:0;">
+                                    <button class="toggle-btn active" data-f="pstress" onclick="FE.lab.setForm('pstress')">Plane Stress</button>
+                                    <button class="toggle-btn" data-f="pstrain" onclick="FE.lab.setForm('pstrain')">Plane Strain</button>
+                                </div>
+                            </div>
+                            <div class="grid-2" style="gap:0 2rem;">
+                                <div class="slider-control">
+                                    <label>Mesh density</label>
+                                    <input type="range" min="1" max="6" value="2" id="lab-density-slider" oninput="FE.lab.setDensity(this.value)">
+                                    <span class="slider-value" id="lab-density-val">2</span>
+                                </div>
+                                <div class="slider-control">
+                                    <label>Load ×P₀</label>
+                                    <input type="range" min="0.2" max="3" step="0.1" value="1" id="lab-load-slider" oninput="FE.lab.setLoad(this.value)">
+                                    <span class="slider-value" id="lab-load-val">1.0</span>
+                                </div>
+                            </div>
+                            <div class="grid-2" style="gap:0 2rem;">
+                                <div class="slider-control">
+                                    <label>Deformation ×</label>
+                                    <input type="range" min="0" max="3" step="0.1" value="1" id="lab-scale-slider" oninput="FE.lab.setScale(this.value)">
+                                    <span class="slider-value" id="lab-scale-val">auto</span>
+                                </div>
+                                <div class="toggle-group" id="lab-field-toggle" style="margin-bottom:0;align-self:center;">
+                                    <button class="toggle-btn active" data-fl="vm" onclick="FE.lab.setField('vm')">von Mises</button>
+                                    <button class="toggle-btn" data-fl="sxx" onclick="FE.lab.setField('sxx')">σxx</button>
+                                    <button class="toggle-btn" data-fl="syy" onclick="FE.lab.setField('syy')">σyy</button>
+                                    <button class="toggle-btn" data-fl="txy" onclick="FE.lab.setField('txy')">τxy</button>
+                                    <button class="toggle-btn" data-fl="umag" onclick="FE.lab.setField('umag')">|u|</button>
+                                </div>
+                            </div>
+                            <div class="canvas-container" style="height:480px;">
+                                <canvas id="lab-canvas" width="880" height="480" role="img" aria-label="Deformed finite element mesh with stress contours"></canvas>
+                            </div>
+                            <div class="grid-3" style="margin-top:1rem;">
+                                <div class="stat-card">
+                                    <div class="stat-value" id="lab-elems">—</div>
+                                    <div class="stat-label">Elements</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="lab-dofs">—</div>
+                                    <div class="stat-label">DOFs</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="lab-maxvm">—</div>
+                                    <div class="stat-label">Max von Mises</div>
+                                </div>
+                            </div>
+                            <div class="grid-3" style="margin-top:1rem;">
+                                <div class="stat-card">
+                                    <div class="stat-value" id="lab-tipdef">—</div>
+                                    <div class="stat-label">FEM deflection</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="lab-beamdef">—</div>
+                                    <div class="stat-label">Beam theory (Timoshenko)</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="lab-diff">—</div>
+                                    <div class="stat-label">Difference</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel">
+                            <h3><i class="fas fa-flask" style="color:var(--fe-accent);"></i> Try This</h3>
+                            <ul style="color:var(--fe-text-secondary);line-height:1.9;margin-left:1.2rem;">
+                                <li><strong>Feel the locking:</strong> set density 1 with <em>T3 triangles</em> on the cantilever — the deflection comes out far too small. Constant-strain triangles cannot bend (Module: Element Types). Switch to Q4 and watch the answer jump toward beam theory.</li>
+                                <li><strong>Converge it:</strong> crank the density up and watch the FEM deflection approach — then slightly exceed — Euler-Bernoulli, because the 2D model includes shear deformation that beam theory ignores. Timoshenko theory (shown) accounts for it.</li>
+                                <li><strong>Find the singularity:</strong> on the L-bracket, look at the re-entrant corner. Refine the mesh — the peak von Mises <em>keeps climbing</em>. That is a stress singularity (Module: Convergence, Pitfalls). Real parts have fillets!</li>
+                                <li><strong>Plane stress vs strain:</strong> toggle the formulation and watch stiffness rise slightly under plane strain — the suppressed out-of-plane contraction acts like extra confinement.</li>
+                            </ul>
+                        </div>
+
+                        <div class="panel">
+                            <h3>Mini Convergence Study</h3>
+                            <p>Run the cantilever at five mesh densities with both element types. One click reproduces the central lesson of this whole platform: <strong>element choice sets the starting point, refinement closes the gap</strong>.</p>
+                            <button class="btn btn-primary" id="lab-study-btn" onclick="FE.lab.runStudy()"><i class="fas fa-play"></i> Run Study</button>
+                            <div class="plotly-container" id="lab-conv-plot" style="height:380px;margin-top:1rem;display:none;"></div>
                         </div>
                     </div>
 
@@ -2552,8 +2982,8 @@
             <div class="shortcut-group">
                 <div class="shortcut-group-title">Navigation</div>
                 <div class="shortcut-row">
-                    <span class="shortcut-label">Navigate to module 1–8</span>
-                    <div class="shortcut-keys"><span class="kbd">1</span> – <span class="kbd">8</span></div>
+                    <span class="shortcut-label">Navigate to module 1–9</span>
+                    <div class="shortcut-keys"><span class="kbd">1</span> – <span class="kbd">9</span></div>
                 </div>
                 <div class="shortcut-row">
                     <span class="shortcut-label">Next module</span>
@@ -2578,7 +3008,7 @@
         var _initializedModules = {};
         var _currentView = 'landing';
 
-        var MODULES = ['intro','meshing','elements','hpmethod','complexity','convergence','abaqus','proscons'];
+        var MODULES = ['intro','mathfem','meshing','elements','isopar','hpmethod','complexity','convergence','solver','stresslab','abaqus','proscons'];
 
         // ==================== LANDING ↔ MODULE TRANSITIONS ====================
         window.openModuleFromLanding = function(moduleId) {
@@ -2751,8 +3181,8 @@
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                var lineColor = isDark ? 'rgba(224, 70, 104, 0.12)' : 'rgba(224, 70, 104, 0.08)';
-                var dotColor = isDark ? 'rgba(224, 70, 104, 0.3)' : 'rgba(224, 70, 104, 0.2)';
+                var lineColor = isDark ? 'rgba(13, 148, 136, 0.12)' : 'rgba(13, 148, 136, 0.08)';
+                var dotColor = isDark ? 'rgba(13, 148, 136, 0.3)' : 'rgba(13, 148, 136, 0.2)';
 
                 // Update positions
                 for (var i = 0; i < points.length; i++) {
@@ -2804,11 +3234,15 @@
         function _initModule(moduleId) {
             switch(moduleId) {
                 case 'intro': _initIntro(); break;
+                case 'mathfem': _initMathFEM(); break;
                 case 'meshing': _initMeshing(); break;
                 case 'elements': _initElements(); break;
+                case 'isopar': _initIsopar(); break;
                 case 'hpmethod': _initHP(); break;
                 case 'complexity': _initComplexity(); break;
                 case 'convergence': _initConvergence(); break;
+                case 'solver': _initSolver(); break;
+                case 'stresslab': _initStressLab(); break;
                 case 'abaqus': _initAbaqus(); break;
                 case 'proscons': _initProscons(); break;
             }
@@ -3056,7 +3490,7 @@
                 ctx.fillStyle = isDark ? '#1e293b' : '#e2e8f0';
                 ctx.fillRect(sx, sy, w, h);
 
-                ctx.strokeStyle = 'rgba(224, 70, 104, 0.6)';
+                ctx.strokeStyle = 'rgba(13, 148, 136, 0.6)';
                 ctx.lineWidth = 1.5;
                 // Vertical lines
                 for (var i = 0; i <= nx && i < linesShown; i++) {
@@ -3188,7 +3622,11 @@
                 dof: '<h4>Degree of Freedom (DOF)</h4><p>Each node can move or rotate in certain directions. Each independent motion is one DOF. A 2D structural node has 2 DOFs (x, y displacement). A 3D beam node might have 6 DOFs (3 translations + 3 rotations).</p>',
                 element: '<h4>Element</h4><p>A small sub-region of the domain, defined by its nodes. Elements connect to form the mesh. The solution is approximated independently within each element using shape functions, then assembled into a global system.</p>',
                 shapefunction: '<h4>Shape Function</h4><p>Mathematical functions that interpolate the solution within an element from its nodal values. For a linear triangle, N₁ = 1-ξ-η, N₂ = ξ, N₃ = η. The solution at any point is u = N₁u₁ + N₂u₂ + N₃u₃.</p>',
-                stiffness: '<h4>Stiffness Matrix</h4><p>The matrix [K] in [K]{u} = {F} that relates nodal displacements {u} to applied forces {F}. Each element contributes its own stiffness matrix, which are assembled into the global system. [K] depends on material properties, geometry, and element type.</p>'
+                stiffness: '<h4>Stiffness Matrix</h4><p>The matrix [K] in [K]{u} = {F} that relates nodal displacements {u} to applied forces {F}. Each element contributes its own stiffness matrix, which are assembled into the global system. [K] depends on material properties, geometry, and element type.</p>',
+                weakform: '<h4>Weak Form</h4><p>An integral restatement of the governing differential equation. Instead of requiring the PDE to hold at every point (the strong form), the weak form only requires it to hold "on average" against a set of test functions. This lowers the smoothness the approximation needs and is the mathematical foundation of FEM. See the <em>Math of FEM</em> module.</p>',
+                jacobian: '<h4>Jacobian</h4><p>The matrix J = ∂(x,y)/∂(ξ,η) that maps the perfect parent element to the distorted physical element. Its determinant scales integrals — and if det J ≤ 0 anywhere, the element is folded over itself and the solver will reject it. See the <em>Isoparametric</em> module.</p>',
+                gausspoint: '<h4>Gauss Point</h4><p>A sampling location for numerical integration. n Gauss points integrate 1D polynomials up to degree 2n−1 exactly, which is why a 2×2 rule suffices for a Q4 stiffness matrix. Stresses are most accurate at Gauss points — most FE codes evaluate and report them there.</p>',
+                isoparametric: '<h4>Isoparametric Element</h4><p>An element that uses the <em>same</em> shape functions to describe both its geometry (x, y coordinates) and its solution field (displacements). This trick lets curved, distorted elements be handled with the exact same machinery as perfect squares and cubes.</p>'
             };
 
             detail.innerHTML = glossaryData[term] || '';
@@ -3256,7 +3694,7 @@
                 var tris = FEMath.delaunay(pts);
 
                 // Draw triangles
-                ctx.strokeStyle = isDark ? 'rgba(224, 70, 104, 0.5)' : 'rgba(224, 70, 104, 0.6)';
+                ctx.strokeStyle = isDark ? 'rgba(13, 148, 136, 0.5)' : 'rgba(13, 148, 136, 0.6)';
                 ctx.lineWidth = 1;
                 tris.forEach(function(tri) {
                     var a = pts[tri[0]], b = pts[tri[1]], c = pts[tri[2]];
@@ -3327,7 +3765,7 @@
                     uPts.push([20 + Math.random() * 340, 15 + Math.random() * 170]);
                 }
                 var uTris = FEMath.delaunay(uPts);
-                uCtx.strokeStyle = isDark ? 'rgba(224, 70, 104, 0.5)' : 'rgba(224, 70, 104, 0.6)';
+                uCtx.strokeStyle = isDark ? 'rgba(13, 148, 136, 0.5)' : 'rgba(13, 148, 136, 0.6)';
                 uCtx.lineWidth = 1;
                 uTris.forEach(function(tri) {
                     var a = uPts[tri[0]], b = uPts[tri[1]], c = uPts[tri[2]];
@@ -3359,7 +3797,7 @@
             function draw() {
                 ctx.clearRect(0, 0, W, H);
                 var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                ctx.strokeStyle = isDark ? 'rgba(224, 70, 104, 0.6)' : 'rgba(224, 70, 104, 0.7)';
+                ctx.strokeStyle = isDark ? 'rgba(13, 148, 136, 0.6)' : 'rgba(13, 148, 136, 0.7)';
                 ctx.lineWidth = 2;
                 tris.forEach(function(tri) {
                     ctx.beginPath();
@@ -3489,7 +3927,7 @@
                     }
                     x.push(xr); y.push(yr); z1.push(zr1); z2.push(zr2); z3.push(zr3);
                 }
-                traces.push({ type: 'surface', x: x, y: y, z: z1, colorscale: [[0,'#3b82f6'],[1,'#e04668']], opacity: 0.8, name: 'N₁', showscale: false });
+                traces.push({ type: 'surface', x: x, y: y, z: z1, colorscale: [[0,'#3b82f6'],[1,'#0d9488']], opacity: 0.8, name: 'N₁', showscale: false });
             } else if (type === 'q4' || type === 'q8') {
                 var funcName = type === 'q4' ? 'shapeFuncsQ4' : 'shapeFuncsQ8';
                 var numFuncs = type === 'q4' ? 4 : 8;
@@ -3511,7 +3949,7 @@
                     for (var k = 0; k < numFuncs; k++) zAll[k].push(zrs[k]);
                 }
                 // Just show N1
-                traces.push({ type: 'surface', x: x, y: y, z: zAll[0], colorscale: [[0,'#3b82f6'],[1,'#e04668']], opacity: 0.8, name: 'N₁', showscale: false });
+                traces.push({ type: 'surface', x: x, y: y, z: zAll[0], colorscale: [[0,'#3b82f6'],[1,'#0d9488']], opacity: 0.8, name: 'N₁', showscale: false });
             }
 
             var layout = {
@@ -3589,7 +4027,7 @@
                 // Color gradient indicating order
                 var grad = ctx.createLinearGradient(sx, 0, sx + w, 0);
                 grad.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
-                grad.addColorStop(1, 'rgba(224, 70, 104, 0.8)');
+                grad.addColorStop(1, 'rgba(13, 148, 136, 0.8)');
                 ctx.fillStyle = grad;
                 ctx.fillRect(sx, sy, w, h);
 
@@ -3785,7 +4223,7 @@
                 var traces = [
                     { x: xExact, y: yExact, mode: 'lines', name: 'Exact', line: { color: '#94a3b8', width: 2, dash: 'dash' } },
                     { x: xFea, y: yFea, mode: 'lines+markers', name: 'FEA (' + ['Linear','Quadratic','Cubic'][currentOrder-1] + ')',
-                      line: { color: '#e04668', width: 2 }, marker: { size: 6 } }
+                      line: { color: '#0d9488', width: 2 }, marker: { size: 6 } }
                 ];
 
                 Plotly.newPlot('complexity-accuracy-plot', traces, {
@@ -3807,7 +4245,7 @@
 
                 var elems = [1,2,4,8,16];
                 var traces = [];
-                var colors = ['#e04668', '#3b82f6', '#f59e0b'];
+                var colors = ['#0d9488', '#3b82f6', '#f59e0b'];
                 var names = ['Linear', 'Quadratic', 'Cubic'];
 
                 [1,2,3].forEach(function(order, idx) {
@@ -3911,7 +4349,7 @@
 
                     // Animate points appearing
                     var data = [{ x: [], y: [], mode: 'lines+markers', name: 'h-convergence',
-                        line: { color: '#e04668', width: 2 }, marker: { size: 8 } }];
+                        line: { color: '#0d9488', width: 2 }, marker: { size: 8 } }];
 
                     Plotly.newPlot('h-convergence-plot', data, {
                         xaxis: { title: 'Number of Elements', type: 'log', color: textColor, gridcolor: gridColor },
@@ -4003,7 +4441,7 @@
 
             // Analysis type prefix
             if (name.startsWith('C')) {
-                segments.push({ text: name[0], color: '#e04668', label: 'Continuum (Solid)' });
+                segments.push({ text: name[0], color: '#0d9488', label: 'Continuum (Solid)' });
             } else if (name.startsWith('S')) {
                 segments.push({ text: name[0], color: '#3b82f6', label: 'Shell' });
             } else if (name.startsWith('B')) {
@@ -4103,6 +4541,1579 @@
             }
         }
 
+        // ==================== MODULE: MATH OF FEM ====================
+        function _initMathFEM() {
+            FE.bar1d.init();
+            FE.assembly.init();
+        }
+
+        // Generic dense symmetric solver (Gaussian elimination, small systems)
+        FEMath.solveDense = function(A, b) {
+            var n = b.length, i, j, k2;
+            var M = [], f = b.slice();
+            for (i = 0; i < n; i++) M[i] = A[i].slice();
+            for (i = 0; i < n; i++) {
+                var maxV = Math.abs(M[i][i]), maxR = i;
+                for (k2 = i + 1; k2 < n; k2++) if (Math.abs(M[k2][i]) > maxV) { maxV = Math.abs(M[k2][i]); maxR = k2; }
+                var tmp = M[i]; M[i] = M[maxR]; M[maxR] = tmp;
+                var tf = f[i]; f[i] = f[maxR]; f[maxR] = tf;
+                if (Math.abs(M[i][i]) < 1e-14) return null;
+                for (k2 = i + 1; k2 < n; k2++) {
+                    var fac = M[k2][i] / M[i][i];
+                    for (j = i; j < n; j++) M[k2][j] -= fac * M[i][j];
+                    f[k2] -= fac * f[i];
+                }
+            }
+            var x = new Array(n);
+            for (i = n - 1; i >= 0; i--) {
+                x[i] = f[i];
+                for (j = i + 1; j < n; j++) x[i] -= M[i][j] * x[j];
+                x[i] /= M[i][i];
+            }
+            return x;
+        };
+
+        // ---------- 1D bar solver ----------
+        FE.bar1d = (function() {
+            var nElem = 3, order = 1, loadCase = 'uniform';
+            var L = 1, EA = 1, P = 1, q0 = 1;
+
+            function qFun(x) {
+                if (loadCase === 'uniform') return q0;
+                if (loadCase === 'tri') return q0 * (1 - x / L);
+                return 0;
+            }
+            function uExact(x) {
+                if (loadCase === 'end') return P * x / EA;
+                if (loadCase === 'uniform') return (q0 / EA) * (L * x - x * x / 2);
+                return (q0 / (6 * L * EA)) * (L*L*L - Math.pow(L - x, 3));
+            }
+            function nExact(x) {
+                if (loadCase === 'end') return P;
+                if (loadCase === 'uniform') return q0 * (L - x);
+                return q0 * (L - x) * (L - x) / (2 * L);
+            }
+
+            // 3-pt Gauss on [-1,1]
+            var GP = [-0.7745966692, 0, 0.7745966692];
+            var GW = [0.5555555556, 0.8888888889, 0.5555555556];
+
+            function shape(order, xi) {
+                if (order === 1) return { N: [(1 - xi) / 2, (1 + xi) / 2], dN: [-0.5, 0.5] };
+                return { N: [xi * (xi - 1) / 2, 1 - xi * xi, xi * (xi + 1) / 2],
+                         dN: [xi - 0.5, -2 * xi, xi + 0.5] };
+            }
+
+            function solve() {
+                var npe = order + 1;                       // nodes per element
+                var nNodes = nElem * order + 1;
+                var xs = [];
+                for (var i = 0; i < nNodes; i++) xs.push(L * i / (nNodes - 1));
+                var K = [], Fv = [];
+                for (var i = 0; i < nNodes; i++) { K[i] = []; Fv[i] = 0; for (var j = 0; j < nNodes; j++) K[i][j] = 0; }
+                for (var e = 0; e < nElem; e++) {
+                    var conn = []; for (var a = 0; a < npe; a++) conn.push(e * order + a);
+                    var x1 = xs[conn[0]], x2 = xs[conn[npe - 1]], Le = x2 - x1, Jac = Le / 2;
+                    for (var g = 0; g < 3; g++) {
+                        var s = shape(order, GP[g]);
+                        var xg = x1 + (GP[g] + 1) * Jac;
+                        for (var a = 0; a < npe; a++) {
+                            Fv[conn[a]] += GW[g] * s.N[a] * qFun(xg) * Jac;
+                            for (var b = 0; b < npe; b++) {
+                                K[conn[a]][conn[b]] += GW[g] * EA * (s.dN[a] / Jac) * (s.dN[b] / Jac) * Jac;
+                            }
+                        }
+                    }
+                }
+                if (loadCase === 'end') Fv[nNodes - 1] += P;
+                // essential BC: u(0)=0 -> reduce
+                var Kr = [], Fr = [];
+                for (var i = 1; i < nNodes; i++) {
+                    Kr.push(K[i].slice(1)); Fr.push(Fv[i]);
+                }
+                var ur = FEMath.solveDense(Kr, Fr) || [];
+                var u = [0].concat(ur);
+                return { xs: xs, u: u, nNodes: nNodes, npe: npe };
+            }
+
+            function sampleFEM(sol) {
+                // dense sampling within each element for plotting
+                var X = [], U = [], N = [];
+                var npe = sol.npe;
+                for (var e = 0; e < nElem; e++) {
+                    var conn = []; for (var a = 0; a < npe; a++) conn.push(e * order + a);
+                    var x1 = sol.xs[conn[0]], x2 = sol.xs[conn[npe - 1]], Jac = (x2 - x1) / 2;
+                    for (var k2 = 0; k2 <= 12; k2++) {
+                        var xi = -1 + 2 * k2 / 12;
+                        var s = shape(order, xi);
+                        var xv = x1 + (xi + 1) * Jac, uv = 0, dv = 0;
+                        for (var a = 0; a < npe; a++) { uv += s.N[a] * sol.u[conn[a]]; dv += (s.dN[a] / Jac) * sol.u[conn[a]]; }
+                        X.push(xv); U.push(uv); N.push(EA * dv);
+                    }
+                    X.push(null); U.push(null); N.push(null); // gap to show discontinuity
+                }
+                return { X: X, U: U, N: N };
+            }
+
+            function plotTheme() {
+                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                return {
+                    bg: isDark ? '#1e293b' : '#f1f5f9',
+                    text: isDark ? '#cbd5e1' : '#64748b',
+                    grid: isDark ? '#334155' : '#cbd5e1'
+                };
+            }
+
+            function update() {
+                var sol = solve();
+                var fem = sampleFEM(sol);
+                var xe = [], ue = [], ne = [];
+                for (var i = 0; i <= 100; i++) { var xv = L * i / 100; xe.push(xv); ue.push(uExact(xv)); ne.push(nExact(xv)); }
+
+                var th = plotTheme();
+                var common = {
+                    paper_bgcolor: th.bg, plot_bgcolor: th.bg, font: { color: th.text, size: 11 },
+                    margin: { l: 50, r: 15, t: 36, b: 40 }, showlegend: true,
+                    legend: { orientation: 'h', y: 1.15 }
+                };
+                Plotly.react('bar1d-disp-plot', [
+                    { x: xe, y: ue, mode: 'lines', name: 'Exact', line: { dash: 'dash', color: th.text, width: 2 } },
+                    { x: fem.X, y: fem.U, mode: 'lines', name: 'FEM', line: { color: '#0d9488', width: 3 }, connectgaps: false },
+                    { x: sol.xs, y: sol.u, mode: 'markers', name: 'Nodes', marker: { color: '#3b82f6', size: 8 } }
+                ], Object.assign({}, common, {
+                    title: { text: 'Displacement u(x)', font: { size: 13 } },
+                    xaxis: { title: 'x / L', color: th.text, gridcolor: th.grid },
+                    yaxis: { color: th.text, gridcolor: th.grid }
+                }), { responsive: true, displayModeBar: false });
+
+                Plotly.react('bar1d-force-plot', [
+                    { x: xe, y: ne, mode: 'lines', name: 'Exact', line: { dash: 'dash', color: th.text, width: 2 } },
+                    { x: fem.X, y: fem.N, mode: 'lines', name: 'FEM', line: { color: '#f59e0b', width: 3 }, connectgaps: false }
+                ], Object.assign({}, common, {
+                    title: { text: 'Axial force N(x) — note the jumps', font: { size: 13 } },
+                    xaxis: { title: 'x / L', color: th.text, gridcolor: th.grid },
+                    yaxis: { color: th.text, gridcolor: th.grid }
+                }), { responsive: true, displayModeBar: false });
+
+                // L2 errors
+                var eu = 0, nu = 0, es = 0, ns = 0;
+                for (var i = 0; i < fem.X.length; i++) {
+                    if (fem.X[i] === null) continue;
+                    var du = fem.U[i] - uExact(fem.X[i]); eu += du * du; nu += uExact(fem.X[i]) * uExact(fem.X[i]);
+                    var dn = fem.N[i] - nExact(fem.X[i]); es += dn * dn; ns += nExact(fem.X[i]) * nExact(fem.X[i]);
+                }
+                var uerr = nu > 1e-12 ? Math.sqrt(eu / nu) * 100 : 0;
+                var serr = ns > 1e-12 ? Math.sqrt(es / ns) * 100 : 0;
+                document.getElementById('bar1d-dofs').textContent = sol.nNodes - 1;
+                document.getElementById('bar1d-uerr').textContent = uerr < 0.005 ? '≈0%' : uerr.toFixed(2) + '%';
+                document.getElementById('bar1d-serr').textContent = serr < 0.005 ? '≈0%' : serr.toFixed(2) + '%';
+                drawBar(sol);
+            }
+
+            function drawBar(sol) {
+                var canvas = document.getElementById('bar1d-canvas');
+                if (!canvas) return;
+                var ctx = canvas.getContext('2d');
+                var W = canvas.width, H = canvas.height;
+                ctx.clearRect(0, 0, W, H);
+                var x0 = 70, x1 = W - 90, ybar = H / 2, hbar = 16;
+                var text = var_color('--fe-text-secondary'), prim = var_color('--fe-primary'), sec = var_color('--fe-secondary');
+                // wall
+                ctx.strokeStyle = text; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(x0, ybar - 34); ctx.lineTo(x0, ybar + 34); ctx.stroke();
+                for (var i = 0; i < 8; i++) {
+                    ctx.beginPath(); ctx.moveTo(x0, ybar - 34 + i * 9.5); ctx.lineTo(x0 - 9, ybar - 25 + i * 9.5); ctx.stroke();
+                }
+                // bar
+                ctx.fillStyle = var_color('--fe-bg-panel'); ctx.strokeStyle = text;
+                ctx.fillRect(x0, ybar - hbar / 2, x1 - x0, hbar);
+                ctx.strokeRect(x0, ybar - hbar / 2, x1 - x0, hbar);
+                // distributed load arrows
+                if (loadCase !== 'end') {
+                    ctx.strokeStyle = prim; ctx.fillStyle = prim; ctx.lineWidth = 1.5;
+                    var nArr = 11;
+                    for (var i = 0; i <= nArr; i++) {
+                        var fx = i / nArr;
+                        var mag = loadCase === 'uniform' ? 1 : (1 - fx);
+                        if (mag < 0.03) continue;
+                        var ax = x0 + fx * (x1 - x0);
+                        var len = 8 + 16 * mag;
+                        ctx.beginPath(); ctx.moveTo(ax, ybar - hbar / 2 - len); ctx.lineTo(ax, ybar - hbar / 2 - 2); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(ax, ybar - hbar / 2); ctx.lineTo(ax - 3.5, ybar - hbar / 2 - 6); ctx.lineTo(ax + 3.5, ybar - hbar / 2 - 6); ctx.fill();
+                    }
+                    ctx.font = '11px sans-serif'; ctx.fillText(loadCase === 'uniform' ? 'q (uniform)' : 'q (triangular)', x0 + 4, ybar - hbar / 2 - 30);
+                }
+                if (loadCase === 'end') {
+                    ctx.strokeStyle = prim; ctx.fillStyle = prim; ctx.lineWidth = 2.5;
+                    ctx.beginPath(); ctx.moveTo(x1 + 2, ybar); ctx.lineTo(x1 + 46, ybar); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(x1 + 54, ybar); ctx.lineTo(x1 + 42, ybar - 6); ctx.lineTo(x1 + 42, ybar + 6); ctx.fill();
+                    ctx.font = 'bold 13px sans-serif'; ctx.fillText('P', x1 + 58, ybar + 4);
+                }
+                // nodes
+                var nNodes = sol.nNodes;
+                for (var i = 0; i < nNodes; i++) {
+                    var nx = x0 + (x1 - x0) * sol.xs[i] / 1;
+                    var isCorner = (order === 1) || (i % order === 0);
+                    ctx.beginPath(); ctx.arc(nx, ybar, isCorner ? 5 : 3.5, 0, Math.PI * 2);
+                    ctx.fillStyle = isCorner ? sec : var_color('--fe-accent'); ctx.fill();
+                    ctx.strokeStyle = var_color('--fe-bg'); ctx.lineWidth = 1.5; ctx.stroke();
+                }
+            }
+
+            return {
+                init: function() { update(); },
+                setN: function(v) {
+                    nElem = parseInt(v);
+                    document.getElementById('bar1d-n-val').textContent = nElem;
+                    update();
+                },
+                setOrder: function(o) {
+                    order = o;
+                    document.querySelectorAll('#bar1d-order-toggle .toggle-btn').forEach(function(b) {
+                        b.classList.toggle('active', parseInt(b.dataset.order) === o);
+                    });
+                    update();
+                },
+                setLoad: function(lc) {
+                    loadCase = lc;
+                    document.querySelectorAll('#bar1d-load-toggle .toggle-btn').forEach(function(b) {
+                        b.classList.toggle('active', b.dataset.load === lc);
+                    });
+                    update();
+                },
+                refresh: update
+            };
+        })();
+
+        // ---------- assembly visualizer ----------
+        FE.assembly = (function() {
+            var NE = 4, added = 0, timer = null;
+
+            function K() {
+                var n = NE + 1, M = [];
+                for (var i = 0; i < n; i++) { M[i] = []; for (var j = 0; j < n; j++) M[i][j] = 0; }
+                for (var e = 0; e < added; e++) {
+                    M[e][e] += 1; M[e][e + 1] -= 1; M[e + 1][e] -= 1; M[e + 1][e + 1] += 1;
+                }
+                return M;
+            }
+
+            function draw() {
+                var canvas = document.getElementById('assembly-canvas');
+                if (!canvas) return;
+                var ctx = canvas.getContext('2d');
+                var W = canvas.width, H = canvas.height;
+                ctx.clearRect(0, 0, W, H);
+                var text = var_color('--fe-text'), muted = var_color('--fe-text-secondary');
+                var prim = var_color('--fe-primary'), sec = var_color('--fe-secondary'), acc = var_color('--fe-accent');
+                var panel = var_color('--fe-bg-panel'), border = var_color('--fe-border');
+
+                // --- bar schematic (top) ---
+                var bx0 = 60, bx1 = 420, by = 62;
+                ctx.font = 'bold 12px sans-serif'; ctx.fillStyle = muted;
+                ctx.fillText('Structure: 4 bar elements, 5 nodes', bx0, 22);
+                for (var e = 0; e < NE; e++) {
+                    var ex0 = bx0 + (bx1 - bx0) * e / NE, ex1 = bx0 + (bx1 - bx0) * (e + 1) / NE;
+                    var active = e === added - 1, done = e < added;
+                    ctx.fillStyle = active ? prim : (done ? sec : panel);
+                    ctx.globalAlpha = done || active ? 0.85 : 1;
+                    ctx.fillRect(ex0 + 2, by - 9, ex1 - ex0 - 4, 18);
+                    ctx.globalAlpha = 1;
+                    ctx.strokeStyle = border; ctx.strokeRect(ex0 + 2, by - 9, ex1 - ex0 - 4, 18);
+                    ctx.fillStyle = active || done ? '#fff' : muted;
+                    ctx.font = 'bold 11px sans-serif';
+                    ctx.fillText('e' + (e + 1), (ex0 + ex1) / 2 - 7, by + 4);
+                }
+                for (var i = 0; i <= NE; i++) {
+                    var nx = bx0 + (bx1 - bx0) * i / NE;
+                    ctx.beginPath(); ctx.arc(nx, by, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = i <= added ? acc : panel; ctx.fill();
+                    ctx.strokeStyle = text; ctx.lineWidth = 1.5; ctx.stroke();
+                    ctx.fillStyle = muted; ctx.font = '10px sans-serif';
+                    ctx.fillText(String(i + 1), nx - 3, by + 24);
+                }
+
+                // --- element matrix (left, below) ---
+                var kx = 70, ky = 130, cell = 44;
+                ctx.fillStyle = muted; ctx.font = 'bold 12px sans-serif';
+                if (added > 0 && added <= NE) {
+                    ctx.fillText('kᵉ of element ' + added + '  (nodes ' + added + ', ' + (added + 1) + ')', kx - 10, ky - 12);
+                    var ke = [[1, -1], [-1, 1]];
+                    for (var i = 0; i < 2; i++) for (var j = 0; j < 2; j++) {
+                        ctx.fillStyle = prim; ctx.globalAlpha = 0.18 + 0.5 * Math.abs(ke[i][j]);
+                        ctx.fillRect(kx + j * cell, ky + i * cell, cell - 3, cell - 3);
+                        ctx.globalAlpha = 1;
+                        ctx.fillStyle = '#fff'; ctx.font = 'bold 14px sans-serif';
+                        ctx.fillText(ke[i][j] > 0 ? '+1' : '−1', kx + j * cell + 11, ky + i * cell + 26);
+                    }
+                    // arrow to global
+                    ctx.strokeStyle = muted; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.moveTo(kx + 2 * cell + 16, ky + cell); ctx.lineTo(kx + 2 * cell + 78, ky + cell); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(kx + 2 * cell + 86, ky + cell); ctx.lineTo(kx + 2 * cell + 72, ky + cell - 6); ctx.lineTo(kx + 2 * cell + 72, ky + cell + 6); ctx.fillStyle = muted; ctx.fill();
+                } else {
+                    ctx.fillText(added === 0 ? 'No elements added yet' : 'All elements assembled ✓', kx - 10, ky + 30);
+                }
+
+                // --- global K (right) ---
+                var gx = 330, gy = 118, gc = 42, n = NE + 1;
+                ctx.fillStyle = muted; ctx.font = 'bold 12px sans-serif';
+                ctx.fillText('Global K  (' + n + '×' + n + ', units EA/Lₑ)', gx, gy - 14);
+                var M = K();
+                for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) {
+                    var v = M[i][j];
+                    var isNew = added > 0 && (i === added - 1 || i === added) && (j === added - 1 || j === added);
+                    var overlap = (i === j && i > 0 && i < NE && i < added); // diagonal receiving 2 contributions
+                    ctx.fillStyle = v === 0 ? panel : (v > 0 ? sec : prim);
+                    ctx.globalAlpha = v === 0 ? 0.5 : (0.35 + 0.28 * Math.min(Math.abs(v), 2));
+                    ctx.fillRect(gx + j * gc, gy + i * gc, gc - 3, gc - 3);
+                    ctx.globalAlpha = 1;
+                    if (isNew) { ctx.strokeStyle = acc; ctx.lineWidth = 2.5; ctx.strokeRect(gx + j * gc + 1, gy + i * gc + 1, gc - 5, gc - 5); }
+                    if (v !== 0) {
+                        ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif';
+                        var lbl = (v > 0 ? '+' : '−') + Math.abs(v);
+                        ctx.fillText(lbl, gx + j * gc + (gc - 3) / 2 - 9, gy + i * gc + 26);
+                    }
+                    if (overlap && added > 0) {
+                        ctx.fillStyle = acc; ctx.font = 'bold 9px sans-serif';
+                        ctx.fillText('1+1', gx + j * gc + 8, gy + i * gc + 37);
+                    }
+                }
+            }
+
+            function caption() {
+                var el = document.getElementById('assembly-caption');
+                if (!el) return;
+                if (added === 0) el.innerHTML = 'Press <strong>Add Next Element</strong> to scatter k<sup>e</sup> of element 1 into the global matrix (values in units of EA/L<sub>e</sub>).';
+                else if (added < NE) el.innerHTML = 'Element ' + added + ' added. Interior diagonal entries show <strong style="color:var(--fe-accent);">1+1 = 2</strong> — two elements sharing one node. That overlap is displacement compatibility in matrix form.';
+                else el.innerHTML = 'Assembly complete. K is symmetric, banded (tridiagonal here), and <strong>singular</strong> until a boundary condition pins the bar — every row sums to zero, so uniform translation costs no energy.';
+            }
+
+            return {
+                init: function() { added = 0; draw(); caption(); },
+                step: function() {
+                    if (added < NE) { added++; draw(); caption(); }
+                    if (added === NE && timer) { clearInterval(timer); timer = null;
+                        var pb = document.getElementById('assembly-play-btn');
+                        if (pb) pb.innerHTML = '<i class="fas fa-play"></i> Auto-Play';
+                    }
+                },
+                play: function() {
+                    var pb = document.getElementById('assembly-play-btn');
+                    if (timer) { clearInterval(timer); timer = null; if (pb) pb.innerHTML = '<i class="fas fa-play"></i> Auto-Play'; return; }
+                    if (added >= NE) { added = 0; draw(); caption(); }
+                    timer = setInterval(function() { FE.assembly.step(); }, 1000);
+                    if (pb) pb.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                },
+                reset: function() {
+                    if (timer) { clearInterval(timer); timer = null;
+                        var pb = document.getElementById('assembly-play-btn');
+                        if (pb) pb.innerHTML = '<i class="fas fa-play"></i> Auto-Play';
+                    }
+                    added = 0; draw(); caption();
+                }
+            };
+        })();
+
+        // ==================== MODULE: ISOPARAMETRIC ====================
+        function _initIsopar() {
+            FE.isopar.init();
+            FE.gauss.init();
+        }
+
+        FE.isopar = (function() {
+            var DEFAULT = [[95, 235], [330, 250], [305, 70], [80, 55]]; // Q4 node order: (-1,-1),(1,-1),(1,1),(-1,1) in canvas coords
+            var corners = DEFAULT.map(function(p) { return p.slice(); });
+            var quad = 2, dragging = -1, bound = false;
+
+            var GAUSS_1D = {
+                1: { p: [0], w: [2] },
+                2: { p: [-0.5773502692, 0.5773502692], w: [1, 1] },
+                3: { p: [-0.7745966692, 0, 0.7745966692], w: [0.5555555556, 0.8888888889, 0.5555555556] }
+            };
+
+            function mapPt(xi, eta) {
+                var N = FEMath.shapeFuncsQ4(xi, eta), x = 0, y = 0;
+                for (var a = 0; a < 4; a++) { x += N[a] * corners[a][0]; y += N[a] * corners[a][1]; }
+                return [x, y];
+            }
+            function detJ(xi, eta) {
+                var dNdXi = [-0.25 * (1 - eta), 0.25 * (1 - eta), 0.25 * (1 + eta), -0.25 * (1 + eta)];
+                var dNdEta = [-0.25 * (1 - xi), -0.25 * (1 + xi), 0.25 * (1 + xi), 0.25 * (1 - xi)];
+                var j11 = 0, j12 = 0, j21 = 0, j22 = 0;
+                for (var a = 0; a < 4; a++) {
+                    j11 += dNdXi[a] * corners[a][0]; j12 += dNdXi[a] * corners[a][1];
+                    j21 += dNdEta[a] * corners[a][0]; j22 += dNdEta[a] * corners[a][1];
+                }
+                // canvas y is flipped; use abs-consistent sign by negating (y down)
+                return -(j11 * j22 - j12 * j21);
+            }
+
+            function drawParent() {
+                var canvas = document.getElementById('iso-parent-canvas');
+                if (!canvas) return;
+                var ctx = canvas.getContext('2d');
+                var W = canvas.width, H = canvas.height;
+                ctx.clearRect(0, 0, W, H);
+                var x0 = 90, y0 = 60, size = 180;
+                var border = var_color('--fe-border-dark'), muted = var_color('--fe-text-muted');
+                var sec = var_color('--fe-secondary'), prim = var_color('--fe-primary');
+                // grid lines
+                ctx.strokeStyle = border; ctx.lineWidth = 1;
+                for (var i = 0; i <= 4; i++) {
+                    var f = i / 4;
+                    ctx.beginPath(); ctx.moveTo(x0 + f * size, y0); ctx.lineTo(x0 + f * size, y0 + size); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(x0, y0 + f * size); ctx.lineTo(x0 + size, y0 + f * size); ctx.stroke();
+                }
+                ctx.strokeStyle = sec; ctx.lineWidth = 2.5;
+                ctx.strokeRect(x0, y0, size, size);
+                // corner labels
+                ctx.fillStyle = muted; ctx.font = '11px sans-serif';
+                ctx.fillText('(−1,−1)', x0 - 42, y0 + size + 14);
+                ctx.fillText('(+1,−1)', x0 + size + 4, y0 + size + 14);
+                ctx.fillText('(+1,+1)', x0 + size + 4, y0 - 6);
+                ctx.fillText('(−1,+1)', x0 - 42, y0 - 6);
+                // axes labels
+                ctx.font = 'italic 13px Georgia'; ctx.fillStyle = var_color('--fe-text');
+                ctx.fillText('ξ', x0 + size / 2 - 3, y0 + size + 30);
+                ctx.fillText('η', x0 - 26, y0 + size / 2 + 4);
+                // gauss points
+                var g = GAUSS_1D[quad];
+                ctx.fillStyle = prim;
+                for (var i = 0; i < g.p.length; i++) for (var j = 0; j < g.p.length; j++) {
+                    var px = x0 + (g.p[i] + 1) / 2 * size;
+                    var py = y0 + size - (g.p[j] + 1) / 2 * size;
+                    ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI * 2); ctx.fill();
+                    ctx.strokeStyle = var_color('--fe-bg'); ctx.lineWidth = 1.5; ctx.stroke();
+                }
+                ctx.fillStyle = muted; ctx.font = '11px sans-serif';
+                ctx.fillText(quad + '×' + quad + ' Gauss rule — ' + (quad * quad) + ' point' + (quad > 1 ? 's' : ''), x0, y0 + size + 30);
+            }
+
+            function jetColor(v) {
+                // v in [-1,1]: negative -> red, positive -> teal/blue scale
+                if (v <= 0) return 'rgba(239,68,68,0.9)';
+                var c1 = [59, 130, 246], c2 = [20, 184, 166];
+                var f = Math.min(v, 1);
+                var r = Math.round(c1[0] + (c2[0] - c1[0]) * f);
+                var g = Math.round(c1[1] + (c2[1] - c1[1]) * f);
+                var b = Math.round(c1[2] + (c2[2] - c1[2]) * f);
+                return 'rgba(' + r + ',' + g + ',' + b + ',0.75)';
+            }
+
+            function drawPhys() {
+                var canvas = document.getElementById('iso-phys-canvas');
+                if (!canvas) return;
+                var ctx = canvas.getContext('2d');
+                var W = canvas.width, H = canvas.height;
+                ctx.clearRect(0, 0, W, H);
+                var muted = var_color('--fe-text-muted');
+                // det J field: sample cells in natural coords
+                var NC = 22, minJ = Infinity, maxJ = -Infinity;
+                var vals = [];
+                for (var i = 0; i < NC; i++) {
+                    vals[i] = [];
+                    for (var j = 0; j < NC; j++) {
+                        var xi = -1 + 2 * (i + 0.5) / NC, eta = -1 + 2 * (j + 0.5) / NC;
+                        var v = detJ(xi, eta);
+                        vals[i][j] = v;
+                        if (v < minJ) minJ = v; if (v > maxJ) maxJ = v;
+                    }
+                }
+                var scale = Math.max(Math.abs(maxJ), 1e-9);
+                for (var i = 0; i < NC; i++) for (var j = 0; j < NC; j++) {
+                    var xi0 = -1 + 2 * i / NC, eta0 = -1 + 2 * j / NC;
+                    var xi1 = -1 + 2 * (i + 1) / NC, eta1 = -1 + 2 * (j + 1) / NC;
+                    var p1 = mapPt(xi0, eta0), p2 = mapPt(xi1, eta0), p3 = mapPt(xi1, eta1), p4 = mapPt(xi0, eta1);
+                    ctx.fillStyle = jetColor(vals[i][j] / scale);
+                    ctx.beginPath(); ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.lineTo(p4[0], p4[1]); ctx.closePath(); ctx.fill();
+                }
+                // lattice lines
+                ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1;
+                for (var k2 = 1; k2 < 4; k2++) {
+                    var c = -1 + 2 * k2 / 4;
+                    ctx.beginPath();
+                    for (var s = 0; s <= 20; s++) { var p = mapPt(c, -1 + 2 * s / 20); if (s === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]); }
+                    ctx.stroke();
+                    ctx.beginPath();
+                    for (var s = 0; s <= 20; s++) { var p = mapPt(-1 + 2 * s / 20, c); if (s === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]); }
+                    ctx.stroke();
+                }
+                // outline
+                ctx.strokeStyle = var_color('--fe-text'); ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(corners[0][0], corners[0][1]);
+                for (var a = 1; a < 4; a++) ctx.lineTo(corners[a][0], corners[a][1]);
+                ctx.closePath(); ctx.stroke();
+                // mapped gauss points
+                var g = GAUSS_1D[quad];
+                ctx.fillStyle = var_color('--fe-primary');
+                for (var i = 0; i < g.p.length; i++) for (var j = 0; j < g.p.length; j++) {
+                    var p = mapPt(g.p[i], g.p[j]);
+                    ctx.beginPath(); ctx.arc(p[0], p[1], 5, 0, Math.PI * 2); ctx.fill();
+                    ctx.strokeStyle = var_color('--fe-bg'); ctx.lineWidth = 1.5; ctx.stroke();
+                }
+                // draggable corners
+                for (var a = 0; a < 4; a++) {
+                    ctx.beginPath(); ctx.arc(corners[a][0], corners[a][1], 9, 0, Math.PI * 2);
+                    ctx.fillStyle = dragging === a ? var_color('--fe-accent') : var_color('--fe-secondary');
+                    ctx.fill();
+                    ctx.strokeStyle = var_color('--fe-bg'); ctx.lineWidth = 2; ctx.stroke();
+                    ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif';
+                    ctx.fillText(String(a + 1), corners[a][0] - 3, corners[a][1] + 3.5);
+                }
+                ctx.fillStyle = muted; ctx.font = '11px sans-serif';
+                ctx.fillText('color = det J   (red = negative!)', 12, H - 10);
+                // stats
+                var minEl = document.getElementById('iso-minj'), maxEl = document.getElementById('iso-maxj'), verdict = document.getElementById('iso-verdict');
+                if (minEl) minEl.textContent = (minJ / scale).toFixed(2);
+                if (maxEl) maxEl.textContent = (maxJ / scale).toFixed(2);
+                if (verdict) {
+                    var cls, txt;
+                    if (minJ <= 0) { cls = 'verdict-bad'; txt = 'INVERTED'; }
+                    else if (minJ / maxJ < 0.2) { cls = 'verdict-warn'; txt = 'Distorted'; }
+                    else { cls = 'verdict-good'; txt = 'Good'; }
+                    verdict.className = 'stat-value ' + cls; verdict.textContent = txt;
+                }
+            }
+
+            function canvasPos(canvas, evt) {
+                var r = canvas.getBoundingClientRect();
+                var cx = (evt.touches ? evt.touches[0].clientX : evt.clientX);
+                var cy = (evt.touches ? evt.touches[0].clientY : evt.clientY);
+                return [(cx - r.left) * canvas.width / r.width, (cy - r.top) * canvas.height / r.height];
+            }
+
+            function bind() {
+                if (bound) return;
+                bound = true;
+                var canvas = document.getElementById('iso-phys-canvas');
+                if (!canvas) return;
+                function down(e) {
+                    var p = canvasPos(canvas, e);
+                    for (var a = 0; a < 4; a++) {
+                        var dx = p[0] - corners[a][0], dy = p[1] - corners[a][1];
+                        if (dx * dx + dy * dy < 220) { dragging = a; e.preventDefault(); break; }
+                    }
+                }
+                function move(e) {
+                    if (dragging < 0) return;
+                    var p = canvasPos(canvas, e);
+                    corners[dragging][0] = Math.max(12, Math.min(canvas.width - 12, p[0]));
+                    corners[dragging][1] = Math.max(12, Math.min(canvas.height - 12, p[1]));
+                    drawPhys();
+                    e.preventDefault();
+                }
+                function up() { if (dragging >= 0) { dragging = -1; drawPhys(); } }
+                canvas.addEventListener('mousedown', down);
+                canvas.addEventListener('touchstart', down, { passive: false });
+                window.addEventListener('mousemove', move);
+                canvas.addEventListener('touchmove', move, { passive: false });
+                window.addEventListener('mouseup', up);
+                canvas.addEventListener('touchend', up);
+            }
+
+            return {
+                init: function() { bind(); drawParent(); drawPhys(); },
+                setQuad: function(q) {
+                    quad = q;
+                    document.querySelectorAll('#iso-quad-toggle .toggle-btn').forEach(function(b) {
+                        b.classList.toggle('active', parseInt(b.dataset.q) === q);
+                    });
+                    drawParent(); drawPhys();
+                },
+                reset: function() {
+                    corners = DEFAULT.map(function(p) { return p.slice(); });
+                    drawPhys();
+                }
+            };
+        })();
+
+        FE.gauss = (function() {
+            var n = 1, funcId = 'cubic';
+            var RULES = {
+                1: { p: [0], w: [2] },
+                2: { p: [-0.5773502692, 0.5773502692], w: [1, 1] },
+                3: { p: [-0.7745966692, 0, 0.7745966692], w: [0.5555555556, 0.8888888889, 0.5555555556] },
+                4: { p: [-0.8611363116, -0.3399810436, 0.3399810436, 0.8611363116], w: [0.3478548451, 0.6521451549, 0.6521451549, 0.3478548451] }
+            };
+            var FUNCS = {
+                lin:     { f: function(x) { return 1 + x; },                    exact: 2,                  label: 'f(x) = 1 + x  (degree 1)' },
+                cubic:   { f: function(x) { return x*x*x + x*x + 1; },          exact: 2/3 + 2,            label: 'f(x) = x³ + x² + 1  (degree 3)' },
+                quintic: { f: function(x) { return Math.pow(x,5) + Math.pow(x,4) + x; }, exact: 2/5,       label: 'f(x) = x⁵ + x⁴ + x  (degree 5)' },
+                cos:     { f: function(x) { return Math.cos(2*x); },            exact: Math.sin(2),        label: 'f(x) = cos 2x  (not a polynomial)' }
+            };
+
+            function draw() {
+                var canvas = document.getElementById('gauss-canvas');
+                if (!canvas) return;
+                var ctx = canvas.getContext('2d');
+                var W = canvas.width, H = canvas.height;
+                ctx.clearRect(0, 0, W, H);
+                var fd = FUNCS[funcId], rule = RULES[n];
+                var x0 = 70, x1 = W - 40;
+                var muted = var_color('--fe-text-muted'), prim = var_color('--fe-primary'), sec = var_color('--fe-secondary');
+                // range
+                var minF = Infinity, maxF = -Infinity;
+                for (var i = 0; i <= 100; i++) { var v = fd.f(-1 + 2 * i / 100); if (v < minF) minF = v; if (v > maxF) maxF = v; }
+                minF = Math.min(minF, 0); maxF = Math.max(maxF, 0);
+                var pad = (maxF - minF) * 0.15 + 1e-9;
+                minF -= pad; maxF += pad;
+                function px(x) { return x0 + (x + 1) / 2 * (x1 - x0); }
+                function py(y) { return H - 34 - (y - minF) / (maxF - minF) * (H - 70); }
+                // axes
+                ctx.strokeStyle = var_color('--fe-border-dark'); ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(x0, py(0)); ctx.lineTo(x1, py(0)); ctx.stroke();
+                ctx.fillStyle = muted; ctx.font = '11px sans-serif';
+                ctx.fillText('−1', px(-1) - 8, py(0) + 16);
+                ctx.fillText('+1', px(1) - 4, py(0) + 16);
+                ctx.fillText('0', px(0) - 3, py(0) + 16);
+                // filled exact area
+                ctx.fillStyle = 'rgba(59,130,246,0.18)';
+                ctx.beginPath(); ctx.moveTo(px(-1), py(0));
+                for (var i = 0; i <= 100; i++) { var xv = -1 + 2 * i / 100; ctx.lineTo(px(xv), py(fd.f(xv))); }
+                ctx.lineTo(px(1), py(0)); ctx.closePath(); ctx.fill();
+                // curve
+                ctx.strokeStyle = sec; ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                for (var i = 0; i <= 100; i++) { var xv = -1 + 2 * i / 100; var p = [px(xv), py(fd.f(xv))]; if (i === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]); }
+                ctx.stroke();
+                // gauss stems
+                var approx = 0;
+                for (var g = 0; g < rule.p.length; g++) {
+                    var xg = rule.p[g], fg = fd.f(xg);
+                    approx += rule.w[g] * fg;
+                    ctx.strokeStyle = prim; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.moveTo(px(xg), py(0)); ctx.lineTo(px(xg), py(fg)); ctx.stroke();
+                    ctx.beginPath(); ctx.arc(px(xg), py(fg), 6, 0, Math.PI * 2);
+                    ctx.fillStyle = prim; ctx.fill();
+                    ctx.strokeStyle = var_color('--fe-bg'); ctx.lineWidth = 1.5; ctx.stroke();
+                    ctx.fillStyle = muted; ctx.font = '10px sans-serif';
+                    ctx.fillText('w=' + rule.w[g].toFixed(3), px(xg) - 18, py(0) + 28);
+                }
+                ctx.fillStyle = var_color('--fe-text'); ctx.font = 'bold 13px sans-serif';
+                ctx.fillText(fd.label, x0, 22);
+                // stats
+                var err = Math.abs(approx - fd.exact);
+                var exEl = document.getElementById('gauss-exact'), apEl = document.getElementById('gauss-approx'), erEl = document.getElementById('gauss-err');
+                if (exEl) exEl.textContent = fd.exact.toFixed(5);
+                if (apEl) apEl.textContent = approx.toFixed(5);
+                if (erEl) {
+                    var exact = err < 1e-9;
+                    erEl.textContent = exact ? 'EXACT ✓' : err.toExponential(2);
+                    erEl.className = 'stat-value ' + (exact ? 'verdict-good' : (err < 0.01 ? 'verdict-warn' : 'verdict-bad'));
+                }
+            }
+
+            return {
+                init: function() { draw(); },
+                setN: function(v) {
+                    n = parseInt(v);
+                    document.getElementById('gauss-n-val').textContent = n;
+                    draw();
+                },
+                setFunc: function(f) {
+                    funcId = f;
+                    document.querySelectorAll('#gauss-func-toggle .toggle-btn').forEach(function(b) {
+                        b.classList.toggle('active', b.dataset.f === f);
+                    });
+                    draw();
+                }
+            };
+        })();
+
+        // ==================== MODULE: SOLVING THE SYSTEM ====================
+        function _initSolver() {
+            FE.bcplay.init();
+            FE.sparsity.init();
+            _plotSolverCost();
+        }
+
+        FE.bcplay = (function() {
+            var NN = 5;                       // nodes
+            var pins = [true, false, false, false, false];
+            var Fload = 1.0, bound = false;
+
+            function solve() {
+                // tridiagonal spring chain, k=1
+                var K = [], Fv = [];
+                for (var i = 0; i < NN; i++) { K[i] = []; Fv[i] = 0; for (var j = 0; j < NN; j++) K[i][j] = 0; }
+                for (var e = 0; e < NN - 1; e++) {
+                    K[e][e] += 1; K[e][e + 1] -= 1; K[e + 1][e] -= 1; K[e + 1][e + 1] += 1;
+                }
+                Fv[NN - 1] = Fload;
+                var free = [];
+                for (var i = 0; i < NN; i++) if (!pins[i]) free.push(i);
+                if (free.length === NN) return { u: null, singular: true };   // nothing pinned
+                var n = free.length;
+                if (n === 0) return { u: new Array(NN).fill(0), singular: false };
+                var Kr = [], Fr = [];
+                for (var i = 0; i < n; i++) {
+                    Kr[i] = [];
+                    for (var j = 0; j < n; j++) Kr[i][j] = K[free[i]][free[j]];
+                    Fr[i] = Fv[free[i]];
+                }
+                var ur = FEMath.solveDense(Kr, Fr);
+                if (!ur) return { u: null, singular: true };
+                var u = new Array(NN).fill(0);
+                for (var i = 0; i < n; i++) u[free[i]] = ur[i];
+                return { u: u, singular: false };
+            }
+
+            var driftPhase = 0, rafId = null;
+
+            function draw() {
+                var canvas = document.getElementById('bcplay-canvas');
+                if (!canvas) return;
+                var ctx = canvas.getContext('2d');
+                var W = canvas.width, H = canvas.height;
+                ctx.clearRect(0, 0, W, H);
+                var sol = solve();
+                var muted = var_color('--fe-text-muted'), text = var_color('--fe-text');
+                var prim = var_color('--fe-primary'), sec = var_color('--fe-secondary'), danger = var_color('--fe-danger');
+                var x0 = 110, x1 = W - 130, y = 110, spacing = (x1 - x0) / (NN - 1);
+                var dispScale = 40;
+
+                function nodeX(i, deformed) {
+                    var base = x0 + i * spacing;
+                    if (!deformed) return base;
+                    if (sol.singular) return base + Math.sin(driftPhase) * 26 + (Fload >= 0 ? 1 : -1) * 14;
+                    return base + sol.u[i] * dispScale;
+                }
+
+                function drawSpring(xa, xb, yy, color, alpha) {
+                    ctx.strokeStyle = color; ctx.globalAlpha = alpha; ctx.lineWidth = 2;
+                    var coils = 6, seg = (xb - xa) / (coils * 2 + 2);
+                    ctx.beginPath(); ctx.moveTo(xa, yy);
+                    ctx.lineTo(xa + seg, yy);
+                    for (var c = 0; c < coils * 2; c++) {
+                        ctx.lineTo(xa + seg * (c + 1.5), yy + (c % 2 === 0 ? -11 : 11));
+                    }
+                    ctx.lineTo(xb - seg, yy); ctx.lineTo(xb, yy);
+                    ctx.stroke(); ctx.globalAlpha = 1;
+                }
+
+                // undeformed (ghost)
+                for (var e = 0; e < NN - 1; e++) drawSpring(nodeX(e, false), nodeX(e + 1, false), y, muted, 0.28);
+                for (var i = 0; i < NN; i++) {
+                    ctx.beginPath(); ctx.arc(nodeX(i, false), y, 8, 0, Math.PI * 2);
+                    ctx.fillStyle = muted; ctx.globalAlpha = 0.28; ctx.fill(); ctx.globalAlpha = 1;
+                }
+
+                // deformed
+                var y2 = y + 68;
+                for (var e = 0; e < NN - 1; e++) drawSpring(nodeX(e, true), nodeX(e + 1, true), y2, sol.singular ? danger : sec, 0.95);
+                for (var i = 0; i < NN; i++) {
+                    var nx = nodeX(i, true);
+                    ctx.beginPath(); ctx.arc(nx, y2, 11, 0, Math.PI * 2);
+                    ctx.fillStyle = pins[i] ? prim : (sol.singular ? danger : sec);
+                    ctx.fill();
+                    ctx.strokeStyle = var_color('--fe-bg'); ctx.lineWidth = 2; ctx.stroke();
+                    ctx.fillStyle = '#fff'; ctx.font = 'bold 11px sans-serif';
+                    ctx.fillText(String(i + 1), nx - 3.5, y2 + 4);
+                    // pin symbol
+                    if (pins[i]) {
+                        ctx.fillStyle = prim;
+                        ctx.beginPath();
+                        ctx.moveTo(nx, y2 + 13); ctx.lineTo(nx - 10, y2 + 30); ctx.lineTo(nx + 10, y2 + 30);
+                        ctx.closePath(); ctx.fill();
+                        ctx.strokeStyle = prim; ctx.lineWidth = 1.5;
+                        for (var h = 0; h < 4; h++) {
+                            ctx.beginPath(); ctx.moveTo(nx - 10 + h * 6, y2 + 30); ctx.lineTo(nx - 14 + h * 6, y2 + 37); ctx.stroke();
+                        }
+                    }
+                }
+                // load arrow at last node
+                if (Math.abs(Fload) > 0.01) {
+                    var lx = nodeX(NN - 1, true), dir = Fload > 0 ? 1 : -1, len = 26 + 16 * Math.abs(Fload);
+                    ctx.strokeStyle = var_color('--fe-accent'); ctx.fillStyle = var_color('--fe-accent'); ctx.lineWidth = 3;
+                    ctx.beginPath(); ctx.moveTo(lx + dir * 13, y2); ctx.lineTo(lx + dir * (13 + len), y2); ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(lx + dir * (13 + len + 9), y2);
+                    ctx.lineTo(lx + dir * (13 + len - 3), y2 - 6);
+                    ctx.lineTo(lx + dir * (13 + len - 3), y2 + 6);
+                    ctx.fill();
+                    ctx.font = 'bold 13px sans-serif';
+                    ctx.fillText('F', lx + dir * (18 + len) - 4, y2 - 12);
+                }
+                // labels
+                ctx.fillStyle = muted; ctx.font = '11px sans-serif';
+                ctx.fillText('undeformed', 14, y + 4);
+                ctx.fillText('deformed', 14, y2 + 4);
+                ctx.font = 'bold 12px sans-serif'; ctx.fillStyle = text;
+                ctx.fillText('Click a node to pin / un-pin it', 14, 24);
+
+                if (sol.singular) {
+                    ctx.fillStyle = danger; ctx.font = 'bold 15px sans-serif';
+                    ctx.fillText('K IS SINGULAR — rigid-body mode, structure floats!', W / 2 - 210, 34);
+                }
+
+                // stats
+                var np = pins.filter(Boolean).length;
+                document.getElementById('bcplay-pins').textContent = np;
+                var st = document.getElementById('bcplay-status');
+                st.textContent = sol.singular ? 'SINGULAR' : 'SOLVABLE';
+                st.className = 'stat-value ' + (sol.singular ? 'verdict-bad' : 'verdict-good');
+                var um = document.getElementById('bcplay-umax');
+                if (sol.singular) um.textContent = '∞';
+                else {
+                    var m = 0; sol.u.forEach(function(v) { m = Math.max(m, Math.abs(v)); });
+                    um.textContent = m.toFixed(2);
+                }
+
+                // drift animation only while singular & module visible
+                if (sol.singular) {
+                    if (!rafId) {
+                        var tick = function() {
+                            rafId = null;
+                            var mod = document.getElementById('module-solver');
+                            if (!mod || !mod.classList.contains('active')) return;
+                            if (!solve().singular) return;
+                            driftPhase += 0.045;
+                            draw();
+                        };
+                        rafId = requestAnimationFrame(tick);
+                    }
+                }
+            }
+
+            function bind() {
+                if (bound) return;
+                bound = true;
+                var canvas = document.getElementById('bcplay-canvas');
+                if (!canvas) return;
+                canvas.addEventListener('click', function(e) {
+                    var r = canvas.getBoundingClientRect();
+                    var px = (e.clientX - r.left) * canvas.width / r.width;
+                    var py = (e.clientY - r.top) * canvas.height / r.height;
+                    var x0 = 110, x1 = canvas.width - 130, spacing = (x1 - x0) / (NN - 1);
+                    for (var i = 0; i < NN; i++) {
+                        var nx = x0 + i * spacing;
+                        // generous hit zone around both rows
+                        if (Math.abs(px - nx) < spacing * 0.4 && py > 60 && py < 230) {
+                            pins[i] = !pins[i];
+                            draw();
+                            return;
+                        }
+                    }
+                });
+            }
+
+            return {
+                init: function() { bind(); draw(); },
+                setF: function(v) {
+                    Fload = parseFloat(v);
+                    document.getElementById('bcplay-f-val').textContent = Fload.toFixed(1);
+                    draw();
+                }
+            };
+        })();
+
+        FE.sparsity = (function() {
+            var n = 8, order = 'row';
+
+            function permutation() {
+                var N = n * n, perm = new Array(N);
+                if (order === 'row') {
+                    for (var i = 0; i < N; i++) perm[i] = i;
+                } else if (order === 'rb') {
+                    var idx = 0;
+                    for (var pass = 0; pass < 2; pass++)
+                        for (var r = 0; r < n; r++)
+                            for (var c = 0; c < n; c++)
+                                if ((r + c) % 2 === pass) perm[r * n + c] = idx++;
+                } else {
+                    // deterministic pseudo-random shuffle (LCG) so redraws are stable
+                    var arr = [];
+                    for (var i = 0; i < N; i++) arr.push(i);
+                    var seed = 12345;
+                    for (var i = N - 1; i > 0; i--) {
+                        seed = (seed * 1103515245 + 12345) % 2147483648;
+                        var j = seed % (i + 1);
+                        var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+                    }
+                    for (var i = 0; i < N; i++) perm[i] = arr[i];
+                }
+                return perm;
+            }
+
+            function draw() {
+                var canvas = document.getElementById('sparsity-canvas');
+                if (!canvas) return;
+                var ctx = canvas.getContext('2d');
+                var W = canvas.width;
+                ctx.clearRect(0, 0, W, W);
+                var N = n * n, cell = W / N;
+                var perm = permutation();
+                var nnz = 0, bw = 0;
+                var prim = var_color('--fe-primary');
+                ctx.fillStyle = prim;
+                function mark(a, b) {
+                    ctx.fillRect(b * cell, a * cell, Math.max(cell - 0.5, 0.8), Math.max(cell - 0.5, 0.8));
+                    nnz++;
+                    bw = Math.max(bw, Math.abs(a - b));
+                }
+                for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) {
+                    var i = perm[r * n + c];
+                    mark(i, i);
+                    if (c + 1 < n) { var j = perm[r * n + c + 1]; mark(i, j); mark(j, i); }
+                    if (r + 1 < n) { var j2 = perm[(r + 1) * n + c]; mark(i, j2); mark(j2, i); }
+                }
+                document.getElementById('sparsity-dim').textContent = N;
+                document.getElementById('sparsity-nnz').textContent = nnz;
+                document.getElementById('sparsity-fill').textContent = (100 * nnz / (N * N)).toFixed(1) + '%';
+                document.getElementById('sparsity-bw').textContent = bw;
+            }
+
+            return {
+                init: function() { draw(); },
+                setN: function(v) {
+                    n = parseInt(v);
+                    document.getElementById('sparsity-n-val').textContent = n;
+                    draw();
+                },
+                setOrder: function(o) {
+                    order = o;
+                    document.querySelectorAll('#sparsity-order-toggle .toggle-btn').forEach(function(b) {
+                        b.classList.toggle('active', b.dataset.o === o);
+                    });
+                    draw();
+                }
+            };
+        })();
+
+        function _plotSolverCost() {
+            var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            var bg = isDark ? '#1e293b' : '#f1f5f9';
+            var text = isDark ? '#cbd5e1' : '#64748b';
+            var grid = isDark ? '#334155' : '#cbd5e1';
+            var N = [], dense = [], banded = [], cg = [];
+            for (var e = 3; e <= 7; e += 0.25) {
+                var nv = Math.pow(10, e);
+                N.push(nv);
+                dense.push(Math.pow(nv, 3) / 1e9);
+                banded.push(nv * nv / 1e9);          // N * b^2, b = sqrt(N)
+                cg.push(Math.pow(nv, 1.5) / 1e9);    // ~N^1.5 with decent preconditioner
+            }
+            Plotly.newPlot('solver-cost-plot', [
+                { x: N, y: dense, mode: 'lines', name: 'Dense LU — O(N³)', line: { color: '#ef4444', width: 3 } },
+                { x: N, y: banded, mode: 'lines', name: 'Banded / sparse direct — O(N·b²)', line: { color: '#3b82f6', width: 3 } },
+                { x: N, y: cg, mode: 'lines', name: 'Preconditioned CG — ~O(N^1.5)', line: { color: '#10b981', width: 3 } }
+            ], {
+                xaxis: { title: 'Degrees of freedom N', type: 'log', color: text, gridcolor: grid },
+                yaxis: { title: 'Relative cost (arbitrary units)', type: 'log', color: text, gridcolor: grid },
+                paper_bgcolor: bg, plot_bgcolor: bg, font: { color: text, size: 11 },
+                margin: { l: 65, r: 20, t: 20, b: 50 },
+                legend: { orientation: 'h', y: 1.12 }
+            }, { responsive: true, displayModeBar: false });
+        }
+
+        // ==================== MODULE: 2D STRESS LAB ====================
+        function _initStressLab() { FE.lab.init(); }
+
+        FE.lab = (function() {
+            var preset = 'cant', elemType = 'q4', form = 'pstress';
+            var density = 2, loadFac = 1, defScale = 1, field = 'vm';
+            var E = 1000, NU = 0.3, TH = 1, P0 = 10;
+            var solTimer = null, lastSol = null;
+
+            // ---------- mesh generation (masked unit grid) ----------
+            function buildMesh() {
+                var ux, uy, keep;
+                if (preset === 'lbrk') {
+                    ux = 8; uy = 8;
+                    keep = function(cx, cy) { return cx < 2 || cy < 2; };
+                } else {
+                    ux = 8; uy = 2;
+                    keep = function() { return true; };
+                }
+                var d = density;
+                var ncx = ux * d, ncy = uy * d, h = 1 / d;
+                // node map, column-major (x outer, y inner) for small bandwidth
+                var nodeId = {}, coords = [], id = 0;
+                function nodeNeeded(ix, iy) {
+                    // node needed if any adjacent kept cell exists
+                    for (var cx = ix - 1; cx <= ix; cx++) for (var cy = iy - 1; cy <= iy; cy++) {
+                        if (cx >= 0 && cy >= 0 && cx < ncx && cy < ncy && keep(cx * h, cy * h)) return true;
+                    }
+                    return false;
+                }
+                for (var ix = 0; ix <= ncx; ix++) {
+                    for (var iy = 0; iy <= ncy; iy++) {
+                        if (nodeNeeded(ix, iy)) {
+                            nodeId[ix + '_' + iy] = id++;
+                            coords.push([ix * h, iy * h]);
+                        }
+                    }
+                }
+                var quads = [];
+                for (var cx = 0; cx < ncx; cx++) {
+                    for (var cy = 0; cy < ncy; cy++) {
+                        if (!keep(cx * h, cy * h)) continue;
+                        quads.push([
+                            nodeId[cx + '_' + cy], nodeId[(cx + 1) + '_' + cy],
+                            nodeId[(cx + 1) + '_' + (cy + 1)], nodeId[cx + '_' + (cy + 1)]
+                        ]);
+                    }
+                }
+                var elems = [];
+                if (elemType === 'q4') {
+                    elems = quads.map(function(q) { return { type: 'q4', n: q }; });
+                } else {
+                    quads.forEach(function(q, qi) {
+                        // alternate the diagonal for a less biased mesh
+                        if (qi % 2 === 0) {
+                            elems.push({ type: 't3', n: [q[0], q[1], q[2]] });
+                            elems.push({ type: 't3', n: [q[0], q[2], q[3]] });
+                        } else {
+                            elems.push({ type: 't3', n: [q[0], q[1], q[3]] });
+                            elems.push({ type: 't3', n: [q[1], q[2], q[3]] });
+                        }
+                    });
+                }
+
+                // BCs & loads
+                var fixed = [], loads = [];        // fixed: dof ids; loads: [dof, value]
+                var eps = 1e-9;
+                var P = P0 * loadFac;
+                if (preset === 'cant') {
+                    // clamp x=0 edge, distribute P downward on right edge
+                    var rightNodes = [];
+                    coords.forEach(function(c, i) {
+                        if (Math.abs(c[0]) < eps) { fixed.push(2 * i, 2 * i + 1); }
+                        if (Math.abs(c[0] - ux) < eps) rightNodes.push(i);
+                    });
+                    rightNodes.forEach(function(i, k2) {
+                        var w = (k2 === 0 || k2 === rightNodes.length - 1) ? 0.5 : 1;
+                        loads.push([2 * i + 1, -P * w / (rightNodes.length - 1)]);
+                    });
+                } else if (preset === 'ssb') {
+                    // pin bottom-left, roller bottom-right, load at top center
+                    var topCenter = -1, bestD = 1e9;
+                    coords.forEach(function(c, i) {
+                        if (Math.abs(c[1]) < eps && Math.abs(c[0]) < eps) fixed.push(2 * i, 2 * i + 1);
+                        if (Math.abs(c[1]) < eps && Math.abs(c[0] - ux) < eps) fixed.push(2 * i + 1);
+                        if (Math.abs(c[1] - uy) < eps) {
+                            var dd = Math.abs(c[0] - ux / 2);
+                            if (dd < bestD) { bestD = dd; topCenter = i; }
+                        }
+                    });
+                    if (topCenter >= 0) loads.push([2 * topCenter + 1, -P]);
+                } else {
+                    // L-bracket: clamp top edge of vertical leg, load at tip (x=8) downward
+                    var tipNodes = [];
+                    coords.forEach(function(c, i) {
+                        if (Math.abs(c[1] - uy) < eps) fixed.push(2 * i, 2 * i + 1);
+                        if (Math.abs(c[0] - ux) < eps) tipNodes.push(i);
+                    });
+                    tipNodes.forEach(function(i, k2) {
+                        var w = (k2 === 0 || k2 === tipNodes.length - 1) ? 0.5 : 1;
+                        loads.push([2 * i + 1, -P * w / Math.max(tipNodes.length - 1, 1)]);
+                    });
+                }
+                return { coords: coords, elems: elems, fixed: fixed, loads: loads, ux: ux, uy: uy };
+            }
+
+            // ---------- element matrices ----------
+            function Dmatrix() {
+                if (form === 'pstress') {
+                    var c = E / (1 - NU * NU);
+                    return [[c, c * NU, 0], [c * NU, c, 0], [0, 0, c * (1 - NU) / 2]];
+                }
+                var c2 = E / ((1 + NU) * (1 - 2 * NU));
+                return [[c2 * (1 - NU), c2 * NU, 0], [c2 * NU, c2 * (1 - NU), 0], [0, 0, c2 * (1 - 2 * NU) / 2]];
+            }
+
+            var GP2 = [-0.5773502692, 0.5773502692];
+
+            function keQ4(xy, D) {
+                var ke = [];
+                for (var i = 0; i < 8; i++) { ke[i] = []; for (var j = 0; j < 8; j++) ke[i][j] = 0; }
+                for (var gi = 0; gi < 2; gi++) for (var gj = 0; gj < 2; gj++) {
+                    var xi = GP2[gi], eta = GP2[gj];
+                    var dNxi = [-0.25 * (1 - eta), 0.25 * (1 - eta), 0.25 * (1 + eta), -0.25 * (1 + eta)];
+                    var dNeta = [-0.25 * (1 - xi), -0.25 * (1 + xi), 0.25 * (1 + xi), 0.25 * (1 - xi)];
+                    var j11 = 0, j12 = 0, j21 = 0, j22 = 0;
+                    for (var a = 0; a < 4; a++) {
+                        j11 += dNxi[a] * xy[a][0]; j12 += dNxi[a] * xy[a][1];
+                        j21 += dNeta[a] * xy[a][0]; j22 += dNeta[a] * xy[a][1];
+                    }
+                    var det = j11 * j22 - j12 * j21;
+                    var i11 = j22 / det, i12 = -j12 / det, i21 = -j21 / det, i22 = j11 / det;
+                    var B = [];
+                    for (var a = 0; a < 4; a++) {
+                        var dNx = i11 * dNxi[a] + i12 * dNeta[a];
+                        var dNy = i21 * dNxi[a] + i22 * dNeta[a];
+                        B.push([dNx, dNy]);
+                    }
+                    for (var a = 0; a < 4; a++) for (var b = 0; b < 4; b++) {
+                        var ax = B[a][0], ay = B[a][1], bx = B[b][0], by = B[b][1];
+                        // Bа' D Bb (2x2 block), exploiting B structure
+                        var k11 = ax * D[0][0] * bx + ay * D[2][2] * by;
+                        var k12 = ax * D[0][1] * by + ay * D[2][2] * bx;
+                        var k21 = ay * D[1][0] * bx + ax * D[2][2] * by;
+                        var k22 = ay * D[1][1] * by + ax * D[2][2] * bx;
+                        var w = det * TH;
+                        ke[2 * a][2 * b] += k11 * w; ke[2 * a][2 * b + 1] += k12 * w;
+                        ke[2 * a + 1][2 * b] += k21 * w; ke[2 * a + 1][2 * b + 1] += k22 * w;
+                    }
+                }
+                return ke;
+            }
+
+            function keT3(xy, D) {
+                var x1 = xy[0][0], y1 = xy[0][1], x2 = xy[1][0], y2 = xy[1][1], x3 = xy[2][0], y3 = xy[2][1];
+                var A2 = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1); // 2*Area (signed)
+                var b = [y2 - y3, y3 - y1, y1 - y2];
+                var c = [x3 - x2, x1 - x3, x2 - x1];
+                var ke = [];
+                for (var i = 0; i < 6; i++) { ke[i] = []; for (var j = 0; j < 6; j++) ke[i][j] = 0; }
+                var w = TH / (2 * Math.abs(A2));  // ke = t·A·BᵀDB with B ~ (b,c)/2A  =>  t/(4A) = t/(2·|2A|)
+                for (var a = 0; a < 3; a++) for (var d2 = 0; d2 < 3; d2++) {
+                    var ax = b[a], ay = c[a], bx = b[d2], by = c[d2];
+                    var k11 = ax * D[0][0] * bx + ay * D[2][2] * by;
+                    var k12 = ax * D[0][1] * by + ay * D[2][2] * bx;
+                    var k21 = ay * D[1][0] * bx + ax * D[2][2] * by;
+                    var k22 = ay * D[1][1] * by + ax * D[2][2] * bx;
+                    ke[2 * a][2 * d2] += k11 * w; ke[2 * a][2 * d2 + 1] += k12 * w;
+                    ke[2 * a + 1][2 * d2] += k21 * w; ke[2 * a + 1][2 * d2 + 1] += k22 * w;
+                }
+                return ke;
+            }
+
+            // ---------- banded Cholesky ----------
+            function solveBanded(N, hb, band, Fv) {
+                // band: Float64Array N*(hb+1); band[i*(hb+1)+d] = K[i][i+d] initially (upper),
+                // used as lower L after factorization: L[i][i-k] stored at band[i*(hb+1)+(i-k)]...
+                // We factor in-place using symmetric layout: entry (i,j), j<=i, dist=i-j <= hb at band[i*(hb+1)+dist]
+                var s = hb + 1;
+                for (var j2 = 0; j2 < N; j2++) {
+                    var diag = band[j2 * s];
+                    var kmin = Math.max(0, j2 - hb);
+                    for (var k2 = kmin; k2 < j2; k2++) {
+                        var l = band[j2 * s + (j2 - k2)];
+                        diag -= l * l;
+                    }
+                    if (diag <= 0) return null;
+                    var dj = Math.sqrt(diag);
+                    band[j2 * s] = dj;
+                    var imax = Math.min(N - 1, j2 + hb);
+                    for (var i = j2 + 1; i <= imax; i++) {
+                        var sum = band[i * s + (i - j2)];
+                        var kmin2 = Math.max(0, i - hb, j2 - hb);
+                        for (var k2 = kmin2; k2 < j2; k2++) {
+                            sum -= band[i * s + (i - k2)] * band[j2 * s + (j2 - k2)];
+                        }
+                        band[i * s + (i - j2)] = sum / dj;
+                    }
+                }
+                // forward: L y = F
+                var y = Fv;
+                for (var i = 0; i < N; i++) {
+                    var sum = y[i];
+                    var kmin = Math.max(0, i - hb);
+                    for (var k2 = kmin; k2 < i; k2++) sum -= band[i * s + (i - k2)] * y[k2];
+                    y[i] = sum / band[i * s];
+                }
+                // backward: L' x = y
+                for (var i = N - 1; i >= 0; i--) {
+                    var sum = y[i];
+                    var imax = Math.min(N - 1, i + hb);
+                    for (var k2 = i + 1; k2 <= imax; k2++) sum -= band[k2 * s + (k2 - i)] * y[k2];
+                    y[i] = sum / band[i * s];
+                }
+                return y;
+            }
+
+            // ---------- assemble & solve ----------
+            function solve() {
+                var mesh = buildMesh();
+                var nN = mesh.coords.length, N = 2 * nN;
+                var D = Dmatrix();
+                // half-bandwidth from connectivity
+                var hb = 0;
+                mesh.elems.forEach(function(el) {
+                    var mn = Infinity, mx = -Infinity;
+                    el.n.forEach(function(nd) { mn = Math.min(mn, nd); mx = Math.max(mx, nd); });
+                    hb = Math.max(hb, 2 * (mx - mn) + 1);
+                });
+                var s = hb + 1;
+                var band = new Float64Array(N * s);
+                var Fv = new Float64Array(N);
+                function addK(gi, gj, v) {
+                    if (gj > gi) return;                  // store lower half: (i, j<=i)
+                    band[gi * s + (gi - gj)] += v;
+                }
+                mesh.elems.forEach(function(el) {
+                    var xy = el.n.map(function(nd) { return mesh.coords[nd]; });
+                    var ke = el.type === 'q4' ? keQ4(xy, D) : keT3(xy, D);
+                    var dofs = [];
+                    el.n.forEach(function(nd) { dofs.push(2 * nd, 2 * nd + 1); });
+                    for (var i = 0; i < dofs.length; i++) for (var j = 0; j < dofs.length; j++) {
+                        addK(dofs[i], dofs[j], ke[i][j]);
+                    }
+                });
+                mesh.loads.forEach(function(l) { Fv[l[0]] += l[1]; });
+                // apply essential BCs: zero every entry touching a fixed dof, then unit diagonal
+                var isFixed = new Uint8Array(N);
+                mesh.fixed.forEach(function(d2) { isFixed[d2] = 1; });
+                for (var i = 0; i < N; i++) {
+                    for (var d2 = 0; d2 <= hb; d2++) {
+                        var j2 = i - d2;
+                        if (j2 < 0) break;
+                        if (isFixed[i] || isFixed[j2]) band[i * s + d2] = 0;
+                    }
+                }
+                for (var i = 0; i < N; i++) if (isFixed[i]) { band[i * s] = 1; Fv[i] = 0; }
+
+                var u = solveBanded(N, hb, band, Fv);
+                if (!u) return null;
+
+                // ---------- stress recovery (nodal averaging) ----------
+                var nodalS = [], cnt = new Float64Array(nN);
+                for (var i = 0; i < nN; i++) nodalS.push([0, 0, 0]);
+                mesh.elems.forEach(function(el) {
+                    var xy = el.n.map(function(nd) { return mesh.coords[nd]; });
+                    var ue = [];
+                    el.n.forEach(function(nd) { ue.push(u[2 * nd], u[2 * nd + 1]); });
+                    if (el.type === 't3') {
+                        var x1 = xy[0][0], y1 = xy[0][1], x2 = xy[1][0], y2 = xy[1][1], x3 = xy[2][0], y3 = xy[2][1];
+                        var A2 = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);
+                        var b = [y2 - y3, y3 - y1, y1 - y2], c = [x3 - x2, x1 - x3, x2 - x1];
+                        var ex = 0, ey = 0, gxy = 0;
+                        for (var a = 0; a < 3; a++) {
+                            ex += b[a] / A2 * ue[2 * a];
+                            ey += c[a] / A2 * ue[2 * a + 1];
+                            gxy += c[a] / A2 * ue[2 * a] + b[a] / A2 * ue[2 * a + 1];
+                        }
+                        var sg = mult3(D, [ex, ey, gxy]);
+                        el.n.forEach(function(nd) {
+                            nodalS[nd][0] += sg[0]; nodalS[nd][1] += sg[1]; nodalS[nd][2] += sg[2]; cnt[nd]++;
+                        });
+                    } else {
+                        var corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+                        for (var a = 0; a < 4; a++) {
+                            var sg = q4StressAt(xy, ue, D, corners[a][0], corners[a][1]);
+                            var nd = el.n[a];
+                            nodalS[nd][0] += sg[0]; nodalS[nd][1] += sg[1]; nodalS[nd][2] += sg[2]; cnt[nd]++;
+                        }
+                    }
+                });
+                for (var i = 0; i < nN; i++) {
+                    if (cnt[i] > 0) { nodalS[i][0] /= cnt[i]; nodalS[i][1] /= cnt[i]; nodalS[i][2] /= cnt[i]; }
+                }
+                var D2 = Dmatrix();
+                function vmOf(sg) {
+                    var sx = sg[0], sy = sg[1], txy = sg[2];
+                    var sz = form === 'pstrain' ? NU * (sx + sy) : 0;
+                    return Math.sqrt(0.5 * ((sx - sy) * (sx - sy) + (sy - sz) * (sy - sz) + (sz - sx) * (sz - sx)) + 3 * txy * txy);
+                }
+                var nodalField = new Float64Array(nN);
+                var maxVM = 0;
+                for (var i = 0; i < nN; i++) {
+                    var vm = vmOf(nodalS[i]);
+                    maxVM = Math.max(maxVM, vm);
+                    var v;
+                    if (field === 'vm') v = vm;
+                    else if (field === 'sxx') v = nodalS[i][0];
+                    else if (field === 'syy') v = nodalS[i][1];
+                    else if (field === 'txy') v = nodalS[i][2];
+                    else v = Math.hypot(u[2 * i], u[2 * i + 1]);
+                    nodalField[i] = v;
+                }
+                return { mesh: mesh, u: u, nodalField: nodalField, maxVM: maxVM, N: N };
+            }
+
+            function mult3(D, e) {
+                return [
+                    D[0][0] * e[0] + D[0][1] * e[1],
+                    D[1][0] * e[0] + D[1][1] * e[1],
+                    D[2][2] * e[2]
+                ];
+            }
+
+            function q4StressAt(xy, ue, D, xi, eta) {
+                var dNxi = [-0.25 * (1 - eta), 0.25 * (1 - eta), 0.25 * (1 + eta), -0.25 * (1 + eta)];
+                var dNeta = [-0.25 * (1 - xi), -0.25 * (1 + xi), 0.25 * (1 + xi), 0.25 * (1 - xi)];
+                var j11 = 0, j12 = 0, j21 = 0, j22 = 0;
+                for (var a = 0; a < 4; a++) {
+                    j11 += dNxi[a] * xy[a][0]; j12 += dNxi[a] * xy[a][1];
+                    j21 += dNeta[a] * xy[a][0]; j22 += dNeta[a] * xy[a][1];
+                }
+                var det = j11 * j22 - j12 * j21;
+                var i11 = j22 / det, i12 = -j12 / det, i21 = -j21 / det, i22 = j11 / det;
+                var ex = 0, ey = 0, gxy = 0;
+                for (var a = 0; a < 4; a++) {
+                    var dNx = i11 * dNxi[a] + i12 * dNeta[a];
+                    var dNy = i21 * dNxi[a] + i22 * dNeta[a];
+                    ex += dNx * ue[2 * a]; ey += dNy * ue[2 * a + 1];
+                    gxy += dNy * ue[2 * a] + dNx * ue[2 * a + 1];
+                }
+                return mult3(D, [ex, ey, gxy]);
+            }
+
+            // ---------- rendering ----------
+            var VIRIDIS = [[68, 1, 84], [59, 82, 139], [33, 145, 140], [94, 201, 98], [253, 231, 37]];
+            function cmap(f) {
+                f = Math.max(0, Math.min(1, f));
+                var seg = f * (VIRIDIS.length - 1);
+                var i = Math.min(Math.floor(seg), VIRIDIS.length - 2);
+                var t2 = seg - i;
+                var a = VIRIDIS[i], b = VIRIDIS[i + 1];
+                return 'rgb(' + Math.round(a[0] + (b[0] - a[0]) * t2) + ',' +
+                    Math.round(a[1] + (b[1] - a[1]) * t2) + ',' + Math.round(a[2] + (b[2] - a[2]) * t2) + ')';
+            }
+
+            function render(sol) {
+                var canvas = document.getElementById('lab-canvas');
+                if (!canvas || !sol) return;
+                var ctx = canvas.getContext('2d');
+                var W = canvas.width, H = canvas.height;
+                ctx.clearRect(0, 0, W, H);
+                var mesh = sol.mesh, u = sol.u, fld = sol.nodalField;
+                // field range
+                var fmin = Infinity, fmax = -Infinity;
+                for (var i = 0; i < fld.length; i++) { fmin = Math.min(fmin, fld[i]); fmax = Math.max(fmax, fld[i]); }
+                if (fmax - fmin < 1e-12) fmax = fmin + 1e-12;
+                // displacement autoscale
+                var umax = 0;
+                for (var i = 0; i < mesh.coords.length; i++) umax = Math.max(umax, Math.hypot(u[2 * i], u[2 * i + 1]));
+                var diag = Math.hypot(mesh.ux, mesh.uy);
+                var autoS = umax > 1e-12 ? 0.07 * diag / umax : 0;
+                var dscale = autoS * defScale;
+                document.getElementById('lab-scale-val').textContent = defScale === 0 ? '0' : '×' + (dscale >= 10 ? Math.round(dscale) : dscale.toFixed(1));
+                // fit transform (model -> canvas), leave room for colorbar (70px right)
+                var margin = 46, availW = W - 120 - margin, availH = H - 2 * margin;
+                var spanX = mesh.ux * 1.16, spanY = mesh.uy * 1.16;   // headroom for deformation
+                var sc = Math.min(availW / spanX, availH / spanY);
+                var ox = margin + (availW - mesh.ux * sc) / 2, oy = H - margin - (availH - mesh.uy * sc) / 2;
+                function X(i, deformed) {
+                    var c = mesh.coords[i];
+                    var xv = c[0] + (deformed ? dscale * u[2 * i] : 0);
+                    var yv = c[1] + (deformed ? dscale * u[2 * i + 1] : 0);
+                    return [ox + xv * sc, oy - yv * sc];
+                }
+                // undeformed outline (ghost)
+                ctx.strokeStyle = var_color('--fe-border-dark'); ctx.lineWidth = 1; ctx.globalAlpha = 0.5;
+                mesh.elems.forEach(function(el) {
+                    ctx.beginPath();
+                    el.n.forEach(function(nd, k2) {
+                        var p = X(nd, false);
+                        if (k2 === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+                    });
+                    ctx.closePath(); ctx.stroke();
+                });
+                ctx.globalAlpha = 1;
+                // contour fill on deformed shape
+                mesh.elems.forEach(function(el) {
+                    if (el.type === 'q4') {
+                        var P4 = el.n.map(function(nd) { return X(nd, true); });
+                        var V4 = el.n.map(function(nd) { return fld[nd]; });
+                        var SUB = 3;
+                        for (var si = 0; si < SUB; si++) for (var sj = 0; sj < SUB; sj++) {
+                            var f0 = si / SUB, f1 = (si + 1) / SUB, g0 = sj / SUB, g1 = (sj + 1) / SUB;
+                            function bilin(P, fx, fy) {
+                                var a = [P[0][0] + (P[1][0] - P[0][0]) * fx, P[0][1] + (P[1][1] - P[0][1]) * fx];
+                                var b = [P[3][0] + (P[2][0] - P[3][0]) * fx, P[3][1] + (P[2][1] - P[3][1]) * fx];
+                                return [a[0] + (b[0] - a[0]) * fy, a[1] + (b[1] - a[1]) * fy];
+                            }
+                            function bval(V, fx, fy) {
+                                var a = V[0] + (V[1] - V[0]) * fx, b = V[3] + (V[2] - V[3]) * fx;
+                                return a + (b - a) * fy;
+                            }
+                            var q1 = bilin(P4, f0, g0), q2 = bilin(P4, f1, g0), q3 = bilin(P4, f1, g1), q4 = bilin(P4, f0, g1);
+                            var vc = bval(V4, (f0 + f1) / 2, (g0 + g1) / 2);
+                            ctx.fillStyle = cmap((vc - fmin) / (fmax - fmin));
+                            ctx.beginPath(); ctx.moveTo(q1[0], q1[1]); ctx.lineTo(q2[0], q2[1]); ctx.lineTo(q3[0], q3[1]); ctx.lineTo(q4[0], q4[1]); ctx.closePath();
+                            ctx.fill();
+                        }
+                    } else {
+                        var Pt = el.n.map(function(nd) { return X(nd, true); });
+                        var Vt = el.n.map(function(nd) { return fld[nd]; });
+                        // 4 subtriangles via midpoints
+                        var m01 = [(Pt[0][0] + Pt[1][0]) / 2, (Pt[0][1] + Pt[1][1]) / 2];
+                        var m12 = [(Pt[1][0] + Pt[2][0]) / 2, (Pt[1][1] + Pt[2][1]) / 2];
+                        var m20 = [(Pt[2][0] + Pt[0][0]) / 2, (Pt[2][1] + Pt[0][1]) / 2];
+                        var v01 = (Vt[0] + Vt[1]) / 2, v12 = (Vt[1] + Vt[2]) / 2, v20 = (Vt[2] + Vt[0]) / 2;
+                        var tris = [
+                            [Pt[0], m01, m20, (Vt[0] + v01 + v20) / 3],
+                            [m01, Pt[1], m12, (v01 + Vt[1] + v12) / 3],
+                            [m20, m12, Pt[2], (v20 + v12 + Vt[2]) / 3],
+                            [m01, m12, m20, (v01 + v12 + v20) / 3]
+                        ];
+                        tris.forEach(function(tr) {
+                            ctx.fillStyle = cmap((tr[3] - fmin) / (fmax - fmin));
+                            ctx.beginPath(); ctx.moveTo(tr[0][0], tr[0][1]); ctx.lineTo(tr[1][0], tr[1][1]); ctx.lineTo(tr[2][0], tr[2][1]); ctx.closePath();
+                            ctx.fill();
+                        });
+                    }
+                });
+                // deformed mesh edges
+                ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 0.6;
+                mesh.elems.forEach(function(el) {
+                    ctx.beginPath();
+                    el.n.forEach(function(nd, k2) {
+                        var p = X(nd, true);
+                        if (k2 === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+                    });
+                    ctx.closePath(); ctx.stroke();
+                });
+                // supports & loads glyphs
+                var prim = var_color('--fe-primary'), acc = var_color('--fe-accent');
+                ctx.fillStyle = prim;
+                var seen = {};
+                mesh.fixed.forEach(function(d2) {
+                    var nd = Math.floor(d2 / 2);
+                    if (seen[nd]) return; seen[nd] = 1;
+                    var p = X(nd, false);
+                    ctx.beginPath(); ctx.arc(p[0], p[1], 3.2, 0, Math.PI * 2); ctx.fill();
+                });
+                ctx.strokeStyle = acc; ctx.fillStyle = acc; ctx.lineWidth = 2;
+                mesh.loads.forEach(function(l) {
+                    if (Math.abs(l[1]) < 1e-12) return;
+                    var nd = Math.floor(l[0] / 2);
+                    var p = X(nd, true);
+                    var dir = l[1] < 0 ? 1 : -1;   // negative uy load -> arrow pointing down
+                    ctx.beginPath(); ctx.moveTo(p[0], p[1] - dir * 26); ctx.lineTo(p[0], p[1] - dir * 6); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(p[0], p[1] - dir * 2); ctx.lineTo(p[0] - 4, p[1] - dir * 9); ctx.lineTo(p[0] + 4, p[1] - dir * 9); ctx.fill();
+                });
+                // colorbar
+                var cbX = W - 66, cbY = 50, cbH = H - 110, cbW = 16;
+                for (var i = 0; i < cbH; i++) {
+                    ctx.fillStyle = cmap(1 - i / cbH);
+                    ctx.fillRect(cbX, cbY + i, cbW, 1.5);
+                }
+                ctx.strokeStyle = var_color('--fe-border-dark'); ctx.strokeRect(cbX, cbY, cbW, cbH);
+                ctx.fillStyle = var_color('--fe-text'); ctx.font = '11px sans-serif';
+                var names = { vm: 'von Mises', sxx: 'σxx', syy: 'σyy', txy: 'τxy', umag: '|u|' };
+                ctx.fillText(names[field], cbX - 14, cbY - 12);
+                ctx.fillText(fmax.toPrecision(3), cbX - 8, cbY + 4);
+                ctx.fillText(fmin.toPrecision(3), cbX - 8, cbY + cbH + 12);
+                ctx.fillText(((fmin + fmax) / 2).toPrecision(3), cbX - 8, cbY + cbH / 2 + 4);
+            }
+
+            // ---------- beam theory ----------
+            function beamTheory() {
+                var P = P0 * loadFac, L = 8, Hh = 2, I = TH * Hh * Hh * Hh / 12;
+                var G = E / (2 * (1 + NU)), A = TH * Hh, k2 = 1.2;
+                if (preset === 'cant') return P * L * L * L / (3 * E * I) + k2 * P * L / (G * A);
+                if (preset === 'ssb') return P * L * L * L / (48 * E * I) + k2 * P * L / (4 * G * A);
+                return null;
+            }
+
+            function femDeflection(sol) {
+                var mesh = sol.mesh, u = sol.u, eps = 1e-9;
+                var best = 0;
+                if (preset === 'cant' || preset === 'lbrk') {
+                    mesh.coords.forEach(function(c, i) {
+                        if (Math.abs(c[0] - mesh.ux) < eps) best = Math.max(best, Math.abs(u[2 * i + 1]));
+                    });
+                } else {
+                    // measure at bottom-center: away from the point load's local indentation
+                    var bd = 1e9, bi = -1;
+                    mesh.coords.forEach(function(c, i) {
+                        if (Math.abs(c[1]) < eps) {
+                            var dd = Math.abs(c[0] - mesh.ux / 2);
+                            if (dd < bd) { bd = dd; bi = i; }
+                        }
+                    });
+                    if (bi >= 0) best = Math.abs(u[2 * bi + 1]);
+                }
+                return best;
+            }
+
+            function update() {
+                var sol = solve();
+                lastSol = sol;
+                if (!sol) return;
+                render(sol);
+                document.getElementById('lab-elems').textContent = sol.mesh.elems.length;
+                document.getElementById('lab-dofs').textContent = sol.N;
+                document.getElementById('lab-maxvm').textContent = sol.maxVM.toPrecision(3);
+                var dFem = femDeflection(sol), dBeam = beamTheory();
+                document.getElementById('lab-tipdef').textContent = dFem.toPrecision(3);
+                document.getElementById('lab-beamdef').textContent = dBeam ? dBeam.toPrecision(3) : '—';
+                document.getElementById('lab-diff').textContent = dBeam ? (100 * (dFem - dBeam) / dBeam).toFixed(1) + '%' : '—';
+            }
+
+            function schedule() {
+                if (solTimer) clearTimeout(solTimer);
+                solTimer = setTimeout(update, 40);
+            }
+
+            function toggleUI(groupId, dataAttr, value) {
+                document.querySelectorAll('#' + groupId + ' .toggle-btn').forEach(function(b) {
+                    b.classList.toggle('active', b.dataset[dataAttr] === String(value));
+                });
+            }
+
+            return {
+                init: function() { update(); },
+                setPreset: function(p) { preset = p; toggleUI('lab-preset-toggle', 'p', p); schedule(); },
+                setElem: function(e2) { elemType = e2; toggleUI('lab-elem-toggle', 'e', e2); schedule(); },
+                setForm: function(f2) { form = f2; toggleUI('lab-form-toggle', 'f', f2); schedule(); },
+                setField: function(f2) { field = f2; toggleUI('lab-field-toggle', 'fl', f2); if (lastSol) { /* re-derive field */ } schedule(); },
+                setDensity: function(v) { density = parseInt(v); document.getElementById('lab-density-val').textContent = v; schedule(); },
+                setLoad: function(v) { loadFac = parseFloat(v); document.getElementById('lab-load-val').textContent = loadFac.toFixed(1); schedule(); },
+                setScale: function(v) { defScale = parseFloat(v); schedule(); },
+                runStudy: function() {
+                    var btn = document.getElementById('lab-study-btn');
+                    btn.classList.add('is-loading');
+                    var savedPreset = preset, savedElem = elemType, savedDensity = density;
+                    preset = 'cant';
+                    toggleUI('lab-preset-toggle', 'p', 'cant');
+                    var results = { q4: { x: [], y: [] }, t3: { x: [], y: [] } };
+                    var runs = [];
+                    ['q4', 't3'].forEach(function(et) {
+                        for (var d2 = 1; d2 <= 5; d2++) runs.push([et, d2]);
+                    });
+                    var idx = 0;
+                    function next() {
+                        if (idx >= runs.length) {
+                            preset = savedPreset; elemType = savedElem; density = savedDensity;
+                            toggleUI('lab-preset-toggle', 'p', savedPreset);
+                            toggleUI('lab-elem-toggle', 'e', savedElem);
+                            plotStudy(results);
+                            btn.classList.remove('is-loading');
+                            update();
+                            return;
+                        }
+                        elemType = runs[idx][0]; density = runs[idx][1];
+                        var sol = solve();
+                        if (sol) {
+                            results[elemType].x.push(sol.N);
+                            results[elemType].y.push(femDeflection(sol));
+                        }
+                        idx++;
+                        setTimeout(next, 10);
+                    }
+                    next();
+                }
+            };
+
+            function plotStudy(results) {
+                var el = document.getElementById('lab-conv-plot');
+                el.style.display = '';
+                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                var bg = isDark ? '#1e293b' : '#f1f5f9';
+                var text = isDark ? '#cbd5e1' : '#64748b';
+                var grid = isDark ? '#334155' : '#cbd5e1';
+                var P = P0 * loadFac, L = 8, Hh = 2, I = TH * Hh * Hh * Hh / 12;
+                var G = E / (2 * (1 + NU)), A = TH * Hh;
+                var beam = P * L * L * L / (3 * E * I) + 1.2 * P * L / (G * A);
+                var xr = results.q4.x.concat(results.t3.x);
+                Plotly.newPlot('lab-conv-plot', [
+                    { x: results.q4.x, y: results.q4.y, mode: 'lines+markers', name: 'Q4 quads', line: { color: '#3b82f6', width: 3 }, marker: { size: 9 } },
+                    { x: results.t3.x, y: results.t3.y, mode: 'lines+markers', name: 'T3 triangles', line: { color: '#ef4444', width: 3 }, marker: { size: 9 } },
+                    { x: [Math.min.apply(null, xr), Math.max.apply(null, xr)], y: [beam, beam], mode: 'lines', name: 'Timoshenko beam theory', line: { color: text, dash: 'dash', width: 2 } }
+                ], {
+                    xaxis: { title: 'Degrees of freedom', type: 'log', color: text, gridcolor: grid },
+                    yaxis: { title: 'Tip deflection', color: text, gridcolor: grid },
+                    paper_bgcolor: bg, plot_bgcolor: bg, font: { color: text, size: 11 },
+                    margin: { l: 60, r: 20, t: 20, b: 50 },
+                    legend: { orientation: 'h', y: 1.12 }
+                }, { responsive: true, displayModeBar: false });
+            }
+        })();
+
         // ==================== MODULE 8: PROS & CONS ====================
         function _initProscons() {
             _plotPerfAccuracy();
@@ -4160,7 +6171,15 @@
                 { q: 'Which element has the best accuracy-to-cost ratio for 3D problems?', opts: ['C3D4', 'C3D8', 'C3D10', 'C3D20'], ans: 2 },
                 { q: 'What does Richardson extrapolation estimate?', opts: ['Mesh quality', 'Exact solution from two mesh levels', 'Element stiffness', 'Convergence rate'], ans: 1 },
                 { q: 'Why are stress singularities problematic in FEA?', opts: ['They slow the solver', 'Stress increases without bound with refinement', 'They cause material failure', 'They require more boundary conditions'], ans: 1 },
-                { q: 'What is the minimum number of mesh refinement levels for a credible convergence study?', opts: ['1', '2', '3', '5'], ans: 2 }
+                { q: 'What is the minimum number of mesh refinement levels for a credible convergence study?', opts: ['1', '2', '3', '5'], ans: 2 },
+                { q: 'What does the weak form of a differential equation accomplish?', opts: ['It makes the solution less accurate', 'It lowers the derivative order the approximation must satisfy', 'It removes boundary conditions', 'It guarantees a symmetric mesh'], ans: 1 },
+                { q: 'A negative Jacobian determinant inside an element means…', opts: ['The material is nonlinear', 'The element is inverted or folded over itself', 'The load is too high', 'The mesh is too fine'], ans: 1 },
+                { q: 'How many 1D Gauss points are needed to integrate a cubic polynomial exactly?', opts: ['1', '2', '3', '4'], ans: 1 },
+                { q: 'Before boundary conditions are applied, the global stiffness matrix is…', opts: ['Diagonal', 'Fully dense', 'Singular, due to rigid-body modes', 'Always well-conditioned'], ans: 2 },
+                { q: 'Node numbering primarily affects…', opts: ['Solution accuracy', 'Matrix bandwidth and direct-solver cost', 'Element stiffness values', 'Convergence rate'], ans: 1 },
+                { q: 'The plane stress assumption is appropriate for…', opts: ['Long buried pipelines', 'Thin plates loaded in their own plane', 'Massive dams', 'Any 3D solid'], ans: 1 },
+                { q: 'Why do CST (T3) triangles perform poorly in bending?', opts: ['They have too many nodes', 'Their constant strain field cannot represent the linear strain variation of bending', 'They are unstable', 'They only work in 3D'], ans: 1 },
+                { q: 'Overlapping element stiffness contributions at shared nodes enforce…', opts: ['Displacement compatibility between elements', 'Equal stresses in all elements', 'Symmetric loading', 'A banded matrix'], ans: 0 }
             ];
 
             var score = 0;
@@ -4198,8 +6217,8 @@
                             var scoreDiv = document.getElementById('quiz-score');
                             scoreDiv.style.display = 'block';
                             scoreDiv.innerHTML = '<div class="quiz-score"><div class="score-value">' + score + '/' + questions.length + '</div><p style="color:var(--fe-text-secondary);margin-top:0.5rem;">' +
-                                (score >= 8 ? 'Excellent! You really know your elements.' : score >= 5 ? 'Good job! Review the modules for the ones you missed.' : 'Keep learning! Go through the modules again.') + '</p></div>';
-                            if (typeof FEToast === 'function') FEToast(score >= 8 ? 'success' : score >= 5 ? 'info' : 'warning', 'Quiz Complete', 'You scored ' + score + '/' + questions.length + '.', 4000);
+                                (score >= 15 ? 'Excellent! You really know your elements.' : score >= 10 ? 'Good job! Review the modules for the ones you missed.' : 'Keep learning! Go through the modules again.') + '</p></div>';
+                            if (typeof FEToast === 'function') FEToast(score >= 15 ? 'success' : score >= 10 ? 'info' : 'warning', 'Quiz Complete', 'You scored ' + score + '/' + questions.length + '.', 4000);
                         }
                     });
                     optsDiv.appendChild(optEl);
@@ -4227,7 +6246,7 @@
 
         // ==================== UTILITY ====================
         function var_color(name) {
-            return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#e04668';
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#0d9488';
         }
 
         // ==================== INIT ====================
@@ -4315,7 +6334,7 @@
         if (closeBtn) closeBtn.addEventListener('click', closeShortcuts);
         overlay.addEventListener('click', function(e) { if (e.target === overlay) closeShortcuts(); });
 
-        var MODULES = ['intro','meshing','elements','hpmethod','complexity','convergence','abaqus','proscons'];
+        var MODULES = ['intro','mathfem','meshing','elements','isopar','hpmethod','complexity','convergence','solver','stresslab','abaqus','proscons'];
         document.addEventListener('keydown', function(e) {
             var tag = (e.target.tagName || '').toLowerCase();
             if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
@@ -4331,9 +6350,9 @@
             if (e.key === 'Escape') {
                 if (overlay.classList.contains('active')) { closeShortcuts(); return; }
             }
-            // 1-8 switch modules
+            // 1-9 switch modules
             var num = parseInt(e.key);
-            if (num >= 1 && num <= 8 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            if (num >= 1 && num <= 9 && !e.ctrlKey && !e.metaKey && !e.altKey) {
                 var tabName = MODULES[num - 1];
                 var tab = document.querySelector('.module-tab[data-module="' + tabName + '"]');
                 if (tab && tab.offsetParent !== null) {
