@@ -2709,6 +2709,9 @@ body.Publications .pub-article .pub-section:first-of-type {
 .gradient-noun[data-app="cross-section-studio"] {
 	background-image: linear-gradient(90deg, #d4a556, #18a9a8, #8a7355, #d4a556);
 }
+.gradient-noun[data-app="leaps"] {
+	background-image: linear-gradient(90deg, #2166ac, #22d3d1, #b2182b, #2166ac);
+}
 
 .app-card .status-badge {
 	position: absolute;

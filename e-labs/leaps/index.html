@@ -1,0 +1,309 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <script>
+        (function() {
+            // Follow the global site theme; default to dark like other E-Labs apps
+            var theme = localStorage.getItem('theme-preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme-preference', theme);
+        })();
+    </script>
+    <title>LEAPS | Layered Elastic Analysis of Pavement Structures</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+    <!-- Social Sharing: Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="LEAPS | Layered Elastic Analysis of Pavement Structures">
+    <meta property="og:description" content="Browser-based mechanistic pavement analysis — multilayer elastic theory with bonded, unbonded and spring interfaces, multi-wheel loads, stress bulbs and depth profiles. Runs entirely client-side.">
+    <meta property="og:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_LEAPS.webp">
+    <meta property="og:url" content="https://www.johanncardenas.com/e-labs/leaps/index.html">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LEAPS | Layered Elastic Analysis of Pavement Structures">
+    <meta name="twitter:description" content="Mechanistic multilayer elastic pavement analysis in the browser.">
+    <meta name="twitter:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_LEAPS.webp">
+
+    <link rel="stylesheet" href="../../assets/css/main.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="canonical" href="https://www.johanncardenas.com/e-labs/leaps/">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js" defer></script>
+</head>
+<body class="LeapsApp is-preload">
+    <div id="page-wrapper">
+
+        <!-- Header -->
+        <section id="header">
+            <h1><a href="../../index.html">Johann Cardenas</a></h1>
+            <nav id="nav">
+                <ul>
+                    <li><a href="../../index.html">Home</a></li>
+                    <li>
+                        <a href="../../Projects.html">Projects</a>
+                        <ul>
+                            <li><a href="../../projects/ACRP_FEM.html">ME Overload Permitting for Airfields</a></li>
+                            <li><a href="../../projects/EV_Trucks.html">Impact of HDEVs on Flexible Pavements</a></li>
+                            <li><a href="../../projects/FAA_Data.html">ML-Based Models for Airfield Pavements</a></li>
+                            <li><a href="../../projects/MS_Thesis.html">Impact of DWL on Flexible Pavements</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="../../Publications.html">Publications</a></li>
+                    <li><a href="../../Resume.html">Resume</a></li>
+                    <li><a href="../../Blog.html">Blog</a></li>
+                    <li><a href="../../News.html">News</a></li>
+                    <li class="current">
+                        <a href="../../E-Labs.html">E-Labs</a>
+                        <ul>
+                            <li><a href="../../e-labs/leaps/index.html">LEAPS</a></li>
+                            <li><a href="../../e-labs/cross-section-studio/index.html">Cross-Section Studio</a></li>
+                            <li><a href="../../e-labs/finite-elemented/index.html">Finite-Elemented</a></li>
+                            <li><a href="../../e-labs/frontier/index.html">Frontier</a></li>
+                            <li><a href="https://curly-adventure-y724nlw.pages.github.io/apps/aircrafter/" target="_blank" rel="noopener">AirCrafter</a></li>
+                            <li><a href="https://curly-adventure-y724nlw.pages.github.io/apps/asphera/" target="_blank" rel="noopener">Asphera</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </section>
+
+        <!-- Main App -->
+        <section id="main">
+            <div class="lp-app" id="main-content" tabindex="-1">
+
+                <!-- App Header -->
+                <div class="app-header">
+                    <div class="header-nav">
+                        <a href="../../E-Labs.html" class="back-btn">
+                            <i class="fas fa-arrow-left"></i> Back to E-Labs
+                        </a>
+                        <div class="header-badges">
+                            <span class="header-badge"><i class="fas fa-microchip"></i> LEAF-JS Engine</span>
+                            <span class="header-badge"><i class="fas fa-code-branch"></i> v1.0</span>
+                        </div>
+                    </div>
+                    <div class="header-content">
+                        <h1>
+                            <span class="lp-icon"><i class="fas fa-road"></i></span>
+                            <span>LEA<span class="highlight">PS</span></span>
+                        </h1>
+                        <p>Linear Elastic Analysis of Pavement Structures — multilayer elastic theory, multi-wheel loads, interface bonding, and live stress bulbs. Every number computed in your browser.</p>
+                    </div>
+                </div>
+
+                <!-- Workspace -->
+                <div class="lp-workspace">
+
+                    <!-- Top toolbar -->
+                    <div class="lp-topbar">
+                        <div class="lp-topbar-group">
+                            <input id="lp-project-name" class="lp-project-name" type="text" value="Untitled analysis" spellcheck="false" aria-label="Project name" />
+                        </div>
+                        <div class="lp-topbar-group">
+                            <button id="lp-undo" class="lp-tool" title="Undo (Ctrl+Z)" disabled><i class="fas fa-undo"></i></button>
+                            <button id="lp-redo" class="lp-tool" title="Redo (Ctrl+Y)" disabled><i class="fas fa-redo"></i></button>
+                            <span class="lp-sep"></span>
+                            <select id="lp-template" class="lp-select" title="Load a template structure">
+                                <option value="" disabled selected>Templates…</option>
+                            </select>
+                            <span class="lp-sep"></span>
+                            <button id="lp-open" class="lp-tool" title="Open project (.leaps.json)"><i class="fas fa-folder-open"></i></button>
+                            <button id="lp-save" class="lp-tool" title="Save project"><i class="fas fa-save"></i></button>
+                            <input type="file" id="lp-file" accept=".json,application/json" hidden />
+                        </div>
+                        <div class="lp-topbar-spacer"></div>
+                        <div class="lp-topbar-group">
+                            <div class="lp-progress" id="lp-progress" hidden><div class="lp-progress-fill" id="lp-progress-fill"></div></div>
+                            <select id="lp-units" class="lp-select" title="Unit system">
+                                <option value="SI" selected>SI — kPa · mm · kN</option>
+                                <option value="US">US — psi · in · lbf</option>
+                            </select>
+                            <label class="lp-check" title="Recompute automatically after every edit">
+                                <input type="checkbox" id="lp-autorun" checked /> Auto
+                            </label>
+                            <button id="lp-run" class="lp-run"><i class="fas fa-play"></i> Run</button>
+                        </div>
+                    </div>
+
+                    <div class="lp-body">
+
+                        <!-- Left panel: model -->
+                        <aside class="lp-left">
+                            <details class="lp-section" open>
+                                <summary><i class="fas fa-layer-group"></i> Structure <span class="lp-count" id="lp-layer-count"></span></summary>
+                                <div class="lp-section-body">
+                                    <div id="lp-layers"></div>
+                                    <button id="lp-add-layer" class="lp-btn lp-btn-block"><i class="fas fa-plus"></i> Add layer</button>
+                                </div>
+                            </details>
+                            <details class="lp-section" open>
+                                <summary><i class="fas fa-grip-lines"></i> Interfaces</summary>
+                                <div class="lp-section-body" id="lp-interfaces"></div>
+                            </details>
+                            <details class="lp-section" open>
+                                <summary><i class="fas fa-truck"></i> Loads <span class="lp-count" id="lp-load-count"></span></summary>
+                                <div class="lp-section-body">
+                                    <div class="lp-gear-row">
+                                        <select id="lp-gear" class="lp-select lp-grow">
+                                            <option value="single">Single wheel</option>
+                                            <option value="dual" selected>Dual wheels</option>
+                                            <option value="dual-tandem">Dual tandem</option>
+                                            <option value="tridem">Tridem axle</option>
+                                        </select>
+                                        <button id="lp-gear-apply" class="lp-btn" title="Replace wheels with this gear layout">Apply</button>
+                                    </div>
+                                    <div class="lp-gear-params" id="lp-gear-params"></div>
+                                    <div id="lp-wheels"></div>
+                                    <button id="lp-add-wheel" class="lp-btn lp-btn-block"><i class="fas fa-plus"></i> Add wheel</button>
+                                </div>
+                            </details>
+                            <details class="lp-section">
+                                <summary><i class="fas fa-crosshairs"></i> Evaluation points <span class="lp-count" id="lp-point-count"></span></summary>
+                                <div class="lp-section-body">
+                                    <p class="lp-hint">Double-click the section to drop a point. Points snap to interfaces.</p>
+                                    <div id="lp-points"></div>
+                                    <div class="lp-row">
+                                        <button id="lp-pts-critical" class="lp-btn lp-grow" title="Add the classical critical locations">Critical set</button>
+                                        <button id="lp-pts-clear" class="lp-btn">Clear</button>
+                                    </div>
+                                </div>
+                            </details>
+                            <details class="lp-section">
+                                <summary><i class="fas fa-sliders-h"></i> Solver</summary>
+                                <div class="lp-section-body">
+                                    <label class="lp-field"><span>Tolerance</span>
+                                        <select id="lp-tol" class="lp-select">
+                                            <option value="1e-5">1e-5 · fast</option>
+                                            <option value="1e-6" selected>1e-6 · standard</option>
+                                            <option value="1e-7">1e-7 · high</option>
+                                        </select>
+                                    </label>
+                                    <label class="lp-field"><span>Contour resolution</span>
+                                        <select id="lp-res" class="lp-select">
+                                            <option value="41x31">Draft · 41×31</option>
+                                            <option value="61x43" selected>Standard · 61×43</option>
+                                            <option value="91x61">Fine · 91×61</option>
+                                        </select>
+                                    </label>
+                                    <p class="lp-hint">Stresses are tension-positive; z is measured downward from the surface; deflection is positive downward.</p>
+                                </div>
+                            </details>
+                        </aside>
+
+                        <!-- Center viewport -->
+                        <div class="lp-viewport" id="lp-viewport">
+                            <canvas id="lp-cv"></canvas>
+                            <div class="lp-vp-toolbar">
+                                <button id="lp-fit" class="lp-tool" title="Fit view (F)"><i class="fas fa-expand"></i></button>
+                                <button id="lp-zin" class="lp-tool" title="Zoom in"><i class="fas fa-search-plus"></i></button>
+                                <button id="lp-zout" class="lp-tool" title="Zoom out"><i class="fas fa-search-minus"></i></button>
+                                <span class="lp-sep"></span>
+                                <label class="lp-check lp-check-tool" title="Overlay the deflected surface (exaggerated)">
+                                    <input type="checkbox" id="lp-show-basin" checked /> <i class="fas fa-water"></i>
+                                </label>
+                                <label class="lp-check lp-check-tool" title="Show contour overlay">
+                                    <input type="checkbox" id="lp-show-contour" checked /> <i class="fas fa-braille"></i>
+                                </label>
+                            </div>
+                            <div class="lp-vp-field">
+                                <select id="lp-field" class="lp-select" title="Contoured response field"></select>
+                                <input id="lp-alpha" type="range" min="0.15" max="1" step="0.05" value="0.85" title="Contour opacity" />
+                            </div>
+                            <canvas id="lp-colorbar" width="72" height="260"></canvas>
+                            <canvas id="lp-plan" width="216" height="164" title="Plan view — drag the section line"></canvas>
+                            <div class="lp-hover" id="lp-hover" hidden></div>
+                        </div>
+
+                        <!-- Right panel: results -->
+                        <aside class="lp-right">
+                            <div class="lp-tabs" role="tablist">
+                                <button class="lp-tab is-active" data-tab="results" role="tab">Results</button>
+                                <button class="lp-tab" data-tab="profiles" role="tab">Profiles</button>
+                                <button class="lp-tab" data-tab="table" role="tab">Points</button>
+                                <button class="lp-tab" data-tab="export" role="tab">Export</button>
+                            </div>
+                            <div class="lp-tabpanes">
+                                <div class="lp-pane is-active" data-pane="results">
+                                    <div id="lp-cards"></div>
+                                    <h4 class="lp-h4">Layer responses</h4>
+                                    <div id="lp-layer-table"></div>
+                                </div>
+                                <div class="lp-pane" data-pane="profiles">
+                                    <label class="lp-field"><span>Field</span>
+                                        <select id="lp-prof-field" class="lp-select"></select>
+                                    </label>
+                                    <div id="lp-chart-profile" class="lp-chart"></div>
+                                    <h4 class="lp-h4">Surface deflection basin</h4>
+                                    <div id="lp-chart-basin" class="lp-chart lp-chart-short"></div>
+                                </div>
+                                <div class="lp-pane" data-pane="table">
+                                    <p class="lp-hint" id="lp-table-hint">Responses at your evaluation points.</p>
+                                    <div id="lp-pts-table" class="lp-table-wrap"></div>
+                                </div>
+                                <div class="lp-pane" data-pane="export">
+                                    <h4 class="lp-h4">Data</h4>
+                                    <button class="lp-btn lp-btn-block" id="lp-exp-csv"><i class="fas fa-file-csv"></i> Evaluation points → CSV</button>
+                                    <button class="lp-btn lp-btn-block" id="lp-exp-grid"><i class="fas fa-border-all"></i> Contour grid → CSV</button>
+                                    <button class="lp-btn lp-btn-block" id="lp-exp-json"><i class="fas fa-code"></i> Project → JSON</button>
+                                    <h4 class="lp-h4">Figures</h4>
+                                    <button class="lp-btn lp-btn-block" id="lp-exp-png"><i class="fas fa-image"></i> Viewport → PNG</button>
+                                    <h4 class="lp-h4">Report</h4>
+                                    <button class="lp-btn lp-btn-block" id="lp-exp-report"><i class="fas fa-file-alt"></i> Printable report</button>
+                                    <p class="lp-hint">The report opens in a new tab — use your browser's Print → PDF.</p>
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
+
+                    <!-- Status bar -->
+                    <div class="lp-statusbar">
+                        <span id="lp-engine" class="lp-status-badge" title="Engine self-check runs at startup against Boussinesq closed-form solutions">
+                            <i class="fas fa-circle-notch fa-spin"></i> LEAF-JS starting…
+                        </span>
+                        <span id="lp-stats" class="lp-status-item"></span>
+                        <span class="lp-status-spacer"></span>
+                        <span id="lp-coords" class="lp-status-item lp-mono"></span>
+                    </div>
+                </div>
+
+                <!-- About / theory strip -->
+                <div class="lp-about">
+                    <div class="lp-about-col">
+                        <h3><i class="fas fa-square-root-alt"></i> The engine</h3>
+                        <p>LEAPS solves the axisymmetric elasticity equations for an N-layer halfspace (Burmister's problem) with a Love stress function per layer in Hankel-transform space. Boundary conditions build a 4N−2 system per transform parameter, solved with scaled exponentials so no modulus ratio or layer thickness can overflow. Responses are recovered by adaptive panel quadrature between Bessel zeros with Wynn-ε acceleration; surface values use closed-form Weber–Schafheitlin tails, so deflection at z&nbsp;=&nbsp;0 is exact to machine precision for a halfspace.</p>
+                    </div>
+                    <div class="lp-about-col">
+                        <h3><i class="fas fa-vial"></i> Validation</h3>
+                        <p>The engine ships with a regression suite of 69 checks: Boussinesq closed forms at all depths, multilayer reduction to the halfspace, spring-interface limits against fully bonded and frictionless solutions, vertical equilibrium, superposition symmetry, Burmister's two-layer deflection factor, and a 1000:1 modulus-contrast case with a 3&nbsp;mm interlayer. A subset runs in your browser every time the app starts.</p>
+                    </div>
+                    <div class="lp-about-col">
+                        <h3><i class="fas fa-drafting-compass"></i> Conventions</h3>
+                        <p>Tension-positive stresses, z downward, deflection positive downward. Wheels are uniform circular pressures; contact radius follows from load and pressure. Bonded, frictionless, and shear-spring interfaces (k in MPa/mm) cover flexible, rigid, composite, and overlay systems. All quantities are shown in the unit system you pick — internally everything is mm · N · MPa.</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <div id="footer-placeholder"></div>
+
+    </div>
+
+    <!-- App -->
+    <script src="app.js" defer></script>
+
+    <!-- Site scripts -->
+    <script src="../../assets/js/components.js"></script>
+    <script src="../../assets/js/jquery.min.js"></script>
+    <script src="../../assets/js/jquery.dropotron.min.js"></script>
+    <script src="../../assets/js/breakpoints.min.js"></script>
+    <script src="../../assets/js/util.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/theme-toggle.js"></script>
+    <script src="../../assets/js/back-to-top.js"></script>
+</body>
+</html>

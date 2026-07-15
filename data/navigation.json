@@ -57,6 +57,7 @@
       "url": "E-Labs.html",
       "type": "dropdown",
       "children": [
+        { "name": "LEAPS", "url": "e-labs/leaps/index.html" },
         { "name": "Cross-Section Studio", "url": "e-labs/cross-section-studio/index.html" },
         { "name": "Finite-Elemented", "url": "e-labs/finite-elemented/index.html" },
         { "name": "Frontier", "url": "e-labs/frontier/index.html" },

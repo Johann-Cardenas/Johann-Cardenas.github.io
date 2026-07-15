@@ -660,6 +660,92 @@
   };
 
   /* ===========================================================
+     LEAPS — pulsing stress bulbs under dual wheels in a layered
+     cross-section, with an exaggerated deflection basin line
+     =========================================================== */
+  var leaps = {
+    init: function (w, h) {
+      return {
+        layers: [
+          { c: '#33363d', t: 0.16 },   // asphalt
+          { c: '#95897a', t: 0.22 },   // base
+          { c: '#ab9c86', t: 0.26 },   // subbase
+          { c: '#8d7355', t: 0.36 }    // subgrade
+        ]
+      };
+    },
+    draw: function (ctx, st, w, h, ts) {
+      var t = ts * 0.001;
+      ctx.fillStyle = '#0a111f';
+      ctx.fillRect(0, 0, w, h);
+
+      var y0 = h * 0.3, depth = h * 0.7;
+      var y = y0;
+      for (var i = 0; i < st.layers.length; i++) {
+        var L = st.layers[i];
+        ctx.fillStyle = L.c;
+        ctx.fillRect(0, y, w, depth * L.t + 1);
+        y += depth * L.t;
+      }
+
+      // dual wheels + pulsing pressure bulbs
+      var pulse = 0.85 + 0.15 * Math.sin(t * 2.2);
+      var wheels = [w * 0.38, w * 0.62];
+      for (i = 0; i < wheels.length; i++) {
+        var cx = wheels[i];
+        // stress bulb (compression = blue)
+        var R = w * 0.16 * pulse;
+        var g = ctx.createRadialGradient(cx, y0, 2, cx, y0, R);
+        g.addColorStop(0, 'rgba(33,102,172,0.85)');
+        g.addColorStop(0.55, 'rgba(67,147,195,0.35)');
+        g.addColorStop(1, 'rgba(67,147,195,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.ellipse(cx, y0 + R * 0.55, R * 0.72, R, 0, 0, 6.2832);
+        ctx.fill();
+        // tire
+        ctx.fillStyle = '#1d2126';
+        var tw = w * 0.055;
+        ctx.fillRect(cx - tw, y0 - tw * 1.5 - 6, tw * 2, tw * 1.5);
+        // arrows
+        ctx.strokeStyle = '#e05252';
+        ctx.lineWidth = 1.2;
+        for (var a = -2; a <= 2; a++) {
+          var ax = cx + a * tw * 0.45;
+          ctx.beginPath(); ctx.moveTo(ax, y0 - 5); ctx.lineTo(ax, y0 - 1); ctx.stroke();
+        }
+      }
+
+      // deflection basin line
+      ctx.strokeStyle = '#22d3d1';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      for (var x = 0; x <= w; x += 3) {
+        var defl = 0;
+        for (i = 0; i < wheels.length; i++) {
+          var dx = (x - wheels[i]) / (w * 0.16);
+          defl += Math.exp(-dx * dx);
+        }
+        var yy = y0 + defl * h * 0.05 * pulse;
+        if (x === 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+      }
+      ctx.stroke();
+
+      // iso-line rings
+      ctx.strokeStyle = 'rgba(232,238,249,0.18)';
+      ctx.lineWidth = 0.8;
+      for (i = 0; i < wheels.length; i++) {
+        for (var r2 = 1; r2 <= 3; r2++) {
+          var RR = w * 0.06 * r2 * pulse;
+          ctx.beginPath();
+          ctx.ellipse(wheels[i], y0 + RR * 0.5, RR * 0.75, RR, 0, 0, Math.PI);
+          ctx.stroke();
+        }
+      }
+    }
+  };
+
+  /* ===========================================================
      Controller: DPR-aware sizing, hover-gated rAF loop
      =========================================================== */
   var engines = {
@@ -667,7 +753,8 @@
     'aircrafter': aircrafter,
     'frontier': frontier,
     'finite-elemented': finiteElemented,
-    'cross-section-studio': crossSectionStudio
+    'cross-section-studio': crossSectionStudio,
+    'leaps': leaps
   };
 
   function initCard(card) {

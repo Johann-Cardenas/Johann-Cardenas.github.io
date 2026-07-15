@@ -82,7 +82,7 @@ assets/js/           Frontend JS (components.js, search.js, theme-toggle.js, etc
 data/                JSON content store (navigation, blog-posts, news, projects, footer, site-config, github)
 blog/                Individual blog post HTML (Liquid-processed by Jekyll)
 projects/            Detailed project pages
-e-labs/              Interactive web apps (Asphera, AirCrafter, Frontier, Finite-Elemented, Cross-Section Studio) + Python preprocessing
+e-labs/              Interactive web apps (Asphera, AirCrafter, Frontier, Finite-Elemented, Cross-Section Studio, LEAPS) + Python preprocessing
 images/              All media assets organized by section
 documents/           PDFs (resume, etc.)
 scripts/             Build / content-refresh utilities (fetch-github-data.mjs)
@@ -204,6 +204,7 @@ ACRP_FEM (password-protected), EV_Trucks, FAA_Data, MS_Thesis
 - **Frontier** (`e-labs/frontier/`) — HPC intuition engine (Canvas 2D), public
 - **Finite-Elemented** (`e-labs/finite-elemented/`) — FEA educational platform, public. v2.0: 12 modules (What is FEA, Math of FEM, Meshing, Element Types, Isoparametric, h vs p, Complexity, Convergence, Solvers, 2D Stress Lab, Abaqus, Pros & Cons) with a live plane-stress/plane-strain FEM solver (Q4/T3, banded Cholesky) in pure JS; sober teal/slate design system, 18-question quiz, 9-term glossary
 - **Cross-Section Studio** (`e-labs/cross-section-studio/`) — Procedural 3D pavement cross-section renderer (Three.js ES modules via CDN import map; `index.html` + `styles.css` + `app.js`), public. Deterministic seeded procedural PBR textures (1024px tiles, material dims in mm via `TILE_MM`/`PX` constants) for 18 materials grouped Asphalt/Concrete/Base/Subgrade, true-to-scale layer stack with fixed-display infinite subgrade, viewport click-to-select with edge outline, insert-layer-between-rows UI, ortho/persp cameras (persp default), lighting presets, PNG/JPEG export up to 8K, `.pavement.json` project save/load, undo/redo, Airfield + Highway template groups (built-in + localStorage user templates)
+- **LEAPS** (`e-labs/leaps/`) — Linear Elastic Analysis of Pavement Structures, public. Mechanistic multilayer elastic (Burmister) analysis workbench: `solver.js` (**LEAF-JS engine**, UMD — runs in the worker, on the page as fallback, and under Node for regression testing) + `worker.js` + `app.js` + `styles.css`. Engine: Love stress function per layer in Hankel space, 4N−2 BC system per transform parameter with overflow-proof scaled exponentials and partial pivoting; bonded/frictionless/shear-spring interfaces; panel-wise Gauss quadrature between Bessel zeros with Wynn-ε acceleration, decay-scale refinement for deep points, and closed-form Weber–Schafheitlin surface tails (AGM elliptic integrals) — surface responses near machine-exact. Multi-wheel superposition with full tensor rotation, principal stresses/strains, von Mises. Internal units mm·N·MPa, tension-positive, z downward. UI: CAD-style workspace (layers/interfaces/loads/points panels, canvas section viewport with live stress-bulb contours + marching-squares iso-lines, plan-view inset with draggable section line, Plotly depth profiles + deflection basin, key-response cards, SI/US units, undo/redo, localStorage autosave, `.leaps.json` save/load, CSV/PNG/printable-report export). 6 templates (AASHTO flexible, FAA B737, rigid PCC/CTB unbonded, composite, perpetual, Boussinesq halfspace check). Validation: 69-check Node suite (scratchpad `test-solver.cjs` pattern: Boussinesq closed forms, multilayer reduction, spring limits, equilibrium, superposition symmetry, Burmister F2, 1000:1 contrast); `LEAPS.selfTest()` runs at worker startup and drives the status-bar badge. NOTE: site FontAwesome is **FA5** — use FA5 icon names; site-wide `button` CSS (incl. `color:#fff !important` and dark-mode teal bg) requires the `.LeapsApp`-scoped override block at the end of `styles.css`.
 
 ## Page → Placeholder → JSON Mapping
 Which DOM placeholders each page uses (determines which JSON files `components.js` fetches):
@@ -223,7 +224,7 @@ Which DOM placeholders each page uses (determines which JSON files `components.j
 All pages have hardcoded `<nav>` in HTML — no page uses `#nav-placeholder`.
 
 ## Navigation & Site Map
-- **Top nav**: Home | Projects (dropdown→4) | Publications | Resume | Blog | News | E-Labs (dropdown→5: AirCrafter, Frontier, Asphera, Finite-Elemented, Cross-Section Studio)
+- **Top nav**: Home | Projects (dropdown→4) | Publications | Resume | Blog | News | E-Labs (dropdown→6: LEAPS, Cross-Section Studio, Finite-Elemented, Frontier, AirCrafter, Asphera)
 - All pages share: hardcoded `<nav>` in HTML + dynamic footer via `#footer-placeholder`
 - Subdirectory pages (`blog/`, `projects/`, `e-labs/`) use `../` relative paths for assets
 
