@@ -1,0 +1,323 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <script>
+        (function () {
+            var theme = localStorage.getItem('theme-preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme-preference', theme);
+        })();
+    </script>
+    <title>LEAPS Documentation | Layered Elastic Analysis of Pavement Structures</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="LEAPS Documentation">
+    <meta property="og:description" content="Theory, engine internals, validation cases, conventions and usage guide for LEAPS — browser-based multilayer elastic pavement analysis.">
+    <meta property="og:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_LEAPS.webp">
+    <meta property="og:url" content="https://www.johanncardenas.com/e-labs/leaps/documentation.html">
+    <link rel="stylesheet" href="../../assets/css/main.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="canonical" href="https://www.johanncardenas.com/e-labs/leaps/documentation.html">
+    <style>
+        .lp-docs { max-width: 1180px; margin: 0 auto; padding: 2em 1.25em 4em; }
+        .lp-docs-top { display: flex; align-items: center; justify-content: space-between; gap: 1em; margin-bottom: 1.4em; flex-wrap: wrap; }
+        .lp-docs-top .back-btn { font-size: 0.9em; color: var(--lp-ink2); border-bottom: none; display: inline-flex; align-items: center; gap: 0.4em; }
+        .lp-docs-top .back-btn:hover { color: var(--lp-accent); }
+        .lp-docs-hero { border: 1px solid var(--lp-line); border-radius: 14px; background: var(--lp-bg1); box-shadow: var(--lp-shadow); padding: 1.6em 1.8em; margin-bottom: 1.6em; }
+        .lp-docs-hero h1 { display: flex; align-items: center; gap: 0.45em; font-size: 2em; margin: 0 0 0.25em; }
+        .lp-docs-hero h1 .highlight { color: var(--lp-accent); }
+        .lp-docs-hero p { color: var(--lp-ink2); margin: 0; max-width: 70ch; }
+        .lp-docs-hero .lp-icon { display: inline-flex; align-items: center; justify-content: center; width: 1.4em; height: 1.4em; border-radius: 0.3em; font-size: 0.72em; background: linear-gradient(135deg, var(--lp-accent-deep), var(--lp-indigo)); color: #fff; }
+        .lp-docs-grid { display: grid; grid-template-columns: 220px 1fr; gap: 2em; align-items: start; }
+        .lp-toc { position: sticky; top: 1em; border: 1px solid var(--lp-line); border-radius: 12px; background: var(--lp-bg1); padding: 1em 1.1em; }
+        .lp-toc h4 { font-size: 0.7em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lp-ink3); margin: 0 0 0.6em; }
+        .lp-toc a { display: block; font-size: 0.85em; color: var(--lp-ink2); padding: 0.28em 0; border-bottom: none; }
+        .lp-toc a:hover { color: var(--lp-accent); }
+        .lp-doc-body { min-width: 0; }
+        .lp-doc-sec { border-bottom: 1px solid var(--lp-line-soft); padding-bottom: 1.6em; margin-bottom: 1.6em; scroll-margin-top: 1em; }
+        .lp-doc-sec:last-child { border-bottom: none; }
+        .lp-doc-sec h2 { font-size: 1.3em; color: var(--lp-ink); display: flex; align-items: center; gap: 0.5em; margin: 0 0 0.6em; }
+        .lp-doc-sec h2 i { color: var(--lp-accent); font-size: 0.85em; }
+        .lp-doc-sec h3 { font-size: 1em; color: var(--lp-accent); margin: 1.3em 0 0.4em; }
+        .lp-doc-sec p, .lp-doc-sec li { color: var(--lp-ink2); line-height: 1.75; font-size: 0.94em; }
+        .lp-doc-sec ul { margin: 0.4em 0 0.8em; padding-left: 1.3em; }
+        .lp-doc-sec li { margin: 0.25em 0; }
+        .lp-eq { display: block; background: var(--lp-bg2); border: 1px solid var(--lp-line); border-left: 3px solid var(--lp-accent); border-radius: 8px; padding: 0.7em 1em; margin: 0.9em 0; font-family: var(--lp-mono); font-size: 0.9em; color: var(--lp-ink); overflow-x: auto; }
+        .lp-doc-sec code { font-family: var(--lp-mono); font-size: 0.88em; background: var(--lp-bg2); border: 1px solid var(--lp-line); border-radius: 5px; padding: 0.05em 0.4em; color: var(--lp-ink); }
+        .lp-doc-table-wrap { overflow-x: auto; margin: 0.9em 0; }
+        table.lp-doc-table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+        table.lp-doc-table th, table.lp-doc-table td { text-align: left; padding: 0.5em 0.8em; border-bottom: 1px solid var(--lp-line-soft); color: var(--lp-ink2); vertical-align: top; }
+        table.lp-doc-table th { color: var(--lp-ink3); font-weight: 700; letter-spacing: 0.03em; border-bottom: 1px solid var(--lp-line); background: var(--lp-bg2); white-space: nowrap; }
+        table.lp-doc-table td:first-child { color: var(--lp-ink); font-weight: 600; white-space: nowrap; }
+        .lp-callout { border: 1px solid var(--lp-line); border-left: 3px solid var(--lp-warn); border-radius: 8px; background: var(--lp-bg2); padding: 0.8em 1em; margin: 1em 0; font-size: 0.9em; color: var(--lp-ink2); line-height: 1.7; }
+        .lp-callout strong { color: var(--lp-ink); }
+        .lp-refs { list-style: none; padding-left: 0; counter-reset: ref; }
+        .lp-refs li { padding-left: 2.2em; position: relative; }
+        .lp-refs li::before { counter-increment: ref; content: "[" counter(ref) "]"; position: absolute; left: 0; color: var(--lp-accent); font-family: var(--lp-mono); font-size: 0.85em; }
+        @media (max-width: 900px) { .lp-docs-grid { grid-template-columns: 1fr; } .lp-toc { position: static; } }
+    </style>
+</head>
+<body class="LeapsApp is-preload">
+    <div id="page-wrapper">
+
+        <section id="header">
+            <h1><a href="../../index.html">Johann Cardenas</a></h1>
+            <nav id="nav">
+                <ul>
+                    <li><a href="../../index.html">Home</a></li>
+                    <li>
+                        <a href="../../Projects.html">Projects</a>
+                        <ul>
+                            <li><a href="../../projects/ACRP_FEM.html">ME Overload Permitting for Airfields</a></li>
+                            <li><a href="../../projects/EV_Trucks.html">Impact of HDEVs on Flexible Pavements</a></li>
+                            <li><a href="../../projects/FAA_Data.html">ML-Based Models for Airfield Pavements</a></li>
+                            <li><a href="../../projects/MS_Thesis.html">Impact of DWL on Flexible Pavements</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="../../Publications.html">Publications</a></li>
+                    <li><a href="../../Resume.html">Resume</a></li>
+                    <li><a href="../../Blog.html">Blog</a></li>
+                    <li><a href="../../News.html">News</a></li>
+                    <li class="current">
+                        <a href="../../E-Labs.html">E-Labs</a>
+                        <ul>
+                            <li><a href="../../e-labs/leaps/index.html">LEAPS</a></li>
+                            <li><a href="../../e-labs/cross-section-studio/index.html">Cross-Section Studio</a></li>
+                            <li><a href="../../e-labs/finite-elemented/index.html">Finite-Elemented</a></li>
+                            <li><a href="../../e-labs/frontier/index.html">Frontier</a></li>
+                            <li><a href="https://curly-adventure-y724nlw.pages.github.io/apps/aircrafter/" target="_blank" rel="noopener">AirCrafter</a></li>
+                            <li><a href="https://curly-adventure-y724nlw.pages.github.io/apps/asphera/" target="_blank" rel="noopener">Asphera</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </section>
+
+        <section id="main">
+            <div class="lp-docs">
+
+                <div class="lp-docs-top">
+                    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to LEAPS workbench</a>
+                    <div class="header-badges">
+                        <span class="header-badge"><i class="fas fa-microchip"></i> LEAF-JS Engine</span>
+                        <span class="header-badge"><i class="fas fa-code-branch"></i> v1.1</span>
+                    </div>
+                </div>
+
+                <div class="lp-docs-hero">
+                    <h1><span class="lp-icon"><i class="fas fa-book-open"></i></span> LEA<span class="highlight">PS</span> — Documentation</h1>
+                    <p>Theory, engine internals, validation cases, sign conventions, distress models and a usage guide for the Linear Elastic Analysis of Pavement Structures workbench. Everything here runs client-side; the numerical engine (<strong>LEAF-JS</strong>) is a from-scratch multilayer elastic solver.</p>
+                </div>
+
+                <div class="lp-docs-grid">
+                    <nav class="lp-toc">
+                        <h4>Contents</h4>
+                        <a href="#overview">1 · Overview</a>
+                        <a href="#theory">2 · Multilayer elastic theory</a>
+                        <a href="#numerics">3 · Numerical method</a>
+                        <a href="#interfaces">4 · Interfaces</a>
+                        <a href="#loads">5 · Loads & gears</a>
+                        <a href="#conventions">6 · Conventions & units</a>
+                        <a href="#responses">7 · Response quantities</a>
+                        <a href="#performance">8 · Distress models</a>
+                        <a href="#validation">9 · Validation suite</a>
+                        <a href="#usage">10 · Using LEAPS</a>
+                        <a href="#references">11 · References</a>
+                    </nav>
+
+                    <div class="lp-doc-body">
+
+                        <section class="lp-doc-sec" id="overview">
+                            <h2><i class="fas fa-circle-info"></i> 1 · Overview</h2>
+                            <p>LEAPS computes the stress, strain and displacement fields inside a pavement idealised as a stack of homogeneous, isotropic, linear-elastic layers resting on a semi-infinite elastic halfspace. Each layer is defined by a thickness <code>h</code>, an elastic modulus <code>E</code> and a Poisson's ratio <code>ν</code>; the bottom layer is infinitely deep. Surface loads are uniform circular contact pressures (tyres). This is the classical <em>layered elastic analysis</em> (LEA) idealisation used throughout mechanistic-empirical pavement design.</p>
+                            <p>The tool is meant for intuition, teaching and rapid mechanistic checks — not as a replacement for a validated design package. Its core assumptions are:</p>
+                            <ul>
+                                <li>Each layer is homogeneous, isotropic and linearly elastic (no stress dependence, no visco-elasticity, no temperature gradient).</li>
+                                <li>Layers extend infinitely in the horizontal plane; the lowest layer is a halfspace.</li>
+                                <li>Loads are static, vertical and applied as uniform pressure over circular contact areas.</li>
+                                <li>Full continuity, frictionless slip or a linear shear-spring is enforced at each interface.</li>
+                            </ul>
+                        </section>
+
+                        <section class="lp-doc-sec" id="theory">
+                            <h2><i class="fas fa-square-root-alt"></i> 2 · Multilayer elastic theory</h2>
+                            <p>For an axisymmetric vertical load, the elasticity equations admit a solution through a single biharmonic <strong>Love stress function</strong> <code>φ(r, z)</code> that satisfies <code>∇⁴φ = 0</code>. Taking the zeroth-order Hankel transform in the radial coordinate maps the biharmonic equation to an ordinary differential equation in the transform variable <code>m</code>, whose general solution in layer <code>i</code> is</p>
+                            <span class="lp-eq">φ̄ᵢ(m, z) = (Aᵢ + Bᵢ·m·z)·e^(−m z) + (Cᵢ + Dᵢ·m·z)·e^(+m z)</span>
+                            <p>The four constants <code>Aᵢ … Dᵢ</code> per layer are fixed by boundary and interface conditions. Stresses and displacements are recovered from <code>φ̄</code> by differentiation in Hankel space and an inverse Hankel transform (an integral over <code>m</code> weighted by Bessel functions <code>J₀</code>, <code>J₁</code>).</p>
+                            <h3>Boundary conditions</h3>
+                            <ul>
+                                <li><strong>Surface</strong> (z = 0): prescribed normal pressure from the load transform, zero shear.</li>
+                                <li><strong>Each interface</strong>: continuity of vertical stress and vertical displacement always; the treatment of shear stress and radial displacement depends on the bond (see §4).</li>
+                                <li><strong>Depth</strong> (z → ∞): the growing exponentials in the halfspace must vanish, so <code>C_N = D_N = 0</code>.</li>
+                            </ul>
+                            <p>These assemble into a <strong>4N − 2</strong> linear system per transform parameter <code>m</code> for an N-layer system, solved independently for every quadrature abscissa.</p>
+                            <div class="lp-callout"><strong>Overflow control.</strong> A naive assembly multiplies <code>e^(+m h)</code> terms that overflow for thick layers or high <code>m·h</code>. LEAF-JS scales each layer's exponentials by its own <code>e^(−m·z)</code> reference and uses partial pivoting, so no modulus ratio or thickness — however extreme — can overflow the double-precision range.</p>
+                        </section>
+
+                        <section class="lp-doc-sec" id="numerics">
+                            <h2><i class="fas fa-wave-square"></i> 3 · Numerical method</h2>
+                            <p>Each response is an infinite integral of an oscillatory, slowly-decaying integrand. LEAF-JS evaluates it with:</p>
+                            <ul>
+                                <li><strong>Panel-wise Gauss–Legendre quadrature</strong> between consecutive zeros of the relevant Bessel function, so each panel integrates a smooth half-wave.</li>
+                                <li><strong>Wynn ε-acceleration</strong> of the sequence of panel partial sums, which converts the slowly-converging alternating tail into a rapidly-convergent estimate.</li>
+                                <li><strong>Decay-scale refinement</strong> for deep evaluation points, where the integrand's envelope decays fast and panels are re-spaced accordingly.</li>
+                                <li><strong>Closed-form surface tails</strong>: at <code>z = 0</code> the integrals reduce to Weber–Schafheitlin forms evaluated with complete elliptic integrals <code>K</code>, <code>E</code> (arithmetic–geometric mean). Surface deflection of a halfspace is therefore returned to machine precision rather than by truncated quadrature.</li>
+                            </ul>
+                            <p>The solver tolerance (Solver panel) sets the convergence target of the accelerated tail; the contour resolution sets the size of the sampling grid used only for the stress-bulb visualisation, not for the reported key responses.</p>
+                        </section>
+
+                        <section class="lp-doc-sec" id="interfaces">
+                            <h2><i class="fas fa-grip-lines"></i> 4 · Interfaces</h2>
+                            <p>Between adjacent layers, vertical stress and vertical displacement are always continuous. The shear behaviour is one of three models:</p>
+                            <div class="lp-doc-table-wrap">
+                                <table class="lp-doc-table">
+                                    <tr><th>Interface</th><th>Shear condition</th><th>Typical use</th></tr>
+                                    <tr><td>Fully bonded</td><td>Shear stress and radial displacement continuous</td><td>Well-constructed flexible layers, tack-coated lifts</td></tr>
+                                    <tr><td>Frictionless</td><td>Zero shear; radial displacement free to slip</td><td>Unbonded PCC/base, bond-breaker, debonded overlay</td></tr>
+                                    <tr><td>Shear spring</td><td>Shear stress = k · (radial slip); <code>k</code> in MPa/mm</td><td>Partial slip, aged tack, transition between the two limits</td></tr>
+                                </table>
+                            </div>
+                            <p>The spring stiffness <code>k</code> spans the two limits continuously: <code>k → ∞</code> recovers the fully-bonded solution, <code>k → 0</code> recovers the frictionless one. Both limits are checked in the validation suite (§9).</p>
+                        </section>
+
+                        <section class="lp-doc-sec" id="loads">
+                            <h2><i class="fas fa-truck"></i> 5 · Loads & gears</h2>
+                            <p>Each wheel applies a uniform pressure <code>p</code> over a circular contact patch. The contact radius follows from the wheel load <code>F</code> and pressure:</p>
+                            <span class="lp-eq">a = √( F / (π · p) )</span>
+                            <p>Multiple wheels are superposed: LEAPS solves each wheel independently in its own axisymmetric frame, then rotates every stress/strain tensor into the global frame before summation, so shear coupling between offset wheels is captured exactly. The <em>Gear generator</em> builds standard layouts, all parameterised by wheel load, pressure, dual spacing <code>Sd</code> (transverse gap between paired tyres) and tandem spacing <code>St</code> (longitudinal gap between axles):</p>
+                            <div class="lp-doc-table-wrap">
+                                <table class="lp-doc-table">
+                                    <tr><th>Gear</th><th>Wheels</th><th>Layout</th></tr>
+                                    <tr><td>Single</td><td>1</td><td>One wheel at the origin</td></tr>
+                                    <tr><td>Dual</td><td>2</td><td>Pair at ±Sd/2</td></tr>
+                                    <tr><td>Dual tandem</td><td>4</td><td>Two duals, axles Sd apart at ±St/2</td></tr>
+                                    <tr><td>Tridem</td><td>3</td><td>Three single wheels, axles St apart</td></tr>
+                                    <tr><td>Dual tridem</td><td>6</td><td>Three duals (±Sd/2) on axles at −St, 0, +St</td></tr>
+                                </table>
+                            </div>
+                            <p>Individual wheels can be repositioned and re-loaded in the wheel table after a gear is built, so irregular configurations are fully supported.</p>
+                        </section>
+
+                        <section class="lp-doc-sec" id="conventions">
+                            <h2><i class="fas fa-drafting-compass"></i> 6 · Conventions & units</h2>
+                            <ul>
+                                <li><strong>Stresses are tension-positive.</strong> Compression under a wheel is therefore negative.</li>
+                                <li><strong>z is measured downward</strong> from the surface; <strong>deflection w is positive downward.</strong></li>
+                                <li>The section is a vertical cut in the x–z plane at the plan y-coordinate set by the draggable section line.</li>
+                                <li>Internally everything is <code>mm · N · MPa</code>; the UI converts to the SI or US display system you select.</li>
+                            </ul>
+                            <div class="lp-doc-table-wrap">
+                                <table class="lp-doc-table">
+                                    <tr><th>Quantity</th><th>SI display</th><th>US display</th></tr>
+                                    <tr><td>Length / thickness</td><td>mm</td><td>in</td></tr>
+                                    <tr><td>Stress / pressure</td><td>kPa</td><td>psi</td></tr>
+                                    <tr><td>Modulus</td><td>MPa</td><td>ksi</td></tr>
+                                    <tr><td>Wheel load</td><td>kN</td><td>lbf</td></tr>
+                                    <tr><td>Deflection</td><td>mm</td><td>mil</td></tr>
+                                    <tr><td>Strain</td><td>µε</td><td>µε</td></tr>
+                                    <tr><td>Interface stiffness</td><td>MPa/mm</td><td>psi/in</td></tr>
+                                </table>
+                            </div>
+                        </section>
+
+                        <section class="lp-doc-sec" id="responses">
+                            <h2><i class="fas fa-bullseye"></i> 7 · Response quantities</h2>
+                            <p>At every evaluation point LEAPS reports the full state:</p>
+                            <ul>
+                                <li><strong>Stress tensor</strong> — σx, σy, σz and the shear components τxy, τxz, τyz.</li>
+                                <li><strong>Principal stresses</strong> σ1 ≥ σ2 ≥ σ3, the maximum shear τmax = (σ1 − σ3)/2, and the von Mises stress.</li>
+                                <li><strong>Strain tensor</strong> — εx, εy, εz (via the 3-D elastic compliance of the local layer).</li>
+                                <li><strong>Displacement</strong> — ux, uy and the vertical deflection w = uz.</li>
+                            </ul>
+                            <p>The <em>Key responses</em> rail highlights the classic design drivers: maximum surface deflection, horizontal tensile strain at the bottom of the asphalt (fatigue), vertical compressive strain at the top of the subgrade (rutting), tensile stress at the bottom of bound layers, and peak interface shear.</p>
+                        </section>
+
+                        <section class="lp-doc-sec" id="performance">
+                            <h2><i class="fas fa-gauge-high"></i> 8 · Distress models</h2>
+                            <p>The Performance tab converts the two critical mechanistic strains into allowable load repetitions using the <strong>Asphalt Institute</strong> transfer functions. Fatigue cracking is driven by the horizontal tensile strain <code>εt</code> at the bottom of the asphalt and the asphalt modulus <code>E</code> (in psi):</p>
+                            <span class="lp-eq">N_f = 0.0796 · εt^(−3.291) · E^(−0.854)</span>
+                            <p>Subgrade rutting is driven by the vertical compressive strain <code>εv</code> at the top of the subgrade:</p>
+                            <span class="lp-eq">N_r = 1.365 × 10⁻⁹ · εv^(−4.477)</span>
+                            <p>The governing life is the smaller of the two. <code>N_f</code> and <code>N_r</code> are allowable <em>repetitions of the analysed load</em>, not calendar life — no seasonal, reliability or shift factors are applied.</p>
+                            <div class="lp-callout"><strong>Scope.</strong> These equations are calibrated for conventional flexible pavements with an asphalt-bound surface. LEAPS shows the fatigue estimate only when the surface layer is asphalt-bound; for rigid or composite systems, treat the numbers as indicative and use a slab-fatigue or cracking model appropriate to the structure. Other agency transfer functions (MEPDG, Shell, FAA CDF) can be applied to the same computed strains.</div>
+                        </section>
+
+                        <section class="lp-doc-sec" id="validation">
+                            <h2><i class="fas fa-vial"></i> 9 · Validation suite</h2>
+                            <p>LEAF-JS ships with a 69-check regression suite (run under Node during development; a subset runs in your browser at every startup and drives the status-bar badge). The checks cover:</p>
+                            <div class="lp-doc-table-wrap">
+                                <table class="lp-doc-table">
+                                    <tr><th>Category</th><th>What is verified</th></tr>
+                                    <tr><td>Boussinesq closed forms</td><td>σz, σr, radial/vertical displacement of a point and circular load on a homogeneous halfspace, at the surface and at depth.</td></tr>
+                                    <tr><td>Multilayer reduction</td><td>An N-layer stack with equal moduli reproduces the single-halfspace solution.</td></tr>
+                                    <tr><td>Interface limits</td><td>Shear-spring stiffness <code>k → ∞</code> matches the fully-bonded solution; <code>k → 0</code> matches the frictionless one.</td></tr>
+                                    <tr><td>Vertical equilibrium</td><td>Integrated vertical stress on horizontal planes balances the applied load.</td></tr>
+                                    <tr><td>Superposition symmetry</td><td>Symmetric multi-wheel gears yield symmetric response fields.</td></tr>
+                                    <tr><td>Burmister two-layer</td><td>Surface deflection factor F₂ matches Burmister's tabulated two-layer solution.</td></tr>
+                                    <tr><td>Extreme contrast</td><td>A 1000:1 modulus contrast with a 3 mm interlayer solves stably without overflow.</td></tr>
+                                </table>
+                            </div>
+                            <p>The startup self-check compares the engine against the Boussinesq closed forms; a green badge means those passed on your machine, in your browser, this session.</p>
+                        </section>
+
+                        <section class="lp-doc-sec" id="usage">
+                            <h2><i class="fas fa-hand-pointer"></i> 10 · Using LEAPS</h2>
+                            <h3>Workflow</h3>
+                            <ul>
+                                <li><strong>Structure</strong> — pick a material per layer and edit thickness, modulus and Poisson's ratio inline. The <i class="fas fa-ellipsis-h"></i> menu renames, reorders, duplicates or deletes a layer; drag the <i class="fas fa-grip-vertical"></i> handle to restack. The bottom layer is always the infinite subgrade.</li>
+                                <li><strong>Interfaces</strong> — set the bond below each layer; enter <code>k</code> for shear springs.</li>
+                                <li><strong>Loads</strong> — build a standard gear, then fine-tune any wheel's position and load in the wheel table.</li>
+                                <li><strong>Evaluation points</strong> — double-click the section to drop a point; it snaps to interfaces and wheel axes. Drag to move, select and press <code>Delete</code> to remove.</li>
+                                <li><strong>Results</strong> — key responses appear in the right rail; the bottom dock holds depth profiles, surface responses, the per-layer response table, the point table and the performance estimates.</li>
+                            </ul>
+                            <h3>Plan view</h3>
+                            <p>The plan inset shows the gear from above with contact footprints, axle and tandem connectors, detected spacings and a grid. Drag the dashed line to move the analysis section along the y-axis; every response updates for the new cut.</p>
+                            <h3>Keyboard & interaction</h3>
+                            <div class="lp-doc-table-wrap">
+                                <table class="lp-doc-table">
+                                    <tr><th>Key / action</th><th>Effect</th></tr>
+                                    <tr><td><code>F</code></td><td>Fit the section view</td></tr>
+                                    <tr><td><code>R</code></td><td>Run the analysis</td></tr>
+                                    <tr><td><code>Ctrl/⌘ + Z</code> / <code>Y</code></td><td>Undo / redo</td></tr>
+                                    <tr><td><code>Delete</code></td><td>Remove the selected evaluation point</td></tr>
+                                    <tr><td>Scroll / drag on section</td><td>Zoom / pan the viewport</td></tr>
+                                    <tr><td>Double-click section</td><td>Drop an evaluation point</td></tr>
+                                </table>
+                            </div>
+                            <h3>Exports</h3>
+                            <p>The right rail exports the evaluation points and the contour grid to CSV, the whole project to a <code>.leaps.json</code> file (re-openable), the section to PNG, and a printable report (opens in a new tab — use Print → Save as PDF). Work autosaves to your browser between sessions.</p>
+                        </section>
+
+                        <section class="lp-doc-sec" id="references">
+                            <h2><i class="fas fa-book"></i> 11 · References</h2>
+                            <ul class="lp-refs">
+                                <li>Burmister, D. M. (1945). <em>The general theory of stresses and displacements in layered soil systems.</em> Journal of Applied Physics, 16.</li>
+                                <li>Huang, Y. H. (2004). <em>Pavement Analysis and Design</em> (2nd ed.). Pearson.</li>
+                                <li>The Asphalt Institute (1982). <em>Research and Development of the Asphalt Institute's Thickness Design Manual (MS-1)</em>, Research Report 82-2.</li>
+                                <li>ARA / NCHRP (2004). <em>Guide for Mechanistic-Empirical Design of New and Rehabilitated Pavement Structures</em> (MEPDG), NCHRP 1-37A.</li>
+                                <li>FAA (2021). <em>Airport Pavement Design and Evaluation</em>, AC 150/5320-6G, and the LEAF layered elastic engine used in FAARFIELD.</li>
+                                <li>Watson, G. N. (1944). <em>A Treatise on the Theory of Bessel Functions.</em> Cambridge University Press (Weber–Schafheitlin integrals).</li>
+                            </ul>
+                            <p style="margin-top:1.4em;"><a href="index.html" class="lp-doc-link" style="display:inline-flex;"><i class="fas fa-arrow-left"></i> Return to the LEAPS workbench</a></p>
+                        </section>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div id="footer-placeholder"></div>
+    </div>
+
+    <script src="../../assets/js/components.js"></script>
+    <script src="../../assets/js/jquery.min.js"></script>
+    <script src="../../assets/js/jquery.dropotron.min.js"></script>
+    <script src="../../assets/js/breakpoints.min.js"></script>
+    <script src="../../assets/js/util.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/theme-toggle.js"></script>
+    <script src="../../assets/js/back-to-top.js"></script>
+</body>
+</html>

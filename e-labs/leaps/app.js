@@ -62,6 +62,16 @@
         a.click();
         setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
     }
+    /* Nudge Plotly to recompute size once a hidden container becomes visible */
+    function resizePlots(ids) {
+        if (typeof Plotly === 'undefined') return;
+        requestAnimationFrame(function () {
+            ids.forEach(function (id) {
+                var elx = document.getElementById(id);
+                if (elx && elx.data) { try { Plotly.Plots.resize(elx); } catch (e) { /* not a plot yet */ } }
+            });
+        });
+    }
 
     /* =================== unit system =================== */
     var UNITS = {
@@ -115,7 +125,7 @@
                 { mat: 'ac-dense', h: 100 }, { mat: 'base', h: 200 },
                 { mat: 'subbase', h: 300 }, { mat: 'sg-silt', h: 0 }
             ],
-            wheels: 'dual', gear: { F: 20, p: 700, Sd: 350, St: 1300 }
+            wheels: 'dual', gear: { F: 20, p: 700, Sd: 350, St: 350 }
         },
         {
             id: 'faa-flex', name: 'Airfield flexible — FAA (B737 duals)',
@@ -123,7 +133,7 @@
                 { mat: 'ac-p401', h: 127 }, { mat: 'p209', h: 305 },
                 { mat: 'p154', h: 305 }, { mat: 'sg-silt', h: 0, E: 83 }
             ],
-            wheels: 'dual', gear: { F: 185, p: 1413, Sd: 864, St: 1473 }
+            wheels: 'dual', gear: { F: 185, p: 1413, Sd: 864, St: 350 }
         },
         {
             id: 'rigid', name: 'Rigid — PCC on CTB (unbonded)',
@@ -131,7 +141,7 @@
                 { mat: 'pcc', h: 300 }, { mat: 'ctb', h: 150 }, { mat: 'sg-silt', h: 0, E: 80 }
             ],
             interfaces: [{ bond: 'unbonded' }, { bond: 'bonded' }],
-            wheels: 'dual', gear: { F: 20, p: 700, Sd: 350, St: 1300 }
+            wheels: 'dual', gear: { F: 20, p: 700, Sd: 350, St: 350 }
         },
         {
             id: 'composite', name: 'Composite — AC over PCC',
@@ -139,7 +149,7 @@
                 { mat: 'ac-dense', h: 100 }, { mat: 'pcc', h: 250 },
                 { mat: 'base', h: 150 }, { mat: 'sg-sand', h: 0 }
             ],
-            wheels: 'dual', gear: { F: 20, p: 700, Sd: 350, St: 1300 }
+            wheels: 'dual', gear: { F: 20, p: 700, Sd: 350, St: 350 }
         },
         {
             id: 'perpetual', name: 'Perpetual — deep asphalt',
@@ -147,12 +157,12 @@
                 { mat: 'ac-sma', h: 50 }, { mat: 'ac-dense', h: 150 },
                 { mat: 'atb', h: 100 }, { mat: 'base', h: 150 }, { mat: 'sg-silt', h: 0 }
             ],
-            wheels: 'dual', gear: { F: 22, p: 750, Sd: 350, St: 1300 }
+            wheels: 'dual', gear: { F: 22, p: 750, Sd: 350, St: 350 }
         },
         {
             id: 'halfspace', name: 'Halfspace — Boussinesq check',
             layers: [{ mat: 'sg-sand', h: 0, E: 100, nu: 0.35 }],
-            wheels: 'single', gear: { F: 49.48, p: 700, Sd: 350, St: 1300 }
+            wheels: 'single', gear: { F: 49.48, p: 700, Sd: 350, St: 350 }
         }
     ];
 
@@ -333,6 +343,11 @@
             add(-g.Sd / 2, -g.St / 2); add(g.Sd / 2, -g.St / 2);
             add(-g.Sd / 2, g.St / 2); add(g.Sd / 2, g.St / 2);
         } else if (type === 'tridem') { add(0, -g.St); add(0, 0); add(0, g.St); }
+        else if (type === 'dual-tridem') {
+            add(-g.Sd / 2, -g.St); add(g.Sd / 2, -g.St);
+            add(-g.Sd / 2, 0); add(g.Sd / 2, 0);
+            add(-g.Sd / 2, g.St); add(g.Sd / 2, g.St);
+        }
         return w;
     }
     function applyTemplate(tpl) {
@@ -350,7 +365,7 @@
         state.points = [];
         gearParams = { F: tpl.gear.F, p: tpl.gear.p, Sd: tpl.gear.Sd, St: tpl.gear.St };
     }
-    var gearParams = { F: 20, p: 700, Sd: 350, St: 1300 };
+    var gearParams = { F: 20, p: 700, Sd: 350, St: 350 };
 
     /* =================== worker bridge =================== */
     var worker = null, workerReady = false, jobGen = 0, jobsInFlight = 0;
@@ -584,6 +599,7 @@
         renderLayerTable();
         renderPointsTable();
         renderCharts();
+        renderPerformance();
         drawViewport();
     }
 
@@ -714,32 +730,56 @@
     function chartColors() {
         return [cssVar('--lp-cat1'), cssVar('--lp-cat2'), cssVar('--lp-cat3'), cssVar('--lp-cat4')];
     }
-    function chartLayout(xTitle, yTitle) {
+    function chartLayout(xTitle, yTitle, opts) {
+        opts = opts || {};
         var ink2 = cssVar('--lp-ink2'), line = cssVar('--lp-line-soft');
-        return {
+        var lay = {
             paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
             font: { color: ink2, size: 11, family: 'Source Sans Pro, sans-serif' },
-            margin: { l: 54, r: 12, t: 8, b: 42 },
+            margin: opts.margin || { l: 56, r: 14, t: 10, b: 44 },
             xaxis: { title: { text: xTitle }, gridcolor: line, zerolinecolor: cssVar('--lp-line') },
-            yaxis: { title: { text: yTitle }, gridcolor: line, zerolinecolor: cssVar('--lp-line'), autorange: 'reversed' },
-            showlegend: true,
-            legend: { orientation: 'h', y: -0.18 },
+            yaxis: { title: { text: yTitle }, gridcolor: line, zerolinecolor: cssVar('--lp-line') },
+            showlegend: opts.showlegend !== false,
+            legend: { orientation: 'h', y: -0.2 },
             hovermode: 'closest'
         };
+        if (!opts.noReverseY) lay.yaxis.autorange = 'reversed';
+        return lay;
+    }
+    /* layer-band shading rectangles for a depth (y) axis */
+    function layerBandShapes(xref, yref) {
+        var shapes = [], z = 0;
+        for (var i = 0; i < state.layers.length; i++) {
+            var top = z;
+            var bot = i < state.layers.length - 1 ? z + state.layers[i].h : z + state.layers[i].h + 400;
+            z = bot;
+            shapes.push({
+                type: 'rect', xref: xref, yref: yref, layer: 'below',
+                x0: 0, x1: 1, y0: toDisp('len', top), y1: toDisp('len', bot),
+                fillcolor: state.layers[i].color, opacity: 0.10, line: { width: 0 }
+            });
+            if (i > 0) shapes.push({
+                type: 'line', xref: xref, yref: yref, x0: 0, x1: 1,
+                y0: toDisp('len', top), y1: toDisp('len', top),
+                line: { color: cssVar('--lp-line'), width: 1, dash: 'dot' }
+            });
+        }
+        return shapes;
     }
     function renderCharts() {
         if (typeof Plotly === 'undefined') { setTimeout(renderCharts, 600); return; }
         renderProfileChart();
+        renderSurfaceChart();
         renderBasinChart();
+        renderSmallMultiples();
     }
     function renderProfileChart() {
         var host = $('lp-chart-profile');
+        if (!host) return;
         if (!results.profiles) { Plotly.purge(host); return; }
         var f = fieldById($('lp-prof-field').value || 'szz');
         var colors = chartColors();
         var traces = [];
-        var zbs = [], zacc = 0;
-        for (var i = 0; i < state.layers.length - 1; i++) { zacc += state.layers[i].h; zbs.push(zacc); }
         results.profiles.stations.forEach(function (s, si) {
             var data = (results.profiles.data[si] || []).slice();
             data.sort(function (a, b) { return a.z - b.z || a.li - b.li; });
@@ -747,33 +787,206 @@
                 x: data.map(function (p) { return toDisp(f.q, f.get(p)); }),
                 y: data.map(function (p) { return toDisp('len', p.z); }),
                 name: s.label, mode: 'lines',
-                line: { color: colors[si % colors.length], width: 2 },
+                line: { color: colors[si % colors.length], width: 2.2 },
                 hovertemplate: '%{x:.4g} ' + unit(f.q) + ' @ z=%{y:.4g} ' + unit('len') + '<extra>' + s.label + '</extra>'
             });
         });
         var lay = chartLayout(f.label + ' (' + unit(f.q) + ')', 'depth z (' + unit('len') + ')');
-        lay.shapes = zbs.map(function (zb) {
-            return {
-                type: 'line', xref: 'paper', x0: 0, x1: 1,
-                y0: toDisp('len', zb), y1: toDisp('len', zb),
-                line: { color: cssVar('--lp-line'), width: 1, dash: 'dot' }
-            };
-        });
+        lay.shapes = layerBandShapes('paper', 'y');
         Plotly.react(host, traces, lay, { displayModeBar: false, responsive: true });
+    }
+    function renderSurfaceChart() {
+        var host = $('lp-chart-surface');
+        if (!host) return;
+        if (!results.basin || !results.basin.length) { Plotly.purge(host); return; }
+        var f = fieldById($('lp-prof-field').value || 'szz');
+        var colors = chartColors();
+        var pts = results.basin.filter(function (p) { return p; });
+        var xs = pts.map(function (p) { return toDisp('len', p.x); });
+        var ys = pts.map(function (p) { return toDisp(f.q, f.get(p)); });
+        var lay = chartLayout('offset x (' + unit('len') + ')', f.label.split(' — ')[0] + ' (' + unit(f.q) + ')',
+            { noReverseY: true, showlegend: false });
+        lay.shapes = state.wheels.map(function (w) {
+            return { type: 'line', yref: 'paper', y0: 0, y1: 1,
+                x0: toDisp('len', w.x), x1: toDisp('len', w.x),
+                line: { color: cssVar('--lp-danger'), width: 1, dash: 'dot' } };
+        });
+        Plotly.react(host, [{
+            x: xs, y: ys, mode: 'lines',
+            line: { color: colors[2], width: 2.2 },
+            hovertemplate: '%{y:.4g} ' + unit(f.q) + ' @ x=%{x:.4g}<extra></extra>'
+        }], lay, { displayModeBar: false, responsive: true });
     }
     function renderBasinChart() {
         var host = $('lp-chart-basin');
+        if (!host) return;
         if (!results.basin || !results.basin.length) { Plotly.purge(host); return; }
-        var colors = chartColors();
         var xs = results.basin.map(function (p) { return toDisp('len', p.x); });
         var ws = results.basin.map(function (p) { return toDisp('defl', p.disp.uz); });
-        var lay = chartLayout('x (' + unit('len') + ')', 'w (' + unit('defl') + ')');
-        lay.showlegend = false;
+        var lay = chartLayout('offset x (' + unit('len') + ')', 'deflection w (' + unit('defl') + ')', { showlegend: false });
+        lay.shapes = state.wheels.map(function (w) {
+            return { type: 'line', yref: 'paper', y0: 0, y1: 1,
+                x0: toDisp('len', w.x), x1: toDisp('len', w.x),
+                line: { color: cssVar('--lp-danger'), width: 1, dash: 'dot' } };
+        });
         Plotly.react(host, [{
             x: xs, y: ws, mode: 'lines', fill: 'tozeroy',
-            line: { color: colors[0], width: 2 },
-            fillcolor: 'rgba(13,148,136,0.12)',
+            line: { color: cssVar('--lp-accent-deep'), width: 2.2 },
+            fillcolor: 'rgba(13,148,136,0.14)',
             hovertemplate: 'w = %{y:.4g} ' + unit('defl') + ' @ x=%{x:.4g}<extra></extra>'
+        }], lay, { displayModeBar: false, responsive: true });
+    }
+    var SM_FIELDS = ['szz', 'sxx', 'vm', 'exx', 'ezz', 'uz'];
+    function renderSmallMultiples() {
+        var host = $('lp-smallmults');
+        if (!host) return;
+        if (!results.profiles || !results.profiles.stations.length) { Plotly.purge(host); return; }
+        var data = (results.profiles.data[0] || []).slice();
+        data.sort(function (a, b) { return a.z - b.z || a.li - b.li; });
+        if (!data.length) { Plotly.purge(host); return; }
+        var zbs = [], zacc = 0;
+        for (var i = 0; i < state.layers.length - 1; i++) { zacc += state.layers[i].h; zbs.push(zacc); }
+        var soft = cssVar('--lp-line-soft'), lineC = cssVar('--lp-line'), ink2 = cssVar('--lp-ink2');
+        var cols = chartColors();
+        var ys = data.map(function (p) { return toDisp('len', p.z); });
+        var traces = [], annotations = [], shapes = [];
+        function sfx(k) { return k === 0 ? '' : String(k + 1); }   /* Plotly: first axis is x/y, then x2/y2… */
+        SM_FIELDS.forEach(function (fid, k) {
+            var f = fieldById(fid), sx = 'x' + sfx(k), sy = 'y' + sfx(k);
+            traces.push({
+                x: data.map(function (p) { return toDisp(f.q, f.get(p)); }), y: ys,
+                xaxis: sx, yaxis: sy, mode: 'lines',
+                line: { color: cols[k % cols.length], width: 1.8 },
+                hovertemplate: '%{x:.4g} ' + unit(f.q) + ' @ z=%{y:.4g}<extra>' + f.label.split(' — ')[0] + '</extra>',
+                showlegend: false
+            });
+            annotations.push({
+                text: '<b>' + f.label.split(' — ')[0] + '</b> (' + unit(f.q) + ')',
+                xref: sx + ' domain', yref: sy + ' domain',
+                x: 0, y: 1.16, xanchor: 'left', yanchor: 'top', showarrow: false,
+                font: { size: 10, color: ink2 }
+            });
+            zbs.forEach(function (zb) {
+                shapes.push({
+                    type: 'line', xref: sx + ' domain', yref: sy,
+                    x0: 0, x1: 1, y0: toDisp('len', zb), y1: toDisp('len', zb),
+                    line: { color: lineC, width: 0.8, dash: 'dot' }
+                });
+            });
+        });
+        var lay = {
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: ink2, size: 10, family: 'Source Sans Pro, sans-serif' },
+            margin: { l: 46, r: 12, t: 26, b: 34 }, height: 430,
+            grid: { rows: 2, columns: 3, pattern: 'independent', roworder: 'top to bottom' },
+            showlegend: false, annotations: annotations, shapes: shapes
+        };
+        for (var k = 0; k < SM_FIELDS.length; k++) {
+            lay['xaxis' + sfx(k)] = { gridcolor: soft, zerolinecolor: lineC };
+            lay['yaxis' + sfx(k)] = { autorange: 'reversed', gridcolor: soft, zerolinecolor: lineC };
+        }
+        Plotly.react(host, traces, lay, { displayModeBar: false, responsive: true });
+    }
+
+    /* =================== performance / distress =================== */
+    function supDigits(s) {
+        var map = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '-': '⁻', '+': '' };
+        return String(s).replace(/[0-9+\-]/g, function (c) { return map[c]; });
+    }
+    function fmtLife(n) {
+        if (n == null || !isFinite(n) || n <= 0) return '—';
+        if (n >= 1e18) return '≈ ∞';
+        var e = Math.floor(Math.log10(n)), m = n / Math.pow(10, e);
+        if (e < 3) return String(Math.round(n));
+        return (Math.round(m * 100) / 100) + ' × 10' + supDigits(e);
+    }
+    function renderPerformance() {
+        var host = $('lp-perf');
+        if (!host) return;
+        var ex = keyExtremes();
+        host.innerHTML = '';
+        if (!ex) { host.appendChild(el('p', 'lp-hint', 'Run the analysis to see mechanistic-empirical distress estimates.')); return; }
+
+        var L0 = state.layers[0];
+        var acBound = L0 && L0.tex === 'asphalt';
+        var Nf = null, epsT = null;
+        if (acBound && ex.et) {
+            epsT = Math.abs(ex.et.v);
+            var Epsi = L0.E * 145.038;
+            if (epsT > 0) Nf = 0.0796 * Math.pow(epsT, -3.291) * Math.pow(Epsi, -0.854);
+        }
+        var Nr = null, epsV = null;
+        if (ex.ev) { epsV = Math.abs(ex.ev.v); if (epsV > 0) Nr = 1.365e-9 * Math.pow(epsV, -4.477); }
+        var gov = null, govName = '';
+        if (Nf != null && Nr != null) { if (Nf <= Nr) { gov = Nf; govName = 'Fatigue cracking'; } else { gov = Nr; govName = 'Subgrade rutting'; } }
+        else if (Nf != null) { gov = Nf; govName = 'Fatigue cracking'; }
+        else if (Nr != null) { gov = Nr; govName = 'Subgrade rutting'; }
+
+        var wrap = el('div', 'lp-perf-grid');
+        var cards = el('div', 'lp-perf-cards');
+        function pcard(label, value, sub, gover, icon) {
+            var c = el('div', 'lp-perf-card' + (gover ? ' is-gov' : ''));
+            c.innerHTML = '<div class="lp-perf-icon"><i class="fas ' + icon + '"></i></div>' +
+                '<div class="lp-perf-body"><div class="lp-perf-label">' + label + '</div>' +
+                '<div class="lp-perf-value">' + value + '</div>' +
+                '<div class="lp-perf-sub">' + sub + '</div></div>';
+            cards.appendChild(c);
+        }
+        pcard('Fatigue life N<sub>f</sub>', fmtLife(Nf),
+            acBound ? (epsT != null ? 'ε<sub>t</sub> = ' + sig(epsT * 1e6, 4) + ' µε · E = ' + sig(toDisp('modulus', L0.E), 4) + ' ' + unit('modulus') : 'no tensile strain found')
+                    : 'surface layer is not asphalt-bound',
+            govName === 'Fatigue cracking', 'fa-network-wired');
+        pcard('Subgrade rutting life N<sub>r</sub>', fmtLife(Nr),
+            epsV != null ? 'ε<sub>v</sub> = ' + sig(epsV * 1e6, 4) + ' µε at top of subgrade' : '—',
+            govName === 'Subgrade rutting', 'fa-arrows-down-to-line');
+        pcard('Governing life', fmtLife(gov), govName ? govName + ' controls' : '—', false, 'fa-flag-checkered');
+        wrap.appendChild(cards);
+
+        var chartCard = el('div', 'lp-perf-chart');
+        var cdiv = el('div'); cdiv.id = 'lp-chart-perf'; cdiv.className = 'lp-chart';
+        chartCard.appendChild(el('div', 'lp-chart-title', 'Critical tensile strain by layer'));
+        chartCard.appendChild(cdiv);
+        wrap.appendChild(chartCard);
+        host.appendChild(wrap);
+
+        host.appendChild(el('p', 'lp-hint',
+            'Asphalt Institute transfer functions — fatigue N<sub>f</sub> = 0.0796·ε<sub>t</sub><sup>−3.291</sup>·E<sup>−0.854</sup> (E in psi) and subgrade rutting ' +
+            'N<sub>r</sub> = 1.365×10<sup>−9</sup>·ε<sub>v</sub><sup>−4.477</sup>. Allowable load repetitions for conventional flexible pavements; ' +
+            'see the <a href="documentation.html">documentation</a> for scope, calibration and other transfer functions.'));
+
+        renderPerfChart();
+    }
+    function renderPerfChart() {
+        if (typeof Plotly === 'undefined') { setTimeout(renderPerfChart, 500); return; }
+        var host = $('lp-chart-perf');
+        if (!host || !results.key) return;
+        var n = state.layers.length, rows = [];
+        for (var i = 0; i < n; i++) rows.push(null);
+        results.key.forEach(function (p) {
+            var t = p.tag;
+            if (t.pos === 'bot') {
+                var eT = Math.max(p.eps.xx, p.eps.yy);
+                if (rows[t.layer] == null || eT > rows[t.layer]) rows[t.layer] = eT;
+            }
+        });
+        var names = [], vals = [], colors = [];
+        for (i = 0; i < n - 1; i++) {
+            names.push(state.layers[i].name);
+            vals.push(rows[i] != null ? rows[i] * 1e6 : 0);
+            colors.push(state.layers[i].color);
+        }
+        var lay = {
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: cssVar('--lp-ink2'), size: 11, family: 'Source Sans Pro, sans-serif' },
+            margin: { l: 150, r: 20, t: 8, b: 40 }, height: 260,
+            xaxis: { title: { text: 'tensile strain at layer bottom (µε)' }, gridcolor: cssVar('--lp-line-soft'), zerolinecolor: cssVar('--lp-line') },
+            yaxis: { automargin: true, autorange: 'reversed' },
+            showlegend: false
+        };
+        Plotly.react(host, [{
+            type: 'bar', orientation: 'h', x: vals, y: names,
+            marker: { color: colors, line: { color: cssVar('--lp-line'), width: 1 } },
+            hovertemplate: '%{y}: %{x:.4g} µε<extra></extra>'
         }], lay, { displayModeBar: false, responsive: true });
     }
 
@@ -1082,41 +1295,102 @@
             }
         }
 
-        /* loads */
-        state.wheels.forEach(function (w, wi) {
+        /* loads — tires with contact patch, pressure arrows and labels.
+         * Wheels off the section plane (|y − ySec| > 0) fade with distance
+         * and are drawn behind, so the on-section tyres read clearly. */
+        var danger = cssVar('--lp-danger');
+        var minTop = Infinity, sumX = 0, yMax = 1;
+        state.wheels.forEach(function (w) { yMax = Math.max(yMax, Math.abs(w.y - state.ySec)); });
+        var fadeScale = Math.max(yMax, 120);
+        var geoms = state.wheels.map(function (w, wi) {
             var a = wheelA(w);
             var cx = w2sx(w.x);
-            var halfW = a * view.scale;
-            var tireH = Math.min(46, Math.max(22, halfW * 0.8));
-            var gap = 12;
-            /* pressure arrows */
-            ctx.strokeStyle = cssVar('--lp-danger');
-            ctx.fillStyle = cssVar('--lp-danger');
-            ctx.lineWidth = 1.2;
-            var nA = Math.max(3, Math.min(9, Math.round(halfW / 9)));
-            for (var k2 = 0; k2 < nA; k2++) {
-                var ax = cx - halfW + 2 * halfW * (k2 + 0.5) / nA;
-                ctx.beginPath(); ctx.moveTo(ax, y0 - gap); ctx.lineTo(ax, y0 - 2); ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(ax, y0); ctx.lineTo(ax - 2.6, y0 - 5); ctx.lineTo(ax + 2.6, y0 - 5);
-                ctx.closePath(); ctx.fill();
-            }
-            /* tire */
-            var ty = y0 - gap - tireH;
-            ctx.fillStyle = '#1d2126';
-            roundRect(ctx, cx - halfW, ty, 2 * halfW, tireH, Math.min(8, halfW * 0.3));
-            ctx.fill();
-            ctx.fillStyle = '#3c4450';
-            roundRect(ctx, cx - halfW * 0.45, ty + tireH * 0.22, halfW * 0.9, tireH * 0.56, 3);
-            ctx.fill();
-            /* label */
-            ctx.fillStyle = ink2;
-            ctx.font = '11px ' + cssVar('--lp-mono');
-            var loadLbl = sig(toDisp('force', w.F), 3) + ' ' + unit('force') + ' · ' + sig(toDisp('stress', w.p / 1000), 4) + ' ' + unit('stress');
-            ctx.textAlign = 'center';
-            ctx.fillText('W' + (wi + 1) + ' · ' + loadLbl, cx, ty - 6);
-            ctx.textAlign = 'left';
+            var contactHalf = Math.max(a * view.scale, 2.5);
+            var tireHalf = Math.max(contactHalf, 10);
+            var tireH = clamp(tireHalf * 1.35, 22, 54);
+            var gap = clamp(tireH * 0.34, 9, 16);
+            var tireBot = y0 - gap;
+            var ty = tireBot - tireH;
+            var dy = Math.abs(w.y - state.ySec);
+            minTop = Math.min(minTop, ty); sumX += cx;
+            return {
+                wi: wi, cx: cx, contactHalf: contactHalf, tireHalf: tireHalf, tireH: tireH,
+                tireBot: tireBot, ty: ty, dy: dy, alpha: clamp(1 - (dy / fadeScale) * 0.62, 0.3, 1)
+            };
         });
+        geoms.slice().sort(function (a, b) { return b.dy - a.dy; }).forEach(function (G) {
+            var cx = G.cx, contactHalf = G.contactHalf, tireHalf = G.tireHalf, tireH = G.tireH, tireBot = G.tireBot, ty = G.ty;
+            ctx.save();
+            ctx.globalAlpha = G.alpha;
+
+            /* ground contact shadow */
+            ctx.fillStyle = 'rgba(0,0,0,0.28)';
+            ctx.beginPath(); ctx.ellipse(cx, y0 + 2.5, contactHalf * 1.3 + 3, 3, 0, 0, 6.3); ctx.fill();
+
+            /* pressure arrows in the gap */
+            ctx.strokeStyle = danger; ctx.fillStyle = danger; ctx.lineWidth = 1;
+            var nA = clamp(Math.round(contactHalf / 7), 2, 9);
+            for (var k = 0; k < nA; k++) {
+                var ax = cx - contactHalf + 2 * contactHalf * (k + 0.5) / nA;
+                ctx.beginPath(); ctx.moveTo(ax, tireBot + 1); ctx.lineTo(ax, y0 - 4); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(ax, y0 - 1); ctx.lineTo(ax - 2.3, y0 - 5); ctx.lineTo(ax + 2.3, y0 - 5); ctx.closePath(); ctx.fill();
+            }
+
+            /* contact patch on the surface (loaded width 2a) */
+            ctx.fillStyle = danger;
+            roundRect(ctx, cx - contactHalf, y0 - 2, 2 * contactHalf, 4, 1.5); ctx.fill();
+
+            /* tire body with cylindrical shading */
+            var rad = Math.min(tireHalf * 0.45, 11);
+            var grad = ctx.createLinearGradient(cx - tireHalf, 0, cx + tireHalf, 0);
+            grad.addColorStop(0, '#111418'); grad.addColorStop(0.5, '#474d57'); grad.addColorStop(1, '#111418');
+            roundRect(ctx, cx - tireHalf, ty, 2 * tireHalf, tireH, rad);
+            ctx.fillStyle = grad; ctx.fill();
+            ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 1; ctx.stroke();
+
+            /* tread grooves + top highlight (clipped) */
+            ctx.save();
+            roundRect(ctx, cx - tireHalf, ty, 2 * tireHalf, tireH, rad); ctx.clip();
+            ctx.strokeStyle = 'rgba(0,0,0,0.32)'; ctx.lineWidth = 1.4;
+            var grooves = clamp(Math.round(tireHalf / 5), 3, 10);
+            for (var gi = 1; gi < grooves; gi++) {
+                var gx = cx - tireHalf + 2 * tireHalf * gi / grooves;
+                ctx.beginPath(); ctx.moveTo(gx, ty + 1.5); ctx.lineTo(gx, ty + tireH - 1.5); ctx.stroke();
+            }
+            ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1.4;
+            ctx.beginPath(); ctx.moveTo(cx - tireHalf + rad, ty + 2.5); ctx.lineTo(cx + tireHalf - rad, ty + 2.5); ctx.stroke();
+            ctx.restore();
+
+            /* index tag */
+            ctx.font = '700 10px ' + cssVar('--lp-mono');
+            var tag = 'W' + (G.wi + 1);
+            var tw = ctx.measureText(tag).width;
+            ctx.fillStyle = 'rgba(15,24,41,0.9)';
+            roundRect(ctx, cx - tw / 2 - 5, ty + tireH / 2 - 8, tw + 10, 16, 4); ctx.fill();
+            ctx.fillStyle = '#e8eef9'; ctx.textAlign = 'center';
+            ctx.fillText(tag, cx, ty + tireH / 2 + 3.5);
+            ctx.textAlign = 'left';
+            ctx.restore();
+        });
+
+        /* shared load/pressure caption above the gear */
+        if (geoms.length) {
+            var w0 = state.wheels[0];
+            var allSame = state.wheels.every(function (w) { return w.F === w0.F && w.p === w0.p; });
+            var capX = sumX / geoms.length, capY = minTop - 9;
+            ctx.font = '600 11px "Source Sans Pro", sans-serif';
+            var cap = allSame
+                ? state.wheels.length + (state.wheels.length > 1 ? ' wheels · ' : ' wheel · ') +
+                  sig(toDisp('force', w0.F), 3) + ' ' + unit('force') + ' · ' + sig(toDisp('stress', w0.p / 1000), 4) + ' ' + unit('stress')
+                : state.wheels.length + ' wheels · mixed loads';
+            var cw = ctx.measureText(cap).width;
+            ctx.fillStyle = 'rgba(15,24,41,0.82)';
+            roundRect(ctx, capX - cw / 2 - 8, capY - 13, cw + 16, 18, 6); ctx.fill();
+            ctx.strokeStyle = 'rgba(224,82,82,0.45)'; ctx.lineWidth = 1; ctx.stroke();
+            ctx.fillStyle = ink2; ctx.textAlign = 'center';
+            ctx.fillText(cap, capX, capY);
+            ctx.textAlign = 'left';
+        }
 
         /* depth rail */
         ctx.strokeStyle = lineC;
@@ -1172,51 +1446,148 @@
         c.closePath();
     }
 
-    /* ---------- plan inset ---------- */
+    /* ---------- plan inset (top-down gear map) ---------- */
+    function niceStep(raw) {
+        if (!(raw > 0)) return 1;
+        var e = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / e;
+        return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * e;
+    }
+    function planSpacings() {
+        var ws = state.wheels, Sd = null, St = null;
+        for (var i = 0; i < ws.length; i++) for (var j = i + 1; j < ws.length; j++) {
+            var dx = Math.abs(ws[i].x - ws[j].x), dy = Math.abs(ws[i].y - ws[j].y);
+            if (dy < 1e-6 && dx > 1e-6 && (Sd == null || dx < Sd)) Sd = dx;
+            if (dx < 1e-6 && dy > 1e-6 && (St == null || dy < St)) St = dy;
+        }
+        return { Sd: Sd, St: St };
+    }
+    function sizePlanCanvas(pc) {
+        var rect = pc.getBoundingClientRect();
+        var W = Math.max(80, Math.round(rect.width)), H = Math.max(60, Math.round(rect.height));
+        var d = window.devicePixelRatio || 1;
+        if (pc.width !== Math.round(W * d) || pc.height !== Math.round(H * d)) {
+            pc.width = Math.round(W * d); pc.height = Math.round(H * d);
+        }
+        return { W: W, H: H, d: d };
+    }
     function drawPlan() {
-        var pc = $('lp-plan');
-        if (!pc || pc.style.display === 'none') return;
+        var panel = $('lp-plan-panel'), pc = $('lp-plan');
+        if (!pc || !panel || panel.classList.contains('is-collapsed')) return;
+        var dim = sizePlanCanvas(pc), W = dim.W, H = dim.H;
         var g = pc.getContext('2d');
-        var W = pc.width, H = pc.height;
+        g.setTransform(dim.d, 0, 0, dim.d, 0, 0);
         g.clearRect(0, 0, W, H);
-        var pad = 14;
-        var xs = [], ys = [];
-        state.wheels.forEach(function (w) {
-            var a = wheelA(w);
-            xs.push(w.x - a, w.x + a); ys.push(w.y - a, w.y + a);
-        });
-        xs.push(-300, 300); ys.push(-300, 300, state.ySec);
-        var xmin = Math.min.apply(null, xs), xmax = Math.max.apply(null, xs);
-        var ymin = Math.min.apply(null, ys), ymax = Math.max.apply(null, ys);
-        var s = Math.min((W - 2 * pad) / (xmax - xmin), (H - 2 * pad) / (ymax - ymin));
-        function px(x) { return pad + (x - xmin) * s + ((W - 2 * pad) - (xmax - xmin) * s) / 2; }
-        function py(y) { return pad + (y - ymin) * s + ((H - 2 * pad) - (ymax - ymin) * s) / 2; }
-        pc._px = px; pc._py = py; pc._s = s; pc._ymin = ymin; pc._ymax = ymax;
 
-        g.fillStyle = cssVar('--lp-ink3');
-        g.font = '9px ' + cssVar('--lp-mono');
-        g.fillText('PLAN', 8, 12);
-        /* wheels */
-        state.wheels.forEach(function (w) {
-            var a = wheelA(w);
-            g.fillStyle = 'rgba(224,82,82,0.4)';
-            g.strokeStyle = cssVar('--lp-danger');
-            g.lineWidth = 1;
-            g.beginPath(); g.arc(px(w.x), py(w.y), Math.max(2.5, a * s), 0, 6.3); g.fill(); g.stroke();
+        var padL = 28, padR = 10, padT = 10, padB = 20;
+        var plotW = W - padL - padR, plotH = H - padT - padB;
+
+        /* isotropic world bounds around footprints + section */
+        var xs = [], ys = [];
+        state.wheels.forEach(function (w) { var a = wheelA(w); xs.push(w.x - a, w.x + a); ys.push(w.y - a, w.y + a); });
+        if (!state.wheels.length) { xs.push(-200, 200); ys.push(-200, 200); }
+        ys.push(state.ySec);
+        var xc = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2;
+        var yc = (Math.min.apply(null, ys) + Math.max.apply(null, ys)) / 2;
+        var xspan = Math.max(Math.max.apply(null, xs) - Math.min.apply(null, xs), 120) * 1.35;
+        var yspan = Math.max(Math.max.apply(null, ys) - Math.min.apply(null, ys), 120) * 1.35;
+        var s = Math.min(plotW / xspan, plotH / yspan);
+        var xmin = xc - (plotW / s) / 2, xmax = xc + (plotW / s) / 2;
+        var ymin = yc - (plotH / s) / 2, ymax = yc + (plotH / s) / 2;
+        function px(x) { return padL + (x - xmin) * s; }
+        function py(y) { return padT + (y - ymin) * s; }
+        pc._px = px; pc._py = py; pc._s = s; pc._ymin = ymin;
+        pc._plotT = padT; pc._plotB = padT + plotH;
+
+        var ink3 = cssVar('--lp-ink3'), ink2 = cssVar('--lp-ink2');
+        var lineC = cssVar('--lp-line'), soft = cssVar('--lp-line-soft');
+        var accent = cssVar('--lp-accent'), danger = cssVar('--lp-danger');
+        var mono = cssVar('--lp-mono');
+
+        /* plot background */
+        g.fillStyle = cssVar('--lp-bg0');
+        g.fillRect(padL, padT, plotW, plotH);
+
+        /* grid + tick labels */
+        var step = niceStep((xmax - xmin) / 4);
+        g.font = '8px ' + mono; g.lineWidth = 1;
+        g.textBaseline = 'middle';
+        var gx, gy, X, Y;
+        for (gx = Math.ceil(xmin / step) * step; gx <= xmax; gx += step) {
+            X = px(gx);
+            g.strokeStyle = Math.abs(gx) < 1e-6 ? lineC : soft;
+            g.beginPath(); g.moveTo(X, padT); g.lineTo(X, padT + plotH); g.stroke();
+            g.fillStyle = ink3; g.textAlign = 'center'; g.textBaseline = 'top';
+            g.fillText(sig(toDisp('len', gx), 3), X, padT + plotH + 3);
+        }
+        for (gy = Math.ceil(ymin / step) * step; gy <= ymax; gy += step) {
+            Y = py(gy);
+            g.strokeStyle = Math.abs(gy) < 1e-6 ? lineC : soft;
+            g.beginPath(); g.moveTo(padL, Y); g.lineTo(padL + plotW, Y); g.stroke();
+            g.fillStyle = ink3; g.textAlign = 'right'; g.textBaseline = 'middle';
+            g.fillText(sig(toDisp('len', gy), 3), padL - 3, Y);
+        }
+        g.strokeStyle = lineC; g.lineWidth = 1; g.strokeRect(padL, padT, plotW, plotH);
+        g.textBaseline = 'alphabetic';
+
+        /* footprints + connectors (clipped) */
+        g.save();
+        g.beginPath(); g.rect(padL, padT, plotW, plotH); g.clip();
+        g.strokeStyle = 'rgba(224,82,82,0.35)'; g.lineWidth = 1;
+        for (var i = 0; i < state.wheels.length; i++) for (var j = i + 1; j < state.wheels.length; j++) {
+            var a2 = state.wheels[i], b2 = state.wheels[j];
+            if (Math.abs(a2.y - b2.y) < 1e-6 || Math.abs(a2.x - b2.x) < 1e-6) {
+                g.beginPath(); g.moveTo(px(a2.x), py(a2.y)); g.lineTo(px(b2.x), py(b2.y)); g.stroke();
+            }
+        }
+        state.wheels.forEach(function (w, wi) {
+            var a = wheelA(w), R = Math.max(2.5, a * s), cX = px(w.x), cY = py(w.y);
+            var rg = g.createRadialGradient(cX - R * 0.3, cY - R * 0.3, 1, cX, cY, R);
+            rg.addColorStop(0, 'rgba(242,128,128,0.9)'); rg.addColorStop(1, 'rgba(196,58,58,0.55)');
+            g.fillStyle = rg;
+            g.beginPath(); g.arc(cX, cY, R, 0, 6.3); g.fill();
+            g.strokeStyle = danger; g.lineWidth = 1.2; g.stroke();
+            g.strokeStyle = 'rgba(255,255,255,0.55)'; g.lineWidth = 0.8;
+            g.beginPath();
+            g.moveTo(cX - R * 0.5, cY); g.lineTo(cX + R * 0.5, cY);
+            g.moveTo(cX, cY - R * 0.5); g.lineTo(cX, cY + R * 0.5); g.stroke();
+            if (R > 6) {
+                g.fillStyle = '#fff'; g.font = '700 8px ' + mono;
+                g.textAlign = 'center'; g.textBaseline = 'middle';
+                g.fillText('W' + (wi + 1), cX, cY);
+                g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+            }
         });
-        /* section line */
-        g.strokeStyle = cssVar('--lp-accent');
-        g.lineWidth = 1.4;
-        g.setLineDash([5, 3]);
-        g.beginPath(); g.moveTo(4, py(state.ySec)); g.lineTo(W - 4, py(state.ySec)); g.stroke();
-        g.setLineDash([]);
-        g.fillStyle = cssVar('--lp-accent');
-        g.fillText('y = ' + sig(toDisp('len', state.ySec), 3), W - 74, py(state.ySec) - 4);
-        /* points */
+        /* evaluation points */
         g.fillStyle = cssVar('--lp-cat3');
         state.points.forEach(function (p) {
             g.beginPath(); g.arc(px(p.x), py(p.y), 2.2, 0, 6.3); g.fill();
         });
+        g.restore();
+
+        /* spacing readout */
+        var sp = planSpacings(), parts = [];
+        if (sp.Sd != null) parts.push('Sd ' + sig(toDisp('len', sp.Sd), 3));
+        if (sp.St != null) parts.push('St ' + sig(toDisp('len', sp.St), 3));
+        if (parts.length) {
+            var txt = parts.join('   ') + ' ' + unit('len');
+            g.font = '8px ' + mono; var tw = g.measureText(txt).width;
+            g.fillStyle = 'rgba(15,24,41,0.82)';
+            roundRect(g, padL + 4, padT + plotH - 16, tw + 10, 13, 3); g.fill();
+            g.fillStyle = ink2; g.textAlign = 'left'; g.textBaseline = 'middle';
+            g.fillText(txt, padL + 9, padT + plotH - 9);
+            g.textBaseline = 'alphabetic';
+        }
+
+        /* section line + drag handle */
+        var syl = py(state.ySec);
+        g.strokeStyle = accent; g.lineWidth = 1.6; g.setLineDash([5, 3]);
+        g.beginPath(); g.moveTo(padL, syl); g.lineTo(padL + plotW, syl); g.stroke();
+        g.setLineDash([]);
+        g.fillStyle = accent;
+        g.beginPath(); g.arc(padL + plotW - 4, syl, 3.5, 0, 6.3); g.fill();
+        g.font = '700 8px ' + mono; g.textAlign = 'right';
+        g.fillText('SECTION y=' + sig(toDisp('len', state.ySec), 3), padL + plotW - 10, syl - 4);
+        g.textAlign = 'left';
     }
 
     /* ---------- colorbar ---------- */
@@ -1349,16 +1720,15 @@
         });
         cv.addEventListener('mouseleave', function () { $('lp-hover').hidden = true; });
 
-        /* plan inset: drag section line */
+        /* plan inset: drag to move the analysis section line */
         var pc = $('lp-plan');
         var planDrag = false;
-        pc.addEventListener('mousedown', function () { planDrag = true; });
+        pc.addEventListener('mousedown', function (e) { planDrag = true; e.preventDefault(); });
         window.addEventListener('mousemove', function (e) {
             if (!planDrag || !pc._py) return;
             var r = pc.getBoundingClientRect();
-            var my = clamp(e.clientY - r.top, 8, pc.height - 8);
-            /* invert py roughly by linear scan */
-            var yw = pc._ymin + (my - pc._py(pc._ymin)) / pc._s;
+            var my = clamp(e.clientY - r.top, pc._plotT, pc._plotB);
+            var yw = pc._ymin + (my - pc._plotT) / pc._s;
             state.ySec = Math.round(yw);
             drawPlan();
         });
@@ -1434,6 +1804,30 @@
         $('lp-point-count').textContent = state.points.length || '';
     }
 
+    function materialSelect(L) {
+        var sel = el('select', 'lp-select lp-layer-mat');
+        var groups = {};
+        MATERIALS.forEach(function (m) {
+            if (!groups[m.group]) {
+                groups[m.group] = el('optgroup');
+                groups[m.group].label = m.group;
+                sel.appendChild(groups[m.group]);
+            }
+            var o = el('option', null, m.name);
+            o.value = m.id;
+            if (m.id === L.mat) o.selected = true;
+            groups[m.group].appendChild(o);
+        });
+        sel.addEventListener('change', function () {
+            mutate(function () {
+                var m = matById(sel.value);
+                L.mat = m.id; L.name = m.name; L.E = m.E; L.nu = m.nu;
+                L.color = m.color; L.tex = m.tex;
+            });
+        });
+        return sel;
+    }
+
     var expandedLayer = null;
     function renderLayers() {
         var host = $('lp-layers');
@@ -1441,66 +1835,58 @@
         var n = state.layers.length;
         state.layers.forEach(function (L, i) {
             var isLast = i === n - 1;
-            var card = el('div', 'lp-layer');
-            card.draggable = !isLast;
+            var card = el('div', 'lp-layer' + (isLast ? ' is-subgrade' : ''));
+
+            /* ---- head: grip · chip · index · material · more ---- */
             var head = el('div', 'lp-layer-head');
-            head.appendChild(el('span', 'lp-layer-grip', isLast ? '' : '<i class="fas fa-grip-vertical"></i>'));
+            var grip = el('span', 'lp-layer-grip',
+                isLast ? '<i class="fas fa-anchor" title="Subgrade — fixed at the bottom"></i>'
+                       : '<i class="fas fa-grip-vertical"></i>');
+            head.appendChild(grip);
             var chip = el('span', 'lp-layer-chip');
             chip.style.background = L.color;
             head.appendChild(chip);
-            head.appendChild(el('span', 'lp-layer-name', L.name));
-            if (isLast) head.appendChild(el('span', 'lp-subgrade-tag', 'halfspace'));
-            else head.appendChild(el('span', 'lp-layer-meta', sig(toDisp('len', L.h), 3) + unit('len')));
+            head.appendChild(el('span', 'lp-layer-idx', String(i + 1)));
+            head.appendChild(materialSelect(L));
+            var more = el('button', 'lp-layer-more' + (expandedLayer === L.id ? ' is-open' : ''),
+                '<i class="fas fa-ellipsis-h"></i>');
+            more.title = 'Rename, reorder, delete';
+            more.addEventListener('click', function (e) {
+                e.stopPropagation();
+                expandedLayer = expandedLayer === L.id ? null : L.id;
+                renderLayers();
+            });
+            head.appendChild(more);
             card.appendChild(head);
 
+            /* ---- always-visible elastic properties ---- */
+            var quick = el('div', 'lp-layer-quick' + (isLast ? ' is-sub' : ''));
+            var m0 = matById(L.mat);
+            if (isLast) {
+                quick.appendChild(el('span', 'lp-inf-tag', '<i class="fas fa-infinity"></i> halfspace'));
+            } else {
+                quick.appendChild(numField('h (' + unit('len') + ')', sig(toDisp('len', L.h), 5), 'any', function (v) {
+                    mutate(function () { L.h = Math.max(1, fromDisp('len', v)); });
+                }, 'Layer thickness'));
+            }
+            quick.appendChild(numField('E (' + unit('modulus') + ')', sig(toDisp('modulus', L.E), 5), 'any', function (v) {
+                mutate(function () { L.E = Math.max(0.1, fromDisp('modulus', v)); });
+            }, 'Elastic modulus · typical ' + sig(toDisp('modulus', m0.range[0]), 3) + '–' + sig(toDisp('modulus', m0.range[1]), 3) + ' ' + unit('modulus') + ' (FAA/AASHTO/Huang)'));
+            quick.appendChild(numField('ν', L.nu, '0.01', function (v) {
+                mutate(function () { L.nu = clamp(v, 0.05, 0.499); });
+            }, "Poisson's ratio"));
+            card.appendChild(quick);
+
+            /* ---- expandable: name + reorder/duplicate/delete ---- */
             if (expandedLayer === L.id) {
                 var body = el('div', 'lp-layer-body');
-                var msel = el('label', 'lp-field');
-                msel.appendChild(el('span', null, 'Material'));
-                var sel = el('select', 'lp-select');
-                var groups = {};
-                MATERIALS.forEach(function (m) {
-                    if (!groups[m.group]) {
-                        groups[m.group] = el('optgroup');
-                        groups[m.group].label = m.group;
-                        sel.appendChild(groups[m.group]);
-                    }
-                    var o = el('option', null, m.name);
-                    o.value = m.id;
-                    if (m.id === L.mat) o.selected = true;
-                    groups[m.group].appendChild(o);
-                });
-                sel.addEventListener('change', function () {
-                    mutate(function () {
-                        var m = matById(sel.value);
-                        L.mat = m.id; L.name = m.name; L.E = m.E; L.nu = m.nu;
-                        L.color = m.color; L.tex = m.tex;
-                    });
-                });
-                msel.appendChild(sel);
-                body.appendChild(msel);
-
-                var grid = el('div', 'lp-layer-grid');
-                if (!isLast) {
-                    grid.appendChild(numField('h (' + unit('len') + ')', sig(toDisp('len', L.h), 5), 'any', function (v) {
-                        mutate(function () { L.h = Math.max(1, fromDisp('len', v)); });
-                    }));
-                }
-                var m0 = matById(L.mat);
-                grid.appendChild(numField('E (' + unit('modulus') + ')', sig(toDisp('modulus', L.E), 5), 'any', function (v) {
-                    mutate(function () { L.E = Math.max(0.1, fromDisp('modulus', v)); });
-                }, 'Typical range: ' + sig(toDisp('modulus', m0.range[0]), 3) + '–' + sig(toDisp('modulus', m0.range[1]), 3) + ' ' + unit('modulus') + ' (FAA/AASHTO/Huang)'));
-                grid.appendChild(numField('ν (—)', L.nu, '0.01', function (v) {
-                    mutate(function () { L.nu = clamp(v, 0.05, 0.499); });
-                }));
                 var nameF = el('label', 'lp-field');
-                nameF.appendChild(el('span', null, 'Name'));
+                nameF.appendChild(el('span', null, 'Layer name'));
                 var ninp = document.createElement('input');
                 ninp.type = 'text'; ninp.className = 'lp-input'; ninp.value = L.name;
                 ninp.addEventListener('change', function () { mutate(function () { L.name = ninp.value || L.name; }); });
                 nameF.appendChild(ninp);
-                grid.appendChild(nameF);
-                body.appendChild(grid);
+                body.appendChild(nameF);
 
                 var acts = el('div', 'lp-layer-actions');
                 function act(icon, title, fn, disabled) {
@@ -1529,31 +1915,31 @@
                 card.appendChild(body);
             }
 
-            head.addEventListener('click', function () {
-                expandedLayer = expandedLayer === L.id ? null : L.id;
-                renderLayers();
-            });
-
-            /* drag & drop reorder */
-            card.addEventListener('dragstart', function (e) {
-                e.dataTransfer.setData('text/plain', String(i));
-            });
-            card.addEventListener('dragover', function (e) {
-                if (isLast) return;
-                e.preventDefault();
-                card.classList.add('is-dragover');
-            });
-            card.addEventListener('dragleave', function () { card.classList.remove('is-dragover'); });
-            card.addEventListener('drop', function (e) {
-                e.preventDefault();
-                card.classList.remove('is-dragover');
-                var from = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                if (!isFinite(from) || from === i || isLast) return;
-                mutate(function (st) {
-                    var moved = st.layers.splice(from, 1)[0];
-                    st.layers.splice(i, 0, moved);
+            /* ---- drag & drop reorder via grip handle ---- */
+            if (!isLast) {
+                grip.setAttribute('draggable', 'true');
+                grip.addEventListener('dragstart', function (e) {
+                    e.dataTransfer.setData('text/plain', String(i));
+                    e.dataTransfer.effectAllowed = 'move';
+                    card.classList.add('is-dragging');
                 });
-            });
+                grip.addEventListener('dragend', function () { card.classList.remove('is-dragging'); });
+                card.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    card.classList.add('is-dragover');
+                });
+                card.addEventListener('dragleave', function () { card.classList.remove('is-dragover'); });
+                card.addEventListener('drop', function (e) {
+                    e.preventDefault();
+                    card.classList.remove('is-dragover');
+                    var from = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                    if (!isFinite(from) || from === i) return;
+                    mutate(function (st) {
+                        var moved = st.layers.splice(from, 1)[0];
+                        st.layers.splice(i, 0, moved);
+                    });
+                });
+            }
 
             host.appendChild(card);
         });
@@ -1615,35 +2001,54 @@
     function renderWheels() {
         var host = $('lp-wheels');
         host.innerHTML = '';
+        if (!state.wheels.length) {
+            host.appendChild(el('p', 'lp-hint', 'No wheels yet — Build a gear above or Add one.'));
+            return;
+        }
+        var ul = unit('len'), uf = unit('force'), us = unit('stress');
+        var tbl = el('table', 'lp-wtable');
+        tbl.innerHTML =
+            '<thead><tr><th class="lp-wtag-h">#</th>' +
+            '<th>x<em>' + ul + '</em></th><th>y<em>' + ul + '</em></th>' +
+            '<th>F<em>' + uf + '</em></th><th>p<em>' + us + '</em></th>' +
+            '<th></th></tr></thead>';
+        var body = el('tbody');
         state.wheels.forEach(function (w, i) {
-            var card = el('div', 'lp-wheel');
-            var head = el('div', 'lp-wheel-head');
-            head.appendChild(el('span', 'lp-wheel-title', 'Wheel ' + (i + 1)));
-            head.appendChild(el('span', 'lp-wheel-a', 'a = ' + sig(toDisp('len', wheelA(w)), 3) + ' ' + unit('len')));
-            var db = el('button', 'lp-tool', '<i class="fas fa-trash"></i>');
-            db.title = 'Remove wheel';
-            db.style.fontSize = '0.7em';
-            db.addEventListener('click', function () {
-                mutate(function (st) { st.wheels.splice(i, 1); });
-            });
-            head.appendChild(db);
-            card.appendChild(head);
-            var grid = el('div', 'lp-wheel-grid');
-            grid.appendChild(numField('x (' + unit('len') + ')', sig(toDisp('len', w.x), 5), 'any', function (v) {
-                mutate(function () { w.x = fromDisp('len', v); });
-            }));
-            grid.appendChild(numField('y (' + unit('len') + ')', sig(toDisp('len', w.y), 5), 'any', function (v) {
-                mutate(function () { w.y = fromDisp('len', v); });
-            }));
-            grid.appendChild(numField('F (' + unit('force') + ')', sig(toDisp('force', w.F), 4), 'any', function (v) {
-                mutate(function () { w.F = Math.max(0.01, fromDisp('force', v)); });
-            }));
-            grid.appendChild(numField('p (' + unit('stress') + ')', sig(toDisp('stress', w.p / 1000), 4), 'any', function (v) {
-                mutate(function () { w.p = Math.max(1, fromDisp('stress', v) * 1000); });
-            }));
-            card.appendChild(grid);
-            host.appendChild(card);
+            var tr = el('tr');
+            var tag = el('td', 'lp-wtag', 'W' + (i + 1));
+            tag.title = 'Contact radius a = ' + sig(toDisp('len', wheelA(w)), 4) + ' ' + ul;
+            tr.appendChild(tag);
+            function cell(val, decimals, setv) {
+                var td = el('td');
+                var inp = document.createElement('input');
+                inp.type = 'number'; inp.step = 'any';
+                inp.value = sig(val, decimals);
+                inp.addEventListener('change', function () {
+                    var v = parseFloat(inp.value);
+                    if (isFinite(v)) mutate(function () { setv(v); });
+                });
+                td.appendChild(inp);
+                tr.appendChild(td);
+            }
+            cell(toDisp('len', w.x), 5, function (v) { w.x = fromDisp('len', v); });
+            cell(toDisp('len', w.y), 5, function (v) { w.y = fromDisp('len', v); });
+            cell(toDisp('force', w.F), 4, function (v) { w.F = Math.max(0.01, fromDisp('force', v)); });
+            cell(toDisp('stress', w.p / 1000), 4, function (v) { w.p = Math.max(1, fromDisp('stress', v) * 1000); });
+            var tdDel = el('td');
+            var db = el('button', 'lp-tool lp-wdel', '<i class="fas fa-times"></i>');
+            db.title = 'Remove wheel ' + (i + 1);
+            db.addEventListener('click', function () { mutate(function (st) { st.wheels.splice(i, 1); }); });
+            tdDel.appendChild(db);
+            tr.appendChild(tdDel);
+            body.appendChild(tr);
         });
+        tbl.appendChild(body);
+        host.appendChild(tbl);
+
+        var foot = el('div', 'lp-wfoot');
+        foot.innerHTML = '<i class="fas fa-circle-notch"></i> contact radius ' +
+            state.wheels.map(function (w, i) { return 'W' + (i + 1) + ' ' + sig(toDisp('len', wheelA(w)), 3); }).join(' · ') + ' ' + ul;
+        host.appendChild(foot);
     }
 
     function renderPointsList() {
@@ -1805,6 +2210,7 @@
             renderLayerTable();
             renderPointsTable();
             renderCharts();
+            renderPerformance();
             drawViewport();
             saveLocal();
         });
@@ -1876,19 +2282,35 @@
         });
         fsel.value = state.settings.field;
         psel.value = 'szz';
-        psel.addEventListener('change', renderProfileChart);
+        psel.addEventListener('change', function () { renderProfileChart(); renderSurfaceChart(); });
 
-        /* tabs */
-        var tabs = document.querySelectorAll('.lp-tab');
-        tabs.forEach(function (t) {
+        /* bottom dock tabs */
+        var dtabs = document.querySelectorAll('.lp-dtab');
+        dtabs.forEach(function (t) {
             t.addEventListener('click', function () {
-                tabs.forEach(function (x) { x.classList.remove('is-active'); });
+                var key = t.getAttribute('data-dtab');
+                dtabs.forEach(function (x) { x.classList.remove('is-active'); });
                 t.classList.add('is-active');
-                document.querySelectorAll('.lp-pane').forEach(function (p) {
-                    p.classList.toggle('is-active', p.getAttribute('data-pane') === t.getAttribute('data-tab'));
+                document.querySelectorAll('.lp-dpane').forEach(function (p) {
+                    p.classList.toggle('is-active', p.getAttribute('data-dpane') === key);
                 });
-                if (t.getAttribute('data-tab') === 'profiles') renderCharts();
+                $('lp-dock').classList.remove('is-collapsed');
+                if (key === 'profiles') { renderCharts(); resizePlots(['lp-chart-profile', 'lp-chart-surface', 'lp-chart-basin', 'lp-smallmults']); }
+                else if (key === 'performance') { renderPerformance(); resizePlots(['lp-chart-perf']); }
             });
+        });
+        $('lp-dock-collapse').addEventListener('click', function () {
+            var d = $('lp-dock');
+            d.classList.toggle('is-collapsed');
+            if (!d.classList.contains('is-collapsed')) {
+                resizePlots(['lp-chart-profile', 'lp-chart-surface', 'lp-chart-basin', 'lp-smallmults', 'lp-chart-perf']);
+            }
+        });
+
+        /* plan-view collapse */
+        $('lp-plan-toggle').addEventListener('click', function (e) {
+            e.stopPropagation();
+            $('lp-plan-panel').classList.toggle('is-collapsed');
         });
 
         /* exports */
@@ -1919,6 +2341,7 @@
             texCache = {};
             drawViewport();
             renderCharts();
+            renderPerformance();
         }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     }
 
