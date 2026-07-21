@@ -54,6 +54,13 @@
     function cssVar(name) {
         return getComputedStyle(document.body).getPropertyValue(name).trim();
     }
+    /* a themed CSS-var hex → rgba() string for Plotly fills */
+    function fillRGBA(name, alpha) {
+        var h = cssVar(name);
+        if (!/^#[0-9a-f]{6}$/i.test(h)) return 'rgba(13,148,136,' + alpha + ')';
+        var r = parseInt(h.slice(1, 3), 16), g = parseInt(h.slice(3, 5), 16), b = parseInt(h.slice(5, 7), 16);
+        return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+    }
     function download(filename, text, mime) {
         var blob = new Blob([text], { type: mime || 'text/plain' });
         var a = document.createElement('a');
@@ -730,25 +737,55 @@
     function chartColors() {
         return [cssVar('--lp-cat1'), cssVar('--lp-cat2'), cssVar('--lp-cat3'), cssVar('--lp-cat4')];
     }
+    /* one high-contrast, theme-aware tooltip style shared by every plot so the
+     * hovered readout is always a solid, legible panel — never Plotly's default
+     * trace-tinted box with auto black/white text */
+    function hoverStyle() {
+        return {
+            bgcolor: cssVar('--lp-bg2'),
+            bordercolor: cssVar('--lp-line'),
+            font: { color: cssVar('--lp-ink'), family: 'Source Sans Pro, sans-serif', size: 12 },
+            align: 'left', namelength: -1
+        };
+    }
+    /* refined axis: subdued ticks, a slightly stronger titled label, a readable
+     * zero line, and (optionally) a dotted crosshair spike while hovering */
+    function chartAxis(titleText, spikes) {
+        var ax = {
+            title: { text: titleText, font: { size: 11.5, color: cssVar('--lp-ink2'), family: 'Source Sans Pro, sans-serif' }, standoff: 10 },
+            tickfont: { size: 10, color: cssVar('--lp-ink3') },
+            gridcolor: cssVar('--lp-line-soft'), gridwidth: 1,
+            zerolinecolor: cssVar('--lp-line'), zerolinewidth: 1.4,
+            linecolor: cssVar('--lp-line'), ticks: 'outside', ticklen: 3, tickcolor: cssVar('--lp-line-soft'),
+            automargin: true
+        };
+        if (spikes) {
+            ax.showspikes = true; ax.spikethickness = 1; ax.spikedash = 'dot';
+            ax.spikecolor = cssVar('--lp-ink3'); ax.spikemode = 'across'; ax.spikesnap = 'data';
+        }
+        return ax;
+    }
     function chartLayout(xTitle, yTitle, opts) {
         opts = opts || {};
-        var ink2 = cssVar('--lp-ink2'), line = cssVar('--lp-line-soft');
+        var ink2 = cssVar('--lp-ink2');
+        var spikes = opts.spikes !== false;   /* reading charts get crosshair spikes by default */
         var lay = {
             paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
             font: { color: ink2, size: 11, family: 'Source Sans Pro, sans-serif' },
-            margin: opts.margin || { l: 56, r: 14, t: 10, b: 44 },
-            xaxis: { title: { text: xTitle }, gridcolor: line, zerolinecolor: cssVar('--lp-line') },
-            yaxis: { title: { text: yTitle }, gridcolor: line, zerolinecolor: cssVar('--lp-line') },
+            margin: opts.margin || { l: 60, r: 16, t: 12, b: 48 },
+            xaxis: chartAxis(xTitle, spikes),
+            yaxis: chartAxis(yTitle, spikes),
             showlegend: opts.showlegend !== false,
-            legend: { orientation: 'h', y: -0.2 },
-            hovermode: 'closest'
+            legend: { orientation: 'h', y: -0.28, font: { size: 10, color: ink2 } },
+            hovermode: 'closest',
+            hoverlabel: hoverStyle()
         };
         if (!opts.noReverseY) lay.yaxis.autorange = 'reversed';
         return lay;
     }
     /* layer-band shading rectangles for a depth (y) axis */
     function layerBandShapes(xref, yref) {
-        var shapes = [], z = 0;
+        var shapes = [], z = 0, line = cssVar('--lp-line');
         for (var i = 0; i < state.layers.length; i++) {
             var top = z;
             var bot = i < state.layers.length - 1 ? z + state.layers[i].h : z + state.layers[i].h + 400;
@@ -756,15 +793,42 @@
             shapes.push({
                 type: 'rect', xref: xref, yref: yref, layer: 'below',
                 x0: 0, x1: 1, y0: toDisp('len', top), y1: toDisp('len', bot),
-                fillcolor: state.layers[i].color, opacity: 0.10, line: { width: 0 }
+                fillcolor: state.layers[i].color, opacity: 0.12, line: { width: 0 }
             });
             if (i > 0) shapes.push({
-                type: 'line', xref: xref, yref: yref, x0: 0, x1: 1,
-                y0: toDisp('len', top), y1: toDisp('len', top),
-                line: { color: cssVar('--lp-line'), width: 1, dash: 'dot' }
+                type: 'line', xref: xref, yref: yref, layer: 'below',
+                x0: 0, x1: 1, y0: toDisp('len', top), y1: toDisp('len', top),
+                line: { color: line, width: 1, dash: 'dot' }, opacity: 0.7
             });
         }
         return shapes;
+    }
+    /* dotted vertical markers at each wheel centre, for the surface/basin charts */
+    function wheelRefLines() {
+        var danger = cssVar('--lp-danger');
+        return state.wheels.map(function (w) {
+            return { type: 'line', yref: 'paper', y0: 0, y1: 1, layer: 'below',
+                x0: toDisp('len', w.x), x1: toDisp('len', w.x),
+                line: { color: danger, width: 1, dash: 'dot' }, opacity: 0.5 };
+        });
+    }
+    /* keep the two field-linked chart-card captions in sync with the selector */
+    function syncProfileTitles() {
+        var f = fieldById($('lp-prof-field') ? ($('lp-prof-field').value || 'szz') : 'szz');
+        var short = f.label.split(' — ')[0];
+        var tp = $('lp-title-profile'), ts = $('lp-title-surface');
+        if (tp) tp.textContent = 'Depth profile · ' + f.label;
+        if (ts) ts.textContent = 'Surface response · ' + short;
+    }
+    /* briefly highlight the two field-linked cards so it is obvious which
+     * charts just refreshed when the Field selector changes */
+    function flashLinkedCards() {
+        var cards = document.querySelectorAll('.lp-chart-card.is-linked');
+        cards.forEach(function (c) {
+            c.classList.remove('is-flash');
+            void c.offsetWidth;   /* restart the animation */
+            c.classList.add('is-flash');
+        });
     }
     function renderCharts() {
         if (typeof Plotly === 'undefined') { setTimeout(renderCharts, 600); return; }
@@ -776,6 +840,7 @@
     function renderProfileChart() {
         var host = $('lp-chart-profile');
         if (!host) return;
+        syncProfileTitles();
         if (!results.profiles) { Plotly.purge(host); return; }
         var f = fieldById($('lp-prof-field').value || 'szz');
         var colors = chartColors();
@@ -787,8 +852,8 @@
                 x: data.map(function (p) { return toDisp(f.q, f.get(p)); }),
                 y: data.map(function (p) { return toDisp('len', p.z); }),
                 name: s.label, mode: 'lines',
-                line: { color: colors[si % colors.length], width: 2.2 },
-                hovertemplate: '%{x:.4g} ' + unit(f.q) + ' @ z=%{y:.4g} ' + unit('len') + '<extra>' + s.label + '</extra>'
+                line: { color: colors[si % colors.length], width: 2.1 },
+                hovertemplate: '<b>' + s.label + '</b><br>%{x:.4g} ' + unit(f.q) + ' @ z = %{y:.4g} ' + unit('len') + '<extra></extra>'
             });
         });
         var lay = chartLayout(f.label + ' (' + unit(f.q) + ')', 'depth z (' + unit('len') + ')');
@@ -798,6 +863,7 @@
     function renderSurfaceChart() {
         var host = $('lp-chart-surface');
         if (!host) return;
+        syncProfileTitles();
         if (!results.basin || !results.basin.length) { Plotly.purge(host); return; }
         var f = fieldById($('lp-prof-field').value || 'szz');
         var colors = chartColors();
@@ -806,15 +872,11 @@
         var ys = pts.map(function (p) { return toDisp(f.q, f.get(p)); });
         var lay = chartLayout('offset x (' + unit('len') + ')', f.label.split(' — ')[0] + ' (' + unit(f.q) + ')',
             { noReverseY: true, showlegend: false });
-        lay.shapes = state.wheels.map(function (w) {
-            return { type: 'line', yref: 'paper', y0: 0, y1: 1,
-                x0: toDisp('len', w.x), x1: toDisp('len', w.x),
-                line: { color: cssVar('--lp-danger'), width: 1, dash: 'dot' } };
-        });
+        lay.shapes = wheelRefLines();
         Plotly.react(host, [{
             x: xs, y: ys, mode: 'lines',
-            line: { color: colors[2], width: 2.2 },
-            hovertemplate: '%{y:.4g} ' + unit(f.q) + ' @ x=%{x:.4g}<extra></extra>'
+            line: { color: colors[2], width: 2.1 },
+            hovertemplate: '%{y:.4g} ' + unit(f.q) + ' @ x=%{x:.4g} ' + unit('len') + '<extra></extra>'
         }], lay, { displayModeBar: false, responsive: true });
     }
     function renderBasinChart() {
@@ -824,16 +886,12 @@
         var xs = results.basin.map(function (p) { return toDisp('len', p.x); });
         var ws = results.basin.map(function (p) { return toDisp('defl', p.disp.uz); });
         var lay = chartLayout('offset x (' + unit('len') + ')', 'deflection w (' + unit('defl') + ')', { showlegend: false });
-        lay.shapes = state.wheels.map(function (w) {
-            return { type: 'line', yref: 'paper', y0: 0, y1: 1,
-                x0: toDisp('len', w.x), x1: toDisp('len', w.x),
-                line: { color: cssVar('--lp-danger'), width: 1, dash: 'dot' } };
-        });
+        lay.shapes = wheelRefLines();
         Plotly.react(host, [{
             x: xs, y: ws, mode: 'lines', fill: 'tozeroy',
-            line: { color: cssVar('--lp-accent-deep'), width: 2.2 },
-            fillcolor: 'rgba(13,148,136,0.14)',
-            hovertemplate: 'w = %{y:.4g} ' + unit('defl') + ' @ x=%{x:.4g}<extra></extra>'
+            line: { color: cssVar('--lp-accent-deep'), width: 2.1 },
+            fillcolor: fillRGBA('--lp-accent-deep', 0.16),
+            hovertemplate: 'w = %{y:.4g} ' + unit('defl') + ' @ x=%{x:.4g} ' + unit('len') + '<extra></extra>'
         }], lay, { displayModeBar: false, responsive: true });
     }
     var SM_FIELDS = ['szz', 'sxx', 'vm', 'exx', 'ezz', 'uz'];
@@ -846,7 +904,7 @@
         if (!data.length) { Plotly.purge(host); return; }
         var zbs = [], zacc = 0;
         for (var i = 0; i < state.layers.length - 1; i++) { zacc += state.layers[i].h; zbs.push(zacc); }
-        var soft = cssVar('--lp-line-soft'), lineC = cssVar('--lp-line'), ink2 = cssVar('--lp-ink2');
+        var soft = cssVar('--lp-line-soft'), lineC = cssVar('--lp-line'), ink2 = cssVar('--lp-ink2'), ink3 = cssVar('--lp-ink3');
         var cols = chartColors();
         var ys = data.map(function (p) { return toDisp('len', p.z); });
         var traces = [], annotations = [], shapes = [];
@@ -856,8 +914,8 @@
             traces.push({
                 x: data.map(function (p) { return toDisp(f.q, f.get(p)); }), y: ys,
                 xaxis: sx, yaxis: sy, mode: 'lines',
-                line: { color: cols[k % cols.length], width: 1.8 },
-                hovertemplate: '%{x:.4g} ' + unit(f.q) + ' @ z=%{y:.4g}<extra>' + f.label.split(' — ')[0] + '</extra>',
+                line: { color: cols[k % cols.length], width: 1.7 },
+                hovertemplate: '<b>' + f.label.split(' — ')[0] + '</b><br>%{x:.4g} ' + unit(f.q) + ' @ z = %{y:.4g} ' + unit('len') + '<extra></extra>',
                 showlegend: false
             });
             annotations.push({
@@ -877,13 +935,20 @@
         var lay = {
             paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
             font: { color: ink2, size: 10, family: 'Source Sans Pro, sans-serif' },
-            margin: { l: 46, r: 12, t: 26, b: 34 }, height: 430,
+            margin: { l: 48, r: 14, t: 28, b: 36 }, height: 430,
             grid: { rows: 2, columns: 3, pattern: 'independent', roworder: 'top to bottom' },
-            showlegend: false, annotations: annotations, shapes: shapes
+            showlegend: false, annotations: annotations, shapes: shapes,
+            hovermode: 'closest', hoverlabel: hoverStyle()
         };
         for (var k = 0; k < SM_FIELDS.length; k++) {
-            lay['xaxis' + sfx(k)] = { gridcolor: soft, zerolinecolor: lineC };
-            lay['yaxis' + sfx(k)] = { autorange: 'reversed', gridcolor: soft, zerolinecolor: lineC };
+            lay['xaxis' + sfx(k)] = {
+                gridcolor: soft, zerolinecolor: lineC, zerolinewidth: 1.2,
+                tickfont: { size: 9, color: ink3 }, ticks: 'outside', ticklen: 2, tickcolor: soft
+            };
+            lay['yaxis' + sfx(k)] = {
+                autorange: 'reversed', gridcolor: soft, zerolinecolor: lineC, zerolinewidth: 1.2,
+                tickfont: { size: 9, color: ink3 }, ticks: 'outside', ticklen: 2, tickcolor: soft
+            };
         }
         Plotly.react(host, traces, lay, { displayModeBar: false, responsive: true });
     }
@@ -978,10 +1043,14 @@
         var lay = {
             paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
             font: { color: cssVar('--lp-ink2'), size: 11, family: 'Source Sans Pro, sans-serif' },
-            margin: { l: 150, r: 20, t: 8, b: 40 }, height: 260,
-            xaxis: { title: { text: 'tensile strain at layer bottom (µε)' }, gridcolor: cssVar('--lp-line-soft'), zerolinecolor: cssVar('--lp-line') },
-            yaxis: { automargin: true, autorange: 'reversed' },
-            showlegend: false
+            margin: { l: 150, r: 20, t: 8, b: 44 }, height: 260,
+            xaxis: {
+                title: { text: 'tensile strain at layer bottom (µε)', font: { size: 11.5, color: cssVar('--lp-ink2') }, standoff: 10 },
+                tickfont: { size: 10, color: cssVar('--lp-ink3') },
+                gridcolor: cssVar('--lp-line-soft'), zerolinecolor: cssVar('--lp-line'), zerolinewidth: 1.4
+            },
+            yaxis: { automargin: true, autorange: 'reversed', tickfont: { size: 11, color: cssVar('--lp-ink2') } },
+            showlegend: false, hovermode: 'closest', hoverlabel: hoverStyle()
         };
         Plotly.react(host, [{
             type: 'bar', orientation: 'h', x: vals, y: names,
@@ -1829,12 +1898,37 @@
     }
 
     var expandedLayer = null;
+    /* a slim click target that inserts a new layer at boundary `atIndex`
+     * (i.e. between the card above and the card below) */
+    function layerInsertZone(atIndex) {
+        var z = el('div', 'lp-layer-insert');
+        z.setAttribute('role', 'button');
+        z.setAttribute('tabindex', '0');
+        z.setAttribute('aria-label', 'Insert a layer here');
+        z.title = 'Insert a layer here';
+        z.innerHTML =
+            '<span class="lp-layer-insert-line"></span>' +
+            '<span class="lp-layer-insert-btn"><i class="fas fa-plus"></i></span>' +
+            '<span class="lp-layer-insert-line"></span>';
+        function doInsert() {
+            mutate(function (st) {
+                st.layers.splice(atIndex, 0, layerFromMat('base', { h: 150 }));
+            });
+        }
+        z.addEventListener('click', doInsert);
+        z.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doInsert(); }
+        });
+        return z;
+    }
     function renderLayers() {
         var host = $('lp-layers');
         host.innerHTML = '';
         var n = state.layers.length;
         state.layers.forEach(function (L, i) {
             var isLast = i === n - 1;
+            /* insert affordance in the gap above every card except the first */
+            if (i > 0) host.appendChild(layerInsertZone(i));
             var card = el('div', 'lp-layer' + (isLast ? ' is-subgrade' : ''));
 
             /* ---- head: grip · chip · index · material · more ---- */
@@ -2282,7 +2376,7 @@
         });
         fsel.value = state.settings.field;
         psel.value = 'szz';
-        psel.addEventListener('change', function () { renderProfileChart(); renderSurfaceChart(); });
+        psel.addEventListener('change', function () { renderProfileChart(); renderSurfaceChart(); flashLinkedCards(); });
 
         /* bottom dock tabs */
         var dtabs = document.querySelectorAll('.lp-dtab');

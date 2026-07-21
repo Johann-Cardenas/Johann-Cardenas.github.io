@@ -91,7 +91,7 @@
                             <span class="lp-icon"><i class="fas fa-road"></i></span>
                             <span>LEA<span class="highlight">PS</span></span>
                         </h1>
-                        <p>Linear Elastic Analysis of Pavement Structures — multilayer elastic theory, multi-wheel loads, interface bonding, and live stress bulbs. Every number computed in your browser.</p>
+                        <p>Linear Elastic Analysis of Pavement Structures — multilayer elastic theory, multi-wheel loads, interface bonding, and live stress bulbs.</p>
                     </div>
                 </div>
 
@@ -136,7 +136,7 @@
                             <details class="lp-section" open>
                                 <summary><i class="fas fa-layer-group"></i> Structure <span class="lp-count" id="lp-layer-count"></span></summary>
                                 <div class="lp-section-body">
-                                    <p class="lp-hint">Edit material, thickness and modulus inline. Use <i class="fas fa-ellipsis-h"></i> to rename, set Poisson's ratio, reorder or delete. Drag <i class="fas fa-grip-vertical"></i> to restack.</p>
+                                    <p class="lp-hint">Edit material, thickness and modulus inline. Click the <i class="fas fa-plus"></i> between two layers to insert one there. Use <i class="fas fa-ellipsis-h"></i> to rename, set Poisson's ratio, reorder or delete. Drag <i class="fas fa-grip-vertical"></i> to restack.</p>
                                     <div id="lp-layers"></div>
                                     <button id="lp-add-layer" class="lp-btn lp-btn-block"><i class="fas fa-plus"></i> Add layer</button>
                                 </div>
@@ -264,27 +264,39 @@
 
                             <div class="lp-dpane is-active" data-dpane="profiles">
                                 <div class="lp-prof-controls">
-                                    <label class="lp-field lp-field-inline"><span>Field</span>
+                                    <label class="lp-field lp-field-inline lp-field-linked"><span><i class="fas fa-link"></i> Field — drives the linked charts</span>
                                         <select id="lp-prof-field" class="lp-select"></select>
                                     </label>
-                                    <p class="lp-hint lp-grow">Depth profiles are sampled under the busiest wheel stations; the surface plots run along the analysis section line.</p>
+                                    <p class="lp-hint lp-grow">The <strong>Field</strong> selector re-plots the two <span class="lp-tag-linked">Field</span> charts — the depth profile (sampled under the busiest wheel stations) and the surface response along the section line. The <span class="lp-tag-fixed">Fixed</span> deflection basin and six-field grid are constant references.</p>
                                 </div>
                                 <div class="lp-prof-grid">
-                                    <div class="lp-chart-card">
-                                        <div class="lp-chart-title">Depth profile — selected field</div>
+                                    <div class="lp-chart-card is-linked">
+                                        <div class="lp-chart-head">
+                                            <div class="lp-chart-title" id="lp-title-profile">Depth profile</div>
+                                            <span class="lp-chart-flag is-linked" title="Re-plots when you change the Field selector"><i class="fas fa-link"></i> Field</span>
+                                        </div>
                                         <div id="lp-chart-profile" class="lp-chart"></div>
                                     </div>
-                                    <div class="lp-chart-card">
-                                        <div class="lp-chart-title">Surface response along section</div>
+                                    <div class="lp-chart-card is-linked">
+                                        <div class="lp-chart-head">
+                                            <div class="lp-chart-title" id="lp-title-surface">Surface response along section</div>
+                                            <span class="lp-chart-flag is-linked" title="Re-plots when you change the Field selector"><i class="fas fa-link"></i> Field</span>
+                                        </div>
                                         <div id="lp-chart-surface" class="lp-chart"></div>
                                     </div>
                                     <div class="lp-chart-card">
-                                        <div class="lp-chart-title">Surface deflection basin</div>
+                                        <div class="lp-chart-head">
+                                            <div class="lp-chart-title">Surface deflection basin</div>
+                                            <span class="lp-chart-flag" title="Always shows vertical surface deflection, independent of the Field selector"><i class="fas fa-thumbtack"></i> Fixed · w</span>
+                                        </div>
                                         <div id="lp-chart-basin" class="lp-chart"></div>
                                     </div>
                                 </div>
                                 <div class="lp-chart-card lp-chart-card-wide">
-                                    <div class="lp-chart-title">Depth profiles by field <span class="lp-chart-sub">— principal responses vs. depth</span></div>
+                                    <div class="lp-chart-head">
+                                        <div class="lp-chart-title">Depth profiles by field <span class="lp-chart-sub">— principal responses vs. depth</span></div>
+                                        <span class="lp-chart-flag" title="A constant six-field reference grid, independent of the Field selector"><i class="fas fa-thumbtack"></i> Fixed · 6 fields</span>
+                                    </div>
                                     <div id="lp-smallmults" class="lp-smallmults"></div>
                                 </div>
                             </div>
