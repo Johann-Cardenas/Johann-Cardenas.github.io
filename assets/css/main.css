@@ -8538,17 +8538,16 @@ html {
 	to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Keep header/nav stable during transition */
-#header h1 { view-transition-name: site-title; }
-#nav { view-transition-name: site-nav; }
-
-::view-transition-old(site-title),
-::view-transition-new(site-title),
-::view-transition-old(site-nav),
-::view-transition-new(site-nav) {
-	animation: none;
-	mix-blend-mode: normal;
-}
+/* Keep the header stable during transitions.
+   The WHOLE header is promoted to a single view-transition group so its
+   opaque background travels together with its title/nav. Previously only
+   #header h1 and #nav were named: those elements have transparent
+   backgrounds, so the header's dark background stayed behind in the fading
+   root layer. During the cross-fade the root's opacity dips below 1, and
+   because :root has no background the browser's white canvas showed
+   through — the two header rows flashed white. Naming #header itself keeps
+   its background opaque and out of the root fade. */
+#header { view-transition-name: site-header; }
 
 /* ===== @STARTING-STYLE: STAT CARDS ===== */
 .pub-stat-card {
@@ -8685,8 +8684,7 @@ html {
    with the cross-document navigation transition above.
    --vt-x/--vt-y/--vt-r are set inline from the toggle
    button's position. */
-html.theme-vt #header h1,
-html.theme-vt #nav {
+html.theme-vt #header {
 	view-transition-name: none;
 }
 
