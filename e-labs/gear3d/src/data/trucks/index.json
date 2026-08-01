@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "1.0",
+  "scheme": "FHWA-Scheme-F",
+  "$comment": [
+    "Manifest of the FHWA Scheme F classes and the files that hold their units.",
+    "Class definitions are taken from the FHWA Traffic Monitoring Guide.",
+    "Per-unit geometry provenance is in each unit's own sources[]; the overall",
+    "verification status of the library is in data/SOURCES.md."
+  ],
+  "files": [
+    "light.json",
+    "single-unit.json",
+    "single-trailer.json",
+    "multi-trailer.json"
+  ],
+  "classes": [
+    { "class": 1, "label": "Motorcycles", "group": "light", "axles": "2", "definition": "Two- or three-wheeled motorized vehicles." },
+    { "class": 2, "label": "Passenger cars", "group": "light", "axles": "2-4", "definition": "All sedans, coupes and station wagons, including those pulling one- or two-axle trailers." },
+    { "class": 3, "label": "Other two-axle, four-tire single-unit vehicles", "group": "light", "axles": "2-4", "definition": "Pickups, panels and vans, including those pulling one- or two-axle trailers." },
+    { "class": 4, "label": "Buses", "group": "single-unit", "axles": "2-3", "definition": "Vehicles manufactured as traditional passenger-carrying buses with two axles and six tires, or three or more axles." },
+    { "class": 5, "label": "Two-axle, six-tire single-unit trucks", "group": "single-unit", "axles": "2", "definition": "Two-axle vehicles with dual rear tires." },
+    { "class": 6, "label": "Three-axle single-unit trucks", "group": "single-unit", "axles": "3", "definition": "Single-unit vehicles on three axles, and three-axle tractors without a trailer." },
+    { "class": 7, "label": "Four or more axle single-unit trucks", "group": "single-unit", "axles": "4+", "definition": "Single-unit vehicles with four or more axles." },
+    { "class": 8, "label": "Four or fewer axle single-trailer trucks", "group": "single-trailer", "axles": "3-4", "definition": "All vehicles with four or fewer axles consisting of two units, one of which is a tractor or straight truck power unit." },
+    { "class": 9, "label": "Five-axle single-trailer trucks", "group": "single-trailer", "axles": "5", "definition": "All five-axle vehicles consisting of two units, one of which is a tractor or straight truck power unit." },
+    { "class": 10, "label": "Six or more axle single-trailer trucks", "group": "single-trailer", "axles": "6+", "definition": "All vehicles with six or more axles consisting of two units, one of which is a tractor or straight truck power unit." },
+    { "class": 11, "label": "Five or fewer axle multi-trailer trucks", "group": "multi-trailer", "axles": "4-5", "definition": "All vehicles with five or fewer axles consisting of three or more units, one of which is a tractor or straight truck power unit." },
+    { "class": 12, "label": "Six-axle multi-trailer trucks", "group": "multi-trailer", "axles": "6", "definition": "All six-axle vehicles consisting of three or more units, one of which is a tractor or straight truck power unit." },
+    { "class": 13, "label": "Seven or more axle multi-trailer trucks", "group": "multi-trailer", "axles": "7+", "definition": "All vehicles with seven or more axles consisting of three or more units, one of which is a tractor or straight truck power unit." }
+  ],
+  "sources": [
+    {
+      "id": "fhwa-tmg",
+      "title": "Traffic Monitoring Guide, Vehicle Types (Scheme F, 13-category classification)",
+      "publisher": "U.S. Federal Highway Administration",
+      "url": "https://www.fhwa.dot.gov/policyinformation/tmguide/",
+      "note": "Class definitions and axle-count rules. Verified against the FHWA Traffic Monitoring Guide and the standard 13-class summary during this build."
+    }
+  ]
+}

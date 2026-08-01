@@ -1,0 +1,211 @@
+/* ============================================================
+   Gear3D — lighting presets
+   ------------------------------------------------------------
+   Four presets matching Cross-Section Studio, each fully described
+   by numbers so a figure caption can state the exact setup.
+
+   Every control has a numeric field beside its slider in the UI —
+   a reproducible-views requirement, not a nicety.
+
+   Scene units are METRES (the renderer scales millimetre geometry
+   by 1/1000 once, at the root), so light distances and shadow
+   camera extents below are in metres.
+   ============================================================ */
+
+'use strict';
+
+import * as THREE from 'three';
+
+/**
+ * @typedef {Object} LightingState
+ * @property {string} preset
+ * @property {number} keyIntensity
+ * @property {number} ambient
+ * @property {number} azimuth      degrees, about vertical
+ * @property {number} elevation    degrees above the pavement
+ * @property {number} shadowOpacity 0-1
+ * @property {number} shadowSoftness 0-12
+ * @property {boolean} groundShadow
+ */
+
+/** @type {Record<string, LightingState>} */
+export const LIGHTING_PRESETS = Object.freeze({
+    studio: {
+        preset: 'studio',
+        keyIntensity: 2.6, ambient: 0.85, azimuth: -38, elevation: 44,
+        shadowOpacity: 0.32, shadowSoftness: 3.5, groundShadow: true
+    },
+    daylight: {
+        preset: 'daylight',
+        keyIntensity: 3.4, ambient: 0.55, azimuth: -60, elevation: 58,
+        shadowOpacity: 0.46, shadowSoftness: 1.5, groundShadow: true
+    },
+    softbox: {
+        preset: 'softbox',
+        keyIntensity: 1.9, ambient: 1.35, azimuth: -20, elevation: 35,
+        shadowOpacity: 0.18, shadowSoftness: 8.0, groundShadow: true
+    },
+    threepoint: {
+        preset: 'threepoint',
+        keyIntensity: 2.9, ambient: 0.5, azimuth: -45, elevation: 40,
+        shadowOpacity: 0.38, shadowSoftness: 2.5, groundShadow: true
+    }
+});
+
+export class LightingRig {
+    /**
+     * @param {THREE.Scene} scene
+     */
+    constructor(scene) {
+        this.scene = scene;
+
+        this.ambient = new THREE.AmbientLight(0xffffff, 1);
+        this.hemi = new THREE.HemisphereLight(0xdfe7ef, 0x3a3f45, 1);
+        this.key = new THREE.DirectionalLight(0xffffff, 1);
+        this.fill = new THREE.DirectionalLight(0xdce6f0, 0.35);
+        this.rim = new THREE.DirectionalLight(0xffffff, 0.0);
+
+        this.key.castShadow = true;
+        this.key.shadow.mapSize.set(2048, 2048);
+        this.key.shadow.bias = -0.0006;
+        this.key.shadow.normalBias = 0.02;
+
+        this.ground = null;
+        this._radius = 10;
+
+        scene.add(this.ambient, this.hemi, this.key, this.key.target, this.fill, this.rim);
+        this.apply(LIGHTING_PRESETS.studio);
+    }
+
+    /**
+     * Size the rig to the scene so shadows stay crisp on a motorcycle and
+     * still cover a nine-axle turnpike double.
+     * @param {THREE.Box3} box scene bounds in metres
+     */
+    fit(box) {
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const r = Math.max(size.x, size.y, size.z) * 0.75 + 0.5;
+        this._radius = r;
+        this._center = center;
+
+        const cam = /** @type {THREE.OrthographicCamera} */ (this.key.shadow.camera);
+        cam.left = -r * 1.6; cam.right = r * 1.6;
+        cam.top = r * 1.6; cam.bottom = -r * 1.6;
+        cam.near = 0.05; cam.far = r * 8;
+        cam.updateProjectionMatrix();
+
+        this.key.target.position.copy(center);
+        this._place();
+    }
+
+    /**
+     * @param {LightingState} s
+     */
+    apply(s) {
+        this.state = { ...s };
+        this.key.intensity = s.keyIntensity;
+        this.ambient.intensity = s.ambient * 0.55;
+        this.hemi.intensity = s.ambient * 0.75;
+
+        // Preset-specific secondary lights.
+        if (s.preset === 'threepoint') {
+            this.fill.intensity = s.keyIntensity * 0.30;
+            this.rim.intensity = s.keyIntensity * 0.55;
+        } else if (s.preset === 'softbox') {
+            this.fill.intensity = s.keyIntensity * 0.55;
+            this.rim.intensity = 0;
+        } else {
+            this.fill.intensity = s.keyIntensity * 0.18;
+            this.rim.intensity = 0;
+        }
+
+        // Shadow softness is expressed in the same 0-12 range as
+        // Cross-Section Studio; three.js maps it to PCF radius.
+        this.key.shadow.radius = Math.max(1, s.shadowSoftness);
+        this.key.castShadow = s.groundShadow;
+
+        this._place();
+        if (this.ground) this.ground.material.opacity = s.shadowOpacity;
+    }
+
+    /** Reposition the lights from the current azimuth/elevation. */
+    _place() {
+        const s = this.state;
+        const r = this._radius * 2.4;
+        const az = (s.azimuth * Math.PI) / 180;
+        const el = (s.elevation * Math.PI) / 180;
+        const c = this._center || new THREE.Vector3();
+
+        // Scene frame is three.js Y-up: x right, y up, z toward viewer.
+        const dir = new THREE.Vector3(
+            Math.cos(el) * Math.sin(az),
+            Math.sin(el),
+            Math.cos(el) * Math.cos(az)
+        );
+        this.key.position.copy(c).addScaledVector(dir, r);
+        this.key.target.position.copy(c);
+        this.key.target.updateMatrixWorld();
+
+        // Fill from the opposite side and lower.
+        const fillDir = new THREE.Vector3(-dir.x, Math.max(0.25, dir.y * 0.45), -dir.z).normalize();
+        this.fill.position.copy(c).addScaledVector(fillDir, r);
+
+        // Rim from behind.
+        const rimDir = new THREE.Vector3(-dir.x * 0.6, 0.35, -dir.z).normalize();
+        this.rim.position.copy(c).addScaledVector(rimDir, r);
+    }
+
+    /**
+     * A shadow-catching ground plane. Uses ShadowMaterial so the plane is
+     * invisible except where it is shadowed — which is exactly what a
+     * transparent-background export needs.
+     *
+     * The plane MUST stay inside the shadow camera's coverage. Outside the
+     * shadow map, the depth lookup clamps to the border texel, and if that
+     * texel reads as occluded the entire overhanging area renders fully
+     * shadowed — a plane larger than the shadow frustum turns the whole
+     * background into a grey slab. The shadow camera spans +/- 1.6 r, so the
+     * plane is capped at a half-extent of 1.4 r with margin to spare.
+     *
+     * @param {number} [size] metres; clamped to the shadow camera's coverage
+     * @returns {THREE.Mesh}
+     */
+    makeGround(size) {
+        const maxSize = this._radius * 2.8;
+        size = Math.min(size ?? maxSize, maxSize);
+        return this._makeGround(size);
+    }
+
+    /**
+     * @param {number} size
+     * @returns {THREE.Mesh}
+     */
+    _makeGround(size) {
+        if (this.ground) {
+            this.scene.remove(this.ground);
+            this.ground.geometry.dispose();
+            this.ground.material.dispose();
+        }
+        const geo = new THREE.PlaneGeometry(size, size);
+        geo.rotateX(-Math.PI / 2);
+        const mat = new THREE.ShadowMaterial({ opacity: this.state.shadowOpacity });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.receiveShadow = true;
+        mesh.name = 'ground-shadow';
+        mesh.userData.pickable = false;
+        this.ground = mesh;
+        this.scene.add(mesh);
+        return mesh;
+    }
+
+    dispose() {
+        if (this.ground) {
+            this.scene.remove(this.ground);
+            this.ground.geometry.dispose();
+            this.ground.material.dispose();
+            this.ground = null;
+        }
+        for (const l of [this.ambient, this.hemi, this.key, this.fill, this.rim]) this.scene.remove(l);
+    }
+}

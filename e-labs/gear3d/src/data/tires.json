@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "1.0",
+  "$comment": [
+    "Inch-nominal truck tire sizes. Metric (295/75R22.5), passenger (P225/60R16)",
+    "and aircraft (H44.5x16.5-21, 1400x530R23) designations encode their own",
+    "dimensions and are computed arithmetically by src/core/tires.js — they are",
+    "deliberately NOT listed here.",
+    "",
+    "Dimensions are NOMINAL new-tire values in millimetres. See data/SOURCES.md",
+    "for the verification status of every entry: values marked confidence",
+    "'medium' were reproduced from the standard truck-tire literature but were",
+    "NOT checked against a primary Tire and Rim Association yearbook during the",
+    "build. Check them before using this app's output in a publication.",
+    "",
+    "A size that is absent is reported by the app as unknown. It is never guessed."
+  ],
+  "nominal": {
+    "11R22.5": {
+      "sectionWidth": 279,
+      "overallDiameter": 1054,
+      "confidence": "high",
+      "source": "Nominal 11.0 in section / 41.5 in overall diameter. This is the reference truck tire of the flexible-pavement literature and the size assumed by the AASHTO 18-kip ESAL dual-wheel idealisation; dimensions agree across Michelin, Bridgestone and Goodyear medium-truck data books.",
+      "notes": "Standard drive/trailer fitment for FHWA classes 5-13."
+    },
+    "11R24.5": {
+      "sectionWidth": 279,
+      "overallDiameter": 1097,
+      "confidence": "medium",
+      "source": "Nominal 11.0 in section / 43.2 in overall diameter; medium-truck tire data books. Not verified against a TRA yearbook in this build.",
+      "notes": "Common on 24.5 in wheels, otherwise interchangeable with 11R22.5 in service."
+    },
+    "12R22.5": {
+      "sectionWidth": 300,
+      "overallDiameter": 1085,
+      "confidence": "medium",
+      "source": "Nominal 12.0 in section / 42.7 in overall diameter; medium-truck tire data books. Not verified against a TRA yearbook in this build.",
+      "notes": "Heavy steer and bus fitment."
+    },
+    "10.00R20": {
+      "sectionWidth": 278,
+      "overallDiameter": 1052,
+      "confidence": "medium",
+      "source": "Tube-type 20 in rim series; medium-truck tire data books. Not verified against a TRA yearbook in this build.",
+      "notes": "Older vocational and vintage fitments."
+    },
+    "11.00R20": {
+      "sectionWidth": 293,
+      "overallDiameter": 1085,
+      "confidence": "medium",
+      "source": "Tube-type 20 in rim series; medium-truck tire data books. Not verified against a TRA yearbook in this build.",
+      "notes": "Heavy vocational / off-highway-capable fitment."
+    },
+    "9.00R20": {
+      "sectionWidth": 259,
+      "overallDiameter": 1013,
+      "confidence": "medium",
+      "source": "Tube-type 20 in rim series; medium-truck tire data books. Not verified against a TRA yearbook in this build.",
+      "notes": "Light-medium vocational fitment."
+    }
+  },
+  "presets": {
+    "truck": [
+      { "designation": "11R22.5", "label": "11R22.5 — standard drive/trailer", "config": ["STA", "DTA"] },
+      { "designation": "295/75R22.5", "label": "295/75R22.5 — common line-haul", "config": ["STA", "DTA"] },
+      { "designation": "275/80R22.5", "label": "275/80R22.5 — common line-haul", "config": ["STA", "DTA"] },
+      { "designation": "285/75R24.5", "label": "285/75R24.5 — 24.5 in line-haul", "config": ["STA", "DTA"] },
+      { "designation": "315/80R22.5", "label": "315/80R22.5 — heavy steer", "config": ["STA"] },
+      { "designation": "385/65R22.5", "label": "385/65R22.5 — wide steer", "config": ["STA"] },
+      { "designation": "12R22.5", "label": "12R22.5 — heavy steer / bus", "config": ["STA"] },
+      { "designation": "445/50R22.5", "label": "445/50R22.5 — wide-base single", "config": ["WBT"] },
+      { "designation": "455/55R22.5", "label": "455/55R22.5 — wide-base single", "config": ["WBT"] },
+      { "designation": "425/65R22.5", "label": "425/65R22.5 — wide-base single", "config": ["WBT"] },
+      { "designation": "LT245/75R16", "label": "LT245/75R16 — light truck", "config": ["STA", "DTA"] },
+      { "designation": "P225/60R16", "label": "P225/60R16 — passenger car", "config": ["STA"] },
+      { "designation": "180/55R17", "label": "180/55R17 — motorcycle rear", "config": ["STA"] },
+      { "designation": "120/70R17", "label": "120/70R17 — motorcycle front", "config": ["STA"] }
+    ],
+    "aircraft": [
+      { "designation": "27x7.75-15", "label": "27x7.75-15 — 737 nose" },
+      { "designation": "H44.5x16.5-21", "label": "H44.5x16.5-21 — 737NG main" },
+      { "designation": "46x17.0R20", "label": "46x17.0R20 — A320 main" },
+      { "designation": "30x8.8R15", "label": "30x8.8R15 — A320 nose" },
+      { "designation": "50x20.0R22", "label": "50x20.0R22 — 767 main" },
+      { "designation": "52x21.0R22", "label": "52x21.0R22 — 777 main" },
+      { "designation": "49x19.0-22", "label": "49x19.0-22 — 747 main" },
+      { "designation": "1400x530R23", "label": "1400x530R23 — A380 main" },
+      { "designation": "H29x9.0-15", "label": "H29x9.0-15 — regional jet main" },
+      { "designation": "22x8.0-10", "label": "22x8.0-10 — light twin" }
+    ]
+  },
+  "sources": [
+    {
+      "id": "tra-yearbook",
+      "title": "Tire and Rim Association Yearbook",
+      "publisher": "The Tire and Rim Association, Inc.",
+      "note": "Authoritative dimensional standard for truck and aircraft tire designations. Not consulted directly during this build — entries above marked 'medium' should be checked against it."
+    },
+    {
+      "id": "tire-designation-convention",
+      "title": "Three-part aircraft tire designation (overall diameter x section width - rim diameter)",
+      "publisher": "Tire and Rim Association / ETRTO aircraft tire conventions",
+      "note": "Basis for computing aircraft tire dimensions directly from the designation, implemented in src/core/tires.js."
+    }
+  ]
+}

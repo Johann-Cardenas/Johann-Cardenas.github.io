@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "1.0",
+  "$comment": "FHWA Scheme F classes 1-3. Light vehicles. Included for completeness of the classification; pavement damage from these classes is negligible relative to classes 5-13.",
+  "units": [
+    {
+      "schemaVersion": "1.0",
+      "id": "fhwa-c01-motorcycle",
+      "domain": "truck",
+      "classification": { "scheme": "FHWA-Scheme-F", "class": 1, "label": "Motorcycles" },
+      "designation": "1-1",
+      "bodyType": "motorcycle",
+      "overallLength": 2180,
+      "axles": [
+        {
+          "id": "A1", "role": "steer", "x": 0, "trackWidth": 0, "wheelPositions": 1,
+          "tireConfig": "STA", "tire": "120/70R17", "dualSpacing": null,
+          "load": { "value": 1.1, "unit": "kN", "basis": "Approximately 45 % of a 250 kg (rider + machine) touring motorcycle mass, a representative front-axle share. Order-of-magnitude only." },
+          "liftable": false, "steerable": true,
+          "source": "Representative large touring motorcycle. Wheelbase 1450 mm is typical of the class. Single wheel on the vehicle centreline, so track width is zero by definition. Confidence: low — representative geometry, not a specific model."
+        },
+        {
+          "id": "A2", "role": "drive", "x": 1450, "trackWidth": 0, "wheelPositions": 1,
+          "tireConfig": "STA", "tire": "180/55R17", "dualSpacing": null,
+          "load": { "value": 1.4, "unit": "kN", "basis": "Approximately 55 % of a 250 kg (rider + machine) touring motorcycle mass. Order-of-magnitude only." },
+          "liftable": false, "steerable": false,
+          "source": "Representative large touring motorcycle; wheelbase 1450 mm from axle 1. Confidence: low — representative geometry, not a specific model."
+        }
+      ],
+      "axleGroups": [
+        { "id": "G1", "type": "single", "axles": ["A1"], "spacing": null, "suspension": "telescopic fork" },
+        { "id": "G2", "type": "single", "axles": ["A2"], "spacing": null, "suspension": "swingarm" }
+      ],
+      "gvw": { "value": 250, "unit": "kg", "basis": "Representative kerb mass plus rider for a large touring motorcycle." },
+      "notes": "Included so the FHWA classification is complete. Contact-patch and dimension tools work, but loads are representative rather than regulatory.",
+      "sources": [
+        { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 1", "publisher": "FHWA", "note": "Class definition." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "fhwa-c02-passenger-car",
+      "domain": "truck",
+      "classification": { "scheme": "FHWA-Scheme-F", "class": 2, "label": "Passenger cars" },
+      "designation": "2",
+      "bodyType": "passenger car",
+      "overallLength": 4880,
+      "axles": [
+        {
+          "id": "A1", "role": "steer", "x": 0, "trackWidth": 1560,
+          "tireConfig": "STA", "tire": "P225/60R16", "dualSpacing": null,
+          "load": { "value": 8.8, "unit": "kN", "basis": "Approximately 55 % of a 1630 kg mid-size sedan kerb mass on the front axle (front-engine, front-drive weight split)." },
+          "liftable": false, "steerable": true,
+          "source": "Representative mid-size sedan. Wheelbase 2790 mm and track 1560 mm are typical of the segment. Confidence: low — representative geometry, not a specific model."
+        },
+        {
+          "id": "A2", "role": "drive", "x": 2790, "trackWidth": 1560,
+          "tireConfig": "STA", "tire": "P225/60R16", "dualSpacing": null,
+          "load": { "value": 7.2, "unit": "kN", "basis": "Approximately 45 % of a 1630 kg mid-size sedan kerb mass on the rear axle." },
+          "liftable": false, "steerable": false,
+          "source": "Representative mid-size sedan; wheelbase 2790 mm from axle 1. Confidence: low — representative geometry, not a specific model."
+        }
+      ],
+      "axleGroups": [
+        { "id": "G1", "type": "single", "axles": ["A1"], "spacing": null, "suspension": "independent" },
+        { "id": "G2", "type": "single", "axles": ["A2"], "spacing": null, "suspension": "independent" }
+      ],
+      "gvw": { "value": 1630, "unit": "kg", "basis": "Representative kerb mass of a mid-size passenger sedan." },
+      "notes": "FHWA class 2 also covers cars pulling one- and two-axle trailers; only the base two-axle car is modelled.",
+      "sources": [
+        { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 2", "publisher": "FHWA", "note": "Class definition." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "fhwa-c03-pickup",
+      "domain": "truck",
+      "classification": { "scheme": "FHWA-Scheme-F", "class": 3, "label": "Other two-axle, four-tire single-unit vehicles" },
+      "designation": "3",
+      "bodyType": "pickup truck",
+      "overallLength": 6220,
+      "axles": [
+        {
+          "id": "A1", "role": "steer", "x": 0, "trackWidth": 1730,
+          "tireConfig": "STA", "tire": "LT245/75R16", "dualSpacing": null,
+          "load": { "value": 15.7, "unit": "kN", "basis": "Approximately 57 % of a 2800 kg crew-cab half-ton pickup kerb mass on the front axle." },
+          "liftable": false, "steerable": true,
+          "source": "Representative crew-cab half-ton pickup. Wheelbase 3680 mm and track 1730 mm are typical of the segment. Confidence: low — representative geometry, not a specific model."
+        },
+        {
+          "id": "A2", "role": "drive", "x": 3680, "trackWidth": 1730,
+          "tireConfig": "STA", "tire": "LT245/75R16", "dualSpacing": null,
+          "load": { "value": 11.8, "unit": "kN", "basis": "Approximately 43 % of a 2800 kg crew-cab half-ton pickup kerb mass on the rear axle, unladen." },
+          "liftable": false, "steerable": false,
+          "source": "Representative crew-cab half-ton pickup; wheelbase 3680 mm from axle 1. Confidence: low — representative geometry, not a specific model."
+        }
+      ],
+      "axleGroups": [
+        { "id": "G1", "type": "single", "axles": ["A1"], "spacing": null, "suspension": "independent" },
+        { "id": "G2", "type": "single", "axles": ["A2"], "spacing": null, "suspension": "leaf" }
+      ],
+      "gvw": { "value": 2800, "unit": "kg", "basis": "Representative kerb mass of a crew-cab half-ton pickup." },
+      "notes": "Class 3 is defined by four tires on two axles, which distinguishes it from class 5 (six tires, dual rear).",
+      "sources": [
+        { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 3", "publisher": "FHWA", "note": "Class definition; four-tire criterion." }
+      ]
+    }
+  ]
+}

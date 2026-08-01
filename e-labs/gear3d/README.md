@@ -1,0 +1,179 @@
+# Gear3D
+
+Deterministic, true-to-scale 3D visualizer of **truck axle configurations** and
+**aircraft landing gear**, for pavement engineers, researchers and instructors.
+
+Gear3D is a renderer and a dimension engine — not a CAD tool and not a physics
+simulator. It does three things:
+
+1. Shows what a gear configuration actually looks like in 3D, from any angle.
+2. Shows the numbers that matter — axle spacings, track widths, dual spacings,
+   tire sizes — as measurable, annotated, exportable dimensions.
+3. Exports **machine-readable footprint coordinates** that drop straight into a
+   finite-element pre-processor.
+
+Point 3 is the differentiator.
+
+**Live:** `/e-labs/gear3d/`
+
+---
+
+## Quick start
+
+It is a static app. No build step.
+
+```bash
+# from the repository root
+bundle exec jekyll serve      # → http://localhost:4000/e-labs/gear3d/
+# or, without Jekyll:
+python -m http.server 8899    # → http://localhost:8899/e-labs/gear3d/
+```
+
+Tests need only Node ≥ 18:
+
+```bash
+cd e-labs/gear3d
+npm test          # 74 checks, no dependencies
+```
+
+---
+
+## Architecture
+
+Scene units are **metres**; everything else is **millimetres**. The single
+1/1000 scale lives on the assembly root and nowhere else.
+
+```
+index.html · styles.css · main.js        shell and UI controller
+src/
+  core/       coords · units · prng · tires · schema · store · bridge · layout
+  data/       tires.json · trucks/*.json · SOURCES.md
+  geometry/   tire · rim · hub · axle · assembly
+  scene/      renderer · cameras · lighting · materials
+  annotate/   projection · dimensions
+  contact/    models · patch · export
+  views/      isolation
+  io/         project · exportRaster · exportVector
+test/         harness.mjs · run.mjs
+```
+
+**The load-bearing rule:** `src/core`, `src/contact` and `src/annotate/projection.js`
+import **no three.js and touch no DOM**. That is what makes coordinates, unit
+conversion, tire parsing, layout resolution, bridge-formula compliance, contact
+models and label decluttering testable under plain Node — and it is why the
+renderer, the dimension engine and the FEM export cannot disagree about where a
+tire is: all three consume the same `resolveLayout()` output.
+
+### Coordinate system
+
+Defined once in `src/core/coords.js` and never deviated from:
+
+- `x` longitudinal, **positive rearward**, origin at the front-most axle centreline
+- `y` transverse, **positive right** of the direction of travel, origin on the centreline
+- `z` vertical, **positive up**, `z = 0` at the pavement surface
+
+Right-handed, millimetres. three.js is Y-up, so `(x,y,z)_eng → (y,z,x)_three`
+at the scene boundary only — a cyclic permutation, so handedness is preserved.
+Render coordinates never appear in data or exports.
+
+---
+
+## How to add a vehicle
+
+1. Pick the right file in `src/data/trucks/` — `light.json` (classes 1–3),
+   `single-unit.json` (4–7), `single-trailer.json` (8–10), `multi-trailer.json`
+   (11–13).
+2. Add a unit to its `units[]` array. Required: `schemaVersion`, `id`,
+   `domain`, `classification`, `axles[]`, `axleGroups[]`, `sources[]`.
+3. **Every axle needs a `source` string. Every load needs a `basis` string.**
+   The test suite fails the build otherwise — that is deliberate.
+4. The first axle must be at `x: 0`; axles must be ordered front to rear.
+5. If the vehicle claims federal legality, leave `federalBridgeFormula` unset
+   (classes ≥ 5 default to `"compliant"`) and the suite will check it over
+   every consecutive-axle subset. If it does not comply, say so with
+   `"permit"` or `"exempt"` rather than quietly excluding it.
+6. `npm test`.
+
+## How to add a tire
+
+- **Metric** (`315/80R22.5`), **passenger** (`LT245/75R16`) and **aircraft**
+  (`H44.5x16.5-21`, `1400x530R23`) sizes need nothing — the designation encodes
+  the dimensions and `src/core/tires.js` computes them.
+- **Inch-nominal** sizes (`11R22.5`) do not encode overall diameter, so they
+  need an entry in `src/data/tires.json` under `nominal`, with `sectionWidth`,
+  `overallDiameter`, a `source` and a `confidence`. A size that is absent is
+  reported as unknown; it is never guessed.
+- Add it to `presets` too if it should appear in the UI pickers.
+
+---
+
+## Determinism
+
+`Math.random()` is not used anywhere. Every procedural detail draws from a
+seeded generator (`src/core/prng.js`) keyed on the project seed, which is shown
+in the UI and stored in the project file. Same seed and settings → identical
+render.
+
+---
+
+## Export
+
+| Output | Notes |
+|---|---|
+| PNG / PNG-transparent / JPEG | Re-rendered at full resolution. Above the GPU's `MAX_RENDERBUFFER_SIZE` / `MAX_TEXTURE_SIZE` the render is **tiled** and composited, so 600 dpi works on integrated graphics. A blank result raises an error instead of silently saving a black rectangle. |
+| **SVG** | Hybrid: shaded render embedded as a raster, all dimensions and labels kept **vector**. This is the format that survives journal production. |
+| **PDF** | Same hybrid composition. Self-contained writer — no external library, works offline. |
+| `footprint.csv` / `.json` | Contact patches with load, pressure, area and equivalent radius. |
+| Abaqus parameter table | Patch rectangles and pressures, with the assumptions stated in the header. Not a runnable deck — see `DECISIONS.md` §D11. |
+| `unit.json` | The full parametric definition, citations included. |
+| `.gear3d` | Unit + customizations + camera (all four modes) + lighting + annotations + seed. |
+| Gear matrix | N×M comparison sheet with shared camera, lighting and **shared scale**, so cells are genuinely comparable. |
+
+---
+
+## Keyboard
+
+| Key | Action |
+|---|---|
+| `V` then `1`–`4` | 3D / Plan / Side / Front |
+| `Esc` | Step out one isolation level |
+| `F` | Fit |
+| `Ctrl+Z` / `Ctrl+Y` | Undo / redo |
+| `Ctrl+S` | Save project |
+
+Click an axle in the viewport to isolate it; `Esc` steps back up.
+
+---
+
+## Provenance
+
+The app's central claim is that its dimensions are real engineering values.
+Every axle carries a citation and every load a stated basis, both visible in
+the properties panel. **`src/data/SOURCES.md` records the verification status
+of every number, including what could *not* be verified** — read it before
+using any output in a publication.
+
+`window.gear3d` exposes the live state so the resolved layout and patch table
+can be read straight from the console, without trusting the UI.
+
+---
+
+## Status
+
+**v1.0 ships M0–M6 plus M7** (contact patches and FEM export).
+
+Deferred, with reasons in `DECISIONS.md` §D9:
+
+- **Aircraft data library** — the code paths are complete and the domain is
+  supported throughout; no verified gear geometry could be obtained during the
+  build, and `SOURCES.md` §5 explains why shipping unverified values would have
+  been worse than shipping none.
+- Chassis silhouettes (the `unit` isolation level currently matches
+  `running-gear`), the 2×2 quad view, and glTF/OBJ scene export.
+
+## Documents
+
+- `DECISIONS.md` — every `[DECISION]`, and every deliberate deviation from the spec
+- `DESIGN.md` — token system, signature element, self-critique, accessibility
+- `ASSETS.md` — the contract for contributing higher-fidelity glTF meshes
+- `src/data/SOURCES.md` — citations and verification status

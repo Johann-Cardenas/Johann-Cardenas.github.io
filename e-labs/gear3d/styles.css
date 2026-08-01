@@ -1,0 +1,593 @@
+/* ============================================================
+   Gear3D — app styles
+   Prefix: g3-
+   ------------------------------------------------------------
+   DESIGN DIRECTION (see DESIGN.md for the full rationale)
+   Grounded in measurement instruments and aircraft technical
+   documentation: drafting film, gauge faces, ruled datum lines.
+
+   Six tokens carry the identity:
+     --g3-ink       deep slate, the drawn line
+     --g3-paper     drafting film, the ground
+     --g3-graphite  secondary text and inactive rules
+     --g3-rule      hairline separators
+     --g3-datum     teal, ties Gear3D to the rest of E-Labs
+     --g3-signal    instrument red-orange, the needle colour.
+                    Used ONLY for the live measurement and the
+                    current selection. Nothing decorative is ever
+                    this colour, so it always means "this one".
+
+   SIGNATURE ELEMENT: the datum tick. Every panel heading carries a
+   hairline rule that terminates in a short perpendicular tick, the
+   way an extension line terminates on a drawing. It is the same
+   mark the dimension engine draws in the viewport, so the panel
+   furniture and the figure share a vocabulary.
+
+   Numbers are everywhere in this app, so a tabular-figure face is
+   a functional requirement, not a stylistic one.
+   ============================================================ */
+
+:root {
+    --g3-datum: #18a9a8;
+    --g3-datum-hover: #14908f;
+    --g3-datum-glow: rgba(24, 169, 168, 0.28);
+    --g3-signal: #c8452a;
+    --g3-signal-soft: rgba(200, 69, 42, 0.12);
+    --g3-warn: #b8860b;
+    --g3-mono: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, 'Liberation Mono', monospace;
+    --g3-sans: ui-sans-serif, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --g3-rail: 264px;
+    --g3-rail-right: 288px;
+}
+
+[data-theme="light"] {
+    --g3-ink: #16202b;
+    --g3-paper: #ffffff;
+    --g3-surface: #f4f6f8;
+    --g3-surface-2: #e9edf1;
+    --g3-inset: #dfe5ea;
+    --g3-graphite: #5c6b7a;
+    --g3-muted: #8b98a5;
+    --g3-rule: #ccd5dd;
+    --g3-rule-strong: #adb9c4;
+    --g3-shadow: 0 1px 2px rgba(22, 32, 43, .07), 0 6px 16px rgba(22, 32, 43, .06);
+}
+
+[data-theme="dark"] {
+    --g3-datum: #22d3d1;
+    --g3-datum-hover: #18a9a8;
+    --g3-signal: #e46a4a;
+    --g3-signal-soft: rgba(228, 106, 74, 0.16);
+    --g3-warn: #d9a441;
+    --g3-ink: #e8edf2;
+    --g3-paper: #0f151c;
+    --g3-surface: #161e27;
+    --g3-surface-2: #1d2732;
+    --g3-inset: #121a22;
+    --g3-graphite: #9fb0be;
+    --g3-muted: #6d7f8d;
+    --g3-rule: #2b3846;
+    --g3-rule-strong: #3d4d5e;
+    --g3-shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 22px rgba(0, 0, 0, .3);
+}
+
+/* ==================== SHELL ==================== */
+.g3-app {
+    max-width: 1620px;
+    margin: 0 auto;
+    padding: 0 1rem 2rem;
+    font-family: var(--g3-sans);
+}
+
+.g3-app .app-header { padding: 1.25rem 0 .75rem; }
+
+.g3-app .header-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-bottom: .75rem;
+}
+
+.g3-app .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .45rem 1rem;
+    border: 1px solid var(--g3-rule);
+    border-radius: 6px;
+    background: var(--g3-surface);
+    color: var(--g3-graphite);
+    font-size: .85rem;
+    text-decoration: none;
+    transition: all .22s ease;
+}
+.g3-app .back-btn:hover { color: var(--g3-datum); border-color: var(--g3-datum); transform: translateX(-3px); }
+
+.g3-app .header-badges { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+.g3-app .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .3rem .8rem;
+    border: 1px solid var(--g3-rule);
+    border-radius: 3px;
+    background: var(--g3-surface);
+    color: var(--g3-graphite);
+    font-size: .74rem;
+    letter-spacing: .02em;
+    font-variant-numeric: tabular-nums;
+}
+.g3-app .header-badge i { color: var(--g3-datum); }
+
+.g3-app .header-content h1 {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin: 0 0 .2rem;
+    font-size: 2rem;
+    letter-spacing: .01em;
+    color: var(--g3-ink);
+}
+
+.g3-app .header-content h1 .g3-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px; height: 44px;
+    border-radius: 8px;
+    background: var(--g3-ink);
+    color: var(--g3-paper);
+    font-size: 1.25rem;
+    border: 1px solid var(--g3-rule-strong);
+}
+[data-theme="dark"] .g3-app .header-content h1 .g3-icon { background: var(--g3-surface-2); color: var(--g3-datum); }
+
+.g3-app .header-content h1 .highlight { color: var(--g3-datum); }
+.g3-app .header-content > p { margin: 0; color: var(--g3-graphite); font-size: .96rem; max-width: 86ch; }
+
+/* ==================== STUDIO GRID ==================== */
+.g3-studio {
+    display: grid;
+    grid-template-columns: var(--g3-rail) minmax(0, 1fr) var(--g3-rail-right);
+    grid-template-rows: auto minmax(460px, 66vh) auto;
+    grid-template-areas:
+        "toolbar toolbar  toolbar"
+        "left    viewport right"
+        "status  status   status";
+    gap: .6rem;
+    margin-top: 1rem;
+}
+
+/* ==================== TOOLBAR ==================== */
+.g3-toolbar {
+    grid-area: toolbar;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex-wrap: wrap;
+    padding: .5rem .6rem;
+    background: var(--g3-surface);
+    border: 1px solid var(--g3-rule);
+    border-radius: 5px;
+}
+.g3-spacer { flex: 1 1 auto; }
+.g3-tool-sep { width: 1px; align-self: stretch; background: var(--g3-rule); margin: 0 .3rem; }
+
+.g3-viewtabs, .g3-unitsys {
+    display: inline-flex;
+    border: 1px solid var(--g3-rule);
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--g3-paper);
+}
+.g3-vtab, .g3-uswitch {
+    padding: .34rem .8rem;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    border: 0;
+    border-right: 1px solid var(--g3-rule);
+    background: transparent;
+    color: var(--g3-graphite);
+    cursor: pointer;
+    transition: background .16s ease, color .16s ease;
+}
+.g3-vtab:last-child, .g3-uswitch:last-child { border-right: 0; }
+.g3-vtab:hover, .g3-uswitch:hover { background: var(--g3-surface-2); color: var(--g3-ink); }
+.g3-vtab.is-active, .g3-uswitch.is-active { background: var(--g3-ink); color: var(--g3-paper); }
+[data-theme="dark"] .g3-vtab.is-active,
+[data-theme="dark"] .g3-uswitch.is-active { background: var(--g3-datum); color: #06222a; }
+
+/* ==================== PANELS ==================== */
+.g3-panel {
+    background: var(--g3-surface);
+    border: 1px solid var(--g3-rule);
+    border-radius: 5px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.g3-left { grid-area: left; }
+.g3-right { grid-area: right; display: flex; flex-direction: column; }
+
+.g3-panel details { border-bottom: 1px solid var(--g3-rule); }
+.g3-panel details:last-child { border-bottom: 0; }
+
+.g3-panel summary {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .58rem .7rem .58rem 1.55rem;
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--g3-graphite);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+}
+.g3-panel summary::-webkit-details-marker { display: none; }
+.g3-panel summary i { color: var(--g3-datum); font-size: .82rem; width: 1em; }
+.g3-panel summary:hover { color: var(--g3-ink); background: var(--g3-surface-2); }
+
+/* Signature element: the datum tick. A hairline rule terminating in a
+   perpendicular tick, exactly as an extension line terminates on a drawing. */
+.g3-panel summary::before {
+    content: "";
+    position: absolute;
+    left: .55rem; top: 50%;
+    width: 8px; height: 1px;
+    background: var(--g3-rule-strong);
+    transition: background .18s ease, width .18s ease;
+}
+.g3-panel summary::after {
+    content: "";
+    position: absolute;
+    left: .55rem; top: calc(50% - 3px);
+    width: 1px; height: 7px;
+    background: var(--g3-rule-strong);
+    transition: background .18s ease;
+}
+.g3-panel details[open] > summary::before,
+.g3-panel details[open] > summary::after { background: var(--g3-datum); }
+
+.g3-group { padding: .25rem .7rem .8rem; }
+
+.g3-field {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .42rem;
+}
+.g3-field label {
+    flex: 0 0 74px;
+    font-size: .76rem;
+    color: var(--g3-graphite);
+    margin: 0;
+}
+.g3-field label.g3-label--wide { flex-basis: 46px; }
+.g3-field--num .g3-range { flex: 1 1 auto; min-width: 0; }
+
+.g3-select, .g3-num, .g3-text, .g3-textarea {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: .32rem .45rem;
+    font-size: .8rem;
+    font-family: inherit;
+    color: var(--g3-ink);
+    background: var(--g3-paper);
+    border: 1px solid var(--g3-rule);
+    border-radius: 3px;
+}
+.g3-num { font-family: var(--g3-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.g3-num--tiny { flex: 0 0 62px; }
+.g3-textarea { width: 100%; min-height: 62px; resize: vertical; margin-top: .3rem; }
+
+.g3-select:focus-visible, .g3-num:focus-visible, .g3-text:focus-visible,
+.g3-textarea:focus-visible, .g3-range:focus-visible, .g3-color:focus-visible {
+    outline: 2px solid var(--g3-datum);
+    outline-offset: 1px;
+}
+
+.g3-unit { font-size: .7rem; color: var(--g3-muted); flex: 0 0 auto; font-family: var(--g3-mono); }
+
+.g3-range { -webkit-appearance: none; appearance: none; height: 3px; background: var(--g3-inset); border-radius: 2px; }
+.g3-range::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 13px; height: 13px; border-radius: 50%;
+    background: var(--g3-paper); border: 2px solid var(--g3-datum); cursor: pointer;
+}
+.g3-range::-moz-range-thumb {
+    width: 13px; height: 13px; border-radius: 50%;
+    background: var(--g3-paper); border: 2px solid var(--g3-datum); cursor: pointer;
+}
+
+.g3-color { flex: 0 0 40px; height: 26px; padding: 1px; background: var(--g3-paper); border: 1px solid var(--g3-rule); border-radius: 3px; }
+
+.g3-check { display: inline-flex !important; align-items: center; gap: .45rem; flex: 1 1 auto !important; cursor: pointer; font-size: .78rem; color: var(--g3-ink) !important; }
+.g3-check input { margin: 0; accent-color: var(--g3-datum); }
+
+.g3-rule { border: 0; border-top: 1px solid var(--g3-rule); margin: .6rem 0; }
+
+.g3-note {
+    margin: .5rem 0 0;
+    font-size: .7rem;
+    line-height: 1.5;
+    color: var(--g3-muted);
+    border-left: 2px solid var(--g3-rule);
+    padding-left: .5rem;
+}
+.g3-note kbd {
+    font-family: var(--g3-mono); font-size: .92em;
+    background: var(--g3-inset); border: 1px solid var(--g3-rule);
+    border-radius: 3px; padding: 0 .25em;
+}
+
+.g3-meta {
+    font-size: .72rem;
+    line-height: 1.55;
+    color: var(--g3-graphite);
+    margin-top: .45rem;
+    padding-top: .45rem;
+    border-top: 1px dashed var(--g3-rule);
+}
+.g3-meta dl { display: grid; grid-template-columns: auto 1fr; gap: .1rem .6rem; margin: 0; }
+.g3-meta dt { color: var(--g3-muted); }
+.g3-meta dd { margin: 0; font-family: var(--g3-mono); font-variant-numeric: tabular-nums; color: var(--g3-ink); }
+
+.g3-report {
+    margin-top: .5rem;
+    padding: .45rem .55rem;
+    font-size: .71rem;
+    line-height: 1.55;
+    background: var(--g3-inset);
+    border: 1px solid var(--g3-rule);
+    border-radius: 3px;
+    font-variant-numeric: tabular-nums;
+}
+.g3-report strong { color: var(--g3-ink); }
+.g3-report .g3-delta-up { color: var(--g3-signal); }
+.g3-report .g3-delta-down { color: var(--g3-datum); }
+
+.g3-badge-modified {
+    display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+    margin-top: .5rem; padding: .4rem .5rem;
+    font-size: .71rem;
+    color: var(--g3-ink);
+    background: var(--g3-signal-soft);
+    border-left: 2px solid var(--g3-signal);
+    border-radius: 0 3px 3px 0;
+}
+.g3-badge-modified i { color: var(--g3-signal); }
+
+.g3-mini-row { display: flex; gap: .35rem; flex-wrap: wrap; margin-top: .5rem; }
+
+/* ==================== BUTTONS ==================== */
+.g3-btn, .g3-linkbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: .38rem;
+    padding: .34rem .7rem;
+    font-size: .78rem;
+    font-family: inherit;
+    font-weight: 500;
+    color: var(--g3-ink);
+    background: var(--g3-paper);
+    border: 1px solid var(--g3-rule);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all .16s ease;
+}
+.g3-btn:hover { border-color: var(--g3-datum); color: var(--g3-datum); }
+.g3-btn:disabled { opacity: .45; cursor: not-allowed; }
+.g3-btn--primary { background: var(--g3-datum); border-color: var(--g3-datum); color: #fff; }
+.g3-btn--primary:hover { background: var(--g3-datum-hover); border-color: var(--g3-datum-hover); color: #fff; }
+.g3-btn--danger:hover { border-color: var(--g3-signal); color: var(--g3-signal); }
+
+.g3-linkbtn {
+    padding: 0; border: 0; background: none;
+    color: var(--g3-signal); text-decoration: underline; font-size: .71rem;
+}
+.g3-linkbtn:hover { color: var(--g3-ink); }
+
+/* ==================== VIEWPORT ==================== */
+.g3-viewport {
+    grid-area: viewport;
+    position: relative;
+    background: var(--g3-surface);
+    border: 1px solid var(--g3-rule);
+    border-radius: 5px;
+    overflow: hidden;
+    min-height: 0;
+}
+#g3-canvas { display: block; width: 100%; height: 100%; }
+
+.g3-overlay {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    color: var(--g3-ink);
+    font-family: var(--g3-sans);
+    font-variant-numeric: tabular-nums;
+}
+.g3-dim.is-highlighted .g3-dim-label { font-weight: 700; }
+
+.g3-hud, .g3-hud-right, .g3-axisbadge {
+    position: absolute;
+    padding: .28rem .55rem;
+    font-size: .68rem;
+    font-family: var(--g3-mono);
+    color: var(--g3-graphite);
+    background: color-mix(in srgb, var(--g3-paper) 86%, transparent);
+    border: 1px solid var(--g3-rule);
+    border-radius: 3px;
+    pointer-events: none;
+}
+.g3-hud { top: .5rem; left: .5rem; }
+.g3-hud-right { top: .5rem; right: .5rem; }
+.g3-axisbadge { bottom: .5rem; right: .5rem; line-height: 1.5; }
+.g3-axisbadge b { color: var(--g3-datum); }
+
+.g3-progress {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .7rem;
+    background: color-mix(in srgb, var(--g3-paper) 82%, transparent);
+    backdrop-filter: blur(2px);
+}
+.g3-progress-bar { width: 220px; height: 3px; background: var(--g3-inset); border-radius: 2px; overflow: hidden; }
+.g3-progress-bar span { display: block; height: 100%; width: 0; background: var(--g3-datum); transition: width .2s ease; }
+.g3-progress-label { font-size: .74rem; color: var(--g3-graphite); font-family: var(--g3-mono); }
+
+/* ==================== TREE ==================== */
+.g3-tree-head {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .58rem .7rem;
+    border-bottom: 1px solid var(--g3-rule);
+}
+.g3-tree-head h3 {
+    margin: 0; font-size: .74rem; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--g3-graphite);
+    display: flex; align-items: center; gap: .5rem;
+}
+.g3-tree-head i { color: var(--g3-datum); }
+.g3-tree-total { margin-left: auto; font-size: .7rem; color: var(--g3-muted); font-family: var(--g3-mono); }
+
+.g3-tree { flex: 1 1 auto; overflow-y: auto; padding: .35rem 0; min-height: 120px; }
+
+.g3-node {
+    display: flex; align-items: center; gap: .4rem;
+    padding: .22rem .7rem;
+    font-size: .76rem;
+    color: var(--g3-ink);
+    cursor: pointer;
+    border-left: 2px solid transparent;
+}
+.g3-node:hover { background: var(--g3-surface-2); }
+.g3-node.is-selected { background: var(--g3-signal-soft); border-left-color: var(--g3-signal); }
+.g3-node.is-dim { color: var(--g3-muted); }
+.g3-node .g3-node-tag {
+    font-family: var(--g3-mono); font-size: .68rem;
+    color: var(--g3-muted); margin-left: auto;
+    font-variant-numeric: tabular-nums;
+}
+.g3-node[data-depth="1"] { padding-left: 1.5rem; }
+.g3-node[data-depth="2"] { padding-left: 2.4rem; }
+.g3-node[data-depth="3"] { padding-left: 3.3rem; }
+.g3-node-iso {
+    border: 0; background: none; color: var(--g3-muted);
+    cursor: pointer; padding: 0 .2rem; font-size: .7rem;
+}
+.g3-node-iso:hover { color: var(--g3-datum); }
+
+.g3-props { border-top: 1px solid var(--g3-rule); padding: .55rem .7rem .8rem; max-height: 42%; overflow-y: auto; }
+.g3-props h4 {
+    margin: 0 0 .45rem; font-size: .72rem; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--g3-graphite);
+}
+.g3-source {
+    margin-top: .55rem; padding-top: .5rem;
+    border-top: 1px dashed var(--g3-rule);
+    font-size: .68rem; line-height: 1.55; color: var(--g3-muted);
+}
+.g3-source b { color: var(--g3-graphite); display: block; margin-bottom: .15rem; letter-spacing: .06em; text-transform: uppercase; font-size: .64rem; }
+
+/* ==================== STATUS ==================== */
+.g3-status {
+    grid-area: status;
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+    padding: .35rem .7rem;
+    font-size: .71rem;
+    color: var(--g3-graphite);
+    background: var(--g3-surface);
+    border: 1px solid var(--g3-rule);
+    border-radius: 5px;
+}
+.g3-status-sep { width: 1px; height: 12px; background: var(--g3-rule); }
+.g3-mono { font-family: var(--g3-mono); font-variant-numeric: tabular-nums; }
+
+/* ==================== TOASTS ==================== */
+.g3-toast-wrap {
+    position: fixed; bottom: 1.1rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; gap: .4rem; z-index: 9999;
+    pointer-events: none;
+}
+.g3-toast {
+    padding: .5rem .9rem;
+    font-size: .8rem;
+    color: var(--g3-paper);
+    background: var(--g3-ink);
+    border-radius: 4px;
+    box-shadow: var(--g3-shadow);
+    max-width: 60ch;
+    animation: g3-toast-in .22s ease;
+}
+.g3-toast--error { background: var(--g3-signal); }
+.g3-toast--warn { background: var(--g3-warn); color: #1a1405; }
+@keyframes g3-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ==================== RESPONSIVE ==================== */
+@media screen and (max-width: 1280px) {
+    .g3-studio {
+        grid-template-columns: 232px minmax(0, 1fr) 244px;
+    }
+}
+
+@media screen and (max-width: 980px) {
+    .g3-studio {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto minmax(380px, 56vh) auto auto;
+        grid-template-areas:
+            "toolbar"
+            "left"
+            "viewport"
+            "right"
+            "status";
+    }
+    .g3-panel { max-height: 320px; }
+}
+
+/* ==================== REDUCED MOTION ==================== */
+@media (prefers-reduced-motion: reduce) {
+    .g3-app *, .g3-app *::before, .g3-app *::after {
+        animation-duration: .001ms !important;
+        transition-duration: .001ms !important;
+    }
+}
+
+/* ============================================================
+   SITE BUTTON OVERRIDES
+   ------------------------------------------------------------
+   The site-wide stylesheet styles bare <button> with a teal
+   background and `color: #fff !important`, plus a dark-mode
+   variant. Every button in this app is scoped under .Gear3D and
+   restated here so the app's controls are not repainted by it.
+   Any NEW button class added to this app needs a line here too.
+   ============================================================ */
+body.Gear3D .g3-btn,
+body.Gear3D .g3-vtab,
+body.Gear3D .g3-uswitch,
+body.Gear3D .g3-linkbtn,
+body.Gear3D .g3-node-iso {
+    text-transform: none !important;
+    letter-spacing: normal;
+    box-shadow: none !important;
+    height: auto !important;
+    line-height: 1.4 !important;
+    text-decoration: none;
+}
+body.Gear3D .g3-btn { color: var(--g3-ink) !important; background: var(--g3-paper) !important; }
+body.Gear3D .g3-btn:hover { color: var(--g3-datum) !important; }
+body.Gear3D .g3-btn--primary,
+body.Gear3D .g3-btn--primary:hover { color: #fff !important; background: var(--g3-datum) !important; }
+body.Gear3D .g3-vtab,
+body.Gear3D .g3-uswitch { color: var(--g3-graphite) !important; background: transparent !important; }
+body.Gear3D .g3-vtab.is-active,
+body.Gear3D .g3-uswitch.is-active { color: var(--g3-paper) !important; background: var(--g3-ink) !important; }
+[data-theme="dark"] body.Gear3D .g3-vtab.is-active,
+[data-theme="dark"] body.Gear3D .g3-uswitch.is-active { color: #06222a !important; background: var(--g3-datum) !important; }
+body.Gear3D .g3-linkbtn { color: var(--g3-signal) !important; background: none !important; text-decoration: underline; }
+body.Gear3D .g3-node-iso { color: var(--g3-muted) !important; background: none !important; }
+body.Gear3D .g3-node-iso:hover { color: var(--g3-datum) !important; }

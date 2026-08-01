@@ -1,0 +1,440 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <script>
+        (function () {
+            // Follow the global site theme; default to dark like other E-Labs apps
+            var theme = localStorage.getItem('theme-preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme-preference', theme);
+        })();
+    </script>
+    <title>Gear3D | Truck Axle &amp; Aircraft Landing Gear Visualizer</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+    <!-- Social Sharing: Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Gear3D | Truck Axle &amp; Aircraft Landing Gear Visualizer">
+    <meta property="og:description" content="Deterministic, true-to-scale 3D visualizer of truck axle configurations and aircraft landing gear, with a measurable dimension engine and machine-readable contact-patch export for finite-element pre-processing.">
+    <meta property="og:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_Gear3D.webp">
+    <meta property="og:url" content="https://www.johanncardenas.com/e-labs/gear3d/index.html">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Gear3D | Truck Axle &amp; Aircraft Landing Gear Visualizer">
+    <meta name="twitter:description" content="True-to-scale 3D gear visualizer with publication-quality figure and FEM footprint export.">
+    <meta name="twitter:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_Gear3D.webp">
+
+    <link rel="stylesheet" href="../../assets/css/main.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="canonical" href="https://www.johanncardenas.com/e-labs/gear3d/">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body class="Gear3D is-preload">
+    <div id="page-wrapper">
+
+        <!-- Header -->
+        <section id="header">
+            <h1><a href="../../index.html">Johann Cardenas</a></h1>
+            <nav id="nav">
+                <ul>
+                    <li><a href="../../index.html">Home</a></li>
+                    <li>
+                        <a href="../../Projects.html">Projects</a>
+                        <ul>
+                            <li><a href="../../projects/ACRP_FEM.html">ME Overload Permitting for Airfields</a></li>
+                            <li><a href="../../projects/EV_Trucks.html">Impact of HDEVs on Flexible Pavements</a></li>
+                            <li><a href="../../projects/FAA_Data.html">ML-Based Models for Airfield Pavements</a></li>
+                            <li><a href="../../projects/MS_Thesis.html">Impact of DWL on Flexible Pavements</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="../../Publications.html">Publications</a></li>
+                    <li><a href="../../Resume.html">Resume</a></li>
+                    <li><a href="../../Blog.html">Blog</a></li>
+                    <li><a href="../../News.html">News</a></li>
+                    <li class="current">
+                        <a href="../../E-Labs.html">E-Labs</a>
+                        <ul>
+                            <li><a href="../../e-labs/gear3d/index.html">Gear3D</a></li>
+                            <li><a href="../../e-labs/leaps/index.html">LEAPS</a></li>
+                            <li><a href="../../e-labs/cross-section-studio/index.html">Cross-Section Studio</a></li>
+                            <li><a href="../../e-labs/finite-elemented/index.html">Finite-Elemented</a></li>
+                            <li><a href="../../e-labs/frontier/index.html">Frontier</a></li>
+                            <li><a href="https://curly-adventure-y724nlw.pages.github.io/apps/aircrafter/" target="_blank" rel="noopener">AirCrafter</a></li>
+                            <li><a href="https://curly-adventure-y724nlw.pages.github.io/apps/asphera/" target="_blank" rel="noopener">Asphera</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </section>
+
+        <!-- Main App -->
+        <section id="main">
+            <div class="g3-app" id="main-content" tabindex="-1">
+
+                <!-- App Header -->
+                <div class="app-header">
+                    <div class="header-nav">
+                        <a href="../../E-Labs.html" class="back-btn">
+                            <i class="fas fa-arrow-left"></i> Back to E-Labs
+                        </a>
+                        <div class="header-badges">
+                            <span class="header-badge"><i class="fas fa-truck-moving"></i> <span id="g3-unit-count">—</span> units</span>
+                            <span class="header-badge"><i class="fas fa-ruler-combined"></i> mm · true scale</span>
+                            <span class="header-badge"><i class="fas fa-code-branch"></i> v1.0</span>
+                        </div>
+                    </div>
+                    <div class="header-content">
+                        <h1>
+                            <span class="g3-icon"><i class="fas fa-dharmachakra"></i></span>
+                            <span>Gear<span class="highlight">3D</span></span>
+                        </h1>
+                        <p>Truck axle configurations and aircraft landing gear — deterministic, true to scale, measurable, and exportable as footprint coordinates for finite-element pre-processing.</p>
+                    </div>
+                </div>
+
+                <!-- Studio -->
+                <div class="g3-studio">
+
+                    <!-- Toolbar -->
+                    <div class="g3-toolbar" role="toolbar" aria-label="Main toolbar">
+                        <div class="g3-viewtabs" role="tablist" aria-label="View mode">
+                            <button class="g3-vtab is-active" data-view="3d" role="tab" aria-selected="true" title="Free 3D view (V then 1)">3D</button>
+                            <button class="g3-vtab" data-view="plan" role="tab" aria-selected="false" title="Plan view — locked (V then 2)">Plan</button>
+                            <button class="g3-vtab" data-view="side" role="tab" aria-selected="false" title="Side view — locked (V then 3)">Side</button>
+                            <button class="g3-vtab" data-view="front" role="tab" aria-selected="false" title="Front view — locked (V then 4)">Front</button>
+                        </div>
+                        <span class="g3-tool-sep"></span>
+                        <button id="g3-fit" class="g3-btn" title="Fit in view (F)"><i class="fas fa-expand"></i> Fit</button>
+                        <button id="g3-undo" class="g3-btn" title="Undo (Ctrl+Z)"><i class="fas fa-undo"></i></button>
+                        <button id="g3-redo" class="g3-btn" title="Redo (Ctrl+Y)"><i class="fas fa-redo"></i></button>
+                        <span class="g3-tool-sep"></span>
+                        <button id="g3-open" class="g3-btn" title="Open project (.gear3d)"><i class="fas fa-folder-open"></i> Open</button>
+                        <button id="g3-save" class="g3-btn" title="Save project (.gear3d)"><i class="fas fa-save"></i> Save</button>
+                        <input type="file" id="g3-file-input" accept=".gear3d,.json,application/json" hidden>
+                        <span class="g3-spacer"></span>
+                        <div class="g3-unitsys" role="group" aria-label="Display units">
+                            <button class="g3-uswitch is-active" data-units="SI" title="Millimetres, kilonewtons, kilopascals">SI</button>
+                            <button class="g3-uswitch" data-units="US" title="Inches, kips, psi">US</button>
+                        </div>
+                        <button id="g3-reset" class="g3-btn g3-btn--danger" title="Revert to the cited reference configuration"><i class="fas fa-rotate-left"></i> Revert</button>
+                        <button id="g3-export" class="g3-btn g3-btn--primary" title="Export figure"><i class="fas fa-camera"></i> Export</button>
+                    </div>
+
+                    <!-- Left rail -->
+                    <aside class="g3-panel g3-left" aria-label="Model and view controls">
+
+                        <details open>
+                            <summary><i class="fas fa-layer-group"></i> Unit</summary>
+                            <div class="g3-group">
+                                <div class="g3-field">
+                                    <label for="g3-domain">Domain</label>
+                                    <select id="g3-domain" class="g3-select">
+                                        <option value="truck">Truck</option>
+                                        <option value="aircraft">Aircraft</option>
+                                    </select>
+                                </div>
+                                <div class="g3-field">
+                                    <label for="g3-category">Class</label>
+                                    <select id="g3-category" class="g3-select"></select>
+                                </div>
+                                <div class="g3-field">
+                                    <label for="g3-unit">Model</label>
+                                    <select id="g3-unit" class="g3-select"></select>
+                                </div>
+                                <div id="g3-unit-meta" class="g3-meta"></div>
+                                <div id="g3-modified-badge" class="g3-badge-modified" hidden>
+                                    <i class="fas fa-pen"></i>
+                                    <span></span>
+                                    <button id="g3-revert-inline" class="g3-linkbtn">Revert to reference</button>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details open>
+                            <summary><i class="fas fa-crosshairs"></i> Isolation</summary>
+                            <div class="g3-group">
+                                <div class="g3-field">
+                                    <label for="g3-isolation">Show</label>
+                                    <select id="g3-isolation" class="g3-select"></select>
+                                </div>
+                                <div class="g3-field">
+                                    <label class="g3-check" for="g3-ghost">
+                                        <input type="checkbox" id="g3-ghost"> Ghost hidden parts
+                                    </label>
+                                </div>
+                                <p class="g3-note">Click an axle in the viewport to isolate it. <kbd>Esc</kbd> steps back one level.</p>
+                            </div>
+                        </details>
+
+                        <details>
+                            <summary><i class="fas fa-sliders-h"></i> Configuration</summary>
+                            <div class="g3-group" id="g3-config-group">
+                                <div class="g3-field">
+                                    <label for="g3-wbt">Wide-base</label>
+                                    <select id="g3-wbt" class="g3-select">
+                                        <option value="">Swap selected axle to…</option>
+                                        <option value="445/50R22.5">445/50R22.5</option>
+                                        <option value="455/55R22.5">455/55R22.5</option>
+                                        <option value="425/65R22.5">425/65R22.5</option>
+                                    </select>
+                                </div>
+                                <div id="g3-wbt-report" class="g3-report" hidden></div>
+                                <p class="g3-note">Select a dual-tire axle in the tree, then swap it. The outer tire edge is held so the vehicle's overall width does not change.</p>
+                            </div>
+                        </details>
+
+                        <details open>
+                            <summary><i class="fas fa-ruler-combined"></i> Dimensions</summary>
+                            <div class="g3-group">
+                                <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="longitudinal" checked> Longitudinal</label></div>
+                                <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="transverse" checked> Transverse</label></div>
+                                <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="vertical"> Vertical</label></div>
+                                <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="aircraft"> Aircraft gear</label></div>
+                                <hr class="g3-rule">
+                                <div class="g3-field">
+                                    <label for="g3-precision">Decimals</label>
+                                    <select id="g3-precision" class="g3-select">
+                                        <option value="0" selected>0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                    </select>
+                                </div>
+                                <div class="g3-field"><label class="g3-check" for="g3-dual-units"><input type="checkbox" id="g3-dual-units"> Show both units</label></div>
+                                <div class="g3-field"><label class="g3-check" for="g3-callouts"><input type="checkbox" id="g3-callouts"> Axle callouts</label></div>
+                                <div class="g3-field"><label class="g3-check" for="g3-scalebar"><input type="checkbox" id="g3-scalebar" checked> Scale bar</label></div>
+                            </div>
+                        </details>
+
+                        <details>
+                            <summary><i class="fas fa-shoe-prints"></i> Contact patches</summary>
+                            <div class="g3-group">
+                                <div class="g3-field">
+                                    <label class="g3-check" for="g3-show-patches"><input type="checkbox" id="g3-show-patches"> Draw footprints</label>
+                                </div>
+                                <div class="g3-field">
+                                    <label for="g3-patch-model">Model</label>
+                                    <select id="g3-patch-model" class="g3-select">
+                                        <option value="rectangular">A — rectangular</option>
+                                        <option value="huang">B — Huang (semicircular ends)</option>
+                                        <option value="elliptical">C — elliptical</option>
+                                    </select>
+                                </div>
+                                <div class="g3-field">
+                                    <label for="g3-inflation">Inflation</label>
+                                    <input type="number" id="g3-inflation" class="g3-num" min="200" max="2500" step="5" value="827">
+                                    <span class="g3-unit">kPa</span>
+                                </div>
+                                <div id="g3-patch-summary" class="g3-report"></div>
+                                <div class="g3-mini-row">
+                                    <button id="g3-exp-csv" class="g3-btn"><i class="fas fa-file-csv"></i> footprint.csv</button>
+                                    <button id="g3-exp-fem" class="g3-btn"><i class="fas fa-cubes"></i> FEM export</button>
+                                </div>
+                                <p class="g3-note">Contact pressure is taken equal to inflation pressure and uniform over the patch. Both are idealisations — the export header states them in full.</p>
+                            </div>
+                        </details>
+
+                        <details>
+                            <summary><i class="fas fa-video"></i> Camera</summary>
+                            <div class="g3-group">
+                                <div class="g3-field">
+                                    <label for="g3-proj">Projection</label>
+                                    <select id="g3-proj" class="g3-select">
+                                        <option value="ortho">Orthographic</option>
+                                        <option value="persp">Perspective</option>
+                                    </select>
+                                </div>
+                                <div class="g3-field g3-field--num">
+                                    <label for="g3-cam-az">Azimuth</label>
+                                    <input type="range" id="g3-cam-az" class="g3-range" min="-180" max="180" step="1" value="-30">
+                                    <input type="number" id="g3-cam-az-n" class="g3-num g3-num--tiny" min="-180" max="180" step="1" value="-30">
+                                </div>
+                                <div class="g3-field g3-field--num">
+                                    <label for="g3-cam-el">Elevation</label>
+                                    <input type="range" id="g3-cam-el" class="g3-range" min="-89" max="89" step="0.5" value="20">
+                                    <input type="number" id="g3-cam-el-n" class="g3-num g3-num--tiny" min="-89" max="89" step="0.5" value="20">
+                                </div>
+                                <div class="g3-mini-row" id="g3-presets"></div>
+                            </div>
+                        </details>
+
+                        <details>
+                            <summary><i class="fas fa-lightbulb"></i> Lighting</summary>
+                            <div class="g3-group">
+                                <div class="g3-field">
+                                    <label for="g3-light-preset">Preset</label>
+                                    <select id="g3-light-preset" class="g3-select">
+                                        <option value="studio">Studio</option>
+                                        <option value="daylight">Daylight</option>
+                                        <option value="softbox">Softbox</option>
+                                        <option value="threepoint">Three-point</option>
+                                    </select>
+                                </div>
+                                <div class="g3-field g3-field--num">
+                                    <label for="g3-light-key">Key</label>
+                                    <input type="range" id="g3-light-key" class="g3-range" min="0" max="6" step="0.1">
+                                    <input type="number" id="g3-light-key-n" class="g3-num g3-num--tiny" min="0" max="6" step="0.1">
+                                </div>
+                                <div class="g3-field g3-field--num">
+                                    <label for="g3-light-amb">Ambient</label>
+                                    <input type="range" id="g3-light-amb" class="g3-range" min="0" max="3" step="0.05">
+                                    <input type="number" id="g3-light-amb-n" class="g3-num g3-num--tiny" min="0" max="3" step="0.05">
+                                </div>
+                                <div class="g3-field g3-field--num">
+                                    <label for="g3-light-az">Light az.</label>
+                                    <input type="range" id="g3-light-az" class="g3-range" min="-180" max="180" step="1">
+                                    <input type="number" id="g3-light-az-n" class="g3-num g3-num--tiny" min="-180" max="180" step="1">
+                                </div>
+                                <div class="g3-field g3-field--num">
+                                    <label for="g3-light-el">Light el.</label>
+                                    <input type="range" id="g3-light-el" class="g3-range" min="5" max="88" step="1">
+                                    <input type="number" id="g3-light-el-n" class="g3-num g3-num--tiny" min="5" max="88" step="1">
+                                </div>
+                                <div class="g3-field g3-field--num">
+                                    <label for="g3-shadow-op">Shadow</label>
+                                    <input type="range" id="g3-shadow-op" class="g3-range" min="0" max="1" step="0.02">
+                                    <input type="number" id="g3-shadow-op-n" class="g3-num g3-num--tiny" min="0" max="1" step="0.02">
+                                </div>
+                                <div class="g3-field g3-field--num">
+                                    <label for="g3-shadow-soft">Softness</label>
+                                    <input type="range" id="g3-shadow-soft" class="g3-range" min="0" max="12" step="0.5">
+                                    <input type="number" id="g3-shadow-soft-n" class="g3-num g3-num--tiny" min="0" max="12" step="0.5">
+                                </div>
+                            </div>
+                        </details>
+
+                        <details>
+                            <summary><i class="fas fa-fill-drip"></i> Background</summary>
+                            <div class="g3-group">
+                                <div class="g3-field">
+                                    <label for="g3-bg-mode">Mode</label>
+                                    <select id="g3-bg-mode" class="g3-select">
+                                        <option value="white">Publication white</option>
+                                        <option value="color">Custom colour</option>
+                                        <option value="transparent">Transparent</option>
+                                    </select>
+                                </div>
+                                <div class="g3-field" id="g3-bg-color-field">
+                                    <label for="g3-bg-color">Colour</label>
+                                    <input type="color" id="g3-bg-color" class="g3-color" value="#eef1f4">
+                                </div>
+                            </div>
+                        </details>
+
+                        <details>
+                            <summary><i class="fas fa-file-export"></i> Export</summary>
+                            <div class="g3-group">
+                                <div class="g3-field">
+                                    <label for="g3-exp-format">Format</label>
+                                    <select id="g3-exp-format" class="g3-select">
+                                        <option value="png">PNG</option>
+                                        <option value="png-alpha">PNG (transparent)</option>
+                                        <option value="jpeg">JPEG</option>
+                                        <option value="svg">SVG (vector annotations)</option>
+                                        <option value="pdf">PDF (vector annotations)</option>
+                                    </select>
+                                </div>
+                                <div class="g3-field">
+                                    <label for="g3-exp-size">Resolution</label>
+                                    <select id="g3-exp-size" class="g3-select"></select>
+                                </div>
+                                <div class="g3-field" id="g3-exp-custom" hidden>
+                                    <label>W × H</label>
+                                    <input type="number" id="g3-exp-w" class="g3-num g3-num--tiny" min="256" max="16384" value="2400">
+                                    <input type="number" id="g3-exp-h" class="g3-num g3-num--tiny" min="256" max="16384" value="1800">
+                                </div>
+                                <div class="g3-mini-row">
+                                    <button id="g3-exp-unit" class="g3-btn"><i class="fas fa-file-code"></i> unit.json</button>
+                                    <button id="g3-exp-matrix" class="g3-btn"><i class="fas fa-th-large"></i> Gear matrix</button>
+                                </div>
+                                <p class="g3-note">Exports re-render at full resolution. Above the GPU's limit the render is tiled and composited. SVG and PDF keep dimensions and labels vector.</p>
+                            </div>
+                        </details>
+
+                        <details>
+                            <summary><i class="fas fa-file-signature"></i> Project info</summary>
+                            <div class="g3-group">
+                                <div class="g3-field"><label for="g3-meta-title" class="g3-label--wide">Title</label>
+                                    <input type="text" id="g3-meta-title" class="g3-text" placeholder="FHWA class 9 drive tandem">
+                                </div>
+                                <div class="g3-field"><label for="g3-meta-author" class="g3-label--wide">Author</label>
+                                    <input type="text" id="g3-meta-author" class="g3-text" placeholder="Author">
+                                </div>
+                                <div class="g3-field"><label for="g3-seed" class="g3-label--wide">Seed</label>
+                                    <input type="text" id="g3-seed" class="g3-text" value="gear3d-01">
+                                </div>
+                                <textarea id="g3-meta-notes" class="g3-textarea" placeholder="Notes stored in the project file…"></textarea>
+                                <p class="g3-note">The seed fixes every procedural detail. The same seed and settings always render the identical figure.</p>
+                            </div>
+                        </details>
+                    </aside>
+
+                    <!-- Viewport -->
+                    <div class="g3-viewport" id="g3-viewport">
+                        <canvas id="g3-canvas" aria-label="3D gear viewport"></canvas>
+                        <svg id="g3-overlay" class="g3-overlay" aria-hidden="true"></svg>
+                        <div class="g3-axisbadge" id="g3-axisbadge"></div>
+                        <div class="g3-hud" id="g3-hud">—</div>
+                        <div class="g3-hud-right" id="g3-hud-right">orbit: drag · zoom: wheel · pan: right-drag · click an axle to isolate</div>
+                        <div class="g3-progress" id="g3-progress" hidden><div class="g3-progress-bar"><span></span></div><span class="g3-progress-label"></span></div>
+                    </div>
+
+                    <!-- Right rail -->
+                    <aside class="g3-panel g3-right" aria-label="Structure and properties">
+                        <div class="g3-tree-head">
+                            <h3><i class="fas fa-sitemap"></i> Structure</h3>
+                            <span class="g3-tree-total" id="g3-tree-total"></span>
+                        </div>
+                        <div class="g3-tree" id="g3-tree" role="tree" aria-label="Unit structure"></div>
+                        <div class="g3-props" id="g3-props">
+                            <p class="g3-note">Select an axle to edit its geometry. Every value is a real engineering dimension; editing one marks the unit as modified.</p>
+                        </div>
+                    </aside>
+
+                    <!-- Status strip -->
+                    <div class="g3-status" id="g3-status">
+                        <span class="g3-status-item" id="g3-status-iso">—</span>
+                        <span class="g3-status-sep"></span>
+                        <span class="g3-status-item" id="g3-status-sel">No selection</span>
+                        <span class="g3-spacer"></span>
+                        <span class="g3-status-item g3-mono" id="g3-status-coords">—</span>
+                        <span class="g3-status-sep"></span>
+                        <span class="g3-status-item g3-mono" id="g3-status-view">—</span>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <div id="footer-placeholder"></div>
+
+    </div>
+
+    <div class="g3-toast-wrap" id="g3-toast-wrap" role="status" aria-live="polite"></div>
+
+    <!-- App -->
+    <script type="module" src="main.js"></script>
+
+    <!-- Site scripts -->
+    <script src="../../assets/js/components.js"></script>
+    <script src="../../assets/js/jquery.min.js"></script>
+    <script src="../../assets/js/jquery.dropotron.min.js"></script>
+    <script src="../../assets/js/breakpoints.min.js"></script>
+    <script src="../../assets/js/util.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/theme-toggle.js"></script>
+    <script src="../../assets/js/back-to-top.js"></script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+{
+  "schemaVersion": "1.0",
+  "$comment": [
+    "FHWA Scheme F classes 4-7. Buses and single-unit trucks.",
+    "",
+    "Shared geometric bases used throughout this file:",
+    "  tandem axle spacing 1311 mm  = AASHTOWare Pavement ME default, 51.6 in",
+    "  tridem axle spacing 1250 mm  = AASHTOWare Pavement ME default, 49.2 in",
+    "  drive/trailer track  1829 mm = 72 in, the classic dual-wheel idealisation",
+    "  dual tire spacing     330 mm = 13 in (see data/SOURCES.md for the 12-13.5 in range)",
+    "Axle loads are the US federal statutory limits where the configuration is",
+    "load-limited; the basis field names the governing rule in each case."
+  ],
+  "units": [
+    {
+      "schemaVersion": "1.0",
+      "id": "fhwa-c04-transit-bus",
+      "domain": "truck",
+      "classification": { "scheme": "FHWA-Scheme-F", "class": 4, "label": "Buses" },
+      "designation": "2",
+      "bodyType": "transit bus",
+      "overallLength": 12190,
+      "federalBridgeFormula": "exempt",
+      "axles": [
+        {
+          "id": "A1", "role": "steer", "x": 0, "trackWidth": 2134,
+          "tireConfig": "STA", "tire": "12R22.5", "dualSpacing": null,
+          "load": { "value": 58.8, "unit": "kN", "basis": "6000 kg representative loaded front-axle mass for a 40 ft low-floor transit bus (one third of an 18 000 kg GVWR)." },
+          "liftable": false, "steerable": true,
+          "source": "Representative 40 ft (12 190 mm) low-floor transit bus. Wheelbase 7620 mm and steer track 2134 mm are typical of the type; overall width is within the 102 in (2591 mm) federal limit of 23 CFR 658.15. Confidence: medium — typical values, not a specific manufacturer's model."
+        },
+        {
+          "id": "A2", "role": "drive", "x": 7620, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "12R22.5", "dualSpacing": 330,
+          "load": { "value": 117.7, "unit": "kN", "basis": "12 000 kg representative loaded drive-axle mass. This exceeds the 20 000 lb (89 kN) federal single-axle limit; transit buses routinely do so and operate under statutory exemptions to the axle-weight limits." },
+          "liftable": false, "steerable": false,
+          "source": "Wheelbase 7620 mm (25 ft) from the steer axle, typical of a 40 ft transit bus. Track 1829 mm and dual spacing 330 mm per the shared bases noted in this file's header. Confidence: medium."
+        }
+      ],
+      "axleGroups": [
+        { "id": "G1", "type": "single", "axles": ["A1"], "spacing": null, "suspension": "air" },
+        { "id": "G2", "type": "single", "axles": ["A2"], "spacing": null, "suspension": "air" }
+      ],
+      "gvw": { "value": 18000, "unit": "kg", "basis": "Representative GVWR for a 40 ft low-floor transit bus." },
+      "notes": "FHWA class 4 also covers three-axle intercity coaches. The two-axle transit bus is the more common class 4 count in urban traffic streams.",
+      "sources": [
+        { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 4", "publisher": "FHWA", "note": "Class definition." },
+        { "id": "cfr-658", "title": "23 CFR 658 — Truck size and weight", "publisher": "U.S. Government", "note": "102 in width limit; 20 000 lb single-axle limit." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "fhwa-c05-su2",
+      "domain": "truck",
+      "classification": { "scheme": "FHWA-Scheme-F", "class": 5, "label": "Two-axle, six-tire single-unit trucks" },
+      "designation": "2",
+      "bodyType": "single-unit box truck",
+      "overallLength": 8230,
+      "axles": [
+        {
+          "id": "A1", "role": "steer", "x": 0, "trackWidth": 2032,
+          "tireConfig": "STA", "tire": "11R22.5", "dualSpacing": null,
+          "load": { "value": 44.5, "unit": "kN", "basis": "10 000 lb — representative loaded steer-axle load, below the 20 000 lb federal single-axle limit of 23 CFR 658.17." },
+          "liftable": false, "steerable": true,
+          "source": "Representative two-axle six-tire single-unit truck. Steer track 2032 mm (80 in) is typical of medium-duty practice and keeps the outside width within the 102 in (2591 mm) federal limit. Confidence: medium."
+        },
+        {
+          "id": "A2", "role": "drive", "x": 6100, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 89.0, "unit": "kN", "basis": "20 000 lb — the federal single-axle weight limit, 23 CFR 658.17." },
+          "liftable": false, "steerable": false,
+          "source": "Wheelbase 6100 mm (20 ft) from the steer axle, typical of a medium-duty box truck. Track 1829 mm and dual spacing 330 mm per the shared bases in this file's header. Confidence: medium."
+        }
+      ],
+      "axleGroups": [
+        { "id": "G1", "type": "single", "axles": ["A1"], "spacing": null, "suspension": "leaf" },
+        { "id": "G2", "type": "single", "axles": ["A2"], "spacing": null, "suspension": "leaf" }
+      ],
+      "gvw": { "value": 13608, "unit": "kg", "basis": "30 000 lb — sum of the representative steer load and the federal single-axle limit on the drive axle." },
+      "notes": "The six-tire criterion (dual rear tires) is what separates class 5 from class 3.",
+      "sources": [
+        { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 5", "publisher": "FHWA", "note": "Class definition; six-tire criterion." },
+        { "id": "cfr-658", "title": "23 CFR 658.17 — Weight; 23 CFR 658.15 — Width", "publisher": "U.S. Government", "note": "20 000 lb single-axle limit; 102 in width limit." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "fhwa-c06-su3",
+      "domain": "truck",
+      "classification": { "scheme": "FHWA-Scheme-F", "class": 6, "label": "Three-axle single-unit trucks" },
+      "designation": "3",
+      "bodyType": "single-unit dump truck",
+      "overallLength": 9150,
+      "axles": [
+        {
+          "id": "A1", "role": "steer", "x": 0, "trackWidth": 2032,
+          "tireConfig": "STA", "tire": "11R22.5", "dualSpacing": null,
+          "load": { "value": 53.4, "unit": "kN", "basis": "12 000 lb — representative loaded steer-axle load for a three-axle single unit, below the 20 000 lb federal single-axle limit." },
+          "liftable": false, "steerable": true,
+          "source": "Representative three-axle single-unit dump truck. Steer track 2032 mm (80 in), typical of heavy vocational practice. Confidence: medium."
+        },
+        {
+          "id": "A2", "role": "drive", "x": 4877, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 75.6, "unit": "kN", "basis": "17 000 lb — half of the 34 000 lb federal tandem-axle limit, 23 CFR 658.17, shared equally between the two axles of the group." },
+          "liftable": false, "steerable": false,
+          "source": "Wheelbase 4877 mm (16 ft) from the steer axle, typical of a vocational chassis. Track 1829 mm and dual spacing 330 mm per the shared bases in this file's header. Confidence: medium."
+        },
+        {
+          "id": "A3", "role": "drive", "x": 6188, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 75.6, "unit": "kN", "basis": "17 000 lb — half of the 34 000 lb federal tandem-axle limit, 23 CFR 658.17." },
+          "liftable": false, "steerable": false,
+          "source": "Positioned 1311 mm behind axle A2, the AASHTOWare Pavement ME default tandem axle spacing of 51.6 in. Confidence: high for the spacing."
+        }
+      ],
+      "axleGroups": [
+        { "id": "G1", "type": "single", "axles": ["A1"], "spacing": null, "suspension": "leaf" },
+        {
+          "id": "G2", "type": "tandem", "axles": ["A2", "A3"], "spacing": 1311, "suspension": "leaf",
+          "source": "AASHTOWare Pavement ME Design default tandem axle spacing, 51.6 in = 1310.6 mm, rounded to 1311 mm."
+        }
+      ],
+      "gvw": { "value": 20865, "unit": "kg", "basis": "46 000 lb — 12 000 lb steer plus the 34 000 lb federal tandem limit." },
+      "notes": "The archetypal class 6 vehicle. Its tandem drive group is the standard subject of the tandem-axle dimension set.",
+      "sources": [
+        { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 6", "publisher": "FHWA", "note": "Class definition." },
+        { "id": "mepdg-defaults", "title": "AASHTOWare Pavement ME Design — default traffic inputs (axle configuration)", "publisher": "AASHTO", "url": "https://aashtowarepavementme.org/MEDesign/help/traffic.html", "note": "Tandem 51.6 in, tridem 49.2 in, quad 49.2 in, dual tire spacing 12 in, tire pressure 120 psi, average axle width 8.5 ft. Verified against the published help manual during this build." },
+        { "id": "cfr-658", "title": "23 CFR 658.17 — Weight", "publisher": "U.S. Government", "note": "20 000 lb single-axle and 34 000 lb tandem-axle limits." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "fhwa-c07-su4-tridem",
+      "domain": "truck",
+      "classification": { "scheme": "FHWA-Scheme-F", "class": 7, "label": "Four or more axle single-unit trucks" },
+      "designation": "4",
+      "bodyType": "single-unit tridem dump truck",
+      "overallLength": 10360,
+      "axles": [
+        {
+          "id": "A1", "role": "steer", "x": 0, "trackWidth": 2032,
+          "tireConfig": "STA", "tire": "11R22.5", "dualSpacing": null,
+          "load": { "value": 53.4, "unit": "kN", "basis": "12 000 lb — representative loaded steer-axle load, below the 20 000 lb federal single-axle limit." },
+          "liftable": false, "steerable": true,
+          "source": "Representative four-axle single-unit truck with a tridem rear group. Steer track 2032 mm (80 in). Confidence: medium."
+        },
+        {
+          "id": "A2", "role": "drive", "x": 4877, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 62.3, "unit": "kN", "basis": "14 000 lb — one third of the 42 150 lb allowed on a three-axle group spanning 8.2 ft by the Federal Bridge Formula, W = 500[LN/(N-1) + 12N + 36] with N = 3 and L = 8.2 ft (23 CFR 658.17), rounded to 42 000 lb." },
+          "liftable": false, "steerable": false,
+          "source": "Wheelbase 4877 mm (16 ft) from the steer axle. Track 1829 mm and dual spacing 330 mm per the shared bases in this file's header. Confidence: medium."
+        },
+        {
+          "id": "A3", "role": "drive", "x": 6127, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 62.3, "unit": "kN", "basis": "14 000 lb — one third of the 42 000 lb Federal Bridge Formula allowance for this three-axle group." },
+          "liftable": false, "steerable": false,
+          "source": "Positioned 1250 mm behind A2, the AASHTOWare Pavement ME default tridem axle spacing of 49.2 in. Confidence: high for the spacing."
+        },
+        {
+          "id": "A4", "role": "drive", "x": 7377, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 62.3, "unit": "kN", "basis": "14 000 lb — one third of the 42 000 lb Federal Bridge Formula allowance for this three-axle group." },
+          "liftable": false, "steerable": false,
+          "source": "Positioned 1250 mm behind A3, the AASHTOWare Pavement ME default tridem axle spacing of 49.2 in. Confidence: high for the spacing."
+        }
+      ],
+      "axleGroups": [
+        { "id": "G1", "type": "single", "axles": ["A1"], "spacing": null, "suspension": "leaf" },
+        {
+          "id": "G2", "type": "tridem", "axles": ["A2", "A3", "A4"], "spacing": 1250, "suspension": "air",
+          "source": "AASHTOWare Pavement ME Design default tridem axle spacing, 49.2 in = 1249.7 mm, rounded to 1250 mm."
+        }
+      ],
+      "gvw": { "value": 24494, "unit": "kg", "basis": "54 000 lb — 12 000 lb steer plus the 42 000 lb Federal Bridge Formula allowance on the tridem group." },
+      "notes": "Class 7 covers four-, five-, six- and seven-axle single-unit trucks. The tridem rear group shown here is the most common four-axle form and is the subject of the tridem dimension set.",
+      "sources": [
+        { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 7", "publisher": "FHWA", "note": "Class definition." },
+        { "id": "mepdg-defaults", "title": "AASHTOWare Pavement ME Design — default traffic inputs (axle configuration)", "publisher": "AASHTO", "url": "https://aashtowarepavementme.org/MEDesign/help/traffic.html", "note": "Tridem default 49.2 in. Verified during this build." },
+        { "id": "cfr-658", "title": "23 CFR 658.17 — Weight, including the Federal Bridge Formula", "publisher": "U.S. Government", "note": "Bridge formula used to derive the tridem group allowance." }
+      ]
+    }
+  ]
+}

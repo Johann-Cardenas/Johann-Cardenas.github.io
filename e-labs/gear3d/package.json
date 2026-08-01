@@ -1,0 +1,13 @@
+{
+  "name": "gear3d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Gear3D — deterministic 3D visualizer of truck axle configurations and aircraft landing gear, for pavement engineering figures and FEM footprint export.",
+  "scripts": {
+    "test": "node test/run.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

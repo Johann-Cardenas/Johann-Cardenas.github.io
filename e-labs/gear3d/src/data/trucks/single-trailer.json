@@ -1,0 +1,321 @@
+{
+  "schemaVersion": "1.0",
+  "$comment": [
+    "FHWA Scheme F classes 8-10. Tractor-semitrailer combinations.",
+    "",
+    "HOW THE LONGITUDINAL SPACINGS WERE SET",
+    "Intra-group spacings are the AASHTOWare Pavement ME defaults (tandem",
+    "51.6 in = 1311 mm, tridem 49.2 in = 1250 mm). Tractor wheelbases are the",
+    "Pavement ME wheelbase classes (short 12 ft, medium 15 ft, long 18 ft).",
+    "",
+    "The distance from the drive group to the trailer group is NOT a free",
+    "choice: it is set to the smallest realistic value at which the vehicle",
+    "satisfies the Federal Bridge Formula at its stated legal loads,",
+    "     W = 500 [ L*N/(N-1) + 12N + 36 ]                (23 CFR 658.17)",
+    "checked over EVERY axle subset, not merely the outer bridge. That gives",
+    "these layouts a reproducible engineering basis rather than an eyeballed",
+    "one. test/run.mjs re-derives the check and fails if any subset violates it."
+  ],
+  "units": [
+    {
+      "schemaVersion": "1.0",
+      "id": "fhwa-c08-2S1",
+      "domain": "truck",
+      "classification": { "scheme": "FHWA-Scheme-F", "class": 8, "label": "Four or fewer axle single-trailer trucks" },
+      "designation": "2-S1",
+      "bodyType": "tractor-semitrailer",
+      "overallLength": 16760,
+      "axles": [
+        {
+          "id": "A1", "role": "steer", "x": 0, "trackWidth": 2032,
+          "tireConfig": "STA", "tire": "11R22.5", "dualSpacing": null,
+          "load": { "value": 53.4, "unit": "kN", "basis": "12 000 lb representative loaded steer-axle load, below the 20 000 lb federal single-axle limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": true,
+          "source": "Two-axle tractor with a single-axle semitrailer. Steer track 2032 mm (80 in), within the 102 in (2591 mm) federal width limit. Confidence: medium."
+        },
+        {
+          "id": "A2", "role": "drive", "x": 4572, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 89.0, "unit": "kN", "basis": "20 000 lb — the federal single-axle weight limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": false,
+          "source": "Tractor wheelbase 4572 mm = 15 ft, the AASHTOWare Pavement ME 'medium' wheelbase class. Track 1829 mm (72 in) and dual spacing 330 mm per the shared bases documented in data/SOURCES.md."
+        },
+        {
+          "id": "A3", "role": "trailer", "x": 11600, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 89.0, "unit": "kN", "basis": "20 000 lb — the federal single-axle weight limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": false,
+          "source": "Positioned so that every axle subset satisfies the Federal Bridge Formula at the stated loads; the governing subset is A2-A3, which requires at least 3048 mm (10 ft) for 40 000 lb on two axles."
+        }
+      ],
+      "axleGroups": [
+        { "id": "G1", "type": "single", "axles": ["A1"], "spacing": null, "suspension": "leaf" },
+        { "id": "G2", "type": "single", "axles": ["A2"], "spacing": null, "suspension": "air" },
+        { "id": "G3", "type": "single", "axles": ["A3"], "spacing": null, "suspension": "air" }
+      ],
+      "gvw": { "value": 23587, "unit": "kg", "basis": "52 000 lb — sum of the stated axle loads, well below the 80 000 lb federal gross limit." },
+      "notes": "The lightest of the tractor-semitrailer classes; three axles, all single.",
+      "sources": [
+        { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 8", "publisher": "FHWA", "note": "Class definition." },
+        { "id": "mepdg-defaults", "title": "AASHTOWare Pavement ME Design — default traffic inputs", "publisher": "AASHTO", "url": "https://aashtowarepavementme.org/MEDesign/help/traffic.html", "note": "Wheelbase classes 12/15/18 ft. Verified during this build." },
+        { "id": "cfr-658", "title": "23 CFR 658.17 — Weight, including the Federal Bridge Formula", "publisher": "U.S. Government", "note": "Axle limits and the bridge formula governing the trailer axle position." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "fhwa-c08-3S1",
+      "domain": "truck",
+      "classification": { "scheme": "FHWA-Scheme-F", "class": 8, "label": "Four or fewer axle single-trailer trucks" },
+      "designation": "3-S1",
+      "bodyType": "tractor-semitrailer",
+      "overallLength": 17700,
+      "axles": [
+        {
+          "id": "A1", "role": "steer", "x": 0, "trackWidth": 2032,
+          "tireConfig": "STA", "tire": "11R22.5", "dualSpacing": null,
+          "load": { "value": 53.4, "unit": "kN", "basis": "12 000 lb representative loaded steer-axle load (23 CFR 658.17 permits up to 20 000 lb)." },
+          "liftable": false, "steerable": true,
+          "source": "Three-axle tractor (tandem drive) with a single-axle semitrailer. Steer track 2032 mm (80 in). Confidence: medium."
+        },
+        {
+          "id": "A2", "role": "drive", "x": 4572, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 75.6, "unit": "kN", "basis": "17 000 lb — half of the 34 000 lb federal tandem-axle limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": false,
+          "source": "Tractor wheelbase 4572 mm = 15 ft, the AASHTOWare Pavement ME 'medium' wheelbase class."
+        },
+        {
+          "id": "A3", "role": "drive", "x": 5883, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 75.6, "unit": "kN", "basis": "17 000 lb — half of the 34 000 lb federal tandem-axle limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": false,
+          "source": "1311 mm behind A2 — the AASHTOWare Pavement ME default tandem axle spacing of 51.6 in."
+        },
+        {
+          "id": "A4", "role": "trailer", "x": 12200, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 89.0, "unit": "kN", "basis": "20 000 lb — the federal single-axle weight limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": false,
+          "source": "Positioned so that every axle subset satisfies the Federal Bridge Formula; the governing subset is A2-A4, which requires at least 7315 mm (24 ft) for 54 000 lb on three axles."
+        }
+      ],
+      "axleGroups": [
+        { "id": "G1", "type": "single", "axles": ["A1"], "spacing": null, "suspension": "leaf" },
+        {
+          "id": "G2", "type": "tandem", "axles": ["A2", "A3"], "spacing": 1311, "suspension": "air",
+          "source": "AASHTOWare Pavement ME Design default tandem axle spacing, 51.6 in = 1310.6 mm."
+        },
+        { "id": "G3", "type": "single", "axles": ["A4"], "spacing": null, "suspension": "air" }
+      ],
+      "gvw": { "value": 29937, "unit": "kg", "basis": "66 000 lb — sum of the stated axle loads." },
+      "notes": "Four-axle variant of class 8: tandem drive, single trailer axle.",
+      "sources": [
+        { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 8", "publisher": "FHWA", "note": "Class definition." },
+        { "id": "mepdg-defaults", "title": "AASHTOWare Pavement ME Design — default traffic inputs", "publisher": "AASHTO", "url": "https://aashtowarepavementme.org/MEDesign/help/traffic.html", "note": "Tandem spacing and wheelbase classes. Verified during this build." },
+        { "id": "cfr-658", "title": "23 CFR 658.17 — Weight, including the Federal Bridge Formula", "publisher": "U.S. Government", "note": "Axle limits and bridge formula." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "fhwa-c09-3S2",
+      "domain": "truck",
+      "classification": { "scheme": "FHWA-Scheme-F", "class": 9, "label": "Five-axle single-trailer truck" },
+      "designation": "3-S2",
+      "bodyType": "tractor-semitrailer",
+      "overallLength": 22750,
+      "reference": true,
+      "axles": [
+        {
+          "id": "A1", "role": "steer", "x": 0, "trackWidth": 2032,
+          "tireConfig": "STA", "tire": "11R22.5", "dualSpacing": null,
+          "load": { "value": 53.4, "unit": "kN", "basis": "12 000 lb — the conventional steer-axle share of the 80 000 lb federal gross limit in the canonical 12/34/34 split (23 CFR 658.17)." },
+          "liftable": false, "steerable": true,
+          "source": "Steer track 2032 mm (80 in), typical of US class 8 tractors and within the 102 in (2591 mm) federal width limit of 23 CFR 658.15. Confidence: medium for the track value."
+        },
+        {
+          "id": "A2", "role": "drive", "x": 5486, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 75.6, "unit": "kN", "basis": "17 000 lb — half of the 34 000 lb federal tandem-axle limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": false,
+          "source": "Tractor wheelbase 5486 mm = 18 ft, the AASHTOWare Pavement ME 'long' wheelbase class, which is the class assigned 61 % of the truck stream and is representative of a sleeper-cab line-haul tractor. Track 1829 mm (72 in) is the classic dual-wheel spacing of the flexible-pavement literature (Yoder & Witczak; Huang). Dual spacing 330 mm (13 in) — see data/SOURCES.md for the 12-13.5 in range across sources."
+        },
+        {
+          "id": "A3", "role": "drive", "x": 6797, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 75.6, "unit": "kN", "basis": "17 000 lb — half of the 34 000 lb federal tandem-axle limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": false,
+          "source": "1311 mm behind A2 — the AASHTOWare Pavement ME default tandem axle spacing of 51.6 in (1310.6 mm). Verified against the published AASHTOWare help manual during this build."
+        },
+        {
+          "id": "A4", "role": "trailer", "x": 16200, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 75.6, "unit": "kN", "basis": "17 000 lb — half of the 34 000 lb federal tandem-axle limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": false,
+          "source": "Trailer tandem position is governed by the Federal Bridge Formula, not by styling. The binding subset is A2-A5, four axles carrying 68 000 lb, which the formula allows only over a spread of 11 887 mm (39.0 ft) or more; the tandem is set slightly beyond that at 12 025 mm (39.4 ft) so the vehicle clears the limit with margin rather than sitting exactly on it. With the group spacing at 1311 mm this places A4 at 16 200 mm. Kingpin-to-rear-axle is then about 11 400 mm (37 ft), within the 40 ft limit applied by states that regulate KPRA."
+        },
+        {
+          "id": "A5", "role": "trailer", "x": 17511, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 75.6, "unit": "kN", "basis": "17 000 lb — half of the 34 000 lb federal tandem-axle limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": false,
+          "source": "1311 mm behind A4 — the AASHTOWare Pavement ME default tandem axle spacing of 51.6 in. Outer bridge A1-A5 is then 17 511 mm (57.5 ft), comfortably above the 51.2 ft the bridge formula requires for 80 000 lb on five axles."
+        }
+      ],
+      "axleGroups": [
+        { "id": "G1", "type": "single", "axles": ["A1"], "spacing": null, "suspension": "leaf" },
+        {
+          "id": "G2", "type": "tandem", "axles": ["A2", "A3"], "spacing": 1311, "suspension": "air",
+          "source": "AASHTOWare Pavement ME Design default tandem axle spacing, 51.6 in = 1310.6 mm, rounded to 1311 mm. Verified during this build."
+        },
+        {
+          "id": "G3", "type": "tandem", "axles": ["A4", "A5"], "spacing": 1311, "suspension": "air",
+          "source": "AASHTOWare Pavement ME Design default tandem axle spacing, 51.6 in = 1310.6 mm, rounded to 1311 mm. Verified during this build."
+        }
+      ],
+      "gvw": { "value": 36287, "unit": "kg", "basis": "80 000 lb — the US federal gross vehicle weight limit (23 CFR 658.17), distributed in the canonical 12 000 / 34 000 / 34 000 lb split." },
+      "notes": "The reference vehicle of US pavement engineering: a five-axle tractor-semitrailer at the 80 000 lb legal gross with the 12/34/34 axle split. This unit is covered by a dedicated regression test that pins its axle positions, track widths and dual spacings, and independently re-derives Federal Bridge Formula compliance over every axle subset.",
+      "sources": [
+        { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 9 — Five-axle single-trailer trucks", "publisher": "FHWA", "url": "https://www.fhwa.dot.gov/policyinformation/tmguide/", "note": "Class definition and axle topology. Verified during this build." },
+        { "id": "mepdg-defaults", "title": "AASHTOWare Pavement ME Design — default traffic inputs (axle configuration and wheelbase)", "publisher": "AASHTO", "url": "https://aashtowarepavementme.org/MEDesign/help/traffic.html", "note": "Tandem axle spacing 51.6 in; wheelbase classes short 12 ft / medium 15 ft / long 18 ft with a 17/22/61 % split; dual tire spacing 12 in; tire pressure 120 psi; average axle width 8.5 ft. All verified against the published help manual during this build." },
+        { "id": "cfr-658", "title": "23 CFR 658.17 — Weight; 23 CFR 658.15 — Width", "publisher": "U.S. Government", "note": "20 000 lb single-axle, 34 000 lb tandem-axle and 80 000 lb gross limits; the Federal Bridge Formula; the 102 in width limit." },
+        { "id": "yoder-witczak", "title": "Principles of Pavement Design (Yoder & Witczak); Pavement Analysis and Design (Huang)", "publisher": "Wiley / Pearson", "note": "Classic dual-wheel idealisation: dual tires at 13.5 in centres with the dual sets 72 in apart. Basis for the 1829 mm track." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "fhwa-c09-2S3",
+      "domain": "truck",
+      "classification": { "scheme": "FHWA-Scheme-F", "class": 9, "label": "Five-axle single-trailer trucks" },
+      "designation": "2-S3",
+      "bodyType": "tractor-semitrailer",
+      "overallLength": 19800,
+      "axles": [
+        {
+          "id": "A1", "role": "steer", "x": 0, "trackWidth": 2032,
+          "tireConfig": "STA", "tire": "11R22.5", "dualSpacing": null,
+          "load": { "value": 53.4, "unit": "kN", "basis": "12 000 lb representative loaded steer-axle load (23 CFR 658.17)." },
+          "liftable": false, "steerable": true,
+          "source": "Two-axle tractor with a tridem semitrailer — the other common five-axle class 9 form. Steer track 2032 mm (80 in). Confidence: medium."
+        },
+        {
+          "id": "A2", "role": "drive", "x": 4572, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 89.0, "unit": "kN", "basis": "20 000 lb — the federal single-axle weight limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": false,
+          "source": "Tractor wheelbase 4572 mm = 15 ft, the AASHTOWare Pavement ME 'medium' wheelbase class."
+        },
+        {
+          "id": "A3", "role": "trailer", "x": 11500, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 62.3, "unit": "kN", "basis": "14 000 lb — one third of the 42 000 lb the Federal Bridge Formula allows on a three-axle group spanning 8.2 ft (23 CFR 658.17)." },
+          "liftable": false, "steerable": false,
+          "source": "Leading tridem axle, positioned so that the binding subset A2-A5 (four axles, 62 000 lb) meets its 9144 mm (30 ft) bridge-formula requirement."
+        },
+        {
+          "id": "A4", "role": "trailer", "x": 12750, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 62.3, "unit": "kN", "basis": "14 000 lb — one third of the 42 000 lb bridge-formula allowance on the tridem group." },
+          "liftable": false, "steerable": false,
+          "source": "1250 mm behind A3 — the AASHTOWare Pavement ME default tridem axle spacing of 49.2 in."
+        },
+        {
+          "id": "A5", "role": "trailer", "x": 14000, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 62.3, "unit": "kN", "basis": "14 000 lb — one third of the 42 000 lb bridge-formula allowance on the tridem group." },
+          "liftable": false, "steerable": false,
+          "source": "1250 mm behind A4 — the AASHTOWare Pavement ME default tridem axle spacing of 49.2 in."
+        }
+      ],
+      "axleGroups": [
+        { "id": "G1", "type": "single", "axles": ["A1"], "spacing": null, "suspension": "leaf" },
+        { "id": "G2", "type": "single", "axles": ["A2"], "spacing": null, "suspension": "air" },
+        {
+          "id": "G3", "type": "tridem", "axles": ["A3", "A4", "A5"], "spacing": 1250, "suspension": "air",
+          "source": "AASHTOWare Pavement ME Design default tridem axle spacing, 49.2 in = 1249.7 mm, rounded to 1250 mm."
+        }
+      ],
+      "gvw": { "value": 33566, "unit": "kg", "basis": "74 000 lb — sum of the stated axle loads, below the 80 000 lb federal gross limit." },
+      "notes": "Same class as the 3-S2 but with the load carried on a tridem trailer group instead of a tandem — a useful side-by-side for group-type comparisons.",
+      "sources": [
+        { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 9", "publisher": "FHWA", "note": "Class definition." },
+        { "id": "mepdg-defaults", "title": "AASHTOWare Pavement ME Design — default traffic inputs", "publisher": "AASHTO", "url": "https://aashtowarepavementme.org/MEDesign/help/traffic.html", "note": "Tridem spacing 49.2 in; wheelbase classes. Verified during this build." },
+        { "id": "cfr-658", "title": "23 CFR 658.17 — Weight, including the Federal Bridge Formula", "publisher": "U.S. Government", "note": "Axle limits and bridge formula." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "fhwa-c10-3S3",
+      "domain": "truck",
+      "classification": { "scheme": "FHWA-Scheme-F", "class": 10, "label": "Six or more axle single-trailer trucks" },
+      "designation": "3-S3",
+      "bodyType": "tractor-semitrailer",
+      "overallLength": 22860,
+      "axles": [
+        {
+          "id": "A1", "role": "steer", "x": 0, "trackWidth": 2032,
+          "tireConfig": "STA", "tire": "11R22.5", "dualSpacing": null,
+          "load": { "value": 53.4, "unit": "kN", "basis": "12 000 lb steer-axle share of the 80 000 lb federal gross limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": true,
+          "source": "Six-axle tractor-semitrailer: tandem drive, tridem trailer. Steer track 2032 mm (80 in). Confidence: medium."
+        },
+        {
+          "id": "A2", "role": "drive", "x": 5486, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 75.6, "unit": "kN", "basis": "17 000 lb — half of the 34 000 lb federal tandem-axle limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": false,
+          "source": "Tractor wheelbase 5486 mm = 18 ft, the AASHTOWare Pavement ME 'long' wheelbase class."
+        },
+        {
+          "id": "A3", "role": "drive", "x": 6797, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 75.6, "unit": "kN", "basis": "17 000 lb — half of the 34 000 lb federal tandem-axle limit (23 CFR 658.17)." },
+          "liftable": false, "steerable": false,
+          "source": "1311 mm behind A2 — the AASHTOWare Pavement ME default tandem axle spacing of 51.6 in."
+        },
+        {
+          "id": "A4", "role": "trailer", "x": 14800, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 50.4, "unit": "kN", "basis": "11 333 lb — one third of 34 000 lb. The tridem group could carry 42 000 lb under the bridge formula, but the 80 000 lb federal gross limit binds first, so the group carries 34 000 lb." },
+          "liftable": false, "steerable": false,
+          "source": "Leading tridem axle. Position set so that every axle subset clears the Federal Bridge Formula; the binding subset is A2-A6 (five axles, 68 000 lb), needing 9754 mm (32 ft)."
+        },
+        {
+          "id": "A5", "role": "trailer", "x": 16050, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 50.4, "unit": "kN", "basis": "11 333 lb — one third of the 34 000 lb carried by the tridem group under the 80 000 lb federal gross limit." },
+          "liftable": false, "steerable": false,
+          "source": "1250 mm behind A4 — the AASHTOWare Pavement ME default tridem axle spacing of 49.2 in."
+        },
+        {
+          "id": "A6", "role": "trailer", "x": 17300, "trackWidth": 1829,
+          "tireConfig": "DTA", "tire": "11R22.5", "dualSpacing": 330,
+          "load": { "value": 50.4, "unit": "kN", "basis": "11 333 lb — one third of the 34 000 lb carried by the tridem group under the 80 000 lb federal gross limit." },
+          "liftable": false, "steerable": false,
+          "source": "1250 mm behind A5 — the AASHTOWare Pavement ME default tridem axle spacing of 49.2 in."
+        }
+      ],
+      "axleGroups": [
+        { "id": "G1", "type": "single", "axles": ["A1"], "spacing": null, "suspension": "leaf" },
+        {
+          "id": "G2", "type": "tandem", "axles": ["A2", "A3"], "spacing": 1311, "suspension": "air",
+          "source": "AASHTOWare Pavement ME Design default tandem axle spacing, 51.6 in."
+        },
+        {
+          "id": "G3", "type": "tridem", "axles": ["A4", "A5", "A6"], "spacing": 1250, "suspension": "air",
+          "source": "AASHTOWare Pavement ME Design default tridem axle spacing, 49.2 in."
+        }
+      ],
+      "gvw": { "value": 36287, "unit": "kg", "basis": "80 000 lb — the US federal gross vehicle weight limit (23 CFR 658.17)." },
+      "notes": "Six-axle single-trailer combination. Compared with the class 9 3-S2 at the same 80 000 lb gross, the tridem spreads the trailer load over three axles instead of two — the classic axle-group comparison for rutting and fatigue.",
+      "sources": [
+        { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 10", "publisher": "FHWA", "note": "Class definition." },
+        { "id": "mepdg-defaults", "title": "AASHTOWare Pavement ME Design — default traffic inputs", "publisher": "AASHTO", "url": "https://aashtowarepavementme.org/MEDesign/help/traffic.html", "note": "Tandem and tridem spacings; wheelbase classes. Verified during this build." },
+        { "id": "cfr-658", "title": "23 CFR 658.17 — Weight, including the Federal Bridge Formula", "publisher": "U.S. Government", "note": "Axle limits, gross limit and bridge formula." }
+      ]
+    }
+  ]
+}
