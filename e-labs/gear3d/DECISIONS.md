@@ -205,6 +205,48 @@ carries no secrets and enables nothing that is not already in the project file.
 
 ---
 
+## D12. The environment map is generated, not downloaded (v1.1)
+
+**Decision.** Image-based lighting comes from a studio environment built at
+runtime and PMREM-filtered, not from an HDRI file.
+
+**Why.** An HDRI would be one more asset that can 404, one more third-party
+licence living inside a public academic repository, and several megabytes on a
+site whose other E-Labs apps ship as single files. A generated environment
+keeps the app's existing promises — no asset dependency, deterministic output
+— and has the added benefit that its softbox positions can follow the key
+light, so reflections and cast shadows agree.
+
+---
+
+## D13. No third-party meshes were added (v1.1)
+
+**Asked for:** download free 3D assets to build a mesh library.
+
+**Decision.** The asset-slot **loader** was implemented; **no meshes were
+committed**.
+
+**Why.** Two independent reasons, either sufficient on its own.
+
+1. **Licensing.** This repository is public, under a named academic's domain.
+   Committing a mesh redistributes it, and most "free" marketplace licences
+   permit use while prohibiting redistribution. The sourcing rules are written
+   out in `ASSETS.md` §8.1: CC0 preferred, CC-BY acceptable with the
+   attribution carried in the manifest, nothing whose licence cannot be
+   stated. This is a judgement about the owner's exposure, not about
+   convenience.
+2. **Network access was rate-limited** for the remainder of the session in
+   which this work was done, so no candidate asset could be fetched or, more
+   importantly, have its licence verified at source.
+
+**What this costs.** Nothing structural. The procedural path is the reference
+implementation and is what the test suite exercises; meshes were always an
+appearance enhancement. The loader, the manifest schema, the resolution chain
+and the 1.6× distortion cap are all in place and tested by inspection, so
+adding an asset later is a manifest entry and a file.
+
+---
+
 ## D11. FEM export is a parameter table, not a runnable input deck
 
 **Decision.** The Abaqus export emits commented patch rectangles, pressures and

@@ -153,8 +153,46 @@ should be.
 
 ## 8. Status
 
-**No assets ship with v1.0, and none are required.** The procedural path is
-the reference implementation, not a placeholder: it is deterministic, it scales
-to any designation in the library including sizes nobody has modelled, and it
-is what the test suite exercises. Authored meshes are an enhancement to
-appearance only — they must never become a prerequisite for a correct figure.
+**No assets ship, and none are required.** The procedural path is the reference
+implementation, not a placeholder: it is deterministic, it scales to any
+designation in the library including sizes nobody has modelled, and it is what
+the test suite exercises. Authored meshes are an enhancement to appearance only
+— they must never become a prerequisite for a correct figure.
+
+**The loader is implemented** (`src/geometry/assets.js`, v1.1). It is inert
+until an `assets/manifest.json` appears, so the app runs unchanged with no
+assets present. Drop a manifest and a `.glb` in and it is picked up. Every
+resolution, scale factor and fallback is logged to the console — a figure
+rendered with a silently substituted or silently stretched mesh is a figure
+whose provenance nobody can reconstruct later.
+
+### 8.1 On sourcing meshes from the internet
+
+Worth stating plainly, because "free to download" is not the same as "free to
+put in this repository".
+
+This site is a **public GitHub Pages repo under a named academic's domain**.
+Committing a mesh here redistributes it. That is a stricter bar than personal
+use, and most "free" 3D marketplace licences (Sketchfab free, TurboSquid free,
+CGTrader free) permit use but **prohibit redistribution of the asset itself**.
+Dropping one in would create a real liability for the repository owner, in the
+exact place — an academic portfolio — where it would be most damaging.
+
+**Acceptable sources, in order of preference:**
+
+1. **CC0 / public domain.** No attribution required, redistribution explicitly
+   permitted. Poly Haven and ambientCG are CC0 across their whole libraries.
+   Verify the licence on the asset page, not the site's front page.
+2. **CC-BY.** Fine, but the attribution must travel with the file: record it in
+   the manifest's `credit` field and add it to this document.
+3. **Author it yourself**, or commission it.
+
+**Not acceptable:** anything whose licence is unstated, "free for personal use",
+"free with attribution" where the attribution cannot be surfaced, or scraped
+from a manufacturer's CAD portal. A wheel modelled from a real manufacturer's
+product may also carry design-right and trade-dress considerations that a
+licence file says nothing about.
+
+Before adding any asset, record in the manifest entry: the source URL, the
+licence identifier, and the author. If those three cannot be stated, the asset
+does not go in.

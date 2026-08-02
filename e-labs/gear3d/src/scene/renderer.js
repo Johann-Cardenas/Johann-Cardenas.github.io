@@ -19,6 +19,7 @@
 import * as THREE from 'three';
 import { CameraRig } from './cameras.js';
 import { LightingRig, LIGHTING_PRESETS } from './lighting.js';
+import { EnvironmentRig } from './environment.js';
 
 /** Background modes. */
 export const BACKGROUND_MODES = Object.freeze({
@@ -54,6 +55,10 @@ export class Viewport {
         this.scene = new THREE.Scene();
         this.cameras = new CameraRig(container);
         this.lighting = new LightingRig(this.scene);
+        this.environment = new EnvironmentRig(this.renderer);
+
+        /** @type {import('./materials.js').MaterialLibrary|null} */
+        this.materials = null;
 
         /** @type {import('../geometry/assembly.js').Assembly|null} */
         this.assembly = null;
@@ -172,10 +177,44 @@ export class Viewport {
         this.invalidate();
     }
 
+    /**
+     * Bind the material library so the environment map can be pushed onto it
+     * whenever the lighting changes.
+     * @param {import('./materials.js').MaterialLibrary} library
+     */
+    setMaterialLibrary(library) {
+        this.materials = library;
+        this._refreshEnvironment();
+    }
+
     /** @param {import('./lighting.js').LightingState} state */
     setLighting(state) {
         this.lighting.apply(state);
+        this._refreshEnvironment();
         this.invalidate();
+    }
+
+    /**
+     * Regenerate the studio environment from the current lighting and push it
+     * onto every material.
+     *
+     * The reflections have to agree with the cast shadows — a rim mirroring a
+     * softbox on its left while its shadow falls to the left looks subtly
+     * wrong in a way that is hard to name and impossible to unsee, so the
+     * environment is driven by the same azimuth and elevation as the key
+     * light rather than being a fixed backdrop.
+     */
+    _refreshEnvironment() {
+        const s = this.lighting.state;
+        const tex = this.environment.build({
+            intensity: 0.55 + s.ambient * 0.55,
+            azimuth: s.azimuth,
+            elevation: s.elevation,
+            contrast: 0.6 + s.keyIntensity * 0.22,
+            blur: s.shadowSoftness > 6 ? 0.06 : 0.035
+        });
+        this.scene.environment = tex;
+        if (this.materials) this.materials.setEnvironment(tex, 1);
     }
 
     /** @param {string} preset */
@@ -307,6 +346,7 @@ export class Viewport {
         this._observer.disconnect();
         if (this.assembly) this.assembly.dispose();
         this.lighting.dispose();
+        this.environment.dispose();
         this.cameras.dispose();
         this.renderer.dispose();
     }

@@ -6,136 +6,220 @@
    strength — so the two apps feel like one toolkit and a figure
    pair can be matched by eye.
 
-   Colours are deliberately restrained. A publication figure is
-   read for its geometry; saturated rubber and chrome-bright rims
-   fight the dimension overlay for attention.
+   Two things here are doing most of the visual work:
+
+   1. TREAD AND SIDEWALL ARE SEPARATE MATERIALS. They are
+      genuinely different surfaces: a tread face is scuffed and
+      matte, a sidewall is smoother and picks up a soft sheen
+      along its bulge. Giving them one shared roughness is most of
+      what makes a procedural tire look like a black doughnut.
+
+   2. EVERYTHING RECEIVES THE ENVIRONMENT MAP. Machined aluminium
+      is defined by what it reflects; without image-based lighting
+      no roughness value will make it read as metal.
+
+   Colours stay restrained. A publication figure is read for its
+   geometry, and saturated rubber or chrome-bright rims fight the
+   dimension overlay for attention.
    ============================================================ */
 
 'use strict';
 
 import * as THREE from 'three';
-import { buildTreadMaps } from '../geometry/tire.js';
+import { buildTreadMaps, buildSidewallMaps } from '../geometry/tire.js';
 
 /**
  * @typedef {Object} MaterialSpec
  * @property {string} name
- * @property {number} color        base colour
+ * @property {number} color
  * @property {number} roughness
  * @property {number} metalness
  * @property {number} [normalScale]
  * @property {number} [clearcoat]
+ * @property {number} [clearcoatRoughness]
+ * @property {number} [envIntensity]
  * @property {string} description
  */
 
 /** @type {Record<string, MaterialSpec>} */
 export const MATERIAL_SPECS = Object.freeze({
-    rubber: {
-        name: 'Tire rubber',
-        color: 0x2c3238, roughness: 0.85, metalness: 0.0, normalScale: 1.0,
-        description: 'Near-black with a faint blue-grey cast. Real tire rubber is never pure black '
-            + 'and photographs as a very dark, slightly cool grey. Held a little lighter than a '
-            + 'photograph would be: against publication white, a truly black tire loses all of its '
-            + 'tread and sidewall form and reads as a silhouette.'
+    rubberTread: {
+        name: 'Tread rubber',
+        color: 0x2a2f35, roughness: 0.90, metalness: 0.0, normalScale: 0.9, envIntensity: 0.55,
+        description: 'The running face. Scuffed and matte — it spends its life abrading against '
+            + 'aggregate. Held a little lighter than a photograph: against publication white a '
+            + 'truly black tire loses all of its form and reads as a silhouette.'
+    },
+    rubberSidewall: {
+        name: 'Sidewall rubber',
+        color: 0x24282e, roughness: 0.74, metalness: 0.0, normalScale: 0.7, envIntensity: 0.8,
+        description: 'Smoother and slightly glossier than the tread, with a soft sheen along the '
+            + 'bulge. Carries the moulded ribbing and lettering relief.'
     },
     aluminium: {
         name: 'Machined aluminium rim',
-        color: 0xb8bdc4, roughness: 0.32, metalness: 0.92,
-        description: 'Polished forged aluminium wheel.'
+        color: 0xb9bfc6, roughness: 0.30, metalness: 0.92,
+        clearcoat: 0.30, clearcoatRoughness: 0.24, envIntensity: 1.0,
+        description: 'Polished forged aluminium wheel disc — the face you actually see, with a '
+            + 'light clearcoat for the lacquer.'
+    },
+    rimBarrel: {
+        name: 'Rim barrel',
+        color: 0x5d646b, roughness: 0.68, metalness: 0.55, envIntensity: 0.45,
+        description: 'The inside of the wheel well. Deliberately NOT the polished disc material: '
+            + 'the barrel sits inside the tire, in shadow, and is painted rather than machined. '
+            + 'Given the polished treatment it reads as a chrome spool and becomes the brightest '
+            + 'object in the figure, which is exactly backwards — it should recede behind the '
+            + 'tread and the disc face.'
     },
     steelWheel: {
         name: 'Painted steel rim',
-        color: 0x8d9299, roughness: 0.55, metalness: 0.65,
+        color: 0x8d9299, roughness: 0.52, metalness: 0.70, envIntensity: 0.85,
         description: 'Painted steel disc wheel, the budget fitment.'
     },
     hub: {
         name: 'Painted steel hub',
-        color: 0x6d757e, roughness: 0.62, metalness: 0.55,
+        color: 0x6d757e, roughness: 0.58, metalness: 0.60, envIntensity: 0.9,
         description: 'Hub, cap and lug nuts.'
     },
     drum: {
         name: 'Cast brake drum',
-        color: 0x59524c, roughness: 0.88, metalness: 0.35,
+        color: 0x59524c, roughness: 0.86, metalness: 0.40, envIntensity: 0.7,
         description: 'Cast iron, lightly oxidised.'
     },
     axleBeam: {
         name: 'Galvanised axle beam',
-        color: 0x7e858c, roughness: 0.70, metalness: 0.70,
+        color: 0x7e858c, roughness: 0.66, metalness: 0.72, envIntensity: 0.95,
         description: 'Axle housing and spring pads.'
     },
     strut: {
         name: 'Landing gear strut',
-        color: 0xa9b0b7, roughness: 0.38, metalness: 0.85,
+        color: 0xb2b9c0, roughness: 0.30, metalness: 0.90,
+        clearcoat: 0.25, clearcoatRoughness: 0.18, envIntensity: 1.1,
         description: 'Cadmium-plated / polished oleo strut and bogie beam.'
     },
     chassis: {
         name: 'Chassis',
-        color: 0x4a5560, roughness: 0.6, metalness: 0.3,
+        color: 0x4a5560, roughness: 0.58, metalness: 0.35, envIntensity: 0.85,
         description: 'Frame rails and body silhouette.'
     }
 });
 
 /**
- * Live, user-adjustable overrides applied on top of a spec.
  * @typedef {Object} MaterialOverride
- * @property {string}  [tint]        hex string, multiplied into the base colour
- * @property {number}  [brightness]  0.5 - 1.5
- * @property {number}  [roughness]   absolute
+ * @property {string}  [tint]
+ * @property {number}  [brightness]
+ * @property {number}  [roughness]
  * @property {number}  [textureScale]
- * @property {number}  [relief]      normal map strength
+ * @property {number}  [relief]
  */
 
 export class MaterialLibrary {
-    /**
-     * @param {{seed?: string}} [opts]
-     */
+    /** @param {{seed?: string, quality?: string}} [opts] */
     constructor(opts = {}) {
         this.seed = opts.seed ?? 'gear3d-01';
-        /** @type {Map<string, THREE.MeshStandardMaterial>} */
+        /** @type {Map<string, THREE.Material>} */
         this._materials = new Map();
         /** @type {Map<string, MaterialOverride>} */
         this._overrides = new Map();
-        /** @type {Map<string, {normalMap: THREE.Texture, roughnessMap: THREE.Texture}>} */
-        this._treadCache = new Map();
+        /** @type {Map<string, any>} */
+        this._mapCache = new Map();
         /** @type {THREE.Texture[]} */
-        this._disposables = [];
+        this._textures = [];
+        /** @type {THREE.Texture|null} */
+        this._env = null;
+        this._envIntensity = 1;
+    }
+
+    /**
+     * Install the environment map on every material, current and future.
+     * @param {THREE.Texture|null} texture
+     * @param {number} [intensity=1]
+     */
+    setEnvironment(texture, intensity = 1) {
+        this._env = texture;
+        this._envIntensity = intensity;
+        for (const [key, m] of this._materials) this._applyEnv(key, m);
+    }
+
+    /**
+     * @param {string} key
+     * @param {THREE.Material} m
+     */
+    _applyEnv(key, m) {
+        const family = key.split(':')[0];
+        const spec = MATERIAL_SPECS[family];
+        const any = /** @type {any} */ (m);
+        any.envMap = this._env;
+        any.envMapIntensity = (spec?.envIntensity ?? 1) * this._envIntensity;
+        m.needsUpdate = true;
     }
 
     /**
      * Get (and lazily create) a base material.
      * @param {keyof typeof MATERIAL_SPECS} key
-     * @returns {THREE.MeshStandardMaterial}
+     * @returns {THREE.Material}
      */
     get(key) {
         if (this._materials.has(key)) return this._materials.get(key);
         const spec = MATERIAL_SPECS[key];
         if (!spec) throw new Error(`Unknown material: ${key}`);
-        const m = new THREE.MeshStandardMaterial({
+
+        const params = {
             color: new THREE.Color(spec.color),
             roughness: spec.roughness,
             metalness: spec.metalness
-        });
+        };
+        const m = spec.clearcoat != null
+            ? new THREE.MeshPhysicalMaterial({
+                ...params,
+                clearcoat: spec.clearcoat,
+                clearcoatRoughness: spec.clearcoatRoughness ?? 0.2
+            })
+            : new THREE.MeshStandardMaterial(params);
+
         m.name = key;
         this._materials.set(key, m);
+        this._applyEnv(key, m);
         this._apply(key);
         return m;
     }
 
     /**
-     * A rubber material carrying the seeded tread maps for a given pattern
-     * and tire size. Cached, so a class 13 unit with 34 identical tires
-     * builds the maps once.
+     * The two materials a tire needs, ordered to match the geometry groups
+     * emitted by `buildTireGeometry`: [sidewall, tread].
+     *
+     * Cached per designation and pattern, so a class 13 unit with 34
+     * identical tires builds its maps exactly once.
      *
      * @param {import('../geometry/tire.js').TreadPattern} pattern
      * @param {import('../core/tires.js').TireGeometry} g
      * @param {string} designation
-     * @returns {THREE.MeshStandardMaterial}
+     * @returns {THREE.Material[]}
      */
-    rubberFor(pattern, g, designation) {
-        const key = `rubber:${pattern}:${designation}`;
+    tireMaterials(pattern, g, designation) {
+        return [
+            this._tirePart('rubberSidewall', pattern, g, designation),
+            this._tirePart('rubberTread', pattern, g, designation)
+        ];
+    }
+
+    /**
+     * @param {'rubberTread'|'rubberSidewall'} family
+     * @param {import('../geometry/tire.js').TreadPattern} pattern
+     * @param {import('../core/tires.js').TireGeometry} g
+     * @param {string} designation
+     * @returns {THREE.Material}
+     */
+    _tirePart(family, pattern, g, designation) {
+        const key = `${family}:${pattern}:${designation}`;
         if (this._materials.has(key)) return this._materials.get(key);
 
-        const spec = MATERIAL_SPECS.rubber;
-        const maps = this._treadMaps(pattern, g, designation);
+        const spec = MATERIAL_SPECS[family];
+        const maps = family === 'rubberTread'
+            ? this._cachedMaps(`tread:${pattern}:${designation}`, () => buildTreadMaps(pattern, g, { seed: this.seed, designation }))
+            : this._cachedMaps(`side:${designation}`, () => buildSidewallMaps(g, { seed: this.seed, designation }));
+
         const m = new THREE.MeshStandardMaterial({
             color: new THREE.Color(spec.color),
             roughness: spec.roughness,
@@ -143,50 +227,34 @@ export class MaterialLibrary {
             normalMap: maps.normalMap,
             roughnessMap: maps.roughnessMap
         });
-        m.normalScale = new THREE.Vector2(1, 1);
+        m.normalScale = new THREE.Vector2(spec.normalScale ?? 1, spec.normalScale ?? 1);
         m.name = key;
-        // Tread repeats many times around the circumference; the lathe's U
-        // runs around the tire, so repeat U by a count that keeps the block
-        // pitch roughly constant across tire sizes.
-        const repeatU = Math.max(6, Math.round((Math.PI * g.overallDiameter) / 260));
-        maps.normalMap.repeat.set(repeatU, 1);
-        maps.roughnessMap.repeat.set(repeatU, 1);
 
         this._materials.set(key, m);
-        this._apply(key, 'rubber');
+        this._applyEnv(key, m);
+        this._apply(key, family);
         return m;
     }
 
     /**
-     * @param {import('../geometry/tire.js').TreadPattern} pattern
-     * @param {import('../core/tires.js').TireGeometry} g
-     * @param {string} designation
+     * @param {string} key
+     * @param {() => {normalMap: THREE.Texture, roughnessMap: THREE.Texture}} build
      */
-    _treadMaps(pattern, g, designation) {
-        const key = `${pattern}:${designation}`;
-        if (this._treadCache.has(key)) {
-            // Clone so each material can carry its own repeat without
-            // disturbing the others that share the same source canvas.
-            const src = this._treadCache.get(key);
-            const n = src.normalMap.clone(); n.needsUpdate = true;
-            const r = src.roughnessMap.clone(); r.needsUpdate = true;
-            this._disposables.push(n, r);
-            return { normalMap: n, roughnessMap: r };
+    _cachedMaps(key, build) {
+        if (!this._mapCache.has(key)) {
+            const maps = build();
+            this._textures.push(maps.normalMap, maps.roughnessMap);
+            this._mapCache.set(key, maps);
         }
-        const maps = buildTreadMaps(pattern, g, { seed: this.seed, designation });
-        this._treadCache.set(key, maps);
-        this._disposables.push(maps.normalMap, maps.roughnessMap);
-        return maps;
+        return this._mapCache.get(key);
     }
 
     /**
-     * Set a user override and re-apply it.
      * @param {string} key
      * @param {MaterialOverride} override
      */
     setOverride(key, override) {
         this._overrides.set(key, { ...(this._overrides.get(key) || {}), ...override });
-        // Apply to the base key and to every derived rubber variant.
         for (const k of this._materials.keys()) {
             if (k === key || k.startsWith(key + ':')) this._apply(k, key);
         }
@@ -205,10 +273,10 @@ export class MaterialLibrary {
 
     /**
      * @param {string} materialKey
-     * @param {string} [specKey] which spec/override family this belongs to
+     * @param {string} [specKey]
      */
     _apply(materialKey, specKey) {
-        const m = this._materials.get(materialKey);
+        const m = /** @type {any} */ (this._materials.get(materialKey));
         if (!m) return;
         const family = specKey || materialKey.split(':')[0];
         const spec = MATERIAL_SPECS[family];
@@ -217,8 +285,7 @@ export class MaterialLibrary {
 
         const base = new THREE.Color(spec.color);
         if (o.tint) base.multiply(new THREE.Color(o.tint));
-        const b = o.brightness ?? 1;
-        base.multiplyScalar(b);
+        base.multiplyScalar(o.brightness ?? 1);
         m.color.copy(base);
         m.roughness = o.roughness ?? spec.roughness;
 
@@ -226,9 +293,9 @@ export class MaterialLibrary {
             const rel = o.relief ?? spec.normalScale ?? 1;
             m.normalScale.set(rel, rel);
         }
-        if (m.normalMap && o.textureScale) {
-            const s = o.textureScale;
-            m.normalMap.repeat.set(m.normalMap.repeat.x * 0 + s * 12, 1);
+        if (m.normalMap && o.textureScale != null) {
+            const s = Math.max(0.05, o.textureScale);
+            m.normalMap.repeat.set(s, s);
             if (m.roughnessMap) m.roughnessMap.repeat.copy(m.normalMap.repeat);
         }
         m.needsUpdate = true;
@@ -237,9 +304,9 @@ export class MaterialLibrary {
     /** Free every GPU resource this library owns. */
     dispose() {
         for (const m of this._materials.values()) m.dispose();
-        for (const t of this._disposables) t.dispose();
+        for (const t of this._textures) t.dispose();
         this._materials.clear();
-        this._treadCache.clear();
-        this._disposables.length = 0;
+        this._mapCache.clear();
+        this._textures.length = 0;
     }
 }

@@ -158,9 +158,37 @@ can be read straight from the console, without trusting the UI.
 
 ---
 
+## Rendering (v1.1)
+
+- **Image-based lighting.** A studio environment is generated at runtime
+  (`src/scene/environment.js`) and PMREM-filtered. Machined aluminium is
+  defined by what it reflects; without IBL no roughness value makes a rim read
+  as metal. Built procedurally rather than loaded from an HDRI so there is no
+  asset dependency, no third-party licence in the repo, and the environment
+  stays a pure function of the lighting parameters. The softbox positions
+  follow the key light's azimuth, so reflections agree with cast shadows.
+- **Tread is geometry, not texture.** The tire is a custom revolve whose outer
+  radius is modulated by the tread pattern, so grooves and lug blocks break the
+  silhouette, catch the key light and self-shadow. A perfect circular outline is
+  the loudest "this is CG" tell in a tire render. Textures now carry only the
+  fine detail geometry cannot afford.
+- **Sidewall and tread are separate materials**, via geometry groups — they are
+  genuinely different surfaces.
+- **Wheel handedness is modelled.** Dual wheels bolt together back-to-back, so
+  the two wheels of a dual pair are mirror images, and each disc sits near its
+  outboard face rather than at the tire's centre plane.
+- **Adaptive detail.** `pickQuality()` steps segment counts down as tire count
+  rises, so an isolated axle gets the full treatment and a 34-tire turnpike
+  double stays interactive.
+- **Supersampled export.** Renders at 2× and box-filters down, which resolves
+  the specular shimmer on polished lips and the sub-pixel detail in tread
+  grooves that MSAA alone leaves aliased at 600 dpi. Composes with the tiled
+  fallback automatically.
+
 ## Status
 
-**v1.0 ships M0–M6 plus M7** (contact patches and FEM export).
+**v1.0 shipped M0–M6 plus M7** (contact patches and FEM export). **v1.1** adds
+the rendering work above and the glTF asset-slot loader.
 
 Deferred, with reasons in `DECISIONS.md` §D9:
 

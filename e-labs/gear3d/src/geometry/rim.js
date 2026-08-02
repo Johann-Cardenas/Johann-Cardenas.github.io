@@ -27,9 +27,22 @@ import * as THREE from 'three';
  * @property {number} [handHoles=5]       lightening holes in the disc
  * @property {number} [handHoleRatio=0.17] hole diameter, fraction of rim diameter
  * @property {number} [boreRatio=0.30]    central bore diameter, fraction of rim diameter
- * @property {number} [radialSegments=48]
+ * @property {number} [radialSegments]   overrides the quality preset
+ * @property {'draft'|'standard'|'high'} [quality='standard']
  * @property {'steel'|'aluminium'} [style='aluminium']
  */
+
+/** Circumferential segments per quality level. A rim is a wide, smooth,
+ *  specular band — it shows faceting far more readily than rubber does. */
+export const RIM_QUALITY = Object.freeze({ draft: 40, standard: 72, high: 112 });
+
+/**
+ * @param {RimOptions} opts
+ * @returns {number}
+ */
+function rimSegments(opts) {
+    return opts.radialSegments ?? RIM_QUALITY[opts.quality ?? 'standard'] ?? RIM_QUALITY.standard;
+}
 
 /**
  * Meridian profile of the rim barrel, in (radius, axial) millimetres.
@@ -41,23 +54,32 @@ export function rimProfile(g, opts = {}) {
     const width = g.sectionWidth * (opts.widthRatio ?? 0.72);
     const half = width / 2;
     const r = g.rimRadius;
-    const flange = r * 0.045;      // flange height above the bead seat
-    const drop = r * 0.055;        // drop-centre well depth
+    const flange = r * 0.048;      // flange height above the bead seat
+    const drop = r * 0.062;        // drop-centre well depth
 
     /** @type {THREE.Vector2[]} */
     const p = [];
     const add = (rr, a) => p.push(new THREE.Vector2(rr, a));
 
-    add(r * 0.62, -half);                 // inner lip, tucked under
-    add(r + flange, -half);               // inner flange tip
-    add(r + flange, -half + flange * 0.5);
-    add(r, -half + flange * 1.1);         // inner bead seat
-    add(r - drop, -half + width * 0.30);  // into the drop centre
-    add(r - drop, -half + width * 0.55);
-    add(r, -half + width * 0.72);         // outer bead seat
-    add(r + flange, half - flange * 0.5);
-    add(r + flange, half);                // outer flange tip
-    add(r * 0.62, half);
+    // Inner lip, tucked under so the barrel reads as a closed section.
+    add(r * 0.60, -half);
+    add(r + flange * 0.55, -half - flange * 0.10);
+    add(r + flange, -half + flange * 0.18);    // inner flange tip, rolled
+    add(r + flange * 0.72, -half + flange * 0.72);
+    add(r, -half + flange * 1.25);             // inner bead seat
+    add(r - drop * 0.55, -half + width * 0.22);
+    add(r - drop, -half + width * 0.34);       // into the drop-centre well
+    add(r - drop, -half + width * 0.56);
+    add(r - drop * 0.45, -half + width * 0.66);
+    add(r, -half + width * 0.755);             // outer bead seat
+    // The outer flange is the polished lip that catches the key light and is
+    // the single most legible piece of a wheel in a three-quarter view, so it
+    // gets extra points to keep the highlight band smooth.
+    add(r + flange * 0.72, half - flange * 0.80);
+    add(r + flange, half - flange * 0.22);
+    add(r + flange * 1.02, half + flange * 0.06);
+    add(r + flange * 0.60, half + flange * 0.14);
+    add(r * 0.60, half);
 
     return p;
 }
@@ -69,7 +91,7 @@ export function rimProfile(g, opts = {}) {
  * @returns {THREE.BufferGeometry}
  */
 export function buildRimBarrel(g, opts = {}) {
-    const geo = new THREE.LatheGeometry(rimProfile(g, opts), opts.radialSegments ?? 48);
+    const geo = new THREE.LatheGeometry(rimProfile(g, opts), rimSegments(opts));
     geo.rotateZ(-Math.PI / 2);
     geo.computeVertexNormals();
     return geo;
@@ -108,10 +130,10 @@ export function buildRimDisc(g, opts = {}) {
     const geo = new THREE.ExtrudeGeometry(shape, {
         depth: thickness,
         bevelEnabled: true,
-        bevelThickness: thickness * 0.18,
-        bevelSize: thickness * 0.18,
-        bevelSegments: 2,
-        curveSegments: 32
+        bevelThickness: thickness * 0.20,
+        bevelSize: thickness * 0.20,
+        bevelSegments: opts.quality === 'high' ? 4 : 2,
+        curveSegments: Math.max(24, Math.round(rimSegments(opts) * 0.55))
     });
 
     // Extrude builds along +Z; rotate so the disc's normal is the wheel axis.

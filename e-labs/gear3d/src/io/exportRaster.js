@@ -37,8 +37,65 @@ export const RESOLUTION_PRESETS = Object.freeze([
  * @property {'png'|'png-alpha'|'jpeg'} format
  * @property {number} [quality=0.95]  JPEG only
  * @property {number} [maxTile]       override the tile size (testing)
+ * @property {number} [supersample=1] render at this multiple, then downsample
  * @property {(stage: string, done: number, total: number) => void} [onProgress]
  */
+
+/**
+ * Render at a multiple of the requested size and box-filter down.
+ *
+ * MSAA antialiases geometry edges but does nothing for the specular
+ * shimmer along a rim's polished lip or the sub-pixel detail in tread
+ * grooves, which is exactly the content that falls apart at 600 dpi.
+ * Supersampling resolves both, at the cost of 4x the fill for 2x.
+ *
+ * The tiled fallback composes with this automatically: the supersampled
+ * target is simply a larger image, so if it exceeds the GPU limit it is
+ * tiled like any other.
+ *
+ * @param {import('../scene/renderer.js').Viewport} viewport
+ * @param {RasterOptions} opts
+ * @returns {Promise<HTMLCanvasElement>} at exactly opts.width x opts.height
+ */
+export async function renderSupersampled(viewport, opts) {
+    const ss = Math.max(1, Math.min(4, Math.round(opts.supersample ?? 1)));
+    if (ss === 1) return renderToCanvas(viewport, opts);
+
+    const big = await renderToCanvas(viewport, {
+        ...opts,
+        width: opts.width * ss,
+        height: opts.height * ss,
+        onProgress: (stage, done, total) => opts.onProgress?.(stage, done, total)
+    });
+
+    opts.onProgress?.('downsample', 0, 1);
+    const out = document.createElement('canvas');
+    out.width = opts.width;
+    out.height = opts.height;
+    const ctx = out.getContext('2d');
+    if (!ctx) throw new Error('Could not obtain a 2D context for downsampling.');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // Halve repeatedly rather than scaling in one step: a single large
+    // downscale in canvas2d samples too sparsely and reintroduces the
+    // aliasing the supersample was meant to remove.
+    let src = big;
+    let w = big.width, h = big.height;
+    while (w > opts.width * 2 && h > opts.height * 2) {
+        const half = document.createElement('canvas');
+        half.width = Math.max(opts.width, Math.round(w / 2));
+        half.height = Math.max(opts.height, Math.round(h / 2));
+        const hctx = half.getContext('2d');
+        hctx.imageSmoothingEnabled = true;
+        hctx.imageSmoothingQuality = 'high';
+        hctx.drawImage(src, 0, 0, half.width, half.height);
+        src = half; w = half.width; h = half.height;
+    }
+    ctx.drawImage(src, 0, 0, opts.width, opts.height);
+    opts.onProgress?.('downsample', 1, 1);
+    return out;
+}
 
 /**
  * Render the current view to a canvas at an arbitrary size.

@@ -32,6 +32,7 @@ import { TIRE_CONFIGS } from './schema.js';
  * @property {number|null} loadKn   load carried by THIS tire
  * @property {string} config        STA | DTA | WBT | gear type
  * @property {number} [row]         tandem row index, aircraft only
+ * @property {1|-1} discSign        which way along +y the wheel DISC faces
  */
 
 /**
@@ -127,10 +128,19 @@ function resolveTruck(unit, opts) {
                 // "Inner" is the one nearer the vehicle centreline.
                 const inner = yPos - sign * half;
                 const outer = yPos + sign * half;
-                wheels.push(makeWheel(`${positionId}-in`, a, positionId, s, inner, geometry, perTireKn, groupOf));
-                wheels.push(makeWheel(`${positionId}-out`, a, positionId, s, outer, geometry, perTireKn, groupOf));
+                // Dual wheels bolt together BACK TO BACK, so each disc faces
+                // the other tire of the pair — the two wheels of a dual are
+                // mirror images, not copies. Getting this wrong puts both
+                // wheel faces on the same side and the assembly stops
+                // reading as a dual.
+                const d = /** @type {1|-1} */ (sign > 0 ? 1 : -1);
+                wheels.push(makeWheel(`${positionId}-in`, a, positionId, s, inner, geometry, perTireKn, groupOf, d));
+                wheels.push(makeWheel(`${positionId}-out`, a, positionId, s, outer, geometry, perTireKn, groupOf, /** @type {1|-1} */(-d)));
             } else {
-                wheels.push(makeWheel(`${positionId}`, a, positionId, s, yPos, geometry, perTireKn, groupOf));
+                // A single wheel's disc faces outboard, away from the
+                // vehicle centreline.
+                const d = /** @type {1|-1} */ (sign >= 0 ? 1 : -1);
+                wheels.push(makeWheel(`${positionId}`, a, positionId, s, yPos, geometry, perTireKn, groupOf, d));
             }
         }
     }
@@ -147,9 +157,10 @@ function resolveTruck(unit, opts) {
  * @param {import('./tires.js').TireGeometry} geometry
  * @param {number|null} loadKn
  * @param {Map<string,string>} groupOf
+ * @param {1|-1} [discSign=1]
  * @returns {Wheel}
  */
-function makeWheel(id, a, positionId, side, y, geometry, loadKn, groupOf) {
+function makeWheel(id, a, positionId, side, y, geometry, loadKn, groupOf, discSign = 1) {
     return {
         id,
         axleId: a.id,
@@ -162,7 +173,8 @@ function makeWheel(id, a, positionId, side, y, geometry, loadKn, groupOf) {
         tire: a.tire,
         geometry,
         loadKn,
-        config: a.tireConfig
+        config: a.tireConfig,
+        discSign
     };
 }
 
@@ -244,7 +256,8 @@ function resolveAircraft(unit, opts) {
                     geometry,
                     loadKn: perTireKn,
                     config: g.type || (across > 1 ? 'dual' : 'single'),
-                    row
+                    row,
+                    discSign: /** @type {1|-1} */ (off >= 0 ? 1 : -1)
                 });
             }
         }

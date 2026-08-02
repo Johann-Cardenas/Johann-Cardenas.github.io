@@ -47,7 +47,9 @@ import {
     drillInto, stepOut, describeIsolation, isolationBounds
 } from './src/views/isolation.js';
 
-import { renderToCanvas, compositeOverlay, canvasToBlob, RESOLUTION_PRESETS } from './src/io/exportRaster.js';
+import {
+    renderToCanvas, renderSupersampled, compositeOverlay, canvasToBlob, RESOLUTION_PRESETS
+} from './src/io/exportRaster.js';
 import { buildHybridSVG, buildHybridPDF } from './src/io/exportVector.js';
 import {
     serializeProject, parseProject, serializeUnit, download, readFileText,
@@ -93,7 +95,9 @@ function defaultView() {
         exportFormat: 'png',
         exportSize: '2400x1800',
         exportW: 2400,
-        exportH: 1800
+        exportH: 1800,
+        quality: 'standard',
+        supersample: 2
     };
 }
 
@@ -190,6 +194,10 @@ function setupViewport() {
         $('g3-viewport')
     );
 
+    // The viewport owns the environment map; the library owns the materials
+    // it has to be pushed onto.
+    app.viewport.setMaterialLibrary(app.materials);
+
     app.viewport.onFrame = (info) => drawOverlay(info);
     app.viewport.onContextLost = () => {
         toast('The WebGL context was lost. Reload the page to continue — your work is autosaved.', 'error');
@@ -249,7 +257,11 @@ function rebuild(opts = {}) {
     }
 
     app.layout = resolveLayout(unit);
-    app.assembly = buildAssembly(app.layout, app.materials, { showAxles: true });
+    app.assembly = buildAssembly(app.layout, app.materials, {
+        showAxles: true,
+        quality: app.store.view.quality,
+        seed: app.store.doc.seed
+    });
     app.viewport.setAssembly(app.assembly);
 
     applyIsolation({ frame: opts.frame });
@@ -1020,11 +1032,16 @@ async function runExport() {
 
     showProgress(true, 'Preparing export…');
     try {
-        const canvas = await renderToCanvas(app.viewport, {
+        const canvas = await renderSupersampled(app.viewport, {
             width, height,
+            supersample: v.supersample,
             format: v.exportFormat === 'jpeg' ? 'jpeg' : v.exportFormat === 'png-alpha' ? 'png-alpha' : 'png',
-            onProgress: (stage, done, total) =>
-                showProgress(true, stage === 'tile' ? `Rendering tile ${done} of ${total}…` : 'Rendering…', done / total)
+            onProgress: (stage, done, total) => showProgress(
+                true,
+                stage === 'tile' ? `Rendering tile ${done} of ${total}…`
+                    : stage === 'downsample' ? 'Resolving…' : 'Rendering…',
+                done / total
+            )
         });
 
         const overlay = /** @type {SVGSVGElement} */ ($('g3-overlay'));

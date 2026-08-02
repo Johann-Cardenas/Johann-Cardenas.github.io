@@ -105,19 +105,34 @@ export class LightingRig {
     apply(s) {
         this.state = { ...s };
         this.key.intensity = s.keyIntensity;
-        this.ambient.intensity = s.ambient * 0.55;
-        this.hemi.intensity = s.ambient * 0.75;
+        // The studio environment map supplies most of the ambient term now,
+        // so the analytic ambient and hemisphere lights are held well down.
+        // Left at their pre-IBL values they double-count and wash the tread
+        // relief flat — the shading that makes grooves read is exactly the
+        // shading that excess ambient destroys.
+        this.ambient.intensity = s.ambient * 0.16;
+        this.hemi.intensity = s.ambient * 0.24;
 
         // Preset-specific secondary lights.
+        //
+        // Every preset except softbox carries some rim light. A tire is a
+        // near-black object usually rendered against publication white, and
+        // without a rim its far edge dissolves into the background — the
+        // shape stops reading and the figure looks like a silhouette with
+        // detail painted on the near side only. The rim light is what puts
+        // the outline back.
         if (s.preset === 'threepoint') {
             this.fill.intensity = s.keyIntensity * 0.30;
-            this.rim.intensity = s.keyIntensity * 0.55;
+            this.rim.intensity = s.keyIntensity * 0.60;
         } else if (s.preset === 'softbox') {
             this.fill.intensity = s.keyIntensity * 0.55;
-            this.rim.intensity = 0;
+            this.rim.intensity = s.keyIntensity * 0.12;
+        } else if (s.preset === 'daylight') {
+            this.fill.intensity = s.keyIntensity * 0.16;
+            this.rim.intensity = s.keyIntensity * 0.30;
         } else {
-            this.fill.intensity = s.keyIntensity * 0.18;
-            this.rim.intensity = 0;
+            this.fill.intensity = s.keyIntensity * 0.20;
+            this.rim.intensity = s.keyIntensity * 0.38;
         }
 
         // Shadow softness is expressed in the same 0-12 range as
@@ -151,8 +166,9 @@ export class LightingRig {
         const fillDir = new THREE.Vector3(-dir.x, Math.max(0.25, dir.y * 0.45), -dir.z).normalize();
         this.fill.position.copy(c).addScaledVector(fillDir, r);
 
-        // Rim from behind.
-        const rimDir = new THREE.Vector3(-dir.x * 0.6, 0.35, -dir.z).normalize();
+        // Rim from behind and slightly above, so it grazes the far edge of
+        // the tires rather than lighting their faces.
+        const rimDir = new THREE.Vector3(-dir.x * 0.85, 0.30, -dir.z * 0.95).normalize();
         this.rim.position.copy(c).addScaledVector(rimDir, r);
     }
 

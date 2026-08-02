@@ -25,8 +25,9 @@
 
 import * as THREE from 'three';
 import { engToRender } from '../core/coords.js';
-import { buildTireGeometry, treadPatternFor } from './tire.js';
+import { buildTireGeometry, treadPatternFor, pickQuality } from './tire.js';
 import { buildRimBarrel, buildRimDisc } from './rim.js';
+import { buildHubGeometry } from './hub.js';
 import { buildAxleBeam, buildGearStrut } from './axle.js';
 
 /** Millimetres to scene metres. */
@@ -66,39 +67,64 @@ export function buildAssembly(layout, materials, opts = {}) {
 
     /* ---------- group wheels by what they can share ---------- */
 
+    // Detail is chosen from how many tires actually have to be rasterised,
+    // so a single isolated axle gets the full treatment and a 34-tire
+    // turnpike double stays interactive.
+    const quality = pickQuality(layout.wheels.length, opts.quality);
+
     /** @type {Map<string, import('../core/layout.js').Wheel[]>} */
     const byKind = new Map();
     for (const w of layout.wheels) {
         const axle = layout.axles.find((a) => a.id === w.axleId);
         const pattern = treadPatternFor({ role: axle?.role, domain: layout.domain });
-        const key = `${w.tire}|${pattern}`;
+        // Handedness is part of the key: a left-facing wheel and a
+        // right-facing one are mirror images and cannot share geometry.
+        const key = `${w.tire}|${pattern}|${w.discSign ?? 1}`;
         if (!byKind.has(key)) byKind.set(key, []);
         byKind.get(key).push(w);
     }
 
     for (const [key, wheels] of byKind) {
-        const [designation, pattern] = key.split('|');
+        const [designation, pattern, signStr] = key.split('|');
+        const sign = /** @type {1|-1} */ (Number(signStr) < 0 ? -1 : 1);
         const g = wheels[0].geometry;
+        const tp = /** @type {import('./tire.js').TreadPattern} */ (pattern);
 
-        const tireGeo = buildTireGeometry(g, { radialSegments: opts.radialSegments ?? 64 });
-        const barrelGeo = buildRimBarrel(g);
-        const discGeo = buildRimDisc(g);
-        ownedGeometries.push(tireGeo, barrelGeo, discGeo);
+        // Tread relief is cut into the geometry, so the pattern has to be
+        // known here rather than only at material time.
+        const tireGeo = buildTireGeometry(g, {
+            quality,
+            radialSegments: opts.radialSegments,
+            pattern: tp,
+            seed: opts.seed,
+            designation
+        });
+        const barrelGeo = buildRimBarrel(g, { quality });
+        // The disc sits near the OUTBOARD face of the rim, not at its centre.
+        // Left at the centre it is buried behind a section-width of sidewall
+        // and the wheel reads as a hollow ring.
+        const discGeo = buildRimDisc(g, { quality, offsetRatio: 0.30 * sign });
+        const hubGeo = buildHubGeometry(g, { quality, sign });
+        ownedGeometries.push(tireGeo, barrelGeo, discGeo, hubGeo);
 
-        const rubber = materials.rubberFor(
-            /** @type {import('./tire.js').TreadPattern} */(pattern), g, designation
-        );
-        const metal = materials.get(layout.domain === 'aircraft' ? 'aluminium' : 'aluminium');
+        // Two materials, ordered to match the geometry groups: sidewall, tread.
+        const rubber = materials.tireMaterials(tp, g, designation);
+        // Barrel and disc get DIFFERENT metals on purpose — see the rimBarrel
+        // material note.
+        const barrelMat = materials.get('rimBarrel');
+        const discMat = materials.get('aluminium');
 
         const tireMesh = makeInstanced(tireGeo, rubber, wheels.length, `tires:${key}`);
-        const barrelMesh = makeInstanced(barrelGeo, metal, wheels.length, `rim-barrel:${key}`);
-        const discMesh = makeInstanced(discGeo, metal, wheels.length, `rim-disc:${key}`);
+        const barrelMesh = makeInstanced(barrelGeo, barrelMat, wheels.length, `rim-barrel:${key}`);
+        const discMesh = makeInstanced(discGeo, discMat, wheels.length, `rim-disc:${key}`);
+        const hubMesh = makeInstanced(hubGeo, materials.get('hub'), wheels.length, `hub:${key}`);
 
-        wheelsGroup.add(tireMesh, barrelMesh, discMesh);
+        wheelsGroup.add(tireMesh, barrelMesh, discMesh, hubMesh);
         instanceSets.push(
             { mesh: tireMesh, wheels },
             { mesh: barrelMesh, wheels },
-            { mesh: discMesh, wheels }
+            { mesh: discMesh, wheels },
+            { mesh: hubMesh, wheels }
         );
     }
 
@@ -194,7 +220,9 @@ export function buildAssembly(layout, materials, opts = {}) {
 
 /**
  * @param {THREE.BufferGeometry} geo
- * @param {THREE.Material} mat
+ * @param {THREE.Material|THREE.Material[]} mat a material array pairs with the
+ *        geometry's groups, which is how the tire gets separate sidewall and
+ *        tread surfaces from one instanced draw
  * @param {number} count
  * @param {string} name
  * @returns {THREE.InstancedMesh}

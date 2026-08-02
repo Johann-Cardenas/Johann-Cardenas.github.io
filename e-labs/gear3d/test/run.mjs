@@ -783,6 +783,43 @@ test('the dual pair is symmetric about the vehicle centreline', () => {
     assertClose(left[1], -right[0], 1e-9, 'innermost mirror');
 });
 
+test('dual wheels are mounted back to back, so their discs face each other', () => {
+    for (const side of ['L', 'R']) {
+        const pair = c9layout.wheels.filter((w) => w.positionId === `A2-${side}`);
+        assertEqual(pair.length, 2, `${side} pair size`);
+        const inner = pair.find((w) => w.id.endsWith('-in'));
+        const outer = pair.find((w) => w.id.endsWith('-out'));
+        assertEqual(inner.discSign, -outer.discSign, `${side}: the two discs must be opposed`);
+        // Each disc faces the other tire of its own pair.
+        assertEqual(Math.sign(outer.y - inner.y), inner.discSign, `${side} inner faces outward-of-pair`);
+        assertEqual(Math.sign(inner.y - outer.y), outer.discSign, `${side} outer faces inward-of-pair`);
+    }
+});
+
+test('the two sides of an axle are mirror images of each other', () => {
+    const l = c9layout.wheels.filter((w) => w.positionId === 'A2-L');
+    const r = c9layout.wheels.filter((w) => w.positionId === 'A2-R');
+    const byRole = (list, suffix) => list.find((w) => w.id.endsWith(suffix));
+    assertEqual(byRole(l, '-in').discSign, -byRole(r, '-in').discSign, 'inner tires mirror');
+    assertEqual(byRole(l, '-out').discSign, -byRole(r, '-out').discSign, 'outer tires mirror');
+});
+
+test('a single-tire axle faces its disc outboard, away from the centreline', () => {
+    const steer = c9layout.wheels.filter((w) => w.axleId === 'A1');
+    for (const w of steer) {
+        assertEqual(w.discSign, Math.sign(w.y), `${w.id} must face away from the centreline`);
+    }
+});
+
+test('every wheel carries a valid handedness', () => {
+    for (const u of truckUnits) {
+        for (const w of resolveLayout(u).wheels) {
+            assert(w.discSign === 1 || w.discSign === -1,
+                `${u.id}/${w.id} has discSign ${w.discSign}`);
+        }
+    }
+});
+
 test('every tire centre sits at its own static loaded radius, so it touches z = 0', () => {
     for (const w of c9layout.wheels) {
         assertClose(w.z, w.geometry.staticLoadedRadius, 1e-9, `${w.id} centre height`);
