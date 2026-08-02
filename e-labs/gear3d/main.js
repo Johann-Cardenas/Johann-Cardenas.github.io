@@ -23,7 +23,7 @@ import { Store } from './src/core/store.js';
 import { checkBridgeFormula } from './src/core/bridge.js';
 import {
     UNIT_SYSTEMS, formatLength, formatForce, formatMass, formatArea,
-    formatPressure, lengthFromMm, lengthToMm
+    formatPressure, lengthFromMm, lengthToMm, canonical
 } from './src/core/units.js';
 import { DEFAULT_SEED } from './src/core/prng.js';
 import { CAMERA_PRESETS, ENG_AXES } from './src/core/coords.js';
@@ -280,7 +280,7 @@ function rebuild(opts = {}) {
 function applyIsolation(opts = {}) {
     if (!app.assembly) return;
     const iso = app.store.view.isolation;
-    app.assembly.setWheelFilter(wheelPredicate(iso));
+    app.assembly.setWheelFilter(wheelPredicate(iso), { ghost: iso.ghost });
 
     if (opts.frame) {
         const b = isolationBounds(iso, app.layout);
@@ -554,7 +554,7 @@ function renderUnitMeta() {
         rows.push(['Designation', u.designation]);
         rows.push(['Axles', String(u.axles.length)]);
         rows.push(['Tires', String(tireCount(u))]);
-        if (u.gvw) rows.push(['GVW', formatMass(u.gvw.value, sys.mass, { precision: 0 })]);
+        if (u.gvw) rows.push(['GVW', formatMass(canonical(u.gvw, 'mass'), sys.mass, { precision: 0 })]);
         rows.push(['Overall length', formatLength(u.overallLength, sys.length, { precision: 0 })]);
 
         const bridge = checkBridgeFormula(u);
@@ -566,10 +566,28 @@ function renderUnitMeta() {
                     : bridge.ok ? 'compliant' : `${bridge.violations.length} violation(s)`;
         rows.push(['Bridge formula', verdict]);
     } else {
+        // Data files state quantities in whatever unit the SOURCE uses — MTOW
+        // in pounds, tire pressure in psi — so the citation stays faithful to
+        // the document. Everything must therefore go through canonical()
+        // before it is formatted, or a value stated in pounds gets a kilogram
+        // label pinned to it.
         rows.push(['Gear code', u.gearDesignation]);
-        if (u.mtow) rows.push(['MTOW', formatMass(u.mtow.value, sys.mass, { precision: 0 })]);
-        if (u.tirePressure) rows.push(['Tire pressure', formatPressure(u.tirePressure.value, sys.pressure, { precision: 0 })]);
+        if (u.mtow) rows.push(['MTOW', formatMass(canonical(u.mtow, 'mass'), sys.mass, { precision: 0 })]);
+        if (u.maxTaxiWeight) {
+            rows.push(['Max taxi', formatMass(canonical(u.maxTaxiWeight, 'mass'), sys.mass, { precision: 0 })]);
+        }
+        if (u.tirePressure) {
+            rows.push(['Tire pressure', formatPressure(canonical(u.tirePressure, 'pressure'), sys.pressure, { precision: 0 })]);
+        }
+        if (u.percentOnMainGear != null) rows.push(['On main gear', `${u.percentOnMainGear} %`]);
         rows.push(['Tires', String(tireCount(u))]);
+        if (app.layout?.derived?.mainGearTrack) {
+            rows.push(['Main gear track', formatLength(app.layout.derived.mainGearTrack, sys.length, { precision: 0 })]);
+        }
+        if (u.mainGearOuterWidth) {
+            rows.push(['Outer width', formatLength(u.mainGearOuterWidth, sys.length, { precision: 0 })]);
+        }
+        rows.push(['Wheelbase', formatLength(u.wheelbase, sys.length, { precision: 0 })]);
     }
 
     $('g3-unit-meta').innerHTML = '<dl>'
@@ -583,6 +601,38 @@ function renderUnitMeta() {
     } else {
         badge.hidden = true;
     }
+
+    renderAssumptionNotice(u);
+}
+
+/**
+ * Surface, unmissably, any value in the loaded unit that was assumed rather
+ * than read from a source.
+ *
+ * The app's claim is that its dimensions are real. Where one is not, saying
+ * so in the interface — not only in a documentation file nobody opens — is
+ * what keeps that claim true. The aircraft units carry authoritative gear
+ * envelopes but a small number of unconstrained internal spacings, and a user
+ * comparing output against FAARFIELD needs to know which is which before they
+ * conclude the app is wrong.
+ *
+ * @param {object} u
+ */
+function renderAssumptionNotice(u) {
+    const box = $('g3-assumption-notice');
+    if (!box) return;
+    const fields = u.assumedFields || [];
+    if (!fields.length) { box.hidden = true; return; }
+
+    box.hidden = false;
+    box.innerHTML =
+        '<i class="fas fa-exclamation-triangle"></i>'
+        + `<span><strong>${fields.length} assumed value${fields.length > 1 ? 's' : ''}:</strong> `
+        + `${fields.map(esc).join(', ')}. Everything else on this aircraft — gear code, `
+        + 'wheelbase, main gear outer width, MTOW, tire size and pressure — is taken from the '
+        + 'FAA Aircraft Characteristics Database and the manufacturer ACAP. Set the assumed '
+        + 'spacings from FAARFIELD before using this figure for pavement work; the track '
+        + 're-derives so the published outer width is preserved.</span>';
 }
 
 function setupIsolationPanel() {

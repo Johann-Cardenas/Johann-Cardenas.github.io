@@ -110,7 +110,10 @@ export function buildGearStrut(spec, g, material, opts = {}) {
     const grp = new THREE.Group();
     grp.name = 'gear-strut';
 
-    const legR = g.rimDiameter * 0.16;
+    // A widebody oleo is a substantial forging — roughly half a metre across
+    // on a 777. At 0.16 it rendered as a thin rod that read as a support pin
+    // rather than the structural member carrying the aircraft.
+    const legR = g.rimDiameter * 0.26;
     // The leg runs from the axle up to roughly two tire diameters, which is
     // enough to read as a strut without pretending to model the actual
     // retraction geometry — that is out of scope by design.
@@ -137,7 +140,7 @@ export function buildGearStrut(spec, g, material, opts = {}) {
     if (spec.tandemRows > 1) {
         const bogieLen = spec.tandemSpacing * (spec.tandemRows - 1) + g.sectionWidth * 0.9;
         const bogie = new THREE.Mesh(
-            new THREE.BoxGeometry(legR * 1.1, legR * 1.25, bogieLen),
+            new THREE.BoxGeometry(legR * 0.85, legR * 1.5, bogieLen),
             material
         );
         bogie.position.set(0, spec.axleHeight, 0);

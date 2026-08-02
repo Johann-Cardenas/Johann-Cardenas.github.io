@@ -64,6 +64,8 @@ export function buildAssembly(layout, materials, opts = {}) {
     const ownedGeometries = [];
     /** @type {Array<{mesh: THREE.InstancedMesh, wheels: import('../core/layout.js').Wheel[]}>} */
     const instanceSets = [];
+    /** @type {Array<{mesh: THREE.InstancedMesh, wheels: import('../core/layout.js').Wheel[]}>} */
+    const ghostSets = [];
 
     /* ---------- group wheels by what they can share ---------- */
 
@@ -119,13 +121,24 @@ export function buildAssembly(layout, materials, opts = {}) {
         const discMesh = makeInstanced(discGeo, discMat, wheels.length, `rim-disc:${key}`);
         const hubMesh = makeInstanced(hubGeo, materials.get('hub'), wheels.length, `hub:${key}`);
 
-        wheelsGroup.add(tireMesh, barrelMesh, discMesh, hubMesh);
+        // Ghost twin: same tire geometry, flat translucent material, showing
+        // exactly the wheels the isolation filter REJECTS. One extra mesh per
+        // tire kind, drawn only when ghosting is on.
+        const ghostMesh = makeInstanced(tireGeo, materials.ghost(), wheels.length, `ghost:${key}`);
+        ghostMesh.castShadow = false;
+        ghostMesh.receiveShadow = false;
+        ghostMesh.userData.pickable = false;
+        ghostMesh.visible = false;
+        ghostMesh.renderOrder = -1;
+
+        wheelsGroup.add(tireMesh, barrelMesh, discMesh, hubMesh, ghostMesh);
         instanceSets.push(
             { mesh: tireMesh, wheels },
             { mesh: barrelMesh, wheels },
             { mesh: discMesh, wheels },
             { mesh: hubMesh, wheels }
         );
+        ghostSets.push({ mesh: ghostMesh, wheels });
     }
 
     /* ---------- axle beams / struts ---------- */
@@ -169,23 +182,48 @@ export function buildAssembly(layout, materials, opts = {}) {
     const visibleMap = new Map();
 
     /**
-     * Rewrite every instance matrix, packing the wheels that pass the
-     * predicate to the front and setting `count` to how many passed.
+     * Pack a set of instances to match a selection.
+     * @param {Array<{mesh: THREE.InstancedMesh, wheels: import('../core/layout.js').Wheel[]}>} sets
      * @param {(w: import('../core/layout.js').Wheel) => boolean} pred
+     * @param {boolean} enabled
      */
-    function setWheelFilter(pred) {
-        for (const { mesh, wheels } of instanceSets) {
-            const visible = wheels.filter(pred);
-            visibleMap.set(mesh, visible);
-            visible.forEach((w, i) => {
+    function packSets(sets, pred, enabled) {
+        for (const { mesh, wheels } of sets) {
+            const chosen = enabled ? wheels.filter(pred) : [];
+            visibleMap.set(mesh, chosen);
+            chosen.forEach((w, i) => {
                 const p = engToRender({ x: w.x, y: w.y, z: w.z });
                 matrix.compose(new THREE.Vector3(p.x, p.y, p.z), quat, scale);
                 mesh.setMatrixAt(i, matrix);
             });
-            mesh.count = visible.length;
+            mesh.count = chosen.length;
             mesh.instanceMatrix.needsUpdate = true;
-            mesh.visible = visible.length > 0;
+            mesh.visible = chosen.length > 0;
             mesh.computeBoundingSphere();
+        }
+    }
+
+    /**
+     * Rewrite every instance matrix, packing the wheels that pass the
+     * predicate to the front and setting `count` to how many passed.
+     *
+     * @param {(w: import('../core/layout.js').Wheel) => boolean} pred
+     * @param {{ghost?: boolean}} [opts] when ghosting, the wheels that FAIL
+     *        the predicate are drawn translucently for context
+     */
+    function setWheelFilter(pred, opts = {}) {
+        packSets(instanceSets, pred, true);
+        packSets(ghostSets, (w) => !pred(w), !!opts.ghost);
+
+        // Axle beams and struts follow their own wheels. Deriving the set
+        // rather than filtering structure separately makes it impossible for
+        // the two to disagree — a beam floating in an isolated figure with no
+        // wheels on it is both wrong and, in an exported figure, quietly
+        // misleading about what was measured.
+        const shownAxles = new Set(layout.wheels.filter(pred).map((w) => w.axleId));
+        for (const node of structureGroup.children) {
+            const id = node.userData?.axleId;
+            node.visible = id == null ? true : shownAxles.has(id);
         }
     }
 

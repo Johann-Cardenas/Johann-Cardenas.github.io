@@ -205,6 +205,50 @@ carries no secrets and enables nothing that is not already in the project file.
 
 ---
 
+## D14. Aircraft track is derived from outer width, not assumed equal to it (v1.2)
+
+**Decision.** Aircraft units store the FAA's `mainGearOuterWidth` as the
+transverse datum and **derive** the centreline track from it:
+`track = outerWidth − (wheelsAcross − 1)·dualSpacing − sectionWidth`.
+
+**Why.** The FAA Aircraft Characteristics Database's own data dictionary
+defines the field as *"Distance between outer tires in the main landing
+gear."* It is an outside dimension. Treating it as the track — the obvious
+mistake, because both are informally called "main gear width" — displaces every
+main wheel outboard by half a dual spacing plus half a tire. On a 777 that is
+close to a metre per side, and the resulting figure looks entirely plausible.
+
+The derivation is validated twice: `validateUnit` fails if the stored gear
+positions do not reproduce the stated outer width, and a separate test checks
+the derived track against each manufacturer's independently published tread
+(agreement is 10–26 mm across four aircraft, which is corroboration rather than
+circularity because the tread figures play no part in the derivation).
+
+---
+
+## D15. Assumed values are declared in the data and shown in the app (v1.2)
+
+**Decision.** Aircraft units carry a required `assumedFields[]` array. Schema
+validation fails when it is absent — an empty array is valid and means "nothing
+was assumed". The app renders an amber notice naming the assumed quantities
+whenever such a unit is loaded.
+
+**Why.** Two aircraft quantities — nose gear dual spacing, and tandem spacing
+on 2D/3D gears — are not constrained by anything published. The alternatives
+were to omit the aircraft entirely (a second deferral, with the code paths
+already built and most of the data authoritative) or to record the values
+silently and let them pass as sourced.
+
+Neither is right. A modelling assumption that is *declared* is legitimate
+engineering; the same number presented as a measurement is not. Putting the
+declaration in the schema makes it unskippable, and putting it in the interface
+means the person comparing output against FAARFIELD sees which two numbers to
+check before concluding the app is wrong. The dual spacing is also the input
+the user is most likely to know, and editing it re-derives the track, so
+correcting it keeps the authoritative envelope intact.
+
+---
+
 ## D12. The environment map is generated, not downloaded (v1.1)
 
 **Decision.** Image-based lighting comes from a studio environment built at

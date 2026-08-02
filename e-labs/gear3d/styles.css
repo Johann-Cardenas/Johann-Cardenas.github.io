@@ -364,6 +364,21 @@
 }
 .g3-badge-modified i { color: var(--g3-signal); }
 
+/* Assumed-value notice. Uses the warn colour rather than the signal red:
+   signal red means "this is the live measurement", and an assumption is a
+   caveat, not a reading. */
+.g3-badge-assumed {
+    display: flex; align-items: flex-start; gap: .45rem;
+    margin-top: .5rem; padding: .45rem .55rem;
+    font-size: .69rem; line-height: 1.5;
+    color: var(--g3-ink);
+    background: color-mix(in srgb, var(--g3-warn) 14%, transparent);
+    border-left: 2px solid var(--g3-warn);
+    border-radius: 0 3px 3px 0;
+}
+.g3-badge-assumed i { color: var(--g3-warn); margin-top: .12rem; flex: 0 0 auto; }
+.g3-badge-assumed strong { color: var(--g3-ink); }
+
 .g3-mini-row { display: flex; gap: .35rem; flex-wrap: wrap; margin-top: .5rem; }
 
 /* ==================== BUTTONS ==================== */

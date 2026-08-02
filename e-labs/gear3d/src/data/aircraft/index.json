@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "1.0",
+  "scheme": "FAA-AC-150/5300-13B",
+  "$comment": [
+    "Aircraft landing gear library.",
+    "",
+    "HOW THIS LIBRARY IS BUILT — read data/SOURCES.md section 5 before using it.",
+    "",
+    "AUTHORITATIVE, taken verbatim from primary sources:",
+    "  gear designation, wheelbase, main gear OUTER width, MTOW    FAA Aircraft",
+    "                                                              Characteristics Database",
+    "  tire size, tire pressure, maximum design taxi weight        manufacturer ACAP",
+    "  percent of gross weight on the main gear (95 %)             FAA AC 150/5320-6G, G.1.3",
+    "",
+    "DERIVED, exactly, from the above:",
+    "  tire overall diameter / section width / rim   from the three-part designation",
+    "  main gear TRACK (centreline to centreline)    from the FAA outer width:",
+    "        track = outerWidth - (wheelsAcross - 1) * dualSpacing - sectionWidth",
+    "",
+    "The FAA field is explicitly 'distance between outer tires in the main landing",
+    "gear' — an OUTSIDE dimension, not the centreline tread. Conflating the two",
+    "would put every main wheel in the wrong place, so the track is always derived",
+    "rather than assumed to equal it.",
+    "",
+    "CROSS-CHECKED: with the dual spacings recorded here, that derivation",
+    "reproduces each manufacturer's separately published tread to within a few",
+    "centimetres on all four aircraft. test/run.mjs asserts this.",
+    "",
+    "ASSUMED, and declared as such on every unit in `assumedFields`:",
+    "  tandem spacing (2D and 3D gears), and nose gear dual spacing.",
+    "  Nothing in the sources above constrains them. Set them from FAARFIELD",
+    "  before using this app's output for pavement work — the app recomputes the",
+    "  track when you change a dual spacing, so the authoritative outer width is",
+    "  preserved whatever you enter."
+  ],
+  "files": ["boeing.json"],
+  "gearCodes": [
+    { "code": "S", "label": "Single wheel" },
+    { "code": "D", "label": "Dual wheel" },
+    { "code": "2D", "label": "Dual wheel, tandem" },
+    { "code": "3D", "label": "Dual wheel, triple tandem" },
+    { "code": "2D/2D2", "label": "Dual tandem wing gear + two dual tandem body gears" },
+    { "code": "2D/3D2", "label": "Dual tandem wing gear + two triple tandem body gears" }
+  ],
+  "sources": [
+    {
+      "id": "faa-acd",
+      "title": "Aircraft Characteristics Database",
+      "publisher": "U.S. Federal Aviation Administration, Office of Airports",
+      "url": "https://www.faa.gov/airports/engineering/aircraft_char_database",
+      "note": "Downloaded and parsed during this build. Supplies Main_Gear_Config, Wheelbase_ft, Main_Gear_Width_ft and MTOW_lb. The database's own data dictionary defines Main_Gear_Width_ft as 'Distance between outer tires in the main landing gear'."
+    },
+    {
+      "id": "ac-6g",
+      "title": "AC 150/5320-6G, Airport Pavement Design and Evaluation, Appendix G",
+      "publisher": "U.S. Federal Aviation Administration",
+      "note": "G.1.3: 'Percent Gross Weight on Whole Main Gear ... In most cases, the value 0.95 is assumed for thickness design.' Retrieved and read during this build."
+    }
+  ]
+}

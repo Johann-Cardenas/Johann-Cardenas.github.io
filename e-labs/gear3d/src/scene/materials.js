@@ -250,6 +250,29 @@ export class MaterialLibrary {
     }
 
     /**
+     * The material used to draw parts that isolation has hidden.
+     *
+     * Deliberately flat and unlit rather than a faded copy of the real
+     * material: a ghost is context, not a measurement, and it must never be
+     * mistaken for something that is actually in the figure. `depthWrite` is
+     * off so ghosts never occlude the parts under study.
+     *
+     * @returns {THREE.Material}
+     */
+    ghost() {
+        if (this._materials.has('__ghost')) return this._materials.get('__ghost');
+        const m = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(0x8894a0),
+            transparent: true,
+            opacity: 0.15,
+            depthWrite: false
+        });
+        m.name = '__ghost';
+        this._materials.set('__ghost', m);
+        return m;
+    }
+
+    /**
      * @param {string} key
      * @param {MaterialOverride} override
      */

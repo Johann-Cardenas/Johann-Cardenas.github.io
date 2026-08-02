@@ -23,7 +23,20 @@
 
 'use strict';
 
+import { parseTire } from './tires.js';
+
 export const SCHEMA_VERSION = '1.0';
+
+/**
+ * Section width of a tire, in millimetres, from its designation.
+ * Aircraft designations encode it directly, so this needs no lookup table.
+ * @param {string} designation
+ * @returns {number|null}
+ */
+function sectionWidthOf(designation) {
+    const spec = parseTire(designation);
+    return spec.sectionWidth;
+}
 
 /** Axle roles, truck domain. */
 export const AXLE_ROLES = Object.freeze(['steer', 'drive', 'trailer', 'lift', 'tag', 'pusher']);
@@ -70,7 +83,7 @@ const REQUIRED_PROVENANCE = {
     truckUnit: ['overallLength'],
     axle: ['x', 'trackWidth', 'dualSpacing'],
     axleGroup: ['spacing'],
-    aircraftUnit: ['wheelbase', 'mainGearTrack', 'percentOnMainGear'],
+    aircraftUnit: ['wheelbase', 'mainGearOuterWidth', 'mainGearTrack', 'percentOnMainGear'],
     gear: ['x', 'y', 'dualSpacing', 'tandemSpacing']
 };
 
@@ -246,8 +259,30 @@ function validateAircraft(u, E, W) {
     checkProvenanceFields(u, REQUIRED_PROVENANCE.aircraftUnit, u.sources?.length ? 'unit sources' : null, E);
 
     if (u.mtow != null && !quantityHasProvenance(u.mtow)) E('mtow is present but has no basis');
+    if (u.maxTaxiWeight != null && !quantityHasProvenance(u.maxTaxiWeight)) {
+        E('maxTaxiWeight is present but has no basis');
+    }
     if (u.tirePressure != null && !quantityHasProvenance(u.tirePressure)) {
         E('tirePressure is present but has no basis');
+    }
+
+    // An aircraft unit must state, explicitly, which of its numbers are
+    // assumed rather than sourced.
+    //
+    // The published record for an aircraft constrains its gear envelope — the
+    // outer width and the wheelbase — but not necessarily every spacing
+    // inside it. Where a value had to be chosen rather than read, saying so is
+    // the difference between a modelling assumption and a fabricated
+    // measurement. An empty array is a valid and meaningful answer: it asserts
+    // that nothing was assumed.
+    if (!Array.isArray(u.assumedFields)) {
+        E('aircraft unit must declare assumedFields[] (use [] if nothing was assumed)');
+    }
+
+    // The outer width is the load-bearing datum: gear transverse positions are
+    // derived from it, so it must be present and cited.
+    if (u.mainGearOuterWidth == null && u.mainGearTrack == null) {
+        E('aircraft unit requires mainGearOuterWidth (preferred) or mainGearTrack');
     }
     if (u.percentOnMainGear != null) {
         if (typeof u.percentOnMainGear !== 'number' || u.percentOnMainGear <= 0 || u.percentOnMainGear >= 100) {
@@ -270,7 +305,37 @@ function validateAircraft(u, E, W) {
         if (wheelsAcross > 1 && !(g.dualSpacing > 0)) E(`${tag} multi-wheel gear requires dualSpacing > 0`);
         const rows = g.tandemRows ?? 1;
         if (rows > 1 && !(g.tandemSpacing > 0)) E(`${tag} tandemRows ${rows} requires tandemSpacing > 0`);
+        if (g.pressure != null && !quantityHasProvenance(g.pressure)) {
+            E(`${tag} pressure is present but has no basis`);
+        }
     });
+
+    // The derived track must reproduce the stated outer width exactly. This is
+    // the check that stops a transcription slip in either number from quietly
+    // moving every main wheel: the two are related by the tire's own section
+    // width, so they cannot be edited independently without the geometry
+    // becoming self-contradictory.
+    if (u.mainGearOuterWidth != null) {
+        const mains = u.gears.filter((g) => g.role === 'main');
+        if (mains.length >= 2) {
+            const ys = mains.map((g) => g.y);
+            const span = Math.max(...ys) - Math.min(...ys);
+            const across = mains[0].wheelsAcross ?? 2;
+            const dual = mains[0].dualSpacing || 0;
+            let section = null;
+            try {
+                section = sectionWidthOf(mains[0].tire);
+            } catch { /* tire checked elsewhere */ }
+            if (section != null) {
+                const implied = span + (across - 1) * dual + section;
+                if (Math.abs(implied - u.mainGearOuterWidth) > 2) {
+                    E(`main gear geometry does not reproduce mainGearOuterWidth: `
+                        + `track ${span} + dual ${(across - 1) * dual} + section ${section.toFixed(1)} `
+                        + `= ${implied.toFixed(1)} mm, but mainGearOuterWidth is ${u.mainGearOuterWidth} mm`);
+                }
+            }
+        }
+    }
 
     const noseGears = u.gears.filter((g) => /^N/i.test(g.id) || g.role === 'nose');
     if (noseGears.length === 0) W('no gear identified as the nose gear');

@@ -972,6 +972,118 @@ test('a wide-base swap redistributes contact area without inventing any', () => 
     assertEqual(after.tires, before.tires - 2, 'two tires fewer');
 });
 
+/* ============================================================
+   13. Aircraft library
+   ============================================================ */
+
+group('13. Aircraft library');
+
+test('the aircraft library loads and covers several gear codes', () => {
+    assert(aircraftUnits.length >= 4, `only ${aircraftUnits.length} aircraft`);
+    const codes = new Set(aircraftUnits.map((u) => u.gearDesignation));
+    for (const c of ['D', '2D', '3D']) assert(codes.has(c), `gear code ${c} missing`);
+});
+
+test('every aircraft declares which of its numbers are assumed', () => {
+    for (const u of aircraftUnits) {
+        assert(Array.isArray(u.assumedFields),
+            `${u.id} must declare assumedFields[] — an empty array asserts that nothing was assumed`);
+    }
+});
+
+test('DERIVATION: main gear geometry reproduces the FAA outer width exactly', () => {
+    // The FAA publishes the distance between OUTER TIRES, not the centreline
+    // track. Gear positions are derived from it, so the two must close. If
+    // this ever fails, either the outer width or a dual spacing has drifted
+    // and every main wheel is in the wrong place.
+    for (const u of aircraftUnits) {
+        if (u.mainGearOuterWidth == null) continue;
+        const l = resolveLayout(u);
+        assertClose(l.derived.mainGearOuterWidth, u.mainGearOuterWidth, 2,
+            `${u.id}: derived outer width must reproduce the stated FAA value`);
+    }
+});
+
+test('CROSS-CHECK: the derived track matches each manufacturer\'s published tread', () => {
+    // Independent corroboration that the dual spacings are right: nothing in
+    // the derivation uses the published tread, so agreement is a real check
+    // rather than a tautology. Tolerance is generous because the published
+    // treads are quoted to the nearest inch.
+    const publishedTread = {
+        'b737-800': 5715,      // Boeing: 18 ft 9 in
+        'b757-200': 7315,      // Boeing: 24 ft 0 in
+        'b767-400er': 9296,    // Boeing: 30 ft 6 in
+        'b777-300er': 10973    // Boeing: 36 ft 0 in
+    };
+    for (const [id, tread] of Object.entries(publishedTread)) {
+        const u = aircraftUnits.find((x) => x.id === id);
+        assert(u, `${id} missing from the library`);
+        const l = resolveLayout(u);
+        assertClose(l.derived.mainGearTrack, tread, 40,
+            `${id}: derived track vs published tread`);
+    }
+});
+
+test('aircraft wheelbase is measured to the main gear centroid', () => {
+    for (const u of aircraftUnits) {
+        const l = resolveLayout(u);
+        assertClose(l.derived.wheelbase, u.wheelbase, 1, `${u.id} wheelbase`);
+    }
+});
+
+test('percent on main gear is the FAA design value and load splits accordingly', () => {
+    for (const u of aircraftUnits) {
+        assertEqual(u.percentOnMainGear, 95, `${u.id} percentOnMainGear`);
+        const l = resolveLayout(u);
+        const mainIds = new Set(l.axles.filter((a) => a.role === 'main').map((a) => a.id));
+        const mainLoad = l.wheels.filter((w) => mainIds.has(w.axleId))
+            .reduce((s, w) => s + (w.loadKn ?? 0), 0);
+        const total = l.wheels.reduce((s, w) => s + (w.loadKn ?? 0), 0);
+        assertClose((mainLoad / total) * 100, 95, 0.01, `${u.id} main gear load share`);
+    }
+});
+
+test('tire counts match the gear designation', () => {
+    const expected = { 'b737-800': 6, 'b757-200': 10, 'b767-400er': 10, 'b777-300er': 14 };
+    for (const [id, n] of Object.entries(expected)) {
+        const u = aircraftUnits.find((x) => x.id === id);
+        assertEqual(resolveLayout(u).wheels.length, n, `${id} tire count`);
+    }
+});
+
+test('the validator rejects an aircraft whose geometry contradicts its outer width', () => {
+    const good = structuredClone(aircraftUnits.find((u) => u.id === 'b737-800'));
+    assert(validateUnit(good).ok, 'control must be valid');
+    const bad = structuredClone(good);
+    bad.gears.find((g) => g.id === 'MLG-R').y += 250;   // move one strut outboard
+    const r = validateUnit(bad);
+    assert(!r.ok, 'a strut moved off the derived track must fail validation');
+    assert(r.errors.some((e) => /mainGearOuterWidth/.test(e)), 'the error must name the datum');
+});
+
+test('stated quantities convert correctly from their source units', () => {
+    // Data files quote MTOW in pounds and tire pressure in psi because that
+    // is how the source documents state them. Anything that displays or
+    // computes with those numbers must go through canonical() first — reading
+    // 775 000 lb as 775 000 kg is a factor-2.2 error that looks entirely
+    // plausible on screen.
+    const b777 = aircraftUnits.find((u) => u.id === 'b777-300er');
+    assertEqual(b777.mtow.unit, 'lb', 'stored in the source unit');
+    assertClose(canonical(b777.mtow, 'mass'), 351534, 2, 'MTOW in kg');
+    assertEqual(b777.tirePressure.unit, 'psi', 'stored in the source unit');
+    assertClose(canonical(b777.tirePressure, 'pressure'), 1523.7, 0.5, 'tire pressure in kPa');
+
+    // And the contact model must see the converted value, not the raw one.
+    const patches = computePatches(resolveLayout(b777), b777, { model: 'rectangular' });
+    assertClose(patches[0].inflationKpa, 1523.7, 0.5, 'patch inflation pressure');
+});
+
+test('the validator rejects an aircraft that does not declare assumedFields', () => {
+    const bad = structuredClone(aircraftUnits[0]);
+    delete bad.assumedFields;
+    assert(!validateUnit(bad).ok, 'undeclared assumptions must fail validation');
+});
+
 test('footprint CSV carries its assumptions and one row per tire', () => {
     const p = computePatches(c9layout, c9, { model: 'huang' });
     const csv = toCSV(p, { unitId: c9.id, unitLabel: '3-S2', model: 'huang', timestamp: '2026-01-01T00:00:00Z' });

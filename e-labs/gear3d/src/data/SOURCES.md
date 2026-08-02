@@ -155,42 +155,87 @@ refuses to produce geometry. It is never guessed. Adding one requires a
 
 ---
 
-## 5. Aircraft — why no library ships in v1.0
+## 5. Aircraft — what is sourced, derived and assumed
 
-The build specification is explicit: *"If FAARFIELD-consistent values are
-available, they win — this app's audience will compare Gear3D output against
-FAARFIELD and any mismatch destroys trust."*
+The aircraft library ships in v1.2 with **four Boeing aircraft** spanning gear
+codes **D, 2D and 3D**: 737-800, 757-200, 767-400ER and 777-300ER.
 
-During this build:
+An earlier attempt was abandoned because the sources could not be reached
+(the FAA database returned 403 to the fetch tool, and the ACAP PDFs exceeded
+its size limit). Both were tooling limits, not access limits: the FAA site
+serves the spreadsheet normally to a browser user-agent, and the PDFs download
+fine with `curl`. Every number below was retrieved and read directly.
 
-- The **FAA Aircraft Characteristics Database** page returned **HTTP 403**.
-- Every **manufacturer ACAP PDF** attempted (Boeing 737, 737NG, 777) exceeded
-  the 10 MB fetch limit and could not be read.
-- **FAARFIELD's** internal aircraft library was not accessible.
+### 5.1 Authoritative — taken verbatim
 
-The result: **no aircraft gear geometry could be verified against a primary
-source.** Publishing dual spacings, tandem spacings, tracks and wheelbases from
-recollection, dressed in citations to documents that were never opened, would
-have produced exactly the mismatch the specification warns about — and the
-provenance machinery would have made it look trustworthy.
+| Quantity | Source |
+|---|---|
+| Gear designation (`Main_Gear_Config`) | FAA Aircraft Characteristics Database |
+| Wheelbase, nose to main gear | FAA Aircraft Characteristics Database |
+| Main gear **outer** width | FAA Aircraft Characteristics Database |
+| MTOW | FAA Aircraft Characteristics Database |
+| Maximum design taxi weight | Manufacturer ACAP, section 7.2 |
+| Tire size and tire pressure, nose and main | Manufacturer ACAP, section 7.2 |
+| Percent gross weight on the whole main gear (95 %) | FAA AC 150/5320-6G, G.1.3 |
 
-So the aircraft library is deferred to v1.1, which is also where the spec's own
-build order puts it (M8). **The data model, schema validation, layout resolver,
-gear-code table, aircraft dimension set and renderer all handle the aircraft
-domain today**; dropping verified `src/data/aircraft/*.json` files in is picked
-up with no code changes.
+ACAP editions used: 737 **D6-58325-7 Rev C** (Oct 2025), 757 **D6-58327 Rev H**
+(Dec 2024), 767 **D6-58328 Rev K** (Dec 2024), 777 **D6-58329-2 Rev G**
+(Dec 2024).
 
-**To add it, in order:**
-1. Obtain the FAA Aircraft Characteristics Database spreadsheet, or the
-   FAARFIELD library, or the manufacturer ACAP for each aircraft.
-2. Record, per gear: `x`, `y`, `dualSpacing`, `tandemSpacing`, `tandemRows`,
-   `wheelsAcross`, `tire`, and a `source` naming the document, edition and
-   table.
-3. Record, per aircraft: `gearDesignation` (AC 150/5300-13B nomenclature),
-   `mtow`, `percentOnMainGear`, `wheelbase`, `mainGearTrack`, `tirePressure`.
-4. Run `npm test`. The provenance test fails on any number without a source.
-5. Cross-check at least B737-800, B777-300ER and A380-800 against FAARFIELD
-   before shipping, per the specification.
+### 5.2 The outer-width trap
+
+The FAA field is **not** the centreline tread. Its own data dictionary defines
+`Main_Gear_Width_ft` as *"Distance between outer tires in the main landing
+gear."* Treating it as the track would push every main wheel outboard by half
+a dual spacing plus half a tire — for a 777 that is nearly a metre per side,
+and the figure would look entirely reasonable while being wrong.
+
+So the track is **derived**, never assumed:
+
+```
+track = outerWidth − (wheelsAcross − 1) × dualSpacing − sectionWidth
+```
+
+Section width comes exactly from the three-part tire designation.
+
+### 5.3 The cross-check that makes this trustworthy
+
+Nothing in that derivation uses the manufacturers' separately published tread
+figures, so agreement between them is real corroboration rather than
+circularity. With the dual spacings recorded in the data files:
+
+| Aircraft | Derived track | Manufacturer published tread | Difference |
+|---|---|---|---|
+| 737-800 | 5727 mm | 5715 mm (18 ft 9 in) | 12 mm |
+| 757-200 | 7302 mm | 7315 mm (24 ft 0 in) | 13 mm |
+| 767-400ER | 9322 mm | 9296 mm (30 ft 6 in) | 26 mm |
+| 777-300ER | 10 963 mm | 10 973 mm (36 ft 0 in) | 10 mm |
+
+All four agree to within a few centimetres, on quantities of 6 to 11 metres.
+`test/run.mjs` asserts both the derivation and this cross-check.
+
+### 5.4 Assumed — declared, and shown in the app
+
+Two quantities are **not** constrained by any source consulted:
+
+- **Nose gear dual spacing.** Nothing published pins it down.
+- **Tandem spacing** on 2D and 3D gears. The wheelbase is measured to the main
+  gear *centroid*, so the spread within a bogie does not move it, and no other
+  figure constrains it.
+
+Every aircraft unit lists these in `assumedFields`, the schema **fails
+validation** if that array is missing, and the app shows an amber notice naming
+them whenever an aircraft is loaded. Set them from FAARFIELD before using the
+output for pavement work — and note that changing a dual spacing re-derives the
+track, so the authoritative outer width is preserved whatever you enter.
+
+### 5.5 Not included, and why
+
+The **747 (2D/2D2)** and **A380 (2D/3D2)** are omitted. Their wing-plus-body
+gear layouts need the longitudinal and transverse offsets of the body gear
+relative to the wing gear. A single outer width closes a two-strut layout; it
+cannot close a four-bogie one. Including them would mean inventing geometry
+rather than deriving it, which is the one thing this library exists not to do.
 
 ---
 

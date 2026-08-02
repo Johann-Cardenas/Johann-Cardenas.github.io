@@ -185,19 +185,39 @@ can be read straight from the console, without trusting the UI.
   grooves that MSAA alone leaves aliased at 600 dpi. Composes with the tiled
   fallback automatically.
 
+## Aircraft (v1.2)
+
+Four Boeing aircraft spanning gear codes **D, 2D and 3D**: 737-800, 757-200,
+767-400ER, 777-300ER.
+
+The important detail: the FAA publishes main gear **outer** width — its data
+dictionary says *"distance between outer tires"* — not the centreline tread.
+Gear3D therefore **derives** the track from it rather than assuming they are
+the same, which on a 777 would misplace every main wheel by nearly a metre per
+side. With the recorded dual spacings, that derivation reproduces each
+manufacturer's separately published tread to within 10–26 mm on all four
+aircraft; the test suite asserts it.
+
+Nose gear dual spacing and tandem spacing are **not** constrained by any
+consulted source. Each unit declares them in `assumedFields`, validation fails
+if that declaration is missing, and the app shows an amber notice naming them
+whenever an aircraft is loaded. Changing a dual spacing re-derives the track,
+so the authoritative outer width survives whatever you enter. Full breakdown in
+`src/data/SOURCES.md` §5.
+
 ## Status
 
-**v1.0 shipped M0–M6 plus M7** (contact patches and FEM export). **v1.1** adds
-the rendering work above and the glTF asset-slot loader.
+**v1.0** shipped M0–M6 plus M7. **v1.1** added the rendering work above and the
+glTF asset-slot loader. **v1.2** adds the aircraft library (M8), ghost
+rendering, and the E-Labs preview image.
 
-Deferred, with reasons in `DECISIONS.md` §D9:
+Deferred, with reasons in `DECISIONS.md`:
 
-- **Aircraft data library** — the code paths are complete and the domain is
-  supported throughout; no verified gear geometry could be obtained during the
-  build, and `SOURCES.md` §5 explains why shipping unverified values would have
-  been worse than shipping none.
+- **747 and A380** — wing-plus-body gear layouts need body-gear offsets that no
+  consulted source provides (`SOURCES.md` §5.5).
 - Chassis silhouettes (the `unit` isolation level currently matches
-  `running-gear`), the 2×2 quad view, and glTF/OBJ scene export.
+  `running-gear`), the 2×2 quad view, click-to-create custom dimensions,
+  draggable callouts, and glTF/OBJ scene export.
 
 ## Documents
 

@@ -326,8 +326,26 @@ function finish(unit, wheels, axles, groups, domain) {
             derived.wheelbase = mainCentroidX - noses[0].x;
         }
         if (mains.length >= 2) {
-            derived.mainGearTrack = Math.max(...mains.map((a) => Math.abs(a.x * 0 + mainGearY(a, wheels)))) * 2;
+            // Centreline-to-centreline track between the main gear struts.
+            const ys = mains.map((a) => mainGearY(a, wheels));
+            derived.mainGearTrack = Math.max(...ys) - Math.min(...ys);
+
+            // Outside-to-outside over the main gear tires. This is the
+            // quantity the FAA Aircraft Characteristics Database publishes,
+            // and it is NOT the track — the database defines it as the
+            // distance between outer tires. Reporting both, explicitly
+            // labelled, is what stops the two being confused.
+            const mainWheels = wheels.filter((w) => mains.some((a) => a.id === w.axleId));
+            if (mainWheels.length) {
+                const lo = Math.min(...mainWheels.map((w) => w.y - w.geometry.sectionWidth / 2));
+                const hi = Math.max(...mainWheels.map((w) => w.y + w.geometry.sectionWidth / 2));
+                derived.mainGearOuterWidth = hi - lo;
+            }
         }
+        if (unit.mainGearOuterWidth != null) {
+            derived.statedMainGearOuterWidth = unit.mainGearOuterWidth;
+        }
+        derived.assumedFields = unit.assumedFields || [];
     }
 
     return { wheels, axles, groups, domain, extents, derived };
