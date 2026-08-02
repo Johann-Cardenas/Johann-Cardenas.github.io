@@ -116,6 +116,13 @@
                             <button class="g3-vtab" data-view="front" role="tab" aria-selected="false" title="Front view — locked (V then 4)">Front</button>
                         </div>
                         <span class="g3-tool-sep"></span>
+                        <button id="g3-annot" class="g3-btn is-on" title="Show or hide all dimensions, callouts and the scale bar (A)" aria-pressed="true">
+                            <i class="fas fa-ruler-combined"></i> Annotations
+                        </button>
+                        <button id="g3-grid" class="g3-btn is-on" title="Ground reference grid (G)" aria-pressed="true">
+                            <i class="fas fa-border-all"></i> Grid
+                        </button>
+                        <span class="g3-tool-sep"></span>
                         <button id="g3-fit" class="g3-btn" title="Fit in view (F)"><i class="fas fa-expand"></i> Fit</button>
                         <button id="g3-undo" class="g3-btn" title="Undo (Ctrl+Z)"><i class="fas fa-undo"></i></button>
                         <button id="g3-redo" class="g3-btn" title="Redo (Ctrl+Y)"><i class="fas fa-redo"></i></button>
@@ -200,9 +207,25 @@
                             <summary><i class="fas fa-ruler-combined"></i> Dimensions</summary>
                             <div class="g3-group">
                                 <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="longitudinal" checked> Longitudinal</label></div>
-                                <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="transverse" checked> Transverse</label></div>
+                                <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="transverse"> Transverse</label></div>
                                 <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="vertical"> Vertical</label></div>
                                 <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="aircraft"> Aircraft gear</label></div>
+                                <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="custom" checked> Custom</label></div>
+                                <hr class="g3-rule">
+
+                                <div class="g3-mini-row">
+                                    <button id="g3-measure" class="g3-btn" title="Measure between two features (M)">
+                                        <i class="fas fa-ruler"></i> Measure
+                                    </button>
+                                    <button id="g3-clear-custom" class="g3-btn" title="Delete all custom dimensions">
+                                        <i class="fas fa-trash"></i> Clear
+                                    </button>
+                                </div>
+                                <div id="g3-custom-list" class="g3-dimlist"></div>
+                                <p class="g3-note" id="g3-measure-hint" hidden>
+                                    Click two features to measure. Endpoints snap to tire centres and edges,
+                                    contact patches and axle centrelines. <kbd>Esc</kbd> cancels.
+                                </p>
                                 <hr class="g3-rule">
                                 <div class="g3-field">
                                     <label for="g3-precision">Decimals</label>

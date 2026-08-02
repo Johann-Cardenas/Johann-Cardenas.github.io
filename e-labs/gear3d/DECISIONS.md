@@ -205,6 +205,50 @@ carries no secrets and enables nothing that is not already in the project file.
 
 ---
 
+## D16. `[hidden]` needs an explicit rule, and the cost of not having one (v1.3)
+
+**The bug.** The stylesheet had no `[hidden]` rule. The UA stylesheet declares
+`[hidden] { display: none }` at the same specificity as a class selector, and
+an author rule beats a UA rule outright — so every `.g3-thing { display: flex }`
+silently un-hid its own element the moment the app set `.hidden = true`.
+
+**Why it mattered so much.** `.g3-progress` is absolutely positioned over
+`inset: 0` of the viewport with a translucent backdrop and `backdrop-filter:
+blur(2px)`. Permanently displayed, it put a grey haze over every render and
+**swallowed every pointer event** — no orbit, no click-to-select. The app
+looked unfinished and behaved like a static image. The modified badge, the
+aircraft assumption notice and the custom export fields were also all
+permanently on screen.
+
+**The lesson worth recording.** This was visible in screenshots from the very
+first build and I explained it away as a headless-compositing artifact, because
+exports looked perfect — `renderToCanvas` draws the WebGL scene directly and
+never touches the DOM overlay, so the one output I was checking most carefully
+was precisely the one that could not show the fault. When a rendering path and
+an interactive path disagree, the disagreement is the finding; it should not be
+attributed to the tooling until the tooling has been ruled out.
+
+**Fix.** `.g3-app [hidden] { display: none !important; }`, stated once with the
+reasoning attached, so no future `display:` rule can reintroduce it.
+
+---
+
+## D17. Annotations default to sparse, with a master switch (v1.3)
+
+**Decision.** Only longitudinal dimensions and the scale bar are on at load.
+A toolbar toggle (`A`) clears all annotation in one action, and a ground grid
+(`G`) is on by default.
+
+**Why.** With every set enabled a class 9 carries roughly twenty dimension
+lines across an 18 m model, and the gear — the thing the app exists to show —
+becomes unreadable behind its own measurements. The numbers are the product,
+but they are a product the reader should be able to ask for rather than one
+imposed on every view. The grid earns its place by being a readable scale in
+its own right: its pitch is a round number in the display unit, so a viewer can
+count squares, and it is part of the scene so it exports exactly as framed.
+
+---
+
 ## D14. Aircraft track is derived from outer width, not assumed equal to it (v1.2)
 
 **Decision.** Aircraft units store the FAA's `mainGearOuterWidth` as the

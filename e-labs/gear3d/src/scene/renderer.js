@@ -20,6 +20,23 @@ import * as THREE from 'three';
 import { CameraRig } from './cameras.js';
 import { LightingRig, LIGHTING_PRESETS } from './lighting.js';
 import { EnvironmentRig } from './environment.js';
+import { buildGrid } from './grid.js';
+
+/**
+ * Relative luminance of a hex colour, 0 (black) to 1 (white).
+ * @param {string} hex
+ * @returns {number}
+ */
+function luminance(hex) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(hex).trim());
+    if (!m) return 1;
+    const n = parseInt(m[1], 16);
+    const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
 
 /** Background modes. */
 export const BACKGROUND_MODES = Object.freeze({
@@ -65,6 +82,9 @@ export class Viewport {
 
         this.background = 'white';
         this.backgroundColor = '#ffffff';
+        this.showGrid = true;
+        /** @type {THREE.LineSegments|null} */
+        this._grid = null;
 
         this._raycaster = new THREE.Raycaster();
         this._pointer = new THREE.Vector2();
@@ -139,6 +159,8 @@ export class Viewport {
         const c = mode === 'color' ? this.backgroundColor : m.color;
         this.renderer.setClearColor(new THREE.Color(c), m.alpha);
         this.scene.background = m.alpha === 0 ? null : new THREE.Color(c);
+        // The grid's contrast depends on what it is drawn over.
+        if (this._grid) this.rebuildGrid();
         this.invalidate();
     }
 
@@ -159,8 +181,50 @@ export class Viewport {
         // Let the rig size its own shadow catcher: it is the only thing that
         // knows how far the shadow camera actually reaches.
         this.lighting.makeGround();
+        this.rebuildGrid(box);
         this.cameras.fit(box);
         this.invalidate();
+    }
+
+    /**
+     * Rebuild the ground grid for the current model extent.
+     * @param {THREE.Box3} [box] scene metres; defaults to the assembly bounds
+     */
+    rebuildGrid(box) {
+        if (this._grid) {
+            this.scene.remove(this._grid);
+            this._grid.geometry.dispose();
+            /** @type {any} */(this._grid.material).dispose();
+            this._grid = null;
+        }
+        if (!this.showGrid || !this.assembly) return;
+
+        const b = box || this.assembly.bounds();
+        const size = b.getSize(new THREE.Vector3());
+        // Grid colour follows the FIGURE background, not the UI theme, for
+        // the same reason the annotations do.
+        const dark = this.background === 'color'
+            ? luminance(this.backgroundColor) < 0.45
+            : false;
+        const { object } = buildGrid(Math.max(size.x, size.z) * 1000, {
+            color: dark ? '#e8edf2' : '#16202b',
+            minorOpacity: dark ? 0.20 : 0.15,
+            majorOpacity: dark ? 0.38 : 0.30
+        });
+        // Centre it under the model. The engineering origin is the front
+        // axle, so a grid left at the world origin covers only the front of
+        // a long vehicle and its fade is centred on the wrong place.
+        const centre = b.getCenter(new THREE.Vector3());
+        object.position.set(centre.x, 0, centre.z);
+        this._grid = object;
+        this.scene.add(object);
+        this.invalidate();
+    }
+
+    /** @param {boolean} on */
+    setGrid(on) {
+        this.showGrid = on;
+        this.rebuildGrid();
     }
 
     /**
@@ -275,7 +339,14 @@ export class Viewport {
         const rect = this.canvas.getBoundingClientRect();
         this._pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         this._pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-        cb(this.pickAt(this._pointer));
+        // Pixel coordinates travel with the hit as well as NDC: the SVG
+        // annotation overlay works in CSS pixels, so anything that has to
+        // agree with what is drawn there — snapping, in particular — needs
+        // the same units rather than a second conversion that could drift.
+        const hit = this.pickAt(this._pointer);
+        hit.px = e.clientX - rect.left;
+        hit.py = e.clientY - rect.top;
+        cb(hit);
     }
 
     /**
@@ -344,6 +415,11 @@ export class Viewport {
     dispose() {
         this.stop();
         this._observer.disconnect();
+        if (this._grid) {
+            this.scene.remove(this._grid);
+            this._grid.geometry.dispose();
+            /** @type {any} */(this._grid.material).dispose();
+        }
         if (this.assembly) this.assembly.dispose();
         this.lighting.dispose();
         this.environment.dispose();

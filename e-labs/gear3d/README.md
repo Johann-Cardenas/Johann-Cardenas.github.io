@@ -131,17 +131,39 @@ render.
 
 ---
 
+## Measuring
+
+Press **`M`** (or the Measure button) and click two features. Endpoints snap
+only to real geometry — tire centres and edges, contact patch centres, axle
+centrelines — because a free-hand endpoint produces a number that looks
+authoritative and is quietly wrong. Snap targets follow visibility, so a
+dimension can never be anchored to something the reader cannot see.
+
+Measurements land in `customDimensions`, are undoable, list in the Dimensions
+panel with a delete control, and save into the `.gear3d` file. A measurement
+that is essentially axis-aligned is labelled with that axis and behaves like an
+automatic one; a diagonal is marked `free` and its dimension line is offset
+perpendicular to the measurement itself rather than to a coordinate axis.
+
 ## Keyboard
 
 | Key | Action |
 |---|---|
 | `V` then `1`–`4` | 3D / Plan / Side / Front |
-| `Esc` | Step out one isolation level |
+| `M` | Measure mode |
+| `A` | Annotations on/off |
+| `G` | Ground grid on/off |
+| `Esc` | Cancel a pending measurement, then measure mode, then step out one isolation level |
 | `F` | Fit |
 | `Ctrl+Z` / `Ctrl+Y` | Undo / redo |
 | `Ctrl+S` | Save project |
 
 Click an axle in the viewport to isolate it; `Esc` steps back up.
+
+**Annotations start sparse on purpose.** A full class 9 with every dimension
+set enabled puts around twenty dimension lines over the model and the geometry
+stops being readable. Longitudinal spacings and the scale bar are on by
+default; the rest are one checkbox away, and `A` clears everything at once.
 
 ---
 

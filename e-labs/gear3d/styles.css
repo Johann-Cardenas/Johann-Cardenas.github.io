@@ -71,6 +71,25 @@
     --g3-shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 22px rgba(0, 0, 0, .3);
 }
 
+/* ============================================================
+   THE HIDDEN ATTRIBUTE MUST WIN
+   ------------------------------------------------------------
+   The UA stylesheet styles `[hidden]` as `display: none` at the
+   same specificity as any class selector — and an author rule
+   beats a UA rule outright. So every `.g3-thing { display: flex }`
+   below silently un-hides its own element the moment the app sets
+   `.hidden = true`.
+
+   That is not a cosmetic slip. `.g3-progress` is absolutely
+   positioned over `inset: 0` of the viewport with a translucent
+   backdrop and a blur, so leaving it displayed puts a grey haze
+   over the render AND swallows every pointer event: no orbit, no
+   click-to-select, and a viewport that looks unfinished. The same
+   bug also kept the modified badge, the aircraft assumption
+   notice and the custom export fields permanently on screen.
+   ============================================================ */
+.g3-app [hidden] { display: none !important; }
+
 /* ==================== SHELL ==================== */
 .g3-app {
     max-width: 1620px;
@@ -379,6 +398,35 @@
 .g3-badge-assumed i { color: var(--g3-warn); margin-top: .12rem; flex: 0 0 auto; }
 .g3-badge-assumed strong { color: var(--g3-ink); }
 
+/* Custom dimension list */
+.g3-dimlist { margin-top: .45rem; display: flex; flex-direction: column; gap: .18rem; }
+.g3-dimlist:empty { display: none; }
+.g3-dimrow {
+    display: flex; align-items: center; gap: .4rem;
+    padding: .22rem .35rem;
+    font-size: .71rem;
+    background: var(--g3-inset);
+    border: 1px solid var(--g3-rule);
+    border-radius: 3px;
+}
+.g3-dimrow-value {
+    font-family: var(--g3-mono); font-variant-numeric: tabular-nums;
+    color: var(--g3-ink); flex: 0 0 auto;
+}
+.g3-dimrow-note {
+    color: var(--g3-muted); flex: 1 1 auto; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.g3-dimrow-del {
+    flex: 0 0 auto; border: 0; background: none; cursor: pointer;
+    color: var(--g3-muted); padding: 0 .15rem; font-size: .72rem;
+}
+.g3-dimrow-del:hover { color: var(--g3-signal); }
+
+/* Measure mode */
+.g3-viewport.is-measuring { cursor: crosshair; }
+.g3-btn.is-active { border-color: var(--g3-signal); color: var(--g3-signal); }
+
 .g3-mini-row { display: flex; gap: .35rem; flex-wrap: wrap; margin-top: .5rem; }
 
 /* ==================== BUTTONS ==================== */
@@ -595,6 +643,24 @@ body.Gear3D .g3-node-iso {
 }
 body.Gear3D .g3-btn { color: var(--g3-ink) !important; background: var(--g3-paper) !important; }
 body.Gear3D .g3-btn:hover { color: var(--g3-datum) !important; }
+/* Measure toggle while engaged. Instrument red, because an armed measurement
+   IS the live reading — the one case where a button earns the signal colour. */
+body.Gear3D .g3-btn.is-active,
+body.Gear3D .g3-btn.is-active:hover {
+    color: var(--g3-signal) !important;
+    border-color: var(--g3-signal);
+    background: var(--g3-signal-soft) !important;
+}
+/* Toolbar on/off toggles. Datum teal, because these mark STATE — what is
+   currently switched on — rather than a live reading. */
+body.Gear3D .g3-btn.is-on,
+body.Gear3D .g3-btn.is-on:hover {
+    color: var(--g3-datum) !important;
+    border-color: var(--g3-datum);
+    background: color-mix(in srgb, var(--g3-datum) 12%, transparent) !important;
+}
+body.Gear3D .g3-dimrow-del { color: var(--g3-muted) !important; background: none !important; }
+body.Gear3D .g3-dimrow-del:hover { color: var(--g3-signal) !important; }
 body.Gear3D .g3-btn--primary,
 body.Gear3D .g3-btn--primary:hover { color: #fff !important; background: var(--g3-datum) !important; }
 body.Gear3D .g3-vtab,

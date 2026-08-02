@@ -38,6 +38,7 @@ import {
     autoDimensions, renderDimensions, renderCallouts, renderScaleBar, dimensionValue
 } from './src/annotate/dimensions.js';
 import { projectEng } from './src/annotate/projection.js';
+import { buildSnapPoints, nearestSnapPoint, dimensionFromSnaps } from './src/annotate/snapping.js';
 
 import { computePatches, patchTotals, patchOutlineAbsolute, DEFAULT_INFLATION_KPA } from './src/contact/patch.js';
 import { toCSV, toJSON as footprintJSON, toAbaqus } from './src/contact/export.js';
@@ -72,6 +73,12 @@ const app = {
     /** @type {any} */ layout: null,
     /** @type {any} */ selection: { axleId: null, positionId: null },
     /** @type {any[]} */ patches: [],
+    /** @type {import('./src/annotate/snapping.js').SnapPoint[]} */ snapPoints: [],
+    /** Measurement mode: click two snap targets to create a dimension. */
+    measure: { active: false, first: null, hover: null, cursor: null },
+    /** Last frame's projection, so pointer handlers can snap against exactly
+     *  what is on screen rather than recomputing a camera state. */
+    lastFrame: null,
     dirtyOverlay: true
 };
 
@@ -82,9 +89,15 @@ function defaultView() {
         unitSystem: 'SI',
         precision: 0,
         dualUnits: false,
-        dimensionSets: ['longitudinal', 'transverse'],
+        // Annotations start deliberately sparse. A full class 9 with every
+        // set enabled puts around twenty dimension lines over the model and
+        // the geometry stops being readable; the point of the app is the
+        // gear, with the numbers available on demand.
+        annotations: true,
+        dimensionSets: ['longitudinal', 'custom'],
         showCallouts: false,
         showScaleBar: true,
+        showGrid: true,
         showPatches: false,
         patchModel: 'rectangular',
         inflationKpa: DEFAULT_INFLATION_KPA,
@@ -129,6 +142,7 @@ async function boot() {
     setupBackgroundPanel();
     setupExportPanel();
     setupProjectPanel();
+    setupMeasure();
     setupKeyboard();
 
     const saved = loadAutosave();
@@ -204,6 +218,7 @@ function setupViewport() {
     };
 
     app.viewport.onHover = (hit) => {
+        if (app.measure.active) { updateMeasureHover(hit); return; }
         const el = $('g3-status-coords');
         if (hit.point) {
             // render (x,y,z) metres -> engineering millimetres
@@ -215,6 +230,9 @@ function setupViewport() {
     };
 
     app.viewport.onPick = (hit) => {
+        // Measuring takes the click. Drilling isolation at the same time
+        // would move the camera out from under a half-placed dimension.
+        if (app.measure.active) { placeMeasurePoint(); return; }
         if (!hit.axleId) return;
         app.selection = { axleId: hit.axleId, positionId: hit.positionId };
         const view = app.store.view;
@@ -269,6 +287,7 @@ function rebuild(opts = {}) {
     renderTree();
     renderProperties();
     renderUnitMeta();
+    renderCustomList();
     updateStatus();
     scheduleAutosave();
 }
@@ -281,6 +300,8 @@ function applyIsolation(opts = {}) {
     if (!app.assembly) return;
     const iso = app.store.view.isolation;
     app.assembly.setWheelFilter(wheelPredicate(iso), { ghost: iso.ghost });
+    // Snap targets follow visibility — see rebuildSnapPoints.
+    rebuildSnapPoints();
 
     if (opts.frame) {
         const b = isolationBounds(iso, app.layout);
@@ -303,6 +324,17 @@ function drawOverlay(info) {
     if (!app.layout) return;
 
     const v = app.store.view;
+
+    // Cached first, so the pointer handlers can snap against exactly this
+    // projection even when nothing is drawn.
+    app.lastFrame = { vp: info.vp, viewport: info.viewport };
+
+    // Master switch: one control that clears the view completely.
+    if (!v.annotations && !app.measure.active) {
+        while (svg.firstChild) svg.removeChild(svg.firstChild);
+        updateAxisBadge();
+        return;
+    }
     const iso = v.isolation;
     const pred = wheelPredicate(iso);
     const visibleAxles = new Set(app.layout.wheels.filter(pred).map((w) => w.axleId));
@@ -323,7 +355,7 @@ function drawOverlay(info) {
 
     const dims = [
         ...autoDimensions(shownLayout, { sets: v.dimensionSets }),
-        ...(app.store.doc.customDimensions || [])
+        ...(v.dimensionSets.includes('custom') ? (app.store.doc.customDimensions || []) : [])
     ];
 
     const highlight = new Set(
@@ -352,10 +384,13 @@ function drawOverlay(info) {
         highlight
     };
 
-    renderDimensions(svg, dims, opts);
-    if (v.showPatches) drawPatches(svg, opts);
-    if (v.showCallouts) renderCallouts(svg, shownLayout, { ...opts, offsets: app.store.doc.calloutOffsets });
-    if (v.showScaleBar) renderScaleBar(svg, opts);
+    renderDimensions(svg, v.annotations ? dims : [], opts);
+    if (v.annotations && v.showPatches) drawPatches(svg, opts);
+    if (v.annotations && v.showCallouts) {
+        renderCallouts(svg, shownLayout, { ...opts, offsets: app.store.doc.calloutOffsets });
+    }
+    if (v.annotations && v.showScaleBar) renderScaleBar(svg, opts);
+    if (app.measure.active) drawMeasureLayer(svg, opts);
 
     updateAxisBadge();
 }
@@ -399,6 +434,204 @@ function updateAxisBadge() {
 }
 
 /* ============================================================
+   6b. Measurement — click two features to create a dimension
+   ============================================================ */
+
+/**
+ * Rebuild the snap targets. Only what is currently VISIBLE is snappable: a
+ * dimension anchored to a hidden wheel would draw to a point the reader
+ * cannot see, and would silently change meaning when isolation changed.
+ */
+function rebuildSnapPoints() {
+    if (!app.layout) { app.snapPoints = []; return; }
+    app.snapPoints = buildSnapPoints(app.layout, {
+        visible: wheelPredicate(app.store.view.isolation)
+    });
+}
+
+/** @param {boolean} [on] */
+function setMeasureMode(on) {
+    const next = on ?? !app.measure.active;
+    app.measure = { active: next, first: null, hover: null, cursor: null };
+    $('g3-measure').classList.toggle('is-active', next);
+    $('g3-measure-hint').hidden = !next;
+    $('g3-viewport').classList.toggle('is-measuring', next);
+    // Orbiting while measuring makes the second click land somewhere the user
+    // did not intend, so the controls are parked for the duration.
+    app.viewport.cameras.controls.enabled = !next;
+    updateStatus();
+    app.viewport.invalidate();
+}
+
+/** @param {any} hit pointer hit, carrying px/py in CSS pixels */
+function updateMeasureHover(hit) {
+    if (!app.lastFrame || hit.px == null) return;
+    const { vp, viewport } = app.lastFrame;
+    app.measure.cursor = { x: hit.px, y: hit.py };
+    app.measure.hover = nearestSnapPoint(
+        app.snapPoints,
+        (p) => projectEng(p, vp, viewport),
+        hit.px, hit.py, 28
+    );
+    $('g3-status-coords').textContent = app.measure.hover
+        ? app.measure.hover.snap.label
+        : 'no snap target within reach';
+    app.viewport.invalidate();
+}
+
+/** Commit the hovered snap target as the next endpoint. */
+function placeMeasurePoint() {
+    const hover = app.measure.hover;
+    if (!hover) { toast('Move onto a snap target — tire centre, edge, contact patch or axle centreline.', 'warn'); return; }
+
+    if (!app.measure.first) {
+        app.measure.first = hover.snap;
+        app.viewport.invalidate();
+        updateStatus();
+        return;
+    }
+    if (app.measure.first.id === hover.snap.id) {
+        toast('Pick a different second point.', 'warn');
+        return;
+    }
+
+    const dim = dimensionFromSnaps(app.measure.first, hover.snap, {
+        id: `custom:${Date.now().toString(36)}`
+    });
+    app.store.update((d) => {
+        if (!Array.isArray(d.customDimensions)) d.customDimensions = [];
+        d.customDimensions.push(dim);
+    }, 'add dimension');
+
+    app.measure.first = null;
+    renderCustomList();
+    scheduleAutosave();
+    app.viewport.invalidate();
+    const sys = UNIT_SYSTEMS[app.store.view.unitSystem];
+    toast(`Added ${formatLength(dimensionValue(dim), sys.length, { precision: app.store.view.precision })}.`);
+}
+
+/** Draw snap targets, the pending endpoint and the rubber band. */
+function drawMeasureLayer(svg, o) {
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('class', 'g3-measure');
+    const ink = figureInk();
+
+    // All available targets, small and faint, so they read as a field of
+    // options rather than as annotation.
+    for (const p of app.snapPoints) {
+        const s = projectEng(p.point, o.vp, o.viewport);
+        if (s.behind) continue;
+        const dot = document.createElementNS(SVG_NS, 'circle');
+        dot.setAttribute('cx', s.x.toFixed(1));
+        dot.setAttribute('cy', s.y.toFixed(1));
+        dot.setAttribute('r', '1.7');
+        dot.setAttribute('fill', ink.color);
+        dot.setAttribute('opacity', '0.32');
+        g.appendChild(dot);
+    }
+
+    const mark = (pt, filled, label) => {
+        const s = projectEng(pt, o.vp, o.viewport);
+        if (s.behind) return null;
+        const ring = document.createElementNS(SVG_NS, 'circle');
+        ring.setAttribute('cx', s.x.toFixed(1));
+        ring.setAttribute('cy', s.y.toFixed(1));
+        ring.setAttribute('r', '6');
+        ring.setAttribute('fill', filled ? ink.accent : 'none');
+        ring.setAttribute('stroke', ink.accent);
+        ring.setAttribute('stroke-width', '1.8');
+        g.appendChild(ring);
+        if (label) {
+            const halo = document.createElementNS(SVG_NS, 'text');
+            halo.setAttribute('x', (s.x + 10).toFixed(1));
+            halo.setAttribute('y', (s.y - 9).toFixed(1));
+            halo.setAttribute('font-size', '11');
+            halo.setAttribute('stroke', ink.halo);
+            halo.setAttribute('stroke-width', '3.5');
+            halo.setAttribute('stroke-linejoin', 'round');
+            halo.setAttribute('fill', 'none');
+            halo.textContent = label;
+            const txt = halo.cloneNode(true);
+            txt.removeAttribute('stroke');
+            txt.setAttribute('fill', ink.color);
+            g.appendChild(halo);
+            g.appendChild(txt);
+        }
+        return s;
+    };
+
+    if (app.measure.first) mark(app.measure.first.point, true, null);
+    const hover = app.measure.hover;
+    if (hover) mark(hover.snap.point, false, hover.snap.label);
+
+    // Rubber band from the placed endpoint to wherever the cursor is.
+    if (app.measure.first) {
+        const a = projectEng(app.measure.first.point, o.vp, o.viewport);
+        const b = hover
+            ? projectEng(hover.snap.point, o.vp, o.viewport)
+            : app.measure.cursor;
+        if (a && b && !a.behind) {
+            const line = document.createElementNS(SVG_NS, 'line');
+            line.setAttribute('x1', a.x.toFixed(1));
+            line.setAttribute('y1', a.y.toFixed(1));
+            line.setAttribute('x2', b.x.toFixed(1));
+            line.setAttribute('y2', b.y.toFixed(1));
+            line.setAttribute('stroke', ink.accent);
+            line.setAttribute('stroke-width', '1.2');
+            line.setAttribute('stroke-dasharray', '5 4');
+            g.appendChild(line);
+        }
+    }
+
+    svg.appendChild(g);
+}
+
+/** The list of user-created dimensions, with delete. */
+function renderCustomList() {
+    const box = $('g3-custom-list');
+    if (!box) return;
+    const dims = app.store.doc.customDimensions || [];
+    const sys = UNIT_SYSTEMS[app.store.view.unitSystem];
+    box.innerHTML = '';
+
+    for (const d of dims) {
+        const row = document.createElement('div');
+        row.className = 'g3-dimrow';
+        row.innerHTML =
+            `<span class="g3-dimrow-value">${esc(formatLength(dimensionValue(d), sys.length, { precision: app.store.view.precision }))}</span>`
+            + `<span class="g3-dimrow-note" title="${esc(d.note || '')}">${esc(d.note || '')}</span>`;
+        const del = document.createElement('button');
+        del.className = 'g3-dimrow-del';
+        del.innerHTML = '<i class="fas fa-times"></i>';
+        del.title = 'Delete this dimension';
+        del.setAttribute('aria-label', `Delete dimension ${d.note || d.id}`);
+        del.addEventListener('click', () => {
+            app.store.update((doc) => {
+                doc.customDimensions = (doc.customDimensions || []).filter((x) => x.id !== d.id);
+            }, 'delete dimension');
+            renderCustomList();
+            scheduleAutosave();
+            app.viewport.invalidate();
+        });
+        row.appendChild(del);
+        box.appendChild(row);
+    }
+}
+
+function setupMeasure() {
+    $('g3-measure').addEventListener('click', () => setMeasureMode());
+    $('g3-clear-custom').addEventListener('click', () => {
+        if (!(app.store.doc.customDimensions || []).length) return;
+        app.store.update((d) => { d.customDimensions = []; }, 'clear dimensions');
+        renderCustomList();
+        scheduleAutosave();
+        app.viewport.invalidate();
+        toast('Custom dimensions cleared. Ctrl+Z restores them.');
+    });
+}
+
+/* ============================================================
    7. Panels
    ============================================================ */
 
@@ -414,9 +647,28 @@ function setupToolbar() {
             renderProperties();
             renderUnitMeta();
             renderPatchSummary();
+            renderCustomList();
             app.viewport.invalidate();
         });
     }
+
+    // Master annotation switch and grid, both in the toolbar rather than
+    // buried in a panel: they are the two controls a user reaches for most
+    // when a figure is too busy to read.
+    const syncToggle = (el, on) => {
+        el.classList.toggle('is-on', on);
+        el.setAttribute('aria-pressed', String(on));
+    };
+    $('g3-annot').addEventListener('click', () => {
+        app.store.view.annotations = !app.store.view.annotations;
+        syncToggle($('g3-annot'), app.store.view.annotations);
+        app.viewport.invalidate();
+    });
+    $('g3-grid').addEventListener('click', () => {
+        app.store.view.showGrid = !app.store.view.showGrid;
+        syncToggle($('g3-grid'), app.store.view.showGrid);
+        app.viewport.setGrid(app.store.view.showGrid);
+    });
 
     $('g3-fit').addEventListener('click', () => {
         const b = isolationBounds(app.store.view.isolation, app.layout);
@@ -1261,6 +1513,8 @@ function currentState() {
             dimensionSets: v.dimensionSets,
             showCallouts: v.showCallouts,
             showScaleBar: v.showScaleBar,
+            annotations: v.annotations,
+            showGrid: v.showGrid,
             isolation: v.isolation
         }
     };
@@ -1294,6 +1548,8 @@ function applyProject(p) {
         dimensionSets: p.view?.dimensionSets || ['longitudinal', 'transverse'],
         showCallouts: !!p.view?.showCallouts,
         showScaleBar: p.view?.showScaleBar !== false,
+        annotations: p.view?.annotations !== false,
+        showGrid: p.view?.showGrid !== false,
         isolation: p.view?.isolation || defaultIsolation(),
         patchModel: p.contact?.model || 'rectangular',
         inflationKpa: p.contact?.inflationKpa ?? DEFAULT_INFLATION_KPA,
@@ -1314,6 +1570,16 @@ function applyProject(p) {
     syncLightingFields();
     syncCameraFields();
     syncInflationField();
+    renderCustomList();
+    app.viewport.setGrid(app.store.view.showGrid);
+    for (const cb of document.querySelectorAll('.g3-dimset')) {
+        const el = /** @type {HTMLInputElement} */ (cb);
+        el.checked = app.store.view.dimensionSets.includes(el.getAttribute('data-set'));
+    }
+    for (const [id, on] of [['g3-annot', app.store.view.annotations], ['g3-grid', app.store.view.showGrid]]) {
+        $(id).classList.toggle('is-on', !!on);
+        $(id).setAttribute('aria-pressed', String(!!on));
+    }
     setViewMode(app.store.view.mode);
     $('g3-seed').value = app.store.doc.seed;
     $('g3-meta-title').value = app.store.doc.meta.title || '';
@@ -1348,10 +1614,23 @@ function setupKeyboard() {
         pendingV = false;
 
         if (e.key === 'v' || e.key === 'V') { pendingV = true; return; }
+        if (e.key === 'm' || e.key === 'M') { setMeasureMode(); e.preventDefault(); return; }
+        if (e.key === 'a' || e.key === 'A') { $('g3-annot').click(); e.preventDefault(); return; }
+        if (e.key === 'g' || e.key === 'G') { $('g3-grid').click(); e.preventDefault(); return; }
         if (e.key === 'Escape') {
-            app.store.view.isolation = stepOut(app.store.view.isolation, app.layout);
-            $('g3-isolation').value = app.store.view.isolation.level;
-            applyIsolation({ frame: true });
+            // Escape unwinds the innermost thing first: a half-placed
+            // measurement, then measure mode, then isolation.
+            if (app.measure.active && app.measure.first) {
+                app.measure.first = null;
+                app.viewport.invalidate();
+                updateStatus();
+            } else if (app.measure.active) {
+                setMeasureMode(false);
+            } else {
+                app.store.view.isolation = stepOut(app.store.view.isolation, app.layout);
+                $('g3-isolation').value = app.store.view.isolation.level;
+                applyIsolation({ frame: true });
+            }
             e.preventDefault();
         } else if (e.key === 'f' || e.key === 'F') {
             $('g3-fit').click();
@@ -1375,9 +1654,15 @@ function setupKeyboard() {
 function updateStatus() {
     if (!app.layout) return;
     $('g3-status-iso').textContent = describeIsolation(app.store.view.isolation, app.layout);
-    $('g3-status-sel').textContent = app.selection.axleId
-        ? `Selected ${app.selection.positionId || app.selection.axleId}`
-        : 'No selection';
+    if (app.measure.active) {
+        $('g3-status-sel').textContent = app.measure.first
+            ? 'Measuring — click the second feature (Esc to cancel)'
+            : `Measuring — click the first feature (${app.snapPoints.length} snap targets)`;
+    } else {
+        $('g3-status-sel').textContent = app.selection.axleId
+            ? `Selected ${app.selection.positionId || app.selection.axleId}`
+            : 'No selection';
+    }
     const o = app.viewport.cameras.getOrbit();
     const v = app.store.view;
     $('g3-status-view').textContent = v.mode === '3d'

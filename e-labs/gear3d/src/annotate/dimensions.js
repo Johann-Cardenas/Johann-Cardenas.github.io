@@ -416,7 +416,13 @@ export function chooseOffsetDirection(d, o) {
         ? [{ x: 0, y: -1, z: 0 }, { x: 0, y: 0, z: 1 }, { x: 0, y: 1, z: 0 }, { x: 0, y: 0, z: -1 }]
         : d.axis === 'y'
             ? [{ x: -1, y: 0, z: 0 }, { x: 0, y: 0, z: 1 }, { x: 1, y: 0, z: 0 }, { x: 0, y: 0, z: -1 }]
-            : [{ x: -1, y: 0, z: 0 }, { x: 0, y: -1, z: 0 }, { x: 1, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }];
+            : d.axis === 'z'
+                ? [{ x: -1, y: 0, z: 0 }, { x: 0, y: -1, z: 0 }, { x: 1, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }]
+                // 'free': a user-created diagonal. Offsetting along a
+                // coordinate axis would skew the dimension line relative to
+                // what it measures, so the candidates are built perpendicular
+                // to the measurement itself.
+                : perpendicularCandidates(d);
 
     const mid = { x: (d.from.x + d.to.x) / 2, y: (d.from.y + d.to.y) / 2, z: (d.from.z + d.to.z) / 2 };
     const p0 = projectEng(mid, o.vp, o.viewport);
@@ -439,11 +445,41 @@ export function chooseOffsetDirection(d, o) {
 }
 
 /**
+ * Four unit directions perpendicular to a dimension's own axis.
+ * @param {Dimension} d
+ * @returns {Vec3[]}
+ */
+function perpendicularCandidates(d) {
+    const dir = unit({ x: d.to.x - d.from.x, y: d.to.y - d.from.y, z: d.to.z - d.from.z });
+    // Cross with whichever world axis the measurement is least aligned to,
+    // so the reference is never degenerate.
+    const ref = Math.abs(dir.z) < 0.9 ? { x: 0, y: 0, z: 1 } : { x: 0, y: 1, z: 0 };
+    const p1 = unit(cross3(dir, ref));
+    const p2 = unit(cross3(dir, p1));
+    return [p1, p2, scaleVec(p1, -1), scaleVec(p2, -1)];
+}
+
+/** @param {Vec3} a @param {Vec3} b @returns {Vec3} */
+function cross3(a, b) {
+    return {
+        x: a.y * b.z - a.z * b.y,
+        y: a.z * b.x - a.x * b.z,
+        z: a.x * b.y - a.y * b.x
+    };
+}
+
+/** @param {Vec3} a @returns {Vec3} */
+function unit(a) {
+    const m = Math.hypot(a.x, a.y, a.z) || 1;
+    return { x: a.x / m, y: a.y / m, z: a.z / m };
+}
+
+/**
  * @param {SVGElement} parent
  * @param {Dimension} d
  * @param {any} g
  * @param {any} box
- * @param {{font: number, color: string, accent: string, highlighted: boolean}} style
+ * @param {{font: number, color: string, accent: string, halo: string, highlighted: boolean}} style
  */
 function drawDimension(parent, d, g, box, style) {
     const stroke = style.highlighted ? style.accent : style.color;

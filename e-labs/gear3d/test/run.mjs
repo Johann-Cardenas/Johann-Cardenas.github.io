@@ -39,6 +39,10 @@ import {
 import { checkBridgeFormula, bridgeAllowanceLb, knToLb, minimumSpreadMm } from '../src/core/bridge.js';
 import { resolveLayout, swapToWideBase } from '../src/core/layout.js';
 import { computePatches, patchTotals, DEFAULT_INFLATION_KPA } from '../src/contact/patch.js';
+import {
+    buildSnapPoints, nearestSnapPoint, inferAxis, dimensionFromSnaps
+} from '../src/annotate/snapping.js';
+import { dimensionValue } from '../src/annotate/dimensions.js';
 import { toCSV, toAbaqus } from '../src/contact/export.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -970,6 +974,128 @@ test('a wide-base swap redistributes contact area without inventing any', () => 
     assertClose(after.totalAreaMm2, before.totalAreaMm2, 1e-6,
         'at equal load and pressure the TOTAL area cannot change — only its distribution');
     assertEqual(after.tires, before.tires - 2, 'two tires fewer');
+});
+
+/* ============================================================
+   12b. Measurement snapping
+   ============================================================ */
+
+group('12b. Measurement snapping');
+
+const snaps = buildSnapPoints(c9layout);
+
+test('every wheel and axle contributes snap targets', () => {
+    const kinds = new Set(snaps.map((s) => s.kind));
+    for (const k of ['tire-centre', 'tire-edge', 'contact', 'axle-centreline', 'axle-end']) {
+        assert(kinds.has(k), `no ${k} targets`);
+    }
+    // One centre per tire.
+    assertEqual(snaps.filter((s) => s.kind === 'tire-centre').length, 18, 'tire centres');
+});
+
+test('contact targets sit exactly on the pavement', () => {
+    for (const s of snaps.filter((x) => x.kind === 'contact')) {
+        assertEqual(s.point.z, 0, `${s.id} must be at z = 0`);
+    }
+});
+
+test('tire edge targets are half a section width from the centre', () => {
+    const w = c9layout.wheels.find((x) => x.id === 'A2-R-out');
+    const edges = snaps.filter((s) => s.ownerId === w.id && s.kind === 'tire-edge');
+    assertEqual(edges.length, 2, 'two edges');
+    const ys = edges.map((e) => e.point.y).sort((a, b) => a - b);
+    assertClose(ys[1] - ys[0], w.geometry.sectionWidth, 1e-9, 'edge separation is the section width');
+});
+
+test('coincident targets are deduplicated, keeping the more meaningful one', () => {
+    // A motorcycle axle has zero track, so its ends land on its centreline.
+    const moto = resolveLayout(truckUnits.find((u) => u.classification.class === 1));
+    const pts = buildSnapPoints(moto);
+    const seen = new Set();
+    for (const p of pts) {
+        const key = `${Math.round(p.point.x)}|${Math.round(p.point.y)}|${Math.round(p.point.z)}`;
+        assert(!seen.has(key), `duplicate target at ${key}`);
+        seen.add(key);
+    }
+    assertEqual(pts.filter((p) => p.kind === 'axle-end').length, 0,
+        'zero-track axles must not emit end targets');
+});
+
+test('hidden wheels contribute no snap targets', () => {
+    const only = buildSnapPoints(c9layout, { visible: (w) => w.axleId === 'A2' });
+    assert(only.every((s) => s.ownerId.startsWith('A2')), 'only A2 targets');
+    assert(only.length > 0 && only.length < snaps.length, 'a strict subset');
+});
+
+test('nearestSnapPoint finds the target under the cursor', () => {
+    // Fake projector: engineering x,y -> screen, scaled down.
+    const project = (p) => ({ x: p.x / 10, y: -p.z / 10 + 200, behind: false });
+    const target = snaps.find((s) => s.kind === 'tire-centre' && s.ownerId === 'A1-R');
+    const s = project(target.point);
+    const hit = nearestSnapPoint(snaps, project, s.x, s.y, 26);
+    assert(hit, 'expected a hit');
+    assertClose(hit.distance, 0, 1e-6, 'exact hit distance');
+});
+
+test('nearestSnapPoint returns null outside the pick radius', () => {
+    const project = (p) => ({ x: p.x / 10, y: -p.z / 10 + 200, behind: false });
+    assertEqual(nearestSnapPoint(snaps, project, 99999, 99999, 26), null, 'far away');
+});
+
+test('nearestSnapPoint ignores targets behind the camera', () => {
+    const project = () => ({ x: 10, y: 10, behind: true });
+    assertEqual(nearestSnapPoint(snaps, project, 10, 10, 26), null, 'all behind');
+});
+
+test('a near-tie prefers the more meaningful target', () => {
+    /** @type {any[]} */
+    const pair = [
+        { id: 'edge', kind: 'tire-edge', label: 'edge', point: { x: 0, y: 0, z: 0 }, ownerId: 'w', priority: 4 },
+        { id: 'centre', kind: 'tire-centre', label: 'centre', point: { x: 1, y: 0, z: 0 }, ownerId: 'w', priority: 6 }
+    ];
+    // The edge is marginally nearer, but within the tie window.
+    const project = (p) => ({ x: p.x, y: p.y, behind: false });
+    const hit = nearestSnapPoint(pair, project, 0, 0, 26);
+    assertEqual(hit.snap.id, 'centre', 'the centre should win a near-tie');
+});
+
+test('inferAxis recognises axis-aligned measurements and diagonals', () => {
+    assertEqual(inferAxis({ x: 0, y: 0, z: 0 }, { x: 100, y: 0, z: 0 }), 'x', 'pure x');
+    assertEqual(inferAxis({ x: 0, y: 0, z: 0 }, { x: 0, y: -250, z: 0 }), 'y', 'pure y');
+    assertEqual(inferAxis({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 520 }), 'z', 'pure z');
+    assertEqual(inferAxis({ x: 0, y: 0, z: 0 }, { x: 100, y: 100, z: 0 }), 'free', 'diagonal');
+    assertEqual(inferAxis({ x: 5, y: 5, z: 5 }, { x: 5, y: 5, z: 5 }), 'free', 'degenerate');
+});
+
+test('a dimension built from two snaps measures the true distance', () => {
+    const a = snaps.find((s) => s.kind === 'tire-centre' && s.ownerId === 'A1-L');
+    const b = snaps.find((s) => s.kind === 'tire-centre' && s.ownerId === 'A1-R');
+    const d = dimensionFromSnaps(a, b);
+    assertEqual(d.set, 'custom', 'set');
+    assertEqual(d.axis, 'y', 'a track measurement is transverse');
+    assertClose(dimensionValue(d), 2032, 1e-6, 'steer track');
+    assert(d.note.includes('tire centre'), 'note records what was measured');
+    assert(d.offset !== 0, 'must stand off the feature');
+});
+
+test('a diagonal measurement is marked free so it can be offset perpendicular', () => {
+    const a = snaps.find((s) => s.kind === 'contact' && s.ownerId === 'A1-L');
+    const b = snaps.find((s) => s.kind === 'tire-centre' && s.ownerId === 'A5-R-out');
+    const d = dimensionFromSnaps(a, b);
+    assertEqual(d.axis, 'free', 'not axis aligned');
+    const expected = Math.hypot(b.point.x - a.point.x, b.point.y - a.point.y, b.point.z - a.point.z);
+    assertClose(dimensionValue(d), expected, 1e-6, 'true 3D distance');
+});
+
+test('every snap target of the whole library projects to a finite point', () => {
+    // Guards against a NaN leaking in from a degenerate geometry and
+    // poisoning the picker for a whole unit.
+    for (const u of [...truckUnits, ...aircraftUnits]) {
+        for (const s of buildSnapPoints(resolveLayout(u))) {
+            assert(Number.isFinite(s.point.x) && Number.isFinite(s.point.y) && Number.isFinite(s.point.z),
+                `${u.id}/${s.id} has a non-finite coordinate`);
+        }
+    }
 });
 
 /* ============================================================
