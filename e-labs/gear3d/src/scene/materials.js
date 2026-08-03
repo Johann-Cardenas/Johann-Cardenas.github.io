@@ -27,6 +27,7 @@
 
 import * as THREE from 'three';
 import { buildTreadMaps, buildSidewallMaps } from '../geometry/tire.js';
+import { TextureLibrary } from './textures.js';
 
 /**
  * @typedef {Object} MaterialSpec
@@ -129,6 +130,47 @@ export class MaterialLibrary {
         /** @type {THREE.Texture|null} */
         this._env = null;
         this._envIntensity = 1;
+
+        // CC0 surface detail. Optional by construction: materials are always
+        // created with their procedural maps first, and these are swapped in
+        // only if they load.
+        this.textures = opts.textures ?? new TextureLibrary();
+        this.useCC0 = opts.useCC0 !== false;
+        /** @type {(() => void)|null} fired when a swap lands, so the host can redraw */
+        this.onTextureUpgrade = null;
+    }
+
+    /**
+     * Swap CC0 micro-detail onto a material once it has loaded.
+     *
+     * THE ROUGHNESS MULTIPLY IS THE TRAP HERE. three.js computes final
+     * roughness as `material.roughness * roughnessMap.g`, so attaching a
+     * scanned map to a material whose roughness was already tuned darkens
+     * it twice: a 0.90 tread against a map averaging ~0.5 lands at 0.45 and
+     * the rubber renders wet and plasticky. When a scanned map is attached
+     * the base is therefore set to 1.0 and the measured data is allowed to
+     * speak for itself, which is the physically meaningful choice anyway.
+     *
+     * The user's roughness override still works: `_apply` runs after this
+     * and re-asserts whatever they set.
+     *
+     * @param {THREE.Material} m
+     * @param {keyof typeof import('./textures.js').TEXTURE_SETS} name
+     * @param {number} ru repeat along U
+     * @param {number} rv repeat along V
+     */
+    _upgrade(m, name, ru, rv) {
+        if (!this.useCC0) return;
+        this.textures.load(name).then((set) => {
+            if (!set || !m) return;
+            const t = this.textures.tiled(set, ru, rv);
+            const any = /** @type {any} */ (m);
+            any.normalMap = t.normal;
+            any.roughnessMap = t.rough;
+            any.roughness = 1.0;
+            any.needsUpdate = true;
+            if (this.onTextureUpgrade) this.onTextureUpgrade();
+        });
     }
 
     /**
@@ -182,6 +224,17 @@ export class MaterialLibrary {
         this._materials.set(key, m);
         this._applyEnv(key, m);
         this._apply(key);
+
+        // METALS DELIBERATELY KEEP THEIR DESIGNED MATERIALS.
+        //
+        // A scanned metal set was evaluated and rejected on the evidence: the
+        // candidate's normal map is almost perfectly flat (a smooth metal, so
+        // it contributes no visible machining detail) while its roughness map
+        // dropped the rims and axle beams to a wet, plastic-looking gloss that
+        // was plainly worse than the tuned values. Rubber gains from measured
+        // micro-detail because rubber IS micro-detailed; a machined rim is
+        // characterised by what it reflects, which the studio environment map
+        // already supplies. Recorded in assets/textures/CREDITS.md.
         return m;
     }
 
@@ -233,6 +286,19 @@ export class MaterialLibrary {
         this._materials.set(key, m);
         this._applyEnv(key, m);
         this._apply(key, family);
+
+        // Real physical tiling. The tyre's own UVs already repeat `uRepeat`
+        // times around the circumference (see geometry/tire.js), so the
+        // texture repeat has to be divided by that or the grain would be
+        // multiplied twice and turn to noise.
+        const circumference = Math.PI * g.overallDiameter;
+        const uRepeat = Math.max(4, Math.round(circumference / 300));
+        const developed = 2 * g.sectionHeight + g.sectionWidth;
+        this._upgrade(
+            m, 'rubber',
+            this.textures.tilesAcross('rubber', circumference) / uRepeat,
+            this.textures.tilesAcross('rubber', developed)
+        );
         return m;
     }
 
@@ -328,6 +394,7 @@ export class MaterialLibrary {
     dispose() {
         for (const m of this._materials.values()) m.dispose();
         for (const t of this._textures) t.dispose();
+        this.textures.dispose();
         this._materials.clear();
         this._mapCache.clear();
         this._textures.length = 0;

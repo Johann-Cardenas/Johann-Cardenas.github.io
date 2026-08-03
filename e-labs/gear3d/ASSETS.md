@@ -151,6 +151,27 @@ should be.
 
 ---
 
+## 7a. What actually ships (searched 2026-08-03)
+
+A real search was carried out across the CC0 libraries. Result:
+
+- **Shipped:** one CC0 PBR **texture** set (ambientCG `Rubber004`) providing
+  tyre surface micro-detail. 114 KB, tiled at true physical scale. See
+  `assets/textures/CREDITS.md`.
+- **Not shipped:** any third-party **mesh**. No CC0 truck wheel, truck tyre
+  or aircraft landing gear model exists in the libraries searched. The two
+  candidate CC0 wheel meshes are junkyard **car** parts that exceed this
+  document's own 1.6× distortion cap when scaled to truck sizes (1.76× and
+  2.62×). Full numbers in `CREDITS.md`.
+
+The conclusion worth carrying forward: for this app **textures are where
+third-party assets pay off and meshes are not**. Gear3D's geometry is
+parametric and dimensionally exact for any tyre designation, including sizes
+nobody has modelled — a mesh can only ever approximate that, and must be
+distorted to fit. Surface micro-detail is the opposite: it carries no
+dimensional meaning, so measured data is strictly better than procedural
+noise and costs nothing in accuracy.
+
 ## 8. Status
 
 **No assets ship, and none are required.** The procedural path is the reference

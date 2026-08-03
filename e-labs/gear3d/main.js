@@ -202,6 +202,8 @@ async function loadLibrary() {
 
 function setupViewport() {
     app.materials = new MaterialLibrary({ seed: DEFAULT_SEED });
+    // CC0 surface detail arrives asynchronously; redraw when it lands.
+    app.materials.onTextureUpgrade = () => app.viewport?.invalidate();
     app.viewport = new Viewport(
         /** @type {HTMLCanvasElement} */($('g3-canvas')),
         /** @type {any} */($('g3-overlay')),
@@ -1098,6 +1100,7 @@ function setupProjectPanel() {
         app.store.update((d) => { d.seed = seed; }, 'seed');
         app.materials.dispose();
         app.materials = new MaterialLibrary({ seed });
+        app.materials.onTextureUpgrade = () => app.viewport?.invalidate();
         rebuild();
     });
     for (const [id, key] of [['g3-meta-title', 'title'], ['g3-meta-author', 'author'], ['g3-meta-notes', 'notes']]) {
@@ -1559,6 +1562,7 @@ function applyProject(p) {
     if (app.store.doc.seed !== DEFAULT_SEED) {
         app.materials.dispose();
         app.materials = new MaterialLibrary({ seed: app.store.doc.seed });
+        app.materials.onTextureUpgrade = () => app.viewport?.invalidate();
     }
 
     rebuild({ frame: true });
