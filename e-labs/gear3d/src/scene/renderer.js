@@ -21,6 +21,10 @@ import { CameraRig } from './cameras.js';
 import { LightingRig, LIGHTING_PRESETS } from './lighting.js';
 import { EnvironmentRig } from './environment.js';
 import { buildGrid } from './grid.js';
+import { quadLayout } from '../views/quadview.js';
+
+/** Hairline between quad panes, CSS pixels. */
+export const QUAD_GAP = 2;
 
 /**
  * Relative luminance of a hex colour, 0 (black) to 1 (white).
@@ -83,6 +87,8 @@ export class Viewport {
         this.background = 'white';
         this.backgroundColor = '#ffffff';
         this.showGrid = true;
+        /** Quad view: all four modes rendered in one frame. */
+        this.quad = false;
         /** @type {THREE.LineSegments|null} */
         this._grid = null;
 
@@ -309,11 +315,85 @@ export class Viewport {
 
     stop() { this._running = false; }
 
-    render() {
-        this.renderer.render(this.scene, this.cameras.camera);
-        if (this.onFrame) {
-            this.onFrame({ vp: this.viewProjection(), viewport: this.size });
+    /**
+     * The actual GL work, single-view or quad. Split out from render() so the
+     * export path can drive exactly the same drawing rather than reaching for
+     * `renderer.render` and silently losing the quad layout.
+     *
+     * @returns {{panes: import('../views/quadview.js').Pane[]}|null} pane
+     *          rects when quad is active, so the annotation overlay can be
+     *          drawn per pane against the same layout the GL pass used
+     */
+    renderScene() {
+        const r = this.renderer;
+        if (!this.quad) {
+            r.setScissorTest(false);
+            r.render(this.scene, this.cameras.camera);
+            return null;
         }
+
+        const size = r.getSize(new THREE.Vector2());
+        const panes = quadLayout(size.x, size.y, QUAD_GAP);
+        const aspect = panes[0].w / Math.max(1, panes[0].h);
+        const cams = this.cameras.quadCameras(aspect);
+
+        // Clear the WHOLE frame first, with the scissor off. Left to the
+        // per-pane renders, each pane would clear only its own rect and the
+        // hairline gaps between them would keep last frame's pixels.
+        r.setScissorTest(false);
+        r.clear();
+        const prevAutoClear = r.autoClear;
+        r.autoClear = false;
+        r.setScissorTest(true);
+        for (const p of panes) {
+            r.setViewport(p.x, p.glY, p.w, p.h);
+            r.setScissor(p.x, p.glY, p.w, p.h);
+            r.render(this.scene, cams[p.mode]);
+        }
+        r.setScissorTest(false);
+        r.autoClear = prevAutoClear;
+        r.setViewport(0, 0, size.x, size.y);
+        return { panes };
+    }
+
+    render() {
+        const quad = this.renderScene();
+        if (this.onFrame) {
+            this.onFrame({
+                vp: this.viewProjection(),
+                viewport: this.size,
+                panes: quad ? quad.panes : null,
+                paneVp: quad ? this.paneProjections(quad.panes) : null
+            });
+        }
+    }
+
+    /**
+     * View-projection matrices for each quad pane, keyed by mode.
+     * @param {import('../views/quadview.js').Pane[]} panes
+     * @returns {Record<string, number[]>}
+     */
+    paneProjections(panes) {
+        const aspect = panes[0].w / Math.max(1, panes[0].h);
+        const cams = this.cameras.quadCameras(aspect);
+        /** @type {Record<string, number[]>} */
+        const out = {};
+        for (const p of panes) {
+            const c = cams[p.mode];
+            c.updateMatrixWorld();
+            out[p.mode] = new THREE.Matrix4()
+                .multiplyMatrices(c.projectionMatrix, c.matrixWorldInverse).elements;
+        }
+        return out;
+    }
+
+    /** @param {boolean} on */
+    setQuad(on) {
+        this.quad = !!on;
+        // Orbit belongs to a single camera; in quad view the controls would
+        // silently drive only the 3D pane while the user aimed at another.
+        this.cameras.controls.enabled = !this.quad;
+        this.invalidate();
     }
 
     /**

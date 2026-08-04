@@ -205,6 +205,40 @@ carries no secrets and enables nothing that is not already in the project file.
 
 ---
 
+## D21. The three orthographic quad panes share one scale (v1.4)
+
+**Decision.** In quad view, plan, side and front are fitted to a single
+shared scale — the largest any of them needs. 3D keeps its own.
+
+**Why.** Fitted independently each pane is correctly framed and the sheet is
+useless. A 22 m truck's front elevation comes out about seven times larger
+than its side elevation, so nothing can be compared between panes by eye and
+a dimension cannot be carried down from the plan to the side beneath it —
+which is the entire reason those two views are placed in one column. Drafting
+practice puts the orthographic views of a drawing at one scale; a check sheet
+that does not is decoration.
+
+3D is excluded because it is a pictorial reference rather than an elevation:
+nothing is measured off it, so matching its scale to the others would only
+waste pane area.
+
+**Found on the way.** The half-height was a single value fitted for whichever
+mode happened to be active when `fit()` last ran, so even in single view
+switching Plan → Front framed the front elevation using the plan's extents.
+It is now stored per mode and every mode is fitted at once.
+
+---
+
+## D22. Quad view refuses to tile rather than export a wrong sheet (v1.4)
+
+Tiled export offsets ONE projection matrix. Quad view has four, each confined
+to a scissor rect, and a frame-level offset does not map onto them. Asked for
+a quad export above the GPU's single-pass limit the app therefore raises a
+message naming the limit and the ways round it, rather than emitting a sheet
+that is quietly wrong. Single-view tiling is untouched.
+
+---
+
 ## D20. One whitelist, or none (v1.4)
 
 **The bug.** `serializeProject` re-enumerated the view fields that the caller

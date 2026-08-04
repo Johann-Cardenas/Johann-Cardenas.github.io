@@ -151,10 +151,25 @@ export async function renderToCanvas(viewport, opts) {
             viewport.cameras.setSize(width, height);
             renderer.setSize(width, height, false);
             /** @type {any} */(camera).clearViewOffset?.();
-            renderer.render(viewport.scene, camera);
+            // renderScene(), not renderer.render(): the viewport is the only
+            // thing that knows whether this frame is one view or four.
+            viewport.renderScene();
             ctx.drawImage(renderer.domElement, 0, 0);
             opts.onProgress?.('render', 1, 1);
         } else {
+            if (viewport.quad) {
+                // Tiling offsets ONE projection matrix. Quad view has four,
+                // each confined to a scissor rect, and an offset applied to
+                // the frame would not map onto them. Rather than emit a
+                // quietly wrong sheet, say so and let the user choose a size
+                // the GPU can render in one pass.
+                throw new Error(
+                    `A ${width} x ${height} quad export exceeds this GPU's `
+                    + `${limit} px limit, and the quad layout cannot be tiled. `
+                    + 'Reduce the resolution, lower the supersample factor, or '
+                    + 'export the panes individually from single view.'
+                );
+            }
             const cols = Math.ceil(width / limit);
             const rows = Math.ceil(height / limit);
             const total = cols * rows;

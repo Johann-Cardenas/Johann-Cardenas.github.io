@@ -309,11 +309,17 @@ export function renderDimensions(svg, dims, o) {
     const accent = o.accent ?? '#c8452a';
     const sys = UNIT_SYSTEMS[o.unitSystem] || UNIT_SYSTEMS.SI;
 
-    while (svg.firstChild) svg.removeChild(svg.firstChild);
-    svg.setAttribute('viewBox', `0 0 ${o.viewport.width} ${o.viewport.height}`);
+    // Quad view draws this four times, once per pane, into groups the caller
+    // has already positioned and clipped. Only the single-view caller — the
+    // one that owns the whole <svg> — may clear it.
+    const target = o.container || svg;
+    if (!o.container) {
+        while (svg.firstChild) svg.removeChild(svg.firstChild);
+        svg.setAttribute('viewBox', `0 0 ${o.viewport.width} ${o.viewport.height}`);
+    }
 
     const layer = el('g', { class: 'g3-dims' });
-    svg.appendChild(layer);
+    target.appendChild(layer);
 
     /** @type {Array<{d: Dimension, geom: any, box: any}>} */
     const staged = [];

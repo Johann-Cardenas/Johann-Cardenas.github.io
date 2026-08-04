@@ -44,6 +44,7 @@ import { buildSnapPoints, nearestSnapPoint, dimensionFromSnaps } from './src/ann
 import { computePatches, patchTotals, patchOutlineAbsolute, DEFAULT_INFLATION_KPA } from './src/contact/patch.js';
 import { toCSV, toJSON as footprintJSON, toAbaqus } from './src/contact/export.js';
 
+import { paneAt } from './src/views/quadview.js';
 import {
     defaultIsolation, wheelPredicate, ISOLATION_LEVELS, ISOLATION_META,
     drillInto, stepOut, describeIsolation, isolationBounds, showChassis
@@ -242,6 +243,16 @@ function setupViewport() {
         // Measuring takes the click. Drilling isolation at the same time
         // would move the camera out from under a half-placed dimension.
         if (app.measure.active) { placeMeasurePoint(); return; }
+
+        // In quad view a click means "open this pane", which is the only
+        // interpretation that makes sense: isolation drilling would apply to
+        // whichever pane happened to be under the cursor while three others
+        // silently changed with it.
+        if (app.panes && hit.px != null) {
+            const pane = paneAt(app.panes, hit.px, hit.py);
+            if (pane) setViewMode(pane.mode);
+            return;
+        }
         if (!hit.axleId) return;
         app.selection = { axleId: hit.axleId, positionId: hit.positionId };
         const view = app.store.view;
@@ -343,6 +354,9 @@ function drawOverlay(info) {
     // Cached first, so the pointer handlers can snap against exactly this
     // projection even when nothing is drawn.
     app.lastFrame = { vp: info.vp, viewport: info.viewport };
+    app.panes = info.panes || null;
+
+    if (info.panes) { drawQuadOverlay(svg, info); return; }
 
     // Master switch: one control that clears the view completely.
     if (!v.annotations && !app.measure.active) {
@@ -441,11 +455,116 @@ function drawPatches(svg, o) {
     svg.appendChild(g);
 }
 
+/**
+ * Annotate a quad frame: one clipped group per pane, each projected with that
+ * pane's own camera.
+ *
+ * Everything is clipped to its pane. Without that, a dimension running off
+ * the side of the plan view would draw straight across the 3D pane beside it
+ * and the sheet would be unreadable — the single most likely way a
+ * multi-viewport overlay goes wrong.
+ *
+ * @param {SVGSVGElement} svg
+ * @param {{panes: any[], paneVp: Record<string, number[]>, viewport: {width:number,height:number}}} info
+ */
+function drawQuadOverlay(svg, info) {
+    const v = app.store.view;
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.setAttribute('viewBox', `0 0 ${info.viewport.width} ${info.viewport.height}`);
+
+    const ink = figureInk();
+    svg.style.color = ink.color;
+
+    const defs = document.createElementNS(SVG_NS, 'defs');
+    svg.appendChild(defs);
+
+    const pred = wheelPredicate(v.isolation);
+    const visibleAxles = new Set(app.layout.wheels.filter(pred).map((w) => w.axleId));
+    const shown = {
+        ...app.layout,
+        wheels: app.layout.wheels.filter(pred),
+        axles: app.layout.axles.filter((a) => visibleAxles.has(a.id))
+    };
+    if (!shown.wheels.length) return;
+    shown.extents = {
+        ...app.layout.extents,
+        minY: Math.min(...shown.wheels.map((w) => w.y - w.geometry.sectionWidth / 2)),
+        maxY: Math.max(...shown.wheels.map((w) => w.y + w.geometry.sectionWidth / 2))
+    };
+
+    for (const pane of info.panes) {
+        // Pane separators, drawn as the app's hairlines.
+        const frame = document.createElementNS(SVG_NS, 'rect');
+        frame.setAttribute('x', String(pane.x));
+        frame.setAttribute('y', String(pane.y));
+        frame.setAttribute('width', String(pane.w));
+        frame.setAttribute('height', String(pane.h));
+        frame.setAttribute('fill', 'none');
+        frame.setAttribute('stroke', ink.color);
+        frame.setAttribute('stroke-width', '1');
+        frame.setAttribute('opacity', '0.22');
+        svg.appendChild(frame);
+
+        // Pane label, in the app's uppercase datum idiom.
+        const lab = document.createElementNS(SVG_NS, 'text');
+        lab.setAttribute('x', String(pane.x + 10));
+        lab.setAttribute('y', String(pane.y + 18));
+        lab.setAttribute('font-size', '10');
+        lab.setAttribute('letter-spacing', '1.6');
+        lab.setAttribute('fill', ink.color);
+        lab.setAttribute('opacity', '0.62');
+        lab.textContent = pane.label.toUpperCase();
+        svg.appendChild(lab);
+
+        if (!v.annotations) continue;
+
+        const clipId = `g3-pane-${pane.mode}`;
+        const clip = document.createElementNS(SVG_NS, 'clipPath');
+        clip.setAttribute('id', clipId);
+        const cr = document.createElementNS(SVG_NS, 'rect');
+        cr.setAttribute('x', String(pane.x));
+        cr.setAttribute('y', String(pane.y));
+        cr.setAttribute('width', String(pane.w));
+        cr.setAttribute('height', String(pane.h));
+        clip.appendChild(cr);
+        defs.appendChild(clip);
+
+        const g = document.createElementNS(SVG_NS, 'g');
+        g.setAttribute('clip-path', `url(#${clipId})`);
+        g.setAttribute('transform', `translate(${pane.x} ${pane.y})`);
+        svg.appendChild(g);
+
+        const opts = {
+            vp: info.paneVp[pane.mode],
+            // Pane-local: the group's transform puts it in place, so the
+            // projection must work in pane coordinates, not frame ones.
+            viewport: { width: pane.w, height: pane.h },
+            unitSystem: v.unitSystem,
+            precision: v.precision,
+            dualUnits: v.dualUnits,
+            fontSize: 11,
+            color: ink.color,
+            halo: ink.halo,
+            accent: ink.accent,
+            container: g
+        };
+
+        const dims = [
+            ...autoDimensions(shown, { sets: v.dimensionSets }),
+            ...(v.dimensionSets.includes('custom') ? (app.store.doc.customDimensions || []) : [])
+        ];
+        renderDimensions(svg, dims, opts);
+        if (v.showScaleBar) renderScaleBar(g, opts);
+    }
+
+    updateAxisBadge();
+}
+
 function updateAxisBadge() {
     const v = app.store.view;
-    const meta = VIEW_META[v.mode];
+    const label = v.mode === 'quad' ? 'Quad' : VIEW_META[v.mode].label;
     $('g3-axisbadge').innerHTML =
-        `<b>${meta.label}</b><br>x ${ENG_AXES.x.positive}<br>y ${ENG_AXES.y.positive}<br>z ${ENG_AXES.z.positive}`;
+        `<b>${label}</b><br>x ${ENG_AXES.x.positive}<br>y ${ENG_AXES.y.positive}<br>z ${ENG_AXES.z.positive}`;
 }
 
 /**
@@ -848,18 +967,27 @@ function setupToolbar() {
     $('g3-export').addEventListener('click', runExport);
 }
 
-/** @param {string} mode */
+/** @param {string} mode one of the four view modes, or 'quad' */
 function setViewMode(mode) {
     app.store.view.mode = mode;
-    app.viewport.cameras.setMode(mode);
+
+    // 'quad' is a LAYOUT, not a camera mode: the rig keeps whatever single
+    // mode was last active so returning from quad lands where you left.
+    const quad = mode === 'quad';
+    app.viewport.setQuad(quad);
+    if (!quad) app.viewport.cameras.setMode(mode);
+
     for (const b of document.querySelectorAll('.g3-vtab')) {
         const on = b.getAttribute('data-view') === mode;
         b.classList.toggle('is-active', on);
         b.setAttribute('aria-selected', String(on));
     }
-    $('g3-hud-right').textContent = VIEW_META[mode].locked
-        ? 'locked view · zoom: wheel · pan: drag · click an axle to isolate'
-        : 'orbit: drag · zoom: wheel · pan: right-drag · click an axle to isolate';
+    $('g3-hud-right').textContent = quad
+        ? 'four views · click a pane to open it full size'
+        : VIEW_META[mode].locked
+            ? 'locked view · zoom: wheel · pan: drag · click an axle to isolate'
+            : 'orbit: drag · zoom: wheel · pan: right-drag · click an axle to isolate';
+
     const b = isolationBounds(app.store.view.isolation, app.layout);
     if (b) app.viewport.frameEngineering(b);
     updateStatus();
@@ -1864,7 +1992,7 @@ function applyProject(p) {
         $(id).classList.toggle('is-on', !!on);
         $(id).setAttribute('aria-pressed', String(!!on));
     }
-    setViewMode(app.store.view.mode);
+    setViewMode(app.store.view.mode || '3d');
     $('g3-seed').value = app.store.doc.seed;
     $('g3-meta-title').value = app.store.doc.meta.title || '';
     $('g3-meta-author').value = app.store.doc.meta.author || '';
@@ -1889,8 +2017,8 @@ function setupKeyboard() {
         const t = /** @type {HTMLElement} */ (e.target);
         if (t && /INPUT|TEXTAREA|SELECT/.test(t.tagName)) return;
 
-        if (pendingV && '1234'.includes(e.key)) {
-            setViewMode(['3d', 'plan', 'side', 'front'][Number(e.key) - 1]);
+        if (pendingV && '12345'.includes(e.key)) {
+            setViewMode(['3d', 'plan', 'side', 'front', 'quad'][Number(e.key) - 1]);
             pendingV = false;
             e.preventDefault();
             return;
@@ -1949,9 +2077,11 @@ function updateStatus() {
     }
     const o = app.viewport.cameras.getOrbit();
     const v = app.store.view;
-    $('g3-status-view').textContent = v.mode === '3d'
-        ? `az ${o.azimuth.toFixed(0)}° · el ${o.elevation.toFixed(0)}°`
-        : `${VIEW_META[v.mode].label} · locked`;
+    $('g3-status-view').textContent = v.mode === 'quad'
+        ? 'Quad · plan / 3D / side / front'
+        : v.mode === '3d'
+            ? `az ${o.azimuth.toFixed(0)}° · el ${o.elevation.toFixed(0)}°`
+            : `${VIEW_META[v.mode].label} · locked`;
     $('g3-hud').textContent = `${app.store.doc.unit?.designation || app.store.doc.unit?.model || ''} · `
         + `${app.layout.wheels.length} tires`;
     syncCameraFields();

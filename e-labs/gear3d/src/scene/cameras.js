@@ -112,7 +112,11 @@ export class CameraRig {
 
     /** Recompute the orthographic frustum from the fitted bounds and zoom. */
     _updateOrthoFrustum() {
-        const half = this._orthoHalfHeight ?? 2;
+        // Half-height is stored PER MODE. It used to be a single value fitted
+        // for whichever mode was active when fit() last ran, so switching
+        // Plan -> Front framed the front elevation using the plan's extents —
+        // a 22 m truck's length deciding the zoom for a 2.4 m wide view.
+        const half = this.states[this.mode]?.halfHeight ?? 2;
         this.ortho.top = half;
         this.ortho.bottom = -half;
         this.ortho.left = -half * this.aspect;
@@ -120,6 +124,81 @@ export class CameraRig {
         this.ortho.near = -(this._depth ?? 1000);
         this.ortho.far = this._depth ?? 1000;
         this.ortho.updateProjectionMatrix();
+    }
+
+    /**
+     * Which way a mode looks, and which way is up for it.
+     * Shared by the interactive camera and the quad-view cameras so the two
+     * can never disagree about what "Plan" means.
+     *
+     * @param {ViewMode} mode
+     * @returns {{dir: THREE.Vector3, up: THREE.Vector3}} dir points from the
+     *          target toward the camera, in the three.js frame
+     */
+    _orientation(mode) {
+        if (VIEW_META[mode].locked) {
+            const v = LOCKED_VIEWS[mode];
+            const la = engToRender(v.lookAlong);
+            const u = engToRender(v.up);
+            return {
+                dir: new THREE.Vector3(-la.x, -la.y, -la.z).normalize(),
+                up: new THREE.Vector3(u.x, u.y, u.z).normalize()
+            };
+        }
+        const s = this.states[mode];
+        const r = engToRender(orbitToEng(s.azimuth, s.elevation));
+        return {
+            dir: new THREE.Vector3(r.x, r.y, r.z).normalize(),
+            up: new THREE.Vector3(0, 1, 0)
+        };
+    }
+
+    /**
+     * Configure an arbitrary camera for a mode, without disturbing the
+     * interactive state. Used to render all four quad panes in one frame.
+     *
+     * @param {THREE.OrthographicCamera} cam
+     * @param {ViewMode} mode
+     * @param {number} aspect
+     * @returns {THREE.OrthographicCamera}
+     */
+    configureCamera(cam, mode, aspect) {
+        const s = this.states[mode];
+        const { dir, up } = this._orientation(mode);
+        const half = s.halfHeight ?? 2;
+        const depth = this._depth ?? 1000;
+
+        cam.top = half;
+        cam.bottom = -half;
+        cam.left = -half * aspect;
+        cam.right = half * aspect;
+        cam.near = -depth;
+        cam.far = depth;
+        cam.zoom = s.zoom;
+        cam.updateProjectionMatrix();
+
+        cam.position.copy(s.target).addScaledVector(dir, Math.max(10, depth * 0.35));
+        cam.up.copy(up);
+        cam.lookAt(s.target);
+        cam.updateMatrixWorld();
+        return cam;
+    }
+
+    /**
+     * Four cameras, one per pane, configured for the given pane aspect.
+     * Pooled: quad view re-renders on every interaction and allocating four
+     * cameras a frame would churn needlessly.
+     *
+     * @param {number} aspect
+     * @returns {Record<string, THREE.OrthographicCamera>}
+     */
+    quadCameras(aspect) {
+        if (!this._pool) {
+            this._pool = {};
+            for (const m of VIEW_MODES) this._pool[m] = new THREE.OrthographicCamera(-1, 1, 1, -1, -1000, 1000);
+        }
+        for (const m of VIEW_MODES) this.configureCamera(this._pool[m], m, aspect);
+        return this._pool;
     }
 
     /**
@@ -186,18 +265,38 @@ export class CameraRig {
         this._box = box.clone();
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
-        const s = this.states[this.mode];
-        s.target.copy(center);
-
-        // Extent perpendicular to the view direction decides the ortho height.
-        const { horizontal, vertical } = this._extentsFor(this.mode, size);
-        const needH = vertical * padding;
-        const needW = (horizontal * padding) / this.aspect;
-        this._orthoHalfHeight = Math.max(needH, needW) / 2;
         this._depth = Math.max(size.x, size.y, size.z) * 6 + 10;
 
-        s.distance = Math.max(size.x, size.y, size.z) * 2.2 + 1;
-        s.zoom = 1;
+        // Fit EVERY mode, not just the active one. Each view direction sees a
+        // different silhouette — plan sees length by width, front sees width
+        // by height — so each needs its own half-height. Quad view renders all
+        // four at once and would otherwise show three of them mis-framed.
+        for (const m of VIEW_MODES) {
+            const s = this.states[m];
+            s.target.copy(center);
+            const { horizontal, vertical } = this._extentsFor(m, size);
+            const needH = vertical * padding;
+            const needW = (horizontal * padding) / this.aspect;
+            s.halfHeight = Math.max(needH, needW) / 2;
+            s.distance = Math.max(size.x, size.y, size.z) * 2.2 + 1;
+            s.zoom = 1;
+        }
+
+        // THE THREE ORTHOGRAPHIC VIEWS SHARE ONE SCALE.
+        //
+        // Fitted independently, the front elevation of a 22 m truck comes out
+        // roughly seven times larger than its side elevation — each pane is
+        // correctly framed and the sheet is useless, because the whole point
+        // of plan/side/front together is that a reader can carry a dimension
+        // between them by eye. Drafting practice puts all three at one scale
+        // and so does this. 3D is a pictorial reference, not an elevation, so
+        // it keeps its own fit.
+        const shared = Math.max(
+            this.states.plan.halfHeight,
+            this.states.side.halfHeight,
+            this.states.front.halfHeight
+        );
+        for (const m of ['plan', 'side', 'front']) this.states[m].halfHeight = shared;
 
         this._updateOrthoFrustum();
         this._applyState();
@@ -227,23 +326,7 @@ export class CameraRig {
         const s = this.states[this.mode];
         const cam = this.camera;
 
-        /** @type {THREE.Vector3} */
-        let dir;   // from target toward the camera, three.js frame
-        /** @type {THREE.Vector3} */
-        let up;
-
-        if (this.isLocked) {
-            const v = LOCKED_VIEWS[this.mode];
-            const la = engToRender(v.lookAlong);
-            const u = engToRender(v.up);
-            dir = new THREE.Vector3(-la.x, -la.y, -la.z).normalize();
-            up = new THREE.Vector3(u.x, u.y, u.z).normalize();
-        } else {
-            const e = orbitToEng(s.azimuth, s.elevation);
-            const r = engToRender(e);
-            dir = new THREE.Vector3(r.x, r.y, r.z).normalize();
-            up = new THREE.Vector3(0, 1, 0);
-        }
+        const { dir, up } = this._orientation(this.mode);
 
         const dist = s.projection === 'persp' && this.mode === '3d'
             ? s.distance
@@ -310,7 +393,7 @@ export class CameraRig {
             out.states[m] = {
                 target: [s.target.x, s.target.y, s.target.z],
                 zoom: s.zoom, azimuth: s.azimuth, elevation: s.elevation,
-                distance: s.distance, projection: s.projection
+                distance: s.distance, projection: s.projection, halfHeight: s.halfHeight
             };
         }
         return out;
@@ -327,6 +410,7 @@ export class CameraRig {
             s.target.set(j.target[0], j.target[1], j.target[2]);
             s.zoom = j.zoom; s.azimuth = j.azimuth; s.elevation = j.elevation;
             s.distance = j.distance; s.projection = j.projection;
+            if (j.halfHeight != null) s.halfHeight = j.halfHeight;
         }
         this.setMode(json.mode || '3d');
     }
@@ -345,6 +429,7 @@ function makeState(init = {}) {
         azimuth: init.azimuth ?? -30,
         elevation: init.elevation ?? 20,
         distance: 10,
+        halfHeight: 2,
         projection: init.projection ?? 'ortho'
     };
 }

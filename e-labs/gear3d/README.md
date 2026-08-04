@@ -33,7 +33,7 @@ Tests need only Node ≥ 18:
 
 ```bash
 cd e-labs/gear3d
-npm test          # 74 checks, no dependencies
+npm test          # 141 checks, no dependencies
 ```
 
 ---
@@ -46,14 +46,17 @@ Scene units are **metres**; everything else is **millimetres**. The single
 ```
 index.html · styles.css · main.js        shell and UI controller
 src/
-  core/       coords · units · prng · tires · schema · store · bridge · layout
-  data/       tires.json · trucks/*.json · SOURCES.md
-  geometry/   tire · rim · hub · axle · assembly
-  scene/      renderer · cameras · lighting · materials
-  annotate/   projection · dimensions
+  core/       coords · units · prng · tires · schema · store · bridge ·
+              layout · version
+  data/       tires.json · trucks/*.json · aircraft/*.json · SOURCES.md
+  geometry/   tire · rim · hub · axle · chassis · assembly · assets
+  scene/      renderer · cameras · lighting · materials · environment ·
+              textures · grid
+  annotate/   projection · dimensions · snapping
   contact/    models · patch · export
-  views/      isolation
+  views/      isolation · quadview
   io/         project · exportRaster · exportVector
+assets/       textures/ (CC0, see CREDITS.md)
 test/         harness.mjs · run.mjs
 ```
 
@@ -126,7 +129,7 @@ render.
 | `footprint.csv` / `.json` | Contact patches with load, pressure, area and equivalent radius. |
 | Abaqus parameter table | Patch rectangles and pressures, with the assumptions stated in the header. Not a runnable deck — see `DECISIONS.md` §D11. |
 | `unit.json` | The full parametric definition, citations included. |
-| `.gear3d` | Unit + customizations + camera (all four modes) + lighting + annotations + seed. |
+| `.gear3d` | Unit + customizations + camera (all four modes) + lighting + annotations + materials + seed. Quad view exports as a single check sheet. |
 | Gear matrix | N×M comparison sheet with shared camera, lighting and **shared scale**, so cells are genuinely comparable. |
 
 ---
@@ -164,7 +167,7 @@ perpendicular to the measurement itself rather than to a coordinate axis.
 
 | Key | Action |
 |---|---|
-| `V` then `1`–`4` | 3D / Plan / Side / Front |
+| `V` then `1`–`5` | 3D / Plan / Side / Front / Quad |
 | `M` | Measure mode |
 | `A` | Annotations on/off |
 | `G` | Ground grid on/off |
@@ -251,14 +254,30 @@ rendering, and the E-Labs preview image.
 **v1.4** adds chassis silhouettes.
 
 **v1.4** adds chassis silhouettes, a drafting-title-block header, draggable
-callouts and material controls.
+callouts, material controls and the quad view.
+
+## Quad view
+
+`Quad` renders plan, 3D, side and front in one frame — the layout for
+*checking* a configuration rather than composing a single figure, and it
+exports as a complete check sheet.
+
+Plan sits above Side so the two share a longitudinal axis and a dimension can
+be carried straight down between them; Side and Front share a row and the
+vertical axis. **The three orthographic panes share one scale.** Fitted
+independently the front elevation of a 22 m truck comes out roughly seven
+times larger than its side elevation — each pane correctly framed and the
+sheet useless. Drafting practice puts all three at one scale and so does
+this; 3D is a pictorial reference, so it keeps its own fit.
+
+Annotations are drawn per pane and clipped to it. Click any pane to open it
+full size.
 
 Deferred, with reasons in `DECISIONS.md`:
 
 - **747 and A380** — wing-plus-body gear layouts need body-gear offsets that no
   consulted source provides (`SOURCES.md` §5.5).
-- The 2×2 quad view, per-tire contact patch overrides, and glTF/OBJ scene
-  export.
+- Per-tire contact patch overrides and glTF/OBJ scene export.
 
 ## Materials
 

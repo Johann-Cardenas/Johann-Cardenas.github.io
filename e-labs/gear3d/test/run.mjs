@@ -46,6 +46,7 @@ import { dimensionValue } from '../src/annotate/dimensions.js';
 import {
     chassisEnvelope, profileFor, WIDTH_LIMIT_MM, HEIGHT_LIMIT_MM
 } from '../src/geometry/chassis.js';
+import { quadLayout, paneAt, QUAD_ORDER } from '../src/views/quadview.js';
 import { toCSV, toAbaqus } from '../src/contact/export.js';
 import { serializeProject, parseProject } from '../src/io/project.js';
 
@@ -1152,6 +1153,86 @@ test('a project written by a newer format major version is refused', () => {
     }));
     good.formatVersion = '99.0';
     assertThrows(() => parseProject(JSON.stringify(good)), 'newer major must be refused');
+});
+
+/* ============================================================
+   12b-iii. Quad view layout
+   ============================================================ */
+
+group('12b-iii. Quad view layout');
+
+test('four panes tile the frame without overlapping', () => {
+    const panes = quadLayout(1000, 600, 2);
+    assertEqual(panes.length, 4, 'four panes');
+    for (let i = 0; i < panes.length; i++) {
+        for (let j = i + 1; j < panes.length; j++) {
+            const a = panes[i], b = panes[j];
+            const overlap = a.x < b.x + b.w && b.x < a.x + a.w
+                && a.y < b.y + b.h && b.y < a.y + a.h;
+            assert(!overlap, `${a.mode} overlaps ${b.mode}`);
+        }
+    }
+});
+
+test('panes reach every edge of the frame', () => {
+    const W = 1000, H = 600;
+    const panes = quadLayout(W, H, 2);
+    assertEqual(Math.min(...panes.map((p) => p.x)), 0, 'left edge');
+    assertEqual(Math.min(...panes.map((p) => p.y)), 0, 'top edge');
+    assertEqual(Math.max(...panes.map((p) => p.x + p.w)), W, 'right edge');
+    assertEqual(Math.max(...panes.map((p) => p.y + p.h)), H, 'bottom edge');
+});
+
+test('every pane shares the frame aspect, which is what lets one fit serve all four', () => {
+    const panes = quadLayout(1200, 800, 2);
+    const frame = 1200 / 800;
+    for (const p of panes) {
+        assertClose(p.w / p.h, frame, 0.02, `${p.mode} aspect`);
+    }
+});
+
+test('the GL origin is derived, never left to the caller', () => {
+    // WebGL measures its viewport from the BOTTOM-left, CSS from the top.
+    // Deriving one from the other at each call site is how a vertically
+    // mirrored quad view happens.
+    const H = 600;
+    for (const p of quadLayout(1000, H, 2)) {
+        assertEqual(p.glY, H - p.y - p.h, `${p.mode} glY`);
+    }
+});
+
+test('plan sits above side so they share a longitudinal axis', () => {
+    const panes = quadLayout(1000, 600, 2);
+    const plan = panes.find((p) => p.mode === 'plan');
+    const side = panes.find((p) => p.mode === 'side');
+    const front = panes.find((p) => p.mode === 'front');
+    assertEqual(plan.x, side.x, 'plan and side share a column');
+    assert(plan.y < side.y, 'plan above side');
+    assertEqual(side.y, front.y, 'side and front share a row');
+});
+
+test('paneAt finds the pane under a point, and nothing outside the frame', () => {
+    const panes = quadLayout(1000, 600, 2);
+    for (const p of panes) {
+        const hit = paneAt(panes, p.x + p.w / 2, p.y + p.h / 2);
+        assertEqual(hit?.mode, p.mode, `centre of ${p.mode}`);
+    }
+    assertEqual(paneAt(panes, 5000, 5000), null, 'outside the frame');
+});
+
+test('the layout survives odd and tiny frame sizes', () => {
+    for (const [w, h] of [[1, 1], [3, 7], [1001, 603], [10000, 17]]) {
+        const panes = quadLayout(w, h, 2);
+        assertEqual(panes.length, 4, `${w}x${h} pane count`);
+        for (const p of panes) {
+            assert(p.w >= 1 && p.h >= 1, `${w}x${h} ${p.mode} collapsed`);
+            assert(Number.isFinite(p.glY), `${w}x${h} ${p.mode} glY not finite`);
+        }
+    }
+});
+
+test('QUAD_ORDER covers all four modes exactly once', () => {
+    assertEqual([...QUAD_ORDER].sort().join(','), '3d,front,plan,side', 'modes');
 });
 
 /* ============================================================
