@@ -45,7 +45,7 @@ import { toCSV, toJSON as footprintJSON, toAbaqus } from './src/contact/export.j
 
 import {
     defaultIsolation, wheelPredicate, ISOLATION_LEVELS, ISOLATION_META,
-    drillInto, stepOut, describeIsolation, isolationBounds
+    drillInto, stepOut, describeIsolation, isolationBounds, showChassis
 } from './src/views/isolation.js';
 
 import {
@@ -301,9 +301,15 @@ function rebuild(opts = {}) {
 function applyIsolation(opts = {}) {
     if (!app.assembly) return;
     const iso = app.store.view.isolation;
-    app.assembly.setWheelFilter(wheelPredicate(iso), { ghost: iso.ghost });
-    // Snap targets follow visibility — see rebuildSnapPoints.
+    app.assembly.setWheelFilter(wheelPredicate(iso), {
+        ghost: iso.ghost,
+        chassis: showChassis(iso)
+    });
+    // Snap targets follow visibility — see rebuildSnapPoints. The chassis is
+    // deliberately NOT snappable: it is a schematic envelope, so measuring to
+    // it would produce a number with no sourced meaning.
     rebuildSnapPoints();
+    renderChassisNotice();
 
     if (opts.frame) {
         const b = isolationBounds(iso, app.layout);
@@ -433,6 +439,44 @@ function updateAxisBadge() {
     const meta = VIEW_META[v.mode];
     $('g3-axisbadge').innerHTML =
         `<b>${meta.label}</b><br>x ${ENG_AXES.x.positive}<br>y ${ENG_AXES.y.positive}<br>z ${ENG_AXES.z.positive}`;
+}
+
+/**
+ * Say, in the interface, exactly what the chassis silhouette is.
+ *
+ * It is drawn only when "Full unit" is selected, and it is the one thing on
+ * screen that is not derived from cited dimensions. Its outer envelope comes
+ * from the unit's own overall length and the federal width and height
+ * limits; its internal subdivision is representative. A reader who cannot
+ * tell those apart could mistake a schematic for a measurement, so the app
+ * states it rather than relying on the documentation.
+ */
+function renderChassisNotice() {
+    const box = $('g3-chassis-notice');
+    if (!box) return;
+    const iso = app.store.view.isolation;
+    const env = app.assembly?.chassis;
+
+    if (iso.level !== 'unit') { box.hidden = true; return; }
+
+    if (!env) {
+        box.hidden = false;
+        box.innerHTML = '<i class="fas fa-info-circle"></i><span>'
+            + (app.layout?.domain === 'aircraft'
+                ? 'No fuselage silhouette: nothing in the sourced data constrains an aircraft body, '
+                + 'so drawing one would be invention. The gear is shown alone.'
+                : 'This unit has no chassis silhouette.')
+            + '</span>';
+        return;
+    }
+
+    box.hidden = false;
+    box.innerHTML = '<i class="fas fa-drafting-compass"></i><span>'
+        + '<strong>Schematic envelope, not bodywork.</strong> Length is the unit\'s cited '
+        + 'overall length; width and height are the 102 in and 13 ft 6 in legal limits. '
+        + `Representative: ${esc(env.representative.join(', '))}. `
+        + 'Not measurable — the silhouette carries no snap targets.'
+        + '</span>';
 }
 
 /* ============================================================
@@ -715,8 +759,14 @@ function setViewMode(mode) {
 }
 
 function setupUnitPanel() {
-    $('g3-domain').addEventListener('change', () => { syncCategories(); syncUnits(); });
-    $('g3-category').addEventListener('change', syncUnits);
+    // Changing Domain or Class must LOAD something, not merely repopulate the
+    // Model list. Without autoLoad the Model dropdown shows one vehicle while
+    // the viewport still holds the previous one, and the app looks frozen.
+    $('g3-domain').addEventListener('change', () => {
+        syncCategories();
+        syncUnits({ autoLoad: true });
+    });
+    $('g3-category').addEventListener('change', () => syncUnits({ autoLoad: true }));
     $('g3-unit').addEventListener('change', () => loadUnitById($('g3-unit').value));
     $('g3-revert-inline').addEventListener('click', revertToReference);
     syncCategories();
@@ -757,7 +807,15 @@ function syncCategories() {
     }
 }
 
-function syncUnits() {
+/**
+ * Repopulate the Model dropdown for the current Domain and Class.
+ *
+ * @param {{autoLoad?: boolean}} [opts] when true, load the first matching
+ *        unit if the currently loaded one is filtered out. Callers that run
+ *        AFTER a load (syncUnitSelectors) must leave this false or they will
+ *        re-enter loadUnitById.
+ */
+function syncUnits(opts = {}) {
     const domain = $('g3-domain').value;
     const cat = $('g3-category').value;
     const pool = domain === 'truck' ? app.library.trucks : app.library.aircraft;
@@ -783,8 +841,16 @@ function syncUnits() {
             : `${u.manufacturer} ${u.model} (${u.gearDesignation})`;
         sel.appendChild(o);
     }
+    // Keep the loaded unit selected when it survives the new filter. When it
+    // does not, the dropdown would otherwise fall to its first option while
+    // the viewport kept showing something else entirely — so load it.
     const current = app.store?.doc?.unit?.id;
-    if (current && filtered.some((u) => u.id === current)) sel.value = current;
+    if (current && filtered.some((u) => u.id === current)) {
+        sel.value = current;
+    } else if (opts.autoLoad && filtered.length) {
+        sel.value = filtered[0].id;
+        loadUnitById(filtered[0].id);
+    }
 }
 
 function syncUnitSelectors() {

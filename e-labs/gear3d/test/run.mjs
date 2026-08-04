@@ -43,6 +43,9 @@ import {
     buildSnapPoints, nearestSnapPoint, inferAxis, dimensionFromSnaps
 } from '../src/annotate/snapping.js';
 import { dimensionValue } from '../src/annotate/dimensions.js';
+import {
+    chassisEnvelope, profileFor, WIDTH_LIMIT_MM, HEIGHT_LIMIT_MM
+} from '../src/geometry/chassis.js';
 import { toCSV, toAbaqus } from '../src/contact/export.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -1096,6 +1099,93 @@ test('every snap target of the whole library projects to a finite point', () => 
                 `${u.id}/${s.id} has a non-finite coordinate`);
         }
     }
+});
+
+/* ============================================================
+   12c. Chassis silhouette
+   ============================================================ */
+
+group('12c. Chassis silhouette');
+
+test('the class 9 gets a silhouette bounded by its cited overall length', () => {
+    const env = chassisEnvelope(c9layout, c9);
+    assert(env, 'expected an envelope');
+    assertClose(env.extent.length, c9.overallLength, 1e-6, 'length is the cited value');
+    const x0 = Math.min(...env.boxes.map((b) => b.x0));
+    const x1 = Math.max(...env.boxes.map((b) => b.x1));
+    assertClose(x1 - x0, c9.overallLength, 1e-6, 'boxes span exactly the overall length');
+});
+
+test('the silhouette never exceeds the federal width or height limits', () => {
+    for (const u of truckUnits) {
+        const env = chassisEnvelope(resolveLayout(u), u);
+        if (!env) continue;
+        const halfW = Math.max(...env.boxes.map((b) => Math.max(Math.abs(b.y0), Math.abs(b.y1))));
+        const top = Math.max(...env.boxes.map((b) => b.z1));
+        assert(halfW * 2 <= WIDTH_LIMIT_MM + 1, `${u.id} width ${halfW * 2} exceeds 2591 mm`);
+        assert(top <= HEIGHT_LIMIT_MM + 1, `${u.id} height ${top} exceeds 4115 mm`);
+    }
+});
+
+test('the silhouette encloses the running gear it belongs to', () => {
+    const env = chassisEnvelope(c9layout, c9);
+    const x0 = Math.min(...env.boxes.map((b) => b.x0));
+    const x1 = Math.max(...env.boxes.map((b) => b.x1));
+    for (const a of c9layout.axles) {
+        assert(a.x >= x0 && a.x <= x1, `axle ${a.id} at ${a.x} falls outside [${x0}, ${x1}]`);
+    }
+});
+
+test('every box sits above the pavement and has positive volume', () => {
+    for (const u of truckUnits) {
+        const env = chassisEnvelope(resolveLayout(u), u);
+        if (!env) continue;
+        for (const b of env.boxes) {
+            assert(b.z0 >= 0, `${u.id}/${b.id} starts below the pavement at ${b.z0}`);
+            assert(b.x1 > b.x0 && b.y1 > b.y0 && b.z1 > b.z0, `${u.id}/${b.id} is degenerate`);
+        }
+    }
+});
+
+test('a motorcycle gets no silhouette, because one would be meaningless', () => {
+    const moto = truckUnits.find((u) => u.classification.class === 1);
+    assertEqual(chassisEnvelope(resolveLayout(moto), moto), null, 'class 1');
+});
+
+test('aircraft get no silhouette — no sourced dimension constrains a fuselage', () => {
+    for (const u of aircraftUnits) {
+        assertEqual(chassisEnvelope(resolveLayout(u), u), null, u.id);
+    }
+});
+
+test('body profiles are selected from the unit\'s body type', () => {
+    assertEqual(profileFor('tractor-semitrailer').key, 'truck', 'tractor');
+    assertEqual(profileFor('transit bus').key, 'bus', 'bus');
+    assertEqual(profileFor('passenger car').key, 'car', 'car');
+    assertEqual(profileFor('pickup truck').key, 'pickup', 'pickup');
+    assertEqual(profileFor('motorcycle').key, 'motorcycle', 'motorcycle');
+    assertEqual(profileFor('something unheard of').key, 'truck', 'unknown falls back to truck');
+});
+
+test('every truck in the library produces a usable silhouette or an explicit null', () => {
+    for (const u of truckUnits) {
+        const env = chassisEnvelope(resolveLayout(u), u);
+        if (env === null) {
+            assertEqual(u.classification.class, 1, `only class 1 may be null, ${u.id} was not`);
+            continue;
+        }
+        assert(env.boxes.length > 0, `${u.id} produced an empty envelope`);
+        assert(Array.isArray(env.representative) && env.representative.length > 0,
+            `${u.id} must declare what is representative rather than sourced`);
+    }
+});
+
+test('heavy trucks carry frame rails at the 34 in standard spacing', () => {
+    const env = chassisEnvelope(c9layout, c9);
+    const rails = env.boxes.filter((b) => b.kind === 'frame');
+    assertEqual(rails.length, 2, 'two rails');
+    const centres = rails.map((b) => (b.y0 + b.y1) / 2).sort((a, b) => a - b);
+    assertClose(centres[1] - centres[0], 864, 1e-6, '34 in between rail centres');
 });
 
 /* ============================================================

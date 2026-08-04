@@ -205,6 +205,58 @@ carries no secrets and enables nothing that is not already in the project file.
 
 ---
 
+## D18. The chassis is a regulatory envelope, not a vehicle body (v1.4)
+
+**Decision.** The "Full unit" isolation level draws a translucent schematic
+envelope with picked-out edges, not a modelled truck.
+
+**Why.** Gear3D has no sourced body dimensions — it knows axle positions,
+track widths and overall length, and nothing about cab shape, trailer height
+or frame depth. Modelling a body would mean inventing dimensions, which is
+the one thing this app exists not to do. So the silhouette is built from
+bounds that are themselves citable:
+
+| Bound | Source |
+|---|---|
+| Overall length | the unit's own cited `overallLength` |
+| Overall width | min(actual outer width, **2591 mm**) — 23 CFR 658.15 |
+| Overall height | **4115 mm** (13 ft 6 in) — the limit most US states apply |
+| Axle positions | cited, straight from the unit |
+
+Only the internal subdivision — where the cab ends, how deep the frame sits,
+how the non-axle length splits between front and rear overhang — is
+representative, and the app names those in an on-screen notice rather than
+burying them here. The silhouette is excluded from picking and from
+measurement snapping, so no number can ever be taken off it.
+
+**Aircraft get nothing.** No sourced dimension constrains a fuselage, and the
+notice says exactly that instead of quietly showing bare gear.
+
+**Motorcycles get nothing** either: an envelope around a motorcycle conveys
+nothing its two wheels do not already show.
+
+---
+
+## D19. A dropdown that filters must also load (v1.4)
+
+**The bug.** Changing the Class or Domain dropdown repopulated the Model list
+but never loaded anything, so the Model dropdown displayed one vehicle while
+the viewport still held the previous one. The app looked frozen.
+
+**Why my own testing missed it.** My verification fired `change` on the Model
+select manually after changing the Class — so it exercised the code path I
+had written rather than the interaction a user performs. Confirming a
+mechanism is not the same as confirming a feature. The corrected check drives
+only the control the user actually touches and asserts that the loaded unit
+matches what the dropdown displays.
+
+**Fix.** `syncUnits({ autoLoad })` loads the first matching unit whenever the
+currently loaded one is filtered out. The flag defaults to false because
+`syncUnitSelectors()` runs *after* a load and would otherwise re-enter
+`loadUnitById`.
+
+---
+
 ## D16. `[hidden]` needs an explicit rule, and the cost of not having one (v1.3)
 
 **The bug.** The stylesheet had no `[hidden]` rule. The UA stylesheet declares

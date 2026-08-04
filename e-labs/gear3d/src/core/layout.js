@@ -52,6 +52,7 @@ import { TIRE_CONFIGS } from './schema.js';
 
 /**
  * @typedef {Object} Layout
+ * @property {object} unit    the source definition this layout was built from
  * @property {Wheel[]} wheels
  * @property {ResolvedAxle[]} axles
  * @property {Array<{id:string, type:string, axles:string[], spacing:number|null}>} groups
@@ -348,7 +349,11 @@ function finish(unit, wheels, axles, groups, domain) {
         derived.assumedFields = unit.assumedFields || [];
     }
 
-    return { wheels, axles, groups, domain, extents, derived };
+    // The unit travels with its layout. Consumers that need to reach back to
+    // the source definition — the chassis silhouette needs bodyType and
+    // overallLength — should not have to be handed it separately and risk
+    // being given a different one than the layout was built from.
+    return { unit, wheels, axles, groups, domain, extents, derived };
 }
 
 /**

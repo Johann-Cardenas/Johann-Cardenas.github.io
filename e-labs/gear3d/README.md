@@ -131,6 +131,21 @@ render.
 
 ---
 
+## Chassis silhouettes
+
+The **Full unit** isolation level draws the vehicle envelope around the
+running gear. It is a *schematic*, and deliberately looks like one —
+translucent panels with picked-out edges, never a modelled body.
+
+That is not a shortcut. Gear3D has no sourced body dimensions, so the
+envelope is built only from bounds that are citable: the unit's own overall
+length, the 102 in federal width limit, the 13 ft 6 in height limit, and the
+real axle positions. The internal subdivision is representative and the app
+names it on screen. The silhouette carries no snap targets and cannot be
+picked, so no measurement can ever be taken off it.
+
+Aircraft show no fuselage: nothing in the sourced data constrains one.
+
 ## Measuring
 
 Press **`M`** (or the Measure button) and click two features. Endpoints snap
@@ -233,13 +248,15 @@ so the authoritative outer width survives whatever you enter. Full breakdown in
 glTF asset-slot loader. **v1.2** adds the aircraft library (M8), ghost
 rendering, and the E-Labs preview image.
 
+**v1.4** adds chassis silhouettes.
+
 Deferred, with reasons in `DECISIONS.md`:
 
 - **747 and A380** — wing-plus-body gear layouts need body-gear offsets that no
   consulted source provides (`SOURCES.md` §5.5).
-- Chassis silhouettes (the `unit` isolation level currently matches
-  `running-gear`), the 2×2 quad view, click-to-create custom dimensions,
-  draggable callouts, and glTF/OBJ scene export.
+- The 2×2 quad view, draggable callouts, a material-controls panel (the
+  `MaterialLibrary` override backend is built but has no UI), per-tire contact
+  patch overrides, and glTF/OBJ scene export.
 
 ## Documents
 

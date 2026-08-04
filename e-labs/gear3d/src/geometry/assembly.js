@@ -28,6 +28,7 @@ import { engToRender } from '../core/coords.js';
 import { buildTireGeometry, treadPatternFor, pickQuality } from './tire.js';
 import { buildRimBarrel, buildRimDisc } from './rim.js';
 import { buildHubGeometry } from './hub.js';
+import { chassisEnvelope } from './chassis.js';
 import { buildAxleBeam, buildGearStrut } from './axle.js';
 
 /** Millimetres to scene metres. */
@@ -58,10 +59,17 @@ export function buildAssembly(layout, materials, opts = {}) {
     wheelsGroup.name = 'wheels';
     const structureGroup = new THREE.Group();
     structureGroup.name = 'structure';
-    root.add(wheelsGroup, structureGroup);
+    const chassisGroup = new THREE.Group();
+    chassisGroup.name = 'chassis';
+    chassisGroup.visible = false;
+    root.add(wheelsGroup, structureGroup, chassisGroup);
 
     /** @type {THREE.BufferGeometry[]} */
     const ownedGeometries = [];
+    /** Materials this assembly creates itself, as opposed to borrowing from
+     *  the shared MaterialLibrary — only these may be disposed here. */
+    /** @type {THREE.Material[]} */
+    const ownedMaterials = [];
     /** @type {Array<{mesh: THREE.InstancedMesh, wheels: import('../core/layout.js').Wheel[]}>} */
     const instanceSets = [];
     /** @type {Array<{mesh: THREE.InstancedMesh, wheels: import('../core/layout.js').Wheel[]}>} */
@@ -172,6 +180,60 @@ export function buildAssembly(layout, materials, opts = {}) {
         }
     }
 
+    /* ---------- chassis silhouette ---------- */
+
+    // Built once and hidden; the isolation level toggles it. Drawn as
+    // translucent panels with picked-out edges so it reads unmistakably as a
+    // schematic envelope rather than as measured bodywork — see chassis.js
+    // for why it must not look like a modelled vehicle.
+    const envelope = chassisEnvelope(layout, layout.unit || opts.unit);
+    if (envelope) {
+        const panel = new THREE.MeshStandardMaterial({
+            color: new THREE.Color(0x7d8894),
+            roughness: 0.85,
+            metalness: 0.0,
+            transparent: true,
+            opacity: 0.13,
+            depthWrite: false,
+            side: THREE.DoubleSide
+        });
+        const edge = new THREE.LineBasicMaterial({
+            color: new THREE.Color(0x5a6674),
+            transparent: true,
+            opacity: 0.55,
+            depthWrite: false
+        });
+        ownedMaterials.push(panel, edge);
+
+        for (const b of envelope.boxes) {
+            const w = b.y1 - b.y0, h = b.z1 - b.z0, d = b.x1 - b.x0;
+            if (!(w > 0 && h > 0 && d > 0)) continue;
+            // Engineering (x,y,z) -> render (y,z,x).
+            const geo = new THREE.BoxGeometry(w, h, d);
+            ownedGeometries.push(geo);
+            const centre = engToRender({
+                x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2, z: (b.z0 + b.z1) / 2
+            });
+
+            const mesh = new THREE.Mesh(geo, panel);
+            mesh.position.set(centre.x, centre.y, centre.z);
+            mesh.name = `chassis:${b.id}`;
+            mesh.userData.pickable = false;
+            mesh.castShadow = false;
+            mesh.receiveShadow = false;
+            mesh.renderOrder = 2;
+
+            const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), edge);
+            edges.position.copy(mesh.position);
+            edges.name = `chassis-edge:${b.id}`;
+            edges.userData.pickable = false;
+            edges.renderOrder = 3;
+            ownedGeometries.push(edges.geometry);
+
+            chassisGroup.add(mesh, edges);
+        }
+    }
+
     /* ---------- instance placement ---------- */
 
     const matrix = new THREE.Matrix4();
@@ -214,6 +276,7 @@ export function buildAssembly(layout, materials, opts = {}) {
     function setWheelFilter(pred, opts = {}) {
         packSets(instanceSets, pred, true);
         packSets(ghostSets, (w) => !pred(w), !!opts.ghost);
+        chassisGroup.visible = !!opts.chassis && chassisGroup.children.length > 0;
 
         // Axle beams and struts follow their own wheels. Deriving the set
         // rather than filtering structure separately makes it impossible for
@@ -246,6 +309,7 @@ export function buildAssembly(layout, materials, opts = {}) {
 
     function dispose() {
         for (const g of ownedGeometries) g.dispose();
+        for (const m of ownedMaterials) m.dispose();
         root.traverse((o) => {
             const anyO = /** @type {any} */ (o);
             if (anyO.geometry && !ownedGeometries.includes(anyO.geometry)) anyO.geometry.dispose?.();
@@ -253,7 +317,13 @@ export function buildAssembly(layout, materials, opts = {}) {
         root.clear();
     }
 
-    return { root, layout, setWheelFilter, wheelAt, bounds, dispose };
+    return {
+        root, layout, setWheelFilter, wheelAt, bounds, dispose,
+        /** The chassis envelope actually built, or null. Lets the UI say what
+         *  was drawn from cited data and what was representative. */
+        chassis: envelope,
+        hasChassis: () => chassisGroup.children.length > 0
+    };
 }
 
 /**
