@@ -302,6 +302,34 @@
                                     <span class="g3-unit">kPa</span>
                                 </div>
                                 <div id="g3-patch-summary" class="g3-report"></div>
+
+                                <hr class="g3-rule">
+                                <div class="g3-field">
+                                    <label for="g3-ov-scope">Override</label>
+                                    <select id="g3-ov-scope" class="g3-select">
+                                        <option value="all">All tires</option>
+                                        <option value="axle">Selected axle</option>
+                                        <option value="position">Selected wheel position</option>
+                                    </select>
+                                </div>
+                                <div class="g3-field">
+                                    <label for="g3-ov-len">Length</label>
+                                    <input type="number" id="g3-ov-len" class="g3-num" min="1" step="1">
+                                    <span class="g3-unit" id="g3-ov-unit-l">mm</span>
+                                </div>
+                                <div class="g3-field">
+                                    <label for="g3-ov-wid">Width</label>
+                                    <input type="number" id="g3-ov-wid" class="g3-num" min="1" step="1">
+                                    <span class="g3-unit" id="g3-ov-unit-w">mm</span>
+                                </div>
+                                <div class="g3-mini-row">
+                                    <button id="g3-ov-apply" class="g3-btn"><i class="fas fa-check"></i> Apply measured</button>
+                                    <button id="g3-ov-clear" class="g3-btn"><i class="fas fa-rotate-left"></i> Clear</button>
+                                </div>
+                                <div id="g3-ov-status" class="g3-badge-assumed" hidden></div>
+                                <p class="g3-note">Use this when you have <em>measured</em> footprint dimensions. An overridden patch keeps its load and reports the contact pressure that implies, so it no longer equals inflation pressure — and every export says which patches were overridden.</p>
+
+                                <hr class="g3-rule">
                                 <div class="g3-mini-row">
                                     <button id="g3-exp-csv" class="g3-btn"><i class="fas fa-file-csv"></i> footprint.csv</button>
                                     <button id="g3-exp-fem" class="g3-btn"><i class="fas fa-cubes"></i> FEM export</button>

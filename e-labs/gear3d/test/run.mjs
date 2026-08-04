@@ -1444,7 +1444,65 @@ test('footprint CSV carries its assumptions and one row per tire', () => {
     assert(csv.includes('EQUAL TO INFLATION PRESSURE'), 'the pressure assumption must be stated');
     const dataRows = lines.slice(header + 1).filter((l) => l && !l.startsWith('#'));
     assertEqual(dataRows.length, 18, 'one row per tire');
-    assertEqual(dataRows[0].split(',').length, 13, 'column count');
+    assertEqual(dataRows[0].split(',').length, 14, 'column count');
+    assert(dataRows[0].endsWith(',model:huang'), 'every row names its provenance');
+});
+
+test('a measured patch keeps its load and implies a new pressure', () => {
+    // The override direction matters: the wheel still carries what it carries,
+    // so measured dimensions imply a contact pressure rather than the pressure
+    // implying dimensions.
+    const base = computePatches(c9layout, c9, { model: 'rectangular' });
+    const target = base[0].tireId;
+    const ov = computePatches(c9layout, c9, {
+        model: 'rectangular',
+        overrides: { [target]: { length: 300, width: 250 } }
+    });
+    const before = base.find((p) => p.tireId === target);
+    const after = ov.find((p) => p.tireId === target);
+
+    assertEqual(after.patch.overridden, true, 'flagged as overridden');
+    assertClose(after.patch.length, 300, 1e-9, 'measured length');
+    assertClose(after.patch.width, 250, 1e-9, 'measured width');
+    assertClose(after.patch.area, 75000, 1e-9, 'area follows the measurement');
+    assertClose(after.loadKn, before.loadKn, 1e-9, 'load is HELD');
+    assertClose(after.patch.pressure * after.patch.area / 1e6, after.loadKn, 1e-9,
+        'pressure x area must reproduce the load');
+    assert(Math.abs(after.patch.pressure - after.inflationKpa) > 1,
+        'an overridden patch no longer sits at inflation pressure');
+
+    // and every other patch is untouched
+    for (const p of ov.filter((x) => x.tireId !== target)) {
+        assertEqual(p.patch.overridden, false, `${p.tireId} must be untouched`);
+    }
+});
+
+test('the CSV distinguishes measured patches from modelled ones', () => {
+    const p = computePatches(c9layout, c9, {
+        model: 'huang',
+        overrides: { [c9layout.wheels[0].id]: { length: 300, width: 250 } }
+    });
+    const csv = toCSV(p, { unitId: c9.id, model: 'huang', timestamp: 'now' });
+    const lines = csv.split(String.fromCharCode(10));
+    const hdr = lines.findIndex((l) => l.startsWith('tire_id,'));
+    assert(lines[hdr].endsWith(',source'), 'a source column must exist');
+
+    const rows = lines.slice(hdr + 1).filter((l) => l && !l.startsWith('#'));
+    const measured = rows.filter((l) => l.endsWith(',measured'));
+    const modelled = rows.filter((l) => l.endsWith(',model:huang'));
+    assertEqual(measured.length, 1, 'one measured row');
+    assertEqual(modelled.length, rows.length - 1, 'the rest modelled');
+
+    // and the header must warn, because assumption 1 no longer holds for all rows
+    assert(/MEASURED PATCHES PRESENT/.test(csv), 'header must flag measured patches');
+    assert(/1 of 18 patches/.test(csv), 'header must count them');
+});
+
+test('with no overrides the header makes no measured-patch claim', () => {
+    const csv = toCSV(computePatches(c9layout, c9, { model: 'huang' }),
+        { unitId: c9.id, model: 'huang', timestamp: 'now' });
+    assert(!/MEASURED PATCHES PRESENT/.test(csv), 'no spurious warning');
+    assert(/,model:huang/.test(csv), 'rows still name their model');
 });
 
 test('the Abaqus export states that it is not a runnable deck', () => {

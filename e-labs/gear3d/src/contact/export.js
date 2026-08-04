@@ -24,6 +24,29 @@ export const FOOTPRINT_FORMAT_VERSION = '1.0';
  * @returns {string[]} lines, WITHOUT comment markers
  */
 export function assumptionLines(ctx) {
+    // When any patch carries measured dimensions, the blanket statement
+    // "pressure equals inflation" stops being true of the whole file and the
+    // header has to say so up front rather than leaving it to be inferred
+    // from a column.
+    const measured = ctx.overriddenCount || 0;
+    const override = measured > 0 ? [
+        '',
+        'MEASURED PATCHES PRESENT',
+        `  ${measured} of ${ctx.totalCount} patches carry MEASURED dimensions entered by the`,
+        '  user, not dimensions computed from the contact model. For those rows the',
+        '  load is held and the contact pressure is a CONSEQUENCE of the measured',
+        '  area, so it does not equal the inflation pressure and assumption 1 below',
+        '  does not apply to them. The `source` column identifies them individually.'
+    ] : [];
+
+    return [...baseAssumptionLines(ctx).flatMap((l) => (l === '@@OVERRIDE@@' ? override : [l]))];
+}
+
+/**
+ * @param {object} ctx
+ * @returns {string[]}
+ */
+function baseAssumptionLines(ctx) {
     return [
         `Gear3D footprint export — format ${FOOTPRINT_FORMAT_VERSION}`,
         `Unit: ${ctx.unitId}${ctx.unitLabel ? ` (${ctx.unitLabel})` : ''}`,
@@ -55,6 +78,7 @@ export function assumptionLines(ctx) {
         '     cornering or braking forces.',
         '  5. Tire dimensions are NOMINAL values from the size designation, not',
         '     manufacturer grown dimensions.',
+        '@@OVERRIDE@@',
         '',
         'Every geometric input to this file carries a citation in the source unit',
         'definition. Export unit.json alongside this file to keep them together.'
@@ -69,13 +93,14 @@ export function assumptionLines(ctx) {
  * @returns {string}
  */
 export function toCSV(patches, ctx) {
+    ctx = withCounts(patches, ctx);
     const lines = assumptionLines(ctx).map((l) => (l ? `# ${l}` : '#'));
     lines.push('#');
     lines.push([
         'tire_id', 'axle_id', 'x_center_mm', 'y_center_mm',
         'patch_length_mm', 'patch_width_mm', 'area_mm2',
         'load_kN', 'contact_pressure_kPa', 'inflation_pressure_kPa',
-        'equivalent_radius_mm', 'tire_size', 'config'
+        'equivalent_radius_mm', 'tire_size', 'config', 'source'
     ].join(','));
 
     for (const p of patches) {
@@ -89,7 +114,14 @@ export function toCSV(patches, ctx) {
             r(p.inflationKpa, 2),
             r(p.equivalentRadius, 2),
             p.tire,
-            p.config
+            p.config,
+            // Which patches are measured and which are modelled. Without this
+            // column a hand-entered footprint is indistinguishable from a
+            // computed one in the format most people actually open, and the
+            // reader has no way to know that a row's contact pressure is a
+            // consequence of measured dimensions rather than the stated
+            // inflation assumption.
+            p.patch.overridden ? 'measured' : `model:${p.patch.model}`
         ].join(','));
     }
 
@@ -107,6 +139,7 @@ export function toCSV(patches, ctx) {
  * @returns {string}
  */
 export function toJSON(patches, ctx) {
+    ctx = withCounts(patches, ctx);
     return JSON.stringify({
         format: 'gear3d-footprint',
         formatVersion: FOOTPRINT_FORMAT_VERSION,
@@ -158,6 +191,7 @@ export function toJSON(patches, ctx) {
  * @returns {string}
  */
 export function toAbaqus(patches, ctx) {
+    ctx = withCounts(patches, ctx);
     const lines = [];
     const push = (s = '') => lines.push(s ? `** ${s}` : '**');
 
@@ -199,6 +233,21 @@ export function toAbaqus(patches, ctx) {
     push('Units above are mm, N, MPa — the conventional Abaqus system for pavement work.');
     push(`Total applied load: ${r(patchTotals(patches).totalLoadKn, 3)} kN`);
     return lines.join('\n') + '\n';
+}
+
+/**
+ * Attach how many patches are measured rather than modelled, so every writer
+ * reports it the same way instead of each counting for itself.
+ * @param {import('./patch.js').PatchRecord[]} patches
+ * @param {object} ctx
+ * @returns {object}
+ */
+function withCounts(patches, ctx) {
+    return {
+        ...ctx,
+        overriddenCount: patches.filter((p) => p.patch.overridden).length,
+        totalCount: patches.length
+    };
 }
 
 /**

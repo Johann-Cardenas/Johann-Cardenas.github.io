@@ -103,6 +103,9 @@ function defaultView() {
         showPatches: false,
         patchModel: 'rectangular',
         inflationKpa: DEFAULT_INFLATION_KPA,
+        /** Measured footprint dimensions, keyed by tire id. Kept beside the
+         *  other contact settings, which also change exported numbers. */
+        contactOverrides: {},
         isolation: defaultIsolation(),
         lighting: { ...LIGHTING_PRESETS.studio },
         background: 'white',
@@ -919,6 +922,8 @@ function setupToolbar() {
             renderProperties();
             renderUnitMeta();
             renderPatchSummary();
+            renderOverrideStatus();
+            syncOverrideUnits();
             renderCustomList();
             app.viewport.invalidate();
         });
@@ -1290,7 +1295,114 @@ function setupContactPanel() {
     });
     $('g3-exp-csv').addEventListener('click', () => exportFootprint('csv'));
     $('g3-exp-fem').addEventListener('click', () => exportFootprint('abaqus'));
+
+    $('g3-ov-apply').addEventListener('click', applyPatchOverride);
+    $('g3-ov-clear').addEventListener('click', () => {
+        const n = Object.keys(app.store.view.contactOverrides || {}).length;
+        if (!n) return;
+        app.store.view.contactOverrides = {};
+        recomputePatches();
+        scheduleAutosave();
+        toast(`Cleared ${n} measured patch${n > 1 ? 'es' : ''}; back to the ${app.store.view.patchModel} model.`);
+    });
+
     syncInflationField();
+}
+
+/**
+ * Which tires the override scope selects.
+ * @returns {{ids: string[], label: string}}
+ */
+function overrideTargets() {
+    const scope = $('g3-ov-scope').value;
+    const all = app.patches.map((p) => p.tireId);
+    if (scope === 'axle') {
+        const id = app.selection.axleId;
+        return {
+            ids: app.patches.filter((p) => p.axleId === id).map((p) => p.tireId),
+            label: id ? `axle ${id}` : ''
+        };
+    }
+    if (scope === 'position') {
+        const id = app.selection.positionId;
+        return {
+            ids: app.patches.filter((p) => p.positionId === id).map((p) => p.tireId),
+            label: id ? `position ${id}` : ''
+        };
+    }
+    return { ids: all, label: 'all tires' };
+}
+
+/**
+ * Replace modelled patch dimensions with measured ones.
+ *
+ * This is the escape hatch from the app's own idealisation. Every patch it
+ * computes assumes contact pressure equals inflation pressure and is uniform
+ * — stated plainly in the export header and true enough for far-field
+ * response. A researcher holding real footprint dimensions, from an
+ * impression or a stress-in-motion rig, should be able to use them instead of
+ * a model, and the exports must then say which numbers are which.
+ *
+ * Load is held, not the pressure: the wheel still carries what it carries, so
+ * a measured area implies a contact pressure and `overridePatch` back-computes
+ * it. That is the physically meaningful direction.
+ */
+function applyPatchOverride() {
+    const sys = UNIT_SYSTEMS[app.store.view.unitSystem];
+    const L = Number($('g3-ov-len').value);
+    const W = Number($('g3-ov-wid').value);
+    if (!(L > 0 && W > 0)) {
+        toast('Enter a positive length and width to apply.', 'warn');
+        return;
+    }
+
+    const { ids, label } = overrideTargets();
+    if (!ids.length) {
+        toast('Nothing selected for that scope — pick an axle or wheel position in the structure tree.', 'warn');
+        return;
+    }
+
+    const lengthMm = lengthToMm(L, sys.length);
+    const widthMm = lengthToMm(W, sys.length);
+
+    if (!app.store.view.contactOverrides) app.store.view.contactOverrides = {};
+    for (const id of ids) {
+        app.store.view.contactOverrides[id] = { length: lengthMm, width: widthMm };
+    }
+    recomputePatches();
+    scheduleAutosave();
+    toast(`Measured footprint applied to ${ids.length} tire${ids.length > 1 ? 's' : ''} (${label}).`);
+}
+
+/** Report how many patches are measured rather than modelled. */
+function renderOverrideStatus() {
+    const box = $('g3-ov-status');
+    if (!box) return;
+    const n = app.patches.filter((p) => p.patch.overridden).length;
+    if (!n) { box.hidden = true; return; }
+
+    const sys = UNIT_SYSTEMS[app.store.view.unitSystem];
+    const ov = app.patches.filter((p) => p.patch.overridden);
+    const lo = Math.min(...ov.map((p) => p.patch.pressure));
+    const hi = Math.max(...ov.map((p) => p.patch.pressure));
+    box.hidden = false;
+    box.innerHTML = '<i class="fas fa-ruler-combined"></i><span>'
+        + `<strong>${n} of ${app.patches.length} patches are measured</strong>, not modelled. `
+        + 'Their contact pressure is implied by load over the measured area — '
+        + (Math.abs(hi - lo) < 0.5
+            ? `${formatPressure(lo, sys.pressure, { precision: 0 })}`
+            : `${formatPressure(lo, sys.pressure, { precision: 0 })} to ${formatPressure(hi, sys.pressure, { precision: 0 })}`)
+        + `, against an inflation pressure of ${formatPressure(app.store.view.inflationKpa, sys.pressure, { precision: 0 })}. `
+        + 'Exports flag them individually.</span>';
+}
+
+/** Keep the override unit labels in step with the display unit system. */
+function syncOverrideUnits() {
+    const sys = UNIT_SYSTEMS[app.store.view.unitSystem];
+    for (const id of ['g3-ov-unit-l', 'g3-ov-unit-w']) {
+        const el = $(id);
+        if (el) el.textContent = sys.length;
+    }
 }
 
 function syncInflationField() {
@@ -1312,9 +1424,11 @@ function recomputePatches() {
     if (!app.layout) return;
     app.patches = computePatches(app.layout, app.store.doc.unit, {
         model: app.store.view.patchModel,
-        inflationKpa: app.store.view.inflationKpa
+        inflationKpa: app.store.view.inflationKpa,
+        overrides: app.store.view.contactOverrides
     });
     renderPatchSummary();
+    renderOverrideStatus();
     app.viewport.invalidate();
 }
 
@@ -1941,7 +2055,10 @@ function currentState() {
         modifiedFrom: app.store.doc.modifiedFrom,
         customDimensions: app.store.doc.customDimensions,
         calloutOffsets: app.store.doc.calloutOffsets,
-        contact: { model: v.patchModel, inflationKpa: v.inflationKpa, show: v.showPatches },
+        contact: {
+            model: v.patchModel, inflationKpa: v.inflationKpa, show: v.showPatches,
+            overrides: v.contactOverrides || {}
+        },
         view: {
             mode: v.mode,
             camera: app.viewport.cameras.toJSON(),
@@ -1996,7 +2113,8 @@ function applyProject(p) {
         isolation: p.view?.isolation || defaultIsolation(),
         patchModel: p.contact?.model || 'rectangular',
         inflationKpa: p.contact?.inflationKpa ?? DEFAULT_INFLATION_KPA,
-        showPatches: !!p.contact?.show
+        showPatches: !!p.contact?.show,
+        contactOverrides: p.contact?.overrides || {}
     });
 
     if (app.store.doc.seed !== DEFAULT_SEED) {
@@ -2015,6 +2133,7 @@ function applyProject(p) {
     syncLightingFields();
     syncCameraFields();
     syncInflationField();
+    syncOverrideUnits();
     renderCustomList();
     app.viewport.setGrid(app.store.view.showGrid);
     for (const cb of document.querySelectorAll('.g3-dimset')) {
