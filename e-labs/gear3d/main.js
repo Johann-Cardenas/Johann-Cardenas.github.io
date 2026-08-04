@@ -53,6 +53,7 @@ import {
 import {
     renderToCanvas, renderSupersampled, compositeOverlay, canvasToBlob, RESOLUTION_PRESETS
 } from './src/io/exportRaster.js';
+import { exportGLTF, exportOBJ } from './src/io/exportScene.js';
 import { buildHybridSVG, buildHybridPDF } from './src/io/exportVector.js';
 import {
     serializeProject, parseProject, serializeUnit, download, readFileText,
@@ -1643,6 +1644,8 @@ function setupExportPanel() {
         download(serializeUnit(u), `${filenameFor(u)}.unit.json`, 'application/json');
     });
     $('g3-exp-matrix').addEventListener('click', exportGearMatrix);
+    $('g3-exp-glb').addEventListener('click', () => exportGeometry('glb'));
+    $('g3-exp-obj').addEventListener('click', () => exportGeometry('obj'));
 }
 
 function setupProjectPanel() {
@@ -2021,6 +2024,46 @@ async function exportGearMatrix() {
     }
 }
 
+/**
+ * Export the visible geometry for CAD or FEM.
+ * @param {'glb'|'obj'} kind
+ */
+async function exportGeometry(kind) {
+    const unit = app.store.doc.unit;
+    showProgress(true, 'Building geometry…');
+    try {
+        const opts = {
+            unitId: unit.id,
+            // The chassis is a schematic envelope, not measured bodywork, so it
+            // stays out of a geometry export unless it is actually on screen.
+            includeChassis: app.store.view.isolation.level === 'unit'
+        };
+        const r = kind === 'glb'
+            ? await exportGLTF(app.viewport, opts)
+            : await exportOBJ(app.viewport, opts);
+        download(r.blob, `${filenameFor(unit, 'geometry')}.${r.extension}`);
+
+        const mb = r.blob.size / (1024 * 1024);
+        const summary = `${r.meshCount} parts, ${Math.round(r.triangleCount / 1000)}k triangles, `
+            + `${mb >= 1 ? mb.toFixed(1) + ' MB' : Math.round(r.blob.size / 1024) + ' KB'}, in millimetres.`;
+
+        // OBJ has no instancing, so a full unit writes every tyre's geometry
+        // in full and the file gets very large. Say so rather than let someone
+        // discover it when their pre-processor stalls.
+        if (kind === 'obj' && mb > 40) {
+            toast(`Exported ${summary} OBJ repeats every tyre's geometry in full — `
+                + 'isolate an axle first, or use .glb, which shares one mesh between all of them.', 'warn');
+        } else {
+            toast(`Exported ${summary}`);
+        }
+    } catch (err) {
+        console.error(err);
+        toast(err.message, 'error');
+    } finally {
+        showProgress(false);
+    }
+}
+
 /** @param {'csv'|'abaqus'} kind */
 function exportFootprint(kind) {
     if (!app.patches.length) { toast('No contact patches to export.', 'warn'); return; }
@@ -2317,7 +2360,9 @@ function toast(msg, kind = 'info') {
     el.className = `g3-toast${kind === 'info' ? '' : ` g3-toast--${kind}`}`;
     el.textContent = msg;
     wrap.appendChild(el);
-    setTimeout(() => el.remove(), kind === 'error' ? 9000 : 4200);
+    // Warnings carry as much to read as errors do — a 4 s dwell is enough to
+    // notice one and not enough to act on it.
+    setTimeout(() => el.remove(), kind === 'info' ? 4200 : 9000);
 }
 
 /** @param {string} s @returns {string} */

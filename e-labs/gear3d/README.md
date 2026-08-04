@@ -130,6 +130,8 @@ render.
 | Abaqus parameter table | Patch rectangles and pressures, with the assumptions stated in the header. Not a runnable deck — see `DECISIONS.md` §D11. |
 | `unit.json` | The full parametric definition, citations included. |
 | `.gear3d` | Unit + customizations + camera (all four modes) + lighting + annotations + materials + seed. Quad view exports as a single check sheet. |
+| **`.glb`** (glTF) | The visible geometry, in the **engineering frame** and in **millimetres** — the same coordinates as `footprint.csv`, not the render frame and not glTF's metre convention. Instances share geometry, so 34 tyres reference one mesh. Frame and unit are written into the file's `extras`. |
+| **`.obj`** | Same geometry for pre-processors that will not read glTF. OBJ has no instancing, so a full unit is large — the app says so at export time and suggests isolating an axle or using `.glb`. |
 | Gear matrix | N×M comparison sheet with shared camera, lighting and **shared scale**, so cells are genuinely comparable. |
 
 ---
@@ -251,10 +253,11 @@ so the authoritative outer width survives whatever you enter. Full breakdown in
 glTF asset-slot loader. **v1.2** adds the aircraft library (M8), ghost
 rendering, and the E-Labs preview image.
 
-**v1.4** adds chassis silhouettes.
-
 **v1.4** adds chassis silhouettes, a drafting-title-block header, draggable
 callouts, material controls and the quad view.
+
+**v1.5** adds per-tire measured contact-patch overrides and glTF/OBJ geometry
+export, closing the build spec apart from the two deferred aircraft.
 
 ## Quad view
 
@@ -276,8 +279,9 @@ full size.
 Deferred, with reasons in `DECISIONS.md`:
 
 - **747 and A380** — wing-plus-body gear layouts need body-gear offsets that no
-  consulted source provides (`SOURCES.md` §5.5).
-- Per-tire contact patch overrides and glTF/OBJ scene export.
+  consulted source provides (`SOURCES.md` §5.5). This is the only item from the
+  original build spec still outstanding, and it is outstanding for want of
+  published data rather than for want of work.
 
 ## Materials
 

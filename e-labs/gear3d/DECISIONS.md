@@ -239,6 +239,52 @@ that is quietly wrong. Single-view tiling is untouched.
 
 ---
 
+## D23. The geometry export is millimetres in the engineering frame, against the glTF convention (v1.5)
+
+glTF's stated convention is metres, Y-up. The export deliberately does not
+follow it: it writes **millimetres** in the **engineering frame** — x
+longitudinal positive rearward, y transverse positive right, z vertical
+positive up.
+
+Both departures are the same decision. This app already emits
+`footprint.csv`, the Abaqus patch table and every printed dimension in
+millimetres in that frame. If the `.glb` alone came out in metres in the
+render frame, the two files describing the same truck would disagree with
+each other by a factor of a thousand *and* by a rotation. Someone would open
+them side by side in a pre-processor, and the failure mode is not a visible
+error — it is a mesh that looks plausible and is wrong.
+
+The trade is real and it is not close. Following the convention costs a
+correctness trap that is expensive to notice; breaking it costs a viewer
+showing a 22 000-unit truck, which is an inconvenience you see immediately
+and fix with one scale factor. So the convention loses, and the file says so
+about itself: the unit and the full axis definition are written into the
+glTF `extras` and into the OBJ header, because a geometry export whose scale
+can only be recovered from a README is a geometry export somebody will
+import wrongly.
+
+The transform itself lives in `core/coords.js`, next to `engToRender`, not
+in the exporter. It is pure arithmetic and it is the inverse of the function
+the whole scene is built through, so the two must never be allowed to drift
+apart — and keeping it three-free is what lets the test suite check it,
+including that its determinant is positive so no normal is inverted.
+
+Two things this cost during implementation, both worth recording:
+
+- Composing an instance's world matrix with two successive `applyMatrix4`
+  calls **premultiplies**, giving `instance x world` rather than
+  `world x instance`. That applies the assembly's 1/1000 scale before a
+  translation already expressed in millimetres, and the export comes out a
+  thousand times too large. It is now composed explicitly with
+  `multiplyMatrices`, and verified by checking that every exported tyre node
+  lands on its layout coordinate exactly, not approximately.
+- OBJ has no instancing. A full unit is ~737k triangles and ~145 MB, because
+  every tyre is written out in full. That is not a bug to fix — it is what
+  the format is — so the app states it at export time and points at the
+  `.glb`, which shares one mesh between all of them.
+
+---
+
 ## D20. One whitelist, or none (v1.4)
 
 **The bug.** `serializeProject` re-enumerated the view fields that the caller

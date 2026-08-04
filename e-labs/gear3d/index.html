@@ -487,6 +487,11 @@
                                     <button id="g3-exp-unit" class="g3-btn"><i class="fas fa-file-code"></i> unit.json</button>
                                     <button id="g3-exp-matrix" class="g3-btn"><i class="fas fa-th-large"></i> Gear matrix</button>
                                 </div>
+                                <div class="g3-mini-row">
+                                    <button id="g3-exp-glb" class="g3-btn" title="Binary glTF geometry, engineering frame, millimetres"><i class="fas fa-cube"></i> Geometry .glb</button>
+                                    <button id="g3-exp-obj" class="g3-btn" title="Wavefront OBJ geometry, engineering frame, millimetres"><i class="fas fa-cube"></i> .obj</button>
+                                </div>
+                                <p class="g3-note">Geometry exports carry the visible model in the <strong>engineering frame, in millimetres</strong> — the same coordinate system and scale as footprint.csv, so the two line up. Isolation applies.</p>
                                 <p class="g3-note">Exports re-render at full resolution. Above the GPU's limit the render is tiled and composited. SVG and PDF keep dimensions and labels vector.</p>
                             </div>
                         </details>

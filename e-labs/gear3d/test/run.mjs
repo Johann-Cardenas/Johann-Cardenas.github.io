@@ -22,7 +22,8 @@ import { dirname, join } from 'node:path';
 import { group, test, assert, assertClose, assertEqual, assertThrows, summary } from './harness.mjs';
 
 import {
-    engToRender, renderToEng, eng, distance, bounds, orbitToEng, engToOrbit, LOCKED_VIEWS
+    engToRender, renderToEng, eng, distance, bounds, orbitToEng, engToOrbit, LOCKED_VIEWS,
+    renderToEngMatrix, applyMatrix16
 } from '../src/core/coords.js';
 import {
     MM_PER_IN, MM_PER_FT, KG_PER_LB, lengthFromMm, lengthToMm, forceFromKn, forceToKn,
@@ -1233,6 +1234,45 @@ test('the layout survives odd and tiny frame sizes', () => {
 
 test('QUAD_ORDER covers all four modes exactly once', () => {
     assertEqual([...QUAD_ORDER].sort().join(','), '3d,front,plan,side', 'modes');
+});
+
+/* ============================================================
+   12b-iv. Geometry export transform
+   ============================================================ */
+
+group('12b-iv. Geometry export transform');
+
+test('the export transform maps the render frame back to engineering mm', () => {
+    // Internally the scene is three.js Y-up, where render (x,y,z) is
+    // engineering (y,z,x) in METRES. A geometry export has to undo both or it
+    // will not line up with footprint.csv, which is the whole point of having
+    // one coordinate system.
+    const m = renderToEngMatrix(1000);
+    /** @param {number[]} v @returns {number[]} */
+    const apply = (v) => {
+        const r = applyMatrix16(m, { x: v[0], y: v[1], z: v[2] });
+        return [r.x, r.y, r.z].map((n) => Math.round(n * 1e6) / 1e6);
+    };
+
+    // A wheel at engineering (5486, 1079.5, 511.2) mm sits at render
+    // (1.0795, 0.5112, 5.486) m. Round-tripping must return the original.
+    assertEqual(apply([1.0795, 0.5112, 5.486]).join(','), '5486,1079.5,511.2', 'wheel centre');
+    assertEqual(apply([0, 0, 0]).join(','), '0,0,0', 'origin is preserved');
+    // Unit render axes land on the right engineering axes, scaled to mm.
+    assertEqual(apply([1, 0, 0]).join(','), '0,1000,0', 'render x is engineering y');
+    assertEqual(apply([0, 1, 0]).join(','), '0,0,1000', 'render y is engineering z');
+    assertEqual(apply([0, 0, 1]).join(','), '1000,0,0', 'render z is engineering x');
+});
+
+test('the export transform preserves handedness, so no normal is inverted', () => {
+    const e = renderToEngMatrix(1000);
+    // 3x3 determinant of the linear part; must be positive.
+    const a = [e[0], e[1], e[2]], b = [e[4], e[5], e[6]], c = [e[8], e[9], e[10]];
+    const det = a[0] * (b[1] * c[2] - b[2] * c[1])
+        - a[1] * (b[0] * c[2] - b[2] * c[0])
+        + a[2] * (b[0] * c[1] - b[1] * c[0]);
+    assert(det > 0, `determinant must be positive, got ${det}`);
+    assertClose(det, 1e9, 1, 'a pure rotation scaled by 1000 in each axis');
 });
 
 /* ============================================================

@@ -1,10 +1,6 @@
 # Active Agents
 
-## Agent: T-800-gear3d
-- **Status**: active
-- **Started**: 2026-08-04
-- **Task**: Gear3D — per-tire contact patch overrides, then glTF/OBJ scene export.
-- **Files**: `e-labs/gear3d/**` only.
+No agents currently active.
 
 <!--
 FORMAT — each active agent adds a block like this:

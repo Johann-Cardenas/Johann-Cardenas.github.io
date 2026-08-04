@@ -238,3 +238,47 @@ export function engToOrbit(v) {
     const azimuth = (Math.atan2(n.y, -n.x) * 180) / Math.PI;
     return { azimuth, elevation };
 }
+
+/* ------------------------------------------------------------
+   Export transform
+   ------------------------------------------------------------ */
+
+/**
+ * Render frame (three.js, metres) -> engineering frame (millimetres), as a
+ * COLUMN-MAJOR 4x4 suitable for `THREE.Matrix4.fromArray`.
+ *
+ * This lives here, with the rest of the frame conversion, rather than in the
+ * exporter: it is pure arithmetic, it is the inverse of {@link engToRender},
+ * and it must never be allowed to disagree with it. Keeping it three-free
+ * also means the test suite can check it without a browser.
+ *
+ * The linear part is the cyclic permutation (x,y,z) -> (z,x,y), determinant
+ * +1, so handedness is preserved and no surface normal is inverted.
+ *
+ * @param {number} [scale=1000] metres to millimetres
+ * @returns {number[]} 16 elements, column-major
+ */
+export function renderToEngMatrix(scale = 1000) {
+    const s = scale;
+    return [
+        0, s, 0, 0,
+        0, 0, s, 0,
+        s, 0, 0, 0,
+        0, 0, 0, 1
+    ];
+}
+
+/**
+ * Apply a column-major 4x4 to a point. For tests and for anything that needs
+ * the transform without pulling in three.js.
+ * @param {number[]} m column-major 4x4
+ * @param {Vec3} p
+ * @returns {Vec3}
+ */
+export function applyMatrix16(m, p) {
+    return {
+        x: m[0] * p.x + m[4] * p.y + m[8] * p.z + m[12],
+        y: m[1] * p.x + m[5] * p.y + m[9] * p.z + m[13],
+        z: m[2] * p.x + m[6] * p.y + m[10] * p.z + m[14]
+    };
+}
