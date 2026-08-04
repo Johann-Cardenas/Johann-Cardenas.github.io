@@ -26,6 +26,7 @@ import {
     formatPressure, lengthFromMm, lengthToMm, canonical
 } from './src/core/units.js';
 import { DEFAULT_SEED } from './src/core/prng.js';
+import { APP_REVISION } from './src/core/version.js';
 import { CAMERA_PRESETS, ENG_AXES } from './src/core/coords.js';
 
 import { MaterialLibrary } from './src/scene/materials.js';
@@ -194,6 +195,7 @@ async function loadLibrary() {
     }
 
     $('g3-unit-count').textContent = String(app.library.trucks.length + app.library.aircraft.length);
+    $('g3-tb-rev').textContent = APP_REVISION;
 }
 
 /* ============================================================
@@ -923,6 +925,16 @@ function renderUnitMeta() {
     }
 
     renderAssumptionNotice(u);
+
+    // Title block "Loaded" field. Kept short — the designation is the name an
+    // engineer would actually use for the configuration.
+    const loaded = $('g3-tb-loaded');
+    if (loaded) {
+        loaded.textContent = u.domain === 'truck'
+            ? `Class ${u.classification.class} · ${u.designation}`
+            : `${u.model} · ${u.gearDesignation}`;
+        loaded.title = u.domain === 'truck' ? u.bodyType : `${u.manufacturer} ${u.model}`;
+    }
 }
 
 /**

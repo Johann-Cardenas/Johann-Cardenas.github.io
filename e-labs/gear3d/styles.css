@@ -98,74 +98,153 @@
     font-family: var(--g3-sans);
 }
 
-.g3-app .app-header { padding: 1.25rem 0 .75rem; }
+/* ============================================================
+   HEADER — a drafting title block
+   ------------------------------------------------------------
+   DESIGN.md commits this app to the idiom of measurement
+   instruments and aircraft technical documentation. The title
+   block is that idiom's own answer to "what goes at the top of a
+   drawing": a ruled strip of labelled fields — name, scale,
+   revision — and no prose.
 
-.g3-app .header-nav {
+   It replaced a large wordmark over a paragraph of description.
+   Two things were wrong with that. The paragraph restated what
+   the interface already shows, and the whole assembly cost about
+   140 px of vertical space on an app whose central complaint had
+   been that the viewport was too small. This is ~72 px and every
+   cell carries something true of the loaded model.
+   ============================================================ */
+.g3-app .app-header {
+    padding: 1.1rem 0 .8rem;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: .75rem;
-    flex-wrap: wrap;
-    margin-bottom: .75rem;
+    flex-direction: column;
+    gap: .6rem;
+    align-items: flex-start;
 }
 
 .g3-app .back-btn {
     display: inline-flex;
     align-items: center;
     gap: .5rem;
-    padding: .45rem 1rem;
+    padding: .3rem .7rem .3rem .55rem;
     border: 1px solid var(--g3-rule);
-    border-radius: 6px;
+    border-radius: 4px;
     background: var(--g3-surface);
     color: var(--g3-graphite);
-    font-size: .85rem;
+    font-size: .78rem;
     text-decoration: none;
-    transition: all .22s ease;
+    transition: color .18s ease, border-color .18s ease, transform .18s ease;
 }
-.g3-app .back-btn:hover { color: var(--g3-datum); border-color: var(--g3-datum); transform: translateX(-3px); }
+.g3-app .back-btn:hover {
+    color: var(--g3-datum);
+    border-color: var(--g3-datum);
+    transform: translateX(-3px);
+}
 
-.g3-app .header-badges { display: flex; gap: .5rem; flex-wrap: wrap; }
-
-.g3-app .header-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    padding: .3rem .8rem;
-    border: 1px solid var(--g3-rule);
-    border-radius: 3px;
+.g3-titleblock {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
     background: var(--g3-surface);
-    color: var(--g3-graphite);
-    font-size: .74rem;
-    letter-spacing: .02em;
-    font-variant-numeric: tabular-nums;
+    border: 1px solid var(--g3-rule-strong);
+    border-radius: 4px;
+    overflow: hidden;
 }
-.g3-app .header-badge i { color: var(--g3-datum); }
 
-.g3-app .header-content h1 {
+/* The mark cell. Heavier than the fields, the way a title block's
+   originator box is heavier than its data boxes. */
+.g3-tb-mark {
     display: flex;
     align-items: center;
-    gap: .75rem;
-    margin: 0 0 .2rem;
-    font-size: 2rem;
-    letter-spacing: .01em;
-    color: var(--g3-ink);
+    gap: .6rem;
+    padding: .55rem .9rem;
+    background: var(--g3-inset);
+    border-right: 1px solid var(--g3-rule-strong);
+    flex: 0 0 auto;
 }
 
-.g3-app .header-content h1 .g3-icon {
+.g3-tb-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 44px; height: 44px;
-    border-radius: 8px;
+    width: 32px; height: 32px;
+    border-radius: 3px;
     background: var(--g3-ink);
     color: var(--g3-paper);
-    font-size: 1.25rem;
-    border: 1px solid var(--g3-rule-strong);
+    font-size: 1rem;
 }
-[data-theme="dark"] .g3-app .header-content h1 .g3-icon { background: var(--g3-surface-2); color: var(--g3-datum); }
+[data-theme="dark"] .g3-tb-icon { background: var(--g3-datum); color: #06222a; }
 
-.g3-app .header-content h1 .highlight { color: var(--g3-datum); }
-.g3-app .header-content > p { margin: 0; color: var(--g3-graphite); font-size: .96rem; max-width: 86ch; }
+.g3-tb-name {
+    font-size: 1.18rem;
+    font-weight: 600;
+    letter-spacing: .015em;
+    color: var(--g3-ink);
+    line-height: 1;
+}
+.g3-tb-name b { color: var(--g3-datum); font-weight: 600; }
+
+/* Data cells: label over value, hairline-separated. */
+.g3-tb-cell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: .12rem;
+    padding: .55rem .9rem;
+    border-right: 1px solid var(--g3-rule);
+    min-width: 0;
+    /* Share the strip evenly. Left to size themselves the cells bunch at the
+       left and leave a dead gap before the revision, which reads as an
+       unfinished strip rather than a ruled block. */
+    flex: 1 1 0;
+}
+.g3-tb-cell:last-child { border-right: 0; }
+
+/* The datum tick, the app's signature mark, carried into the header
+   so the title block and the panel rails share one vocabulary. */
+.g3-tb-cell::before {
+    content: "";
+    position: absolute;
+    left: .9rem; top: .42rem;
+    width: 6px; height: 1px;
+    background: var(--g3-rule-strong);
+}
+.g3-tb-cell::after {
+    content: "";
+    position: absolute;
+    left: .9rem; top: calc(.42rem - 2px);
+    width: 1px; height: 5px;
+    background: var(--g3-rule-strong);
+}
+
+.g3-tb-label {
+    font-size: .58rem;
+    font-weight: 700;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--g3-muted);
+    padding-left: .62rem;
+    white-space: nowrap;
+}
+
+.g3-tb-value {
+    font-family: var(--g3-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: .82rem;
+    color: var(--g3-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media screen and (max-width: 1180px) {
+    .g3-tb-cell--wide { display: none; }
+}
+@media screen and (max-width: 760px) {
+    .g3-tb-name { font-size: 1rem; }
+    .g3-tb-cell { padding: .5rem .6rem; }
+}
 
 /* ==================== STUDIO GRID ==================== */
 .g3-studio {

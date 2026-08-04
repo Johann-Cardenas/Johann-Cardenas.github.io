@@ -14,6 +14,7 @@
 'use strict';
 
 import { SCHEMA_VERSION } from '../core/schema.js';
+import { APP_NAME, APP_VERSION } from '../core/version.js';
 
 export const PROJECT_FORMAT = 'gear3d-project';
 export const PROJECT_VERSION = '1.0';
@@ -28,7 +29,7 @@ export function serializeProject(state) {
         formatVersion: PROJECT_VERSION,
         unitSchemaVersion: SCHEMA_VERSION,
         savedAt: new Date().toISOString(),
-        app: { name: 'Gear3D', version: '1.0.0' },
+        app: { name: APP_NAME, version: APP_VERSION },
 
         meta: state.meta || {},
         seed: state.seed,

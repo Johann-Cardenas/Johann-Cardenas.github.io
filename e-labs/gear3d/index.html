@@ -83,24 +83,40 @@
         <section id="main">
             <div class="g3-app" id="main-content" tabindex="-1">
 
-                <!-- App Header -->
+                <!-- App Header — a drafting title block, per DESIGN.md.
+                     Every cell carries information that is actually true of
+                     the loaded model; nothing here is decorative copy. -->
                 <div class="app-header">
-                    <div class="header-nav">
-                        <a href="../../E-Labs.html" class="back-btn">
-                            <i class="fas fa-arrow-left"></i> Back to E-Labs
-                        </a>
-                        <div class="header-badges">
-                            <span class="header-badge"><i class="fas fa-truck-moving"></i> <span id="g3-unit-count">—</span> units</span>
-                            <span class="header-badge"><i class="fas fa-ruler-combined"></i> mm · true scale</span>
-                            <span class="header-badge"><i class="fas fa-code-branch"></i> v1.0</span>
+                    <a href="../../E-Labs.html" class="back-btn">
+                        <i class="fas fa-arrow-left"></i> Back to E-Labs
+                    </a>
+
+                    <div class="g3-titleblock">
+                        <div class="g3-tb-mark">
+                            <span class="g3-tb-icon"><i class="fas fa-dharmachakra"></i></span>
+                            <span class="g3-tb-name">Gear<b>3D</b></span>
                         </div>
-                    </div>
-                    <div class="header-content">
-                        <h1>
-                            <span class="g3-icon"><i class="fas fa-dharmachakra"></i></span>
-                            <span>Gear<span class="highlight">3D</span></span>
-                        </h1>
-                        <p>Truck axle configurations and aircraft landing gear — deterministic, true to scale, measurable, and exportable as footprint coordinates for finite-element pre-processing.</p>
+
+                        <div class="g3-tb-cell">
+                            <span class="g3-tb-label">Library</span>
+                            <span class="g3-tb-value"><span id="g3-unit-count">—</span> vehicles</span>
+                        </div>
+                        <div class="g3-tb-cell">
+                            <span class="g3-tb-label">Loaded</span>
+                            <span class="g3-tb-value" id="g3-tb-loaded">—</span>
+                        </div>
+                        <div class="g3-tb-cell g3-tb-cell--wide">
+                            <span class="g3-tb-label">Scale</span>
+                            <span class="g3-tb-value">1:1 true</span>
+                        </div>
+                        <div class="g3-tb-cell g3-tb-cell--wide">
+                            <span class="g3-tb-label">Internal units</span>
+                            <span class="g3-tb-value">mm · kN · kPa</span>
+                        </div>
+                        <div class="g3-tb-cell">
+                            <span class="g3-tb-label">Rev</span>
+                            <span class="g3-tb-value" id="g3-tb-rev">—</span>
+                        </div>
                     </div>
                 </div>
 
