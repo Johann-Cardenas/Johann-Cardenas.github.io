@@ -557,6 +557,14 @@
 }
 .g3-dim.is-highlighted .g3-dim-label { font-weight: 700; }
 
+/* Callouts are the one part of the overlay that accepts pointer events, so
+   they can be dragged while orbit and click-to-select keep working
+   everywhere else. */
+.g3-overlay .g3-callout { pointer-events: auto; cursor: grab; }
+.g3-overlay .g3-callout:hover rect { stroke: var(--g3-signal); stroke-width: 1.3; }
+.g3-overlay.is-dragging { cursor: grabbing; }
+.g3-overlay.is-dragging .g3-callout { cursor: grabbing; }
+
 .g3-hud, .g3-hud-right, .g3-axisbadge {
     position: absolute;
     padding: .28rem .55rem;

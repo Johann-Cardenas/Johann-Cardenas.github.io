@@ -144,6 +144,7 @@ async function boot() {
     setupExportPanel();
     setupProjectPanel();
     setupMeasure();
+    setupCallouts();
     setupKeyboard();
 
     const saved = loadAutosave();
@@ -665,6 +666,106 @@ function renderCustomList() {
         row.appendChild(del);
         box.appendChild(row);
     }
+}
+
+/* ============================================================
+   6c. Draggable callouts
+   ============================================================ */
+
+/**
+ * Let axle callouts be dragged, and remember where they were put.
+ *
+ * The annotation engine auto-places callouts and staggers them apart, which
+ * is right most of the time and wrong exactly when a figure matters most —
+ * a label sitting over the feature it describes, or over another label, in
+ * the one view being exported. `calloutOffsets` has always been saved into
+ * the project file; until now nothing could write it.
+ *
+ * The SVG overlay is `pointer-events: none` so the canvas underneath keeps
+ * orbit and click-to-select. Only callouts opt back in, and the handlers are
+ * DELEGATED to the overlay because the annotation layer is rebuilt from
+ * scratch on every frame — per-element listeners would be reattached dozens
+ * of times a second and leak.
+ */
+function setupCallouts() {
+    const svg = $('g3-overlay');
+    /** @type {{id: string, x0: number, y0: number, dx0: number, dy0: number, before: object}|null} */
+    let drag = null;
+
+    const localPoint = (e) => {
+        const r = $('g3-canvas').getBoundingClientRect();
+        return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+
+    svg.addEventListener('pointerdown', (e) => {
+        const g = /** @type {Element} */ (e.target).closest?.('.g3-callout');
+        if (!g) return;
+        const id = g.getAttribute('data-axle-id');
+        if (!id) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const p = localPoint(e);
+        const cur = app.store.doc.calloutOffsets?.[id] || {};
+        drag = {
+            id,
+            x0: p.x, y0: p.y,
+            dx0: cur.dx ?? 46,
+            dy0: cur.dy ?? -34,
+            // Snapshot for a single clean undo step covering the whole drag.
+            before: structuredClone(app.store.doc.calloutOffsets || {})
+        };
+        svg.setPointerCapture?.(e.pointerId);
+        svg.classList.add('is-dragging');
+    });
+
+    svg.addEventListener('pointermove', (e) => {
+        if (!drag) return;
+        const p = localPoint(e);
+        // Mutated directly, WITHOUT an undo entry: pushing one per pointermove
+        // would bury the history under hundreds of one-pixel steps.
+        if (!app.store.doc.calloutOffsets) app.store.doc.calloutOffsets = {};
+        app.store.doc.calloutOffsets[drag.id] = {
+            dx: drag.dx0 + (p.x - drag.x0),
+            dy: drag.dy0 + (p.y - drag.y0)
+        };
+        app.viewport.invalidate();
+    });
+
+    const endDrag = (e) => {
+        if (!drag) return;
+        const final = app.store.doc.calloutOffsets[drag.id];
+        const { id, before } = drag;
+        drag = null;
+        svg.classList.remove('is-dragging');
+        svg.releasePointerCapture?.(e.pointerId);
+
+        // Rewind to the pre-drag state so the undo snapshot is taken from
+        // there, then apply the final position as one atomic change.
+        app.store.doc.calloutOffsets = before;
+        app.store.update((d) => {
+            if (!d.calloutOffsets) d.calloutOffsets = {};
+            d.calloutOffsets[id] = final;
+        }, 'move callout');
+        scheduleAutosave();
+        app.viewport.invalidate();
+    };
+    svg.addEventListener('pointerup', endDrag);
+    svg.addEventListener('pointercancel', endDrag);
+
+    // Double-click returns a callout to its automatic position.
+    svg.addEventListener('dblclick', (e) => {
+        const g = /** @type {Element} */ (e.target).closest?.('.g3-callout');
+        const id = g?.getAttribute('data-axle-id');
+        if (!id) return;
+        e.preventDefault();
+        e.stopPropagation();
+        app.store.update((d) => { delete d.calloutOffsets?.[id]; }, 'reset callout');
+        scheduleAutosave();
+        app.viewport.invalidate();
+        toast(`${id} callout returned to its automatic position.`);
+    });
 }
 
 function setupMeasure() {

@@ -616,7 +616,12 @@ export function renderCallouts(svg, layout, o) {
             id: a.id, text,
             anchorX: p.x, anchorY: p.y,
             x: p.x + (user?.dx ?? 46), y: p.y + (user?.dy ?? -34),
-            w: size.w, h: size.h, ox: 1, oy: -1, priority: 0
+            w: size.w, h: size.h, ox: 1, oy: -1,
+            // A hand-placed callout outranks the automatic layout. Without
+            // this the declutter pass shoves it straight back off the spot
+            // the user just dragged it to, and the label appears to fight
+            // the cursor.
+            priority: user ? 100 : 0
         });
     }
 
