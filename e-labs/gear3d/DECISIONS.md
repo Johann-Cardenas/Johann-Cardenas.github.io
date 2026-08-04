@@ -205,6 +205,25 @@ carries no secrets and enables nothing that is not already in the project file.
 
 ---
 
+## D20. One whitelist, or none (v1.4)
+
+**The bug.** `serializeProject` re-enumerated the view fields that the caller
+had already assembled. Every view flag added after that point was written in
+one place and dropped in the other, so `annotations`, `showGrid` and the
+material overrides were all silently lost on save — switch the grid off, save,
+reopen, and it is back on.
+
+**Why it survived.** Nothing failed loudly. The project file was valid, it
+just quietly held less than the app had put in it, and the defaults filled
+the gaps on reopen so the result looked plausible.
+
+**Fix.** `view: { ...state.view }`. The caller is the single authority on what
+the view state is; two whitelists for one object is a bug generator. Backed
+by a test that round-trips **every** view flag rather than a sampled few,
+because the failure mode is specifically "the one nobody remembered".
+
+---
+
 ## D18. The chassis is a regulatory envelope, not a vehicle body (v1.4)
 
 **Decision.** The "Full unit" isolation level draws a translucent schematic

@@ -356,6 +356,42 @@
                         </details>
 
                         <details>
+                            <summary><i class="fas fa-swatchbook"></i> Materials</summary>
+                            <div class="g3-group">
+                                <div class="g3-field">
+                                    <label for="g3-mat-target">Surface</label>
+                                    <select id="g3-mat-target" class="g3-select"></select>
+                                </div>
+                                <div class="g3-field">
+                                    <label for="g3-mat-tint">Tint</label>
+                                    <input type="color" id="g3-mat-tint" class="g3-color" value="#ffffff">
+                                    <button class="g3-icon-btn" id="g3-mat-tint-clear" title="Clear tint"><i class="fas fa-eraser"></i></button>
+                                </div>
+                                <div class="g3-field g3-field--num">
+                                    <label for="g3-mat-bright">Brightness</label>
+                                    <input type="range" id="g3-mat-bright" class="g3-range" min="0.5" max="1.5" step="0.01" value="1">
+                                    <input type="number" id="g3-mat-bright-n" class="g3-num g3-num--tiny" min="0.5" max="1.5" step="0.01" value="1">
+                                </div>
+                                <div class="g3-field g3-field--num">
+                                    <label for="g3-mat-rough">Roughness</label>
+                                    <input type="range" id="g3-mat-rough" class="g3-range" min="0.05" max="1" step="0.01">
+                                    <input type="number" id="g3-mat-rough-n" class="g3-num g3-num--tiny" min="0.05" max="1" step="0.01">
+                                </div>
+                                <div class="g3-field g3-field--num">
+                                    <label for="g3-mat-relief">Relief</label>
+                                    <input type="range" id="g3-mat-relief" class="g3-range" min="0" max="2.5" step="0.05">
+                                    <input type="number" id="g3-mat-relief-n" class="g3-num g3-num--tiny" min="0" max="2.5" step="0.05">
+                                </div>
+                                <div id="g3-mat-desc" class="g3-meta"></div>
+                                <div class="g3-mini-row">
+                                    <button id="g3-mat-reset" class="g3-btn"><i class="fas fa-rotate-left"></i> Reset surface</button>
+                                    <button id="g3-mat-reset-all" class="g3-btn"><i class="fas fa-broom"></i> Reset all</button>
+                                </div>
+                                <p class="g3-note">Appearance only — materials never affect a dimension, a contact patch or an export. Settings are saved in the project file.</p>
+                            </div>
+                        </details>
+
+                        <details>
                             <summary><i class="fas fa-fill-drip"></i> Background</summary>
                             <div class="g3-group">
                                 <div class="g3-field">

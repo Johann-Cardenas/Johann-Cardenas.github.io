@@ -36,20 +36,16 @@ export function serializeProject(state) {
         unit: state.unit,
         modifiedFrom: state.modifiedFrom || null,
 
-        view: {
-            mode: state.view.mode,
-            camera: state.view.camera,
-            lighting: state.view.lighting,
-            background: state.view.background,
-            backgroundColor: state.view.backgroundColor,
-            unitSystem: state.view.unitSystem,
-            precision: state.view.precision,
-            dualUnits: state.view.dualUnits,
-            dimensionSets: state.view.dimensionSets,
-            showCallouts: state.view.showCallouts,
-            showScaleBar: state.view.showScaleBar,
-            isolation: state.view.isolation
-        },
+        // The whole view block, not a re-listed subset.
+        //
+        // This used to enumerate the fields again, duplicating the list the
+        // caller had already assembled. Every view flag added after that was
+        // written in one place and dropped in the other — `annotations`,
+        // `showGrid` and the material overrides were all silently lost on
+        // save, so switching the grid off and reopening quietly switched it
+        // back on. Two whitelists for one object is a bug generator; the
+        // caller is the single authority on what the view state is.
+        view: { ...state.view },
 
         contact: state.contact || {},
         customDimensions: state.customDimensions || [],

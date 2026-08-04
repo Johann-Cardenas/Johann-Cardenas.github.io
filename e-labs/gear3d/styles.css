@@ -406,6 +406,21 @@
 
 .g3-color { flex: 0 0 40px; height: 26px; padding: 1px; background: var(--g3-paper); border: 1px solid var(--g3-rule); border-radius: 3px; }
 
+.g3-icon-btn {
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px;
+    padding: 0;
+    border: 1px solid var(--g3-rule);
+    border-radius: 3px;
+    background: var(--g3-paper);
+    color: var(--g3-muted);
+    font-size: .72rem;
+    cursor: pointer;
+    transition: color .16s ease, border-color .16s ease;
+}
+.g3-icon-btn:hover { color: var(--g3-signal); border-color: var(--g3-signal); }
+
 .g3-check { display: inline-flex !important; align-items: center; gap: .45rem; flex: 1 1 auto !important; cursor: pointer; font-size: .78rem; color: var(--g3-ink) !important; }
 .g3-check input { margin: 0; accent-color: var(--g3-datum); }
 
@@ -746,6 +761,8 @@ body.Gear3D .g3-btn.is-on:hover {
     border-color: var(--g3-datum);
     background: color-mix(in srgb, var(--g3-datum) 12%, transparent) !important;
 }
+body.Gear3D .g3-icon-btn { color: var(--g3-muted) !important; background: var(--g3-paper) !important; }
+body.Gear3D .g3-icon-btn:hover { color: var(--g3-signal) !important; }
 body.Gear3D .g3-dimrow-del { color: var(--g3-muted) !important; background: none !important; }
 body.Gear3D .g3-dimrow-del:hover { color: var(--g3-signal) !important; }
 body.Gear3D .g3-btn--primary,

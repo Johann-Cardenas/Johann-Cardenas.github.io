@@ -29,7 +29,7 @@ import { DEFAULT_SEED } from './src/core/prng.js';
 import { APP_REVISION } from './src/core/version.js';
 import { CAMERA_PRESETS, ENG_AXES } from './src/core/coords.js';
 
-import { MaterialLibrary } from './src/scene/materials.js';
+import { MaterialLibrary, MATERIAL_SPECS } from './src/scene/materials.js';
 import { LIGHTING_PRESETS } from './src/scene/lighting.js';
 import { Viewport } from './src/scene/renderer.js';
 import { VIEW_META } from './src/scene/cameras.js';
@@ -111,7 +111,10 @@ function defaultView() {
         exportW: 2400,
         exportH: 1800,
         quality: 'standard',
-        supersample: 2
+        supersample: 2,
+        /** Appearance overrides per material family. View state, not document:
+         *  they cannot affect a dimension, a patch or an export. */
+        materials: {}
     };
 }
 
@@ -140,6 +143,7 @@ async function boot() {
     setupContactPanel();
     setupCameraPanel();
     setupLightingPanel();
+    setupMaterialPanel();
     setupBackgroundPanel();
     setupExportPanel();
     setupProjectPanel();
@@ -1235,6 +1239,99 @@ function syncLightingFields() {
     $('g3-light-preset').value = l.preset;
 }
 
+/**
+ * Material controls.
+ *
+ * `MaterialLibrary` has carried a full override system — tint, brightness,
+ * roughness, relief — since v1.0 with nothing wired to it. These are the
+ * same five controls Cross-Section Studio exposes, so a figure pair from the
+ * two apps can be matched by eye.
+ *
+ * Overrides are strictly APPEARANCE. Nothing here can move a dimension,
+ * resize a contact patch or alter an export, which is why they live in the
+ * view state rather than in the undoable document.
+ */
+function setupMaterialPanel() {
+    const sel = $('g3-mat-target');
+    // Only the surfaces a user would actually reach for. The internal
+    // per-tire rubber variants are driven by these same families.
+    const targets = ['rubberTread', 'rubberSidewall', 'aluminium', 'rimBarrel', 'hub', 'axleBeam', 'drum', 'strut'];
+    for (const key of targets) {
+        const o = document.createElement('option');
+        o.value = key;
+        o.textContent = MATERIAL_SPECS[key]?.name ?? key;
+        sel.appendChild(o);
+    }
+    sel.value = 'rubberTread';
+
+    const controls = () => ({
+        tint: $('g3-mat-tint'), bright: $('g3-mat-bright'), brightN: $('g3-mat-bright-n'),
+        rough: $('g3-mat-rough'), roughN: $('g3-mat-rough-n'),
+        relief: $('g3-mat-relief'), reliefN: $('g3-mat-relief-n')
+    });
+
+    /** Push the stored override (or the spec default) into the controls. */
+    function syncFields() {
+        const key = sel.value;
+        const spec = MATERIAL_SPECS[key] || {};
+        const o = app.store.view.materials?.[key] || {};
+        const c = controls();
+        c.tint.value = o.tint || '#ffffff';
+        const set = (r, n, v) => { r.value = String(v); n.value = String(v); };
+        set(c.bright, c.brightN, o.brightness ?? 1);
+        set(c.rough, c.roughN, o.roughness ?? spec.roughness ?? 0.5);
+        set(c.relief, c.reliefN, o.relief ?? spec.normalScale ?? 1);
+        $('g3-mat-desc').innerHTML = `<p style="margin:0">${esc(spec.description || '')}</p>`;
+    }
+
+    /** @param {string} field @param {*} value */
+    function apply(field, value) {
+        const key = sel.value;
+        if (!app.store.view.materials) app.store.view.materials = {};
+        if (!app.store.view.materials[key]) app.store.view.materials[key] = {};
+        app.store.view.materials[key][field] = value;
+        app.materials.setOverride(key, { [field]: value });
+        app.viewport.invalidate();
+        scheduleAutosave();
+    }
+
+    sel.addEventListener('change', syncFields);
+    $('g3-mat-tint').addEventListener('input', (e) => apply('tint', /** @type {HTMLInputElement} */(e.target).value));
+    $('g3-mat-tint-clear').addEventListener('click', () => {
+        $('g3-mat-tint').value = '#ffffff';
+        apply('tint', '#ffffff');
+    });
+    linkRange('g3-mat-bright', 'g3-mat-bright-n', (v) => apply('brightness', v));
+    linkRange('g3-mat-rough', 'g3-mat-rough-n', (v) => apply('roughness', v));
+    linkRange('g3-mat-relief', 'g3-mat-relief-n', (v) => apply('relief', v));
+
+    $('g3-mat-reset').addEventListener('click', () => {
+        const key = sel.value;
+        delete app.store.view.materials?.[key];
+        app.materials.resetOverride(key);
+        syncFields();
+        app.viewport.invalidate();
+        scheduleAutosave();
+    });
+    $('g3-mat-reset-all').addEventListener('click', () => {
+        for (const key of Object.keys(app.store.view.materials || {})) app.materials.resetOverride(key);
+        app.store.view.materials = {};
+        syncFields();
+        app.viewport.invalidate();
+        scheduleAutosave();
+        toast('All surfaces returned to their designed appearance.');
+    });
+
+    /** Re-apply stored overrides onto a freshly built material library. */
+    app.reapplyMaterials = () => {
+        for (const [key, o] of Object.entries(app.store.view.materials || {})) {
+            app.materials.setOverride(key, o);
+        }
+    };
+
+    syncFields();
+}
+
 function setupBackgroundPanel() {
     const mode = $('g3-bg-mode');
     const field = $('g3-bg-color-field');
@@ -1280,6 +1377,7 @@ function setupProjectPanel() {
         app.materials.dispose();
         app.materials = new MaterialLibrary({ seed });
         app.materials.onTextureUpgrade = () => app.viewport?.invalidate();
+        app.reapplyMaterials?.();
         rebuild();
     });
     for (const [id, key] of [['g3-meta-title', 'title'], ['g3-meta-author', 'author'], ['g3-meta-notes', 'notes']]) {
@@ -1697,6 +1795,7 @@ function currentState() {
             showScaleBar: v.showScaleBar,
             annotations: v.annotations,
             showGrid: v.showGrid,
+            materials: v.materials,
             isolation: v.isolation
         }
     };
@@ -1732,6 +1831,7 @@ function applyProject(p) {
         showScaleBar: p.view?.showScaleBar !== false,
         annotations: p.view?.annotations !== false,
         showGrid: p.view?.showGrid !== false,
+        materials: p.view?.materials || {},
         isolation: p.view?.isolation || defaultIsolation(),
         patchModel: p.contact?.model || 'rectangular',
         inflationKpa: p.contact?.inflationKpa ?? DEFAULT_INFLATION_KPA,
@@ -1742,6 +1842,7 @@ function applyProject(p) {
         app.materials.dispose();
         app.materials = new MaterialLibrary({ seed: app.store.doc.seed });
         app.materials.onTextureUpgrade = () => app.viewport?.invalidate();
+        app.reapplyMaterials?.();
     }
 
     rebuild({ frame: true });

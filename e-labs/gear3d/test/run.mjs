@@ -47,6 +47,7 @@ import {
     chassisEnvelope, profileFor, WIDTH_LIMIT_MM, HEIGHT_LIMIT_MM
 } from '../src/geometry/chassis.js';
 import { toCSV, toAbaqus } from '../src/contact/export.js';
+import { serializeProject, parseProject } from '../src/io/project.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DATA = join(HERE, '..', 'src', 'data');
@@ -1099,6 +1100,58 @@ test('every snap target of the whole library projects to a finite point', () => 
                 `${u.id}/${s.id} has a non-finite coordinate`);
         }
     }
+});
+
+/* ============================================================
+   12b-ii. Project round trip
+   ============================================================ */
+
+group('12b-ii. Project round trip');
+
+test('EVERY view flag survives save and reopen', () => {
+    // This exists because it did not. serializeProject re-listed the view
+    // fields, so anything added afterwards was written by the caller and
+    // dropped by the writer — the grid and annotation toggles came back on
+    // after reopening a project that had them off. A whitelist nobody
+    // remembers to update is worse than no whitelist.
+    const view = {
+        mode: 'plan',
+        camera: { mode: 'plan', fov: 35, states: {} },
+        lighting: { preset: 'daylight', keyIntensity: 3.4 },
+        background: 'color', backgroundColor: '#101820',
+        unitSystem: 'US', precision: 2, dualUnits: true,
+        dimensionSets: ['transverse', 'custom'],
+        showCallouts: true, showScaleBar: false,
+        annotations: false, showGrid: false,
+        materials: { rubberTread: { tint: '#ff3333', roughness: 0.7 } },
+        isolation: { level: 'axle', targetId: 'A2', ghost: true }
+    };
+    const round = parseProject(serializeProject({
+        meta: { title: 't' }, seed: 'x', unit: c9,
+        customDimensions: [], calloutOffsets: {}, contact: {}, view
+    }));
+    for (const [k, v] of Object.entries(view)) {
+        assertEqual(JSON.stringify(round.view[k]), JSON.stringify(v), `view.${k} must survive`);
+    }
+});
+
+test('custom dimensions and callout offsets survive save and reopen', () => {
+    const dims = [{ id: 'custom:1', set: 'custom', from: { x: 0, y: 0, z: 0 }, to: { x: 0, y: 100, z: 0 }, axis: 'y', offset: -200 }];
+    const offs = { A1: { dx: 120, dy: -80 } };
+    const round = parseProject(serializeProject({
+        meta: {}, seed: 'x', unit: c9, customDimensions: dims, calloutOffsets: offs,
+        contact: {}, view: { mode: '3d', isolation: {} }
+    }));
+    assertEqual(round.customDimensions.length, 1, 'dimension count');
+    assertClose(round.calloutOffsets.A1.dx, 120, 1e-9, 'callout dx');
+});
+
+test('a project written by a newer format major version is refused', () => {
+    const good = JSON.parse(serializeProject({
+        meta: {}, seed: 'x', unit: c9, view: { mode: '3d' }
+    }));
+    good.formatVersion = '99.0';
+    assertThrows(() => parseProject(JSON.stringify(good)), 'newer major must be refused');
 });
 
 /* ============================================================

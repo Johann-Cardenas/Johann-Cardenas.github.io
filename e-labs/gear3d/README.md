@@ -250,13 +250,24 @@ rendering, and the E-Labs preview image.
 
 **v1.4** adds chassis silhouettes.
 
+**v1.4** adds chassis silhouettes, a drafting-title-block header, draggable
+callouts and material controls.
+
 Deferred, with reasons in `DECISIONS.md`:
 
 - **747 and A380** — wing-plus-body gear layouts need body-gear offsets that no
   consulted source provides (`SOURCES.md` §5.5).
-- The 2×2 quad view, draggable callouts, a material-controls panel (the
-  `MaterialLibrary` override backend is built but has no UI), per-tire contact
-  patch overrides, and glTF/OBJ scene export.
+- The 2×2 quad view, per-tire contact patch overrides, and glTF/OBJ scene
+  export.
+
+## Materials
+
+Five controls per surface — tint, brightness, roughness, relief — matching
+Cross-Section Studio, so a figure pair from the two apps can be matched by
+eye. Overrides are strictly **appearance**: nothing there can move a
+dimension, resize a contact patch or alter an export, which is why they live
+in the view state rather than the undoable document. They are saved in the
+project file and re-applied when the material library is rebuilt.
 
 ## Documents
 
