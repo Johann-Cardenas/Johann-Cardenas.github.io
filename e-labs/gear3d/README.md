@@ -227,7 +227,7 @@ can be read straight from the console, without trusting the UI.
   grooves that MSAA alone leaves aliased at 600 dpi. Composes with the tiled
   fallback automatically.
 
-## Aircraft (v1.2)
+## Aircraft (v1.2, extended v1.6)
 
 Four Boeing aircraft spanning gear codes **D, 2D and 3D**: 737-800, 757-200,
 767-400ER, 777-300ER.
@@ -257,7 +257,7 @@ rendering, and the E-Labs preview image.
 callouts, material controls and the quad view.
 
 **v1.5** adds per-tire measured contact-patch overrides and glTF/OBJ geometry
-export, closing the build spec apart from the two deferred aircraft.
+export. **v1.6** adds the three wing-plus-body aircraft, closing the build spec.
 
 ## Quad view
 
@@ -276,12 +276,46 @@ this; 3D is a pictorial reference, so it keeps its own fit.
 Annotations are drawn per pane and clipped to it. Click any pane to open it
 full size.
 
-Deferred, with reasons in `DECISIONS.md`:
+Nothing from the original build spec is outstanding. The 747 and A380, deferred
+since the first build for want of published body-gear offsets, ship in v1.6 —
+see **Wing-plus-body gear** below.
 
-- **747 and A380** — wing-plus-body gear layouts need body-gear offsets that no
-  consulted source provides (`SOURCES.md` §5.5). This is the only item from the
-  original build spec still outstanding, and it is outstanding for want of
-  published data rather than for want of work.
+## Wing-plus-body gear (v1.6)
+
+The **747-400**, **747-8** (2D/2D2) and **A380-800** (2D/3D2) have four main
+struts rather than two: a wing gear and, inboard and further aft, a body gear.
+They were deferred through v1.5 for a specific reason — a single main-gear
+outer width closes a two-strut layout, but it cannot close a four-bogie one.
+The body gear's offset from the wing gear is a free parameter, and no summary
+table carries it.
+
+It turned out to be a **data** problem, not a modelling one. The manufacturers'
+own footprint figures — Boeing ACAP §7.2, Airbus AC §7-2-0 — state the track,
+both gear positions and every spacing outright. So for these three the sourcing
+is **inverted**: the geometry is read off the figure and the outer width becomes
+a cross-check, closing to 0.2, 5 and 5 mm respectively. Nothing is assumed on
+the 747-8 or the A380 at all.
+
+Every dimension is corroborated independently by the FAA's FAARFIELD 2.1.1
+aircraft library, which stores explicit per-wheel coordinates and agrees with
+the manufacturer figures **to the millimetre** — including the A380 body
+bogie's 20 mm wider middle axle (1530 / 1550 / 1530 mm), which is carried in
+`dualSpacingByRow` rather than averaged away.
+
+Two things this exposed, both of which were latent bugs that only a mixed-bogie
+aircraft could reveal:
+
+- **The outer-width check reached for the first main gear.** On the A380 the
+  body bogie is *wider* than the wing bogie (1530 against 1350 mm), so the
+  quantity that closes the outer width is the outermost strut's, not the first
+  one listed. Every previous aircraft made those the same thing.
+- **The wheelbase averaged struts, not tires.** The A380's body gear carries
+  twelve of the twenty main tires, which pulls the load centroid 328 mm aft of
+  the midpoint between wing and body gear. A plain mean is right on every other
+  aircraft in the library — which is exactly what would have kept it hidden.
+
+`SOURCES.md` §5.5 records both, plus two places where the FAA database
+disagrees with the manufacturers and the manufacturers are followed.
 
 ## Materials
 

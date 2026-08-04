@@ -157,8 +157,17 @@ refuses to produce geometry. It is never guessed. Adding one requires a
 
 ## 5. Aircraft — what is sourced, derived and assumed
 
-The aircraft library ships in v1.2 with **four Boeing aircraft** spanning gear
-codes **D, 2D and 3D**: 737-800, 757-200, 767-400ER and 777-300ER.
+The aircraft library shipped in v1.2 with **four Boeing aircraft** spanning
+gear codes **D, 2D and 3D**: 737-800, 757-200, 767-400ER and 777-300ER. **v1.6
+adds the three wing-plus-body aircraft** — 747-400, 747-8 (both 2D/2D2) and
+A380-800 (2D/3D2) — which had been deferred since the first build. Seven
+aircraft, six gear codes.
+
+Those three are sourced by a **different and better method** than the original
+four, described in 5.5. Read that section before comparing numbers between
+them: on the original four the outer width is an input and the track is
+derived; on the three new ones the track is published and the outer width is
+a cross-check.
 
 An earlier attempt was abandoned because the sources could not be reached
 (the FAA database returned 403 to the fetch tool, and the ACAP PDFs exceeded
@@ -167,6 +176,10 @@ serves the spreadsheet normally to a browser user-agent, and the PDFs download
 fine with `curl`. Every number below was retrieved and read directly.
 
 ### 5.1 Authoritative — taken verbatim
+
+**This table describes the original four aircraft.** The three wing-plus-body
+aircraft take their geometry from the manufacturer footprint figures instead —
+see 5.5.
 
 | Quantity | Source |
 |---|---|
@@ -216,7 +229,8 @@ All four agree to within a few centimetres, on quantities of 6 to 11 metres.
 
 ### 5.4 Assumed — declared, and shown in the app
 
-Two quantities are **not** constrained by any source consulted:
+**On the original four aircraft**, two quantities are **not** constrained by
+any source consulted:
 
 - **Nose gear dual spacing.** Nothing published pins it down.
 - **Tandem spacing** on 2D and 3D gears. The wheelbase is measured to the main
@@ -229,13 +243,88 @@ them whenever an aircraft is loaded. Set them from FAARFIELD before using the
 output for pavement work — and note that changing a dual spacing re-derives the
 track, so the authoritative outer width is preserved whatever you enter.
 
-### 5.5 Not included, and why
+Neither assumption applies to the 747-8 or the A380-800: their footprint
+figures publish every spacing, and both declare `assumedFields: []`. The
+747-400 declares exactly one, `NLG.tire.rimDiameter`, because Boeing states
+its nose tire as `49X17` — a two-part Type VII designation that omits the rim.
+The overall diameter and section width come from the two published numbers and
+do not depend on that assumption.
 
-The **747 (2D/2D2)** and **A380 (2D/3D2)** are omitted. Their wing-plus-body
-gear layouts need the longitudinal and transverse offsets of the body gear
-relative to the wing gear. A single outer width closes a two-strut layout; it
-cannot close a four-bogie one. Including them would mean inventing geometry
-rather than deriving it, which is the one thing this library exists not to do.
+### 5.5 Wing-plus-body gear — the aircraft that were deferred (v1.6)
+
+The **747-400**, **747-8** and **A380-800** were left out of v1.2 through v1.5
+with this reason recorded: their wing-plus-body layouts need the longitudinal
+and transverse offsets of the body gear relative to the wing gear, *"a single
+outer width closes a two-strut layout; it cannot close a four-bogie one."*
+
+That was correct, and it was a **data** problem rather than a modelling one.
+The offsets are not in the FAA database, and they are not in FAARFIELD either
+— FAARFIELD analyses one gear at a time and stores the wing gear and the body
+gear as separate entries (`B747-400` and `B747-400 Belly`), so it carries the
+bogie geometry but not the distance between the two.
+
+They are stated plainly in the manufacturers' own airport planning documents,
+which is where they came from:
+
+| Aircraft | Document | Figure |
+|---|---|---|
+| 747-400 | Boeing ACAP **D6-58326-1 Rev E** (Sep 2023) | §7.2.1 landing gear footprint |
+| 747-8 | Boeing ACAP **D6-58326-3 Rev C** (Aug 2023) | §7.2 landing gear footprint |
+| A380-800 | Airbus **AC A380**, issue **Nov 01/24** | §7-2-0 footprint, sheets 1 and 2 |
+
+**The sourcing is inverted relative to 5.2.** These figures publish the track,
+both gear positions and every spacing directly, so nothing is derived from an
+outer width. The outer width instead becomes an independent check:
+
+| Aircraft | track + dual + section | Published outer width | Difference |
+|---|---|---|---|
+| 747-400 | 10 998 + 1118 + 482.6 = **12 598.6 mm** | 41 ft 4 in = 12 598.4 mm (Boeing) | **0.2 mm** |
+| 747-8 | 10 998 + 1189 + 533.4 = **12 720.4 mm** | 41 ft 9 in = 12 725.4 mm (Boeing) | 5 mm |
+| A380-800 | 12 456 + 1350 + 530 = **14 336 mm** | 47.05 ft = 14 341 mm (FAA) | 5 mm |
+
+The residuals are the figures' own rounding — Boeing draws to the nearest inch,
+the FAA tabulates to 0.01 ft.
+
+**Independent corroboration from FAARFIELD.** The FAA's FAARFIELD 2.1.1
+aircraft library stores explicit per-wheel coordinates. It agrees with the
+manufacturer figures on every bogie dimension:
+
+| Aircraft | FAARFIELD wheel coordinates | Manufacturer figure |
+|---|---|---|
+| 747-400 | X ±22 in, Y 58 in | 44 in dual, 58 in tandem |
+| 747-8 | X ±23.4 in, Y 56.5 in | 46.8 in dual, 56.5 in tandem |
+| A380 wing | X ±674.37 mm, Y 1699.26 mm | 1350 mm dual, 1700 mm tandem |
+| A380 body | X ±764.54 / ±774.70 mm, Y 0 / 1699.26 / 3398.52 mm | 1530 / **1550** / 1530 mm dual, 1700 mm tandem |
+
+Two wholly independent sources agreeing to the millimetre, including the
+A380 body bogie's **20 mm wider middle axle** — which is why `dualSpacingByRow`
+exists rather than the spacing being averaged. FAARFIELD's per-strut
+`MgPercent` also reproduces the load split from the other direction: 0.2375 × 4
+struts = 95 % for both 747s, and 0.19 × 2 wing + 0.285 × 2 body = 95 % for the
+A380, with both giving an equal 4.75 % per tire.
+
+#### Two disagreements worth knowing about
+
+**The FAA's tabulated wheelbase is not defined consistently for these
+aircraft.** For the 747-8 it equals the centroid of the four bogies (97.3 ft
+against a computed 29 655 mm, agreeing to 2 mm). For the A380 it equals the
+nose-to-**body**-gear dimension (104.6 ft = 31 881 mm exactly). For the 747-400
+it matches neither, nor their midpoint — it gives 87.9 ft where Boeing's figure
+gives 84.0 ft, the commonly published 747-400 wheelbase. **This library uses
+the manufacturer figures** and treats the FAA field as a cross-check only.
+
+**The FAA's MTOW for the 747-400 is the -400ER figure** (910 000 lb), which
+exceeds the maximum taxi weight in Boeing's own table for the -400. The
+manufacturer table is used instead: MTOW 875 000 lb, MDTW 877 000 lb, from the
+same column of ACAP §2.1.1.
+
+#### What is still not included
+
+Nothing from the original build spec. The library now covers every gear code
+in `index.json`. Additional weight variants (the A380 alone has fifteen) are
+not separate entries because the geometry is identical across them — only the
+weights differ, so a variant changes tire loads and nothing else. `A380-800
+WV000` is the one carried, and its variant is stated on every weight.
 
 ---
 

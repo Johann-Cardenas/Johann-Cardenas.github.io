@@ -242,8 +242,16 @@ function resolveAircraft(unit, opts) {
 
         for (let row = 0; row < rows; row++) {
             const x = g.x + (row - (rows - 1) / 2) * tandem;
+            // Some bogies are not a constant width. The A380's body gear is a
+            // tridem whose middle axle is 20 mm wider than the outer two
+            // (1550 vs 1530 mm), which is published and therefore represented
+            // rather than averaged away. Absent the array every row uses the
+            // single dualSpacing, which is every other gear in the library.
+            const rowDual = Array.isArray(g.dualSpacingByRow)
+                ? (g.dualSpacingByRow[row] ?? dual)
+                : dual;
             for (let i = 0; i < across; i++) {
-                const off = (i - (across - 1) / 2) * dual;
+                const off = (i - (across - 1) / 2) * rowDual;
                 const y = g.y + off;
                 wheels.push({
                     id: `${g.id}-r${row + 1}-w${i + 1}`,
@@ -323,8 +331,21 @@ function finish(unit, wheels, axles, groups, domain) {
         const mains = axles.filter((a) => a.role === 'main');
         const noses = axles.filter((a) => a.role === 'nose');
         if (mains.length && noses.length) {
-            const mainCentroidX = mains.reduce((s, a) => s + a.x, 0) / mains.length;
-            derived.wheelbase = mainCentroidX - noses[0].x;
+            // Weighted by the number of tires on each strut, not a plain mean
+            // over struts. On every two-strut aircraft, and on a 747 where all
+            // four bogies carry four tires, the two agree. On an A380 they do
+            // not: the body gear carries twelve of the twenty main tires, so
+            // the load centroid sits 328 mm aft of the midpoint between wing
+            // and body gear. Since every main tire carries the same load, tire
+            // count is the correct weight.
+            let num = 0;
+            let den = 0;
+            for (const a of mains) {
+                const n = wheels.filter((w) => w.axleId === a.id).length || 1;
+                num += a.x * n;
+                den += n;
+            }
+            derived.wheelbase = num / den - noses[0].x;
         }
         if (mains.length >= 2) {
             // Centreline-to-centreline track between the main gear struts.

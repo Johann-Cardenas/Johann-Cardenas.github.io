@@ -1,18 +1,28 @@
 {
   "schemaVersion": "1.0",
   "$comment": [
-    "Four Boeing aircraft spanning gear codes D, 2D and 3D.",
+    "Six Boeing aircraft spanning gear codes D, 2D, 3D and 2D/2D2.",
     "",
-    "Every unit records `mainGearOuterWidth` (authoritative, FAA) and derives the",
-    "gear centreline positions from it. See index.json for the full method, and",
-    "data/SOURCES.md section 5 for what is and is not verified.",
+    "TWO DIFFERENT SOURCING METHODS LIVE IN THIS FILE.",
     "",
-    "The 747 (2D/2D2) and A380 (2D/3D2) are NOT included. Their wing-plus-body",
-    "gear layouts need the longitudinal and transverse offsets of the body gear",
-    "relative to the wing gear, and no source consulted in this build constrains",
-    "those. A single outer width cannot close a four-bogie layout the way it",
-    "closes a two-strut one, so including them would mean inventing geometry",
-    "rather than deriving it."
+    "The four two-strut aircraft (737, 757, 767, 777) record `mainGearOuterWidth`",
+    "as authoritative, from the FAA database, and DERIVE the gear centrelines",
+    "from it, because no consulted source publishes their track directly. See",
+    "index.json for that method.",
+    "",
+    "The two 747s invert it. Their ACAP section 7.2 footprint figures publish the",
+    "track, both gear positions, and every spacing outright, so the geometry is",
+    "read off the figure and the outer width becomes a CROSS-CHECK rather than an",
+    "input. That is the better arrangement wherever the data allows it — it is",
+    "simply not available for the other four.",
+    "",
+    "The 747s were absent until v1.6 because a single outer width cannot close a",
+    "four-bogie layout the way it closes a two-strut one: the body gear's offset",
+    "from the wing gear is a free parameter that no summary table carries. The",
+    "ACAP figures state it (10 ft 1 in, and the two models agree independently),",
+    "which is what made these entries possible without inventing geometry.",
+    "",
+    "See data/SOURCES.md section 5 for what is and is not verified."
   ],
   "units": [
     {
@@ -183,6 +193,118 @@
       "sources": [
         { "id": "faa-acd", "title": "Aircraft Characteristics Database (type B77W)", "publisher": "U.S. Federal Aviation Administration", "url": "https://www.faa.gov/airports/engineering/aircraft_char_database", "note": "Gear config 3D; wheelbase 102.4 ft; main gear width 42.3 ft; MTOW 775 000 lb." },
         { "id": "boeing-777-acap", "title": "777-200LR/-300ER/777F Airplane Characteristics for Airport Planning, D6-58329-2 Rev G", "publisher": "Boeing Commercial Airplanes", "year": 2024, "note": "Section 7.2 landing gear footprint." },
+        { "id": "ac-6g", "title": "AC 150/5320-6G Appendix G, G.1.3", "publisher": "U.S. Federal Aviation Administration", "note": "Percent gross weight on the whole main gear: 0.95." }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "b747-400",
+      "domain": "aircraft",
+      "manufacturer": "Boeing",
+      "model": "747-400",
+      "gearDesignation": "2D/2D2",
+      "mtow": { "value": 875000, "unit": "lb", "basis": "Boeing 747-400 ACAP D6-58326-1 Rev E (September 2023), section 2.1.1, highest Maximum Design Takeoff Weight listed for the 747-400. NOTE: the FAA Aircraft Characteristics Database lists 910 000 lb against 'Boeing 747-400'; that is the 747-400ER figure, so the manufacturer's own table is used here instead." },
+      "maxTaxiWeight": { "value": 877000, "unit": "lb", "basis": "Boeing 747-400 ACAP D6-58326-1 Rev E, section 2.1.1, highest Maximum Design Taxi Weight, in the same column as the 875 000 lb takeoff weight." },
+      "percentOnMainGear": 95,
+      "wheelbase": 25604,
+      "mainGearOuterWidth": 12598,
+      "mainGearTrack": 10998,
+      "tirePressure": { "value": 200, "unit": "psi", "basis": "Boeing 747-400 ACAP D6-58326-1 Rev E, section 7.2.1, main gear tire pressure at the highest taxi weight." },
+      "assumedFields": ["NLG.tire.rimDiameter"],
+      "gears": [
+        {
+          "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1,
+          "x": 0, "y": 0, "dualSpacing": 914, "tandemSpacing": null,
+          "tire": "49x17-20",
+          "pressure": { "value": 200, "unit": "psi", "basis": "Boeing 747-400 ACAP D6-58326-1 Rev E, section 7.2.1, nose gear tire pressure for the 747-400 and -400 Combi." },
+          "source": "Dual spacing 914 mm (36 in) read directly from the ACAP section 7.2.1 footprint figure — published, not assumed as it is on the two-strut aircraft in this library. Tire size is published as '49X17, 32 PR', a two-part Type VII designation that omits the rim diameter; the 20 in rim is ASSUMED and declared in assumedFields. Overall diameter and section width come from the published two numbers and are unaffected by that assumption."
+        },
+        {
+          "id": "WLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
+          "x": 24067, "y": -5499, "dualSpacing": 1118, "tandemSpacing": 1473,
+          "tire": "H49x19.0-22",
+          "source": "WING gear, the outboard pair. Longitudinal position 24 067 mm = 78 ft 11.5 in, read directly from the ACAP section 7.2.1 footprint figure. Track 10 998 mm = 36 ft 1 in from the same figure, putting the strut centreline at 5499 mm — published here, not derived from the outer width as it must be for the two-strut aircraft. Cross-check: 10 998 + 1118 + 482.6 = 12 598.6 mm against the figure's own stated outer width of 41 ft 4 in (12 598.4 mm), agreeing to within 1 mm. Dual spacing 44 in and tandem spacing 58 in are the figure's TYPICAL values, and match the FAARFIELD aircraft library's B747-400 wheel coordinates exactly (X +/-22 in, Y 58 in). Tire H49X19.0-22, 32PR from the same figure."
+        },
+        {
+          "id": "WLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
+          "x": 24067, "y": 5499, "dualSpacing": 1118, "tandemSpacing": 1473,
+          "tire": "H49x19.0-22",
+          "source": "Mirror of WLG-L about the aircraft centreline; same derivation."
+        },
+        {
+          "id": "BLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
+          "x": 27140, "y": -1918, "dualSpacing": 1118, "tandemSpacing": 1473,
+          "tire": "H49x19.0-22",
+          "source": "BODY gear, the inboard pair — the geometry whose absence kept this aircraft out of the library until now. Longitudinal position = the wing gear's 24 067 mm plus the figure's 10 ft 1 in (3073 mm) body-gear offset. Track 3835 mm = 12 ft 7 in, strut centreline 1918 mm. Both read directly from the ACAP section 7.2.1 footprint figure. Dual and tandem spacings are that figure's TYPICAL values, which it applies to all four main bogies."
+        },
+        {
+          "id": "BLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
+          "x": 27140, "y": 1918, "dualSpacing": 1118, "tandemSpacing": 1473,
+          "tire": "H49x19.0-22",
+          "source": "Mirror of BLG-L about the aircraft centreline; same derivation."
+        }
+      ],
+      "notes": "Wing-plus-body gear: four main struts, sixteen main tires, eighteen in total. The body gear sits 3073 mm aft of the wing gear and 3581 mm inboard of it, so the four bogies share neither an axle line nor a track, and no single track figure describes the aircraft. The stated wheelbase is the main gear centroid, midway between wing and body gear; every bogie carries four tires, so the load centroid is the same point. NOTE: the FAA Aircraft Characteristics Database lists this aircraft's wheelbase as 87.9 ft (26 792 mm), which matches neither the wing gear, nor the body gear, nor their centroid. Boeing's figure gives 84.0 ft, the commonly published 747-400 wheelbase, and that is what is used here.",
+      "sources": [
+        { "id": "boeing-747-400-acap", "title": "747-400 Airplane Characteristics for Airport Planning, D6-58326-1 Rev E", "publisher": "Boeing Commercial Airplanes", "year": 2023, "note": "Section 7.2.1 landing gear footprint (all gear geometry); section 2.1.1 weights. Retrieved and read during this build." },
+        { "id": "faa-acd", "title": "Aircraft Characteristics Database (type B744)", "publisher": "U.S. Federal Aviation Administration", "url": "https://www.faa.gov/airports/engineering/aircraft_char_database", "note": "Gear config 2D/2D2; main gear width 40.7 ft. Its Wheelbase_ft and MTOW_lb fields are deliberately NOT used for this aircraft — see notes." },
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entries B747-400 and B747-400 Belly", "publisher": "U.S. Federal Aviation Administration", "note": "Independent corroboration of the bogie geometry: wheel coordinates X +/-22 in (44 in dual) and Y 58 in (tandem), matching the ACAP figure exactly. Its MgPercent of 0.2375 per strut across four struts also reproduces the 95 percent on the main gear." },
+        { "id": "ac-6g", "title": "AC 150/5320-6G Appendix G, G.1.3", "publisher": "U.S. Federal Aviation Administration", "note": "Percent gross weight on the whole main gear: 0.95." }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "b747-8",
+      "domain": "aircraft",
+      "manufacturer": "Boeing",
+      "model": "747-8",
+      "gearDesignation": "2D/2D2",
+      "mtow": { "value": 987000, "unit": "lb", "basis": "Boeing 747-8 ACAP D6-58326-3 Rev C (August 2023), section 2.1.2, Maximum Design Takeoff Weight for the 747-8. Agrees with the FAA Aircraft Characteristics Database MTOW_lb for ICAO type B748." },
+      "maxTaxiWeight": { "value": 990000, "unit": "lb", "basis": "Boeing 747-8 ACAP D6-58326-3 Rev C, section 2.1.2, Maximum Design Taxi Weight." },
+      "percentOnMainGear": 95,
+      "wheelbase": 29655,
+      "mainGearOuterWidth": 12720,
+      "mainGearTrack": 10998,
+      "tirePressure": { "value": 221, "unit": "psi", "basis": "Boeing 747-8 ACAP D6-58326-3 Rev C, section 7.2, main gear tire pressure." },
+      "assumedFields": [],
+      "gears": [
+        {
+          "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1,
+          "x": 0, "y": 0, "dualSpacing": 914, "tandemSpacing": null,
+          "tire": "50x20.0R22",
+          "pressure": { "value": 167, "unit": "psi", "basis": "Boeing 747-8 ACAP D6-58326-3 Rev C, section 7.2, nose gear tire pressure." },
+          "source": "Dual spacing 914 mm (36 in) read directly from the ACAP section 7.2 footprint figure. Tire 50X20.0 R22, 26PR from the same section. Nothing on this aircraft is assumed."
+        },
+        {
+          "id": "WLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
+          "x": 28118, "y": -5499, "dualSpacing": 1189, "tandemSpacing": 1435,
+          "tire": "52x21.0R22",
+          "source": "WING gear, the outboard pair. Longitudinal position 28 118 mm = 92 ft 3 in, and track 10 998 mm = 36 ft 1 in (strut centreline 5499 mm), both read directly from the ACAP section 7.2 footprint figure. Cross-check: 10 998 + 1189 + 533.4 = 12 720.4 mm against the figure's stated outer width of 41 ft 9 in (12 725.4 mm), agreeing to 5 mm — the residual is the figure's own rounding to the nearest inch. Dual spacing 46.8 in and tandem spacing 56.5 in are the figure's TYPICAL values and match the FAARFIELD library's B747-8 wheel coordinates exactly (X +/-23.4 in, Y 56.5 in). Tire 52X21.0 R22, 36PR."
+        },
+        {
+          "id": "WLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
+          "x": 28118, "y": 5499, "dualSpacing": 1189, "tandemSpacing": 1435,
+          "tire": "52x21.0R22",
+          "source": "Mirror of WLG-L about the aircraft centreline; same derivation."
+        },
+        {
+          "id": "BLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
+          "x": 31191, "y": -1918, "dualSpacing": 1189, "tandemSpacing": 1435,
+          "tire": "52x21.0R22",
+          "source": "BODY gear, the inboard pair. Longitudinal position = the wing gear's 28 118 mm plus the figure's 10 ft 1 in (3073 mm) body-gear offset — the same offset as the 747-400, stated independently by the two figures. Track 3835 mm = 12 ft 7 in, strut centreline 1918 mm. Cross-check on the layout as a whole: the centroid of the four bogies falls at 29 655 mm, and the FAA database's tabulated wheelbase of 97.3 ft is 29 657 mm, agreeing to 2 mm."
+        },
+        {
+          "id": "BLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
+          "x": 31191, "y": 1918, "dualSpacing": 1189, "tandemSpacing": 1435,
+          "tire": "52x21.0R22",
+          "source": "Mirror of BLG-L about the aircraft centreline; same derivation."
+        }
+      ],
+      "notes": "The stretched 747, and the last one built. Same wing-plus-body architecture as the 747-400 and the same 3073 mm body-gear offset, but a longer wheelbase and a differently proportioned bogie: 46.8 in dual by 56.5 in tandem, against the -400's 44 by 58. Sixteen main tires, eighteen in total. Nothing on this aircraft is assumed — the ACAP figure publishes every spacing it needs.",
+      "sources": [
+        { "id": "boeing-747-8-acap", "title": "747-8 Airplane Characteristics for Airport Planning, D6-58326-3 Rev C", "publisher": "Boeing Commercial Airplanes", "year": 2023, "note": "Section 7.2 landing gear footprint (all gear geometry); section 2.1.2 weights. Retrieved and read during this build." },
+        { "id": "faa-acd", "title": "Aircraft Characteristics Database (type B748)", "publisher": "U.S. Federal Aviation Administration", "url": "https://www.faa.gov/airports/engineering/aircraft_char_database", "note": "Gear config 2D/2D2; wheelbase 97.3 ft, used only as a cross-check on the derived centroid; MTOW 987 000 lb." },
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entry B747-8", "publisher": "U.S. Federal Aviation Administration", "note": "Independent corroboration of the bogie geometry: wheel coordinates X +/-23.4 in, Y 56.5 in, and Cp 221 psi, all matching the ACAP figure." },
         { "id": "ac-6g", "title": "AC 150/5320-6G Appendix G, G.1.3", "publisher": "U.S. Federal Aviation Administration", "note": "Percent gross weight on the whole main gear: 0.95." }
       ]
     }

@@ -239,6 +239,94 @@ that is quietly wrong. Single-view tiling is untouched.
 
 ---
 
+## D24. The wing-plus-body aircraft invert the sourcing method (v1.6)
+
+The 747-400, 747-8 and A380-800 were deferred from v1.2 to v1.5 with a reason
+that stayed accurate the whole time: a single main-gear outer width closes a
+two-strut layout, but it cannot close a four-bogie one. The body gear's offset
+from the wing gear is a free parameter, and putting a number on it without a
+source would have been inventing geometry — the one thing this library exists
+not to do.
+
+What changed is not the modelling. It is that the number was found. It is
+stated outright in the manufacturers' own airport planning figures (Boeing
+ACAP §7.2, Airbus AC §7-2-0), which publish the track, both gear positions and
+every spacing. Neither the FAA database nor FAARFIELD carries it: FAARFIELD
+analyses one gear at a time and stores the wing gear and body gear as separate
+entries, so it has the bogie geometry but not the distance between the two.
+Three releases of "deferred" were three releases of not having looked in the
+right document.
+
+So these three are sourced **the other way round** from D-, 2D- and 3D-gear
+aircraft. There, the outer width is authoritative and the track is derived from
+it (the trap in SOURCES.md §5.2). Here, the track is published and the outer
+width becomes an independent check — which closes to 0.2, 5 and 5 mm, the
+residuals being the figures' own rounding to the nearest inch or 0.01 ft.
+
+Two sourcing methods in one library is a cost, and it is worth paying. The
+derivation exists because the track is unpublished for the original four; where
+a manufacturer states the track directly, deriving it from a coarser number
+instead would be throwing away the better datum to preserve a uniform method.
+Both `index.json` and `boeing.json` say which method applies to which aircraft,
+because a reader comparing two entries would otherwise have no way to tell.
+
+**The corroboration is what makes this trustworthy.** FAARFIELD 2.1.1 stores
+explicit per-wheel coordinates, derived from neither source used here, and it
+reproduces every published spacing to the millimetre — including the A380 body
+bogie's 20 mm wider middle axle (±764.54 and ±774.70 mm against the figure's
+1530 and 1550). Its per-strut load percentages independently reproduce the
+95 % on the main gear from a third direction.
+
+### What this exposed
+
+Adding an aircraft whose bogies are not all alike found two latent bugs. Both
+had been correct on every aircraft in the library, which is what makes this
+class of bug expensive:
+
+- **The outer-width validator reached for `mains[0]`.** Outer width is measured
+  at the outermost tires, so the dual spacing and tire that close the sum are
+  the outermost strut's. On the A380 the *body* bogie is the wider one (1530
+  against 1350 mm), so taking the first-listed main gear would have misjudged
+  the width by 180 mm — while looking entirely reasonable.
+- **The wheelbase averaged struts rather than tires.** The A380's body gear
+  carries twelve of the twenty main tires, so the load centroid sits 328 mm aft
+  of the midpoint between wing and body gear. Every previous aircraft had equal
+  tire counts per strut, so the plain mean agreed and the bug could not surface.
+
+A test now asserts the A380 case specifically, including that the tire-weighted
+centroid differs from the plain mean — otherwise a regression to the simpler
+formula would pass everything.
+
+### The A380's middle axle
+
+Its body bogie is a dual-tridem whose middle axle is 20 mm wider than the outer
+two. That is 1.3 % on a 5.3 m track and invisible on screen, and it is
+published and confirmed by two sources, so it is carried in `dualSpacingByRow`
+rather than averaged. The app exports footprint coordinates for FEM
+pre-processing; a dimension that is real, known and quietly rounded away is
+precisely the kind of thing that has no business being silently wrong in a file
+someone meshes.
+
+### Where the FAA database is not followed
+
+Two places, both recorded in the data files:
+
+- **Its tabulated wheelbase is not consistently defined for these aircraft.**
+  For the 747-8 it is the four-bogie centroid (agreeing to 2 mm); for the A380
+  it is the nose-to-body-gear dimension exactly; for the 747-400 it is neither,
+  nor their midpoint, giving 87.9 ft where Boeing's figure gives the commonly
+  published 84.0 ft.
+- **Its 747-400 MTOW is the -400ER figure** (910 000 lb), which exceeds the
+  maximum *taxi* weight in Boeing's own table for the -400 — an internal
+  contradiction that would have shipped unnoticed had the manufacturer table
+  not been read.
+
+The FAA database remains authoritative for the four two-strut aircraft, where
+its outer width is the only published constraint on the track. It is used as a
+cross-check, not an input, wherever the manufacturer figure is more specific.
+
+---
+
 ## D23. The geometry export is millimetres in the engineering frame, against the glTF convention (v1.5)
 
 glTF's stated convention is metres, Y-up. The export deliberately does not

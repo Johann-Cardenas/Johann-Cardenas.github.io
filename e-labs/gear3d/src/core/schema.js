@@ -320,11 +320,19 @@ function validateAircraft(u, E, W) {
         if (mains.length >= 2) {
             const ys = mains.map((g) => g.y);
             const span = Math.max(...ys) - Math.min(...ys);
-            const across = mains[0].wheelsAcross ?? 2;
-            const dual = mains[0].dualSpacing || 0;
+            // The outer width is measured at the OUTERMOST tires, so the dual
+            // spacing and tire that close the sum are the outermost strut's,
+            // not whichever main gear happens to be listed first. On a two-strut
+            // aircraft these are the same thing. On a wing-plus-body gear they
+            // are not: the A380's body gear is 1550 mm dual against the wing
+            // gear's 1350 mm, and taking the first would misjudge the width by
+            // 200 mm while looking entirely reasonable.
+            const outer = mains.reduce((a, b) => (Math.abs(b.y) > Math.abs(a.y) ? b : a), mains[0]);
+            const across = outer.wheelsAcross ?? 2;
+            const dual = outer.dualSpacing || 0;
             let section = null;
             try {
-                section = sectionWidthOf(mains[0].tire);
+                section = sectionWidthOf(outer.tire);
             } catch { /* tire checked elsewhere */ }
             if (section != null) {
                 const implied = span + (across - 1) * dual + section;

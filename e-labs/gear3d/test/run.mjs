@@ -1421,20 +1421,36 @@ test('aircraft wheelbase is measured to the main gear centroid', () => {
     }
 });
 
-test('percent on main gear is the FAA design value and load splits accordingly', () => {
+test('percent on main gear is the design value and load splits accordingly', () => {
     for (const u of aircraftUnits) {
-        assertEqual(u.percentOnMainGear, 95, `${u.id} percentOnMainGear`);
+        // 95 % is the FAA thickness-design value (AC 150/5320-6G G.1.3) and is
+        // what every aircraft here uses ABSENT a manufacturer figure. The A380
+        // publishes 95.1 % for its weight variant, which is more specific, so
+        // the assertion is a band around the design value rather than equality
+        // to it — a unit outside this band is a transcription error, not a
+        // legitimately different aircraft.
+        assert(u.percentOnMainGear >= 94 && u.percentOnMainGear <= 96,
+            `${u.id} percentOnMainGear ${u.percentOnMainGear} outside 94-96`);
         const l = resolveLayout(u);
         const mainIds = new Set(l.axles.filter((a) => a.role === 'main').map((a) => a.id));
         const mainLoad = l.wheels.filter((w) => mainIds.has(w.axleId))
             .reduce((s, w) => s + (w.loadKn ?? 0), 0);
         const total = l.wheels.reduce((s, w) => s + (w.loadKn ?? 0), 0);
-        assertClose((mainLoad / total) * 100, 95, 0.01, `${u.id} main gear load share`);
+        // Whatever the stated figure, the layout must actually split the load
+        // that way. This is the half of the test that catches real breakage.
+        assertClose((mainLoad / total) * 100, u.percentOnMainGear, 0.01,
+            `${u.id} main gear load share`);
     }
 });
 
 test('tire counts match the gear designation', () => {
-    const expected = { 'b737-800': 6, 'b757-200': 10, 'b767-400er': 10, 'b777-300er': 14 };
+    const expected = {
+        'b737-800': 6, 'b757-200': 10, 'b767-400er': 10, 'b777-300er': 14,
+        // Wing-plus-body gear: nose 2 plus four bogies. The 747s carry four
+        // tires on every bogie; the A380 carries four on each wing bogie and
+        // six on each body bogie.
+        'b747-400': 18, 'b747-8': 18, 'a380-800': 22
+    };
     for (const [id, n] of Object.entries(expected)) {
         const u = aircraftUnits.find((x) => x.id === id);
         assertEqual(resolveLayout(u).wheels.length, n, `${id} tire count`);
@@ -1449,6 +1465,157 @@ test('the validator rejects an aircraft whose geometry contradicts its outer wid
     const r = validateUnit(bad);
     assert(!r.ok, 'a strut moved off the derived track must fail validation');
     assert(r.errors.some((e) => /mainGearOuterWidth/.test(e)), 'the error must name the datum');
+});
+
+/* ============================================================
+   13b. Wing-plus-body gear (2D/2D2 and 2D/3D2)
+   ------------------------------------------------------------
+   These aircraft were kept out of the library for two releases
+   because a single outer width cannot close a four-bogie
+   layout. The geometry now comes from the manufacturers' own
+   footprint figures, so these tests check the things a summary
+   table would have let slide.
+   ============================================================ */
+
+group('13b. Wing-plus-body gear');
+
+const WING_BODY = ['b747-400', 'b747-8', 'a380-800'];
+
+test('wing-plus-body aircraft have four main struts, body gear aft and inboard', () => {
+    for (const id of WING_BODY) {
+        const u = aircraftUnits.find((x) => x.id === id);
+        assert(u, `${id} must be in the library`);
+        const mains = u.gears.filter((g) => g.role === 'main');
+        assertEqual(mains.length, 4, `${id} main strut count`);
+
+        const wing = mains.filter((g) => g.id.startsWith('WLG'));
+        const body = mains.filter((g) => g.id.startsWith('BLG'));
+        assertEqual(wing.length, 2, `${id} wing struts`);
+        assertEqual(body.length, 2, `${id} body struts`);
+
+        // The whole reason these aircraft were deferred: the body gear is
+        // displaced in BOTH axes, and neither displacement is recoverable
+        // from an outer width.
+        assert(body[0].x > wing[0].x, `${id} body gear must sit aft of the wing gear`);
+        assert(Math.abs(body[0].y) < Math.abs(wing[0].y),
+            `${id} body gear must sit inboard of the wing gear`);
+    }
+});
+
+test('nothing on a wing-plus-body aircraft rests on an assumed spacing', () => {
+    // On the two-strut aircraft the tandem and nose dual spacings are assumed,
+    // because no consulted source constrains them. The footprint figures used
+    // for these publish every spacing, so an assumption here would mean a
+    // number was not actually read off the figure.
+    for (const id of ['b747-8', 'a380-800']) {
+        const u = aircraftUnits.find((x) => x.id === id);
+        assertEqual(u.assumedFields.length, 0, `${id} should assume nothing`);
+        for (const g of u.gears) {
+            if ((g.tandemRows ?? 1) > 1) assert(g.tandemSpacing > 0, `${id} ${g.id} tandem spacing`);
+            if ((g.wheelsAcross ?? 1) > 1) assert(g.dualSpacing > 0, `${id} ${g.id} dual spacing`);
+        }
+    }
+    // The 747-400's one assumption is the nose tire's rim diameter, because
+    // Boeing states that size in the two-part form that omits it.
+    const b744 = aircraftUnits.find((x) => x.id === 'b747-400');
+    assertEqual(b744.assumedFields.join(','), 'NLG.tire.rimDiameter', '747-400 assumptions');
+});
+
+test('body gear offsets reproduce the published footprint figures', () => {
+    // Read straight off the ACAP and AC drawings. If a transcription slips,
+    // the whole rear of the aircraft moves and nothing else complains.
+    const cases = [
+        ['b747-400', 24067, 27140, 5499, 1918],
+        ['b747-8', 28118, 31191, 5499, 1918],
+        ['a380-800', 28605, 31881, 6228, 2632]
+    ];
+    for (const [id, wx, bx, wy, by] of cases) {
+        const u = aircraftUnits.find((x) => x.id === id);
+        const wing = u.gears.find((g) => g.id === 'WLG-L');
+        const body = u.gears.find((g) => g.id === 'BLG-L');
+        assertEqual(wing.x, wx, `${id} wing gear x`);
+        assertEqual(body.x, bx, `${id} body gear x`);
+        assertEqual(Math.abs(wing.y), wy, `${id} wing strut centreline`);
+        assertEqual(Math.abs(body.y), by, `${id} body strut centreline`);
+    }
+    // Both 747 figures state the same body-gear offset, independently.
+    for (const id of ['b747-400', 'b747-8']) {
+        const u = aircraftUnits.find((x) => x.id === id);
+        const d = u.gears.find((g) => g.id === 'BLG-L').x - u.gears.find((g) => g.id === 'WLG-L').x;
+        assertEqual(d, 3073, `${id} body gear offset (10 ft 1 in)`);
+    }
+});
+
+test('the wheelbase is the tire-weighted centroid, which only the A380 distinguishes', () => {
+    // Every 747 bogie carries four tires, so its centroid is the midpoint
+    // between wing and body gear. The A380's body gear carries twelve of the
+    // twenty main tires and pulls the centroid aft of that midpoint. A plain
+    // mean over struts would put it 328 mm too far forward — and would be
+    // right on every other aircraft in the library, which is exactly what
+    // makes that kind of error survive.
+    for (const id of WING_BODY) {
+        const u = aircraftUnits.find((x) => x.id === id);
+        assertClose(resolveLayout(u).derived.wheelbase, u.wheelbase, 1, `${id} wheelbase`);
+    }
+    const a380 = aircraftUnits.find((x) => x.id === 'a380-800');
+    const mains = a380.gears.filter((g) => g.role === 'main');
+    const plainMean = mains.reduce((s, g) => s + g.x, 0) / mains.length;
+    assertClose(plainMean, 30243, 1, 'unweighted mean over struts');
+    assertClose(resolveLayout(a380).derived.wheelbase - plainMean, 328, 1,
+        'tire weighting must move the centroid aft');
+});
+
+test('the A380 body bogie keeps its 20 mm wider middle axle', () => {
+    // Published as 1.530 / 1.550 / 1.530 m, corroborated to the millimetre by
+    // the FAARFIELD library. Averaging it to one dual spacing would be
+    // invisible on screen and wrong in a footprint file.
+    const u = aircraftUnits.find((x) => x.id === 'a380-800');
+    const g = u.gears.find((x) => x.id === 'BLG-L');
+    assertEqual(g.dualSpacingByRow.join(','), '1530,1550,1530', 'published per-row dual spacing');
+
+    const wheels = resolveLayout(u).wheels.filter((w) => w.axleId === 'BLG-L');
+    assertEqual(wheels.length, 6, 'six wheels on a dual-tridem body bogie');
+    const byRow = new Map();
+    for (const w of wheels) byRow.set(w.row, Math.round(Math.abs(w.y - g.y) * 100) / 100);
+
+    // FAARFIELD: +/-764.54 mm on the outer axles, +/-774.70 on the middle.
+    assertClose(byRow.get(0), 765, 0.6, 'front axle half-offset vs FAARFIELD 764.54');
+    assertClose(byRow.get(1), 775, 0.6, 'middle axle half-offset vs FAARFIELD 774.70');
+    assertClose(byRow.get(2), 765, 0.6, 'rear axle half-offset vs FAARFIELD 764.54');
+    assert(byRow.get(1) > byRow.get(0), 'the middle axle must be the wider one');
+});
+
+test('the outermost strut closes the outer width, not whichever is listed first', () => {
+    // The A380's body gear has a WIDER dual spacing than its wing gear
+    // (1530 vs 1350), so a check reaching for the first main gear would
+    // misjudge the outer width by 180 mm while looking entirely reasonable.
+    const u = aircraftUnits.find((x) => x.id === 'a380-800');
+    assert(validateUnit(u).ok, 'A380 must validate as shipped');
+
+    const body = u.gears.find((g) => g.id === 'BLG-L');
+    const wing = u.gears.find((g) => g.id === 'WLG-L');
+    assert(body.dualSpacing > wing.dualSpacing,
+        'this test only bites while the body bogie is the wider one');
+
+    const bad = structuredClone(u);
+    bad.gears.find((g) => g.id === 'WLG-R').y += 250;
+    const r = validateUnit(bad);
+    assert(!r.ok, 'a wing strut moved off the published track must fail');
+    assert(r.errors.some((e) => /mainGearOuterWidth/.test(e)), 'the error must name the datum');
+});
+
+test('wing-plus-body aircraft carry provenance on every gear and cite the cross-check', () => {
+    for (const id of WING_BODY) {
+        const u = aircraftUnits.find((x) => x.id === id);
+        const r = validateUnit(u);
+        assert(r.ok, `${id} must validate: ${(r.errors || []).join('; ')}`);
+        for (const g of u.gears) {
+            assert(typeof g.source === 'string' && g.source.length > 40,
+                `${id} ${g.id} needs a source saying where the number came from`);
+        }
+        const ids = (u.sources || []).map((x) => x.id);
+        assert(ids.includes('faarfield-aclib'), `${id} must cite the FAARFIELD cross-check`);
+    }
 });
 
 test('stated quantities convert correctly from their source units', () => {
