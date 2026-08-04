@@ -1159,14 +1159,47 @@ function renderUnitMeta() {
 
     renderAssumptionNotice(u);
 
-    // Title block "Loaded" field. Kept short — the designation is the name an
-    // engineer would actually use for the configuration.
+    renderTitleBlock(u);
+}
+
+/**
+ * The title block's subject — the drawing title of the sheet.
+ *
+ * The classification is the small label above; the designation and body type
+ * are the title itself. A flag appears when the loaded unit is not simply its
+ * cited reference: edited away from it, or carrying assumed values. That is
+ * what a revision box on a drawing is for, and it is the first thing a reader
+ * should check before trusting a figure.
+ *
+ * @param {object} u
+ */
+function renderTitleBlock(u) {
+    const cls = $('g3-tb-class');
     const loaded = $('g3-tb-loaded');
-    if (loaded) {
-        loaded.textContent = u.domain === 'truck'
-            ? `Class ${u.classification.class} · ${u.designation}`
-            : `${u.model} · ${u.gearDesignation}`;
-        loaded.title = u.domain === 'truck' ? u.bodyType : `${u.manufacturer} ${u.model}`;
+    const flag = $('g3-tb-flag');
+    const tires = $('g3-tb-tires');
+    if (!loaded) return;
+
+    if (u.domain === 'truck') {
+        cls.textContent = `FHWA Class ${u.classification.class}`;
+        loaded.textContent = `${u.designation} — ${u.bodyType}`;
+    } else {
+        cls.textContent = `${u.manufacturer} · Gear ${u.gearDesignation}`;
+        loaded.textContent = `${u.model}`;
+    }
+    loaded.title = loaded.textContent;
+    if (tires) tires.textContent = String(tireCount(u));
+
+    if (app.store.doc.modifiedFrom) {
+        flag.hidden = false;
+        flag.textContent = 'Modified';
+        flag.title = `Modified from ${app.store.doc.modifiedFrom}`;
+    } else if ((u.assumedFields || []).length) {
+        flag.hidden = false;
+        flag.textContent = `${u.assumedFields.length} assumed`;
+        flag.title = `Assumed values: ${u.assumedFields.join(', ')}`;
+    } else {
+        flag.hidden = true;
     }
 }
 

@@ -90,6 +90,48 @@ rail.
 
 ---
 
+## 4a. The header: a title block, composed
+
+The header is the app's own title block, and it went through two wrong
+versions before it worked.
+
+**v1.0** was a large wordmark over a paragraph describing the app. The
+paragraph restated what the interface already shows, and the assembly cost
+~190 px on an app whose main complaint was a cramped viewport.
+
+**v1.3** replaced it with a ruled strip of equal cells. Better, but it was
+*arrangement*, not composition: "Rev 1.4" got the same width and weight as
+the loaded vehicle, the datum tick was repeated on all six cells until it
+stopped being a signature, and a reader could not tell at a glance what the
+sheet was of.
+
+**v1.4** composes it the way a real engineering title block is composed:
+
+```
+ORIGINATOR │ ············ SUBJECT ············ │ METADATA
+```
+
+- **Subject dominant.** What is loaded is the drawing title — it is the one
+  field that changes, so it takes the slack and the type weight.
+- **Metadata recessive.** Fixed width, pinned right, mono and small.
+- **The tick appears once**, on the block's leading edge. A signature
+  repeated six times in 80 px is wallpaper.
+- **State is shown.** A flag reads *Modified* when a unit has been edited
+  away from its cited reference, or *N assumed* when it carries unsourced
+  values — in instrument red, because that is exactly what a reader must not
+  miss. This is what a revision box is for.
+
+89 px, down from 190.
+
+**The mark.** Originally a Font Awesome *dharmachakra* — a Buddhist
+religious symbol standing in for a wheel, which is both imprecise and not
+something to use as decoration. The first replacement drew a front-view axle,
+two tyres on a beam, which at 21 px read unmistakably as the letter **H**.
+What ships is a wheel seen face on: tyre ring and hub, two circles, drawn for
+this app.
+
+---
+
 ## 5. Self-critique — "would I produce this for any app?"
 
 Honest answers, first pass:

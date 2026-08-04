@@ -87,33 +87,56 @@
                      Every cell carries information that is actually true of
                      the loaded model; nothing here is decorative copy. -->
                 <div class="app-header">
-                    <a href="../../E-Labs.html" class="back-btn">
-                        <i class="fas fa-arrow-left"></i> Back to E-Labs
-                    </a>
-
                     <div class="g3-titleblock">
+
+                        <!-- Originator block: mark, name, and the way back. -->
                         <div class="g3-tb-mark">
-                            <span class="g3-tb-icon"><i class="fas fa-dharmachakra"></i></span>
-                            <span class="g3-tb-name">Gear<b>3D</b></span>
+                            <span class="g3-tb-icon" aria-hidden="true">
+                                <!-- A wheel seen face on: tyre ring and hub,
+                                     drawn for this app rather than borrowed
+                                     from an icon font. The previous mark was a
+                                     dharmachakra, which is a religious symbol
+                                     standing in for a wheel; a first attempt
+                                     at replacing it drew a front-view axle —
+                                     two tyres on a beam — which at this size
+                                     read unmistakably as the letter H. -->
+                                <svg viewBox="0 0 24 24" width="21" height="21"
+                                     fill="none" stroke="currentColor" stroke-width="3">
+                                    <circle cx="12" cy="12" r="9.4"/>
+                                    <circle cx="12" cy="12" r="3.1" stroke-width="2.4"/>
+                                </svg>
+                            </span>
+                            <span class="g3-tb-id">
+                                <span class="g3-tb-name">Gear<b>3D</b></span>
+                                <a href="../../E-Labs.html" class="g3-tb-back">
+                                    <i class="fas fa-arrow-left"></i> E-Labs
+                                </a>
+                            </span>
+                        </div>
+
+                        <!-- Subject. The drawing title of the sheet: the one
+                             field that changes, so the one that gets weight. -->
+                        <div class="g3-tb-subject">
+                            <span class="g3-tb-label" id="g3-tb-class">—</span>
+                            <span class="g3-tb-title">
+                                <span id="g3-tb-loaded">—</span>
+                                <span class="g3-tb-flag" id="g3-tb-flag" hidden></span>
+                            </span>
                         </div>
 
                         <div class="g3-tb-cell">
+                            <span class="g3-tb-label">Tires</span>
+                            <span class="g3-tb-value" id="g3-tb-tires">—</span>
+                        </div>
+                        <div class="g3-tb-cell g3-tb-cell--wide">
                             <span class="g3-tb-label">Library</span>
                             <span class="g3-tb-value"><span id="g3-unit-count">—</span> vehicles</span>
                         </div>
-                        <div class="g3-tb-cell">
-                            <span class="g3-tb-label">Loaded</span>
-                            <span class="g3-tb-value" id="g3-tb-loaded">—</span>
-                        </div>
                         <div class="g3-tb-cell g3-tb-cell--wide">
-                            <span class="g3-tb-label">Scale</span>
-                            <span class="g3-tb-value">1:1 true</span>
-                        </div>
-                        <div class="g3-tb-cell g3-tb-cell--wide">
-                            <span class="g3-tb-label">Internal units</span>
+                            <span class="g3-tb-label">Units</span>
                             <span class="g3-tb-value">mm · kN · kPa</span>
                         </div>
-                        <div class="g3-tb-cell">
+                        <div class="g3-tb-cell g3-tb-cell--rev">
                             <span class="g3-tb-label">Rev</span>
                             <span class="g3-tb-value" id="g3-tb-rev">—</span>
                         </div>
