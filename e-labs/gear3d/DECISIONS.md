@@ -239,6 +239,71 @@ that is quietly wrong. Single-view tiling is untouched.
 
 ---
 
+## D25. Chrome drawn on the figure follows the figure, not the theme (v1.7)
+
+The viewport shows publication white in both themes. That is deliberate and it
+is not going to change: the annotation halo in `annotate/dimensions.js` is
+drawn in the *figure's* background colour so that a figure exported on white
+while the app runs dark does not get a dark halo eating its own text. The
+viewport is a preview of the figure, so the figure's background is what it
+shows.
+
+The consequence had not been followed through. The HUD, the axis badge and the
+progress overlay were styled from the *theme's* tokens, so in the dark theme
+they became near-black pills sitting on white paper — blocks with more visual
+weight than the drawing they annotate, which is precisely backwards.
+
+So `.g3-viewport` now declares `--g3-fig-paper`, `--g3-fig-ink`, `--g3-fig-rule`
+and `--g3-fig-muted`, and everything drawn over the plate takes its colour from
+those. The rule is: **if it sits on the figure, it follows the figure; if it
+sits on the interface, it follows the theme.** The halo already worked this
+way; the rest of the chrome now does too.
+
+The white plate in a dark interface is then handled as a composition rather
+than apologised for. It gets an edge, a mat and a lift, so it reads as drafting
+film lying on a desk instead of a hole punched through the UI.
+
+### The one thing not to do to the viewport
+
+**Never add padding to `.g3-viewport`.** The SVG annotation overlay is
+`inset: 0`, which resolves against the element's PADDING box, while the canvas
+fills its CONTENT box. Padding would leave the two boxes different sizes, and
+every dimension line would be drawn a few pixels off the geometry it measures.
+That failure looks exactly like a projection bug — it would be hunted for in
+the maths, not in the stylesheet. The mat is therefore a `box-shadow` ring,
+which does not affect layout. There is a comment saying so at the rule itself.
+
+---
+
+## D26. Dimension labels are decluttered by their rotated footprint (v1.7)
+
+Labels are rotated to lie along their own dimension line, which is ISO 129-1
+and correct. `declutter()` and `overlaps()` in `annotate/projection.js` are
+axis-aligned box tests, and they were being handed the *unrotated* glyph box.
+
+A 70 x 12 label at 45 degrees occupies a 58 x 58 square. Tested as 70 x 12 it
+was treated as a thin horizontal sliver, so it could overlap almost anything it
+was not parallel to — and a three-quarter view is nothing but non-parallel
+dimension lines. Values sat on top of each other and on the tires, in the one
+part of the app whose whole job is to be read.
+
+`rotatedBox(w, h, angle)` now supplies the true axis-aligned footprint, and the
+declutter pass is given that instead. Measured in the browser afterwards, a
+five-dimension truck goes from labels overlapping at the default camera to zero
+overlapping pairs at four different orbits, and the 22-tire A380 is clean too.
+
+Two things worth noting about the fix:
+
+- The declutter pass was not broken. It was being lied to about how much room
+  each label needed. The bug was in what it was told, not in what it did — and
+  a test asserting `declutter` separates two boxes would have passed throughout.
+- `projection.js` is pure precisely so this is testable under Node, and it had
+  no coverage at all. It does now, including the case that distinguishes the
+  two behaviours: two labels 20 px apart that do *not* overlap as flat boxes
+  and *do* overlap once rotated.
+
+---
+
 ## D24. The wing-plus-body aircraft invert the sourcing method (v1.6)
 
 The 747-400, 747-8 and A380-800 were deferred from v1.2 to v1.5 with a reason

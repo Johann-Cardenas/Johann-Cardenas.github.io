@@ -223,3 +223,26 @@ export function overlaps(a, b, pad = 0) {
 export function estimateTextBox(text, fontSize) {
     return { w: text.length * fontSize * 0.56 + 10, h: fontSize + 8 };
 }
+
+/**
+ * Axis-aligned bounding box of a w x h box rotated by `angleRad`.
+ *
+ * Dimension labels are rotated to lie along their own dimension line, but
+ * {@link declutter} and {@link overlaps} reason about axis-aligned boxes. Given
+ * the unrotated glyph box, those two would consider a steeply rotated label to
+ * be a thin horizontal sliver and let it sit on top of anything it is not
+ * parallel to — which is exactly what a three-quarter view is full of. Feeding
+ * them this box instead makes the footprint honest.
+ *
+ * A 70 x 12 label at 45 degrees occupies a 58 x 58 square, not 70 x 12.
+ *
+ * @param {number} w
+ * @param {number} h
+ * @param {number} angleRad
+ * @returns {{w: number, h: number}}
+ */
+export function rotatedBox(w, h, angleRad) {
+    const c = Math.abs(Math.cos(angleRad));
+    const s = Math.abs(Math.sin(angleRad));
+    return { w: w * c + h * s, h: w * s + h * c };
+}

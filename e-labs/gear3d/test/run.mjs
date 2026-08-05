@@ -44,6 +44,7 @@ import {
     buildSnapPoints, nearestSnapPoint, inferAxis, dimensionFromSnaps
 } from '../src/annotate/snapping.js';
 import { dimensionValue } from '../src/annotate/dimensions.js';
+import { rotatedBox, overlaps, declutter } from '../src/annotate/projection.js';
 import {
     chassisEnvelope, profileFor, WIDTH_LIMIT_MM, HEIGHT_LIMIT_MM
 } from '../src/geometry/chassis.js';
@@ -1273,6 +1274,72 @@ test('the export transform preserves handedness, so no normal is inverted', () =
         + a[2] * (b[0] * c[1] - b[1] * c[0]);
     assert(det > 0, `determinant must be positive, got ${det}`);
     assertClose(det, 1e9, 1, 'a pure rotation scaled by 1000 in each axis');
+});
+
+/* ============================================================
+   12b-v. Annotation label placement
+   ------------------------------------------------------------
+   projection.js is pure by design so this can run under Node.
+   It had no coverage until the rotated-footprint fix.
+   ============================================================ */
+
+group('12b-v. Annotation label placement');
+
+test('a rotated label reports the footprint it actually occupies', () => {
+    // Unrotated, the box is itself.
+    let b = rotatedBox(70, 12, 0);
+    assertClose(b.w, 70, 1e-9, 'width at 0 deg');
+    assertClose(b.h, 12, 1e-9, 'height at 0 deg');
+
+    // At 90 degrees it is on its side.
+    b = rotatedBox(70, 12, Math.PI / 2);
+    assertClose(b.w, 12, 1e-9, 'width at 90 deg');
+    assertClose(b.h, 70, 1e-9, 'height at 90 deg');
+
+    // At 45 degrees a long thin label becomes very nearly square, and much
+    // TALLER than the 12 px the glyph box claims. This is the case that let
+    // dimension values pile up on each other in three-quarter views.
+    b = rotatedBox(70, 12, Math.PI / 4);
+    assertClose(b.w, (70 + 12) / Math.SQRT2, 1e-9, 'width at 45 deg');
+    assertClose(b.h, (70 + 12) / Math.SQRT2, 1e-9, 'height at 45 deg');
+    assert(b.h > 12 * 4, 'the rotated height must dwarf the glyph height');
+
+    // Sign of the angle cannot matter — a box rotated -30 covers the same
+    // area as one rotated +30.
+    const p = rotatedBox(70, 12, Math.PI / 6);
+    const n = rotatedBox(70, 12, -Math.PI / 6);
+    assertClose(p.w, n.w, 1e-9, 'width is symmetric in the angle');
+    assertClose(p.h, n.h, 1e-9, 'height is symmetric in the angle');
+});
+
+test('the rotated footprint is what makes declutter separate angled labels', () => {
+    // Two 70x12 labels 20 px apart vertically, both rotated 45 degrees. As
+    // flat glyph boxes they do not overlap, so nothing moves and they render
+    // on top of one another. As rotated footprints they clearly overlap.
+    const flatA = { id: 'a', x: 100, y: 100, w: 70, h: 12, ox: 0, oy: 1 };
+    const flatB = { id: 'b', x: 100, y: 120, w: 70, h: 12, ox: 0, oy: 1 };
+    assert(!overlaps(flatA, flatB, 2), 'flat boxes 20 px apart do not overlap');
+
+    const r = rotatedBox(70, 12, Math.PI / 4);
+    const rotA = { id: 'a', x: 100, y: 100, w: r.w, h: r.h, ox: 0, oy: 1 };
+    const rotB = { id: 'b', x: 100, y: 120, w: r.w, h: r.h, ox: 0, oy: 1 };
+    assert(overlaps(rotA, rotB, 2), 'the same labels, rotated, do overlap');
+
+    // And declutter must then actually separate them.
+    declutter([rotA, rotB], { step: 16 });
+    assert(!overlaps(rotA, rotB, 2),
+        `declutter must resolve the overlap, got a at ${rotA.y} and b at ${rotB.y}`);
+});
+
+test('declutter leaves a hand-placed label where it was put', () => {
+    // Dragging a callout and having the layout shove it back is the bug this
+    // priority exists to prevent; it is worth a test of its own.
+    const pinned = { id: 'user', x: 200, y: 200, w: 80, h: 16, ox: 1, oy: -1, priority: 100 };
+    const auto = { id: 'auto', x: 205, y: 204, w: 80, h: 16, ox: 1, oy: -1, priority: 0 };
+    declutter([auto, pinned], { step: 14 });
+    assertEqual(pinned.x, 200, 'pinned x');
+    assertEqual(pinned.y, 200, 'pinned y');
+    assert(!overlaps(pinned, auto, 2), 'the automatic label must be the one that moved');
 });
 
 /* ============================================================

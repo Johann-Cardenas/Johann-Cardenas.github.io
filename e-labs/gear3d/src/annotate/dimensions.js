@@ -29,7 +29,7 @@
 
 'use strict';
 
-import { projectEng, projectSegment, foreshorteningDeg, pixelsPerMm, declutter, estimateTextBox } from './projection.js';
+import { projectEng, projectSegment, foreshorteningDeg, pixelsPerMm, declutter, estimateTextBox, rotatedBox } from './projection.js';
 import { formatLength, formatForce, UNIT_SYSTEMS } from '../core/units.js';
 
 /** Below this angle a dimension starts to fade. */
@@ -339,12 +339,18 @@ export function renderDimensions(svg, dims, o) {
         });
 
         const size = estimateTextBox(text, font);
+        // The label is drawn rotated to lie along its dimension line, so the
+        // footprint the declutter pass must avoid is the ROTATED box. Passing
+        // the flat glyph box lets a steeply angled label be treated as a thin
+        // horizontal sliver, which is why values used to sit on top of each
+        // other and on the tires in any three-quarter view.
+        const foot = rotatedBox(size.w, size.h, geom.angle);
         staged.push({
             d,
             geom: { ...geom, opacity, text },
             box: {
                 id: d.id, x: geom.labelX, y: geom.labelY,
-                w: size.w, h: size.h,
+                w: foot.w, h: foot.h,
                 priority: d.priority ?? 0,
                 ox: geom.normX, oy: geom.normY
             }

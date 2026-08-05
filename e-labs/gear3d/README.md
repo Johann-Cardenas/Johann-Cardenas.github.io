@@ -258,7 +258,10 @@ callouts, material controls and the quad view.
 
 **v1.5** adds per-tire measured contact-patch overrides and glTF/OBJ geometry
 export. **v1.6** adds the three wing-plus-body aircraft, closing the build spec.
-**v1.6.1** corrects the 767-400ER main gear dual spacing to the FAARFIELD value
+**v1.7** is a visual pass: chrome drawn on the figure now follows the figure
+rather than the app theme, the viewport is composed as a sheet, and dimension
+labels are decluttered by their true rotated footprint. **v1.6.1** corrects the
+767-400ER main gear dual spacing to the FAARFIELD value
 (1143 → 1163 mm), dropping its tread cross-check residual from 26 mm to 6 mm.
 The outer tire edge is unmoved — the authoritative outer width is held, so the
 correction is absorbed inside it — while the inboard tire shifts 20 mm and the
@@ -322,6 +325,39 @@ aircraft could reveal:
 
 `SOURCES.md` §5.5 records both, plus two places where the FAA database
 disagrees with the manufacturers and the manufacturers are followed.
+
+## Interface (v1.7)
+
+The design system did not change — no new colours, no new controls. What
+changed is craft.
+
+**Chrome on the figure follows the figure.** The viewport shows publication
+white in both themes, because it is a preview of the exported figure and the
+annotation halo depends on that. The HUD and axis badge were nonetheless
+themed, so dark mode put near-black pills on white paper. They now take their
+colours from `--g3-fig-*`, declared on the viewport itself. The rule: on the
+figure, follow the figure; on the interface, follow the theme.
+
+**The viewport is a sheet.** Given an edge, a mat and a lift, the white plate
+reads as drafting film on a desk rather than a hole in the interface. The mat
+is a shadow ring, not padding — see `DECISIONS.md` §D25 for why padding would
+silently misalign every dimension line.
+
+**Labels stop colliding.** Dimension values are rotated along their dimension
+lines, but the declutter pass was testing their *unrotated* boxes and so let
+steeply angled labels overlap. Measured before and after: a five-dimension
+truck went from overlapping labels at the default camera to zero overlapping
+pairs at four orbits.
+
+**Chrome recedes until asked for.** The structure tree's isolate buttons appear
+on hover and keyboard focus instead of stacking twenty identical icons down one
+edge, and nested rows get depth guides so a wheel's parent axle is readable at
+a glance.
+
+Plus: selects carry a chevron and ellipsis instead of clipping mid-word,
+section headers stay put while their contents scroll, the idle coordinate
+readout collapses instead of showing a lone dash, and the floating HUD stands
+down in quad view where it was covering the PLAN pane's own label.
 
 ## Materials
 

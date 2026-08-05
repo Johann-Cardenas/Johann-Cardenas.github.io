@@ -239,7 +239,10 @@ function setupViewport() {
             const e = { x: hit.point.z * 1000, y: hit.point.x * 1000, z: hit.point.y * 1000 };
             el.textContent = `x ${e.x.toFixed(0)}  y ${e.y.toFixed(0)}  z ${e.z.toFixed(0)} mm`;
         } else {
-            el.textContent = '—';
+            // Empty, not an em dash. A readout showing a lone dash reads as a
+            // broken field; an empty one collapses itself and its separator
+            // (see .g3-status-item:empty in styles.css) and reads as idle.
+            el.textContent = '';
         }
     };
 
@@ -2279,6 +2282,9 @@ function updateStatus() {
             : `${VIEW_META[v.mode].label} · locked`;
     $('g3-hud').textContent = `${app.store.doc.unit?.designation || app.store.doc.unit?.model || ''} · `
         + `${app.layout.wheels.length} tires`;
+    // Quad draws a label into every pane; the floating HUD occupies the same
+    // corner as the first of them. CSS hides it while tiled.
+    $('g3-viewport').classList.toggle('is-quad', v.mode === 'quad');
     syncCameraFields();
 }
 

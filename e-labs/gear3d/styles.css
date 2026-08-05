@@ -749,6 +749,211 @@
 }
 
 /* ============================================================
+   VISUAL REFINEMENT (v1.7)
+   ------------------------------------------------------------
+   A craft pass over the existing system. It introduces no new
+   colours and no new controls: every rule below reuses the tokens
+   declared at the top of this file. Three ideas run through it.
+
+   1. THE VIEWPORT IS A SHEET, NOT A HOLE.
+      The figure background is publication white by deliberate
+      decision — the annotation halo in annotate/dimensions.js
+      depends on it, so that a figure exported on white while the
+      app runs dark does not get a dark halo swallowing its own
+      text. That decision is right, and it means the dark theme
+      shows a white plate. Unavoidable is not the same as
+      accidental: given an edge, a lift and a mat, the plate reads
+      as drafting film lying on a desk rather than a hole punched
+      through the interface.
+
+      DO NOT ADD PADDING TO .g3-viewport. The SVG annotation
+      overlay is inset:0, which resolves against the PADDING box,
+      while the canvas fills the CONTENT box. Padding would
+      silently offset every dimension line from the geometry it
+      measures — the failure would look like a projection bug and
+      would be hunted for in the maths. Border and box-shadow do
+      not have this problem, which is why the mat below is a
+      shadow ring.
+
+   2. CHROME DRAWN OVER THE FIGURE FOLLOWS THE FIGURE.
+      The HUD, the axis badge and the scale bar sit on the white
+      plate, not on the app surface, so they take the figure's
+      colours rather than the theme's. This is the same rule the
+      label halo already follows. Without it, the dark theme puts
+      near-black pills on white paper — high-contrast blocks that
+      read as heavier than the drawing they annotate.
+
+   3. CHROME RECEDES UNTIL ASKED FOR.
+      Twenty identical isolate buttons down one edge of the
+      structure tree is noise the eye filters on every glance. They
+      appear on hover and on keyboard focus, and stay visible on
+      the selected row.
+   ============================================================ */
+
+/* ---- 1. The sheet ---------------------------------------- */
+
+.g3-viewport {
+    /* Colours for anything drawn ON the figure. Held here, on the
+       element that owns the plate, so the HUD cannot drift from it. */
+    --g3-fig-paper: #ffffff;
+    --g3-fig-ink: #16202b;
+    --g3-fig-muted: #5c6b7a;
+    --g3-fig-rule: #ccd5dd;
+
+    border-color: var(--g3-rule-strong);
+    /* The ring is the mat; the drop is the lift off the desk. A ring
+       rather than padding, for the reason in the header above. */
+    box-shadow:
+        0 0 0 4px var(--g3-inset),
+        0 8px 22px -14px rgba(0, 0, 0, .40);
+}
+
+[data-theme="dark"] .g3-viewport {
+    box-shadow:
+        0 0 0 4px var(--g3-inset),
+        0 14px 34px -16px rgba(0, 0, 0, .85);
+}
+
+/* ---- 2. Instrument chrome -------------------------------- */
+
+.g3-hud, .g3-hud-right, .g3-axisbadge {
+    color: var(--g3-fig-muted);
+    background: color-mix(in srgb, var(--g3-fig-paper) 82%, transparent);
+    border-color: color-mix(in srgb, var(--g3-fig-rule) 85%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 1px 2px rgba(22, 32, 43, .06);
+    letter-spacing: .015em;
+}
+
+.g3-axisbadge b { color: var(--g3-datum-hover); }
+
+/* In quad view every pane carries its own label, drawn into the SVG
+   at the pane's top-left. The floating HUD sits at the viewport's
+   top-left, which is the PLAN pane's corner, and covers it. Quad
+   already states what it is in the right-hand HUD, so the left one
+   stands down rather than fighting for the same 40 pixels. */
+.g3-viewport.is-quad .g3-hud { opacity: 0; pointer-events: none; }
+
+.g3-progress {
+    background: color-mix(in srgb, var(--g3-fig-paper) 80%, transparent);
+}
+.g3-progress-label { color: var(--g3-fig-muted); }
+
+/* ---- 3. Controls ----------------------------------------- */
+
+.g3-select {
+    -webkit-appearance: none;
+    appearance: none;
+    padding-right: 1.4rem;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    /* A select with no chevron reads as a text input the user cannot
+       type into. Neutral grey so one mark serves both themes. */
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238b98a5' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right .45rem center;
+    background-size: 9px 6px;
+}
+.g3-select::-ms-expand { display: none; }
+
+.g3-select:hover, .g3-num:hover, .g3-text:hover {
+    border-color: var(--g3-rule-strong);
+}
+
+/* The model and class names are long — 'Class 9 — Five-axle
+   single-trailer truck' — and were being cut mid-word by a label
+   column sized for 'Domain'. Narrower label, more room for the
+   value, and an ellipsis when it still does not fit. */
+.g3-field label { flex-basis: 62px; }
+
+/* ---- 4. Structure tree ----------------------------------- */
+
+.g3-node { position: relative; transition: background-color .1s ease; }
+
+/* Depth guides. Indentation alone leaves the eye counting pixels to
+   work out which axle a wheel belongs to. */
+.g3-node[data-depth="1"]::before,
+.g3-node[data-depth="2"]::before,
+.g3-node[data-depth="3"]::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: var(--g3-rule);
+}
+.g3-node[data-depth="1"]::before { left: .95rem; }
+.g3-node[data-depth="2"]::before { left: 1.85rem; }
+.g3-node[data-depth="3"]::before { left: 2.75rem; }
+
+.g3-node.is-selected { border-left-width: 2px; }
+.g3-node.is-selected .g3-node-tag { color: var(--g3-signal); }
+
+.g3-node-iso {
+    opacity: 0;
+    transition: opacity .12s ease, color .12s ease;
+}
+/* Hidden by opacity, not display, so it keeps its place in the tab
+   order and does not reflow the row when it appears. */
+.g3-node:hover .g3-node-iso,
+.g3-node.is-selected .g3-node-iso,
+.g3-node-iso:focus-visible { opacity: 1; }
+
+/* ---- 5. Panels ------------------------------------------- */
+
+/* Section headers hold their place while their contents scroll, so
+   a long dimension list never leaves you wondering which section
+   you are reading. */
+.g3-panel summary {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--g3-surface);
+}
+
+.g3-panel, .g3-tree, .g3-props {
+    scrollbar-width: thin;
+    scrollbar-color: var(--g3-rule-strong) transparent;
+}
+.g3-panel::-webkit-scrollbar,
+.g3-tree::-webkit-scrollbar,
+.g3-props::-webkit-scrollbar { width: 10px; }
+.g3-panel::-webkit-scrollbar-track,
+.g3-tree::-webkit-scrollbar-track,
+.g3-props::-webkit-scrollbar-track { background: transparent; }
+.g3-panel::-webkit-scrollbar-thumb,
+.g3-tree::-webkit-scrollbar-thumb,
+.g3-props::-webkit-scrollbar-thumb {
+    background: var(--g3-rule);
+    border: 3px solid var(--g3-surface);
+    border-radius: 5px;
+}
+.g3-panel:hover::-webkit-scrollbar-thumb,
+.g3-tree:hover::-webkit-scrollbar-thumb,
+.g3-props:hover::-webkit-scrollbar-thumb { background: var(--g3-rule-strong); }
+
+/* ---- 6. Status bar --------------------------------------- */
+
+/* A readout with nothing to report showed a lone em dash, which
+   reads as a broken field rather than an idle one. main.js now
+   empties it, and an empty readout takes its separator with it. */
+.g3-status-item:empty { display: none; }
+.g3-status-item:empty + .g3-status-sep,
+.g3-status-sep:has(+ .g3-status-item:empty) { display: none; }
+.g3-status-item { letter-spacing: .01em; }
+
+/* The axle/tire count is a single reading and must not break across two
+   lines when the rail narrows; the header lets it win the space instead. */
+.g3-tree-total { white-space: nowrap; }
+.g3-tree-head h3 { min-width: 0; }
+
+/* ---- 7. Motion ------------------------------------------- */
+
+.g3-btn, .g3-icon-btn, .g3-vtab, .g3-uswitch {
+    transition: color .12s ease, background-color .12s ease, border-color .12s ease;
+}
+
+/* ============================================================
    SITE BUTTON OVERRIDES
    ------------------------------------------------------------
    The site-wide stylesheet styles bare <button> with a teal
