@@ -135,13 +135,13 @@
         },
         {
           "id": "MLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
-          "x": 26152, "y": -4661, "dualSpacing": 1143, "tandemSpacing": 1422,
+          "x": 26152, "y": -4651, "dualSpacing": 1163, "tandemSpacing": 1422,
           "tire": "50x20.0R22",
-          "source": "Longitudinal position = the FAA wheelbase of 85.8 ft (26 152 mm). Transverse position derived from the FAA main gear outer width of 36.0 ft (10 973 mm): track = 10973 - 1143 - 508 = 9322 mm, strut centreline at 4661 mm. That agrees with Boeing's published 767 tread of 30 ft 6 in (9296 mm) to within 26 mm, supporting the 1143 mm (45 in) dual spacing. Tire 50x20.0R22, 32PR from Boeing 767 ACAP section 7.2.3. ASSUMED: tandem spacing 1422 mm (56 in), declared in assumedFields."
+          "source": "Longitudinal position = the FAA wheelbase of 85.8 ft (26 152 mm). Transverse position derived from the FAA main gear outer width of 36.0 ft (10 973 mm): track = 10973 - 1163 - 508 = 9302 mm, strut centreline at 4651 mm. That agrees with Boeing's published 767 tread of 30 ft 6 in (9296 mm) to within 6 mm. Tire 50x20.0R22, 32PR from Boeing 767 ACAP section 7.2.3. CORRECTED in v1.6.1: this entry previously carried a dual spacing of 1143 mm, taken as a round 45 in because no consulted source stated it. The FAARFIELD 2.1.1 aircraft library gives 45.800 in (1163.32 mm) as an explicit wheel coordinate (X +/-22.900 in), and it is the better number in the strongest available sense — because the track is DERIVED from the dual spacing, the error propagated, and 1143 was what made this aircraft's tread cross-check the worst of the four at 26 mm against 12, -13 and -10 for the others. At 1163 the residual falls to 6 mm and the outlier disappears. What moves: the OUTBOARD tire of each dual pair does not move at all, because the FAA outer width is the authoritative datum and is held; the INBOARD tire moves 20 mm inboard, and the strut centreline 10 mm. That is the derivation behaving exactly as intended — a corrected dual spacing is absorbed inside the fixed outer width rather than displacing the whole gear. ASSUMED: tandem spacing 1422 mm (56 in), declared in assumedFields; FAARFIELD gives 54.000 in for this too, but replacing it is a separate change and is not made here."
         },
         {
           "id": "MLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
-          "x": 26152, "y": 4661, "dualSpacing": 1143, "tandemSpacing": 1422,
+          "x": 26152, "y": 4651, "dualSpacing": 1163, "tandemSpacing": 1422,
           "tire": "50x20.0R22",
           "source": "Mirror of MLG-L about the aircraft centreline; same derivation."
         }
@@ -150,7 +150,7 @@
       "sources": [
         { "id": "faa-acd", "title": "Aircraft Characteristics Database (Boeing 767-400)", "publisher": "U.S. Federal Aviation Administration", "url": "https://www.faa.gov/airports/engineering/aircraft_char_database", "note": "Gear config 2D; wheelbase 85.8 ft; main gear width 36.0 ft; MTOW 450 000 lb." },
         { "id": "boeing-767-acap", "title": "767 Airplane Characteristics for Airport Planning, D6-58328 Rev K", "publisher": "Boeing Commercial Airplanes", "year": 2024, "note": "Section 7.2.3 landing gear footprint for the 767-400ER." },
-        { "id": "ac-6g", "title": "AC 150/5320-6G Appendix G, G.1.3", "publisher": "U.S. Federal Aviation Administration", "note": "Percent gross weight on the whole main gear: 0.95." }
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entry B767-400 ER", "publisher": "U.S. Federal Aviation Administration", "note": "Explicit main gear wheel coordinates X +/-22.900 in, Y 0 and 54.000 in. Source of the corrected 45.800 in (1163 mm) dual spacing in v1.6.1, replacing a round 45 in that no document stated." },        { "id": "ac-6g", "title": "AC 150/5320-6G Appendix G, G.1.3", "publisher": "U.S. Federal Aviation Administration", "note": "Percent gross weight on the whole main gear: 0.95." }
       ]
     },
 

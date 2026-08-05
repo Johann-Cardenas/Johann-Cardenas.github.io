@@ -258,6 +258,12 @@ callouts, material controls and the quad view.
 
 **v1.5** adds per-tire measured contact-patch overrides and glTF/OBJ geometry
 export. **v1.6** adds the three wing-plus-body aircraft, closing the build spec.
+**v1.6.1** corrects the 767-400ER main gear dual spacing to the FAARFIELD value
+(1143 → 1163 mm), dropping its tread cross-check residual from 26 mm to 6 mm.
+The outer tire edge is unmoved — the authoritative outer width is held, so the
+correction is absorbed inside it — while the inboard tire shifts 20 mm and the
+strut 10 mm. The cross-check tolerance that let a 26 mm error pass for four
+releases is tightened from 40 mm to 15 mm.
 
 ## Quad view
 

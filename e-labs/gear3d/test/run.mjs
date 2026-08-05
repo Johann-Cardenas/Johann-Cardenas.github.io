@@ -1397,8 +1397,20 @@ test('DERIVATION: main gear geometry reproduces the FAA outer width exactly', ()
 test('CROSS-CHECK: the derived track matches each manufacturer\'s published tread', () => {
     // Independent corroboration that the dual spacings are right: nothing in
     // the derivation uses the published tread, so agreement is a real check
-    // rather than a tautology. Tolerance is generous because the published
-    // treads are quoted to the nearest inch.
+    // rather than a tautology.
+    //
+    // TOLERANCE IS 15 mm, AND THAT NUMBER IS THE POINT. This assertion
+    // originally allowed 40 mm, on the reasoning that the treads are quoted to
+    // the nearest inch. But the 767-400ER was out by 26 mm and passed —
+    // a corroboration test whose tolerance exceeds the error it exists to
+    // catch corroborates nothing. The 26 mm was a wrong dual spacing (1143 mm,
+    // taken as a round 45 in because no document stated it; FAARFIELD gives
+    // 45.800 in), and it was visibly the worst of the four the whole time.
+    //
+    // Rounding to the nearest inch can only account for about 13 mm here, and
+    // the four residuals are +12.3, -12.9, +6.0 and -10.4. 15 mm admits the
+    // rounding and nothing else. Widening this bound to make a future aircraft
+    // pass would be reintroducing exactly this bug.
     const publishedTread = {
         'b737-800': 5715,      // Boeing: 18 ft 9 in
         'b757-200': 7315,      // Boeing: 24 ft 0 in
@@ -1409,9 +1421,36 @@ test('CROSS-CHECK: the derived track matches each manufacturer\'s published trea
         const u = aircraftUnits.find((x) => x.id === id);
         assert(u, `${id} missing from the library`);
         const l = resolveLayout(u);
-        assertClose(l.derived.mainGearTrack, tread, 40,
+        assertClose(l.derived.mainGearTrack, tread, 15,
             `${id}: derived track vs published tread`);
     }
+});
+
+test('the 767-400ER dual spacing is the FAARFIELD value, not a rounded guess', () => {
+    // Pinned deliberately. This is the number the v1.6.1 correction turned on,
+    // and because the track is DERIVED from it, a silent revert would move
+    // every 767 main wheel 10 mm per side while every other check still passed.
+    const u = aircraftUnits.find((x) => x.id === 'b767-400er');
+    const mlg = u.gears.filter((g) => g.role === 'main');
+    for (const g of mlg) {
+        assertEqual(g.dualSpacing, 1163, `${g.id} dual spacing (45.800 in per FAARFIELD)`);
+        assertEqual(Math.abs(g.y), 4651, `${g.id} strut centreline re-derived from the corrected spacing`);
+    }
+    // And the geometry must still close the authoritative outer width exactly.
+    assert(validateUnit(u).ok, '767-400ER must validate after the correction');
+    const l = resolveLayout(u);
+    assertClose(l.derived.mainGearTrack, 9302, 1, 'derived track');
+
+    // The property that makes correcting a dual spacing safe: the FAA outer
+    // width is held, so the change is absorbed INSIDE it. The outboard tire
+    // edge does not move. Before the correction the outer tire sat at the same
+    // 5232.5 mm it does now; only the inboard tire and the strut moved.
+    const ys = l.wheels.filter((w) => w.axleId !== 'NLG').map((w) => Math.abs(w.y));
+    assertClose(Math.max(...ys), 5232.5, 0.1, 'outboard tire centre is unmoved');
+    assertClose(Math.min(...ys), 4069.5, 0.1, 'inboard tire moved 20 mm inboard');
+    const sec = 508;  // 50x20.0R22 section width, mm
+    assertClose(2 * (Math.max(...ys) + sec / 2), u.mainGearOuterWidth, 1,
+        'outer tire EDGES still reproduce the authoritative outer width');
 });
 
 test('aircraft wheelbase is measured to the main gear centroid', () => {

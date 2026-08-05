@@ -219,20 +219,54 @@ circularity. With the dual spacings recorded in the data files:
 
 | Aircraft | Derived track | Manufacturer published tread | Difference |
 |---|---|---|---|
-| 737-800 | 5727 mm | 5715 mm (18 ft 9 in) | 12 mm |
-| 757-200 | 7302 mm | 7315 mm (24 ft 0 in) | 13 mm |
-| 767-400ER | 9322 mm | 9296 mm (30 ft 6 in) | 26 mm |
-| 777-300ER | 10 963 mm | 10 973 mm (36 ft 0 in) | 10 mm |
+| 737-800 | 5727 mm | 5715 mm (18 ft 9 in) | +12 mm |
+| 757-200 | 7302 mm | 7315 mm (24 ft 0 in) | −13 mm |
+| 767-400ER | 9302 mm | 9296 mm (30 ft 6 in) | +6 mm |
+| 777-300ER | 10 963 mm | 10 973 mm (36 ft 0 in) | −10 mm |
 
-All four agree to within a few centimetres, on quantities of 6 to 11 metres.
-`test/run.mjs` asserts both the derivation and this cross-check.
+All four agree to within about 13 mm, on quantities of 6 to 11 metres — which
+is roughly what quoting a tread to the nearest inch can account for, and no
+more. `test/run.mjs` asserts both the derivation and this cross-check, at a
+**15 mm** tolerance.
+
+#### The 767-400ER was wrong until v1.6.1, and this table is how it showed
+
+The 767 row previously read **9322 mm, 26 mm** — twice any other residual, and
+the only one this rounding argument could not explain. It was recorded as
+"agreeing to within a few centimetres" and left alone.
+
+It was not rounding. Its dual spacing was **1143 mm**, taken as a round 45 in
+because no consulted document stated it. FAARFIELD 2.1.1 stores the 767-400 ER
+main gear wheel coordinates explicitly as X ±22.900 in, i.e. **45.800 in
+(1163 mm)**. Because the track is *derived* from the dual spacing, that error
+propagated straight into the geometry. Correcting it drops the residual from
+26 mm to 6 mm and removes the outlier.
+
+What actually moved is worth stating precisely, because it shows the
+derivation behaving as designed: the **outboard tire of each dual pair did not
+move at all**. The FAA outer width is the authoritative datum and is held, so a
+corrected dual spacing is absorbed *inside* it — the inboard tire moves 20 mm
+inboard and the strut centreline 10 mm, while the outer tire edge stays put.
+This is the same property 5.4 relies on when it says the outer width is
+preserved whatever dual spacing you enter.
+
+Two things are worth taking from this beyond the number:
+
+- **A cross-check is only as good as its tolerance.** The test that existed to
+  catch this allowed 40 mm, so a 26 mm error passed for four releases. A bound
+  looser than the error it guards against is decoration. It is now 15 mm.
+- **The largest residual was visible the whole time and was rationalised.**
+  The table above published the 26 mm figure in every release since v1.2; what
+  was missing was treating an outlier as a defect rather than as noise.
 
 ### 5.4 Assumed — declared, and shown in the app
 
 **On the original four aircraft**, two quantities are **not** constrained by
 any source consulted:
 
-- **Nose gear dual spacing.** Nothing published pins it down.
+- **Nose gear dual spacing.** Nothing published pins it down. FAARFIELD does
+  not help here: it stores main gear only, because that is what its pavement
+  analysis needs.
 - **Tandem spacing** on 2D and 3D gears. The wheelbase is measured to the main
   gear *centroid*, so the spread within a bogie does not move it, and no other
   figure constrains it.
