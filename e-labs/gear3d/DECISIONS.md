@@ -239,6 +239,76 @@ that is quietly wrong. Single-view tiling is untouched.
 
 ---
 
+## D27. Text contrast is a token property, and it is tested (v1.8)
+
+`--g3-muted` shipped from v1.0 to v1.7 at **2.72:1** against the light theme's
+panel. WCAG AA wants 4.5:1 for text that size. It failed on *every* background
+in that theme — 2.50:1 on a raised surface, 2.32:1 on an inset — and it colours
+55 elements: the title-block labels, every definition term in the unit stats,
+the tree's tags, the panel notes. The dark theme was marginal at 4.06:1 rather
+than badly wrong, which is probably why it survived: the app is usually looked
+at in dark mode.
+
+Both are raised. Light muted goes to `#5a6774` (4.56:1 at worst, on `--g3-inset`,
+which is the darkest surface it is drawn on — not the panel, which is the one
+you would naively check). Dark goes to `#7d8f9d`. All 16 uses of the token are
+`color:`, so nothing decorative moved.
+
+**Raising muted alone would have flattened the hierarchy.** Light graphite sat
+at 5.05:1 and muted would have landed at 5.34:1 — the "secondary" tier would
+have out-weighted the primary one. Graphite is darkened to `#465564` (7.06:1)
+to keep the two tiers a clear step apart, and a test asserts that gap stays.
+
+### Two things this exposed about where colours are judged
+
+- **The wordmark is measured against the wrong thing if you measure it against
+  the panel.** `Gear3D`'s teal `3D` sits on `.g3-tb-mark`, the inset tile,
+  which is darker than the panel behind it — 2.66:1 by the panel's reckoning,
+  and the first correction computed against the panel still left it at 3.89:1.
+  It is `#107271` now, 4.51:1 against the tile it is actually on. WCAG exempts
+  logotypes, so this is legibility rather than compliance: at 2.27:1 the `3D`
+  faded next to `Gear` and read as a rendering fault rather than as branding.
+- **The axis badge was still using a theme token on the figure.** D25 set the
+  rule — chrome on the figure follows the figure — and the badge's `<b>` was
+  missed: `--g3-datum-hover` manages 3.88:1 on white in the light theme and
+  2.88:1 in the dark one, because it is tuned for panels. There is now a
+  `--g3-fig-datum` (`#138483`, 4.51:1) alongside the other figure tokens.
+
+### Why this is a test and not a note
+
+A token is one edit from regressing and the regression is invisible to every
+other check in the suite — and to the eye, which is exactly the problem: 2.72:1
+does not look broken, it looks slightly soft. `test/run.mjs` now parses
+`styles.css`, extracts each theme's custom properties, and asserts every text
+token against every surface it is drawn on, plus the figure tokens against the
+figure. Verified by reverting the old value: the suite fails with
+`--g3-muted (#8b98a5) on --g3-surface (#f4f6f8) is 2.72:1, needs 4.5`.
+
+Measured across the whole interface afterwards: **55 failures to 0, in both
+themes.**
+
+---
+
+## D28. The structure tree is one tab stop, not nineteen (v1.8)
+
+The tree is correctly marked up — `role="tree"`, `role="treeitem"` — but every
+node carried `tabIndex = 0`. A 5-axle truck put 19 tab stops in that panel and
+an A380 puts 28, all of which a keyboard user had to walk through to reach
+anything after the tree. The ARIA practice for a tree is the opposite: the
+whole tree is a **single** tab stop and the arrow keys move within it.
+
+So: roving tabindex. Exactly one node is tabbable — the selected row if there
+is one, otherwise the first — and Up/Down/Home/End move focus and the tab stop
+together. The handler is bound to the container, not to each node, because the
+tree is rebuilt wholesale on every selection change and per-node handlers would
+be re-attached each time.
+
+Nodes also now carry `aria-selected`. Selection had been communicated by colour
+alone, so a screen reader user could move through the tree without ever being
+told which row was current.
+
+---
+
 ## D25. Chrome drawn on the figure follows the figure, not the theme (v1.7)
 
 The viewport shows publication white in both themes. That is deliberate and it

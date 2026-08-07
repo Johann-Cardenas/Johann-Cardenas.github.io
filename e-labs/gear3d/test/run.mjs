@@ -58,6 +58,10 @@ const DATA = join(HERE, '..', 'src', 'data');
 /** @param {string} p @returns {any} */
 const readJson = (p) => JSON.parse(readFileSync(p, 'utf8'));
 
+/** @param {string} p @returns {string} */
+const readText = (p) => readFileSync(p, 'utf8');
+const ROOT = join(HERE, '..');
+
 /* ---------- load the data library once ---------- */
 
 const tireTable = readJson(join(DATA, 'tires.json'));
@@ -1824,6 +1828,115 @@ test('the Abaqus export states that it is not a runnable deck', () => {
     assert(inp.includes('PARAMETER TABLE'), 'must say what it is');
     assert(inp.includes('area_ratio'), 'must expose the bounding-rectangle area ratio');
     assert(inp.split('\n').filter((l) => /^[A-Za-z]/.test(l)).length >= 18, 'one data row per tire');
+});
+
+
+/* ============================================================
+   14. Design tokens — text contrast
+   ------------------------------------------------------------
+   styles.css is data as far as this check is concerned: the
+   theme blocks are parsed and the colour pairs are computed.
+   No DOM, no browser.
+
+   This exists because --g3-muted spent five releases at 2.72:1
+   on the light panel — below the WCAG AA minimum on EVERY
+   background in that theme, across 55 elements — and nothing
+   could tell. A token is one edit away from regressing, and a
+   regression here is invisible to every other test in this file.
+   ============================================================ */
+
+group('14. Design tokens — text contrast');
+
+/** @param {number[]} c @returns {number} */
+function relLuminance(c) {
+    const [r, g, b] = c.map((v) => {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** @param {string} h @returns {number[]} */
+function hexRGB(h) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(h.trim());
+    if (!m) throw new Error(`not a hex colour: ${h}`);
+    const n = parseInt(m[1], 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/** @param {string} a @param {string} b @returns {number} */
+function contrast(a, b) {
+    const l1 = relLuminance(hexRGB(a));
+    const l2 = relLuminance(hexRGB(b));
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+
+/**
+ * Pull one theme's custom properties out of the stylesheet.
+ * @param {string} css
+ * @param {string} selector
+ * @returns {Record<string,string>}
+ */
+function themeTokens(css, selector) {
+    const i = css.indexOf(selector);
+    if (i < 0) throw new Error(`theme block not found: ${selector}`);
+    const body = css.slice(css.indexOf('{', i) + 1, css.indexOf('}', i));
+    /** @type {Record<string,string>} */
+    const out = {};
+    for (const m of body.matchAll(/(--g3-[\w-]+)\s*:\s*(#[0-9a-f]{6})/gi)) out[m[1]] = m[2];
+    return out;
+}
+
+const CSS = readText(join(ROOT, 'styles.css'));
+
+test('body text tokens clear WCAG AA on every surface they are drawn on', () => {
+    // 4.5:1 is the AA minimum for text below 18.66px bold / 24px regular, and
+    // everything these two tokens colour is small.
+    const AA = 4.5;
+    for (const [theme, sel] of [['light', '[data-theme="light"]'], ['dark', '[data-theme="dark"]']]) {
+        const t = themeTokens(CSS, sel);
+        const surfaces = ['--g3-surface', '--g3-surface-2', '--g3-paper', '--g3-inset'];
+        for (const ink of ['--g3-muted', '--g3-graphite', '--g3-ink']) {
+            for (const bg of surfaces) {
+                assert(t[ink] && t[bg], `${theme}: missing ${ink} or ${bg}`);
+                const c = contrast(t[ink], t[bg]);
+                assert(c >= AA,
+                    `${theme}: ${ink} (${t[ink]}) on ${bg} (${t[bg]}) is ${c.toFixed(2)}:1, needs ${AA}`);
+            }
+        }
+    }
+});
+
+test('the muted/graphite hierarchy stays visibly two steps wide', () => {
+    // Raising muted to clear AA could have collapsed it onto graphite, which
+    // would make every "secondary" label look primary. Graphite must stay
+    // clearly the stronger of the two.
+    for (const [theme, sel] of [['light', '[data-theme="light"]'], ['dark', '[data-theme="dark"]']]) {
+        const t = themeTokens(CSS, sel);
+        const g = contrast(t['--g3-graphite'], t['--g3-surface']);
+        const m = contrast(t['--g3-muted'], t['--g3-surface']);
+        assert(g > m * 1.15,
+            `${theme}: graphite ${g.toFixed(2)}:1 must stay clearly above muted ${m.toFixed(2)}:1`);
+    }
+});
+
+test('chrome drawn on the figure clears AA against the figure, not the theme', () => {
+    // --g3-fig-* colour the HUD and axis badge, which sit on the white plate
+    // whatever the interface theme is. They are declared once, outside the
+    // theme blocks, and must be judged against the figure's own paper.
+    const i = CSS.indexOf('--g3-fig-paper');
+    assert(i > 0, '--g3-fig-paper must be declared');
+    const block = CSS.slice(i - 400, i + 600);
+    /** @type {Record<string,string>} */
+    const fig = {};
+    for (const m of block.matchAll(/(--g3-fig-[\w-]+)\s*:\s*(#[0-9a-f]{6})/gi)) fig[m[1]] = m[2];
+
+    for (const ink of ['--g3-fig-ink', '--g3-fig-muted', '--g3-fig-datum']) {
+        assert(fig[ink], `${ink} must be declared`);
+        const c = contrast(fig[ink], fig['--g3-fig-paper']);
+        assert(c >= 4.5,
+            `${ink} (${fig[ink]}) on the figure is ${c.toFixed(2)}:1, needs 4.5`);
+    }
 });
 
 process.exit(summary());

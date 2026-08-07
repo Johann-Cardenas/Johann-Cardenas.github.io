@@ -46,8 +46,17 @@
     --g3-surface: #f4f6f8;
     --g3-surface-2: #e9edf1;
     --g3-inset: #dfe5ea;
-    --g3-graphite: #5c6b7a;
-    --g3-muted: #8b98a5;
+    /* Both raised to clear WCAG AA (4.5:1) on the DARKEST surface each is
+       drawn on, which is --g3-inset, not --g3-surface. The old --g3-muted
+       (#8b98a5) managed only 2.72:1 on the panel and 2.32:1 on an inset —
+       it failed on every background in this theme, across 55 elements.
+       Every one of the 16 uses of --g3-muted is a `color:`, so raising it
+       costs nothing decorative.
+       Graphite is darkened with it to keep the hierarchy two steps wide:
+       7.06:1 against muted's 5.34:1 on the panel. */
+    --g3-graphite: #465564;
+    --g3-muted: #5a6774;
+    --g3-wordmark: #107271;   /* 4.51:1 on --g3-inset, the mark tile it sits on */
     --g3-rule: #ccd5dd;
     --g3-rule-strong: #adb9c4;
     --g3-shadow: 0 1px 2px rgba(22, 32, 43, .07), 0 6px 16px rgba(22, 32, 43, .06);
@@ -65,7 +74,11 @@
     --g3-surface-2: #1d2732;
     --g3-inset: #121a22;
     --g3-graphite: #9fb0be;
-    --g3-muted: #6d7f8d;
+    /* 4.06:1 on the panel and 3.65:1 on a raised surface — marginal, and
+       still a failure. 4.53:1 at worst now. Graphite already passes at
+       7.55:1 and is left alone. */
+    --g3-muted: #7d8f9d;
+    --g3-wordmark: var(--g3-datum);
     --g3-rule: #2b3846;
     --g3-rule-strong: #3d4d5e;
     --g3-shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 22px rgba(0, 0, 0, .3);
@@ -174,7 +187,15 @@
     color: var(--g3-ink);
     line-height: 1;
 }
-.g3-tb-name b { color: var(--g3-datum); font-weight: 600; }
+/* The wordmark's teal. WCAG exempts logotypes from the contrast minimum, so
+   this is a legibility choice rather than a compliance one — at 2.66:1 on the
+   light panel the '3D' visibly faded next to 'Gear', which reads as a
+   rendering fault rather than as branding. Same hue, 4.51:1 measured
+   against --g3-inset — the mark tile it actually sits on, which is darker
+   than the panel behind it. The dark theme's
+   teal already sits at a comfortable ratio on its own surface and is left
+   alone. */
+.g3-tb-name b { color: var(--g3-wordmark); font-weight: 600; }
 
 .g3-tb-back {
     display: inline-flex;
@@ -799,6 +820,11 @@
     --g3-fig-ink: #16202b;
     --g3-fig-muted: #5c6b7a;
     --g3-fig-rule: #ccd5dd;
+    /* The datum teal, dark enough to read as small text ON THE FIGURE. The
+       theme's own --g3-datum-hover manages only 3.88:1 on white in the light
+       theme and 2.88:1 in the dark one, because it is tuned for panels, not
+       for paper. Same hue, 4.51:1. */
+    --g3-fig-datum: #138483;
 
     border-color: var(--g3-rule-strong);
     /* The ring is the mat; the drop is the lift off the desk. A ring
@@ -826,7 +852,7 @@
     letter-spacing: .015em;
 }
 
-.g3-axisbadge b { color: var(--g3-datum-hover); }
+.g3-axisbadge b { color: var(--g3-fig-datum); }
 
 /* In quad view every pane carries its own label, drawn into the SVG
    at the pane's top-left. The floating HUD sits at the viewport's

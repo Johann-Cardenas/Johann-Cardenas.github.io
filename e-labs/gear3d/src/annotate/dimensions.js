@@ -637,7 +637,11 @@ export function renderCallouts(svg, layout, o) {
         });
     }
 
-    declutter(boxes, { step: font + 8 });
+    // padding, not just step: with padding 2 the pass is satisfied the moment
+    // two callouts stop strictly overlapping, which leaves them stacked edge
+    // to edge with a hairline between and reads as one crowded block. 6 px of
+    // clearance is enough to see them as separate readings.
+    declutter(boxes, { step: font + 8, padding: 6 });
 
     for (const b of boxes) {
         const g = el('g', { class: 'g3-callout', 'data-axle-id': b.id });

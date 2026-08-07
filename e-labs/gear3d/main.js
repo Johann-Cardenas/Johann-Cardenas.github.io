@@ -154,6 +154,7 @@ async function boot() {
     setupProjectPanel();
     setupMeasure();
     setupCallouts();
+    setupTreeKeys();
     setupKeyboard();
 
     const saved = loadAutosave();
@@ -1691,9 +1692,17 @@ function renderTree() {
         el.className = 'g3-node';
         el.setAttribute('role', 'treeitem');
         el.setAttribute('data-depth', String(depth));
-        el.tabIndex = 0;
+        // Roving tabindex: a role="tree" is ONE tab stop, and the arrow keys
+        // move within it. Making every node tabbable put 19 stops in this
+        // panel on a 5-axle truck and 28 on an A380, which a keyboard user
+        // has to walk through to reach anything after it.
+        el.tabIndex = -1;
         if (data.axleId && !shown.has(data.axleId)) el.classList.add('is-dim');
-        if (data.axleId && data.axleId === app.selection.axleId && !data.groupOnly) el.classList.add('is-selected');
+        const isSel = !!(data.axleId && data.axleId === app.selection.axleId && !data.groupOnly);
+        if (isSel) el.classList.add('is-selected');
+        // The selection was communicated by colour alone; assistive tech had
+        // no way to know which row is current.
+        el.setAttribute('aria-selected', String(isSel));
         el.innerHTML = `<span>${esc(label)}</span><span class="g3-node-tag">${esc(tag)}</span>`;
 
         const iso2 = document.createElement('button');
@@ -1746,7 +1755,51 @@ function renderTree() {
         }
     }
 
+    // Exactly one node carries the tab stop: the selected row if there is one,
+    // otherwise the first. Re-established on every render because the tree is
+    // rebuilt wholesale.
+    const nodes = [...tree.querySelectorAll('.g3-node')];
+    const stop = nodes.find((n) => n.classList.contains('is-selected')) || nodes[0];
+    if (stop) stop.tabIndex = 0;
+
     $('g3-tree-total').textContent = `${app.layout.axles.length} axles · ${app.layout.wheels.length} tires`;
+}
+
+/**
+ * Arrow-key navigation for the structure tree, wired once.
+ *
+ * Bound to the container rather than to each node, so it survives the tree
+ * being rebuilt on every selection change.
+ */
+function setupTreeKeys() {
+    const tree = $('g3-tree');
+    tree.addEventListener('keydown', (ev) => {
+        const nodes = [...tree.querySelectorAll('.g3-node')];
+        if (!nodes.length) return;
+        const cur = document.activeElement;
+        const i = nodes.indexOf(/** @type {any} */(cur));
+        if (i < 0) return;
+
+        /** @param {number} next */
+        const move = (next) => {
+            const t = nodes[Math.max(0, Math.min(nodes.length - 1, next))];
+            if (!t || t === cur) return;
+            for (const n of nodes) n.tabIndex = -1;
+            t.tabIndex = 0;
+            t.focus();
+            // Keep the moved-to row on screen without yanking the whole panel.
+            t.scrollIntoView({ block: 'nearest' });
+            ev.preventDefault();
+        };
+
+        switch (ev.key) {
+            case 'ArrowDown': move(i + 1); break;
+            case 'ArrowUp': move(i - 1); break;
+            case 'Home': move(0); break;
+            case 'End': move(nodes.length - 1); break;
+            default: break;
+        }
+    });
 }
 
 function renderProperties() {

@@ -258,7 +258,8 @@ callouts, material controls and the quad view.
 
 **v1.5** adds per-tire measured contact-patch overrides and glTF/OBJ geometry
 export. **v1.6** adds the three wing-plus-body aircraft, closing the build spec.
-**v1.7** is a visual pass: chrome drawn on the figure now follows the figure
+**v1.8** raises text contrast to WCAG AA across both themes and gives the
+structure tree a proper keyboard model. **v1.7** is a visual pass: chrome drawn on the figure now follows the figure
 rather than the app theme, the viewport is composed as a sheet, and dimension
 labels are decluttered by their true rotated footprint. **v1.6.1** corrects the
 767-400ER main gear dual spacing to the FAARFIELD value
@@ -325,6 +326,26 @@ aircraft could reveal:
 
 `SOURCES.md` §5.5 records both, plus two places where the FAA database
 disagrees with the manufacturers and the manufacturers are followed.
+
+## Accessibility (v1.8)
+
+**Text contrast.** `--g3-muted` had shipped since v1.0 at 2.72:1 on the light
+theme's panel, below the WCAG AA minimum on every background in that theme,
+across 55 elements. Both themes' muted tokens are raised, and graphite is
+darkened with them so the two tiers stay a visible step apart rather than
+collapsing together. Measured across the whole interface: **55 failures to 0,
+in both themes.**
+
+It is a test, not a note: `test/run.mjs` parses `styles.css` and asserts every
+text token against every surface it is drawn on. A token is one edit from
+regressing, and 2.72:1 does not look broken — it looks slightly soft, which is
+why it lasted seven releases.
+
+**The structure tree is one tab stop.** It was nineteen — every node was
+tabbable, which a keyboard user had to walk through to reach anything past the
+panel. It now behaves as `role="tree"` implies: a single tab stop with
+Up/Down/Home/End moving within it, and `aria-selected` so the current row is
+announced rather than being conveyed by colour alone.
 
 ## Interface (v1.7)
 
