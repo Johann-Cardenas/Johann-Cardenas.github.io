@@ -1828,15 +1828,19 @@ body.Publications .pub-article .pub-section:first-of-type {
 
 /* --- Stat Cards --- */
 .pub-stats {
-	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
 	gap: 1rem;
-	max-width: 720px;
+	max-width: 900px;
 	margin: 1.5rem auto;
 	padding: 0;
 }
 
 .pub-stat-card {
+	flex: 1 1 120px;
+	max-width: 200px;
+	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -1880,8 +1884,12 @@ body.Publications .pub-article .pub-section:first-of-type {
 
 @media screen and (max-width: 736px) {
 	.pub-stats {
-		grid-template-columns: repeat(2, 1fr);
 		max-width: 100%;
+	}
+	/* Two per row; the odd card centres itself on the last row. */
+	.pub-stat-card {
+		flex: 1 1 calc(50% - 0.5rem);
+		max-width: calc(50% - 0.5rem);
 	}
 	/* 2-col layout gives each card more room — numerals can grow further. */
 	.pub-stat-value {
@@ -1891,7 +1899,7 @@ body.Publications .pub-article .pub-section:first-of-type {
 
 @media screen and (min-width: 981px) {
 	.pub-stats {
-		max-width: 860px;
+		max-width: 920px;
 	}
 }
 
@@ -3606,15 +3614,19 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 
 /* --- Key Stats Strip --- */
 .resume-stats {
-	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
 	gap: 1rem;
-	max-width: 720px;
+	max-width: 900px;
 	margin: 1.5rem auto 0;
 	padding: 0;
 }
 
 .resume-stat-card {
+	flex: 1 1 120px;
+	max-width: 200px;
+	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -4095,8 +4107,12 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 /* --- Stats + Timeline mobile --- */
 @media screen and (max-width: 736px) {
 	.resume-stats {
-		grid-template-columns: repeat(2, 1fr);
 		max-width: 100%;
+	}
+	/* Two per row; the odd card centres itself on the last row. */
+	.resume-stat-card {
+		flex: 1 1 calc(50% - 0.5rem);
+		max-width: calc(50% - 0.5rem);
 	}
 	/* 2-col layout gives each card more room — numerals can grow further. */
 	.resume-stat-value {
@@ -4111,7 +4127,7 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 
 @media screen and (min-width: 981px) {
 	.resume-stats {
-		max-width: 860px;
+		max-width: 920px;
 	}
 }
 
