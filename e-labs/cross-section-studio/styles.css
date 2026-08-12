@@ -766,36 +766,330 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* ==================== RESPONSIVE ==================== */
-@media (max-width: 1180px) {
+/* ============================================================
+   CHECKBOXES
+   ------------------------------------------------------------
+   The site stylesheet strips the native control from every bare
+   <input type="checkbox"> and redraws it through an adjacent
+   <label> sibling. This app puts its inputs INSIDE their labels,
+   which is the better markup and means the redraw never fires:
+   measured on desktop, every toggle here was appearance:none at
+   0x0 - live, clickable through its text, and with nothing on
+   screen to say whether it was on or off.
+
+   Redrawn here rather than by rearranging the markup, because
+   label-wrapping is what makes the whole row a target on touch.
+   ============================================================ */
+.xs-app input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    position: relative;
+    flex: 0 0 auto;
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    background: var(--xs-bg);
+    border: 1px solid var(--xs-border-strong);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.xs-app input[type="checkbox"]:hover { border-color: var(--xs-primary); }
+.xs-app input[type="checkbox"]:checked {
+    background: var(--xs-primary);
+    border-color: var(--xs-primary);
+}
+
+/* Centred by transform rather than fixed offsets, so the tick stays
+   centred when the touch rules grow the box to 20px. */
+.xs-app input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: 4px;
+    height: 8px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -50%) rotate(43deg);
+}
+.xs-app input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--xs-primary);
+    outline-offset: 2px;
+}
+
+/* ============================================================
+   RESPONSIVE — TABLET & HANDHELD
+   ------------------------------------------------------------
+   The studio is a three-column shell: controls, viewport,
+   material library, with the layer manager across the bottom.
+   The earlier ladder had two steps, and both of them stacked
+   panels at full width without bounding them. Measured, that
+   produced a 4,837px page on a 390px handset and a 1,997px-tall
+   material panel on an 820px tablet: correct in the sense that
+   nothing overlapped, unusable in the sense that reaching the
+   layer manager meant eleven swipes.
+
+   The ladder below follows Gear3D's, so the two apps behave the
+   same way on the same device:
+
+     >1180   three columns, unchanged
+     720-1180 rail + viewport, with the wide panels below split
+              into columns instead of stacked into a ribbon
+     <720    single column, viewport directly under the toolbar,
+              panels collapsed and read one at a time
+
+   Widths below 720px are phones and small foldables; the widest
+   phone in portrait is ~430px, so a tablet never lands there.
+   Touch sizing is keyed to (pointer: coarse) instead, since it
+   is a property of the hand, not of the width.
+
+   dvh is stated after vh so a browser without it keeps the vh
+   line, while one with it stops resizing the viewport every
+   time the mobile URL bar hides.
+   ============================================================ */
+
+/* ---------- Tablet: rail + viewport, wide panels below ------ */
+@media (max-width: 1180px) and (min-width: 720px) {
     .xs-studio {
-        grid-template-columns: 240px minmax(0, 1fr);
+        grid-template-columns: clamp(220px, 27vw, 268px) minmax(0, 1fr);
         grid-template-rows: auto minmax(380px, 56vh) auto auto;
+        grid-template-rows: auto minmax(380px, 56dvh) auto auto;
         grid-template-areas:
             "toolbar toolbar"
             "left    viewport"
             "right   right"
             "layers  layers";
     }
+
+    /* The material panel is a library and an inspector. Full
+       width it has no reason to keep them one above the other,
+       which is what made it 2,000px tall. */
+    .xs-right {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        align-items: start;
+        gap: 0 1rem;
+        max-height: 420px;
+    }
+
+    /* With the full width to spend, the swatch grid stops being
+       three cramped columns and takes as many as will fit. */
+    .xs-mat-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
 }
 
-@media (max-width: 800px) {
+/* ---------- Handheld: viewport first, panels beneath -------- */
+@media (max-width: 719px) {
     .xs-studio {
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto minmax(320px, 50vh) auto auto auto;
+        grid-template-rows: auto minmax(300px, 52vh) auto auto auto;
+        grid-template-rows: auto minmax(300px, 52dvh) auto auto auto;
         grid-template-areas:
             "toolbar"
             "viewport"
             "left"
             "right"
             "layers";
+        gap: 0.5rem;
     }
 
+    /* Panels are read one at a time here, so they take their
+       natural height rather than becoming scrollers inside the
+       page scroller. app.js collapses them on first load so the
+       stack starts short. */
+    .xs-panel {
+        max-height: none;
+        overflow-y: visible;
+    }
+
+    .xs-mat-grid { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+
+    /* The masthead is sized for a desktop page: measured at 390px it was
+       202px of hero standing between the reader and the tool. It keeps its
+       title and its one-line claim, at a size that suits the screen. */
+    .xs-app .header-content h1 { font-size: 1.4rem; gap: .5rem; }
+    .xs-app .header-content h1 .xs-icon { width: 34px; height: 34px; font-size: 1rem; border-radius: 9px; }
+    .xs-app .header-content > p { font-size: .85rem; line-height: 1.45; }
+}
+
+/* ---------- Compact toolbar: one scrolling row -------------- */
+/* At 390px the toolbar wrapped to three rows and pushed the
+   viewport down with it. One sideways-scrolling row holds its
+   height whatever it carries, and stays put while the panels
+   below are scrolled. */
+@media (max-width: 1180px) {
+    .xs-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .xs-toolbar::-webkit-scrollbar { display: none; }
+    .xs-toolbar > * { flex: 0 0 auto; }
+    /* A flex spacer in a horizontal scroller has no slack to
+       take: it collapses and contributes only a gap. */
+    .xs-toolbar .xs-spacer { display: none; }
+
+    .xs-app .header-content { padding-bottom: 0.25rem; }
+}
+
+/* ---------- Handheld, landscape ----------------------------- */
+/* A phone on its side is ~390px tall but up to ~930px wide, so
+   width alone would call it a tablet. Height decides, and the
+   layout is restated in full so the rule does not depend on
+   which band it happens to land on top of. */
+@media (max-width: 1180px) and (max-height: 500px) and (orientation: landscape) {
+    .xs-studio {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(200px, 72vh) auto auto auto;
+        grid-template-rows: auto minmax(200px, 72dvh) auto auto auto;
+        grid-template-areas:
+            "toolbar"
+            "viewport"
+            "left"
+            "right"
+            "layers";
+        gap: 0.5rem;
+    }
+    .xs-panel { max-height: none; overflow-y: visible; }
+
+    /* Measured at 844x390 the viewport still started at y=406 — sixteen
+       pixels below the fold, which is the difference between opening the
+       app and opening a page about the app. The masthead gives them up. */
+    .xs-app .header-content > p { display: none; }
+    .xs-app .header-content h1 { font-size: 1.25rem; }
+    .xs-app .header-content h1 .xs-icon { width: 30px; height: 30px; font-size: .9rem; }
+    .xs-app .header-content { padding-top: .25rem; }
+}
+
+/* ---------- Layer rows on a handheld ------------------------ */
+/* Six columns do not fit in 349px. The previous attempt kept
+   them on one line and dropped the material select, and the
+   remaining five still overflowed their track by ~95px, so the
+   thickness field and the row actions were clipped off the
+   right-hand edge — on the one control that has to be reachable
+   for the app to be of any use.
+
+   Two lines instead of one: identity on top, the two values
+   that get edited underneath, with the grip and the action
+   cluster spanning both. Nothing is dropped. */
+@media (max-width: 719px) {
     .xs-layer-row {
-        grid-template-columns: 26px 40px minmax(90px, 1fr) 100px auto;
+        grid-template-columns: 26px 40px minmax(0, 1fr) 96px auto;
+        grid-template-areas:
+            "move swatch name  name  actions"
+            "move swatch mat   thick actions";
+        row-gap: 0.3rem;
+        column-gap: 0.45rem;
+        align-items: center;
+    }
+    .xs-layer-move     { grid-area: move; }
+    .xs-layer-swatch   { grid-area: swatch; }
+    .xs-layer-name     { grid-area: name; }
+    .xs-layer-mat-cell { grid-area: mat; display: block; min-width: 0; }
+    .xs-layer-thick    { grid-area: thick; }
+    .xs-layer-actions  { grid-area: actions; }
+
+    /* Four icon buttons in a row is 160px of a 349px screen. In
+       two-by-two they take 80px and sit level with the two text
+       lines beside them. */
+    .xs-layer-actions {
+        display: grid;
+        grid-template-columns: repeat(2, auto);
+        gap: 0.15rem;
     }
 
-    .xs-layer-row .xs-layer-mat-cell { display: none; }
+    .xs-layers-head { flex-wrap: wrap; row-gap: 0.4rem; }
+}
+
+/* ---------- Touch target sizing ----------------------------- */
+/* WCAG 2.2 sets the floor at 24px and its AAA figure at 44px,
+   which is also what both platform guidelines ask for. Toolbar
+   and layer-row controls — hit while holding the device — get
+   44. Fields inside a panel get 40: a rail of forty 44px rows
+   is a very long rail, and those are two-handed controls.
+
+   min-height rather than height, because the site button reset
+   further up pins `height: auto` on every .xs-btn. */
+@media (pointer: coarse) {
+    .xs-app .xs-btn { min-height: 44px; }
+    .xs-app .xs-icon-btn { min-width: 40px; min-height: 40px; }
+    .xs-select, .xs-num, .xs-text { min-height: 40px; }
+    .xs-app .xs-layer-move button { min-width: 34px; min-height: 21px; }
+    .xs-panel summary { min-height: 48px; }
+    .xs-layer-name input { min-height: 36px; }
+
+    /* The checkbox is 16px, but the whole label is clickable, so it is the
+       label that has to carry the height. */
+    .xs-check, .xs-app label:has(> input[type="checkbox"]) { min-height: 40px; }
+    .xs-app input[type="checkbox"] { width: 20px; height: 20px; }
+
+    .xs-app .xs-mat-tile { min-height: 72px; }
+
+    /* A range input is as tall as its track, and this track is 4px. The
+       thumb may be 14px but the element you have to hit is 4px of screen,
+       which no thumb can rescue. The input grows to a 40px grab area and
+       hands the painting of the track to the pseudo-element, so the
+       control looks unchanged and is ten times easier to catch.
+
+       Restated at the base rule's own specificity — `.xs-app
+       input[type="range"].xs-range` beats a bare `.xs-range` no matter
+       how far down the file it sits. */
+    .xs-app input[type="range"].xs-range {
+        height: 40px;
+        background: transparent;
+    }
+    .xs-app input[type="range"].xs-range::-webkit-slider-runnable-track {
+        height: 5px;
+        border-radius: 3px;
+        background: var(--xs-border-strong);
+    }
+    .xs-app input[type="range"].xs-range::-moz-range-track {
+        height: 5px;
+        border-radius: 3px;
+        background: var(--xs-border-strong);
+    }
+    .xs-app input[type="range"].xs-range::-webkit-slider-thumb {
+        width: 22px;
+        height: 22px;
+        /* (track 5 - thumb 22) / 2 centres the thumb on the track. */
+        margin-top: -8.5px;
+    }
+    .xs-app input[type="range"].xs-range::-moz-range-thumb { width: 20px; height: 20px; }
+
+    /* Row affordances that only show on hover never show at all
+       on touch, so selection has to carry itself. */
+    .xs-layer-row.is-selected { border-color: var(--xs-primary); }
+
+    .xs-app input[type="color"].xs-color { height: 40px; }
+
+    /* Two stacked steppers inside one row: 24px each makes the pair 48,
+       which is the figure that matters when the thumb is aiming at the
+       pair and correcting afterwards. */
+    .xs-app .xs-layer-move button { min-width: 34px; min-height: 24px; }
+}
+
+/* ---------- Affordances that were hover-only ---------------- */
+/* `hover: none` is the honest test here: the insert zone between two
+   layer rows sits at opacity 0 until the pointer is over it, and a
+   touchscreen never puts a pointer over anything. The control was not
+   merely awkward on a tablet, it was invisible — you could tap the
+   12px strip and have a layer appear, but only by accident.
+
+   Kept recessive rather than made loud: it is a seam, not a button, and
+   there is one between every pair of layers. */
+@media (hover: none) {
+    .xs-layer-insert {
+        opacity: .45;
+        height: 28px;
+        margin: -8px 0;
+    }
+    .xs-layer-insert:focus-within { opacity: 1; }
+    .xs-app .xs-insert-btn { min-height: 26px; min-width: 26px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

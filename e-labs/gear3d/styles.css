@@ -747,19 +747,11 @@
     }
 }
 
-@media screen and (max-width: 980px) {
-    .g3-studio {
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto auto minmax(380px, 56vh) auto auto;
-        grid-template-areas:
-            "toolbar"
-            "left"
-            "viewport"
-            "right"
-            "status";
-    }
-    .g3-panel { max-height: 320px; }
-}
+/* The tablet and handheld ladder lives at the END of this file, under
+   RESPONSIVE - TABLET & HANDHELD. It has to sit after the v1.7 refinement
+   pass, which restates .g3-hud, .g3-viewport and the panel chrome at the
+   same specificity: a stacking rule written up here would be silently
+   overruled by a rule two hundred lines below it. */
 
 /* ==================== REDUCED MOTION ==================== */
 @media (prefers-reduced-motion: reduce) {
@@ -1033,3 +1025,336 @@ body.Gear3D .g3-uswitch.is-active { color: var(--g3-paper) !important; backgroun
 body.Gear3D .g3-linkbtn { color: var(--g3-signal) !important; background: none !important; text-decoration: underline; }
 body.Gear3D .g3-node-iso { color: var(--g3-muted) !important; background: none !important; }
 body.Gear3D .g3-node-iso:hover { color: var(--g3-datum) !important; }
+
+/* ============================================================
+   CHECKBOXES
+   ------------------------------------------------------------
+   The site stylesheet strips the native control from every bare
+   <input type="checkbox"> and redraws it through an adjacent
+   <label> sibling. This app puts its inputs INSIDE their labels,
+   which is the better markup and means the redraw never fires:
+   measured on desktop, every toggle in the rail was
+   appearance:none at 0x0. Ghost parts, the five dimension sets,
+   dual units, callouts, the scale bar and the footprint switch
+   were all live and all invisible - clicking the text worked,
+   and nothing on screen said so or showed what was on.
+
+   Redrawn here rather than by rearranging the markup, because
+   the label-wrapping is correct and worth keeping: it is what
+   makes the whole row a target on touch.
+   ============================================================ */
+.g3-app input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    position: relative;
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    background: var(--g3-paper);
+    border: 1px solid var(--g3-rule-strong);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease;
+}
+.g3-app input[type="checkbox"]:hover { border-color: var(--g3-datum); }
+.g3-app input[type="checkbox"]:checked {
+    background: var(--g3-datum);
+    border-color: var(--g3-datum);
+}
+
+/* Centred by transform rather than by fixed offsets, so the tick stays
+   centred when the touch rules grow the box to 20px. */
+.g3-app input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: 4px;
+    height: 8px;
+    border: solid #fff;
+    border-width: 0 1.6px 1.6px 0;
+    transform: translate(-50%, -50%) rotate(43deg);
+}
+/* Teal is light in the dark theme; a white tick on it is unreadable, the
+   same reason the active view tab uses ink there. */
+[data-theme="dark"] .g3-app input[type="checkbox"]:checked::after { border-color: #06222a; }
+.g3-app input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--g3-datum);
+    outline-offset: 1px;
+}
+
+/* ============================================================
+   RESPONSIVE — TABLET & HANDHELD (v1.9)
+   ------------------------------------------------------------
+   The app is a three-column CAD shell: rail, viewport, rail.
+   Until now it had one fallback — below 980px everything
+   stacked in source order — and source order puts the control
+   rail BEFORE the viewport. Measured on a 390×844 handset that
+   put the 3D view at y=735, behind a six-row toolbar and a
+   320px scrolling panel: the one thing the app exists to show
+   was the one thing you could not see without hunting for it.
+
+   Three ideas run through the ladder below.
+
+   1. THE VIEWPORT IS THE FIRST THING, NOT THE THIRD.
+      On a handheld the grid areas re-order so the sheet sits
+      directly under the toolbar; panels follow it. This is a
+      grid-template-areas change only — the DOM order is
+      untouched, so the tab sequence still runs controls-then-
+      canvas for a keyboard user, which is the order they want.
+
+   2. A TABLET IS NOT A BIG PHONE.
+      720–1100px keeps a real rail beside the viewport and moves
+      only the structure panel below, where the full width lets
+      it split into tree | properties. The break sits at 720 so
+      the portrait iPad Mini (744px) stays a tablet; the widest
+      phone in portrait is ~430px, so nothing below the line is
+      a phone. The rail is a clamp rather than a fixed 250px,
+      because at 744px a fixed rail would leave the viewport
+      narrower than the panel standing beside it.
+
+   3. TOUCH SIZING IS A POINTER QUESTION, NOT A WIDTH QUESTION.
+      The target-size rules hang off (pointer: coarse), so a
+      touch laptop at 1400px gets them and a 700px desktop
+      window does not.
+
+   dvh is stated after vh throughout: a browser without dvh
+   keeps the vh line, and one with it avoids the URL-bar jump
+   that makes a 66vh viewport resize itself mid-scroll.
+   ============================================================ */
+
+/* ---------- Tablet: rail + viewport, structure below -------- */
+@media screen and (max-width: 1100px) and (min-width: 720px) {
+    .g3-studio {
+        grid-template-columns: clamp(210px, 26vw, 250px) minmax(0, 1fr);
+        grid-template-rows: auto minmax(400px, 58vh) auto auto;
+        grid-template-rows: auto minmax(400px, 58dvh) auto auto;
+        grid-template-areas:
+            "toolbar  toolbar"
+            "left     viewport"
+            "right    right"
+            "status   status";
+    }
+
+    /* Given the full width, the structure panel stops being a
+       tall thin list and becomes what it is on the desktop rail:
+       a tree you pick from, and the properties of what you
+       picked, readable at the same time. */
+    .g3-right {
+        display: grid;
+        grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+        max-height: 320px;
+        overflow: hidden;
+    }
+    .g3-tree-head { grid-column: 1 / -1; }
+    .g3-tree { grid-column: 1; grid-row: 2; overflow-y: auto; }
+    .g3-props {
+        grid-column: 2; grid-row: 2;
+        max-height: none;
+        border-top: 0;
+        border-left: 1px solid var(--g3-rule);
+    }
+}
+
+/* ---------- Handheld: viewport first, panels beneath -------- */
+@media screen and (max-width: 719px) {
+    .g3-studio {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(300px, 56vh) auto auto auto;
+        grid-template-rows: auto minmax(300px, 56dvh) auto auto auto;
+        grid-template-areas:
+            "toolbar"
+            "viewport"
+            "left"
+            "right"
+            "status";
+        gap: .5rem;
+    }
+
+    /* Panels are read one at a time on a phone, so they get their
+       natural height. The old 320px cap made each one a scroller
+       inside the page scroller — two nested scrolls under one
+       thumb, where a flick meant as "next section" instead spins
+       a list. main.js closes them on first load so the stack
+       still starts short. */
+    .g3-panel {
+        max-height: none;
+        overflow-y: visible;
+    }
+    .g3-right {
+        display: block;
+        max-height: none;
+    }
+    .g3-tree { max-height: 45vh; }
+    .g3-props { max-height: none; }
+
+    /* The coordinate readout is a mouse-hover artefact and never
+       updates on touch, so it stops taking a row. */
+    .g3-status { font-size: .68rem; }
+    .g3-status #g3-status-coords { display: none; }
+}
+
+/* ---------- Compact toolbar: one scrolling row -------------- */
+/* Wrapping produced a six-row, 157px-tall control block that
+   pushed the sheet further down the page with every tool it
+   gained. A single row that scrolls sideways stays ~50px
+   whatever is in it, and sticks to the top so the view tabs,
+   Fit and Export remain reachable while the panels below are
+   being scrolled. */
+@media screen and (max-width: 1100px) {
+    .g3-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .g3-toolbar::-webkit-scrollbar { display: none; }
+    .g3-toolbar > * { flex: 0 0 auto; }
+    /* A flex spacer inside a horizontal scroller has no slack to
+       take: it collapses to nothing and contributes only a gap. */
+    .g3-toolbar .g3-spacer { display: none; }
+}
+
+/* The title block is sized for a desktop sheet. On a tablet the
+   30px it gives back is 30px of viewport. */
+@media screen and (max-width: 1100px) {
+    .g3-app .app-header { padding: .7rem 0 .55rem; }
+    .g3-app { padding-left: .75rem; padding-right: .75rem; }
+}
+
+/* ---------- Handheld viewport chrome ------------------------ */
+/* The interaction hint is written for a mouse and is long.
+   main.js swaps the wording for touch; here it moves out of the
+   top-right corner, where at these widths it collided with the
+   model readout, down to the bottom-left. The axis badge already
+   owns bottom-right. */
+@media screen and (max-width: 719px), screen and (max-height: 500px) and (orientation: landscape) {
+    .g3-hud-right {
+        top: auto;
+        bottom: .5rem;
+        left: .5rem;
+        right: auto;
+        max-width: calc(100% - 5.5rem);
+    }
+    .g3-hud, .g3-hud-right, .g3-axisbadge { font-size: .62rem; }
+    .g3-progress-bar { width: min(220px, 60%); }
+}
+
+/* ---------- Handheld, landscape ----------------------------- */
+/* A phone on its side is ~390px tall and up to ~930px wide, so
+   it lands in the tablet band on width alone. It is not a
+   tablet: a 250px rail against a 390px-tall screen leaves a
+   viewport the size of a postage stamp. Height decides here,
+   and the whole layout is restated rather than patched so this
+   block does not depend on which band it happens to override. */
+@media screen and (max-width: 1100px) and (max-height: 500px) and (orientation: landscape) {
+    .g3-studio {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(200px, 72vh) auto auto auto;
+        grid-template-rows: auto minmax(200px, 72dvh) auto auto auto;
+        grid-template-areas:
+            "toolbar"
+            "viewport"
+            "left"
+            "right"
+            "status";
+        gap: .5rem;
+    }
+    .g3-panel { max-height: none; overflow-y: visible; }
+    .g3-right { display: block; max-height: none; }
+    .g3-props { max-height: none; }
+
+    /* Vertical space is the scarce resource; the title block
+       keeps only the revision cell it is named for. */
+    .g3-app .app-header { padding: .5rem 0 .4rem; }
+    .g3-tb-cell:not(.g3-tb-cell--rev) { display: none; }
+}
+
+/* ---------- Touch target sizing ----------------------------- */
+/* WCAG 2.2 puts the floor at 24px; 44px is the AAA figure and
+   what both platform guidelines ask for. Toolbar controls — the
+   ones hit while holding the device one-handed — get the full
+   44. In-panel fields get 40: a rail of forty 44px rows is a
+   very long rail, and those are two-handed, seated controls.
+
+   Stated as min-height because the site-wide button override at
+   the foot of this file pins `height: auto !important`, which a
+   plain height would lose to. */
+@media (pointer: coarse) {
+    body.Gear3D .g3-btn,
+    body.Gear3D .g3-vtab,
+    body.Gear3D .g3-uswitch {
+        min-height: 44px;
+        padding-left: .85rem;
+        padding-right: .85rem;
+    }
+    body.Gear3D .g3-toolbar .g3-btn { padding-left: .7rem; padding-right: .7rem; }
+
+    .g3-select, .g3-num, .g3-text { min-height: 40px; }
+    .g3-num--tiny { flex-basis: 68px; }
+    .g3-color { height: 40px; }
+    .g3-panel summary { min-height: 48px; }
+    .g3-check input { width: 20px; height: 20px; }
+
+    body.Gear3D .g3-icon-btn { min-width: 40px; min-height: 40px; }
+    body.Gear3D .g3-dimrow-del { min-width: 36px; min-height: 36px; }
+    body.Gear3D .g3-node-iso { min-width: 34px; min-height: 32px; }
+
+    /* A range input is as tall as its track, and this track is 3px. The
+       thumb may be 13px but the element you have to hit is 3px of screen,
+       which no thumb can rescue. The input grows to a 40px grab area and
+       hands the painting of the track to the pseudo-element, so the
+       control looks unchanged and is far easier to catch. */
+    .g3-range {
+        height: 40px;
+        background: transparent;
+    }
+    .g3-range::-webkit-slider-runnable-track {
+        height: 3px;
+        border-radius: 2px;
+        background: var(--g3-inset);
+    }
+    .g3-range::-moz-range-track {
+        height: 3px;
+        border-radius: 2px;
+        background: var(--g3-inset);
+    }
+    .g3-range::-webkit-slider-thumb {
+        width: 22px;
+        height: 22px;
+        /* (track 3 - thumb 22) / 2 centres the thumb on the track. */
+        margin-top: -9.5px;
+    }
+    .g3-range::-moz-range-thumb { width: 20px; height: 20px; }
+
+    /* The checkbox itself is 20px, but the whole label is the target, so
+       it is the label that has to carry the height. */
+    .g3-check { min-height: 40px; }
+
+    /* Scroll affordances that only appear on hover do not appear
+       at all on touch. */
+    .g3-tree::-webkit-scrollbar-thumb,
+    .g3-props::-webkit-scrollbar-thumb,
+    .g3-panel::-webkit-scrollbar-thumb { background: var(--g3-rule-strong); }
+
+    /* A 17px text link in the title block. Padding, not font size: the
+       block is a drafting header and the type belongs at the size it is. */
+    .g3-tb-back { padding: .5rem .25rem .5rem 0; }
+}
+
+/* ---------- Affordances that were hover-only ---------------- */
+/* The isolate control on a tree row sits at opacity 0 until the row is
+   hovered or selected, and a touchscreen never hovers anything. Selection
+   still reveals it, so the feature was reachable — but only once you had
+   already tapped the row, which is a poor way to learn that a control
+   exists. On touch it stands quietly on every row instead. */
+@media (hover: none) {
+    .g3-node-iso { opacity: .55; }
+    .g3-node.is-selected .g3-node-iso { opacity: 1; }
+}

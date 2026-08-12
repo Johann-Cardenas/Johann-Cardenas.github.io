@@ -156,6 +156,7 @@ async function boot() {
     setupCallouts();
     setupTreeKeys();
     setupKeyboard();
+    setupHandheldPanels();
 
     const saved = loadAutosave();
     if (saved && saved.unit) {
@@ -977,6 +978,59 @@ function setupToolbar() {
     $('g3-export').addEventListener('click', runExport);
 }
 
+/**
+ * Collapses the control rail on a handheld so the stack starts short.
+ *
+ * Every <details> in the rail ships open, which is right on a desktop where
+ * the rail is a fixed column beside the sheet and scrolls on its own. Once
+ * the layout stacks, those same open panels become roughly 2,000px of page
+ * the reader has to swipe past to reach anything below them. Only the Model
+ * panel — the one that answers 'what am I looking at, and can I change it?'
+ * — stays open.
+ *
+ * Runs once, at boot, and is not persisted: opening a panel by hand must
+ * stick for the session, and a reader who has opened four of them has said
+ * clearly enough that they want them.
+ *
+ * @returns {void}
+ */
+function setupHandheldPanels() {
+    if (!window.matchMedia || !window.matchMedia('(max-width: 719px)').matches) return;
+
+    const panels = document.querySelectorAll('.g3-left details');
+    panels.forEach((d, i) => { if (i > 0) d.open = false; });
+}
+/**
+ * True when the primary pointer cannot hover — a touchscreen. Read live
+ * rather than cached: a tablet with a keyboard folio attached switches
+ * between coarse and fine without a reload.
+ *
+ * @returns {boolean}
+ */
+function isTouchPointer() {
+    return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+}
+
+/**
+ * The viewport hint, in the vocabulary of the device holding it. The mouse
+ * wording names a wheel and a right button, neither of which exists on a
+ * phone, so a touch reader was being told to do something impossible.
+ *
+ * @param {string} mode one of the four view modes
+ * @param {boolean} quad true when the four-pane layout is showing
+ * @returns {string}
+ */
+function viewportHint(mode, quad) {
+    if (quad) return 'four views · tap a pane to open it full size';
+    if (isTouchPointer()) {
+        return VIEW_META[mode].locked
+            ? 'locked view · pinch to zoom · drag to pan · tap an axle to isolate'
+            : 'drag to orbit · pinch to zoom · two-finger drag to pan · tap an axle';
+    }
+    return VIEW_META[mode].locked
+        ? 'locked view · zoom: wheel · pan: drag · click an axle to isolate'
+        : 'orbit: drag · zoom: wheel · pan: right-drag · click an axle to isolate';
+}
 /** @param {string} mode one of the four view modes, or 'quad' */
 function setViewMode(mode) {
     app.store.view.mode = mode;
@@ -992,11 +1046,7 @@ function setViewMode(mode) {
         b.classList.toggle('is-active', on);
         b.setAttribute('aria-selected', String(on));
     }
-    $('g3-hud-right').textContent = quad
-        ? 'four views · click a pane to open it full size'
-        : VIEW_META[mode].locked
-            ? 'locked view · zoom: wheel · pan: drag · click an axle to isolate'
-            : 'orbit: drag · zoom: wheel · pan: right-drag · click an axle to isolate';
+    $('g3-hud-right').textContent = viewportHint(mode, quad);
 
     const b = isolationBounds(app.store.view.isolation, app.layout);
     if (b) app.viewport.frameEngineering(b);

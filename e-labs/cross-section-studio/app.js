@@ -1517,6 +1517,29 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         toast('Reset to defaults');
     });
 
+    /**
+     * Collapses the control panels on a handheld so the stack starts short.
+     *
+     * Every <details> ships open, which is right on a desktop where the
+     * panels are fixed columns beside the viewport and scroll on their own.
+     * Once the layout stacks they become some 2,000px of page between the
+     * viewport and the layer manager. Section Geometry stays open; the
+     * material panels do not, because the 18-tile library alone measured
+     * 1,097px and pushed the layer manager — the control the app is really
+     * driven from — a further screen and a half down.
+     *
+     * Runs once at boot and is not persisted: a panel opened by hand has to
+     * stay open for the session.
+     *
+     * @returns {void}
+     */
+    function collapsePanelsOnHandheld() {
+        if (!window.matchMedia || !window.matchMedia('(max-width: 719px)').matches) return;
+
+        document.querySelectorAll('.xs-left details').forEach((d, i) => { if (i > 0) d.open = false; });
+        document.querySelectorAll('.xs-right details').forEach((d) => { d.open = false; });
+    }
+
     /* ========================================================
        13. Boot
        ======================================================== */
@@ -1533,5 +1556,6 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     renderMaterialEditor();
     populateTemplates();
     pushHistory();
+    collapsePanelsOnHandheld();
     animate();
 })();
