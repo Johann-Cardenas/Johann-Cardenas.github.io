@@ -769,16 +769,16 @@
 /* ============================================================
    CHECKBOXES
    ------------------------------------------------------------
-   The site stylesheet strips the native control from every bare
-   <input type="checkbox"> and redraws it through an adjacent
-   <label> sibling. This app puts its inputs INSIDE their labels,
-   which is the better markup and means the redraw never fires:
-   measured on desktop, every toggle here was appearance:none at
-   0x0 - live, clickable through its text, and with nothing on
+   The site reset applies `appearance: none` to every input, and a
+   checkbox with no appearance and no replacement box has no
+   intrinsic size: measured on desktop, every toggle here laid out
+   at 0x0 - live, clickable through its label, and with nothing on
    screen to say whether it was on or off.
 
-   Redrawn here rather than by rearranging the markup, because
-   label-wrapping is what makes the whole row a target on touch.
+   The site reset now restores native rendering for checkboxes, so
+   this block is no longer what makes them visible. It is kept so
+   the control carries the same rounded geometry and primary teal
+   as the rest of the panel.
    ============================================================ */
 .xs-app input[type="checkbox"] {
     -webkit-appearance: none;

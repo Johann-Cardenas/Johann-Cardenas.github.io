@@ -1029,19 +1029,21 @@ body.Gear3D .g3-node-iso:hover { color: var(--g3-datum) !important; }
 /* ============================================================
    CHECKBOXES
    ------------------------------------------------------------
-   The site stylesheet strips the native control from every bare
-   <input type="checkbox"> and redraws it through an adjacent
-   <label> sibling. This app puts its inputs INSIDE their labels,
-   which is the better markup and means the redraw never fires:
-   measured on desktop, every toggle in the rail was
-   appearance:none at 0x0. Ghost parts, the five dimension sets,
-   dual units, callouts, the scale bar and the footprint switch
-   were all live and all invisible - clicking the text worked,
-   and nothing on screen said so or showed what was on.
+   The site reset applies `appearance: none` to every input, and a
+   checkbox with no appearance and no replacement box has no
+   intrinsic size: measured on desktop, every toggle in the rail
+   laid out at 0x0. Ghost parts, the five dimension sets, dual
+   units, callouts, the scale bar and the footprint switch were all
+   live and all invisible - clicking the label worked, and nothing
+   on screen said so or showed what was on.
 
-   Redrawn here rather than by rearranging the markup, because
-   the label-wrapping is correct and worth keeping: it is what
-   makes the whole row a target on touch.
+   The site reset now hands checkboxes and radios their native
+   rendering back, so this block is no longer what makes them
+   visible. It is kept because native controls do not carry the
+   drafting language the rest of this rail is drawn in - the square
+   corners, the rule weight, the datum teal - and because the tick
+   has to flip to ink on the dark theme, where teal is the light
+   colour.
    ============================================================ */
 .g3-app input[type="checkbox"] {
     -webkit-appearance: none;
