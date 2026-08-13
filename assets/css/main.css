@@ -5024,6 +5024,38 @@ input, select, textarea {
 	appearance: none;
 }
 
+/* Checkboxes and radios opt back in.
+   ------------------------------------------------------------
+   The reset above is aimed at text fields and selects, where the native
+   chrome fights the design. Applied to a checkbox or radio it does
+   something else entirely: with appearance:none and no replacement box,
+   the control has no intrinsic size and lays out at 0x0. It stays in the
+   tab order and still toggles when its label is clicked, so it works
+   perfectly and is simply invisible - which is the hardest kind of
+   broken to notice. Nothing in this stylesheet ever drew a replacement.
+
+   Verified with CSS.getMatchedStylesForNode: this rule is the only
+   author rule that reached the control, overriding the user-agent's
+   input[type="checkbox" i] { appearance: auto }.
+
+   Both types are handed their native rendering back and tinted to the
+   site accent. color-scheme is set on the controls themselves rather
+   than on :root, so the dark theme gets dark checkboxes without also
+   repainting every scrollbar on the site. */
+input[type="checkbox"],
+input[type="radio"] {
+	-moz-appearance: auto;
+	-webkit-appearance: auto;
+	-ms-appearance: auto;
+	appearance: auto;
+	accent-color: var(--accent-primary, #18a9a8);
+}
+
+[data-theme="dark"] input[type="checkbox"],
+[data-theme="dark"] input[type="radio"] {
+	color-scheme: dark;
+}
+
 /* Basic */
 
 	html {
