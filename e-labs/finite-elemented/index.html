@@ -10,7 +10,7 @@
     </script>
     <title>Finite-Elemented | Interactive FEA Learning Platform</title>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
     <!-- Social Sharing: Open Graph -->
@@ -3842,22 +3842,39 @@
                 document.getElementById('drag-skew').textContent = (totalSkew / 4).toFixed(2);
             }
 
-            canvas.addEventListener('mousedown', function(e) {
+            /* Pointer events rather than mouse events: a touch drag never
+               produces a mousemove - the browser scrolls the page instead - so
+               on a phone or tablet this node could not be dragged and the
+               aspect-ratio and skew readouts never moved. The isoparametric
+               demo further down already handled touch; this one was missed.
+
+               touch-action is switched off only while a drag is live, so the
+               page can still be scrolled with a finger anywhere on the canvas
+               that is not the node. The hit radius goes from 20px to 30px for
+               the same reason a fingertip is not a cursor. */
+            canvas.addEventListener('pointerdown', function(e) {
                 var rect = canvas.getBoundingClientRect();
                 var mx = (e.clientX - rect.left) * (W / rect.width);
                 var my = (e.clientY - rect.top) * (H / rect.height);
                 var dx = mx - nodes[4][0], dy = my - nodes[4][1];
-                if (dx*dx + dy*dy < 400) dragging = true;
+                if (dx*dx + dy*dy < 900) {
+                    dragging = true;
+                    canvas.style.touchAction = 'none';
+                    if (canvas.setPointerCapture) { try { canvas.setPointerCapture(e.pointerId); } catch (err) {} }
+                }
             });
-            canvas.addEventListener('mousemove', function(e) {
+            canvas.addEventListener('pointermove', function(e) {
                 if (!dragging) return;
+                e.preventDefault();
                 var rect = canvas.getBoundingClientRect();
                 nodes[4][0] = Math.max(210, Math.min(590, (e.clientX - rect.left) * (W / rect.width)));
                 nodes[4][1] = Math.max(60, Math.min(240, (e.clientY - rect.top) * (H / rect.height)));
                 draw();
             });
-            canvas.addEventListener('mouseup', function() { dragging = false; });
-            canvas.addEventListener('mouseleave', function() { dragging = false; });
+            function endNodeDrag() { dragging = false; canvas.style.touchAction = ''; }
+            canvas.addEventListener('pointerup', endNodeDrag);
+            canvas.addEventListener('pointercancel', endNodeDrag);
+            canvas.addEventListener('mouseleave', endNodeDrag);
 
             draw();
         }

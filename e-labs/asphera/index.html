@@ -35,7 +35,7 @@
     </script>
     <title>Asphera | Pavement Response Visualizer</title>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../../assets/css/main.css" />
     <link rel="canonical" href="https://www.johanncardenas.com/e-labs/asphera/">
@@ -1907,6 +1907,41 @@
         }
         .shortcuts-close:hover { background: var(--asp-primary); color: white; border-color: var(--asp-primary); }
     </style>
+<style>
+/* ---------- Touch target sizing ----------
+   Keyed to the pointer rather than the width, so a touch laptop gets it and
+   a narrow desktop window does not. WCAG 2.2 puts the floor at 24px; these
+   were measured below it on a phone.
+
+   The animation scrubber is the important one. A range input is only as tall
+   as its track, and this track is 6px: the thumb may be 16px but the element
+   a finger has to catch is 6px of screen. It takes a 40px grab area and hands
+   the track to the pseudo-element, so it looks exactly as before. */
+@media (pointer: coarse) {
+    .asphera-app .about-btn, .about-btn { min-height: 36px; }
+    .view-tab { min-height: 44px; }
+
+    .anim-slider {
+        height: 40px;
+        background: transparent;
+    }
+    .anim-slider::-webkit-slider-runnable-track {
+        height: 6px; border-radius: 3px; background: var(--asp-border);
+    }
+    .anim-slider::-moz-range-track {
+        height: 6px; border-radius: 3px; background: var(--asp-border);
+    }
+    .anim-slider::-webkit-slider-thumb {
+        width: 22px; height: 22px;
+        /* (track 6 - thumb 22) / 2 centres the thumb on the track. */
+        margin-top: -8px;
+    }
+    .anim-slider::-moz-range-thumb {
+        width: 20px; height: 20px; border: 2px solid #fff;
+        border-radius: 50%; background: var(--asp-primary);
+    }
+}
+</style>
 </head>
 <body class="asphera is-preload">
     <!-- Accessibility: Skip Link -->

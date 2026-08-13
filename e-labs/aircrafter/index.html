@@ -36,7 +36,7 @@
     </script>
     <title>AirCrafter | Contact Stress Engine</title>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../../assets/css/main.css" />
     <link rel="canonical" href="https://www.johanncardenas.com/e-labs/aircrafter/">
@@ -2374,6 +2374,16 @@
             .module-tabs-wrapper { padding-bottom: 0; }
         }
     </style>
+<style>
+/* ---------- Touch target sizing ----------
+   Keyed to the pointer rather than the width. WCAG 2.2 puts the floor at
+   24px; these three were measured below it on a phone, the About control at
+   19px. */
+@media (pointer: coarse) {
+    .about-btn { min-height: 36px; }
+    #lc-cancel, #lc-confirm { min-height: 44px; }
+}
+</style>
 </head>
 
 <body>
