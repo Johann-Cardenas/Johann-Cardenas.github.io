@@ -624,26 +624,261 @@
 .lp-doc-link:active { transform: translateY(1px); }
 .lp-about-cta-note { font-size: 0.72em; color: var(--lp-ink3); line-height: 1.5; max-width: 22em; }
 
-/* ---------- Responsive ---------- */
+/* ---------- Responsive ----------
+ * Three bands, matching Gear3D and Cross-Section Studio so the three
+ * workbenches behave the same way on the same device:
+ *
+ *   >1080     three columns, unchanged
+ *   720-1080  rail + viewport, with the right rail below in columns
+ *   <720      single column, viewport first
+ *
+ * The break sits at 720 because the widest phone in portrait is ~430px,
+ * so nothing below the line is a tablet. Previously everything under
+ * 1080 took the same single-column stack, which handed a 1024px iPad in
+ * landscape the phone layout: measured, that left a 976x476 viewport
+ * with 1,232px of controls stacked beneath it and the results dock
+ * starting at y=2,848.
+ *
+ * dvh is stated after vh throughout, so a browser without it keeps the
+ * vh line and one with it stops resizing the viewport whenever the
+ * mobile URL bar hides.
+ */
 @media (max-width: 1280px) {
     .lp-body { grid-template-columns: 264px minmax(360px, 1fr) 300px; }
     .lp-prof-grid { grid-template-columns: 1fr 1fr; }
 }
-@media (max-width: 1080px) {
+
+/* ---------- Tablet: rail + viewport, right rail below ---------- */
+@media (max-width: 1080px) and (min-width: 720px) {
+    .lp-body {
+        grid-template-columns: clamp(240px, 30vw, 300px) minmax(0, 1fr);
+        grid-template-areas:
+            "left viewport"
+            "right right";
+    }
+
+    /* Both are capped to the same figure so the row has one predictable
+       height. Left uncapped, a 1,250px rail would stretch the row and
+       drag the viewport to 1,250px with it. */
+    .lp-left {
+        grid-area: left;
+        max-height: 62vh;
+        max-height: 62dvh;
+        overflow-y: auto;
+    }
+    .lp-viewport {
+        grid-area: viewport;
+        min-height: 62vh;
+        min-height: 62dvh;
+    }
+    .lp-right {
+        grid-area: right;
+        max-height: none;
+        border-left: none;
+        border-top: 1px solid var(--lp-line);
+    }
+
+    /* Full width, the key-response cards and the export grid have no
+       reason to stay in one 320px column stacked 634px tall. */
+    .lp-right-scroll {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        align-items: start;
+        gap: 0 1.4em;
+    }
+    .lp-right-block { margin-bottom: 1em; }
+
+    .lp-prof-grid { grid-template-columns: 1fr 1fr; }
+    .lp-perf-grid { grid-template-columns: 1fr; }
+    .lp-about { grid-template-columns: 1fr; text-align: left; }
+}
+
+/* ---------- Handheld: single column, viewport first ---------- */
+@media (max-width: 719px) {
     .lp-body { grid-template-columns: 1fr; }
-    .lp-left { order: 2; max-height: none; border-right: none; border-top: 1px solid var(--lp-line); }
-    .lp-viewport { order: 1; min-height: 62vh; }
-    .lp-right { order: 3; max-height: none; border-left: none; border-top: 1px solid var(--lp-line); }
+    .lp-left {
+        order: 2;
+        max-height: none;
+        overflow-y: visible;
+        border-right: none;
+        border-top: 1px solid var(--lp-line);
+    }
+    .lp-viewport {
+        order: 1;
+        min-height: 54vh;
+        min-height: 54dvh;
+    }
+    .lp-right {
+        order: 3;
+        max-height: none;
+        overflow-y: visible;
+        border-left: none;
+        border-top: 1px solid var(--lp-line);
+    }
     .lp-about { grid-template-columns: 1fr; text-align: left; }
     .lp-prof-grid { grid-template-columns: 1fr; }
     .lp-perf-grid { grid-template-columns: 1fr; }
+
+    /* Four 320px charts in one pane is 1,280px of scrolling before the
+       tables. They stay readable a good deal shorter than that. */
+    .lp-chart { height: 250px; }
+    .lp-chart-short { height: 220px; }
+    .lp-table-wrap { max-height: 50vh; }
 }
+
 @media (max-width: 640px) {
     .lp-app { padding: 1em 0.5em 2em; }
     .lp-project-name { width: 9em; }
     .lp-plan-panel { display: none; }
     .lp-dtab { padding: 0.75em 0.6em; font-size: 0.72em; }
 }
+
+/* ---------- Compact top bar ----------
+ * Wrapping put the bar at 143px and three rows on a phone, pushing the
+ * section down with every control it gained. One sideways-scrolling row
+ * holds its height, and sticks so Run, the unit switch and undo stay
+ * reachable while the panels below are being read.
+ *
+ * .lp-workspace is overflow:hidden for its rounded corners, which makes
+ * it a scroll container and would anchor the sticky bar to a box that
+ * never scrolls - i.e. no stickiness at all. overflow:clip clips the
+ * same corners without creating that scrollport. A browser too old for
+ * clip ignores the declaration, keeps hidden, and simply gets a bar
+ * that does not stick.
+ */
+@media (max-width: 1080px) {
+    .lp-workspace { overflow: clip; }
+    .lp-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .lp-topbar::-webkit-scrollbar { display: none; }
+    .lp-topbar > * { flex: 0 0 auto; }
+    /* A flex spacer inside a horizontal scroller has no slack to take:
+       it collapses to nothing and contributes only a gap. */
+    .lp-topbar-spacer { display: none; }
+}
+
+/* ---------- Handheld, landscape ----------
+ * A phone on its side is ~390px tall and up to ~930px wide, so width
+ * alone would call it a tablet. Height decides, and the layout is
+ * restated in full so the rule does not depend on which band it lands
+ * on top of.
+ */
+@media (max-width: 1080px) and (max-height: 500px) and (orientation: landscape) {
+    .lp-body {
+        grid-template-columns: 1fr;
+        grid-template-areas: none;
+    }
+    .lp-left, .lp-right {
+        grid-area: auto;
+        max-height: none;
+        overflow-y: visible;
+        border-left: none;
+        border-right: none;
+        border-top: 1px solid var(--lp-line);
+    }
+    .lp-left { order: 2; }
+    .lp-right { order: 3; }
+    .lp-viewport {
+        grid-area: auto;
+        order: 1;
+        min-height: 72vh;
+        min-height: 72dvh;
+    }
+    .lp-app .header-content p { display: none; }
+}
+
+/* ---------- Touch target sizing ----------
+ * WCAG 2.2 puts the floor at 24px and its AAA figure at 44px, which is
+ * also what both platform guidelines ask for. The workbench is dense by
+ * design - a rail of forty 44px rows is a very long rail - so the
+ * controls that get the full 44 are the ones hit while holding the
+ * device, and the in-panel fields settle at 40.
+ *
+ * Keyed to the pointer, not the width: a touch laptop at 1400px gets
+ * these and a 700px desktop window does not.
+ */
+@media (pointer: coarse) {
+    .LeapsApp .lp-tool,
+    .LeapsApp .lp-btn,
+    .LeapsApp .lp-run,
+    .LeapsApp .lp-dtab { min-height: 44px; }
+
+    /* A text-styled button is still a button. At 11px tall this one was the
+       smallest target in the app. Padding rather than font-size: it is meant
+       to read as a link and should go on doing so. */
+    .LeapsApp .lp-linkbtn { min-height: 36px; padding: 0.5em 0.4em; }
+
+    .lp-select,
+    .lp-num,
+    .lp-app input[type="number"],
+    .lp-app input[type="text"].lp-input { min-height: 40px; }
+
+    .LeapsApp .lp-layer-more,
+    .LeapsApp .lp-dock-collapse,
+    .LeapsApp .lp-plan-btn { min-width: 40px; min-height: 40px; }
+
+    .lp-section > summary { min-height: 48px; }
+
+    /* The insert seam between two layer cards: its button is an 18px
+       circle at 45% opacity, which is a small target for something that
+       cannot be reached any other way. */
+    .lp-layer-insert { height: 28px; margin: -0.15em 0; }
+    .LeapsApp .lp-layer-insert-btn { width: 26px; height: 26px; opacity: 0.7; transform: none; }
+
+    /* The one range control in the app sits at the UA's ~16px, and a
+       16px-tall target is a poor one. The input takes a 40px grab area
+       and hands the track to the pseudo-element, so it looks the same. */
+    .lp-vp-field input[type="range"] {
+        height: 40px;
+        background: transparent;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    .lp-vp-field input[type="range"]::-webkit-slider-runnable-track {
+        height: 4px;
+        border-radius: 2px;
+        background: var(--lp-line);
+    }
+    .lp-vp-field input[type="range"]::-moz-range-track {
+        height: 4px;
+        border-radius: 2px;
+        background: var(--lp-line);
+    }
+    .lp-vp-field input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--lp-accent);
+        /* (track 4 - thumb 20) / 2 centres the thumb on the track. */
+        margin-top: -8px;
+    }
+    .lp-vp-field input[type="range"]::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border: none;
+        border-radius: 50%;
+        background: var(--lp-accent);
+    }
+}
+
+/* ---------- Drag surfaces ----------
+ * The section viewport and the plan inset are both dragged directly.
+ * Their handlers are pointer-based (see app.js), but a touch drag is
+ * claimed by the page scroller before a pointermove is ever delivered
+ * unless the surface opts out of native scrolling.
+ */
+#lp-cv, #lp-plan { touch-action: none; }
+
 
 /* ---------- Hard overrides vs site-wide button styling ----------
  * main.css styles bare <button> with background + `color:#fff !important`

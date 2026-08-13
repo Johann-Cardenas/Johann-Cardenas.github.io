@@ -229,6 +229,27 @@ All pages have hardcoded `<nav>` in HTML — no page uses `#nav-placeholder`.
 - Subdirectory pages (`blog/`, `projects/`, `e-labs/`) use `../` relative paths for assets
 
 ## E-Labs Architecture
+
+### Responsive ladder (Gear3D, Cross-Section Studio, LEAPS)
+These three are CAD-style workbenches and share one breakpoint ladder, so the same device behaves the same way in each:
+
+| Band | Layout |
+|---|---|
+| desktop (>1100 / >1180) | three columns, unchanged |
+| tablet (720 up) | control rail beside the viewport; the wide panel moves below and splits into columns |
+| handheld (<720) | single column with the **viewport directly under the toolbar**, panels beneath |
+
+Rules that go with it, and the reasoning to preserve if you touch them:
+- **720 is the phone/tablet line.** The widest phone in portrait is ~430px and the iPad Mini is 744px, so nothing below the line is a tablet. Earlier thresholds at 800/980/1080 handed real tablets the phone layout.
+- **Landscape phones are keyed to height** (`max-height: 500px`), never width — a phone on its side is up to ~930px wide and would otherwise read as a tablet.
+- **`dvh` is stated after `vh`** on every viewport height, so browsers without it keep the `vh` line and those with it stop resizing the canvas when the mobile URL bar hides.
+- **Touch sizing hangs off `(pointer: coarse)`, not width** — 44px for toolbar controls, 40px for in-panel fields. A touch laptop gets it; a narrow desktop window does not.
+- **Range inputs need a grab area.** A styled slider is only as tall as its track (3-16px here). Each app grows the input to ~40px and moves the track to `::-webkit-slider-runnable-track` / `::-moz-range-track`, so it looks identical and is actually catchable.
+- **Panels collapse on first load on handhelds** via a small JS helper in each app; never persisted, since a panel opened by hand must stay open for the session.
+- **Drag surfaces use Pointer Events + `touch-action: none`.** Mouse-only handlers do not work on touch at all: a touch drag never produces a `mousemove`, the page just scrolls. LEAPS's section viewport and plan inset were converted for this reason. HTML5 `draggable` (LEAPS's layer grip) also does nothing on touch — the `⋯` menu is the reachable path there.
+- **Plotly does not watch the window.** LEAPS resizes all charts on a debounced `resize`/`orientationchange` via `ALL_PLOT_IDS`; without it, rotating a tablet leaves charts drawn to the old width.
+- `position: sticky` fails inside an `overflow: hidden` ancestor. LEAPS's `.lp-workspace` switches to `overflow: clip` below 1080 so its sticky top bar works while the rounded corners still clip.
+
 - Each app is a standalone SPA with inline `<script>`, its own theme bootstrap (`localStorage('appname-theme')`), synced to global `theme-preference`
 - **Asphera**: Loads structure/profiles/contours/pointcloud JSON per pavement section; Plotly charts. Preprocessing scripts (`preprocess_*.py`) convert FEM `.pkl.bz2` → JSON using `numpy`, `pandas`, `scipy`
 - **AirCrafter**: Parametric form → Plotly contour plots for contact stress

@@ -69,6 +69,11 @@
         a.click();
         setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
     }
+    /* Every plot the dock can hold. Kept in one place so the resize paths
+       cannot drift apart as panes are added. */
+    var ALL_PLOT_IDS = ['lp-chart-profile', 'lp-chart-surface', 'lp-chart-basin',
+        'lp-smallmults', 'lp-chart-perf'];
+
     /* Nudge Plotly to recompute size once a hidden container becomes visible */
     function resizePlots(ids) {
         if (typeof Plotly === 'undefined') return;
@@ -1704,7 +1709,13 @@
         resize();
 
         var drag = null;
-        cv.addEventListener('mousedown', function (e) {
+        /* Pointer events, not mouse events. A touch drag never produces a
+           mousemove - the browser scrolls the page instead - so on a phone or
+           tablet the section could not be panned and an analysis point could
+           not be moved. PointerEvent covers mouse, touch and pen from one
+           path, and #lp-cv sets touch-action:none so the gesture is delivered
+           here rather than taken by the scroller. */
+        cv.addEventListener('pointerdown', function (e) {
             var mx = e.offsetX, my = e.offsetY;
             /* near a point? */
             var hit = null;
@@ -1721,7 +1732,7 @@
             }
             drawViewport();
         });
-        window.addEventListener('mousemove', function (e) {
+        window.addEventListener('pointermove', function (e) {
             if (!drag) return;
             var r = cv.getBoundingClientRect();
             var mx = e.clientX - r.left, my = e.clientY - r.top;
@@ -1737,13 +1748,19 @@
                 drawViewport();
             }
         });
-        window.addEventListener('mouseup', function () {
+        function endViewportDrag() {
             if (drag && drag.type === 'point' && drag.moved) {
                 mutate(function () { }, {});      /* commit move */
                 renderPanels();
             }
             drag = null;
-        });
+        }
+        window.addEventListener('pointerup', endViewportDrag);
+        /* A touch drag interrupted by the system - an incoming call, a
+           gesture claimed by the OS - fires pointercancel and no pointerup.
+           Without this the drag would stay armed and the next move would
+           carry on from wherever the finger had been. */
+        window.addEventListener('pointercancel', endViewportDrag);
         cv.addEventListener('dblclick', function (e) {
             var x = s2wx(e.offsetX), z = Math.max(0, s2wy(e.offsetY));
             var p = { id: nid(), x: x, y: state.ySec, z: z };
@@ -1792,8 +1809,8 @@
         /* plan inset: drag to move the analysis section line */
         var pc = $('lp-plan');
         var planDrag = false;
-        pc.addEventListener('mousedown', function (e) { planDrag = true; e.preventDefault(); });
-        window.addEventListener('mousemove', function (e) {
+        pc.addEventListener('pointerdown', function (e) { planDrag = true; e.preventDefault(); });
+        window.addEventListener('pointermove', function (e) {
             if (!planDrag || !pc._py) return;
             var r = pc.getBoundingClientRect();
             var my = clamp(e.clientY - r.top, pc._plotT, pc._plotB);
@@ -1801,12 +1818,14 @@
             state.ySec = Math.round(yw);
             drawPlan();
         });
-        window.addEventListener('mouseup', function () {
+        function endPlanDrag() {
             if (planDrag) {
                 planDrag = false;
                 mutate(function () { }, {});
             }
-        });
+        }
+        window.addEventListener('pointerup', endPlanDrag);
+        window.addEventListener('pointercancel', endPlanDrag);
 
         /* toolbar */
         $('lp-fit').addEventListener('click', fitView);
@@ -2397,7 +2416,7 @@
             var d = $('lp-dock');
             d.classList.toggle('is-collapsed');
             if (!d.classList.contains('is-collapsed')) {
-                resizePlots(['lp-chart-profile', 'lp-chart-surface', 'lp-chart-basin', 'lp-smallmults', 'lp-chart-perf']);
+                resizePlots(ALL_PLOT_IDS);
             }
         });
 
@@ -2472,6 +2491,48 @@
         renderAll();
         fitView();
         initWorker();
+        setupResponsive();
+    }
+
+    /* ---------- Responsive behaviour ----------
+     * Two things the stylesheet cannot do on its own.
+     *
+     * 1. Plotly sizes a chart when it draws it and does not watch the window.
+     *    Only two of the five charts were created with responsive:true, and
+     *    the resize paths that did exist ran on a dock tab switch. Turning a
+     *    tablet from portrait to landscape therefore left the deflection
+     *    basin, the small-multiples grid and the performance chart drawn to
+     *    the old width, overflowing or stranded in white space until a tab
+     *    was touched. The canvas viewport was never affected - it has its own
+     *    ResizeObserver.
+     *
+     * 2. The control sections ship open, which is right beside a viewport on
+     *    a desktop and wrong once they stack: measured at 390px the left rail
+     *    ran 1,281px and put the results dock at y=2,969. Only the first
+     *    section stays open on a handheld.
+     */
+    function setupResponsive() {
+        var onResize = debounce(function () { resizePlots(ALL_PLOT_IDS); }, 180);
+        window.addEventListener('resize', onResize);
+        /* Safari fires orientationchange before the new viewport size is
+           readable, so the resize that follows is what actually lands; this
+           is here for the browsers that do not emit one. */
+        window.addEventListener('orientationchange', function () { setTimeout(onResize, 250); });
+
+        collapseSectionsOnHandheld();
+    }
+
+    /* Runs once, at boot, and is not persisted: a section opened by hand has
+       to stay open for the session. */
+    function collapseSectionsOnHandheld() {
+        /* Matches the stylesheet's handheld band, landscape included - a phone
+           on its side is ~930px wide and would otherwise miss this. */
+        if (!window.matchMedia) return;
+        var handheld = window.matchMedia('(max-width: 719px)').matches
+            || window.matchMedia('(max-width: 1080px) and (max-height: 500px) and (orientation: landscape)').matches;
+        if (!handheld) return;
+        var secs = document.querySelectorAll('.lp-left .lp-section');
+        for (var i = 1; i < secs.length; i++) secs[i].open = false;
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
