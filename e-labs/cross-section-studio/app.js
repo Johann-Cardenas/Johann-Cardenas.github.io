@@ -877,10 +877,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
 
     /* ========================================================
-       9. Export
+       9. Output — export to file, copy to clipboard
        ======================================================== */
-    function exportImage() {
-        const fmt = ui.expFormat.value;                       // png | png-alpha | jpeg
+
+    /** Resolution chosen in the Export panel, clamped to what a canvas will
+        actually encode. */
+    function exportDims() {
         let w, h;
         if (ui.expSize.value === 'custom') {
             w = parseInt(ui.expW.value, 10) || 2400;
@@ -888,17 +890,36 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         } else {
             [w, h] = ui.expSize.value.split('x').map(Number);
         }
-        w = Math.min(8192, Math.max(256, w));
-        h = Math.min(8192, Math.max(256, h));
+        return [
+            Math.min(8192, Math.max(256, w)),
+            Math.min(8192, Math.max(256, h))
+        ];
+    }
 
+    /**
+     * Renders one frame at w x h off the live viewport size, hands the canvas
+     * to `extract`, then puts the viewport back exactly as it was.
+     *
+     * `extract` must read the canvas synchronously. `toDataURL` and `toBlob`
+     * both snapshot at call time, which is what makes this safe with
+     * `preserveDrawingBuffer: false` — anything that defers the read to a
+     * later task gets a cleared buffer.
+     *
+     * @param {number} w        output width in px
+     * @param {number} h        output height in px
+     * @param {boolean} alpha   render onto nothing instead of the background
+     * @param {(c: HTMLCanvasElement) => any} extract
+     * @returns {any} whatever `extract` returned
+     */
+    function withHiResFrame(w, h, alpha, extract) {
         const prevBg = scene.background;
         const prevPR = renderer.getPixelRatio();
         const prevW = canvas.width / prevPR, prevH = canvas.height / prevPR;
         const prevSelVis = selOutline.visible;
-        selOutline.visible = false;              // selection highlight never appears in exports
+        selOutline.visible = false;              // selection highlight never appears in output
 
-        if (fmt === 'png-alpha') scene.background = null;
-        else if (fmt === 'jpeg' && !scene.background) scene.background = new THREE.Color('#ffffff');
+        if (alpha) scene.background = null;
+        else if (!scene.background) scene.background = new THREE.Color('#ffffff');
 
         renderer.setPixelRatio(1);
         renderer.setSize(w, h, false);
@@ -907,22 +928,116 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         updateOrthoFrustum(aspect);
         renderer.render(scene, activeCam);
 
-        const mime = fmt === 'jpeg' ? 'image/jpeg' : 'image/png';
-        const url = renderer.domElement.toDataURL(mime, 0.95);
+        try {
+            return extract(renderer.domElement);
+        } finally {
+            scene.background = prevBg;
+            selOutline.visible = prevSelVis;
+            renderer.setPixelRatio(prevPR);
+            renderer.setSize(prevW, prevH, false);
+            resize();
+        }
+    }
 
-        // restore
-        scene.background = prevBg;
-        selOutline.visible = prevSelVis;
-        renderer.setPixelRatio(prevPR);
-        renderer.setSize(prevW, prevH, false);
-        resize();
+    /** File stem from the project title, or a sane default. */
+    function fileStem(fallback) {
+        return (state.meta.name || fallback).replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || fallback;
+    }
+
+    function downloadBlob(blob, name) {
+        const a = document.createElement('a');
+        a.download = name;
+        a.href = URL.createObjectURL(blob);
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    }
+
+    function exportImage() {
+        const fmt = ui.expFormat.value;                       // png | png-alpha | jpeg
+        const [w, h] = exportDims();
+        const mime = fmt === 'jpeg' ? 'image/jpeg' : 'image/png';
+        const url = withHiResFrame(w, h, fmt === 'png-alpha', c => c.toDataURL(mime, 0.95));
 
         const a = document.createElement('a');
-        const base = (state.meta.name || 'cross-section').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'cross-section';
-        a.download = `${base}_${w}x${h}.${fmt === 'jpeg' ? 'jpg' : 'png'}`;
+        a.download = `${fileStem('cross-section')}_${w}x${h}.${fmt === 'jpeg' ? 'jpg' : 'png'}`;
         a.href = url;
         a.click();
         toast(`Exported ${w} × ${h} ${fmt === 'jpeg' ? 'JPEG' : 'PNG'}`);
+    }
+
+    /* ---------------- Clipboard ----------------
+       The point of the studio is a figure that ends up in a report, and a
+       download puts two steps — find the file, insert it — between the render
+       and the document. `navigator.clipboard.write` removes both.
+
+       The write is issued synchronously inside the click handler and handed a
+       *promise* of the blob rather than the blob itself. That is what Safari's
+       user-activation check requires, and Chrome and Firefox accept the same
+       shape, so one code path serves all three.
+
+       PNG is the only image type the async clipboard reliably carries, so a
+       copy is always a PNG even when the Export format says JPEG. Alpha
+       survives the clipboard on Windows and macOS; a few consumers flatten it
+       to white, which the field note says. */
+    const clipboardReady = () =>
+        typeof navigator !== 'undefined' &&
+        !!navigator.clipboard &&
+        typeof navigator.clipboard.write === 'function' &&
+        typeof window.ClipboardItem === 'function' &&
+        window.isSecureContext;
+
+    let copyBusy = false;
+
+    /** Every copy affordance shows the same pending state, so it is obvious
+        that a 3600 x 2700 encode is under way whichever one was pressed. */
+    function setCopyBusy(busy) {
+        copyBusy = busy;
+        [ui.copy, ui.copyBg, ui.copyAlpha, ui.vpCopy, ui.vpCopyAlpha].forEach(b => {
+            b.disabled = busy;
+            b.classList.toggle('is-busy', busy);
+        });
+    }
+
+    /**
+     * Puts the current view on the clipboard as a PNG.
+     *
+     * @param {boolean} alpha  true copies with a transparent background,
+     *                         whatever the Background panel is set to
+     * @returns {void}
+     */
+    function copyImage(alpha) {
+        if (copyBusy) return;
+        const [w, h] = exportDims();
+        const name = `${fileStem('cross-section')}_${w}x${h}.png`;
+        const label = alpha ? 'transparent PNG' : 'PNG';
+
+        // Render first: it is synchronous, so the blob promise is already in
+        // flight by the time `clipboard.write` is reached and the click is
+        // still the active user gesture.
+        const blobPromise = new Promise((resolve, reject) => {
+            withHiResFrame(w, h, alpha, c => {
+                c.toBlob(b => (b ? resolve(b) : reject(new Error('PNG encoding failed'))), 'image/png');
+            });
+        });
+
+        const saveInstead = why => blobPromise
+            .then(b => { downloadBlob(b, name); toast(`${why} — saved the ${label} instead`); })
+            .catch(() => toast('Could not produce the image'));
+
+        if (!clipboardReady()) {
+            // No clipboard here (insecure origin, or a browser without the
+            // async clipboard). Don't lose the render.
+            setCopyBusy(true);
+            saveInstead('Clipboard unavailable').finally(() => setCopyBusy(false));
+            return;
+        }
+
+        setCopyBusy(true);
+        navigator.clipboard
+            .write([new ClipboardItem({ 'image/png': blobPromise })])
+            .then(() => toast(`Copied ${w} × ${h} ${label} to the clipboard`))
+            .catch(() => saveInstead('Clipboard refused the image'))
+            .finally(() => setCopyBusy(false));
     }
 
     /* ========================================================
@@ -942,14 +1057,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
 
     function saveProject() {
-        const data = serializeProject();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        const base = (state.meta.name || 'section').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'section';
-        a.download = base + '.pavement.json';
-        a.href = URL.createObjectURL(blob);
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        const blob = new Blob([JSON.stringify(serializeProject(), null, 2)], { type: 'application/json' });
+        downloadBlob(blob, fileStem('section') + '.pavement.json');
         toast('Project saved');
     }
 
@@ -1033,6 +1142,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         template: $('xs-template'), undo: $('xs-undo'), redo: $('xs-redo'),
         open: $('xs-open'), save: $('xs-save'), fileInput: $('xs-file-input'),
         reset: $('xs-reset'), export: $('xs-export'),
+        copy: $('xs-copy'), copyBg: $('xs-copy-bg'), copyAlpha: $('xs-copy-alpha'),
+        vpCopy: $('xs-vp-copy'), vpCopyAlpha: $('xs-vp-copy-alpha'),
         secWidth: $('xs-sec-width'), secLength: $('xs-sec-length'),
         secRecessX: $('xs-sec-recess-x'), secRecessZ: $('xs-sec-recess-z'),
         secSubgrade: $('xs-sec-subgrade'),
@@ -1407,9 +1518,20 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     ui.bgMode.addEventListener('change', () => { state.background.mode = ui.bgMode.value; applyBackground(); pushHistory(); });
     ui.bgColor.addEventListener('input', () => { state.background.color = ui.bgColor.value; state.background.mode = 'color'; ui.bgMode.value = 'color'; applyBackground(); pushHistoryDebounced(); });
 
-    /* ---------------- Export ---------------- */
+    /* ---------------- Export & copy ---------------- */
     ui.expSize.addEventListener('change', () => { ui.expCustom.hidden = ui.expSize.value !== 'custom'; });
     ui.export.addEventListener('click', exportImage);
+
+    // Toolbar copy follows the Export format: "PNG (transparent)" copies with
+    // alpha, anything else copies over the current background.
+    ui.copy.addEventListener('click', () => {
+        if (ui.expFormat.value === 'jpeg') toast('Clipboard images are always PNG');
+        copyImage(ui.expFormat.value === 'png-alpha');
+    });
+    ui.copyBg.addEventListener('click', () => copyImage(false));
+    ui.vpCopy.addEventListener('click', () => copyImage(false));
+    ui.copyAlpha.addEventListener('click', () => copyImage(true));
+    ui.vpCopyAlpha.addEventListener('click', () => copyImage(true));
 
     /* ---------------- Meta ---------------- */
     ui.metaName.addEventListener('change', () => { state.meta.name = ui.metaName.value; });
@@ -1479,10 +1601,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     ui.undo.addEventListener('click', undo);
     ui.redo.addEventListener('click', redo);
+    /* Ctrl/Cmd+Z, Ctrl+Y, and Ctrl/Cmd+Alt+C to copy. Alt is in the copy
+       shortcut on purpose: plain Ctrl+C has to keep copying selected text,
+       and Ctrl+Shift+C opens the inspector in Chrome. */
     document.addEventListener('keydown', e => {
         if (e.target.matches('input, textarea, select')) return;
-        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
-        else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); redo(); }
+        const mod = e.ctrlKey || e.metaKey;
+        if (!mod) return;
+        const k = e.key.toLowerCase();
+        if (e.altKey && k === 'c') { e.preventDefault(); copyImage(ui.expFormat.value === 'png-alpha'); }
+        else if (!e.altKey && !e.shiftKey && k === 'z') { e.preventDefault(); undo(); }
+        else if (!e.altKey && (k === 'y' || (e.shiftKey && k === 'z'))) { e.preventDefault(); redo(); }
     });
 
     ui.save.addEventListener('click', saveProject);
@@ -1558,4 +1687,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     pushHistory();
     collapsePanelsOnHandheld();
     animate();
+
+    if (!clipboardReady()) {
+        const why = 'This browser will not put an image on the clipboard here — Copy saves a PNG file instead.';
+        [ui.copy, ui.copyBg, ui.copyAlpha, ui.vpCopy, ui.vpCopyAlpha].forEach(b => { b.title = why; });
+    }
 })();

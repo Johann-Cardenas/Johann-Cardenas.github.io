@@ -120,7 +120,8 @@
                         <input type="file" id="xs-file-input" accept=".json,application/json" hidden>
                         <span class="xs-spacer"></span>
                         <button id="xs-reset" class="xs-btn xs-btn--danger" title="Reset to default section"><i class="fas fa-rotate-left"></i> Reset</button>
-                        <button id="xs-export" class="xs-btn xs-btn--primary" title="Export image"><i class="fas fa-camera"></i> Export</button>
+                        <button id="xs-copy" class="xs-btn xs-btn--primary" title="Copy the figure to the clipboard as a PNG (Ctrl+Alt+C). Choose PNG (transparent) under Export to copy without a background."><i class="fas fa-copy"></i> Copy</button>
+                        <button id="xs-export" class="xs-btn" title="Download the figure as an image file"><i class="fas fa-camera"></i> Export</button>
                     </div>
 
                     <!-- Left sidebar: project controls -->
@@ -250,7 +251,7 @@
                         </details>
 
                         <details>
-                            <summary><i class="fas fa-file-export"></i> Export</summary>
+                            <summary><i class="fas fa-file-export"></i> Export &amp; Copy</summary>
                             <div class="xs-group">
                                 <div class="xs-field">
                                     <label for="xs-exp-format">Format</label>
@@ -276,6 +277,14 @@
                                     <input type="number" id="xs-exp-w" class="xs-num" min="256" max="8192" value="2400" style="width:64px">
                                     <input type="number" id="xs-exp-h" class="xs-num" min="256" max="8192" value="1800" style="width:64px">
                                 </div>
+                                <p class="xs-subhead">To the clipboard</p>
+                                <div class="xs-mini-btn-row">
+                                    <button id="xs-copy-bg" class="xs-btn" title="Copy a PNG at the resolution above, over the current background (Ctrl+Alt+C)"><i class="fas fa-copy"></i> Copy PNG</button>
+                                    <button id="xs-copy-alpha" class="xs-btn" title="Copy a PNG with a transparent background, whatever the Background panel says"><i class="fas fa-clone"></i> Copy transparent</button>
+                                </div>
+                                <p class="xs-field-note">Paste straight into a report or a slide — no file, no download folder. Alpha survives the clipboard in Word, PowerPoint and Google Slides; a few apps flatten it to white.</p>
+
+                                <p class="xs-subhead">To a file</p>
                                 <p class="xs-field-note">Exports re-render the current view at full resolution. Transparent PNG ignores the background.</p>
                             </div>
                         </details>
@@ -297,6 +306,10 @@
                     <!-- Viewport -->
                     <div class="xs-viewport" id="xs-viewport">
                         <canvas id="xs-canvas" aria-label="3D pavement cross-section viewport"></canvas>
+                        <div class="xs-vp-tools">
+                            <button id="xs-vp-copy" class="xs-vp-btn" title="Copy the figure to the clipboard as a PNG (Ctrl+Alt+C)"><i class="fas fa-copy"></i><span>Copy</span></button>
+                            <button id="xs-vp-copy-alpha" class="xs-vp-btn xs-vp-btn--icon" title="Copy as a PNG with a transparent background" aria-label="Copy as a PNG with a transparent background"><i class="fas fa-clone"></i></button>
+                        </div>
                         <div class="xs-hud" id="xs-hud">—</div>
                         <div class="xs-hud-right" id="xs-hud-right">orbit: drag · zoom: wheel · pan: right-drag · select: click layer</div>
                     </div>

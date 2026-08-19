@@ -217,6 +217,10 @@
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
 }
 
+/* A hi-res PNG encode takes a beat. Every copy affordance shares the state, so
+   it is obvious the press landed whichever one was pressed. */
+.xs-app .is-busy { cursor: progress; opacity: 0.6; }
+
 /* ==================== PANELS ==================== */
 .xs-panel {
     background: var(--xs-bg-panel);
@@ -272,6 +276,17 @@
 .xs-panel details[open] summary::after { transform: rotate(90deg); }
 
 .xs-panel .xs-group { padding: 0.15rem 0.9rem 0.9rem; }
+
+/* Separates "to the clipboard" from "to a file" inside one group, without
+   opening a second <details>. */
+.xs-subhead {
+    margin: 0.9rem 0 0.35rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--xs-text-muted);
+}
 
 /* ==================== FIELDS ==================== */
 .xs-field {
@@ -424,6 +439,60 @@
 }
 
 .xs-viewport canvas { display: block; width: 100%; height: 100%; outline: none; }
+
+/* Copy, on the image. The figure is the product, so the control that takes it
+   lives where the figure is rather than only in the toolbar. Recessive until
+   the pointer is near — it must not become part of the composition someone is
+   framing, and it never appears in the render itself. */
+.xs-vp-tools {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    display: flex;
+    gap: 0.3rem;
+    opacity: 0.55;
+    transition: opacity 0.15s ease;
+}
+
+.xs-viewport:hover .xs-vp-tools,
+.xs-vp-tools:focus-within { opacity: 1; }
+
+.xs-app .xs-vp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.34rem 0.6rem;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.72);
+    color: #e2e8f0 !important;
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: 0;
+    height: auto;
+    cursor: pointer;
+    box-shadow: none;
+    backdrop-filter: blur(4px);
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.xs-app .xs-vp-btn--icon { padding: 0.34rem 0.45rem; }
+
+.xs-app .xs-vp-btn:hover:not(:disabled) {
+    background: var(--xs-primary);
+    border-color: var(--xs-primary);
+    color: #fff !important;
+    transform: none;
+}
+
+.xs-app .xs-vp-btn:disabled { opacity: 0.5; cursor: progress; }
+
+.xs-app .xs-vp-btn:focus-visible {
+    outline: 2px solid var(--xs-primary);
+    outline-offset: 2px;
+}
 
 .xs-hud {
     position: absolute;
@@ -1017,6 +1086,7 @@
    further up pins `height: auto` on every .xs-btn. */
 @media (pointer: coarse) {
     .xs-app .xs-btn { min-height: 44px; }
+    .xs-app .xs-vp-btn { min-height: 40px; }
     .xs-app .xs-icon-btn { min-width: 40px; min-height: 40px; }
     .xs-select, .xs-num, .xs-text { min-height: 40px; }
     .xs-app .xs-layer-move button { min-width: 34px; min-height: 21px; }
@@ -1090,9 +1160,13 @@
     }
     .xs-layer-insert:focus-within { opacity: 1; }
     .xs-app .xs-insert-btn { min-height: 26px; min-width: 26px; }
+
+    /* Same reasoning as the insert seam: a touchscreen never hovers, so the
+       copy cluster would sit at 55% forever. */
+    .xs-vp-tools { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .xs-btn, .xs-layer-row, .xs-mat-tile, .xs-app .back-btn { transition: none; }
+    .xs-btn, .xs-layer-row, .xs-mat-tile, .xs-app .back-btn, .xs-vp-tools { transition: none; }
     .xs-toast { animation: none; }
 }
