@@ -12,6 +12,13 @@
     --xs-mono: ui-monospace, 'Cascadia Code', Consolas, 'Courier New', monospace;
 }
 
+/* `hidden` has to beat a class. The browser's `[hidden] { display: none }`
+   lives in the UA sheet, so any author rule that sets a display wins over it —
+   and both elements this app hides at runtime (the custom-resolution pair, the
+   background colour swatch) are `.xs-field { display: flex }`. Without this
+   they stayed on screen whatever `ui.expCustom.hidden` was set to. */
+.xs-app [hidden] { display: none !important; }
+
 [data-theme="light"] {
     --xs-bg: #ffffff;
     --xs-bg-alt: #f8fafc;

@@ -1167,6 +1167,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     let selectedId = null;
     const selectedLayer = () => state.layers.find(l => l.id === selectedId) || null;
 
+    /** Layer names are free text and the rows are built with innerHTML.
+        Escaping is the difference between a name and a script tag. */
+    function esc(s) {
+        return String(s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     function toast(msg) {
         const el = document.createElement('div');
         el.className = 'xs-toast';
@@ -1201,8 +1209,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     /* ---------------- Layer manager ---------------- */
     function materialOptionsHtml(current) {
         return MATERIAL_GROUPS.map(g =>
-            `<optgroup label="${g.label}">` +
-            g.keys.map(k => `<option value="${k}" ${k === current ? 'selected' : ''}>${MATERIALS[k].name}</option>`).join('') +
+            `<optgroup label="${esc(g.label)}">` +
+            g.keys.map(k => `<option value="${k}" ${k === current ? 'selected' : ''}>${esc(MATERIALS[k].name)}</option>`).join('') +
             '</optgroup>').join('');
     }
 
@@ -1236,8 +1244,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
                 </div>
                 <div class="xs-layer-swatch" style="background-image:url('${texs.thumbUrl}')"></div>
                 <div class="xs-layer-name">
-                    <input type="text" value="${layer.name.replace(/"/g, '&quot;')}" data-act="rename" ${lockAttr}>
-                    <span class="xs-layer-spec">${def.spec}</span>
+                    <input type="text" value="${esc(layer.name)}" data-act="rename" ${lockAttr}>
+                    <span class="xs-layer-spec">${esc(def.spec)}</span>
                 </div>
                 <div class="xs-layer-mat-cell">
                     <select class="xs-select" data-act="material" ${lockAttr} style="max-width:100%">
@@ -1386,7 +1394,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
                 tile.dataset.key = key;
                 tile.innerHTML = `
                     <span class="xs-mat-thumb"></span>
-                    <span class="xs-mat-label">${MATERIALS[key].name}</span>`;
+                    <span class="xs-mat-label">${esc(MATERIALS[key].name)}</span>`;
                 tile.title = MATERIALS[key].spec;
                 tile.addEventListener('click', () => {
                     const layer = selectedLayer();
