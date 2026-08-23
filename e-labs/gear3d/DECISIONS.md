@@ -6,6 +6,118 @@ why, so a later maintainer can overturn it on the merits rather than guessing.
 
 ---
 
+## D29. The gear naming convention is implemented as a grammar, not a table (v1.9)
+
+**Decision.** `src/core/gearcode.js` parses FAA Order 5300.7 names from the
+convention's own rules. `GEAR_CODES` in `schema.js` is generated from it, and a
+designation is validated by **parsing** rather than by membership of a list.
+
+**Why.** The convention is explicitly open-ended. Figure 2's caption says
+*increase numeric value for additional tandem axles*, so `4S`, `9Q` and `2D/4D3`
+are all legal names, and a table can only ever contain the ones someone thought
+to type. The hand-maintained table this replaced held twelve codes and had
+already drifted out of the Order's vocabulary — it described `2D` as "Dual
+wheel, tandem", which is the phrasing §6d retired when it made `T` mean triple
+instead of tandem. A third copy of the same list sat in
+`src/data/aircraft/index.json`. Three copies of a table is three places for it
+to be wrong; a parser is one place, and it answers questions no table can.
+
+**What this buys, concretely.** Table 3 publishes a wheel count for eighteen
+configurations. The parser derives all eighteen from the names alone, which is
+a real test of whether the grammar was understood — and it caught the two rules
+that are easiest to invert:
+
+- The main-gear multiple counts gears in line **on one side** of a symmetric
+  gear (§6e) and is doubled; the body-gear multiple is the **total across the
+  aircraft** (§6f) and is not. Getting that backwards gives `2D/D1` twelve
+  wheels instead of ten.
+- The body count is **never** elided, even when it is 1, "because body gear
+  arrangement may not be symmetrical". `2D/D` is therefore refused rather than
+  read as a synonym for `2D/D1`, which it is not.
+
+**The parser throws rather than returning a partial result.** A half-understood
+gear name is worse than a refusal, because every wheel position downstream
+would be derived from the half that was guessed.
+
+**Where.** `src/core/gearcode.js`; `GEAR_CODES` and `isValidGearCode()` in
+`src/core/schema.js`; group 12b of the test suite.
+
+---
+
+## D30. Gear configurations are schematics, and say so everywhere (v1.9)
+
+**Decision.** The sixteen FAA Order 5300.7 configurations ship as normal
+aircraft units — they validate, resolve and export as aircraft — but carry
+`kind: "schematic"`, a separate Domain in the picker, an amber panel notice and
+a `Schematic` flag in the title block that **outranks** both other flags.
+
+**Why not a fourth domain.** `domain` is `truck | aircraft` throughout the
+schema, the layout engine and the exporters. A third value would have meant a
+third branch in every one of them to express something that is not true: these
+*are* aircraft gear. The separation belongs in the picker, which is where the
+confusion would otherwise happen, and nowhere else.
+
+**Why the flag outranks the others.** Whether a drawing was edited away from
+its reference, or how many of its values were assumed, is a second-order
+question next to whether it is a drawing at all. A reader who takes one flag
+off a figure should take that one.
+
+**The sourcing runs opposite to the real aircraft, which is why no schematic
+states an outer width.** On a 737 the FAA's published main gear outer width is
+the datum and the track is derived from it (D14). Here the track is the
+measured quantity — FAARFIELD publishes per-wheel coordinates — and the outer
+width would fall out of a **nominal** tire, because no consulted source gives a
+Tire and Rim Association designation for these aircraft. Publishing one would
+dress a placeholder up as a datum, so `mainGearOuterWidth` is null on all
+sixteen and the validator's closure check correctly skips them. A test asserts
+that no schematic ever states one.
+
+**Two honest nulls fell out of this, and both are corroborated rather than
+tolerated.** The B-52 has no nose gear at all — Figure 18 ignores the wingtip
+outriggers — so it has no wheelbase, the quantity being measured from a nose
+gear that does not exist, and no `percentOnMainGear`, that figure existing to
+split load between nose and main gear. The tests that used to demand both now
+demand that a unit stating null genuinely *has* no nose gear, and that the null
+propagates: no tire may carry a load derived from a split that was never
+stated. That is strictly stronger than what they asserted before.
+
+**Where.** `src/data/aircraft/faa-5300-7.json`; `renderTitleBlock()`,
+`renderAssumptionNotice()` and `poolFor()` in `main.js`.
+
+---
+
+## D31. FAARFIELD's belly entries share a datum, and the 747 proves the sign (v1.9)
+
+**Decision.** The wing-to-body gear longitudinal offset on the DC-10-30 and
+A340-600 schematics is taken from the FAARFIELD 2.1.1 library, with the body
+gear **aft** of the wing gear.
+
+**Why this needed proving.** FAARFIELD stores an aircraft's belly gear as a
+*separate library entry*, and it is not obvious that the two share a
+longitudinal origin. They visibly do not always: the DC-10-30's wing bogie sits
+at Y 762 mm while the KC-10's — essentially the same gear — sits at 0. This
+build initially read the offset as putting the body gear **forward**, which is
+the wrong side, and would have put a body bogie ahead of the wing gear on two
+aircraft.
+
+**What settles it.** The 747-400. Its FAARFIELD wing gear sits at Y 3073.4 mm,
+and Boeing's own ACAP §7.2.1 footprint figure — read separately, for
+`boeing.json`, from a wholly independent document — puts the 747 body gear
+3073 mm **aft** of the wing gear. Agreement to 0.4 mm fixes both the datum
+(shared, origin at the body gear) and the sign (positive Y forward) at once.
+The direction then also agrees with the A380, with Figures 10–12 and 16, and
+with the 747 entry already in this library.
+
+**The general lesson.** A cross-check is only worth something when the two
+sides are independent. This one is worth something precisely because the ACAP
+figure was transcribed for a different aircraft, for a different file, before
+this question was asked.
+
+**Where.** `faa-5300-7.json`, the `WLG-L` and `BLG` source strings on
+`faa-2d-d1` and `faa-2d-2d1`.
+
+---
+
 ## D1. Drafting convention: ISO 129-1
 
 **Decision.** Dimensions follow ISO 129-1, not ANSI Y14.5.
