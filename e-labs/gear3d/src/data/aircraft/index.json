@@ -49,14 +49,13 @@
     "the A380 body bogie's 20 mm wider middle axle, which `dualSpacingByRow`",
     "exists to carry."
   ],
-  "files": ["boeing.json", "airbus.json"],
-  "gearCodes": [
-    { "code": "S", "label": "Single wheel" },
-    { "code": "D", "label": "Dual wheel" },
-    { "code": "2D", "label": "Dual wheel, tandem" },
-    { "code": "3D", "label": "Dual wheel, triple tandem" },
-    { "code": "2D/2D2", "label": "Dual tandem wing gear + two dual tandem body gears" },
-    { "code": "2D/3D2", "label": "Dual tandem wing gear + two triple tandem body gears" }
+  "files": ["boeing.json", "airbus.json", "faa-5300-7.json"],
+  "$gearCodes": [
+    "REMOVED in v1.9. This list was a third hand-maintained copy of the gear",
+    "code table — after src/core/schema.js and the app's own dropdown — and it",
+    "had already drifted out of the vocabulary FAA Order 5300.7 §6d requires.",
+    "Codes now come from src/core/gearcode.js, which derives them from the",
+    "naming convention itself, so there is one place for them to be wrong."
   ],
   "sources": [
     {

@@ -24,6 +24,9 @@
 'use strict';
 
 import { parseTire } from './tires.js';
+import {
+    parseGearCode, describeGearCode, gearWheelCount, FAA_TABLE_3, genericConfigurations
+} from './gearcode.js';
 
 export const SCHEMA_VERSION = '1.0';
 
@@ -54,26 +57,51 @@ export const GROUP_TYPES = Object.freeze({
 });
 
 /**
- * FAA landing gear designation codes.
- * Nomenclature per AC 150/5300-13B: a leading digit is the number of
- * tandem rows, `S` is single wheel, `D` is dual. A slash separates wing
- * gear from body gear; the trailing digit on a body-gear term counts the
- * body gear legs.
+ * FAA landing gear designation codes, per FAA Order 5300.7.
+ *
+ * This table used to be hand-maintained, and had drifted: it carried twelve
+ * codes, described `2D` as "Dual wheel, tandem" in a vocabulary the Order
+ * had retired (§6d: the tandem designation "T" no longer appears in a gear
+ * name; "T" now means TRIPLE), and had no way to answer a code it had not
+ * been told about. It is now GENERATED from the convention itself — every
+ * configuration the Order tabulates in Table 3, plus Figure 2's generic
+ * grid — and a code outside it is validated by parsing rather than by
+ * membership. `3Q` is a legal gear name whether or not anyone has built one.
+ *
+ * @type {Readonly<Record<string, string>>}
  */
-export const GEAR_CODES = Object.freeze({
-    S: 'Single wheel',
-    D: 'Dual wheel',
-    '2S': 'Single wheel, tandem',
-    '2D': 'Dual wheel, tandem',
-    '3D': 'Dual wheel, triple tandem',
-    '2T': 'Triple wheel, tandem',
-    '2D/D1': 'Dual tandem wing gear + dual body gear',
-    '2D/2D1': 'Dual tandem wing gear + one dual tandem body gear',
-    '2D/2D2': 'Dual tandem wing gear + two dual tandem body gears',
-    '2D/3D2': 'Dual tandem wing gear + two triple tandem body gears',
-    '5D': 'Dual wheel, five tandem rows',
-    '7D': 'Dual wheel, seven tandem rows'
-});
+export const GEAR_CODES = Object.freeze(Object.fromEntries(
+    [...new Set([...FAA_TABLE_3.map((r) => r.code), ...genericConfigurations(3)])]
+        .map((code) => [code, describeGearCode(code)])
+));
+
+/**
+ * Is this a designation the naming convention admits?
+ * Membership of GEAR_CODES is sufficient but not necessary — the convention
+ * is open-ended ("Increase numeric value for additional tandem axles",
+ * Figure 2), so anything that parses is valid.
+ *
+ * @param {string} code
+ * @returns {boolean}
+ */
+export function isValidGearCode(code) {
+    try { parseGearCode(code); return true; } catch { return false; }
+}
+
+/**
+ * Wheels the designation implies, excluding the nose gear — Table 3's
+ * "Total # Wheels, Excluding Nose" column. Null when the name is one the
+ * Order declines to decompose (`C5`, §6h).
+ *
+ * @param {string} code
+ * @returns {number|null}
+ */
+function wheelsFromDesignation(code) {
+    try {
+        const c = parseGearCode(code);
+        return c.special ? null : gearWheelCount(c);
+    } catch { return null; }
+}
 
 /* ------------------------------------------------------------
    Fields that must carry provenance, per object kind.
@@ -252,8 +280,29 @@ function validateAircraft(u, E, W) {
         return;
     }
     if (!hasSource(u.gearDesignation)) E('aircraft unit requires gearDesignation');
-    else if (!GEAR_CODES[u.gearDesignation]) {
-        W(`gearDesignation "${u.gearDesignation}" is not in the known code table`);
+    else if (!isValidGearCode(u.gearDesignation)) {
+        // A designation that does not parse is an ERROR, not a warning. The
+        // gear name is how every downstream reader — a pavement engineer, an
+        // export header, this app's own catalogue — identifies the
+        // configuration, and one that the naming convention cannot read is
+        // simply wrong. Being absent from Table 3 is a different matter and
+        // is not flagged at all: the convention is open-ended by design.
+        let why = '';
+        try { parseGearCode(u.gearDesignation); } catch (err) { why = ` — ${err.message}`; }
+        E(`gearDesignation "${u.gearDesignation}" is not a valid FAA Order 5300.7 gear name${why}`);
+    } else {
+        // The name and the geometry must agree. A unit labelled 2D that
+        // carries three tandem rows is a transcription error in one of the
+        // two, and which one it is cannot be decided here — but that they
+        // disagree can.
+        const stated = wheelsFromDesignation(u.gearDesignation);
+        const actual = (u.gears || [])
+            .filter((g) => g.role !== 'nose' && !/^N/i.test(g.id || ''))
+            .reduce((n, g) => n + (g.wheelsAcross ?? (g.type === 'dual' ? 2 : 1)) * (g.tandemRows ?? 1), 0);
+        if (stated != null && actual !== stated) {
+            E(`gear designation "${u.gearDesignation}" implies ${stated} wheels excluding the nose gear, `
+                + `but gears[] carries ${actual}`);
+        }
     }
 
     checkProvenanceFields(u, REQUIRED_PROVENANCE.aircraftUnit, u.sources?.length ? 'unit sources' : null, E);
@@ -302,7 +351,31 @@ function validateAircraft(u, E, W) {
         if (!hasSource(g.source)) E(`${tag} has no source`);
         const wheelsAcross = g.wheelsAcross ?? (g.type === 'dual' ? 2 : g.type === 'single' ? 1 : null);
         if (wheelsAcross == null) E(`${tag} cannot determine wheelsAcross from type "${g.type}"`);
-        if (wheelsAcross > 1 && !(g.dualSpacing > 0)) E(`${tag} multi-wheel gear requires dualSpacing > 0`);
+
+        // A bogie states its lateral geometry either as an even pitch or, where
+        // the published one is not even, as explicit offsets. Exactly one has
+        // to be there. Offsets must describe every wheel on the axle and must
+        // be centred on the strut, or the strut's own y stops meaning what the
+        // track derivation assumes it means.
+        const offsets = g.wheelOffsets;
+        if (offsets != null) {
+            if (!Array.isArray(offsets) || !offsets.every((v) => typeof v === 'number')) {
+                E(`${tag} wheelOffsets must be an array of numbers, mm from the strut centreline`);
+            } else if (offsets.length !== wheelsAcross) {
+                E(`${tag} wheelOffsets has ${offsets.length} entries but the axle carries ${wheelsAcross} wheels`);
+            } else {
+                const mean = offsets.reduce((s, v) => s + v, 0) / offsets.length;
+                if (Math.abs(mean) > 0.5) {
+                    E(`${tag} wheelOffsets are not centred on the strut (mean ${mean.toFixed(2)} mm). `
+                        + 'They are measured from the strut centreline, so they must sum to zero.');
+                }
+                if (!offsets.every((v, i, a) => i === 0 || a[i - 1] < v)) {
+                    E(`${tag} wheelOffsets must be ordered left to right and distinct`);
+                }
+            }
+        } else if (wheelsAcross > 1 && !(g.dualSpacing > 0)) {
+            E(`${tag} multi-wheel gear requires dualSpacing > 0, or explicit wheelOffsets`);
+        }
         const rows = g.tandemRows ?? 1;
         if (rows > 1 && !(g.tandemSpacing > 0)) E(`${tag} tandemRows ${rows} requires tandemSpacing > 0`);
         if (g.pressure != null && !quantityHasProvenance(g.pressure)) {

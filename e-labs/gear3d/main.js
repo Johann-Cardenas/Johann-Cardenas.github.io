@@ -26,6 +26,10 @@ import {
     formatPressure, lengthFromMm, lengthToMm, canonical
 } from './src/core/units.js';
 import { DEFAULT_SEED } from './src/core/prng.js';
+import {
+    parseGearCode, describeGearCode, gearWheelCount, wheelPlan, tableRowsFor,
+    genericConfigurations, GEAR_TYPE_NAMES, TIRE_PRESSURE_CODES, FAA_TABLE_3
+} from './src/core/gearcode.js';
 import { APP_REVISION } from './src/core/version.js';
 import { CAMERA_PRESETS, ENG_AXES } from './src/core/coords.js';
 
@@ -88,7 +92,15 @@ const app = {
 /** Everything that is not the document: view flags, not undoable. */
 function defaultView() {
     return {
-        mode: '3d',
+        // Quad, not 3D. A gear configuration is a PLAN first — the thing an
+        // engineer needs from it is where the wheels are, and a single
+        // pictorial 3D view is the one arrangement that answers that worst:
+        // it foreshortens both axes at once, so no spacing can be read off it.
+        // Opening on plan / 3D / side / front shows the layout, the elevation,
+        // the track and the pictorial together, which is what a gear drawing
+        // has looked like for as long as there have been gear drawings.
+        // Clicking any pane still opens it full size.
+        mode: 'quad',
         unitSystem: 'SI',
         precision: 0,
         dualUnits: false,
@@ -143,6 +155,8 @@ async function boot() {
     setupViewport();
     setupToolbar();
     setupUnitPanel();
+    setupGearCodePanel();
+    setupCatalogue();
     setupIsolationPanel();
     setupDimensionPanel();
     setupContactPanel();
@@ -169,6 +183,16 @@ async function boot() {
     } else {
         loadUnitById('fhwa-c09-3S2');
     }
+
+    // Apply the view mode explicitly, whichever path got us here.
+    //
+    // The restore path goes through applyProject, which calls setViewMode; the
+    // fresh-load path did not, and got away with it for eight releases only
+    // because the default mode was '3d' and the renderer's own default was the
+    // single-view one. They agreed by coincidence. When the default became
+    // 'quad' they stopped agreeing, and the app opened with the Quad tab lit,
+    // store.view.mode === 'quad', and a single 3D view in the viewport.
+    setViewMode(app.store.view.mode);
 
     app.viewport.start();
 
@@ -1075,11 +1099,40 @@ function setupUnitPanel() {
     });
 }
 
+/**
+ * Units the Domain selector's current value refers to.
+ *
+ * `generic` is a UI domain, not a data one. Its members are aircraft — they
+ * validate as aircraft, resolve as aircraft and export as aircraft — but they
+ * are drawings of a gear NAME rather than models of a machine, and putting
+ * them in the same list as a measured 747 would invite exactly the confusion
+ * the schematic flag exists to prevent. They are separated in the picker and
+ * nowhere else.
+ *
+ * @param {string} domain 'truck' | 'aircraft' | 'generic'
+ * @returns {object[]}
+ */
+function poolFor(domain) {
+    if (domain === 'truck') return app.library.trucks;
+    const schematic = (u) => u.kind === 'schematic';
+    return domain === 'generic'
+        ? app.library.aircraft.filter(schematic)
+        : app.library.aircraft.filter((u) => !schematic(u));
+}
+
+/** The Domain value that shows a given unit. @param {object} u @returns {string} */
+function domainOf(u) {
+    if (u.domain === 'truck') return 'truck';
+    return u.kind === 'schematic' ? 'generic' : 'aircraft';
+}
+
 function syncCategories() {
     const domain = $('g3-domain').value;
     const sel = $('g3-category');
+    const label = $('g3-category-label');
     sel.innerHTML = '';
     if (domain === 'truck') {
+        if (label) label.textContent = 'Class';
         const opt = document.createElement('option');
         opt.value = ''; opt.textContent = 'All classes';
         sel.appendChild(opt);
@@ -1089,16 +1142,26 @@ function syncCategories() {
             o.textContent = `Class ${c.class} — ${c.label}`;
             sel.appendChild(o);
         }
-    } else {
-        const codes = [...new Set(app.library.aircraft.map((u) => u.gearDesignation))];
-        const opt = document.createElement('option');
-        opt.value = ''; opt.textContent = codes.length ? 'All gear codes' : 'Aircraft library ships in v1.1';
-        sel.appendChild(opt);
-        for (const c of codes) {
-            const o = document.createElement('option');
-            o.value = c; o.textContent = c;
-            sel.appendChild(o);
-        }
+        return;
+    }
+
+    if (label) label.textContent = 'Gear code';
+    const pool = poolFor(domain);
+    const codes = [...new Set(pool.map((u) => u.gearDesignation))];
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = codes.length
+        ? `All gear codes (${codes.length})`
+        : 'Nothing in this domain';
+    sel.appendChild(opt);
+    for (const c of codes) {
+        const o = document.createElement('option');
+        o.value = c;
+        // The code alone is terse to the point of uselessness in a dropdown —
+        // "2D/2D1" tells a reader nothing they did not already know. The prose
+        // is what the Order writes it out as.
+        o.textContent = `${c} — ${describeGearCode(c).replace(/ main gear$/, '')}`;
+        sel.appendChild(o);
     }
 }
 
@@ -1113,7 +1176,7 @@ function syncCategories() {
 function syncUnits(opts = {}) {
     const domain = $('g3-domain').value;
     const cat = $('g3-category').value;
-    const pool = domain === 'truck' ? app.library.trucks : app.library.aircraft;
+    const pool = poolFor(domain);
     const filtered = pool.filter((u) => !cat
         || (domain === 'truck' ? String(u.classification.class) === cat : u.gearDesignation === cat));
 
@@ -1121,9 +1184,7 @@ function syncUnits(opts = {}) {
     sel.innerHTML = '';
     if (!filtered.length) {
         const o = document.createElement('option');
-        o.textContent = domain === 'aircraft'
-            ? 'No aircraft units yet — see README'
-            : 'No units match this filter';
+        o.textContent = 'No units match this filter';
         o.disabled = true;
         sel.appendChild(o);
         return;
@@ -1133,7 +1194,12 @@ function syncUnits(opts = {}) {
         o.value = u.id;
         o.textContent = domain === 'truck'
             ? `${u.designation} — ${u.bodyType}`
-            : `${u.manufacturer} ${u.model} (${u.gearDesignation})`;
+            : domain === 'generic'
+                // The manufacturer field on a schematic reads "FAA Order
+                // 5300.7", which would be repeated down the whole list; the
+                // model already carries the code and its prose.
+                ? u.model
+                : `${u.manufacturer} ${u.model} (${u.gearDesignation})`;
         sel.appendChild(o);
     }
     // Keep the loaded unit selected when it survives the new filter. When it
@@ -1151,9 +1217,25 @@ function syncUnits(opts = {}) {
 function syncUnitSelectors() {
     const u = app.store.doc.unit;
     if (!u) return;
-    $('g3-domain').value = u.domain;
+    const domain = domainOf(u);
+    const prevDomain = $('g3-domain').value;
+    const prevCat = $('g3-category').value;
+
+    $('g3-domain').value = domain;
     syncCategories();
-    $('g3-category').value = u.domain === 'truck' ? String(u.classification.class) : (u.gearDesignation || '');
+
+    // The Class box tracked whatever had just been loaded, which quietly
+    // narrowed the Model list to the one unit already showing. On trucks that
+    // was merely unhelpful; on gear configurations it is fatal, because every
+    // configuration has a DIFFERENT code, so "all" collapsed to a list of one
+    // and the only way left to browse was the Class dropdown.
+    //
+    // Keep the filter the reader set whenever the loaded unit still passes it,
+    // and "all" always passes.
+    const key = u.domain === 'truck' ? String(u.classification.class) : (u.gearDesignation || '');
+    const keep = prevDomain === domain && (prevCat === '' || prevCat === key);
+    $('g3-category').value = keep ? prevCat : key;
+
     syncUnits();
     $('g3-unit').value = u.id;
 }
@@ -1187,6 +1269,15 @@ function renderUnitMeta() {
         // before it is formatted, or a value stated in pounds gets a kilogram
         // label pinned to it.
         rows.push(['Gear code', u.gearDesignation]);
+        if (u.kind === 'schematic') {
+            // What this drawing's geometry was taken from. On a schematic it
+            // is the first thing worth knowing and there is nowhere else for
+            // it: the manufacturer field says "FAA Order 5300.7", which is
+            // where the NAME comes from, not the spacings.
+            rows.push(['Geometry from', u.faa?.faarfield
+                ? `${u.faa.basis} (FAARFIELD ${u.faa.faarfield})`
+                : 'Nominal — Figure 2 drawing scale']);
+        }
         if (u.mtow) rows.push(['MTOW', formatMass(canonical(u.mtow, 'mass'), sys.mass, { precision: 0 })]);
         if (u.maxTaxiWeight) {
             rows.push(['Max taxi', formatMass(canonical(u.maxTaxiWeight, 'mass'), sys.mass, { precision: 0 })]);
@@ -1218,7 +1309,7 @@ function renderUnitMeta() {
     }
 
     renderAssumptionNotice(u);
-
+    renderGearCode(u);
     renderTitleBlock(u);
 }
 
@@ -1243,12 +1334,29 @@ function renderTitleBlock(u) {
     if (u.domain === 'truck') {
         cls.textContent = `FHWA Class ${u.classification.class}`;
         loaded.textContent = `${u.designation} — ${u.bodyType}`;
+    } else if (u.kind === 'schematic') {
+        cls.textContent = `FAA Order 5300.7 · Gear ${u.gearDesignation}`;
+        loaded.textContent = u.model;
     } else {
         cls.textContent = `${u.manufacturer} · Gear ${u.gearDesignation}`;
         loaded.textContent = `${u.model}`;
     }
     loaded.title = loaded.textContent;
     if (tires) tires.textContent = String(tireCount(u));
+
+    // Schematic outranks both other flags. Whether a drawing was edited, or
+    // how many of its values were assumed, is a second-order question next to
+    // whether it is a drawing at all — and a reader who takes one flag off a
+    // figure should take that one.
+    if (u.kind === 'schematic') {
+        flag.hidden = false;
+        flag.textContent = 'Schematic';
+        flag.className = 'g3-tb-flag g3-tb-flag--schematic';
+        flag.title = `A drawing of the gear name ${u.gearDesignation}, not a model of an aircraft. `
+            + 'Tire size and wheelbase are nominal.';
+        return;
+    }
+    flag.className = 'g3-tb-flag';
 
     if (app.store.doc.modifiedFrom) {
         flag.hidden = false;
@@ -1280,17 +1388,338 @@ function renderAssumptionNotice(u) {
     const box = $('g3-assumption-notice');
     if (!box) return;
     const fields = u.assumedFields || [];
-    if (!fields.length) { box.hidden = true; return; }
+    const schematic = u.kind === 'schematic';
+    if (!fields.length && !schematic) { box.hidden = true; return; }
 
     box.hidden = false;
-    box.innerHTML =
-        '<i class="fas fa-exclamation-triangle"></i>'
-        + `<span><strong>${fields.length} assumed value${fields.length > 1 ? 's' : ''}:</strong> `
-        + `${fields.map(esc).join(', ')}. Everything else on this aircraft — gear code, `
-        + 'wheelbase, main gear outer width, MTOW, tire size and pressure — is taken from the '
-        + 'FAA Aircraft Characteristics Database and the manufacturer ACAP. Set the assumed '
-        + 'spacings from FAARFIELD before using this figure for pavement work; the track '
-        + 're-derives so the published outer width is preserved.</span>';
+    const lead = `<i class="fas fa-exclamation-triangle"></i>`;
+    const list = fields.length
+        ? `<strong>${fields.length} assumed value${fields.length > 1 ? 's' : ''}:</strong> ${fields.map(esc).join(', ')}. `
+        : '';
+
+    // A schematic and a measured aircraft are assumed-about in opposite
+    // directions, so they cannot share one sentence. On the 737 the geometry
+    // is sourced and a couple of internal spacings are not; on a schematic the
+    // wheel PATTERN is the point and the tire and wheelbase are stage dressing.
+    box.innerHTML = schematic
+        ? lead + `<span><strong>Schematic.</strong> This is a drawing of the gear name `
+            + `<span class="g3-mono">${esc(u.gearDesignation)}</span>, not a model of an aircraft. `
+            + `${list}Its wheel geometry — track, dual and tandem spacings — is real where a source `
+            + 'carries it, and the panel below says which. Its tire size and wheelbase are nominal '
+            + 'in every case, so do not read a wheel diameter or a nose gear position off this figure.</span>'
+        : lead + `<span>${list}Everything else on this aircraft — gear code, `
+            + 'wheelbase, main gear outer width, MTOW, tire size and pressure — is taken from the '
+            + 'FAA Aircraft Characteristics Database and the manufacturer ACAP. Set the assumed '
+            + 'spacings from FAARFIELD before using this figure for pavement work; the track '
+            + 're-derives so the published outer width is preserved.</span>';
+}
+
+/* ============================================================
+   6b. Gear nomenclature — FAA Order 5300.7
+   ------------------------------------------------------------
+   Two jobs, and they are the same job seen from either end.
+   Given a loaded unit, say what its gear name MEANS. Given a
+   name, say what gear it describes. The parser in
+   src/core/gearcode.js does the work; this is the surface.
+   ============================================================ */
+
+function setupGearCodePanel() {
+    const input = /** @type {HTMLInputElement} */ ($('g3-gearcode-input'));
+    const loadBtn = /** @type {HTMLButtonElement} */ ($('g3-gearcode-load'));
+    if (!input) return;
+
+    /** The code the input currently resolves to, or null. */
+    let pending = null;
+
+    const read = () => {
+        const raw = input.value.trim();
+        const out = $('g3-gearcode-result');
+        pending = null;
+        loadBtn.disabled = true;
+        if (!raw) { out.hidden = true; out.innerHTML = ''; return; }
+        out.hidden = false;
+        try {
+            const c = parseGearCode(raw);
+            const n = c.special ? 24 : gearWheelCount(c);
+            const units = unitsForCode(c.canonical.replace(/\([WXYZ]\)$/, ''));
+            pending = c.canonical.replace(/\([WXYZ]\)$/, '');
+            loadBtn.disabled = units.length === 0;
+            out.className = 'g3-report is-ok';
+            out.innerHTML =
+                `<div class="g3-gc-ok"><i class="fas fa-check"></i> <span class="g3-mono">${esc(c.canonical)}</span></div>`
+                + `<div>${esc(describeGearCode(c))}.</div>`
+                + `<div class="g3-gc-count">${n} wheels excluding the nose gear.</div>`
+                + (units.length
+                    ? `<div class="g3-gc-count">In this library: ${units.map((u) => esc(u.model)).join(', ')}.</div>`
+                    : '<div class="g3-gc-count">Nothing in this library carries it — a legal name '
+                      + 'the convention admits but no catalogued aircraft uses.</div>');
+        } catch (err) {
+            out.className = 'g3-report is-bad';
+            out.innerHTML = `<div class="g3-gc-bad"><i class="fas fa-times"></i> Not a valid gear name</div>`
+                + `<div>${esc(err.message)}</div>`;
+        }
+    };
+
+    input.addEventListener('input', read);
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && pending && !loadBtn.disabled) { loadBtn.click(); e.preventDefault(); }
+    });
+    loadBtn.addEventListener('click', () => {
+        if (!pending) return;
+        const units = unitsForCode(pending);
+        if (units.length) loadUnitById(units[0].id);
+    });
+    $('g3-gearcode-browse').addEventListener('click', () => openCatalogue());
+}
+
+/**
+ * Units in the library carrying a gear code, measured aircraft first.
+ *
+ * The ordering is the whole point: where a code has both a measured aircraft
+ * and a schematic, the measured one is strictly better and must be what a
+ * "load this" reaches for.
+ *
+ * @param {string} code
+ * @returns {object[]}
+ */
+function unitsForCode(code) {
+    return app.library.aircraft
+        .filter((u) => u.gearDesignation === code)
+        .sort((a, b) => (a.kind === 'schematic' ? 1 : 0) - (b.kind === 'schematic' ? 1 : 0));
+}
+
+/**
+ * The loaded unit's gear name, taken apart into the variables §6 defines.
+ * @param {object} u
+ */
+function renderGearCode(u) {
+    const panel = $('g3-gearcode-panel');
+    if (!panel) return;
+    if (u.domain !== 'aircraft') { panel.hidden = true; return; }
+    panel.hidden = false;
+
+    const code = u.gearDesignation;
+    let c = null;
+    try { c = parseGearCode(code); } catch { /* validation reports it */ }
+
+    $('g3-gearname-code').textContent = code;
+    $('g3-gearname-wheels').textContent = c
+        ? `${c.special ? 24 : gearWheelCount(c)} wheels, nose excluded`
+        : '';
+    $('g3-gearname-prose').textContent = c ? `${describeGearCode(c)}.` : 'Unrecognised gear name.';
+
+    /** @type {Array<[string, string, string]>} label, value, note */
+    const parts = [];
+    if (c && c.special) {
+        parts.push(['Named directly', c.special,
+            'Order 5300.7 §6h declines to name this configuration by the convention.']);
+    } else if (c) {
+        parts.push(['Tandem', String(c.main.tandem),
+            c.main.tandem === 1 ? 'One axle line; the leading 1 is omitted from the name (§6e).'
+                : `${c.main.tandem} axle lines in tandem on each main strut.`]);
+        parts.push(['Type', `${c.main.type} — ${GEAR_TYPE_NAMES[c.main.type]}`,
+            `${{ S: 1, D: 2, T: 3, Q: 4 }[c.main.type]} wheel(s) across each axle line (§6c).`]);
+        parts.push(['Struts per side', String(c.main.multiple),
+            c.main.multiple === 1 ? 'One main gear each side; the trailing 1 is omitted (§6e).'
+                : `${c.main.multiple} main gears in line on each side of the aircraft.`]);
+        if (c.body) {
+            parts.push(['Body gear', `${c.body.tandem > 1 ? c.body.tandem : ''}${c.body.type}${c.body.multiple}`,
+                `${c.body.multiple} body gear(s) in total — the count is never omitted, because a `
+                + 'body gear may be asymmetric (§6f).']);
+        }
+        if (c.pressure) {
+            const p = TIRE_PRESSURE_CODES[c.pressure];
+            parts.push(['Tire pressure', `${c.pressure} — ${p.category.toLowerCase()}`,
+                `${p.psi} psi / ${p.mpa} MPa (Table 1).`]);
+        }
+    }
+
+    $('g3-gearparts').innerHTML = parts.map(([k, v, note]) =>
+        `<div class="g3-gcpart"><span class="g3-gcpart-k">${esc(k)}</span>`
+        + `<span class="g3-gcpart-v g3-mono">${esc(v)}</span>`
+        + `<span class="g3-gcpart-n">${esc(note)}</span></div>`).join('');
+
+    // What the Order itself says about this code, and what it flew on.
+    const rows = tableRowsFor(code);
+    const box = $('g3-gearcode-aircraft');
+    if (!rows.length) {
+        box.innerHTML = '<dl><dt>In Order 5300.7</dt><dd>Figure 2 generic configuration — '
+            + 'a pattern the convention admits, not tabulated against any aircraft.</dd></dl>';
+        return;
+    }
+    const aircraft = [...new Set(rows.flatMap((r) => r.aircraft))];
+    const legacy = [];
+    for (const r of rows) {
+        if (r.faa.name) legacy.push(['Historic FAA', r.faa.name]);
+        if (r.airForce.name) legacy.push(['U.S. Air Force', `${r.airForce.designation} · type ${r.airForce.type} — ${r.airForce.name}`]);
+        if (r.navy.name) legacy.push(['U.S. Navy', `${r.navy.name} (${r.navy.designation})`]);
+    }
+    const seen = new Set();
+    const rows2 = [
+        ['Figure', rows.map((r) => r.figure).join(', ')],
+        ['Nose gear', [...new Set(rows.map((r) => r.noseGear))].join(' or ')],
+        ...(aircraft.length ? [['Typical aircraft', aircraft.join(', ')]] : []),
+        ...legacy.filter(([k, v]) => !seen.has(k + v) && seen.add(k + v))
+    ];
+    box.innerHTML = '<dl>' + rows2.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('') + '</dl>';
+}
+
+/* ============================================================
+   6c. Gear configuration catalogue
+   ------------------------------------------------------------
+   Figure 2 and Table 3 as a browsable sheet. Thumbnails come
+   from the same wheelPlan() the rest of the app uses, so a
+   diagram here cannot disagree with the model it loads.
+   ============================================================ */
+
+/**
+ * A wheel plan as an inline SVG, drawn the way Figure 2 draws one: tall
+ * ellipses on a plain field, no axes, no scale. The figure is scale-free on
+ * purpose — twelve configurations at one size, so the PATTERN is what differs
+ * between cells rather than the size.
+ *
+ * @param {string} code
+ * @returns {string} SVG markup
+ */
+function wheelPlanSVG(code) {
+    let plan;
+    try { plan = wheelPlan(code); } catch { return ''; }
+    const pad = 0.9;
+    const us = plan.wheels.map((w) => w.u);
+    const vs = plan.wheels.map((w) => w.v);
+    const x0 = Math.min(...us) - pad;
+    const y0 = Math.min(...vs) - pad;
+    const w = (Math.max(...us) + pad) - x0;
+    const h = (Math.max(...vs) + pad) - y0;
+    const body = plan.wheels.map((wh) =>
+        `<ellipse cx="${(wh.u - x0).toFixed(3)}" cy="${(wh.v - y0).toFixed(3)}" rx="0.3" ry="0.44"`
+        + ` class="${wh.role === 'body' ? 'g3-wp-body' : 'g3-wp-main'}"/>`).join('');
+    return `<svg class="g3-wp" viewBox="0 0 ${w.toFixed(3)} ${h.toFixed(3)}"`
+        + ` preserveAspectRatio="xMidYMid meet" aria-hidden="true">${body}</svg>`;
+}
+
+function setupCatalogue() {
+    const modal = $('g3-catalogue-modal');
+    if (!modal) return;
+    $('g3-catalogue').addEventListener('click', () => openCatalogue());
+    for (const el of modal.querySelectorAll('[data-close]')) {
+        el.addEventListener('click', () => closeCatalogue());
+    }
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.hidden) { closeCatalogue(); e.stopPropagation(); }
+    }, true);
+
+    const search = /** @type {HTMLInputElement} */ ($('g3-cat-search'));
+    search.addEventListener('input', () => {
+        const q = search.value.trim().toLowerCase();
+        let shown = 0;
+        for (const card of modal.querySelectorAll('.g3-cat-card')) {
+            const hit = !q || (card.getAttribute('data-search') || '').includes(q);
+            /** @type {HTMLElement} */ (card).hidden = !hit;
+            if (hit) shown++;
+        }
+        for (const sec of modal.querySelectorAll('.g3-cat-section')) {
+            const any = sec.querySelectorAll('.g3-cat-card:not([hidden])').length > 0;
+            /** @type {HTMLElement} */ (sec).hidden = !any;
+        }
+        $('g3-cat-count').textContent = String(shown);
+    });
+}
+
+let _catalogueBuilt = false;
+
+function openCatalogue() {
+    if (!_catalogueBuilt) { buildCatalogue(); _catalogueBuilt = true; }
+    const modal = $('g3-catalogue-modal');
+    modal.hidden = false;
+    document.body.classList.add('g3-modal-open');
+    // Focus the filter, not the first card: the sheet is long and typing is
+    // the fastest way through it.
+    /** @type {HTMLElement} */ ($('g3-cat-search')).focus();
+}
+
+function closeCatalogue() {
+    $('g3-catalogue-modal').hidden = true;
+    document.body.classList.remove('g3-modal-open');
+    $('g3-catalogue')?.focus();
+}
+
+function buildCatalogue() {
+    const generic = genericConfigurations(3);
+    const known = [...new Set(FAA_TABLE_3.map((r) => r.code))];
+
+    $('g3-cat-generic').innerHTML = generic.map((c) => catalogueCard(c, 'generic')).join('');
+    $('g3-cat-known').innerHTML = known.map((c) => catalogueCard(c, 'known')).join('');
+    $('g3-cat-count').textContent = String(generic.length + known.length);
+
+    for (const card of document.querySelectorAll('.g3-cat-card')) {
+        card.addEventListener('click', () => {
+            const id = card.getAttribute('data-unit');
+            if (!id) return;
+            loadUnitById(id);
+            closeCatalogue();
+        });
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); /** @type {HTMLElement} */(card).click(); }
+        });
+    }
+}
+
+/**
+ * @param {string} code
+ * @param {'generic'|'known'} section
+ * @returns {string}
+ */
+function catalogueCard(code, section) {
+    const units = unitsForCode(code);
+    const best = units[0] || null;
+    const rows = tableRowsFor(code);
+    const aircraft = [...new Set(rows.flatMap((r) => r.aircraft))];
+    const wheels = code === 'C5' ? 24 : gearWheelCount(code);
+    const schematic = best ? best.kind === 'schematic' : null;
+
+    const state = best
+        ? (schematic ? 'is-schematic' : 'is-real')
+        : 'is-absent';
+    const badge = best
+        ? (schematic ? 'Schematic' : 'Measured')
+        : 'Not modelled';
+
+    // The "measured" line is the one a reader most needs: it names the actual
+    // aircraft this card will load, which is not always the aircraft the Order
+    // names against the code.
+    const model = best
+        ? (schematic
+            ? (rows.length ? 'FAA Order 5300.7' : 'Figure 2 pattern')
+            : `${best.manufacturer} ${best.model}`)
+        : '—';
+
+    const search = [code, describeGearCode(code), ...aircraft, model].join(' ').toLowerCase();
+
+    // On a measured card the aircraft line and the thing the card LOADS are
+    // two different lists: `2D` is tabulated against the 757, the KC-135 and
+    // the C-141, and clicking it loads the one of those this library actually
+    // has geometry for. Saying which removes the guesswork.
+    const loads = best && !schematic
+        ? `<div class="g3-cat-loads"><i class="fas fa-cube"></i> Loads ${esc(model)}</div>`
+        : '';
+
+    return `<div class="g3-cat-card ${state}" ${best ? `data-unit="${esc(best.id)}"` : ''}`
+        + ` data-search="${esc(search)}" ${best ? 'tabindex="0" role="button"' : ''}`
+        + ` title="${esc(best ? `Load ${model}` : 'No model in this library')}">`
+        + `<div class="g3-cat-fig">${wheelPlanSVG(code)}</div>`
+        + `<div class="g3-cat-meta">`
+        + `<div class="g3-cat-code g3-mono">${esc(code)}<span class="g3-cat-badge">${badge}</span></div>`
+        + `<div class="g3-cat-desc">${esc(describeGearCode(code).replace(/ main gear/, ''))}</div>`
+        + `<div class="g3-cat-facts">`
+        + `<span>${wheels} wheels</span>`
+        + (rows.length ? `<span>Fig. ${rows.map((r) => r.figure).join('/')}</span>` : '<span>Fig. 2</span>')
+        + `</div>`
+        + (aircraft.length
+            ? `<div class="g3-cat-ac"><i class="fas fa-plane"></i> ${esc(aircraft.join(', '))}</div>`
+            : (section === 'generic' ? '<div class="g3-cat-ac g3-cat-ac--none">No aircraft tabulated</div>' : ''))
+        + loads
+        + `</div></div>`;
 }
 
 function setupIsolationPanel() {
@@ -2246,7 +2675,9 @@ function applyProject(p) {
     }, 'open project');
 
     Object.assign(app.store.view, {
-        mode: p.view?.mode || '3d',
+        // A project records the view it was saved with, so that wins; the
+        // fallback follows whatever the app's current default is.
+        mode: p.view?.mode || defaultView().mode,
         lighting: p.view?.lighting || { ...LIGHTING_PRESETS.studio },
         background: p.view?.background || 'white',
         backgroundColor: p.view?.backgroundColor || '#eef1f4',
@@ -2293,7 +2724,7 @@ function applyProject(p) {
         $(id).classList.toggle('is-on', !!on);
         $(id).setAttribute('aria-pressed', String(!!on));
     }
-    setViewMode(app.store.view.mode || '3d');
+    setViewMode(app.store.view.mode || defaultView().mode);
     $('g3-seed').value = app.store.doc.seed;
     $('g3-meta-title').value = app.store.doc.meta.title || '';
     $('g3-meta-author').value = app.store.doc.meta.author || '';
@@ -2318,8 +2749,10 @@ function setupKeyboard() {
         const t = /** @type {HTMLElement} */ (e.target);
         if (t && /INPUT|TEXTAREA|SELECT/.test(t.tagName)) return;
 
+        // Same order as the toolbar tabs, quad first — it is the default view,
+        // so V1 lands where the app opens.
         if (pendingV && '12345'.includes(e.key)) {
-            setViewMode(['3d', 'plan', 'side', 'front', 'quad'][Number(e.key) - 1]);
+            setViewMode(['quad', '3d', 'plan', 'side', 'front'][Number(e.key) - 1]);
             pendingV = false;
             e.preventDefault();
             return;
@@ -2327,6 +2760,7 @@ function setupKeyboard() {
         pendingV = false;
 
         if (e.key === 'v' || e.key === 'V') { pendingV = true; return; }
+        if (e.key === 'c' || e.key === 'C') { openCatalogue(); e.preventDefault(); return; }
         if (e.key === 'm' || e.key === 'M') { setMeasureMode(); e.preventDefault(); return; }
         if (e.key === 'a' || e.key === 'A') { $('g3-annot').click(); e.preventDefault(); return; }
         if (e.key === 'g' || e.key === 'G') { $('g3-grid').click(); e.preventDefault(); return; }

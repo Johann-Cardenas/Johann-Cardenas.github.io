@@ -1360,3 +1360,328 @@ body.Gear3D .g3-node-iso:hover { color: var(--g3-datum) !important; }
     .g3-node-iso { opacity: .55; }
     .g3-node.is-selected .g3-node-iso { opacity: 1; }
 }
+
+/* ============================================================
+   GEAR NOMENCLATURE — FAA Order 5300.7  (v1.9)
+   ------------------------------------------------------------
+   The gear name is the densest string on screen: `2D/3D2(X)` is
+   six variables in nine characters. It is set in the mono face at
+   display size, and the decomposition below spends the space the
+   name saves.
+   ============================================================ */
+
+.g3-gearname {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .5rem;
+    padding-bottom: .3rem;
+    border-bottom: 1px solid var(--g3-rule);
+}
+.g3-gearname-code {
+    font-family: var(--g3-mono);
+    font-size: 1.24rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    color: var(--g3-ink);
+    line-height: 1.1;
+}
+.g3-gearname-wheels {
+    font-size: .64rem;
+    color: var(--g3-muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+.g3-gearname-prose {
+    margin: .35rem 0 .1rem;
+    font-size: .73rem;
+    line-height: 1.5;
+    color: var(--g3-graphite);
+}
+
+/* ---------- the name, taken apart ---------- */
+.g3-gearparts { display: grid; gap: .3rem; margin: .5rem 0 .2rem; }
+.g3-gcpart {
+    display: grid;
+    grid-template-columns: 5.6rem 1fr;
+    gap: .1rem .55rem;
+    padding-left: .5rem;
+    border-left: 2px solid var(--g3-rule);
+}
+.g3-gcpart-k {
+    font-size: .63rem;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--g3-muted);
+    align-self: center;
+}
+.g3-gcpart-v { font-size: .74rem; color: var(--g3-ink); align-self: center; }
+.g3-gcpart-n {
+    grid-column: 1 / -1;
+    font-size: .655rem;
+    line-height: 1.45;
+    color: var(--g3-muted);
+}
+
+/* ---------- parser feedback ---------- */
+.g3-report.is-ok { border-left: 2px solid var(--g3-datum); }
+.g3-report.is-bad { border-left: 2px solid var(--g3-signal); }
+.g3-gc-ok { color: var(--g3-datum); font-weight: 600; margin-bottom: .18rem; }
+.g3-gc-ok .g3-mono { font-size: .8rem; color: var(--g3-ink); }
+.g3-gc-bad { color: var(--g3-signal); font-weight: 600; margin-bottom: .18rem; }
+.g3-gc-count { color: var(--g3-muted); margin-top: .18rem; }
+
+/* Schematic flag. The other two title-block flags are instrument red because
+   they mark a deviation from the cited reference. This one is amber, matching
+   the assumed-value notice, because it marks the same KIND of thing: a value
+   that was chosen rather than measured. */
+.g3-tb-flag--schematic { color: var(--g3-warn); border-color: var(--g3-warn); }
+
+/* ============================================================
+   GEAR CONFIGURATION CATALOGUE
+   ------------------------------------------------------------
+   Figure 2 and Table 3 as a sheet. The thumbnails are the point,
+   so they take the top of each card at a fixed height: a grid of
+   wheel patterns is scannable in a way a grid of gear codes is
+   not, which is why the Order draws Figure 2 at all.
+   ============================================================ */
+
+.g3-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    display: grid;
+    place-items: center;
+    padding: 2.5vh 2vw;
+}
+.g3-modal[hidden] { display: none; }
+body.g3-modal-open { overflow: hidden; }
+
+.g3-modal-scrim {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--g3-paper) 30%, rgba(8, 12, 17, .72));
+    backdrop-filter: blur(2px);
+}
+.g3-modal-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(1180px, 96vw);
+    max-height: 95vh;
+    background: var(--g3-surface);
+    border: 1px solid var(--g3-rule-strong);
+    border-radius: 5px;
+    box-shadow: var(--g3-shadow);
+    overflow: hidden;
+}
+.g3-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .85rem 1rem;
+    border-bottom: 1px solid var(--g3-rule);
+    background: var(--g3-paper);
+    flex: 0 0 auto;
+}
+.g3-modal-head h2 {
+    margin: 0;
+    font-size: .96rem;
+    font-weight: 600;
+    letter-spacing: .01em;
+    color: var(--g3-ink);
+    line-height: 1.3;
+}
+.g3-modal-head p {
+    margin: .18rem 0 0;
+    font-size: .69rem;
+    color: var(--g3-muted);
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    flex-wrap: wrap;
+}
+.g3-modal-tools { display: flex; align-items: center; gap: .45rem; flex: 0 0 auto; }
+.g3-modal-tools .g3-text { width: 15rem; max-width: 40vw; }
+
+.g3-cat-legend { display: inline-flex; align-items: center; gap: .55rem; }
+.g3-cat-dot { display: inline-flex; align-items: center; gap: .28rem; }
+.g3-cat-dot::before {
+    content: '';
+    width: .5rem;
+    height: .5rem;
+    border-radius: 50%;
+    display: inline-block;
+}
+.g3-cat-dot--real::before { background: var(--g3-datum); }
+.g3-cat-dot--schem::before { background: var(--g3-warn); }
+
+.g3-cat-body { overflow: auto; padding: .2rem 1rem 1.1rem; }
+.g3-cat-section { padding-top: 1rem; }
+.g3-cat-section[hidden] { display: none; }
+.g3-cat-section h3 {
+    margin: 0;
+    font-size: .69rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--g3-ink);
+}
+/* The datum tick, this app's signature mark — see the header of this file. */
+.g3-cat-section h3::after {
+    content: '';
+    display: block;
+    height: 1px;
+    margin-top: .38rem;
+    background: var(--g3-rule-strong);
+    box-shadow: 0 3px 0 -2px var(--g3-rule-strong);
+}
+.g3-cat-blurb {
+    margin: .45rem 0 .8rem;
+    font-size: .7rem;
+    line-height: 1.55;
+    color: var(--g3-muted);
+    max-width: 62ch;
+}
+
+.g3-cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+    gap: .6rem;
+}
+.g3-cat-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--g3-paper);
+    border: 1px solid var(--g3-rule);
+    border-radius: 4px;
+    overflow: hidden;
+    text-align: left;
+}
+.g3-cat-card[hidden] { display: none; }
+.g3-cat-card[data-unit] { cursor: pointer; }
+.g3-cat-card[data-unit]:hover,
+.g3-cat-card[data-unit]:focus-visible {
+    border-color: var(--g3-datum);
+    box-shadow: 0 0 0 2px var(--g3-datum-glow);
+    outline: none;
+}
+.g3-cat-card.is-absent { opacity: .62; }
+
+/* The thumbnail well STRETCHES its SVG, and that is load-bearing.
+   An SVG carries an intrinsic aspect ratio, so it only letterboxes when its
+   viewport is definite on both axes. Two ways of writing this well failed:
+   `place-items: center` leaves the grid item's height indefinite, and absolute
+   `inset` does not help either, because a positioned replaced element resolves
+   `width: auto` from its intrinsic size rather than from its insets. Both left
+   a square wheel plan 199px tall in a 108px box, spilling over the card's own
+   text. A stretched grid item has a definite height, which is all
+   preserveAspectRatio needs. */
+.g3-cat-fig {
+    display: grid;
+    height: 108px;
+    padding: .6rem;
+    background: var(--g3-inset);
+    border-bottom: 1px solid var(--g3-rule);
+    overflow: hidden;
+}
+/* Figure 2's own drawing: outlined ellipses, nothing filled. The body gear is
+   the one thing that has to be told apart from the main gear, so it is the one
+   thing that gets a second colour. */
+.g3-wp {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+}
+.g3-wp ellipse {
+    fill: none;
+    stroke-width: .07;
+    vector-effect: non-scaling-stroke;
+}
+.g3-wp-main { stroke: var(--g3-ink); }
+.g3-wp-body { stroke: var(--g3-datum); }
+
+.g3-cat-meta { padding: .5rem .55rem .55rem; display: grid; gap: .22rem; }
+.g3-cat-code {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .4rem;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--g3-ink);
+}
+.g3-cat-badge {
+    font-family: var(--g3-sans);
+    font-size: .55rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    padding: .08rem .3rem;
+    border-radius: 2px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+}
+.g3-cat-card.is-real .g3-cat-badge { color: var(--g3-datum); }
+.g3-cat-card.is-schematic .g3-cat-badge { color: var(--g3-warn); }
+.g3-cat-card.is-absent .g3-cat-badge { color: var(--g3-muted); }
+
+.g3-cat-desc { font-size: .68rem; line-height: 1.45; color: var(--g3-graphite); }
+.g3-cat-facts {
+    display: flex;
+    gap: .55rem;
+    font-size: .63rem;
+    color: var(--g3-muted);
+    font-variant-numeric: tabular-nums;
+}
+.g3-cat-ac {
+    font-size: .645rem;
+    line-height: 1.4;
+    color: var(--g3-muted);
+    padding-top: .18rem;
+    border-top: 1px dotted var(--g3-rule);
+}
+.g3-cat-ac i { color: var(--g3-graphite); margin-right: .22rem; font-size: .6rem; }
+.g3-cat-ac--none { font-style: italic; }
+
+/* What the card actually loads, when that is not the aircraft the Order names
+   against the code. Set apart from the tabulated-aircraft line so the two are
+   never read as one list. */
+.g3-cat-loads {
+    font-size: .635rem;
+    line-height: 1.4;
+    color: var(--g3-datum);
+    padding-top: .16rem;
+}
+.g3-cat-loads i { margin-right: .22rem; font-size: .58rem; }
+
+/* Site stylesheet override — see the SITE BUTTON OVERRIDES block above. A card
+   carrying role="button" is styled as a bare button by the site reset. */
+body.Gear3D .g3-cat-card {
+    background: var(--g3-paper) !important;
+    color: var(--g3-ink) !important;
+    text-transform: none !important;
+    letter-spacing: normal;
+    box-shadow: none;
+    height: auto !important;
+    line-height: 1.4;
+}
+
+@media (max-width: 720px) {
+    .g3-modal { padding: 0; }
+    .g3-modal-panel { width: 100vw; max-height: 100vh; border-radius: 0; border: 0; }
+    .g3-modal-head { flex-direction: column; gap: .55rem; }
+    .g3-modal-tools { width: 100%; }
+    .g3-modal-tools .g3-text { flex: 1 1 auto; width: auto; max-width: none; }
+    .g3-cat-grid { grid-template-columns: repeat(auto-fill, minmax(152px, 1fr)); }
+    .g3-cat-fig { height: 92px; }
+}
+/* Touch sizing hangs off the pointer, not the width — see the responsive
+   ladder note in CLAUDE.md. A touch laptop gets this; a narrow window does not. */
+@media (pointer: coarse) {
+    .g3-modal-tools .g3-icon-btn { min-width: 44px; min-height: 44px; }
+    .g3-modal-tools .g3-text { min-height: 44px; }
+    .g3-cat-card[data-unit] { min-height: 44px; }
+}
