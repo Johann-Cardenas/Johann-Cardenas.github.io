@@ -1,0 +1,955 @@
+/* ============================================================
+   QR Studio — e-labs/qr-studio/styles.css
+
+   Layout follows the shared E-Labs workbench ladder used by Gear3D,
+   Cross-Section Studio and LEAPS:
+     > 1180   three columns (left rail | stage | right rail)
+     >= 720   control rail beside the stage, wide panel below
+     <  720   single column with the STAGE FIRST, panels beneath
+
+   720 is the phone/tablet line: the widest phone in portrait is ~430px and
+   the iPad Mini is 744px, so nothing below the line is a tablet. Landscape
+   phones are caught by max-height, never by width, because a phone on its
+   side is up to ~930px wide.
+   ============================================================ */
+
+.QrStudio {
+    --qs-bg: #eef2f4;
+    --qs-bg2: #ffffff;
+    --qs-panel: #ffffff;
+    --qs-sunken: #f6f8f9;
+    --qs-ink: #0f172a;
+    --qs-ink-dim: #5b6b7c;
+    --qs-line: #dde5ea;
+    --qs-line-soft: #eaf0f3;
+    --qs-accent: #18a9a8;
+    --qs-accent-ink: #0d7f7e;
+    --qs-accent-soft: rgba(24, 169, 168, 0.10);
+    --qs-danger: #d1495b;
+    --qs-warn: #c77d17;
+    --qs-ok: #2f8f5b;
+    --qs-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06);
+    --qs-radius: 12px;
+}
+
+[data-theme="dark"] .QrStudio {
+    --qs-bg: #0d141c;
+    --qs-bg2: #131c26;
+    --qs-panel: #16202b;
+    --qs-sunken: #101822;
+    --qs-ink: #dfe7ee;
+    --qs-ink-dim: #8ea0b2;
+    --qs-line: #253340;
+    --qs-line-soft: #1c2733;
+    --qs-accent: #22d3d1;
+    --qs-accent-ink: #22d3d1;
+    --qs-accent-soft: rgba(34, 211, 209, 0.12);
+    --qs-danger: #e06c7c;
+    --qs-warn: #e0a444;
+    --qs-ok: #4cb583;
+    --qs-shadow: 0 1px 2px rgba(0, 0, 0, 0.30), 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+.qs-app {
+    color: var(--qs-ink);
+    font-size: 1rem;
+    line-height: 1.55;
+}
+
+/* ---------------------------------------------------------- app header */
+
+.qs-app .app-header { margin-bottom: 1.5rem; }
+.qs-app .header-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+.qs-app .header-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.qs-app .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid var(--qs-line);
+    border-radius: 999px;
+    color: var(--qs-ink-dim);
+    background: var(--qs-panel);
+}
+.qs-app .header-content h1 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.4rem;
+}
+.qs-app .qs-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 10px;
+    background: var(--qs-accent-soft);
+    color: var(--qs-accent-ink);
+    font-size: 1.1rem;
+}
+.qs-app .header-content h1 .highlight { color: var(--qs-accent-ink); }
+.qs-app .header-content p {
+    color: var(--qs-ink-dim);
+    max-width: 62ch;
+    margin: 0;
+}
+
+/* ------------------------------------------------------------- studio */
+
+.qs-studio {
+    background: var(--qs-bg);
+    border: 1px solid var(--qs-line);
+    border-radius: 16px;
+    padding: 0.85rem;
+    /* sticky children need a non-hidden overflow; clip still rounds corners */
+    overflow: clip;
+}
+
+/* ------------------------------------------------------------ toolbar */
+
+.qs-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0.6rem;
+    margin-bottom: 0.85rem;
+    background: var(--qs-panel);
+    border: 1px solid var(--qs-line);
+    border-radius: var(--qs-radius);
+    box-shadow: var(--qs-shadow);
+}
+.qs-toolbar-group { display: flex; align-items: center; gap: 0.4rem; }
+.qs-toolbar-group--end { margin-left: auto; }
+
+/* ---------------------------------------------------------- workspace */
+
+.qs-workspace {
+    display: grid;
+    grid-template-columns: 344px minmax(0, 1fr) 316px;
+    grid-template-areas: "left stage right";
+    gap: 0.85rem;
+    align-items: start;
+}
+.qs-rail--left { grid-area: left; }
+.qs-stage { grid-area: stage; }
+.qs-rail--right { grid-area: right; }
+
+.qs-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    min-width: 0;
+}
+
+/* -------------------------------------------------------------- panels */
+
+.qs-panel {
+    background: var(--qs-panel);
+    border: 1px solid var(--qs-line);
+    border-radius: var(--qs-radius);
+    box-shadow: var(--qs-shadow);
+    overflow: hidden;
+}
+.qs-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.7rem 0.85rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+}
+.qs-panel-head span { display: inline-flex; align-items: center; gap: 0.5rem; }
+.qs-panel-head i:first-child { color: var(--qs-accent-ink); }
+.qs-chev { transition: transform 0.18s ease; font-size: 0.7rem; opacity: 0.6; }
+.qs-panel-head[aria-expanded="false"] .qs-chev { transform: rotate(-90deg); }
+.qs-panel-body { padding: 0 0.85rem 0.85rem; }
+.qs-panel-head[aria-expanded="false"] + .qs-panel-body { display: none; }
+
+/* ---------------------------------------------------------------- tabs */
+
+.qs-tabs {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    border-bottom: 1px solid var(--qs-line);
+    background: var(--qs-sunken);
+}
+.qs-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.6rem 0.2rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: var(--qs-ink-dim);
+    cursor: pointer;
+}
+.qs-tab i { font-size: 0.85rem; }
+.qs-tab.is-active { color: var(--qs-accent-ink); border-bottom-color: var(--qs-accent); background: var(--qs-panel); }
+/* A dot marks a tab holding settings changed from the defaults, so nothing
+   a user customised stays hidden behind an unopened tab. */
+.qs-tab { position: relative; }
+.qs-tab.is-changed::after {
+    content: "";
+    position: absolute;
+    top: 6px;
+    right: calc(50% - 18px);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--qs-accent);
+}
+.qs-tabpane { display: none; padding: 0.85rem; }
+.qs-tabpane.is-active { display: block; }
+
+/* -------------------------------------------------------------- fields */
+
+.qs-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--qs-ink-dim);
+    margin: 0 0 0.45rem;
+}
+.qs-tabpane .qs-label:not(:first-child) { margin-top: 1rem; }
+
+.qs-field { display: block; margin-bottom: 0.7rem; }
+.qs-field > span {
+    display: block;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--qs-ink-dim);
+    margin-bottom: 0.28rem;
+}
+.qs-field > span b { color: var(--qs-ink); font-variant-numeric: tabular-nums; }
+.qs-field--grow { flex: 1 1 0; min-width: 0; }
+
+.QrStudio .qs-field input[type="text"],
+.QrStudio .qs-field input[type="url"],
+.QrStudio .qs-field input[type="tel"],
+.QrStudio .qs-field input[type="email"],
+.QrStudio .qs-field textarea,
+.QrStudio .qs-field select {
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.86rem;
+    color: var(--qs-ink);
+    background: var(--qs-sunken);
+    border: 1px solid var(--qs-line);
+    border-radius: 8px;
+    box-shadow: none;
+    height: auto;
+}
+.QrStudio .qs-field textarea { resize: vertical; line-height: 1.45; }
+.QrStudio .qs-field input:focus,
+.QrStudio .qs-field textarea:focus,
+.QrStudio .qs-field select:focus {
+    border-color: var(--qs-accent);
+    box-shadow: 0 0 0 3px var(--qs-accent-soft);
+    outline: none;
+}
+
+.qs-row { display: flex; gap: 0.6rem; align-items: flex-end; }
+.qs-row--split > * { min-width: 0; }
+
+.qs-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.8rem;
+    color: var(--qs-ink-dim);
+    margin-bottom: 0.7rem;
+    cursor: pointer;
+}
+.QrStudio .qs-check input[type="checkbox"] { width: auto; margin: 0; opacity: 1; }
+
+.qs-hint {
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: var(--qs-ink-dim);
+    margin: 0.15rem 0 0.6rem;
+}
+.qs-hint.is-warn { color: var(--qs-warn); }
+
+/* colour inputs — swatch plus a hex field, so brand colours can be pasted */
+.qs-color {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    border: 1px solid var(--qs-line);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--qs-sunken);
+}
+.QrStudio .qs-color input[type="color"] {
+    width: 34px;
+    flex: none;
+    border: 0;
+    border-radius: 0;
+    border-right: 1px solid var(--qs-line);
+}
+.QrStudio .qs-hexfield {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    padding: 0.3rem 0.45rem;
+    font-size: 0.76rem;
+    font-family: ui-monospace, Consolas, monospace;
+    text-transform: lowercase;
+    color: var(--qs-ink);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    height: auto;
+}
+.QrStudio .qs-hexfield:focus { outline: none; box-shadow: inset 0 0 0 2px var(--qs-accent-soft); }
+.QrStudio .qs-hexfield.is-bad { color: var(--qs-danger); }
+.qs-color:focus-within { border-color: var(--qs-accent); box-shadow: 0 0 0 3px var(--qs-accent-soft); }
+
+.QrStudio input[type="color"] {
+    width: 100%;
+    height: 34px;
+    padding: 2px;
+    background: var(--qs-sunken);
+    border: 1px solid var(--qs-line);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* quick palette */
+.qs-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: -0.25rem 0 0.8rem;
+}
+.QrStudio .qs-chip {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 1px solid var(--qs-line);
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: none;
+    flex: none;
+}
+.QrStudio .qs-chip:hover { transform: scale(1.14); border-color: var(--qs-accent); }
+.QrStudio .qs-swap { flex: none; align-self: flex-end; margin-bottom: 0.7rem; }
+.qs-colorwrap { display: flex; flex-direction: column; gap: 0.25rem; }
+.QrStudio .qs-linkbtn {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--qs-accent-ink);
+    cursor: pointer;
+    text-align: left;
+    height: auto;
+    line-height: 1.2;
+}
+.QrStudio .qs-linkbtn--danger { color: var(--qs-danger); }
+.QrStudio .qs-linkbtn.is-on { text-decoration: underline; }
+
+/* --------------------------------------------------- segmented control */
+
+.qs-seg {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 3px;
+    background: var(--qs-sunken);
+    border: 1px solid var(--qs-line);
+    border-radius: 9px;
+    margin-bottom: 0.8rem;
+}
+.QrStudio .qs-seg-btn {
+    flex: 1 1 auto;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--qs-ink-dim);
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    height: auto;
+    line-height: 1.4;
+}
+.QrStudio .qs-seg-btn.is-active {
+    background: var(--qs-panel);
+    color: var(--qs-accent-ink);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.10);
+}
+
+/* ------------------------------------------------------- shape pickers */
+
+.qs-swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(66px, 1fr));
+    gap: 0.4rem;
+}
+.QrStudio .qs-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.45rem 0.25rem 0.35rem;
+    background: var(--qs-sunken);
+    border: 1px solid var(--qs-line);
+    border-radius: 9px;
+    cursor: pointer;
+    height: auto;
+    color: var(--qs-ink-dim);
+}
+.QrStudio .qs-swatch:hover { border-color: var(--qs-accent); }
+.QrStudio .qs-swatch.is-active {
+    border-color: var(--qs-accent);
+    background: var(--qs-accent-soft);
+    color: var(--qs-accent-ink);
+}
+.qs-swatch svg { width: 34px; height: 34px; display: block; }
+.qs-swatch svg path { fill: currentColor; }
+.qs-swatch small {
+    font-size: 0.6rem;
+    line-height: 1.15;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+/* Shapes the scan harness measured as having less decode margin. The marker
+   is informational, never a block — the shapes stay fully selectable. */
+.QrStudio .qs-swatch { position: relative; }
+.qs-swatch-flag {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    font-size: 0.58rem;
+    line-height: 1;
+}
+.QrStudio .qs-swatch.is-caution .qs-swatch-flag { color: var(--qs-warn); }
+.QrStudio .qs-swatch.is-risky .qs-swatch-flag { color: var(--qs-danger); }
+
+.qs-swatches--eye { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); }
+.qs-swatches--frame { grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); }
+.qs-swatches--frame .qs-swatch svg { width: 40px; height: 40px; }
+
+/* ------------------------------------------------------------ logo drop */
+
+.qs-drop {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 1.2rem 0.8rem;
+    text-align: center;
+    background: var(--qs-sunken);
+    border: 1.5px dashed var(--qs-line);
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--qs-ink-dim);
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+.qs-drop:hover, .qs-drop:focus-visible, .qs-drop.is-over {
+    border-color: var(--qs-accent);
+    background: var(--qs-accent-soft);
+    outline: none;
+}
+.qs-drop i { font-size: 1.4rem; color: var(--qs-accent-ink); }
+.qs-drop p { margin: 0; font-size: 0.82rem; }
+.qs-drop small { font-size: 0.68rem; opacity: 0.85; }
+
+.qs-logo-preview {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.5rem;
+    background: var(--qs-sunken);
+    border: 1px solid var(--qs-line);
+    border-radius: 10px;
+    margin-bottom: 0.8rem;
+}
+.qs-logo-preview img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 6px;
+    border: 1px solid var(--qs-line);
+}
+.qs-logo-preview p {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    word-break: break-all;
+    line-height: 1.25;
+}
+
+/* --------------------------------------------------------------- stage */
+
+.qs-stage {
+    position: sticky;
+    top: 0.85rem;
+    background: var(--qs-panel);
+    border: 1px solid var(--qs-line);
+    border-radius: var(--qs-radius);
+    box-shadow: var(--qs-shadow);
+    padding: 1rem;
+}
+.qs-stage-inner { display: flex; flex-direction: column; align-items: center; gap: 0.7rem; }
+
+.qs-canvas-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 1rem;
+    border-radius: 10px;
+    /* checkerboard so a transparent background is legible */
+    background-color: var(--qs-sunken);
+    background-image:
+        linear-gradient(45deg, var(--qs-line-soft) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--qs-line-soft) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--qs-line-soft) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--qs-line-soft) 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+}
+#qs-canvas {
+    display: block;
+    max-width: 100%;
+    max-height: 62vh;
+    max-height: 62dvh;
+    height: auto;
+    border-radius: 4px;
+}
+
+/* Shown instead of the meaningless symbol an empty payload would produce. */
+.qs-empty {
+    position: absolute;
+    inset: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    text-align: center;
+    padding: 1.5rem;
+    border-radius: 10px;
+    background: var(--qs-panel);
+    border: 1.5px dashed var(--qs-line);
+    color: var(--qs-ink-dim);
+}
+.qs-empty i { font-size: 1.7rem; color: var(--qs-line); }
+.qs-empty p { margin: 0; font-size: 0.9rem; }
+.qs-empty b { color: var(--qs-ink); }
+.qs-empty small { font-size: 0.76rem; }
+
+.qs-print-hint { padding-top: 0.1rem; border-top: 1px dashed var(--qs-line-soft); margin-top: 0.5rem; }
+
+.qs-stage-meta {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.qs-stage-meta span {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--qs-ink-dim);
+    background: var(--qs-sunken);
+    border: 1px solid var(--qs-line);
+    border-radius: 999px;
+    padding: 0.22rem 0.6rem;
+}
+.qs-stage-error {
+    margin: 0;
+    padding: 0.6rem 0.8rem;
+    width: 100%;
+    font-size: 0.82rem;
+    color: var(--qs-danger);
+    background: rgba(209, 73, 91, 0.08);
+    border: 1px solid rgba(209, 73, 91, 0.28);
+    border-radius: 8px;
+    text-align: center;
+}
+
+/* --------------------------------------------------------- readability */
+
+.qs-score { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; }
+.qs-score-ring { position: relative; width: 52px; height: 52px; flex: none; }
+.qs-score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.qs-score-ring circle { fill: none; stroke-width: 4; }
+.qs-ring-bg { stroke: var(--qs-line); }
+.qs-ring-fg {
+    stroke: var(--qs-ok);
+    stroke-linecap: round;
+    stroke-dasharray: 119.4;
+    stroke-dashoffset: 119.4;
+    transition: stroke-dashoffset 0.35s ease, stroke 0.25s ease;
+}
+.qs-score-ring b {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+}
+.qs-score-text p { margin: 0; font-size: 0.86rem; font-weight: 700; }
+.qs-score-text small { font-size: 0.72rem; color: var(--qs-ink-dim); }
+
+.qs-issues { list-style: none; margin: 0 0 0.7rem; padding: 0; }
+.qs-issues li {
+    display: flex;
+    gap: 0.45rem;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    padding: 0.4rem 0.5rem;
+    border-radius: 7px;
+    margin-bottom: 0.3rem;
+    background: var(--qs-sunken);
+}
+.qs-issues li::before { font-family: "Font Awesome 5 Free"; font-weight: 900; flex: none; }
+.qs-issues li.is-error { color: var(--qs-danger); }
+.qs-issues li.is-error::before { content: "\f06a"; }
+.qs-issues li.is-warn { color: var(--qs-warn); }
+.qs-issues li.is-warn::before { content: "\f071"; }
+.qs-issues li.is-ok { color: var(--qs-ok); }
+.qs-issues li.is-ok::before { content: "\f058"; }
+
+.qs-verify-out {
+    margin: 0.55rem 0 0;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.76rem;
+    line-height: 1.4;
+    border-radius: 8px;
+    background: var(--qs-sunken);
+    word-break: break-all;
+}
+.qs-verify-out.is-ok { color: var(--qs-ok); background: rgba(47, 143, 91, 0.10); }
+.qs-verify-out.is-bad { color: var(--qs-danger); background: rgba(209, 73, 91, 0.10); }
+
+/* ------------------------------------------------------------ presets */
+
+.qs-presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 0.45rem; }
+.QrStudio .qs-preset {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.25rem;
+    background: var(--qs-sunken);
+    border: 1px solid var(--qs-line);
+    border-radius: 9px;
+    cursor: pointer;
+    height: auto;
+    color: var(--qs-ink-dim);
+}
+.QrStudio .qs-preset:hover { border-color: var(--qs-accent); }
+.QrStudio .qs-preset.is-active { border-color: var(--qs-accent); background: var(--qs-accent-soft); color: var(--qs-accent-ink); }
+.qs-preset canvas, .qs-preset img { width: 100%; max-width: 62px; height: auto; border-radius: 5px; display: block; }
+.qs-preset small { font-size: 0.6rem; font-weight: 600; text-align: center; line-height: 1.15; }
+
+/* ------------------------------------------------------------- export */
+
+.qs-export-actions { display: flex; flex-direction: column; gap: 0.45rem; }
+
+/* -------------------------------------------------------------- about */
+
+.qs-about {
+    margin-top: 0.85rem;
+    padding: 0.9rem 1rem;
+    background: var(--qs-panel);
+    border: 1px solid var(--qs-line);
+    border-radius: var(--qs-radius);
+}
+.qs-about p { margin: 0; font-size: 0.82rem; line-height: 1.6; color: var(--qs-ink-dim); }
+.qs-about b { color: var(--qs-ink); }
+
+/* -------------------------------------------------------------- toasts */
+
+.qs-toast-wrap {
+    position: fixed;
+    bottom: 1.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 12000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: center;
+    pointer-events: none;
+}
+.qs-toast {
+    padding: 0.55rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #fff;
+    background: #1f2937;
+    border-radius: 999px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+    animation: qs-toast-in 0.2s ease;
+}
+.qs-toast.is-bad { background: var(--qs-danger); }
+.qs-toast.is-ok { background: var(--qs-ok); }
+@keyframes qs-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ============================================================
+   Range inputs
+
+   A styled slider is only as tall as its track (a few px here), which is
+   nearly impossible to catch with a thumb. Grow the input to a real grab
+   area and move the visible track to the pseudo-elements, so it looks
+   identical but is actually hittable.
+   ============================================================ */
+
+.QrStudio input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 22px;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+.QrStudio input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: var(--qs-line);
+}
+.QrStudio input[type="range"]::-moz-range-track {
+    height: 4px;
+    border-radius: 999px;
+    background: var(--qs-line);
+}
+.QrStudio input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    margin-top: -5.5px;
+    border-radius: 50%;
+    background: var(--qs-accent);
+    border: 2px solid var(--qs-panel);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
+}
+.QrStudio input[type="range"]::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--qs-accent);
+    border: 2px solid var(--qs-panel);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
+}
+.QrStudio input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px var(--qs-accent-soft); }
+
+/* ============================================================
+   Responsive ladder
+   ============================================================ */
+
+@media screen and (max-width: 1180px) {
+    .qs-workspace {
+        grid-template-columns: 320px minmax(0, 1fr);
+        grid-template-areas:
+            "left stage"
+            "right right";
+    }
+    .qs-rail--right {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        align-items: start;
+    }
+}
+
+@media screen and (max-width: 980px) {
+    .qs-workspace { grid-template-columns: 290px minmax(0, 1fr); }
+}
+
+/* Phones — stage first, then the controls. */
+@media screen and (max-width: 719px) {
+    .qs-studio { padding: 0.6rem; }
+    .qs-workspace {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "stage"
+            "left"
+            "right";
+    }
+    .qs-stage { position: static; padding: 0.75rem; }
+    .qs-rail--right { grid-template-columns: minmax(0, 1fr); }
+    #qs-canvas { max-height: 48vh; max-height: 48dvh; }
+    .qs-toolbar-group--end { margin-left: 0; }
+    .qs-toolbar { justify-content: space-between; }
+    .qs-tab span { display: none; }
+    .qs-tab i { font-size: 1rem; }
+    .qs-tab { padding: 0.7rem 0.2rem; }
+}
+
+/* Landscape phones: keyed to height, never width. */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    #qs-canvas { max-height: 70vh; max-height: 70dvh; }
+    .qs-app .app-header { margin-bottom: 0.8rem; }
+    .qs-app .header-content p { display: none; }
+}
+
+/* Touch sizing hangs off pointer type, not width: a touch laptop gets it,
+   a narrow desktop window does not. */
+@media (pointer: coarse) {
+    .QrStudio .qs-btn { min-height: 44px; }
+    .QrStudio .qs-seg-btn,
+    .QrStudio .qs-swatch,
+    .QrStudio .qs-preset { min-height: 40px; }
+    .QrStudio .qs-field input[type="text"],
+    .QrStudio .qs-field input[type="url"],
+    .QrStudio .qs-field input[type="tel"],
+    .QrStudio .qs-field input[type="email"],
+    .QrStudio .qs-field select { min-height: 40px; }
+    .QrStudio .qs-color input[type="color"] { height: 40px; width: 40px; }
+    .QrStudio .qs-hexfield { min-height: 40px; }
+    .qs-panel-head { min-height: 44px; }
+    /* A slider's grab area is its input height, not its track. Grow it on
+       touch and let the pseudo-element track keep the same slim look. */
+    .QrStudio input[type="range"] { height: 40px; }
+    .QrStudio input[type="range"]::-webkit-slider-thumb { width: 20px; height: 20px; margin-top: -8px; }
+    .QrStudio input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; }
+    .QrStudio .qs-chip { width: 28px; height: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .QrStudio *, .QrStudio *::before, .QrStudio *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============================================================
+   Button overrides
+
+   The site-wide stylesheet styles every <button> with a teal background and
+   `color: #fff !important`, which would swamp every control in here. Each
+   button class in this app needs an entry in this block.
+   ============================================================ */
+
+.QrStudio .qs-btn,
+.QrStudio .qs-seg-btn,
+.QrStudio .qs-swatch,
+.QrStudio .qs-preset,
+.QrStudio .qs-tab,
+.QrStudio .qs-panel-head,
+.QrStudio .qs-linkbtn,
+.QrStudio .qs-chip,
+.QrStudio .qs-drop {
+    font-family: inherit;
+    text-transform: none;
+    letter-spacing: normal;
+    box-shadow: none;
+}
+
+/* One visible focus treatment for every control in the app. */
+.QrStudio .qs-btn:focus-visible,
+.QrStudio .qs-seg-btn:focus-visible,
+.QrStudio .qs-swatch:focus-visible,
+.QrStudio .qs-preset:focus-visible,
+.QrStudio .qs-tab:focus-visible,
+.QrStudio .qs-panel-head:focus-visible,
+.QrStudio .qs-linkbtn:focus-visible,
+.QrStudio .qs-chip:focus-visible {
+    outline: 2px solid var(--qs-accent);
+    outline-offset: 2px;
+}
+
+.QrStudio .qs-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.42rem 0.8rem;
+    height: auto;
+    line-height: 1.4;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--qs-ink) !important;
+    background: var(--qs-sunken);
+    border: 1px solid var(--qs-line);
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.QrStudio .qs-btn i { color: var(--qs-ink-dim); font-size: 0.85rem; }
+.QrStudio .qs-btn:hover:not(:disabled) { border-color: var(--qs-accent); color: var(--qs-accent-ink) !important; }
+.QrStudio .qs-btn:hover:not(:disabled) i { color: var(--qs-accent-ink); }
+.QrStudio .qs-btn:disabled { opacity: 0.42; cursor: not-allowed; }
+.QrStudio .qs-btn--icon { padding: 0.42rem 0.6rem; }
+.QrStudio .qs-btn--wide { width: 100%; }
+.QrStudio .qs-btn--grow { flex: 1 1 0; }
+.QrStudio .qs-btn--primary {
+    color: #fff !important;
+    background: var(--qs-accent);
+    border-color: var(--qs-accent);
+}
+.QrStudio .qs-btn--primary i { color: #fff; }
+.QrStudio .qs-btn--primary:hover:not(:disabled) {
+    color: #fff !important;
+    filter: brightness(1.06);
+    border-color: var(--qs-accent);
+}
+.QrStudio .qs-btn--primary:hover:not(:disabled) i { color: #fff; }
+
+.QrStudio .qs-seg-btn,
+.QrStudio .qs-swatch,
+.QrStudio .qs-preset,
+.QrStudio .qs-tab,
+.QrStudio .qs-panel-head,
+.QrStudio .qs-linkbtn {
+    background-color: transparent;
+}
+.QrStudio .qs-swatch,
+.QrStudio .qs-preset { background-color: var(--qs-sunken); }
+.QrStudio .qs-panel-head { color: var(--qs-ink) !important; }
+.QrStudio .qs-tab { color: var(--qs-ink-dim) !important; }
+.QrStudio .qs-tab.is-active { color: var(--qs-accent-ink) !important; }
+.QrStudio .qs-seg-btn { color: var(--qs-ink-dim) !important; }
+.QrStudio .qs-seg-btn.is-active { color: var(--qs-accent-ink) !important; }
+.QrStudio .qs-swatch { color: var(--qs-ink-dim) !important; }
+.QrStudio .qs-swatch.is-active { color: var(--qs-accent-ink) !important; }
+.QrStudio .qs-preset { color: var(--qs-ink-dim) !important; }
+.QrStudio .qs-preset.is-active { color: var(--qs-accent-ink) !important; }
+.QrStudio .qs-linkbtn { color: var(--qs-accent-ink) !important; }
+.QrStudio .qs-linkbtn--danger { color: var(--qs-danger) !important; }
+.QrStudio .qs-drop { color: var(--qs-ink-dim) !important; }
+/* Chips carry their colour as an inline background; the site-wide button rule
+   would otherwise paint them all teal. */
+.QrStudio .qs-chip { color: transparent !important; transition: transform 0.12s ease; }
