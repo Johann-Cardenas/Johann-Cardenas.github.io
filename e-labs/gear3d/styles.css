@@ -1480,10 +1480,17 @@ body.Gear3D .g3-node-iso:hover { color: var(--g3-datum) !important; }
    not, which is why the Order draws Figure 2 at all.
    ============================================================ */
 
+/* Above the SITE's fixed chrome, not just above the app's.
+   The shared stylesheet puts the mobile title bar at 10001, the slide-out nav
+   panel at 10002 and the theme / back-to-top buttons at 10000. At the app-local
+   z-index this modal started with, all four punched straight through it — the
+   hamburger sat on top of the catalogue's own title on a phone, and the theme
+   toggle floated over the card grid on every screen size. A modal has to be the
+   topmost thing on the page or it is not modal. */
 .g3-modal {
     position: fixed;
     inset: 0;
-    z-index: 900;
+    z-index: 10050;
     display: grid;
     place-items: center;
     padding: 2.5vh 2vw;

@@ -431,6 +431,14 @@ Two things had to be fixed to make this work, and both were long-standing:
   faded out. Its alpha is scaled by the ratio to hold the integrated weight
   constant, which is the quantity the eye actually reads.
 
+**The shadow map follows the buffer, not the tier's label.** A tier names an
+aspiration — Ultra asks for 3840 pixels across — but on a phone the ratio cap
+lands the buffer at about 1400, and allocating the nominal 4096 map there costs
+~67 MB of VRAM to shade 2.7 megapixels, which on a mid-range mobile GPU is a
+plausible way to lose the WebGL context. The map is the nearest power of two to
+the buffer's long edge, bounded by the tier: 4096 on a desktop viewport,
+2048 on a tablet, 1024 on a phone. No device sniffing.
+
 `Tyre detail` is separate for when you want to override: `auto` scales segment
 count by tyre count, which is what the README has always claimed and what — see
 below — the app never actually did.

@@ -308,11 +308,35 @@ export class Viewport {
         }, SETTLE_MS);
     }
 
+    /**
+     * Match the shadow map to the buffer that will actually be rasterised,
+     * not to the tier's label.
+     *
+     * A tier names an ASPIRATION — Ultra asks for 3840 pixels across — but on a
+     * phone the viewport is 356 CSS pixels and the ratio cap lands the buffer
+     * at about 1400. Allocating the tier's nominal 4096 shadow map there costs
+     * roughly 67 MB of VRAM to shade 2.7 megapixels, which on a mid-range
+     * mobile GPU is a plausible way to lose the WebGL context outright.
+     *
+     * Shadow resolution should track render resolution, bounded by the tier,
+     * which needs no device sniffing to get right. The power of two is the
+     * NEAREST rather than the next one up: ceiling jumps at 2049, so a 2376
+     * pixel buffer would have been handed a 4096 map — four times the texels it
+     * can show — for the sake of 328 pixels.
+     */
+    _syncShadowMap() {
+        const tier = RENDER_TIERS[this.renderTier] || RENDER_TIERS.high;
+        const { width, height } = this.size;
+        const longEdge = Math.max(width, height) * this.targetRatio();
+        const pow2 = Math.pow(2, Math.round(Math.log2(Math.max(1024, longEdge))));
+        this.lighting.setShadowMapSize(Math.min(tier.shadowMap, pow2));
+    }
+
     /** @param {RenderTier} tier */
     setRenderTier(tier) {
         if (!RENDER_TIERS[tier]) return;
         this.renderTier = tier;
-        this.lighting.setShadowMapSize(RENDER_TIERS[tier].shadowMap);
+        this._syncShadowMap();
         this._applyRatio(this._currentRatio());
         if (this.onResolutionChange) this.onResolutionChange(this.renderResolution());
     }
@@ -346,6 +370,7 @@ export class Viewport {
         }
         this.renderer.setSize(width, height, false);
         this.cameras.setSize(width, height);
+        this._syncShadowMap();
         this.overlay.setAttribute('width', String(width));
         this.overlay.setAttribute('height', String(height));
         this.overlay.setAttribute('viewBox', `0 0 ${width} ${height}`);

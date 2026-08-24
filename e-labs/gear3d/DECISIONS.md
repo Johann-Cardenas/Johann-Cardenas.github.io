@@ -40,9 +40,20 @@ instrument; a reader who asked for UHD should be able to read back what they
 got rather than take it on trust. It appears in the Rendering panel and in the
 status strip.
 
-**Where.** `RENDER_TIERS`, `targetRatio()`, `markInteracting()` and
-`renderResolution()` in `src/scene/renderer.js`; `setShadowMapSize()` in
-`lighting.js`; the `minLevel` argument to `pickQuality()`.
+**The shadow map is sized from the BUFFER, not the tier.** A tier names an
+aspiration; the ratio cap decides what is actually allocated. On a phone Ultra
+lands at roughly a 1400-pixel buffer, and handing that the tier's nominal 4096
+map spends ~67 MB of VRAM to shade 2.7 megapixels — a plausible way to lose the
+context on a mid-range mobile GPU. The map is the NEAREST power of two to the
+buffer's long edge, bounded by the tier. Nearest rather than next-up because
+ceiling jumps at 2049, which would hand a 2376-pixel tablet buffer a 4096 map
+for the sake of 328 pixels. This is device-appropriate without sniffing the
+device, which is the only kind of device adaptation worth writing.
+
+**Where.** `RENDER_TIERS`, `targetRatio()`, `markInteracting()`,
+`_syncShadowMap()` and `renderResolution()` in `src/scene/renderer.js`;
+`setShadowMapSize()` in `lighting.js`; the `minLevel` argument to
+`pickQuality()`.
 
 ---
 
