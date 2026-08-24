@@ -49,6 +49,11 @@ import {
     chassisEnvelope, profileFor, WIDTH_LIMIT_MM, HEIGHT_LIMIT_MM
 } from '../src/geometry/chassis.js';
 import { quadLayout, paneAt, QUAD_ORDER } from '../src/views/quadview.js';
+import {
+    parseGearCode, formatGearCode, describeGearCode, gearWheelCount, wheelsPerMainStrut,
+    wheelPlan, genericConfigurations, tableRowsFor, representativeAircraft, isTabulated,
+    GEAR_TYPES, TIRE_PRESSURE_CODES, SPECIAL_CODES, FAA_TABLE_3
+} from '../src/core/gearcode.js';
 import { toCSV, toAbaqus } from '../src/contact/export.js';
 import { serializeProject, parseProject } from '../src/io/project.js';
 
@@ -1434,6 +1439,204 @@ test('heavy trucks carry frame rails at the 34 in standard spacing', () => {
 });
 
 /* ============================================================
+   12b. FAA Order 5300.7 gear nomenclature
+   ------------------------------------------------------------
+   Table 3 of the Order is the ground truth: it publishes, for
+   eighteen configurations, both the name and the wheel count.
+   A parser that reproduces all eighteen from the names alone is
+   a parser that has understood the grammar.
+   ============================================================ */
+
+group('12b. Gear nomenclature');
+
+test('every Table 3 row round-trips through parse and format', () => {
+    for (const r of FAA_TABLE_3) {
+        const c = parseGearCode(r.code);
+        assertEqual(c.canonical, r.code, `${r.code} canonical form`);
+        // And again from the formatted output, so the two elisions of section
+        // 6e cannot drift apart: a leading 1 and a trailing 1 are both dropped
+        // on the main gear, and re-parsing has to put them back.
+        assertEqual(parseGearCode(c.canonical).canonical, r.code, `${r.code} re-parse`);
+    }
+});
+
+test('GROUND TRUTH: wheel counts reproduce Table 3 for all eighteen rows', () => {
+    // Table 3's "Total # Wheels, Excluding Nose" column, transcribed into the
+    // table and derived independently by the parser. They must agree without
+    // exception — this is the check that the grammar is understood rather
+    // than merely tolerated.
+    for (const r of FAA_TABLE_3) {
+        assertEqual(gearWheelCount(r.code), r.wheels,
+            `${r.code} (Figure ${r.figure}) wheel count`);
+    }
+});
+
+test('the main multiple is doubled and the body multiple is not', () => {
+    // The asymmetry is section 6e against section 6f, and getting it backwards
+    // is the single most plausible way to misread the convention: the main
+    // count is PER SIDE of a symmetric gear, the body count is the TOTAL.
+    assertEqual(gearWheelCount('D2'), 8, 'D2: 2 sides x 2 struts x 2 wheels');
+    assertEqual(gearWheelCount('2D/2D2'), 16, '2D/2D2: 8 main + 8 body');
+    assertEqual(gearWheelCount('2D/2D1'), 12, '2D/2D1: 8 main + 4 body');
+    assertEqual(gearWheelCount('2D/D1'), 10, '2D/D1: 8 main + 2 body');
+    // If the body count were doubled too, 2D/D1 would come out at 12 and
+    // 2D/2D2 at 24. Both are Table 3 rows, so both would have been caught.
+});
+
+test('a bare body term is refused, because 6f never omits the count', () => {
+    // "Because body gear arrangement may not be symmetrical, the gear code
+    // must identify the total number of gears present, and a value of 1 is
+    // not omitted if only one gear exists."  Accepting `2D/D` would make it a
+    // synonym for `2D/D1`, and they are not synonyms.
+    assertThrows(() => parseGearCode('2D/D'), /never omitted|total count/i,
+        'a body term with no count must be refused');
+    assertEqual(parseGearCode('2D/D1').body.multiple, 1, '2D/D1 states its count');
+});
+
+test('the tandem designation T means TRIPLE, per section 6d', () => {
+    // The retired vocabulary is the trap. Under the old naming, "T" meant
+    // tandem; under this Order it means triple wheels, so `2T` is twelve
+    // wheels and not eight.
+    assertEqual(GEAR_TYPES.T, 3, 'T is three wheels across');
+    assertEqual(gearWheelCount('2T'), 12, '2T is two triples in tandem');
+    assertEqual(wheelsPerMainStrut('2T'), 6, 'six wheels on a C-17 strut');
+    assertEqual(gearWheelCount('2D'), 8, '2D is two duals in tandem, not dual-tandem-anything');
+});
+
+test('ICAO tire pressure codes parse, round-trip and do not affect geometry', () => {
+    for (const [code, spec] of Object.entries(TIRE_PRESSURE_CODES)) {
+        const c = parseGearCode(`2D/2D1(${code})`);
+        assertEqual(c.pressure, code, `${code} parsed`);
+        assertEqual(c.canonical, `2D/2D1(${code})`, `${code} round-trip`);
+        assertEqual(gearWheelCount(c), 12, `${code} must not change the wheel count`);
+        assert(spec.category.length > 0, `${code} has a category`);
+    }
+    assertThrows(() => parseGearCode('2D(Q)'), /not an ICAO tire pressure code/,
+        'a gear-type letter is not a pressure code');
+    // Table 2's own examples, verbatim.
+    for (const s of ['S(W)', '2S(X)', '2D/2D1(Z)', 'Q2(Y)', '2D/3D2(Z)']) {
+        assertEqual(parseGearCode(s).canonical, s, `Table 2 sample ${s}`);
+    }
+});
+
+test('the C-5 is named directly and carries no internal grammar', () => {
+    // Section 6h: "This aircraft will not be classified using the new naming
+    // convention and will continue to be referred to directly as the C5."
+    const c = parseGearCode('C5');
+    assertEqual(c.special, 'C5', 'C5 is a special code');
+    assertEqual(gearWheelCount(c), 24, 'C5 wheel count comes from the table, not the grammar');
+    assertEqual(SPECIAL_CODES.C5.wheels, 24, 'and matches Table 3');
+});
+
+test('malformed names are refused rather than half-understood', () => {
+    for (const bad of ['', '  ', '2', 'X', '2X', 'D/', '/D1', '2D/2D1/D1', '0D', 'D0', '2-']) {
+        assertThrows(() => parseGearCode(bad), /.*/, `"${bad}" must be refused`);
+    }
+});
+
+test('the convention is open-ended, exactly as Figure 2 says', () => {
+    // "Increase numeric value for additional tandem axles." A name nobody has
+    // built is still a legal name, and the parser must not gatekeep on
+    // membership of Table 3.
+    assertEqual(gearWheelCount('9Q'), 72, '9Q is nine quadruples in tandem, both sides');
+    assert(!isTabulated('9Q'), '9Q is not in Table 3');
+    assert(isTabulated('2D/2D2'), '2D/2D2 is in Table 3');
+    assertEqual(genericConfigurations(3).length, 12, 'Figure 2 draws twelve cells');
+    assertEqual(genericConfigurations(3)[0], 'S', 'first cell');
+    assertEqual(genericConfigurations(3)[11], '3Q', 'last cell');
+});
+
+test('descriptions name the type, the tandem depth and the body gear', () => {
+    assertEqual(describeGearCode('S'), 'Single wheel main gear');
+    assertEqual(describeGearCode('2T'), 'Two triple wheels in tandem main gear');
+    assertEqual(describeGearCode('D2'), 'Dual wheel, two struts per side main gear');
+    assert(/two body gears, each three dual wheels in tandem/.test(describeGearCode('2D/3D2')),
+        `2D/3D2 body phrase: ${describeGearCode('2D/3D2')}`);
+    assert(/one body gear, dual wheels/.test(describeGearCode('2D/D1')),
+        `2D/D1 body phrase: ${describeGearCode('2D/D1')}`);
+});
+
+test('Table 3 carries the legacy concordance, which is why it is transcribed', () => {
+    // The Order is the only published cross-reference between this convention
+    // and the three it replaced. A row that lost its legacy names would still
+    // look fine on screen, so the distinctive ones are pinned.
+    const c17 = tableRowsFor('2T')[0];
+    assertEqual(c17.airForce.designation, 'TR-TA', 'C-17 Air Force designation');
+    assertEqual(c17.navy.designation, 'TRT', 'C-17 Navy designation');
+    const b747 = tableRowsFor('2D/2D2')[0];
+    assertEqual(b747.faa.name, 'Double Dual Tandem', '747 historic FAA name');
+    assertEqual(b747.navy.designation, 'DDT', '747 Navy designation');
+    assertEqual(tableRowsFor('S').length, 2, 'S has two rows, differing only in the nose gear');
+    assert(representativeAircraft('5D').some((a) => /An-124/.test(a)), '5D names the An-124');
+    assert(/No Nose Gear|None/i.test(tableRowsFor('D2')[0].noseGear), 'the B-52 has no nose gear');
+});
+
+test('wheel plans draw the right number of wheels at the right scope', () => {
+    // The scope rule: draw one strut when the strut IS the configuration
+    // (Figure 2), draw the aircraft when the arrangement of struts is what is
+    // being named (Figures 10-12, 16, 18, 20).
+    for (const code of [...new Set([...genericConfigurations(3), ...FAA_TABLE_3.map((r) => r.code)])]) {
+        const p = wheelPlan(code);
+        const total = code === 'C5' ? 24 : gearWheelCount(code);
+        if (p.scope === 'strut') {
+            assertEqual(p.wheels.length * 2, total, `${code} strut plan is half the aircraft`);
+        } else {
+            assertEqual(p.wheels.length, total, `${code} aircraft plan draws every wheel`);
+        }
+        assert(p.wheels.every((w) => Number.isFinite(w.u) && Number.isFinite(w.v)),
+            `${code} produced a non-finite coordinate`);
+    }
+    // A body gear must be distinguishable, or the diagram cannot show what
+    // makes a 2D/2D2 different from a 2D.
+    assert(wheelPlan('2D/2D2').wheels.some((w) => w.role === 'body'), '2D/2D2 has body wheels');
+    assert(wheelPlan('2D').wheels.every((w) => w.role === 'main'), '2D has none');
+});
+
+test('COVERAGE: every configuration the Order names is loadable', () => {
+    // Twenty-one codes: Figure 2's twelve generic cells plus the Table 3 rows
+    // Figure 2 does not already cover. Each must resolve to something in the
+    // library — a measured aircraft where one exists, a schematic otherwise.
+    //
+    // This is the check that would have caught the v1.9 defect where the Gear
+    // configuration picker listed only the schematics: all twenty-one codes
+    // WERE present in the library, but five of them (D, 2D, 3D, 2D/2D2,
+    // 2D/3D2) were answered only by measured aircraft, so a list built from
+    // the schematics alone silently dropped them. Asserting at the LIBRARY
+    // level rather than the picker level is deliberate — it is the invariant
+    // the picker depends on, and it holds however the picker is written.
+    const conventions = [...new Set([
+        ...genericConfigurations(3),
+        ...FAA_TABLE_3.map((r) => r.code)
+    ])];
+    assertEqual(conventions.length, 21, 'the Order names twenty-one distinct configurations');
+
+    const missing = conventions.filter(
+        (c) => !aircraftUnits.some((u) => u.gearDesignation === c)
+    );
+    assertEqual(missing.length, 0,
+        `no unit answers ${missing.join(', ')} — every FAA configuration must be loadable`);
+
+    // And the reverse: nothing in the library carries a designation the Order's
+    // own grammar cannot read.
+    for (const u of aircraftUnits) {
+        assertEqual(parseGearCode(u.gearDesignation).canonical, u.gearDesignation,
+            `${u.id} carries a non-canonical gear designation`);
+    }
+});
+
+test('gears in line are drawn ALONG the aircraft, not across it', () => {
+    // Figures 18 and 20 both put the second strut BEHIND the first. Drawing
+    // them side by side instead turns a Q2 into an eight-wheel axle line,
+    // which is a gear that does not exist.
+    const q2 = wheelPlan('Q2');
+    const perSide = q2.wheels.filter((w) => w.u < 0);
+    const files = new Set(perSide.map((w) => w.v.toFixed(3)));
+    assertEqual(files.size, 2, 'Q2 has two longitudinal files on each side');
+    const lanes = new Set(q2.wheels.map((w) => Math.sign(w.u)));
+    assertEqual(lanes.size, 2, 'and two sides, with nothing on the centreline');
+});
+
+/* ============================================================
    13. Aircraft library
    ============================================================ */
 
@@ -1527,7 +1730,48 @@ test('the 767-400ER dual spacing is the FAARFIELD value, not a rounded guess', (
 test('aircraft wheelbase is measured to the main gear centroid', () => {
     for (const u of aircraftUnits) {
         const l = resolveLayout(u);
+        if (u.wheelbase == null) {
+            // A null wheelbase is an honest "unknown" and the schema allows it,
+            // but only for one reason: the quantity is measured FROM the nose
+            // gear, so an aircraft that has none — the B-52's bicycle gear —
+            // has no wheelbase to state. A unit that simply forgot to state one
+            // must still fail, so the null has to be corroborated by the
+            // absence it claims.
+            const noses = u.gears.filter((g) => g.role === 'nose' || /^N/i.test(g.id));
+            assertEqual(noses.length, 0,
+                `${u.id} states wheelbase: null but carries a nose gear — the wheelbase is derivable`);
+            assertEqual(l.derived.wheelbase, undefined, `${u.id} must derive no wheelbase either`);
+            continue;
+        }
         assertClose(l.derived.wheelbase, u.wheelbase, 1, `${u.id} wheelbase`);
+    }
+});
+
+test('a stated main gear track is reproduced by the geometry', () => {
+    // The counterpart of the outer-width derivation, for the units that state a
+    // track instead. The schematic configurations are sourced the other way
+    // round from the real aircraft — their track is the measured quantity and
+    // their outer width would depend on a nominal tire — so this is the check
+    // that stops a transcription slip moving every strut.
+    for (const u of aircraftUnits) {
+        if (u.mainGearTrack == null) continue;
+        const l = resolveLayout(u);
+        assertClose(l.derived.mainGearTrack, u.mainGearTrack, 1,
+            `${u.id}: derived track must reproduce the stated one`);
+    }
+});
+
+test('schematic configurations state no outer width, because theirs would be nominal', () => {
+    // On a real aircraft the FAA outer width is the datum and the track is
+    // derived from it. On a schematic the track is measured and the outer
+    // width would fall out of a NOMINAL tire, so publishing one would dress a
+    // placeholder as a datum. Every schematic must decline to state it.
+    for (const u of aircraftUnits.filter((x) => x.kind === 'schematic')) {
+        assertEqual(u.mainGearOuterWidth, null,
+            `${u.id} is schematic and must not state a mainGearOuterWidth`);
+        assert(u.mainGearTrack > 0, `${u.id} must state the track it does know`);
+        assert((u.assumedFields || []).some((f) => /\.tire$/.test(f)),
+            `${u.id} must declare its nominal tire in assumedFields`);
     }
 });
 
@@ -1539,9 +1783,33 @@ test('percent on main gear is the design value and load splits accordingly', () 
         // the assertion is a band around the design value rather than equality
         // to it — a unit outside this band is a transcription error, not a
         // legitimately different aircraft.
+        const l = resolveLayout(u);
+        if (u.percentOnMainGear == null) {
+            // Null is allowed for one reason only: the figure exists to split
+            // load between the nose gear and the main gear, so it is undefined
+            // for an aircraft with no nose gear. Anything else stating null is
+            // an omission, not an honest unknown.
+            const noses = u.gears.filter((g) => g.role === 'nose' || /^N/i.test(g.id));
+            assertEqual(noses.length, 0,
+                `${u.id} states percentOnMainGear: null but carries a nose gear`);
+            // And the null must propagate: no tire may be given a load derived
+            // from a split that was never stated.
+            assert(l.wheels.every((w) => w.loadKn == null),
+                `${u.id} states no load split, so no tire may carry a derived load`);
+            continue;
+        }
         assert(u.percentOnMainGear >= 94 && u.percentOnMainGear <= 96,
             `${u.id} percentOnMainGear ${u.percentOnMainGear} outside 94-96`);
-        const l = resolveLayout(u);
+
+        // A configuration with no stated weight has nothing to split. That is
+        // legitimate for the pure Figure 2 patterns, which are drawings rather
+        // than aircraft — but the absence must be total, not a silent zero.
+        if (u.mtow == null) {
+            assert(l.wheels.every((w) => w.loadKn == null),
+                `${u.id} states no weight, so no tire may carry a load`);
+            continue;
+        }
+
         const mainIds = new Set(l.axles.filter((a) => a.role === 'main').map((a) => a.id));
         const mainLoad = l.wheels.filter((w) => mainIds.has(w.axleId))
             .reduce((s, w) => s + (w.loadKn ?? 0), 0);

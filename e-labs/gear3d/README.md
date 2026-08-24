@@ -169,7 +169,8 @@ perpendicular to the measurement itself rather than to a coordinate axis.
 
 | Key | Action |
 |---|---|
-| `V` then `1`–`5` | 3D / Plan / Side / Front / Quad |
+| `V` then `1`–`5` | Quad / 3D / Plan / Side / Front |
+| `C` | Gear configuration catalogue |
 | `M` | Measure mode |
 | `A` | Annotations on/off |
 | `G` | Ground grid on/off |
@@ -227,6 +228,100 @@ can be read straight from the console, without trusting the UI.
   grooves that MSAA alone leaves aliased at 600 dpi. Composes with the tiled
   fallback automatically.
 
+## Gear nomenclature — FAA Order 5300.7 (v1.9)
+
+Order 5300.7, effective 6 October 2005, replaced three mutually untranslatable
+naming systems — the FAA's own, the Air Force's and the Navy's — with one
+grammar. Gear3D implements it **as a grammar**, in `src/core/gearcode.js`,
+rather than as a lookup table:
+
+```
+    # X #  /  # X #  ( P )
+    │ │ │     │ │ │    └── optional ICAO tire pressure code, Table 1
+    │ │ │     │ │ └────── TOTAL number of body/belly gears
+    │ │ │     │ └──────── gear type, S D T or Q
+    │ │ │     └────────── gear types in tandem
+    │ │ └──────────────── number of main gears in line, ONE SIDE
+    │ └────────────────── gear type, S D T or Q
+    └──────────────────── gear types in tandem
+```
+
+The module parses, re-emits, describes and counts wheels. Table 3 is
+transcribed in full — all eighteen rows, with the historic FAA, U.S. Air Force
+and U.S. Navy names, because the Order is the only published concordance
+between the four systems, and an engineer holding a drawing marked `T-TA` or
+`DDT` has nowhere else to look.
+
+Three rules are easy to get wrong and each has a test pinned to it:
+
+- **The main multiple is doubled; the body multiple is not.** §6e's count is
+  gears in line *on one side* of a symmetric gear. §6f's is the *total* across
+  the aircraft. Swap them and `2D/D1` comes out at 12 wheels instead of 10.
+- **The body count is never omitted** (§6f), "because body gear arrangement
+  may not be symmetrical". `2D/D` is refused, not silently read as `2D/D1`.
+- **`T` means triple, not tandem** (§6d). The letter changed meaning when this
+  Order took effect, so a pre-2005 drawing marked `T` may well mean something
+  else, and `2T` is twelve wheels rather than eight.
+
+**The convention is open-ended and the app treats it that way.** Figure 2's
+caption — *increase numeric value for additional tandem axles* — means `9Q` is
+a legal name whether or not anyone has built one. Validation is by parsing, not
+by membership of a table.
+
+Press `C` for the **catalogue**: all 21 configurations as Figure 2-style wheel
+plans, each with its wheel count, its reference figure, the aircraft the Order
+names against it, and whether this library answers it with a measured aircraft
+or a schematic. Click one to load it. The thumbnails come from the same
+`wheelPlan()` the app uses elsewhere, so a diagram cannot disagree with the
+model it loads.
+
+### Configurations (v1.9)
+
+Sixteen loadable configurations cover every code in the Order:
+**S, T, Q, 2S, 2T, 2Q, 3S, 3T, 3Q, 2D/D1, 2D/2D1, 5D, 7D, C5, D2, Q2.**
+The five codes that already have measured aircraft — D, 2D, 3D, 2D/2D2,
+2D/3D2 — point at those instead of being duplicated, because a measured
+aircraft is strictly better than a drawing of one.
+
+**Every one of them is flagged `Schematic`**, in the title block and in an
+amber panel notice, and the distinction is worth keeping sharp:
+
+- **Real, and cited per gear:** the wheel geometry — track, dual spacing,
+  tandem spacing, body-gear offset — of the ten configurations whose
+  representative aircraft appears in the **FAARFIELD 2.1.1 aircraft library**
+  (C-130, C-17, DC-10-30, A340-600, An-124, An-225, C-5, B-52, IL-76, F-15).
+  That library publishes per-wheel coordinates in millimetres and is already
+  what this project uses to corroborate the 747 and A380.
+- **Nominal, and declared:** the tire and the wheelbase, on all sixteen.
+  FAARFIELD carries a contact patch and an inflation pressure, not a Tire and
+  Rim Association designation, and it models the main gear only because the
+  nose gear carries too little load to matter to thickness design. The nose
+  gear's *type* is real — Table 3 tabulates it — but its distance forward
+  is not.
+- **The six pure patterns** (`T`, `Q`, `2Q`, `3S`, `3T`, `3Q`) have no aircraft
+  behind them and are drawn to one nominal scale so Figure 2's cells stay
+  comparable. Not one of those numbers describes an aircraft.
+
+**None of them states a `mainGearOuterWidth`, and that is deliberate.** On a
+real aircraft the FAA's published outer width is the datum and the track is
+derived from it; here the relationship runs the other way — the track is
+measured and the outer width would depend on the nominal tire — so stating one
+would dress a placeholder up as a datum.
+
+### Uneven bogies
+
+`wheelOffsets` on a gear carries explicit lateral wheel positions where the
+published spacing is not even, instead of averaging it into a single pitch. The
+C-5's quadruple axle sits in two pairs with a wider gap up the middle
+(34 in, 53 in, 34 in), the IL-76's is 620/820/620 mm and the C-17's triple is
+1079.5 and 1028.7 mm. Absent the array a bogie is spread evenly at
+`dualSpacing`, which is every other gear in the library.
+
+The C-5 is modelled as **eight axles rather than four bogies**, because each of
+its bogies carries a quadruple axle *and* a dual axle — which is exactly why
+§6h declines to name it by the convention at all, and the only honest way to
+express a mixed bogie in a schema built on wheels-across times rows.
+
 ## Aircraft (v1.2, extended v1.6)
 
 Four Boeing aircraft spanning gear codes **D, 2D and 3D**: 737-800, 757-200,
@@ -240,12 +335,21 @@ side. With the recorded dual spacings, that derivation reproduces each
 manufacturer's separately published tread to within 10–26 mm on all four
 aircraft; the test suite asserts it.
 
-Nose gear dual spacing and tandem spacing are **not** constrained by any
-consulted source. Each unit declares them in `assumedFields`, validation fails
-if that declaration is missing, and the app shows an amber notice naming them
-whenever an aircraft is loaded. Changing a dual spacing re-derives the track,
-so the authoritative outer width survives whatever you enter. Full breakdown in
+Nose gear dual spacing is **not** constrained by any consulted source. Each
+unit declares it in `assumedFields`, validation fails if that declaration is
+missing, and the app shows an amber notice naming it whenever an aircraft is
+loaded. Changing a dual spacing re-derives the track, so the authoritative
+outer width survives whatever you enter. Full breakdown in
 `src/data/SOURCES.md` §5.
+
+**v1.9 retires the tandem-spacing assumptions.** The 757-200, 767-400ER and
+777-300ER declared `MLG.tandemSpacing` as assumed; the FAARFIELD 2.1.1 library
+constrains all three. Two were wrong — the 767-400ER by 50.4 mm and the
+777-300ER by 15.0 mm — and the 757-200's assumed 45 in was exactly right. A
+tandem spread is symmetric about the bogie centre, so a wrong one moves both
+axle lines and leaves the wheelbase, the track and the outer width untouched;
+that is precisely why it could sit undetected for seven releases while every
+other check on those aircraft passed.
 
 ## Status
 
@@ -269,11 +373,95 @@ correction is absorbed inside it — while the inboard tire shifts 20 mm and the
 strut 10 mm. The cross-check tolerance that let a 26 mm error pass for four
 releases is tightened from 40 mm to 15 mm.
 
-## Quad view
+**v1.9** implements the FAA Order 5300.7 naming convention as a grammar, adds
+sixteen gear configurations covering every code in the Order (library 22 → 38),
+makes quad the default view, and corrects three tandem spacings that were
+assumed and are not. 175 checks, up from 160.
+
+**v1.10** raises the live viewport to a UHD drawing buffer with adaptive
+supersampling, fixes a renderer that had been redrawing at 60 fps while idle
+since v1.0, and completes the Gear configuration picker: it listed only the
+sixteen schematics, so the five conventions answered by a measured aircraft —
+D, 2D, 3D, 2D/2D2, 2D/3D2 — were missing from the one list in the app that
+exists to enumerate the convention. It now lists all twenty-one, and a test
+asserts the coverage at library level. 176 checks.
+
+## Render resolution (v1.10)
+
+The viewport used to render at `min(devicePixelRatio, 2)`, which on an ordinary
+1x desktop monitor is a pixel ratio of **one**. A viewport around 1000 x 660 CSS
+pixels was therefore rasterised at 0.7 megapixels, and it showed — faceted tyre
+silhouettes, stair-stepped shadow edges, specular shimmer on the rim lips that
+MSAA cannot touch because it only antialiases geometry edges. The figure export
+has always supersampled; the live view had not.
+
+**Rendering → Quality** now offers three tiers, and each moves the pixel count
+and the geometry together, because raising either alone is wasted: more pixels
+on a faceted silhouette merely resolve the facets, and more segments behind a
+1x buffer are never seen.
+
+| Tier | Drawing buffer | Tyre floor | Shadow map |
+|---|---|---|---|
+| Balanced | 1920 px wide | adaptive | 2048 |
+| High | 2560 px | 240 segments | 3072 |
+| **Ultra — UHD** (default) | **3840 px** | 352 segments | 4096 |
+
+On a 1017 x 693 viewport that is **3840 x 2617, 10.0 MP, a 3.78x buffer**. The
+panel and the status strip both print what is actually being rasterised, because
+the ratio depends on the viewport's CSS width, the display's own pixel ratio and
+what the GL context will allocate — "Ultra" is not the same number of pixels on
+two machines, and a reader who asked for UHD is entitled to check.
+
+**Interaction drops to a 1.25x buffer and the full frame is drawn 220 ms after
+the view settles.** A 10 MP frame is entirely affordable for an image that is
+going to sit on screen and not at all affordable at 60 fps during an orbit, so
+the cost lands on the still image rather than on the drag.
+
+Two things had to be fixed to make this work, and both were long-standing:
+
+- **The renderer was never actually on demand.** `OrbitControls.update()`
+  returns `true` on every frame even when the camera has not moved — its settle
+  test compares quaternions against a 1e-6 epsilon and the jitter from calling
+  `lookAt()` each update sits on that threshold. The loop trusted that return
+  value, so an idle Gear3D redrew at 60 fps for the whole life of the app. It
+  now compares position, orientation, target and zoom itself. **Idle is now
+  zero renders per second.**
+- **A grid line is one DEVICE pixel wide** whatever the ratio, so at 3.78x it is
+  a quarter of a CSS pixel and the grid does not look sharper, it looks like it
+  faded out. Its alpha is scaled by the ratio to hold the integrated weight
+  constant, which is the quantity the eye actually reads.
+
+**The shadow map follows the buffer, not the tier's label.** A tier names an
+aspiration — Ultra asks for 3840 pixels across — but on a phone the ratio cap
+lands the buffer at about 1400, and allocating the nominal 4096 map there costs
+~67 MB of VRAM to shade 2.7 megapixels, which on a mid-range mobile GPU is a
+plausible way to lose the WebGL context. The map is the nearest power of two to
+the buffer's long edge, bounded by the tier: 4096 on a desktop viewport,
+2048 on a tablet, 1024 on a phone. No device sniffing.
+
+`Tyre detail` is separate for when you want to override: `auto` scales segment
+count by tyre count, which is what the README has always claimed and what — see
+below — the app never actually did.
+
+**Bug fixed in passing.** `view.quality` defaulted to `'standard'`, which is a
+valid `QUALITY` key and therefore an *override*, so `pickQuality`'s adaptive
+step-down never ran once. A 34-tyre turnpike double got the same segment count
+as a single isolated axle. The default is now `'auto'`.
+
+## Quad view — the default since v1.9
 
 `Quad` renders plan, 3D, side and front in one frame — the layout for
 *checking* a configuration rather than composing a single figure, and it
 exports as a complete check sheet.
+
+**It is what the app opens on.** A gear configuration is a plan first: the
+thing a reader needs from it is where the wheels are, and a single pictorial
+3D view is the one arrangement that answers that worst, because it foreshortens
+both axes at once and no spacing can be read off it. Opening on all four shows
+the layout, the elevation, the track and the pictorial together, which is what
+a gear drawing has looked like for as long as there have been gear drawings.
+Clicking any pane still opens it full size, and the `V`-then-digit shortcuts
+follow the toolbar order, so `V1` is Quad.
 
 Plan sits above Side so the two share a longitudinal axis and a dimension can
 be carried straight down between them; Side and Front share a row and the

@@ -6,6 +6,198 @@ why, so a later maintainer can overturn it on the merits rather than guessing.
 
 ---
 
+## D32. Resolution is adaptive, and the tier moves pixels and geometry together (v1.10)
+
+**Decision.** The viewport renders into a buffer far larger than itself — 3840
+pixels wide at the default Ultra tier — and drops to a 1.25x buffer for the
+duration of any pointer or wheel interaction, restoring the full frame 220 ms
+after the last input.
+
+**Why supersample at all.** `min(devicePixelRatio, 2)` sounds like a cap and is
+in fact a floor: on an ordinary 1x monitor it evaluates to **one**, so the
+viewport was being rasterised at its CSS size, around 0.7 megapixels. MSAA
+antialiases geometry edges and does nothing for specular shimmer on a rim lip
+or for the sub-pixel detail in a tread groove. The export path has supersampled
+2x since v1.1 for exactly this reason; the live view simply never did.
+
+**Why adaptive rather than always-on.** A 10 MP frame costs about 7 ms here,
+which is nothing for an image that is going to sit on screen and far too much
+to pay 60 times a second during an orbit drag. Dropping for the interaction and
+restoring on settle puts the whole cost on the still frame — the one anybody
+actually looks at.
+
+**Why the tier also sets a geometry floor.** Raising either resolution or
+segment count alone is wasted. A 4K buffer does not hide a 112-segment
+silhouette, it resolves the faceting more clearly than 1x ever could; and 352
+segments behind a 1x buffer are never seen. One control moves both, plus the
+shadow map, whose radius is rescaled with it so the softness the user chose
+looks the same at every tier.
+
+**Why the number is printed.** The ratio depends on the viewport's CSS width,
+the display's own pixel ratio and what the GL context will allocate, so "Ultra"
+is not the same number of pixels on two machines. This app is a measurement
+instrument; a reader who asked for UHD should be able to read back what they
+got rather than take it on trust. It appears in the Rendering panel and in the
+status strip.
+
+**The shadow map is sized from the BUFFER, not the tier.** A tier names an
+aspiration; the ratio cap decides what is actually allocated. On a phone Ultra
+lands at roughly a 1400-pixel buffer, and handing that the tier's nominal 4096
+map spends ~67 MB of VRAM to shade 2.7 megapixels — a plausible way to lose the
+context on a mid-range mobile GPU. The map is the NEAREST power of two to the
+buffer's long edge, bounded by the tier. Nearest rather than next-up because
+ceiling jumps at 2049, which would hand a 2376-pixel tablet buffer a 4096 map
+for the sake of 328 pixels. This is device-appropriate without sniffing the
+device, which is the only kind of device adaptation worth writing.
+
+**Where.** `RENDER_TIERS`, `targetRatio()`, `markInteracting()`,
+`_syncShadowMap()` and `renderResolution()` in `src/scene/renderer.js`;
+`setShadowMapSize()` in `lighting.js`; the `minLevel` argument to
+`pickQuality()`.
+
+---
+
+## D33. The renderer trusts its own comparison, not OrbitControls' return value (v1.10)
+
+**Decision.** The render loop decides whether the camera moved by comparing
+position, orientation, target and zoom against the previous frame. Nothing is
+hung off `cameras.onChange`.
+
+**Why.** `OrbitControls.update()` returns `true` on **every frame** when damping
+is enabled, even on a camera that has not moved at all: its settle test compares
+quaternions against a 1e-6 epsilon, and the numerical jitter from calling
+`lookAt()` each update sits right on that threshold. The loop took that return
+value as "the camera moved", so an idle Gear3D had been redrawing at 60 fps
+since v1.0 — a renderer documented as on-demand, and advertised as such in its
+own header comment, that had never once been on demand.
+
+**How it surfaced.** It did not surface on its own; it was invisible except as
+battery drain. It only became a *defect* when v1.10 hung the resolution drop off
+the same signal, at which point the viewport never settled and never rendered
+above the interactive ratio. A bug that costs only power is easy to carry for
+eight releases; the lesson is that "is this event telling me what I think it is"
+is worth asking of a library callback before building on it.
+
+**Result.** Idle is now zero renders per second, measured. Interaction is
+detected instead from `pointerdown`, `pointermove` with a button held, and
+`wheel` on the canvas, which is unambiguous in a way the change event is not.
+
+**Where.** `_cameraMoved()` and the `start()` loop in `src/scene/renderer.js`.
+
+---
+
+## D29. The gear naming convention is implemented as a grammar, not a table (v1.9)
+
+**Decision.** `src/core/gearcode.js` parses FAA Order 5300.7 names from the
+convention's own rules. `GEAR_CODES` in `schema.js` is generated from it, and a
+designation is validated by **parsing** rather than by membership of a list.
+
+**Why.** The convention is explicitly open-ended. Figure 2's caption says
+*increase numeric value for additional tandem axles*, so `4S`, `9Q` and `2D/4D3`
+are all legal names, and a table can only ever contain the ones someone thought
+to type. The hand-maintained table this replaced held twelve codes and had
+already drifted out of the Order's vocabulary — it described `2D` as "Dual
+wheel, tandem", which is the phrasing §6d retired when it made `T` mean triple
+instead of tandem. A third copy of the same list sat in
+`src/data/aircraft/index.json`. Three copies of a table is three places for it
+to be wrong; a parser is one place, and it answers questions no table can.
+
+**What this buys, concretely.** Table 3 publishes a wheel count for eighteen
+configurations. The parser derives all eighteen from the names alone, which is
+a real test of whether the grammar was understood — and it caught the two rules
+that are easiest to invert:
+
+- The main-gear multiple counts gears in line **on one side** of a symmetric
+  gear (§6e) and is doubled; the body-gear multiple is the **total across the
+  aircraft** (§6f) and is not. Getting that backwards gives `2D/D1` twelve
+  wheels instead of ten.
+- The body count is **never** elided, even when it is 1, "because body gear
+  arrangement may not be symmetrical". `2D/D` is therefore refused rather than
+  read as a synonym for `2D/D1`, which it is not.
+
+**The parser throws rather than returning a partial result.** A half-understood
+gear name is worse than a refusal, because every wheel position downstream
+would be derived from the half that was guessed.
+
+**Where.** `src/core/gearcode.js`; `GEAR_CODES` and `isValidGearCode()` in
+`src/core/schema.js`; group 12b of the test suite.
+
+---
+
+## D30. Gear configurations are schematics, and say so everywhere (v1.9)
+
+**Decision.** The sixteen FAA Order 5300.7 configurations ship as normal
+aircraft units — they validate, resolve and export as aircraft — but carry
+`kind: "schematic"`, a separate Domain in the picker, an amber panel notice and
+a `Schematic` flag in the title block that **outranks** both other flags.
+
+**Why not a fourth domain.** `domain` is `truck | aircraft` throughout the
+schema, the layout engine and the exporters. A third value would have meant a
+third branch in every one of them to express something that is not true: these
+*are* aircraft gear. The separation belongs in the picker, which is where the
+confusion would otherwise happen, and nowhere else.
+
+**Why the flag outranks the others.** Whether a drawing was edited away from
+its reference, or how many of its values were assumed, is a second-order
+question next to whether it is a drawing at all. A reader who takes one flag
+off a figure should take that one.
+
+**The sourcing runs opposite to the real aircraft, which is why no schematic
+states an outer width.** On a 737 the FAA's published main gear outer width is
+the datum and the track is derived from it (D14). Here the track is the
+measured quantity — FAARFIELD publishes per-wheel coordinates — and the outer
+width would fall out of a **nominal** tire, because no consulted source gives a
+Tire and Rim Association designation for these aircraft. Publishing one would
+dress a placeholder up as a datum, so `mainGearOuterWidth` is null on all
+sixteen and the validator's closure check correctly skips them. A test asserts
+that no schematic ever states one.
+
+**Two honest nulls fell out of this, and both are corroborated rather than
+tolerated.** The B-52 has no nose gear at all — Figure 18 ignores the wingtip
+outriggers — so it has no wheelbase, the quantity being measured from a nose
+gear that does not exist, and no `percentOnMainGear`, that figure existing to
+split load between nose and main gear. The tests that used to demand both now
+demand that a unit stating null genuinely *has* no nose gear, and that the null
+propagates: no tire may carry a load derived from a split that was never
+stated. That is strictly stronger than what they asserted before.
+
+**Where.** `src/data/aircraft/faa-5300-7.json`; `renderTitleBlock()`,
+`renderAssumptionNotice()` and `poolFor()` in `main.js`.
+
+---
+
+## D31. FAARFIELD's belly entries share a datum, and the 747 proves the sign (v1.9)
+
+**Decision.** The wing-to-body gear longitudinal offset on the DC-10-30 and
+A340-600 schematics is taken from the FAARFIELD 2.1.1 library, with the body
+gear **aft** of the wing gear.
+
+**Why this needed proving.** FAARFIELD stores an aircraft's belly gear as a
+*separate library entry*, and it is not obvious that the two share a
+longitudinal origin. They visibly do not always: the DC-10-30's wing bogie sits
+at Y 762 mm while the KC-10's — essentially the same gear — sits at 0. This
+build initially read the offset as putting the body gear **forward**, which is
+the wrong side, and would have put a body bogie ahead of the wing gear on two
+aircraft.
+
+**What settles it.** The 747-400. Its FAARFIELD wing gear sits at Y 3073.4 mm,
+and Boeing's own ACAP §7.2.1 footprint figure — read separately, for
+`boeing.json`, from a wholly independent document — puts the 747 body gear
+3073 mm **aft** of the wing gear. Agreement to 0.4 mm fixes both the datum
+(shared, origin at the body gear) and the sign (positive Y forward) at once.
+The direction then also agrees with the A380, with Figures 10–12 and 16, and
+with the 747 entry already in this library.
+
+**The general lesson.** A cross-check is only worth something when the two
+sides are independent. This one is worth something precisely because the ACAP
+figure was transcribed for a different aircraft, for a different file, before
+this question was asked.
+
+**Where.** `faa-5300-7.json`, the `WLG-L` and `BLG` source strings on
+`faa-2d-d1` and `faa-2d-2d1`.
+
+---
+
 ## D1. Drafting convention: ISO 129-1
 
 **Decision.** Dimensions follow ISO 129-1, not ANSI Y14.5.

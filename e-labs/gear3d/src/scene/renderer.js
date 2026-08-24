@@ -42,6 +42,62 @@ function luminance(hex) {
     return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 }
 
+/* ============================================================
+   RENDER RESOLUTION
+   ------------------------------------------------------------
+   The viewport used to render at `min(devicePixelRatio, 2)`,
+   which on an ordinary 1x desktop monitor means a pixel ratio of
+   ONE. A viewport around 1000 x 660 CSS pixels was therefore
+   being rasterised at 0.7 megapixels, and it showed: faceted
+   tyre silhouettes, stair-stepped shadow edges, specular
+   shimmer on the rim lips that MSAA cannot touch because it
+   only antialiases geometry edges.
+
+   The export path has always supersampled — 2x, box-filtered
+   down — so exported figures were crisp while the live view was
+   not. That gap is what these tiers close.
+
+   Each tier states the pixel WIDTH the drawing buffer aims for,
+   and the ratio follows from the viewport's CSS width. The cap
+   matters as much as the target: on a display that is already
+   HiDPI, or a viewport that is already wide, the ratio needed to
+   reach the target is small, and the tier must never render
+   BELOW devicePixelRatio or the result is blurry rather than
+   sharp.
+   ============================================================ */
+
+/** @typedef {'balanced'|'high'|'ultra'} RenderTier */
+
+export const RENDER_TIERS = Object.freeze({
+    balanced: {
+        label: 'Balanced', targetPx: 1920, maxRatio: 2, minGeometry: null, shadowMap: 2048,
+        note: 'Full HD drawing buffer. The lightest setting; use it on integrated graphics.'
+    },
+    high: {
+        label: 'High', targetPx: 2560, maxRatio: 3, minGeometry: 'standard', shadowMap: 3072,
+        note: 'QHD drawing buffer, and no tyre below 240 segments.'
+    },
+    ultra: {
+        label: 'Ultra — UHD', targetPx: 3840, maxRatio: 4, minGeometry: 'high', shadowMap: 4096,
+        note: 'A 4K drawing buffer downsampled into the viewport, every tyre at 352 segments, '
+            + 'and a 4096 shadow map. Still frames only — interaction drops to a lighter ratio.'
+    }
+});
+
+/**
+ * Pixel ratio used WHILE THE CAMERA IS MOVING.
+ *
+ * A 4K buffer is perfectly affordable for a frame that is going to sit on
+ * screen, and not at all affordable at 60 fps during an orbit drag. Dropping
+ * for the duration of the interaction and restoring once it settles is what
+ * makes an ultra still frame free: the expensive render happens once, when the
+ * view has stopped changing and the reader has started looking at it.
+ */
+const INTERACTIVE_RATIO = 1.25;
+
+/** How long after the last camera movement to re-render at full resolution. */
+const SETTLE_MS = 220;
+
 /** Background modes. */
 export const BACKGROUND_MODES = Object.freeze({
     white: { label: 'Publication white', color: '#ffffff', alpha: 1 },
@@ -66,7 +122,15 @@ export class Viewport {
             alpha: true,
             preserveDrawingBuffer: true    // required for toDataURL exports
         });
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        /** @type {RenderTier} */
+        this.renderTier = 'ultra';
+        /** Pixel ratio currently installed, so a no-op resize costs nothing. */
+        this._ratio = 0;
+        /** True between the first camera movement and the settle timeout. */
+        this._interacting = false;
+        /** @type {any} */
+        this._settleTimer = null;
+
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.0;
@@ -106,8 +170,32 @@ export class Viewport {
         this.onHover = null;
         /** @type {(() => void)|null} */
         this.onContextLost = null;
+        /** @type {((res: {width:number,height:number,ratio:number,megapixels:number,settled:boolean}) => void)|null} */
+        this.onResolutionChange = null;
 
-        this.cameras.onChange = () => this.invalidate();
+        // NOTHING is hung off cameras.onChange, deliberately. It relays the
+        // controls' `change` event, which fires every frame on a stationary
+        // camera, so invalidating from it pinned the renderer at 60 fps — the
+        // very thing the _dirty flag exists to avoid. The loop's own
+        // _cameraMoved() catches any real movement within one frame, and every
+        // other cause of a redraw already calls invalidate() explicitly.
+        // CameraRig still runs _syncStateFromControls() on the event itself.
+
+        // INTERACTION IS DETECTED FROM REAL INPUT, not from the controls'
+        // change event.
+        //
+        // OrbitControls with damping dispatches `change` on EVERY frame even
+        // when the camera has not moved at all — its settle test compares
+        // quaternions against a 1e-6 epsilon, and the jitter from calling
+        // lookAt() each update sits right on that threshold. Hanging the
+        // resolution drop off that event meant the viewport never once
+        // settled, so it never rendered above the interactive ratio.
+        //
+        // A pointer or a wheel on the canvas, by contrast, is unambiguous.
+        const bump = () => this.markInteracting();
+        canvas.addEventListener('pointerdown', bump);
+        canvas.addEventListener('wheel', bump, { passive: true });
+        canvas.addEventListener('pointermove', (e) => { if (e.buttons) bump(); });
 
         this._observer = new ResizeObserver(() => this.resize());
         this._observer.observe(container);
@@ -144,13 +232,149 @@ export class Viewport {
         return { width: Math.max(1, Math.round(r.width)), height: Math.max(1, Math.round(r.height)) };
     }
 
+    /**
+     * Largest drawing-buffer dimension this GL context will actually give us.
+     * Asking for more does not fail loudly — it silently clamps, or drops the
+     * context on weaker drivers — so the ratio is capped against it.
+     * @returns {number}
+     */
+    _maxBufferDim() {
+        if (this._maxDim) return this._maxDim;
+        const gl = this.renderer.getContext();
+        const dims = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
+        const viewportMax = dims ? Math.min(dims[0], dims[1]) : 8192;
+        this._maxDim = Math.min(viewportMax, gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) || 8192);
+        return this._maxDim;
+    }
+
+    /**
+     * The pixel ratio a settled frame should use.
+     *
+     * Three bounds, and each one is there for a different failure:
+     *   - never below devicePixelRatio, or a HiDPI screen renders soft;
+     *   - never above the tier's cap, so a small viewport on a 4K display
+     *     does not quietly ask for a 16 000-pixel buffer;
+     *   - never above what the GL context will allocate.
+     *
+     * @returns {number}
+     */
+    targetRatio() {
+        const tier = RENDER_TIERS[this.renderTier] || RENDER_TIERS.high;
+        const { width, height } = this.size;
+        const dpr = window.devicePixelRatio || 1;
+        const wanted = Math.max(dpr, tier.targetPx / Math.max(1, width));
+        const gpu = this._maxBufferDim() / Math.max(width, height);
+        return Math.max(1, Math.min(wanted, tier.maxRatio, gpu));
+    }
+
+    /** @returns {number} the ratio to use right now, interaction included */
+    _currentRatio() {
+        if (!this._interacting) return this.targetRatio();
+        return Math.min(this.targetRatio(), Math.max(INTERACTIVE_RATIO, window.devicePixelRatio || 1));
+    }
+
+    /**
+     * Install a pixel ratio. Reallocates the drawing buffer, so it is guarded
+     * against no-op calls — this runs on every camera change.
+     * @param {number} ratio
+     */
+    _applyRatio(ratio) {
+        if (Math.abs(ratio - this._ratio) < 0.01) return;
+        this._ratio = ratio;
+        const { width, height } = this.size;
+        this.renderer.setPixelRatio(ratio);
+        // setSize must follow setPixelRatio: three.js multiplies the two, and
+        // the ratio alone does not resize an already-sized buffer.
+        this.renderer.setSize(width, height, false);
+        // A grid line is one DEVICE pixel wide whatever the ratio, so raising
+        // the ratio makes it thinner in CSS terms and the grid fades out. It
+        // has to be re-weighted, not just re-rendered.
+        this.rebuildGrid();
+        this.invalidate();
+    }
+
+    /**
+     * Called whenever the camera moves. Drops to the interactive ratio for the
+     * duration and schedules the full-resolution frame.
+     */
+    markInteracting() {
+        this._interacting = true;
+        this._applyRatio(this._currentRatio());
+        clearTimeout(this._settleTimer);
+        this._settleTimer = setTimeout(() => {
+            this._interacting = false;
+            this._applyRatio(this._currentRatio());
+            if (this.onResolutionChange) this.onResolutionChange(this.renderResolution());
+        }, SETTLE_MS);
+    }
+
+    /**
+     * Match the shadow map to the buffer that will actually be rasterised,
+     * not to the tier's label.
+     *
+     * A tier names an ASPIRATION — Ultra asks for 3840 pixels across — but on a
+     * phone the viewport is 356 CSS pixels and the ratio cap lands the buffer
+     * at about 1400. Allocating the tier's nominal 4096 shadow map there costs
+     * roughly 67 MB of VRAM to shade 2.7 megapixels, which on a mid-range
+     * mobile GPU is a plausible way to lose the WebGL context outright.
+     *
+     * Shadow resolution should track render resolution, bounded by the tier,
+     * which needs no device sniffing to get right. The power of two is the
+     * NEAREST rather than the next one up: ceiling jumps at 2049, so a 2376
+     * pixel buffer would have been handed a 4096 map — four times the texels it
+     * can show — for the sake of 328 pixels.
+     */
+    _syncShadowMap() {
+        const tier = RENDER_TIERS[this.renderTier] || RENDER_TIERS.high;
+        const { width, height } = this.size;
+        const longEdge = Math.max(width, height) * this.targetRatio();
+        const pow2 = Math.pow(2, Math.round(Math.log2(Math.max(1024, longEdge))));
+        this.lighting.setShadowMapSize(Math.min(tier.shadowMap, pow2));
+    }
+
+    /** @param {RenderTier} tier */
+    setRenderTier(tier) {
+        if (!RENDER_TIERS[tier]) return;
+        this.renderTier = tier;
+        this._syncShadowMap();
+        this._applyRatio(this._currentRatio());
+        if (this.onResolutionChange) this.onResolutionChange(this.renderResolution());
+    }
+
+    /**
+     * What is actually being rasterised, for the status strip. This app is a
+     * measurement instrument; a reader who has asked for UHD should be able to
+     * read back the number rather than take it on trust.
+     *
+     * @returns {{width:number, height:number, ratio:number, megapixels:number, settled:boolean}}
+     */
+    renderResolution() {
+        const { width, height } = this.size;
+        const r = this._ratio || 1;
+        const w = Math.round(width * r);
+        const h = Math.round(height * r);
+        return {
+            width: w, height: h, ratio: r,
+            megapixels: (w * h) / 1e6,
+            settled: !this._interacting
+        };
+    }
+
     resize() {
         const { width, height } = this.size;
+        // The ratio depends on the CSS width, so a resize can change it.
+        const ratio = this._currentRatio();
+        if (Math.abs(ratio - this._ratio) >= 0.01) {
+            this._ratio = ratio;
+            this.renderer.setPixelRatio(ratio);
+        }
         this.renderer.setSize(width, height, false);
         this.cameras.setSize(width, height);
+        this._syncShadowMap();
         this.overlay.setAttribute('width', String(width));
         this.overlay.setAttribute('height', String(height));
         this.overlay.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        if (this.onResolutionChange) this.onResolutionChange(this.renderResolution());
         this.invalidate();
     }
 
@@ -212,10 +436,23 @@ export class Viewport {
         const dark = this.background === 'color'
             ? luminance(this.backgroundColor) < 0.45
             : false;
+        // A LineBasicMaterial line is ONE DEVICE PIXEL wide no matter the
+        // pixel ratio — WebGL has no usable line width. At ratio 1 that is a
+        // 1 CSS pixel line; at the ultra tier's ratio of nearly 4 it is a
+        // quarter of one, and once the browser downsamples the buffer the
+        // grid contributes a quarter of the ink it used to. It does not look
+        // sharper, it looks like it faded out.
+        //
+        // Alpha is scaled by the ratio to hold the INTEGRATED weight constant,
+        // which is the quantity the eye actually reads. Capped at 1: past that
+        // the line is genuinely finer than it was, which at 4K is the correct
+        // and rather nice result.
+        const ink = Math.max(1, this._ratio || 1);
+        const cap = (a) => Math.min(1, a * ink);
         const { object } = buildGrid(Math.max(size.x, size.z) * 1000, {
             color: dark ? '#e8edf2' : '#16202b',
-            minorOpacity: dark ? 0.20 : 0.15,
-            majorOpacity: dark ? 0.38 : 0.30
+            minorOpacity: cap(dark ? 0.20 : 0.15),
+            majorOpacity: cap(dark ? 0.38 : 0.30)
         });
         // Centre it under the model. The engineering origin is the front
         // axle, so a grid left at the world origin covers only the front of
@@ -295,16 +532,55 @@ export class Viewport {
 
     invalidate() { this._dirty = true; }
 
+    /**
+     * Has the camera actually moved since the last frame?
+     *
+     * Position, orientation, target and zoom, each against an epsilon chosen
+     * in scene units: 1e-10 on a squared distance is 10 nanometres of scene,
+     * which at this app's 1/1000 scale is a hundredth of a micrometre. Well
+     * below anything that could change a pixel.
+     *
+     * @returns {boolean}
+     */
+    _cameraMoved() {
+        const c = this.cameras.camera;
+        const t = this.cameras.controls.target;
+        const zoom = /** @type {any} */ (c).zoom ?? 1;
+        const p = this._camPrev;
+        if (!p) {
+            this._camPrev = {
+                pos: c.position.clone(), quat: c.quaternion.clone(),
+                target: t.clone(), zoom
+            };
+            return true;
+        }
+        const moved = p.pos.distanceToSquared(c.position) > 1e-10
+            || Math.abs(1 - Math.abs(p.quat.dot(c.quaternion))) > 1e-9
+            || p.target.distanceToSquared(t) > 1e-10
+            || Math.abs(p.zoom - zoom) > 1e-7;
+        if (moved) {
+            p.pos.copy(c.position);
+            p.quat.copy(c.quaternion);
+            p.target.copy(t);
+            p.zoom = zoom;
+        }
+        return moved;
+    }
+
     start() {
         if (this._running) return;
         this._running = true;
         const loop = () => {
             if (!this._running) return;
             requestAnimationFrame(loop);
-            // OrbitControls damping needs continuous updates while settling;
-            // `update()` returns true when it actually moved the camera.
-            const moved = this.cameras.controls.update();
-            if (moved) this._dirty = true;
+            // OrbitControls damping needs continuous updates while settling.
+            // Its return value is NOT usable as "the camera moved": it stays
+            // true indefinitely on a stationary camera (see the note on the
+            // change event above), so this renderer — advertised as
+            // on-demand — was in fact redrawing at 60 fps forever, for the
+            // whole life of the app. The comparison below is the honest test.
+            this.cameras.controls.update();
+            if (this._cameraMoved()) this._dirty = true;
             if (this._dirty && !this._contextLost) {
                 this._dirty = false;
                 this.render();

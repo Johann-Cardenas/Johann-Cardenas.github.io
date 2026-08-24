@@ -1,0 +1,572 @@
+{
+  "schemaVersion": "1.0",
+  "$comment": [
+    "FAA ORDER 5300.7 GEAR CONFIGURATIONS.",
+    "",
+    "Sixteen configurations from the standard naming convention, as loadable",
+    "models. Every one of them is SCHEMATIC and says so — `kind: \"schematic\"`,",
+    "an amber notice in the panel and a flag in the title block. They exist to",
+    "show what a gear NAME means, which is a different job from modelling an",
+    "aircraft, and the distinction is worth keeping sharp: a reader who mistook",
+    "one of these for a measured aircraft would be taking a nominal wheelbase",
+    "and a nominal tire size for published figures.",
+    "",
+    "WHAT IS REAL HERE, AND WHAT IS NOT.",
+    "",
+    "REAL, and cited per gear: the LATERAL AND LONGITUDINAL WHEEL GEOMETRY of",
+    "every configuration whose representative aircraft appears in the FAARFIELD",
+    "2.1.1 aircraft library — track, dual spacing, tandem spacing, body-gear",
+    "offset, and the uneven bogies that a single spacing cannot express. That",
+    "library publishes per-wheel coordinates in millimetres and is the same",
+    "source this project already relies on to corroborate the 747 and the A380",
+    "(see airbus.json). Ten of the sixteen are sourced this way.",
+    "",
+    "NOMINAL, and declared in assumedFields on every unit:",
+    "  - THE TIRE. FAARFIELD carries a contact patch and an inflation pressure,",
+    "    not a Tire and Rim Association designation, and no other consulted",
+    "    source gives one for these aircraft. The tire is therefore a stand-in,",
+    "    chosen to fit the real spacings; it sets how large the rendered wheel",
+    "    is and nothing else. It does not move a single wheel centre.",
+    "  - THE WHEELBASE. FAARFIELD models the main gear only, because the nose",
+    "    gear carries too little load to matter to pavement thickness design.",
+    "    The nose gear's TYPE is real — Table 3 tabulates it in its own column —",
+    "    but its distance forward is nominal.",
+    "",
+    "THE SIX PURE PATTERNS. `T`, `Q`, `2Q`, `3S`, `3T` and `3Q` are Figure 2",
+    "configurations with no aircraft behind them, or none whose geometry any",
+    "consulted source publishes. They are drawn to ONE nominal scale so that the",
+    "twelve cells of Figure 2 stay comparable, which is the whole point of that",
+    "figure: 49x19.0-22 tires, 1400 mm lateral pitch, 1450 mm longitudinal pitch,",
+    "strut centres 1800 mm outboard of the bogie's own half-width, dual nose gear",
+    "at 900 mm, wheelbase 20 000 mm. Not one of those numbers describes an",
+    "aircraft. They are the drawing's scale, and they are stated here so that a",
+    "reader can see they were chosen rather than measured.",
+    "",
+    "NO OUTER WIDTH IS STATED, and that is deliberate. On the real aircraft in",
+    "this library the FAA's published main gear outer width is the load-bearing",
+    "datum and the track is derived from it. Here the relationship runs the",
+    "other way: the track is measured and the outer width would depend on the",
+    "NOMINAL tire, so stating one would dress a placeholder up as a datum.",
+    "`mainGearOuterWidth` is null on every unit in this file and the validator's",
+    "closure check correctly skips it.",
+    "",
+    "WHAT IS NOT HERE. Five of Table 3's codes — D, 2D, 3D, 2D/2D2 and 2D/3D2 —",
+    "already have fully sourced aircraft in this library (737-800, 757-200 and",
+    "767-400ER, 777-300ER, 747-400 and 747-8, A380-800). The catalogue points at",
+    "those rather than duplicating them with a schematic, because a measured",
+    "aircraft is strictly better than a drawing of one."
+  ],
+  "units": [
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-s",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "S — single wheel",
+      "gearDesignation": "S",
+      "faa": { "figure": 3, "basis": "McDonnell Douglas F-15", "faarfield": "F-15C" },
+      "mtow": { "value": 30844.256, "unit": "kg", "basis": "FAARFIELD 2.1.1 aircraft library, entry F-15C, gross weight 30 844.256 kg (68 000 lb)." },
+      "percentOnMainGear": 95,
+      "wheelbase": 5500,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 2749.54,
+      "tirePressure": { "value": 2344.2184, "unit": "kPa", "basis": "FAARFIELD 2.1.1 aircraft library, entry F-15C, Cp 2344.2184 kPa (340 psi)." },
+      "assumedFields": ["wheelbase", "MLG.tire", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "single", "wheelsAcross": 1, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": null, "tandemSpacing": null, "tire": "H29x9.0-15",
+          "source": "Nose gear TYPE is single wheel, from FAA Order 5300.7 Table 3, the Figure 3 row (nose gear column). Its longitudinal position is NOT sourced — FAARFIELD models the main gear only — and follows from the nominal wheelbase declared in assumedFields. Tire nominal." },
+        { "id": "MLG-L", "role": "main", "type": "single", "wheelsAcross": 1, "tandemRows": 1, "x": 5500, "y": -1374.77, "dualSpacing": null, "tandemSpacing": null, "tire": "H29x9.0-15",
+          "source": "Strut centreline 1374.77 mm from the aircraft centreline, read directly from the FAARFIELD 2.1.1 tire track coordinates for the F-15C (±1374.77 mm), giving a 2749.54 mm track. One wheel per strut, which is what makes this an S. Tire nominal — FAARFIELD publishes a contact patch and an inflation pressure, not a tire designation." },
+        { "id": "MLG-R", "role": "main", "type": "single", "wheelsAcross": 1, "tandemRows": 1, "x": 5500, "y": 1374.77, "dualSpacing": null, "tandemSpacing": null, "tire": "H29x9.0-15",
+          "source": "Mirror of MLG-L about the aircraft centreline; same derivation." }
+      ],
+      "notes": "The simplest gear there is, and the one Figures 3 and 4 use to introduce the convention. Both figures are named S: the nose gear is not part of the main gear designation at all, so a single-wheel nose (Figure 3, the F-14 and F-15) and a dual-wheel nose (Figure 4) give the same name. Order 5300.7 §6j says why the nose gear is excluded — its load on the pavement is insignificant beside the main gear's.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Effective 6 October 2005. §6 defines the naming convention; Figure 2 the generic configurations; Figures 3-20 and Table 3 the known ones with their typical aircraft, wheel counts and nose gear types. Read in full during this build." },
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entry F-15C", "publisher": "U.S. Federal Aviation Administration", "note": "Tire track coordinates ±1374.77 mm; gross weight 30 844.256 kg; Cp 2344.2184 kPa; MgPercent 0.95. The same library this project already uses to corroborate the 747 and A380 geometry." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-t",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "T — triple wheel",
+      "gearDesignation": "T",
+      "faa": { "figure": 2, "basis": null, "faarfield": null },
+      "mtow": null,
+      "percentOnMainGear": 95,
+      "wheelbase": 20000,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 6400,
+      "tirePressure": null,
+      "assumedFields": ["wheelbase", "mainGearTrack", "MLG.dualSpacing", "MLG.tire", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 900, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nominal. Figure 2 draws the generic configurations without a nose gear; a dual nose is supplied as the commonest case so the model reads as an aircraft in plan. Every dimension on this gear is nominal and declared." },
+        { "id": "MLG-L", "role": "main", "type": "triple", "wheelsAcross": 3, "tandemRows": 1, "x": 20000, "y": -3200, "dualSpacing": 1400, "tandemSpacing": null, "tire": "49x19.0-22",
+          "source": "Three wheels across one axle line, per FAA Order 5300.7 §6c (T = triple) and Figure 2. Spacings are the NOMINAL Figure 2 drawing scale shared by all six pure patterns in this file — 1400 mm lateral pitch, strut centre 1800 mm outboard of the bogie half-width — not a measurement of any aircraft. No aircraft in Table 3 carries a plain T gear." },
+        { "id": "MLG-R", "role": "main", "type": "triple", "wheelsAcross": 3, "tandemRows": 1, "x": 20000, "y": 3200, "dualSpacing": 1400, "tandemSpacing": null, "tire": "49x19.0-22",
+          "source": "Mirror of MLG-L about the aircraft centreline; same nominal basis." }
+      ],
+      "notes": "A pure Figure 2 pattern. Table 3 names no aircraft with a plain triple-wheel main gear — the triple appears in service only in tandem, as the C-17's 2T. Note what the code does NOT mean: under §6d the letter T stopped denoting tandem when this Order took effect and now denotes triple wheels, so a drawing marked T predating 2005 may well mean something else.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "§6c gear codes; §6d the retirement of the tandem designation; Figure 2 generic configurations." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-q",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "Q — quadruple wheel",
+      "gearDesignation": "Q",
+      "faa": { "figure": 19, "basis": "Hawker Siddeley HS-121 Trident", "faarfield": null },
+      "mtow": null,
+      "percentOnMainGear": 95,
+      "wheelbase": 20000,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 7800,
+      "tirePressure": null,
+      "assumedFields": ["wheelbase", "mainGearTrack", "MLG.dualSpacing", "MLG.tire", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 900, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nose gear TYPE is dual wheel, from FAA Order 5300.7 Table 3, the Figure 19 row. Position and spacing nominal." },
+        { "id": "MLG-L", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 20000, "y": -3900, "dualSpacing": 1400, "tandemSpacing": null, "tire": "49x19.0-22",
+          "source": "Four wheels across one axle line, per §6c (Q = quadruple) and Figure 19. The representative aircraft is the Hawker Siddeley HS-121 Trident, which does not appear in the FAARFIELD 2.1.1 library and for which no consulted source publishes per-wheel geometry — so the spacings are the nominal Figure 2 drawing scale, not the Trident's." },
+        { "id": "MLG-R", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 20000, "y": 3900, "dualSpacing": 1400, "tandemSpacing": null, "tire": "49x19.0-22",
+          "source": "Mirror of MLG-L about the aircraft centreline; same nominal basis." }
+      ],
+      "notes": "Eight wheels on two struts, all in one line across. Table 3 names the HS-121 Trident, an aircraft out of service since 1985 — which is why this configuration's geometry is nominal while most of its neighbours' are measured. Four wheels on a single axle line is a rare arrangement: heavy aircraft almost always reach the same wheel count by going tandem instead, because that spreads the load along the pavement rather than concentrating it across one transverse line.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 19: 'Q - Quadruple Wheel Main Gear with Dual Wheel Nose Gear, Hawker Siddeley HS-121 Trident'. Table 3 gives 8 wheels excluding the nose gear." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-2s",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "2S — two single wheels in tandem",
+      "gearDesignation": "2S",
+      "faa": { "figure": 7, "basis": "Lockheed C-130", "faarfield": "C-130" },
+      "mtow": { "value": 70306.76, "unit": "kg", "basis": "FAARFIELD 2.1.1 aircraft library, entry C-130, gross weight 70 306.76 kg (155 000 lb)." },
+      "percentOnMainGear": 95,
+      "wheelbase": 9800,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 4343.4,
+      "tirePressure": { "value": 723.9498, "unit": "kPa", "basis": "FAARFIELD 2.1.1 aircraft library, entry C-130, Cp 723.9498 kPa (105 psi)." },
+      "assumedFields": ["wheelbase", "MLG.tire", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 800, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nose gear TYPE is dual wheel, from FAA Order 5300.7 Table 3, the Figure 7 row. Position, spacing and tire nominal." },
+        { "id": "MLG-L", "role": "main", "type": "single", "wheelsAcross": 1, "tandemRows": 2, "x": 9800, "y": -2171.7, "dualSpacing": null, "tandemSpacing": 1524, "tire": "46x17.0R20",
+          "source": "Strut centreline 2171.7 mm from the aircraft centreline and tandem spacing 1524.0 mm, both read from the FAARFIELD 2.1.1 wheel coordinates for the C-130 (X ±2171.7 mm, Y ±762.0 mm). One wheel per axle line, two axle lines — a 2S. Tire nominal." },
+        { "id": "MLG-R", "role": "main", "type": "single", "wheelsAcross": 1, "tandemRows": 2, "x": 9800, "y": 2171.7, "dualSpacing": null, "tandemSpacing": 1524, "tire": "46x17.0R20",
+          "source": "Mirror of MLG-L about the aircraft centreline; same derivation." }
+      ],
+      "notes": "Four main wheels, the same count as a plain D, but strung out fore and aft instead of side by side. That is the whole reason the naming convention needs two variables rather than a wheel count: D and 2S both put four wheels on the pavement and they load it quite differently. The Air Force called this one S-TA and the Navy STT; Table 3 is the only published concordance between those names and this one.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 7: '2S - Two Single Wheels in Tandem Main Gear with Dual Wheel Nose Gear, Lockheed C-130'. Table 3 gives 4 wheels excluding the nose gear, Air Force S-TA / type E, Navy STT." },
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entry C-130", "publisher": "U.S. Federal Aviation Administration", "note": "Wheel coordinates X ±2171.7 mm, Y ±762.0 mm; gross weight 70 306.76 kg; Cp 723.9498 kPa; MgPercent 0.95." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-2t",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "2T — two triple wheels in tandem",
+      "gearDesignation": "2T",
+      "faa": { "figure": 8, "basis": "Boeing C-17", "faarfield": "C-17A" },
+      "mtow": { "value": 265351.32, "unit": "kg", "basis": "FAARFIELD 2.1.1 aircraft library, entry C-17A, gross weight 265 351.32 kg (585 000 lb)." },
+      "percentOnMainGear": 95,
+      "wheelbase": 19700,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 7600.36,
+      "tirePressure": { "value": 951.4769, "unit": "kPa", "basis": "FAARFIELD 2.1.1 aircraft library, entry C-17A, Cp 951.4769 kPa (138 psi)." },
+      "assumedFields": ["wheelbase", "MLG.tire", "MLG.rowStagger", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 900, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nose gear TYPE is dual wheel, from FAA Order 5300.7 Table 3, the Figure 8 row. Position, spacing and tire nominal." },
+        { "id": "MLG-L", "role": "main", "type": "triple", "wheelsAcross": 3, "tandemRows": 2, "x": 19700, "y": -3800.18, "wheelOffsets": [-1062.57, 16.93, 1045.63], "dualSpacing": 1054.1, "tandemSpacing": 2463.8, "tire": "50x20.0R22",
+          "source": "Tire track positions 2737.61, 3817.11 and 4845.81 mm from the aircraft centreline, read from the FAARFIELD 2.1.1 library for the C-17A, giving a strut centreline at their mean of 3800.18 mm and the three offsets carried in wheelOffsets. THE SPACING IS NOT EVEN — 1079.5 mm outboard against 1028.7 mm inboard — which is why the offsets are carried rather than a single dualSpacing; the dualSpacing here is their mean and is not what positions the wheels. Tandem spacing 2463.8 mm from the same source's row separation (Y ±1231.9 mm). Tire nominal." },
+        { "id": "MLG-R", "role": "main", "type": "triple", "wheelsAcross": 3, "tandemRows": 2, "x": 19700, "y": 3800.18, "wheelOffsets": [-1045.63, -16.93, 1062.57], "dualSpacing": 1054.1, "tandemSpacing": 2463.8, "tire": "50x20.0R22",
+          "source": "Mirror of MLG-L about the aircraft centreline; the offsets are reversed in sign and order so the pair is genuinely symmetric rather than translated." }
+      ],
+      "notes": "Twelve wheels on two struts, and the configuration Order 5300.7 §6h singles out as a judgement call: the C-17 has more landing struts than this name implies, but 'due to wheel proximity, the C-17 gear is more appropriately called a 2T as it appears to have triple wheels in tandem'. Two idealisations are made here and both are declared. The real bogie's two rows are offset laterally from each other by 38.1 mm, which is averaged away; and one wheel in each row sits 292.1 mm out of line with the other two, which is squared up. Neither shows at the scale a gear diagram is read at, and both are in the FAARFIELD coordinates if you need them.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 8: '2T - Two Triple wheels in Tandem Main Gear with Dual Wheel Nose Gear, Boeing C-17'. §6h on why this aircraft is named 2T. Table 3 gives 12 wheels excluding the nose gear, Air Force TR-TA / type L, Navy TRT." },
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entry C-17A", "publisher": "U.S. Federal Aviation Administration", "note": "Tire tracks ±2737.61, ±3817.11, ±4845.81 mm; wheel coordinates showing the 38.1 mm inter-row lateral stagger and the 292.1 mm longitudinal one; gross weight 265 351.32 kg; Cp 951.4769 kPa; MgPercent 0.95." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-2q",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "2Q — two quadruple wheels in tandem",
+      "gearDesignation": "2Q",
+      "faa": { "figure": 2, "basis": null, "faarfield": null },
+      "mtow": null,
+      "percentOnMainGear": 95,
+      "wheelbase": 20000,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 7800,
+      "tirePressure": null,
+      "assumedFields": ["wheelbase", "mainGearTrack", "MLG.dualSpacing", "MLG.tandemSpacing", "MLG.tire", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 900, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nominal. Figure 2 draws the generic configurations without a nose gear; a dual nose is supplied so the model reads as an aircraft in plan." },
+        { "id": "MLG-L", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 2, "x": 20000, "y": -3900, "dualSpacing": 1400, "tandemSpacing": 1450, "tire": "49x19.0-22",
+          "source": "Two axle lines of four wheels, per Figure 2's '2 Quadruples in Tandem'. Spacings are the nominal Figure 2 drawing scale shared by the six pure patterns in this file, not a measurement." },
+        { "id": "MLG-R", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 2, "x": 20000, "y": 3900, "dualSpacing": 1400, "tandemSpacing": 1450, "tire": "49x19.0-22",
+          "source": "Mirror of MLG-L about the aircraft centreline; same nominal basis." }
+      ],
+      "notes": "Sixteen main wheels, the same total as the IL-76's Q2 and the 747's 2D/2D2 — three quite different ways of arriving at the same wheel count, which is exactly the ambiguity the naming convention was written to remove. No aircraft in Table 3 carries a 2Q.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 2, '2 Quadruples in Tandem, 2Q'." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-3s",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "3S — three single wheels in tandem",
+      "gearDesignation": "3S",
+      "faa": { "figure": 2, "basis": null, "faarfield": null },
+      "mtow": null,
+      "percentOnMainGear": 95,
+      "wheelbase": 20000,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 3600,
+      "tirePressure": null,
+      "assumedFields": ["wheelbase", "mainGearTrack", "MLG.tandemSpacing", "MLG.tire", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 900, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nominal. Figure 2 draws the generic configurations without a nose gear; a dual nose is supplied so the model reads as an aircraft in plan." },
+        { "id": "MLG-L", "role": "main", "type": "single", "wheelsAcross": 1, "tandemRows": 3, "x": 20000, "y": -1800, "dualSpacing": null, "tandemSpacing": 1450, "tire": "49x19.0-22",
+          "source": "Three axle lines of one wheel, per Figure 2's '3 Singles in Tandem'. Spacings are the nominal Figure 2 drawing scale, not a measurement." },
+        { "id": "MLG-R", "role": "main", "type": "single", "wheelsAcross": 1, "tandemRows": 3, "x": 20000, "y": 1800, "dualSpacing": null, "tandemSpacing": 1450, "tire": "49x19.0-22",
+          "source": "Mirror of MLG-L about the aircraft centreline; same nominal basis." }
+      ],
+      "notes": "A pure Figure 2 pattern with no aircraft behind it. Figure 2's caption — 'Increase numeric value for additional tandem axles' — is why this app generates configurations from the grammar rather than listing them: 4S, 5S and beyond are equally legal names, and the convention is deliberately open-ended.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 2, '3 Singles in Tandem, 3S'." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-3t",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "3T — three triple wheels in tandem",
+      "gearDesignation": "3T",
+      "faa": { "figure": 2, "basis": null, "faarfield": null },
+      "mtow": null,
+      "percentOnMainGear": 95,
+      "wheelbase": 20000,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 6400,
+      "tirePressure": null,
+      "assumedFields": ["wheelbase", "mainGearTrack", "MLG.dualSpacing", "MLG.tandemSpacing", "MLG.tire", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 900, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nominal. Figure 2 draws the generic configurations without a nose gear; a dual nose is supplied so the model reads as an aircraft in plan." },
+        { "id": "MLG-L", "role": "main", "type": "triple", "wheelsAcross": 3, "tandemRows": 3, "x": 20000, "y": -3200, "dualSpacing": 1400, "tandemSpacing": 1450, "tire": "49x19.0-22",
+          "source": "Three axle lines of three wheels, per Figure 2's '3 Triples in Tandem'. Spacings are the nominal Figure 2 drawing scale, not a measurement." },
+        { "id": "MLG-R", "role": "main", "type": "triple", "wheelsAcross": 3, "tandemRows": 3, "x": 20000, "y": 3200, "dualSpacing": 1400, "tandemSpacing": 1450, "tire": "49x19.0-22",
+          "source": "Mirror of MLG-L about the aircraft centreline; same nominal basis." }
+      ],
+      "notes": "Eighteen main wheels on two struts. No aircraft in Table 3 carries a 3T; the heaviest aircraft the Order tabulates reach their wheel counts by adding tandem axle lines of duals — the An-225's 7D — or by adding struts, not by widening the bogie.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 2, '3 Triples in Tandem, 3T'." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-3q",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "3Q — three quadruple wheels in tandem",
+      "gearDesignation": "3Q",
+      "faa": { "figure": 2, "basis": null, "faarfield": null },
+      "mtow": null,
+      "percentOnMainGear": 95,
+      "wheelbase": 20000,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 7800,
+      "tirePressure": null,
+      "assumedFields": ["wheelbase", "mainGearTrack", "MLG.dualSpacing", "MLG.tandemSpacing", "MLG.tire", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 900, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nominal. Figure 2 draws the generic configurations without a nose gear; a dual nose is supplied so the model reads as an aircraft in plan." },
+        { "id": "MLG-L", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 3, "x": 20000, "y": -3900, "dualSpacing": 1400, "tandemSpacing": 1450, "tire": "49x19.0-22",
+          "source": "Three axle lines of four wheels, per Figure 2's '3 Quadruples in Tandem'. Spacings are the nominal Figure 2 drawing scale, not a measurement." },
+        { "id": "MLG-R", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 3, "x": 20000, "y": 3900, "dualSpacing": 1400, "tandemSpacing": 1450, "tire": "49x19.0-22",
+          "source": "Mirror of MLG-L about the aircraft centreline; same nominal basis." }
+      ],
+      "notes": "The largest cell of Figure 2: twenty-four main wheels on two struts, the same count as the C-5 reaches on four. No aircraft has been built with it.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 2, '3 Quadruples in Tandem, 3Q'." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-2d-d1",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "2D/D1 — dual tandem wing gear + one dual body gear",
+      "gearDesignation": "2D/D1",
+      "faa": { "figure": 10, "basis": "McDonnell Douglas DC-10-30", "faarfield": "DC10-30/40" },
+      "mtow": { "value": 264445.0, "unit": "kg", "basis": "FAARFIELD 2.1.1 aircraft library, entry DC10-30/40, gross weight 264 445 kg (583 000 lb)." },
+      "percentOnMainGear": 95,
+      "wheelbase": 22070,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 10668,
+      "tirePressure": { "value": 1220.371, "unit": "kPa", "basis": "FAARFIELD 2.1.1 aircraft library, entry DC10-30/40, wing gear Cp 1220.371 kPa (177 psi)." },
+      "assumedFields": ["wheelbase", "WLG.tire", "BLG.tire", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 940, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nose gear TYPE is dual wheel, from FAA Order 5300.7 Table 3, the Figure 10 row. Position, spacing and tire nominal." },
+        { "id": "WLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2, "x": 21917.6, "y": -5334, "dualSpacing": 1371.6, "tandemSpacing": 1625.6, "tire": "50x20.0R22",
+          "source": "WING gear. Strut centreline 5334.0 mm and dual spacing 1371.6 mm from the FAARFIELD 2.1.1 wheel coordinates for the DC10-30/40 (X ±4648.2 and ±6019.8 mm); tandem spacing 1625.6 mm from the same source (Y -50.8 and +1574.8 mm). Longitudinal position follows from the nominal wheelbase and the sourced 762.0 mm offset to the body gear. Tire nominal." },
+        { "id": "WLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2, "x": 21917.6, "y": 5334, "dualSpacing": 1371.6, "tandemSpacing": 1625.6, "tire": "50x20.0R22",
+          "source": "Mirror of WLG-L about the aircraft centreline; same derivation." },
+        { "id": "BLG", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 22679.6, "y": 0, "dualSpacing": 952.5, "tandemSpacing": null, "tire": "50x20.0R22",
+          "source": "BODY gear, on the aircraft centreline: a single dual-wheel axle, and the reason the designation carries a /D1 rather than stopping at 2D. Dual spacing 952.5 mm from the FAARFIELD 2.1.1 'DC10-30/40 Belly' entry (X ±476.25 mm), which also places it 762.0 mm AFT of the wing bogie centre. THE DIRECTION OF THIS OFFSET IS CORROBORATED INDEPENDENTLY. FAARFIELD stores an aircraft and its 'Belly' entry on a SHARED longitudinal datum whose origin is the body gear, with positive Y forward. The proof is the 747-400: its FAARFIELD wing gear sits at Y 3073.4 mm, and Boeing's own ACAP section 7.2.1 footprint figure - read separately, for boeing.json in this same library - puts the 747 body gear 3073 mm AFT of the wing gear. The two agree to 0.4 mm from wholly independent documents, which fixes both the datum and the sign. Tire nominal." }
+      ],
+      "notes": "The configuration Order 5300.7 §3a uses to introduce the whole problem: Douglas built the DC-10 with two dual-tandem struts, then added a centreline strut for the heavier -30, and the old three-name vocabulary had nowhere to put it. Note the body-gear count is written even though there is only one — §6f keeps it because a body gear may be asymmetric, so 2D/D and 2D/D1 could not be allowed to mean the same thing. FAARFIELD apportions 78 % of the aircraft weight to the two wing struts and 17 % to the body gear, which is NOT an equal share per tire; this model uses the equal split that the 95 % main-gear figure implies, so its per-tire loads are nominal even though its geometry is not.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 10: '2D/D1 - Two Dual Wheels in Tandem Main Gear/Dual Wheel Body Gear with Dual Wheel Nose Gear, McDonnell Douglas DC-10, Lockheed L-1011'. §3a on the DC-10-30's added strut; §6f on why the body count is never omitted. Table 3 gives 10 wheels excluding the nose gear, Air Force T-TA / type H, Navy SBTT." },
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entries DC10-30/40 and DC10-30/40 Belly", "publisher": "U.S. Federal Aviation Administration", "note": "Wing wheel coordinates X ±4648.2 / ±6019.8 mm, Y -50.8 / +1574.8 mm; belly X ±476.25 mm, Y 0; gross weight 264 445 kg; Cp 1220.371 kPa wing and 1054.898 kPa belly; MgPercent 0.78 wing and 0.17 belly." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-2d-2d1",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "2D/2D1 — dual tandem wing gear + one dual tandem body gear",
+      "gearDesignation": "2D/2D1",
+      "faa": { "figure": 11, "basis": "Airbus A340-600", "faarfield": "A340-600 WV000" },
+      "mtow": { "value": 366200.0, "unit": "kg", "basis": "FAARFIELD 2.1.1 aircraft library, entry A340-600 WV000, gross weight 366 200 kg." },
+      "percentOnMainGear": 95,
+      "wheelbase": 32890,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 10680.7,
+      "tirePressure": { "value": 1613.3738, "unit": "kPa", "basis": "FAARFIELD 2.1.1 aircraft library, entry A340-600 WV000, wing gear Cp 1613.3738 kPa (234 psi)." },
+      "assumedFields": ["wheelbase", "WLG.tire", "BLG.tire", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 1050, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nose gear TYPE is dual wheel, from FAA Order 5300.7 Table 3, the Figure 11 row. Position, spacing and tire nominal." },
+        { "id": "WLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2, "x": 32310.03, "y": -5340.35, "dualSpacing": 1397, "tandemSpacing": 1981.2, "tire": "1400x530R23",
+          "source": "WING gear. Strut centreline 5340.35 mm and dual spacing 1397.0 mm from the FAARFIELD 2.1.1 wheel coordinates for the A340-600 WV000 (X ±4641.85 and ±6038.85 mm); tandem spacing 1981.2 mm from the same source (Y 749.3 and 2730.5 mm). Longitudinal position follows from the nominal wheelbase and the sourced 1739.9 mm offset to the body gear. Tire nominal." },
+        { "id": "WLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2, "x": 32310.03, "y": 5340.35, "dualSpacing": 1397, "tandemSpacing": 1981.2, "tire": "1400x530R23",
+          "source": "Mirror of WLG-L about the aircraft centreline; same derivation." },
+        { "id": "BLG", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2, "x": 34049.93, "y": 0, "dualSpacing": 1176.02, "tandemSpacing": 1978.66, "tire": "1400x530R23",
+          "source": "BODY gear, on the aircraft centreline: a four-wheel dual-tandem bogie, which is what distinguishes this configuration from the DC-10's single-axle /D1. Dual spacing 1176.02 mm and tandem spacing 1978.66 mm from the FAARFIELD 2.1.1 'A340-600 WV000 Belly' entry (X ±588.01 mm, Y ±989.33 mm), which also places it 1739.9 mm AFT of the wing bogie centre. THE DIRECTION OF THIS OFFSET IS CORROBORATED INDEPENDENTLY. FAARFIELD stores an aircraft and its 'Belly' entry on a SHARED longitudinal datum whose origin is the body gear, with positive Y forward. The proof is the 747-400: its FAARFIELD wing gear sits at Y 3073.4 mm, and Boeing's own ACAP section 7.2.1 footprint figure - read separately, for boeing.json in this same library - puts the 747 body gear 3073 mm AFT of the wing gear. The two agree to 0.4 mm from wholly independent documents, which fixes both the datum and the sign. Tire nominal." }
+      ],
+      "notes": "One body gear, two axle lines — the intermediate step between the DC-10's single body axle and the 747's pair of body bogies. The stated wheelbase is the tire-weighted centroid of all twelve main tires, so it sits aft of the wing bogie: the body gear pulls it 580 mm back. FAARFIELD apportions 72 % of the weight to the wing struts and 23 % to the body gear; this model uses the equal per-tire split, so its loads are nominal and its geometry is not.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 11: '2D/2D1 Two Dual Wheels in Tandem Main Gear/Two Dual Wheels in Tandem Body Gear with Dual Wheel Nose Gear, Airbus A340-600'. Table 3 gives 12 wheels excluding the nose gear." },
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entries A340-600 WV000 and A340-600 WV000 Belly", "publisher": "U.S. Federal Aviation Administration", "note": "Wing wheel coordinates X ±4641.85 / ±6038.85 mm, Y 749.3 / 2730.5 mm; belly X ±588.01 mm, Y ±989.33 mm; gross weight 366 200 kg; Cp 1613.3738 kPa wing and 1503.06 kPa belly; MgPercent 0.72 wing and 0.23 belly." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-5d",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "5D — five dual wheels in tandem",
+      "gearDesignation": "5D",
+      "faa": { "figure": 14, "basis": "Antonov An-124", "faarfield": "An-124" },
+      "mtow": { "value": 397995.229, "unit": "kg", "basis": "FAARFIELD 2.1.1 aircraft library, entry An-124, gross weight 397 995.229 kg." },
+      "percentOnMainGear": 95,
+      "wheelbase": 24900,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 8001,
+      "tirePressure": { "value": 1337.5834, "unit": "kPa", "basis": "FAARFIELD 2.1.1 aircraft library, entry An-124, Cp 1337.5834 kPa (194 psi)." },
+      "assumedFields": ["wheelbase", "MLG.tire", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 900, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nose gear TYPE is four wheels across, from FAA Order 5300.7 Table 3, the Figure 14 row ('4 across' in the nose gear column) and drawn as such in the figure. Position, spacing and tire nominal." },
+        { "id": "MLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 5, "x": 24900, "y": -4000.5, "dualSpacing": 1000.76, "tandemSpacing": 1709.42, "tire": "1270x455R22",
+          "source": "Strut centreline 4000.5 mm and dual spacing 1000.76 mm from the FAARFIELD 2.1.1 wheel coordinates for the An-124 (X ±3500.12 and ±4500.88 mm); tandem spacing 1709.42 mm from the same source's five evenly spaced rows (Y -3418.84 to +3418.84 mm). Tire nominal." },
+        { "id": "MLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 5, "x": 24900, "y": 4000.5, "dualSpacing": 1000.76, "tandemSpacing": 1709.42, "tire": "1270x455R22",
+          "source": "Mirror of MLG-L about the aircraft centreline; same derivation." }
+      ],
+      "notes": "Twenty main wheels in two files of five. Order 5300.7 §6h explains the choice of name: the An-124 physically has five separate landing struts per side, so D5 — dual wheels, five gears in line — would also describe it, but 'it is more advantageous to address the multiple landing struts as one gear, i.e. 5D or five duals in tandem'. Compare the IL-76, where the Order goes the other way and uses Q2 precisely because its struts are far enough apart to read as separate gears. The distinction is proximity, and it is a judgement the Order makes explicitly rather than leaving to the reader.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 14: '5D - Five Dual Wheels in Tandem Main Gear with Quadruple Nose Gear, Antonov AN-124'. §6h on 5D versus D5. Table 3 gives 20 wheels excluding the nose gear." },
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entry An-124", "publisher": "U.S. Federal Aviation Administration", "note": "Wheel coordinates X ±3500.12 / ±4500.88 mm, Y -3418.84 / -1709.42 / 0 / +1709.42 / +3418.84 mm; gross weight 397 995.229 kg; Cp 1337.5834 kPa; MgPercent 0.95." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-7d",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "7D — seven dual wheels in tandem",
+      "gearDesignation": "7D",
+      "faa": { "figure": 15, "basis": "Antonov An-225", "faarfield": "An-225" },
+      "mtow": { "value": 599988.818, "unit": "kg", "basis": "FAARFIELD 2.1.1 aircraft library, entry An-225, gross weight 599 988.818 kg." },
+      "percentOnMainGear": 95,
+      "wheelbase": 30000,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 8839.2,
+      "tirePressure": { "value": 1116.9511, "unit": "kPa", "basis": "FAARFIELD 2.1.1 aircraft library, entry An-225, Cp 1116.9511 kPa (162 psi)." },
+      "assumedFields": ["wheelbase", "MLG.tire", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 900, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nose gear TYPE is four wheels across, from FAA Order 5300.7 Table 3, the Figure 15 row, and drawn as such in the figure. Position, spacing and tire nominal." },
+        { "id": "MLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 7, "x": 30000, "y": -4419.6, "dualSpacing": 1000.76, "tandemSpacing": 1709.42, "tire": "1270x455R22",
+          "source": "Strut centreline 4419.6 mm and dual spacing 1000.76 mm from the FAARFIELD 2.1.1 wheel coordinates for the An-225 (X ±3919.22 and ±4919.98 mm); tandem spacing 1709.42 mm from the same source's seven evenly spaced rows (Y -5128.26 to +5128.26 mm). Tire nominal." },
+        { "id": "MLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 7, "x": 30000, "y": 4419.6, "dualSpacing": 1000.76, "tandemSpacing": 1709.42, "tire": "1270x455R22",
+          "source": "Mirror of MLG-L about the aircraft centreline; same derivation." }
+      ],
+      "notes": "The largest gear the Order tabulates: twenty-eight main wheels, seven dual axle lines a side, spanning 10.3 m fore and aft. Its dual and tandem spacings are identical to the An-124's — the An-225 is the An-124's gear with two more axle lines added, which is the naming convention working exactly as Figure 2's caption says it should.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 15: '7D - Seven Dual Wheels in Tandem Main Gear with Quadruple Nose Gear, Antonov AN-225'. Table 3 gives 28 wheels excluding the nose gear." },
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entry An-225", "publisher": "U.S. Federal Aviation Administration", "note": "Wheel coordinates X ±3919.22 / ±4919.98 mm across seven rows at 1709.42 mm; gross weight 599 988.818 kg; Cp 1116.9511 kPa; MgPercent 0.95." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-c5",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "C5 — dual and quadruple combination, four struts",
+      "gearDesignation": "C5",
+      "faa": { "figure": 17, "basis": "Lockheed C-5 Galaxy", "faarfield": "C-5" },
+      "mtow": { "value": 348812.248, "unit": "kg", "basis": "FAARFIELD 2.1.1 aircraft library, entry C-5, gross weight 348 812.248 kg (769 000 lb)." },
+      "percentOnMainGear": 95,
+      "wheelbase": 22300,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 7543.8,
+      "tirePressure": { "value": 730.8446, "unit": "kPa", "basis": "FAARFIELD 2.1.1 aircraft library, entry C-5, Cp 730.8446 kPa (106 psi)." },
+      "assumedFields": ["wheelbase", "MLG.tire", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 900, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nose gear TYPE is four wheels across, from FAA Order 5300.7 Table 3, the Figure 17 row ('4 across'), and drawn as such in the figure. Position, spacing and tire nominal." },
+        { "id": "MLG-FL-Q", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 18955.67, "y": -3765.55, "wheelOffsets": [-1536.7, -673.1, 673.1, 1536.7], "dualSpacing": 1024.47, "tandemSpacing": null, "tire": "50x20.0R22",
+          "source": "Forward left bogie, QUADRUPLE axle. Tire positions 2228.85, 3092.45, 4438.65 and 5302.25 mm from the aircraft centreline, read from the FAARFIELD 2.1.1 wheel coordinates for the C-5, giving a strut centreline at their mean of 3765.55 mm and the four offsets carried in wheelOffsets. The spacing is NOT even — 863.6, 1346.2, 863.6 mm, i.e. two pairs with a wider gap up the middle — which is why the offsets are carried; the dualSpacing here is their mean and does not position the wheels. Tire nominal." },
+        { "id": "MLG-FL-D", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 20606.67, "y": -3771.9, "dualSpacing": 1231.9, "tandemSpacing": null, "tire": "50x20.0R22",
+          "source": "Forward left bogie, DUAL axle, 1651.0 mm aft of the quadruple axle. Tire positions 3155.95 and 4387.85 mm from the aircraft centreline (FAARFIELD 2.1.1, entry C-5), giving a strut centreline of 3771.9 mm — 6.35 mm outboard of the quadruple axle's, which is published and kept rather than squared up. Tire nominal." },
+        { "id": "MLG-AL-Q", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 24543.67, "y": -3765.55, "wheelOffsets": [-1536.7, -673.1, 673.1, 1536.7], "dualSpacing": 1024.47, "tandemSpacing": null, "tire": "50x20.0R22",
+          "source": "Aft left bogie, quadruple axle. Same lateral geometry as MLG-FL-Q; 5588.0 mm aft of it, per the FAARFIELD 2.1.1 row separation (Y -3619.5 and +1968.5 mm)." },
+        { "id": "MLG-AL-D", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 26194.67, "y": -3771.9, "dualSpacing": 1231.9, "tandemSpacing": null, "tire": "50x20.0R22",
+          "source": "Aft left bogie, dual axle, 1651.0 mm aft of MLG-AL-Q. Same lateral geometry as MLG-FL-D." },
+        { "id": "MLG-FR-Q", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 18955.67, "y": 3765.55, "wheelOffsets": [-1536.7, -673.1, 673.1, 1536.7], "dualSpacing": 1024.47, "tandemSpacing": null, "tire": "50x20.0R22",
+          "source": "Mirror of MLG-FL-Q about the aircraft centreline; same derivation." },
+        { "id": "MLG-FR-D", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 20606.67, "y": 3771.9, "dualSpacing": 1231.9, "tandemSpacing": null, "tire": "50x20.0R22",
+          "source": "Mirror of MLG-FL-D about the aircraft centreline; same derivation." },
+        { "id": "MLG-AR-Q", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 24543.67, "y": 3765.55, "wheelOffsets": [-1536.7, -673.1, 673.1, 1536.7], "dualSpacing": 1024.47, "tandemSpacing": null, "tire": "50x20.0R22",
+          "source": "Mirror of MLG-AL-Q about the aircraft centreline; same derivation." },
+        { "id": "MLG-AR-D", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 26194.67, "y": 3771.9, "dualSpacing": 1231.9, "tandemSpacing": null, "tire": "50x20.0R22",
+          "source": "Mirror of MLG-AL-D about the aircraft centreline; same derivation." }
+      ],
+      "notes": "The one configuration Order 5300.7 refuses to name by its own convention. §6h: 'The Lockheed C-5 Galaxy has a unique gear type and is difficult to name using the proposed method. This aircraft will not be classified using the new naming convention and will continue to be referred to directly as the C5.' The reason is visible in the model: each of its four bogies carries a quadruple axle AND a dual axle, so no single gear code fits — the code assumes every axle line on a strut is the same width. Twenty-four main wheels in all. This app therefore models it as eight axles rather than four bogies, which is the only honest way to express a mixed bogie in a schema built on wheels-across times rows.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 17: 'C5 - Complex Gear Comprised of Dual Wheel and Quadruple Wheel Combination with Quadruple Wheel Nose Gear, Lockheed C5 Galaxy'. §6h on why it is not named by the convention. Table 3 gives 24 wheels excluding the nose gear, Air Force T-D-TA / type K, Navy TDT." },
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entry C-5", "publisher": "U.S. Federal Aviation Administration", "note": "Twenty-four wheel coordinates: quadruple axles at X ±2228.85 / ±3092.45 / ±4438.65 / ±5302.25 mm and dual axles at X ±3155.95 / ±4387.85 mm, on rows Y -3619.5 / -1968.5 / +1968.5 / +3619.5 mm; eight tire tracks; gross weight 348 812.248 kg; Cp 730.8446 kPa; MgPercent 0.95." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-d2",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "D2 — dual wheel, two struts per side",
+      "gearDesignation": "D2",
+      "faa": { "figure": 18, "basis": "Boeing B-52", "faarfield": "B-52" },
+      "mtow": { "value": 221352.89, "unit": "kg", "basis": "FAARFIELD 2.1.1 aircraft library, entry B-52, gross weight 221 352.89 kg (488 000 lb)." },
+      "percentOnMainGear": null,
+      "wheelbase": null,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 2514.6,
+      "tirePressure": { "value": 1611.3054, "unit": "kPa", "basis": "FAARFIELD 2.1.1 aircraft library, entry B-52, forward gear Cp 1611.3054 kPa (234 psi)." },
+      "assumedFields": ["MLG.tire"],
+      "gears": [
+        { "id": "MLG-FL", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 0, "y": -1257.3, "dualSpacing": 939.8, "tandemSpacing": null, "tire": "H44.5x16.5-21",
+          "source": "Forward left strut. Strut centreline 1257.3 mm from the aircraft centreline and dual spacing 939.8 mm, from the FAARFIELD 2.1.1 wheel coordinates for the B-52 (X ±787.4 and ±1727.2 mm). Tire nominal." },
+        { "id": "MLG-FR", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 0, "y": 1257.3, "dualSpacing": 939.8, "tandemSpacing": null, "tire": "H44.5x16.5-21",
+          "source": "Mirror of MLG-FL about the aircraft centreline; same derivation." },
+        { "id": "MLG-AL", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 15163.8, "y": -1257.3, "dualSpacing": 939.8, "tandemSpacing": null, "tire": "H44.5x16.5-21",
+          "source": "Aft left strut, 15 163.8 mm behind the forward one — the separation between the FAARFIELD 2.1.1 'B-52' and 'B-52 Belly' entries (Y 15 163.8 mm and 0). It is that separation, an order of magnitude greater than any tandem spacing in this library, that makes these four separate gears rather than one bogie, and so makes the name D2 rather than 2D." },
+        { "id": "MLG-AR", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 1, "x": 15163.8, "y": 1257.3, "dualSpacing": 939.8, "tandemSpacing": null, "tire": "H44.5x16.5-21",
+          "source": "Mirror of MLG-AL about the aircraft centreline; same derivation." }
+      ],
+      "notes": "The only bicycle gear in the Order and the only configuration here with NO NOSE GEAR: two struts fore and two aft, carrying the aircraft between them, with a single outrigger wheel under each wingtip. Figure 18's caption says those outriggers are ignored, which is why the wheel count is 8 and not 10. Two consequences follow and both are visible in this model. There is no wheelbase — the quantity is defined from the nose gear, and there is none, so it is null rather than invented. And percentOnMainGear is null too: the 95 % design figure exists to split load between nose and main gear, and with the outriggers disregarded this aircraft's entire weight is on the main gear. FAARFIELD apportions it 52 % forward and 48 % aft.",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 18: 'D2 - Dual Wheel Gear Two Struts per Side Main Gear with No Separate Nose Gear (note that single wheel outriggers are ignored), Boeing B-52 Bomber'. Table 3 gives 8 wheels excluding the nose gear, Air Force T-T / type G, Navy TT." },
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entries B-52 and B-52 Belly", "publisher": "U.S. Federal Aviation Administration", "note": "Wheel coordinates X ±787.4 and ±1727.2 mm on both entries; Y 15 163.8 mm and 0 respectively; gross weight 221 352.89 kg; Cp 1611.3054 and 1827.1114 kPa; MgPercent 0.52 and 0.48." }
+      ]
+    },
+
+    {
+      "schemaVersion": "1.0",
+      "id": "faa-q2",
+      "domain": "aircraft",
+      "kind": "schematic",
+      "manufacturer": "FAA Order 5300.7",
+      "model": "Q2 — quadruple wheel, two struts per side",
+      "gearDesignation": "Q2",
+      "faa": { "figure": 20, "basis": "Ilyushin IL-76", "faarfield": "IL-76T" },
+      "mtow": { "value": 170999.83, "unit": "kg", "basis": "FAARFIELD 2.1.1 aircraft library, entry IL-76T, gross weight 170 999.83 kg." },
+      "percentOnMainGear": 95,
+      "wheelbase": 14170,
+      "mainGearOuterWidth": null,
+      "mainGearTrack": 8160,
+      "tirePressure": { "value": 530.0002, "unit": "kPa", "basis": "FAARFIELD 2.1.1 aircraft library, entry IL-76T, Cp 530.0002 kPa (76.9 psi)." },
+      "assumedFields": ["wheelbase", "MLG.tire", "NLG.dualSpacing", "NLG.tire"],
+      "gears": [
+        { "id": "NLG", "role": "nose", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 0, "y": 0, "dualSpacing": 800, "tandemSpacing": null, "tire": "H37x14.0-15",
+          "source": "Nose gear TYPE is four wheels across, from FAA Order 5300.7 Table 3, the Figure 20 row, and drawn as such in the figure. Position, spacing and tire nominal." },
+        { "id": "MLG-FL", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 12880.04, "y": -4080, "wheelOffsets": [-1030, -410, 410, 1030], "dualSpacing": 686.67, "tandemSpacing": null, "tire": "1270x455R22",
+          "source": "Forward left strut. Tire positions 3050, 3670, 4490 and 5110 mm from the aircraft centreline, read from the FAARFIELD 2.1.1 wheel coordinates for the IL-76T, giving a strut centreline of 4080 mm and the four offsets carried in wheelOffsets. The spacing is NOT even — 620, 820, 620 mm — so the offsets position the wheels and the dualSpacing is their mean. Tire nominal." },
+        { "id": "MLG-FR", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 12880.04, "y": 4080, "wheelOffsets": [-1030, -410, 410, 1030], "dualSpacing": 686.67, "tandemSpacing": null, "tire": "1270x455R22",
+          "source": "Mirror of MLG-FL about the aircraft centreline; the offset pattern is symmetric, so it is unchanged." },
+        { "id": "MLG-AL", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 15459.96, "y": -4080, "wheelOffsets": [-1030, -410, 410, 1030], "dualSpacing": 686.67, "tandemSpacing": null, "tire": "1270x455R22",
+          "source": "Aft left strut, 2579.92 mm behind the forward one, from the FAARFIELD 2.1.1 row separation for the IL-76T (Y 0 and 2579.92 mm)." },
+        { "id": "MLG-AR", "role": "main", "type": "quadruple", "wheelsAcross": 4, "tandemRows": 1, "x": 15459.96, "y": 4080, "wheelOffsets": [-1030, -410, 410, 1030], "dualSpacing": 686.67, "tandemSpacing": null, "tire": "1270x455R22",
+          "source": "Mirror of MLG-AL about the aircraft centreline; same derivation." }
+      ],
+      "notes": "Sixteen main wheels, four across on each of four struts. Order 5300.7 §6h pairs this aircraft with the An-124 to show where the line falls: both have several struts per side, but 'in contrast the IL-76 has considerable spacing between the struts and should be designated as a Q2', whereas the An-124's are close enough to be read as one five-axle gear. The two names encode the same judgement a pavement engineer would make by eye — do these wheels load the pavement as one group or as two?",
+      "sources": [
+        { "id": "faa-5300-7", "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations", "publisher": "U.S. Federal Aviation Administration", "year": 2005, "note": "Figure 20: 'Q2 - Quadruple Wheels Two Struts per Side with Quadruple Nose Gear, Ilyushin IL-76'. §6h on Q2 versus the An-124's 5D. Table 3 gives 16 wheels excluding the nose gear." },
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entry IL-76T", "publisher": "U.S. Federal Aviation Administration", "note": "Wheel coordinates X ±3050 / ±3670 / ±4490 / ±5110 mm on rows Y 0 and 2579.92 mm; gross weight 170 999.83 kg; Cp 530.0002 kPa; MgPercent 0.95." }
+      ]
+    }
+  ]
+}

@@ -148,13 +148,22 @@
 
                     <!-- Toolbar -->
                     <div class="g3-toolbar" role="toolbar" aria-label="Main toolbar">
+                        <!-- Quad leads because it is the default: a gear
+                             configuration is a plan first, and the composite
+                             sheet answers "where are the wheels" that a single
+                             pictorial view answers worst. The V-then-digit
+                             shortcuts follow this order. -->
                         <div class="g3-viewtabs" role="tablist" aria-label="View mode">
-                            <button class="g3-vtab is-active" data-view="3d" role="tab" aria-selected="true" title="Free 3D view (V then 1)">3D</button>
-                            <button class="g3-vtab" data-view="plan" role="tab" aria-selected="false" title="Plan view — locked (V then 2)">Plan</button>
-                            <button class="g3-vtab" data-view="side" role="tab" aria-selected="false" title="Side view — locked (V then 3)">Side</button>
-                            <button class="g3-vtab" data-view="front" role="tab" aria-selected="false" title="Front view — locked (V then 4)">Front</button>
-                            <button class="g3-vtab" data-view="quad" role="tab" aria-selected="false" title="All four views in one frame (V then 5) — click a pane to open it">Quad</button>
+                            <button class="g3-vtab is-active" data-view="quad" role="tab" aria-selected="true" title="All four views in one frame (V then 1) — click a pane to open it full size">Quad</button>
+                            <button class="g3-vtab" data-view="3d" role="tab" aria-selected="false" title="Free 3D view (V then 2)">3D</button>
+                            <button class="g3-vtab" data-view="plan" role="tab" aria-selected="false" title="Plan view — locked (V then 3)">Plan</button>
+                            <button class="g3-vtab" data-view="side" role="tab" aria-selected="false" title="Side view — locked (V then 4)">Side</button>
+                            <button class="g3-vtab" data-view="front" role="tab" aria-selected="false" title="Front view — locked (V then 5)">Front</button>
                         </div>
+                        <span class="g3-tool-sep"></span>
+                        <button id="g3-catalogue" class="g3-btn" title="FAA Order 5300.7 gear configuration catalogue (C)">
+                            <i class="fas fa-th"></i> Gear catalogue
+                        </button>
                         <span class="g3-tool-sep"></span>
                         <button id="g3-annot" class="g3-btn is-on" title="Show or hide all dimensions, callouts and the scale bar (A)" aria-pressed="true">
                             <i class="fas fa-ruler-combined"></i> Annotations
@@ -190,10 +199,11 @@
                                     <select id="g3-domain" class="g3-select">
                                         <option value="truck">Truck</option>
                                         <option value="aircraft">Aircraft</option>
+                                        <option value="generic">Gear configuration</option>
                                     </select>
                                 </div>
                                 <div class="g3-field">
-                                    <label for="g3-category">Class</label>
+                                    <label for="g3-category" id="g3-category-label">Class</label>
                                     <select id="g3-category" class="g3-select"></select>
                                 </div>
                                 <div class="g3-field">
@@ -207,6 +217,46 @@
                                     <button id="g3-revert-inline" class="g3-linkbtn">Revert to reference</button>
                                 </div>
                                 <div id="g3-assumption-notice" class="g3-badge-assumed" hidden></div>
+                            </div>
+                        </details>
+
+                        <!-- Gear nomenclature. Aircraft only; hidden entirely
+                             for trucks, which have their own classification. -->
+                        <details id="g3-gearcode-panel" open hidden>
+                            <summary><i class="fas fa-font"></i> Gear designation</summary>
+                            <div class="g3-group">
+                                <div class="g3-gearname" id="g3-gearname">
+                                    <span class="g3-gearname-code" id="g3-gearname-code">—</span>
+                                    <span class="g3-gearname-wheels" id="g3-gearname-wheels"></span>
+                                </div>
+                                <p class="g3-gearname-prose" id="g3-gearname-prose"></p>
+
+                                <!-- Decomposition: the name, taken apart into
+                                     the variables section 6 defines. -->
+                                <div class="g3-gearparts" id="g3-gearparts"></div>
+
+                                <div class="g3-field">
+                                    <label for="g3-gearcode-input">Read a name</label>
+                                    <input type="text" id="g3-gearcode-input" class="g3-text g3-mono"
+                                           placeholder="2D/2D2(X)" spellcheck="false" autocomplete="off"
+                                           aria-describedby="g3-gearcode-result">
+                                </div>
+                                <div id="g3-gearcode-result" class="g3-report" role="status" aria-live="polite"></div>
+
+                                <div id="g3-gearcode-aircraft" class="g3-meta"></div>
+
+                                <hr class="g3-rule">
+                                <div class="g3-mini-row">
+                                    <button id="g3-gearcode-browse" class="g3-btn"><i class="fas fa-th"></i> Catalogue</button>
+                                    <button id="g3-gearcode-load" class="g3-btn" disabled><i class="fas fa-download"></i> Load this</button>
+                                </div>
+                                <p class="g3-note">
+                                    Names follow <strong>FAA Order 5300.7</strong> (6 October 2005):
+                                    <span class="g3-mono">#X#/#X#(P)</span> — tandem count, gear type
+                                    <span class="g3-mono">S D T Q</span>, gears in line per side, then the
+                                    body gear and an optional ICAO tire-pressure code. Anything the grammar
+                                    admits is a legal name, whether or not an aircraft has been built with it.
+                                </p>
                             </div>
                         </details>
 
@@ -359,6 +409,37 @@
                                     <input type="number" id="g3-cam-el-n" class="g3-num g3-num--tiny" min="-89" max="89" step="0.5" value="20">
                                 </div>
                                 <div class="g3-mini-row" id="g3-presets"></div>
+                            </div>
+                        </details>
+
+                        <details>
+                            <summary><i class="fas fa-desktop"></i> Rendering</summary>
+                            <div class="g3-group">
+                                <div class="g3-field">
+                                    <label for="g3-render-tier">Quality</label>
+                                    <select id="g3-render-tier" class="g3-select"></select>
+                                </div>
+                                <div class="g3-resbar" id="g3-resbar">
+                                    <span class="g3-resbar-k">Drawing buffer</span>
+                                    <span class="g3-resbar-v g3-mono" id="g3-res-value">—</span>
+                                    <span class="g3-resbar-n" id="g3-res-note"></span>
+                                </div>
+                                <div class="g3-field">
+                                    <label for="g3-geometry">Tyre detail</label>
+                                    <select id="g3-geometry" class="g3-select">
+                                        <option value="auto">Auto — by tyre count</option>
+                                        <option value="draft">Draft — 112 segments</option>
+                                        <option value="standard">Standard — 240</option>
+                                        <option value="high">High — 352</option>
+                                    </select>
+                                </div>
+                                <p class="g3-note">
+                                    The viewport renders into a buffer larger than itself and the browser
+                                    downsamples it, which is the same supersampling the figure export has
+                                    always used. <strong>Orbiting drops to a lighter ratio and the full
+                                    frame is drawn once the view settles</strong>, so the cost lands on the
+                                    still image rather than on the drag.
+                                </p>
                             </div>
                         </details>
 
@@ -545,6 +626,8 @@
                         <span class="g3-status-item g3-mono" id="g3-status-coords"></span>
                         <span class="g3-status-sep"></span>
                         <span class="g3-status-item g3-mono" id="g3-status-view">—</span>
+                        <span class="g3-status-sep"></span>
+                        <span class="g3-status-item g3-mono" id="g3-status-res" title="Drawing buffer — the resolution the viewport is rasterised at"></span>
                     </div>
 
                 </div>
@@ -554,6 +637,47 @@
         <!-- Footer -->
         <div id="footer-placeholder"></div>
 
+    </div>
+
+    <!-- Gear configuration catalogue.
+         Figure 2 and Table 3 of FAA Order 5300.7, as a browsable sheet. The
+         thumbnails are drawn from the same wheel-plan function the app uses
+         elsewhere, so a diagram here cannot disagree with the model it loads. -->
+    <div class="g3-modal" id="g3-catalogue-modal" hidden>
+        <div class="g3-modal-scrim" data-close></div>
+        <div class="g3-modal-panel" role="dialog" aria-modal="true" aria-labelledby="g3-cat-title">
+            <header class="g3-modal-head">
+                <div>
+                    <h2 id="g3-cat-title">Gear configuration catalogue</h2>
+                    <p>FAA Order 5300.7 — <span id="g3-cat-count">—</span> entries.
+                       <span class="g3-cat-legend">
+                           <span class="g3-cat-dot g3-cat-dot--real"></span> measured aircraft
+                           <span class="g3-cat-dot g3-cat-dot--schem"></span> schematic
+                       </span>
+                    </p>
+                </div>
+                <div class="g3-modal-tools">
+                    <input type="search" id="g3-cat-search" class="g3-text" placeholder="Filter by code or aircraft…"
+                           spellcheck="false" autocomplete="off" aria-label="Filter configurations">
+                    <button class="g3-icon-btn" data-close aria-label="Close catalogue"><i class="fas fa-times"></i></button>
+                </div>
+            </header>
+            <div class="g3-cat-body">
+                <section class="g3-cat-section">
+                    <h3>Figure 2 — generic configurations</h3>
+                    <p class="g3-cat-blurb">Every gear type in one, two and three tandem axle lines.
+                       The figure's own caption says the grid does not stop there: <em>increase numeric
+                       value for additional tandem axles</em>.</p>
+                    <div class="g3-cat-grid" id="g3-cat-generic"></div>
+                </section>
+                <section class="g3-cat-section">
+                    <h3>Table 3 — known configurations</h3>
+                    <p class="g3-cat-blurb">The configurations the Order tabulates against real aircraft,
+                       with the historic FAA, U.S. Air Force and U.S. Navy names each one replaced.</p>
+                    <div class="g3-cat-grid" id="g3-cat-known"></div>
+                </section>
+            </div>
+        </div>
     </div>
 
     <div class="g3-toast-wrap" id="g3-toast-wrap" role="status" aria-live="polite"></div>

@@ -82,7 +82,7 @@ assets/js/           Frontend JS (components.js, search.js, theme-toggle.js, etc
 data/                JSON content store (navigation, blog-posts, news, projects, footer, site-config, github)
 blog/                Individual blog post HTML (Liquid-processed by Jekyll)
 projects/            Detailed project pages
-e-labs/              Interactive web apps (Asphera, AirCrafter, Frontier, Finite-Elemented, Cross-Section Studio, LEAPS) + Python preprocessing
+e-labs/              Interactive web apps (Gear3D, LEAPS, Cross-Section Studio, Finite-Elemented, Frontier, AirCrafter, Asphera) + Python preprocessing
 images/              All media assets organized by section
 documents/           PDFs (resume, etc.)
 scripts/             Build / content-refresh utilities (fetch-github-data.mjs)
@@ -199,6 +199,7 @@ ASCE2025, ATLAS, Datathon2024, Fulbright, Graduation, ISAP2024, TRB2022-2026, Vi
 ACRP_FEM (password-protected), EV_Trucks, FAA_Data, MS_Thesis
 
 ### E-Labs apps (`e-labs/`)
+- **Gear3D** (`e-labs/gear3d/`) — True-to-scale 3D visualizer of truck axle configurations and aircraft landing gear (Three.js ES modules via CDN import map), public. App **v1.10**. Modular: `main.js` (single DOM controller, deliberately — see DECISIONS.md) + `src/core` (schema, layout, tires, units, coords, gearcode, prng, store, bridge) + `src/geometry`, `src/scene`, `src/annotate`, `src/contact`, `src/io`, `src/views`. **The whole app is a provenance claim**: every geometry-bearing number carries a `source` string or a `{value,unit,basis}` quantity, a value that had to be chosen rather than read must appear in the unit's `assumedFields[]`, and `test/run.mjs` (176 checks, `npm test`) FAILS THE BUILD when one does not — including a negative control that the validator actually rejects. Never add a number without a citation; `null` is the correct answer for an unknown. Library: 22 FHWA-classified trucks + 7 measured aircraft + 16 FAA gear configurations. **FAA Order 5300.7 nomenclature** (`src/core/gearcode.js`) is implemented as a GRAMMAR, not a lookup table — parse/format/describe/wheel-count/wheel-plan, Table 3 transcribed with the historic FAA/USAF/Navy concordance, validation by parsing so open-ended names like `9Q` are legal. Gear catalogue overlay (`C`), designation panel listing **all 21 conventions** (measured aircraft preferred over schematics), quad view **is the default** (`V`+`1`; the four panes share one ortho scale), **adaptive UHD rendering** (`RENDER_TIERS` in `scene/renderer.js` — a 3840px drawing buffer on Ultra, dropping to 1.25x during interaction and restoring 220ms after settle; the tier also sets the tyre-segment floor and shadow-map size). The render loop compares camera state itself because `OrbitControls.update()` returns true every frame with damping on. Measurement snapping, contact-patch models + FEM/CSV export, PNG/JPEG/SVG/PDF figure export, glTF/OBJ geometry export in the engineering frame (mm), `.gear3d` project save/load, undo/redo. Aircraft geometry is corroborated against the FAARFIELD 2.1.1 library in `../FAARFIELD-2.1.1/FF2/Defaults/Aircraft/aircraft.xml` (read-only, another agent's repo). NOTE: site-wide `button` CSS requires the `body.Gear3D` override block near the end of `styles.css` — every new button/card class needs a line there.
 - **Asphera** (`e-labs/asphera/`) — FEM pavement visualizer (Plotly), password-protected
 - **AirCrafter** (`e-labs/aircrafter/`) — Contact stress calculator (Plotly), password-protected
 - **Frontier** (`e-labs/frontier/`) — HPC intuition engine (Canvas 2D), public
@@ -224,7 +225,7 @@ Which DOM placeholders each page uses (determines which JSON files `components.j
 All pages have hardcoded `<nav>` in HTML — no page uses `#nav-placeholder`.
 
 ## Navigation & Site Map
-- **Top nav**: Home | Projects (dropdown→4) | Publications | Resume | Blog | News | E-Labs (dropdown→6: LEAPS, Cross-Section Studio, Finite-Elemented, Frontier, AirCrafter, Asphera)
+- **Top nav**: Home | Projects (dropdown→4) | Publications | Resume | Blog | News | E-Labs (dropdown→7: Gear3D, LEAPS, Cross-Section Studio, Finite-Elemented, Frontier, AirCrafter, Asphera)
 - All pages share: hardcoded `<nav>` in HTML + dynamic footer via `#footer-placeholder`
 - Subdirectory pages (`blog/`, `projects/`, `e-labs/`) use `../` relative paths for assets
 

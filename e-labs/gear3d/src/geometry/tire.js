@@ -57,6 +57,9 @@ export const QUALITY = Object.freeze({
     high: { radialSegments: 352, profileDetail: 1.4 }
 });
 
+/** Quality levels, cheapest first — the order `minLevel` is compared against. */
+export const QUALITY_ORDER = Object.freeze(['draft', 'standard', 'high']);
+
 /**
  * Choose a quality level from how many tires have to be drawn.
  *
@@ -67,13 +70,21 @@ export const QUALITY = Object.freeze({
  *
  * @param {number} tireCount
  * @param {string} [override] an explicit level always wins
+ * @param {string} [minLevel] floor imposed by the render tier
  * @returns {keyof typeof QUALITY}
  */
-export function pickQuality(tireCount, override) {
+export function pickQuality(tireCount, override, minLevel) {
     if (override && QUALITY[override]) return /** @type {any} */ (override);
-    if (tireCount > 20) return 'draft';
-    if (tireCount > 8) return 'standard';
-    return 'high';
+    let level = tireCount > 20 ? 'draft' : tireCount > 8 ? 'standard' : 'high';
+    // A render tier can raise the floor. Resolution and geometry have to move
+    // together: a 4K drawing buffer does not hide a 112-segment silhouette,
+    // it resolves the faceting more clearly than 1x ever did, so asking for
+    // UHD and getting draft tyres is worse than not asking.
+    if (minLevel && QUALITY[minLevel]
+        && QUALITY_ORDER.indexOf(minLevel) > QUALITY_ORDER.indexOf(level)) {
+        level = minLevel;
+    }
+    return /** @type {any} */ (level);
 }
 
 /** Geometry group indices — group 0 is sidewall, group 1 is tread. */

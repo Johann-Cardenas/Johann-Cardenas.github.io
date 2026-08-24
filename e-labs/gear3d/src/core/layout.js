@@ -221,6 +221,15 @@ function resolveAircraft(unit, opts) {
         const dual = g.dualSpacing || 0;
         const tandem = g.tandemSpacing || 0;
         const main = isMain(g);
+        // A bogie is not always evenly spaced. The C-5's quadruple axle sits
+        // in two pairs with a wider gap up the middle (34 in, 53 in, 34 in),
+        // the IL-76's is 620/820/620 mm, and the C-17's triple is 1079.5 and
+        // 1028.7 mm. `wheelOffsets` carries those positions as published;
+        // absent it the wheels are spread evenly at `dualSpacing`, which is
+        // every other gear in the library.
+        const offsets = Array.isArray(g.wheelOffsets) && g.wheelOffsets.length === across
+            ? g.wheelOffsets
+            : null;
         const explicit = canonical(g.load, 'force');
         const perTireKn = explicit != null
             ? explicit / (across * rows)
@@ -230,7 +239,9 @@ function resolveAircraft(unit, opts) {
             id: g.id,
             role: main ? 'main' : 'nose',
             x: g.x,
-            trackWidth: dual * (across - 1),
+            trackWidth: offsets
+                ? Math.max(...offsets) - Math.min(...offsets)
+                : dual * (across - 1),
             axleHeight: geometry.staticLoadedRadius,
             tireConfig: across > 1 ? 'DTA' : 'STA',
             dualSpacing: dual || null,
@@ -251,7 +262,12 @@ function resolveAircraft(unit, opts) {
                 ? (g.dualSpacingByRow[row] ?? dual)
                 : dual;
             for (let i = 0; i < across; i++) {
-                const off = (i - (across - 1) / 2) * rowDual;
+                // Explicit offsets win over the even spread. They are absolute
+                // positions relative to the strut centreline, so they are NOT
+                // scaled by the row's dual spacing — a bogie that states both
+                // is stating the offsets and a nominal pitch, and the offsets
+                // are the measurement.
+                const off = offsets ? offsets[i] : (i - (across - 1) / 2) * rowDual;
                 const y = g.y + off;
                 wheels.push({
                     id: `${g.id}-r${row + 1}-w${i + 1}`,

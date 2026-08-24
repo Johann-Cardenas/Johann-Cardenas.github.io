@@ -29,11 +29,22 @@ Three levels are used throughout the data files:
 - 23 CFR 658 statutory limits (20 000 lb single, 34 000 lb tandem, 80 000 lb
   gross, 102 in width) and the Federal Bridge Formula — these are statutory
   text and are additionally re-derived arithmetically by the test suite.
+- **FAA Order 5300.7**, Standard Naming Convention for Aircraft Landing Gear
+  Configurations (6 October 2005) — §6's grammar, Table 1's tire pressure
+  codes, Table 3's eighteen rows and Figures 2-20. Read in full during the v1.9
+  build; the test suite reproduces every published wheel count from the names
+  alone. See §5.7.
+- **FAARFIELD 2.1.1 aircraft library** (`aircraft.xml`) — per-wheel
+  coordinates, gross weights and tire pressures. Read directly during the v1.9
+  build for the gear configurations (§5.7) and to retire three tandem-spacing
+  assumptions (§5.6). Used as an independent cross-check before that (§5.3).
 
 **What was NOT verified during this build:**
 
-- **All aircraft gear geometry.** See §5. No aircraft library ships in v1.0
-  precisely because of this.
+- **Tire size and wheelbase on the sixteen gear configurations.** Both are
+  nominal on every one of them, declared in `assumedFields`, and flagged in the
+  app. See §5.7 — and note that the six pure Figure 2 patterns are nominal
+  throughout.
 - Inch-nominal truck tire overall diameters other than 11R22.5. See §4.
 - Track widths and wheelbases of individual truck classes. See §3.
 
@@ -354,11 +365,90 @@ same column of ACAP §2.1.1.
 
 #### What is still not included
 
-Nothing from the original build spec. The library now covers every gear code
-in `index.json`. Additional weight variants (the A380 alone has fifteen) are
-not separate entries because the geometry is identical across them — only the
-weights differ, so a variant changes tire loads and nothing else. `A380-800
-WV000` is the one carried, and its variant is stated on every weight.
+Nothing from the original build spec. Additional weight variants (the A380
+alone has fifteen) are not separate entries because the geometry is identical
+across them — only the weights differ, so a variant changes tire loads and
+nothing else. `A380-800 WV000` is the one carried, and its variant is stated on
+every weight.
+
+### 5.6 Tandem spacings, retired as assumptions (v1.9)
+
+The 757-200, 767-400ER and 777-300ER shipped from v1.2 with
+`MLG.tandemSpacing` declared in `assumedFields`: no consulted source
+constrained it, so a plausible round number in inches was chosen and said to be
+chosen. The **FAARFIELD 2.1.1 aircraft library** does constrain it.
+
+| Aircraft | Assumed | FAARFIELD | Error |
+|---|---|---|---|
+| 757-200 | 1143 mm (45 in) | 1143 mm (Y ±571.5) | none |
+| 767-400ER | 1422 mm (56 in) | **1371.6 mm** (Y ±685.8) | 50.4 mm too long |
+| 777-300ER | 1448 mm (57 in) | **1463.04 mm** (Y −1463.04 / 0 / +1463.04) | 15.0 mm too short |
+
+All three are now sourced and out of `assumedFields`. Only `NLG.dualSpacing`
+remains assumed on the two-strut aircraft; FAARFIELD models the main gear only,
+because the nose gear carries too little load to matter to thickness design.
+
+**Why a wrong value survived seven releases.** A tandem spread is symmetric
+about the bogie centre, so changing it moves both axle lines equally and leaves
+the wheelbase (a centroid), the track and the outer width completely untouched.
+Every derivation check in the suite passed with the wrong number in place. This
+is the argument for declaring assumptions in the data rather than trusting
+tests to find them: the tests could not have.
+
+### 5.7 FAA Order 5300.7 gear configurations (v1.9)
+
+Sixteen configurations in `aircraft/faa-5300-7.json`. **Every one is
+schematic** — `kind: "schematic"`, flagged in the app — and the split between
+what is measured and what is nominal is not the same as it is for the real
+aircraft above.
+
+**Verified, and cited per gear.** The wheel geometry — track, dual spacing,
+tandem spacing, uneven bogie offsets, wing-to-body offset — of the ten
+configurations whose representative aircraft appears in the FAARFIELD 2.1.1
+library: `S` (F-15C), `2S` (C-130), `2T` (C-17A), `2D/D1` (DC10-30/40),
+`2D/2D1` (A340-600 WV000), `5D` (An-124), `7D` (An-225), `C5` (C-5),
+`D2` (B-52), `Q2` (IL-76T). Gross weights and tire pressures come from the same
+entries. This is the library already used in §5.3 to corroborate the 747 and
+A380, read directly during this build.
+
+**Nominal, and declared in `assumedFields` on every unit:**
+
+- **The tire.** FAARFIELD carries a contact patch and an inflation pressure,
+  not a Tire and Rim Association designation, and no other consulted source
+  gives one for these aircraft. The tire is a stand-in chosen to fit the real
+  spacings. It sets how large the rendered wheel is and moves no wheel centre.
+- **The wheelbase.** FAARFIELD models the main gear only. The nose gear's
+  *type* is real — Order 5300.7 Table 3 tabulates it in its own column — but
+  its distance forward is not.
+
+**No outer width is stated on any of them.** On the real aircraft the FAA's
+published outer width is the datum and the track derives from it (§5.2). Here
+the track is measured and the outer width would depend on the nominal tire, so
+stating one would present a placeholder as a datum. `mainGearOuterWidth` is
+null throughout and a test asserts it.
+
+**Low — the six pure patterns.** `T`, `Q`, `2Q`, `3S`, `3T`, `3Q` have no
+aircraft behind them, or none whose geometry any consulted source publishes
+(`Q`'s representative, the HS-121 Trident, left service in 1985). They are
+drawn to one nominal scale — 49x19.0-22 tires, 1400 mm lateral pitch, 1450 mm
+longitudinal, strut centres 1800 mm outboard of the bogie half-width, wheelbase
+20 000 mm — so that Figure 2's twelve cells stay comparable, which is the
+point of that figure. **Not one of those numbers describes an aircraft.**
+
+**Two idealisations, both declared in the data.** The C-17's real bogie has its
+two rows offset laterally from each other by 38.1 mm, and one wheel in each row
+sits 292.1 mm out of line with the other two; both are squared up here and both
+are in the FAARFIELD coordinates if needed. Loads on all sixteen use the equal
+per-tire split that 95 % on the main gear implies, which is *not* how FAARFIELD
+apportions the wing/body aircraft (DC-10 78/17, A340-600 72/23); the geometry
+is sourced, the per-tire loads are nominal, and the unit notes say so.
+
+**Order 5300.7 itself** — the naming convention, Table 1's pressure codes,
+Table 3's eighteen rows with their wheel counts, nose gear types, typical
+aircraft and the historic FAA/USAF/Navy concordance, and Figures 2–20 — was
+read in full during this build and is transcribed in `src/core/gearcode.js`.
+The test suite reproduces all eighteen published wheel counts from the names
+alone.
 
 ---
 
@@ -368,7 +458,7 @@ Every axle carries a `source` string and every load a `basis` string, both
 shown in the properties panel when you select an axle. Export `unit.json`
 alongside any figure and the citations travel with it.
 
-The test suite (`npm test`, 74 checks) fails the build if any axle, gear, load,
+The test suite (`npm test`, 175 checks as of v1.9) fails the build if any axle, gear, load,
 GVW, MTOW, tire pressure or multi-axle group spacing lacks provenance, and
 includes a negative control that confirms the validator actually rejects a
 missing source rather than passing vacuously.
