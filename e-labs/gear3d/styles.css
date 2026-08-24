@@ -1431,6 +1431,40 @@ body.Gear3D .g3-node-iso:hover { color: var(--g3-datum) !important; }
 .g3-gc-bad { color: var(--g3-signal); font-weight: 600; margin-bottom: .18rem; }
 .g3-gc-count { color: var(--g3-muted); margin-top: .18rem; }
 
+/* ---------- render resolution readout ---------- */
+/* A gauge face, not a label: the number is the point, so it gets the mono
+   face at size and the units sit under it in the muted tone. */
+.g3-resbar {
+    display: grid;
+    gap: .1rem;
+    margin: .1rem 0 .55rem;
+    padding: .42rem .55rem;
+    background: var(--g3-inset);
+    border: 1px solid var(--g3-rule);
+    border-left: 2px solid var(--g3-datum);
+    border-radius: 3px;
+}
+.g3-resbar-k {
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--g3-muted);
+}
+.g3-resbar-v {
+    font-size: .92rem;
+    font-weight: 600;
+    color: var(--g3-ink);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+.g3-resbar-n {
+    font-size: .63rem;
+    color: var(--g3-muted);
+    font-variant-numeric: tabular-nums;
+}
+.g3-resbar-n.is-uhd { color: var(--g3-datum); font-weight: 600; }
+.g3-status-item.is-uhd { color: var(--g3-datum); }
+
 /* Schematic flag. The other two title-block flags are instrument red because
    they mark a deviation from the cited reference. This one is amber, matching
    the assumed-value notice, because it marks the same KIND of thing: a value

@@ -378,6 +378,68 @@ sixteen gear configurations covering every code in the Order (library 22 → 38)
 makes quad the default view, and corrects three tandem spacings that were
 assumed and are not. 175 checks, up from 160.
 
+**v1.10** raises the live viewport to a UHD drawing buffer with adaptive
+supersampling, fixes a renderer that had been redrawing at 60 fps while idle
+since v1.0, and completes the Gear configuration picker: it listed only the
+sixteen schematics, so the five conventions answered by a measured aircraft —
+D, 2D, 3D, 2D/2D2, 2D/3D2 — were missing from the one list in the app that
+exists to enumerate the convention. It now lists all twenty-one, and a test
+asserts the coverage at library level. 176 checks.
+
+## Render resolution (v1.10)
+
+The viewport used to render at `min(devicePixelRatio, 2)`, which on an ordinary
+1x desktop monitor is a pixel ratio of **one**. A viewport around 1000 x 660 CSS
+pixels was therefore rasterised at 0.7 megapixels, and it showed — faceted tyre
+silhouettes, stair-stepped shadow edges, specular shimmer on the rim lips that
+MSAA cannot touch because it only antialiases geometry edges. The figure export
+has always supersampled; the live view had not.
+
+**Rendering → Quality** now offers three tiers, and each moves the pixel count
+and the geometry together, because raising either alone is wasted: more pixels
+on a faceted silhouette merely resolve the facets, and more segments behind a
+1x buffer are never seen.
+
+| Tier | Drawing buffer | Tyre floor | Shadow map |
+|---|---|---|---|
+| Balanced | 1920 px wide | adaptive | 2048 |
+| High | 2560 px | 240 segments | 3072 |
+| **Ultra — UHD** (default) | **3840 px** | 352 segments | 4096 |
+
+On a 1017 x 693 viewport that is **3840 x 2617, 10.0 MP, a 3.78x buffer**. The
+panel and the status strip both print what is actually being rasterised, because
+the ratio depends on the viewport's CSS width, the display's own pixel ratio and
+what the GL context will allocate — "Ultra" is not the same number of pixels on
+two machines, and a reader who asked for UHD is entitled to check.
+
+**Interaction drops to a 1.25x buffer and the full frame is drawn 220 ms after
+the view settles.** A 10 MP frame is entirely affordable for an image that is
+going to sit on screen and not at all affordable at 60 fps during an orbit, so
+the cost lands on the still image rather than on the drag.
+
+Two things had to be fixed to make this work, and both were long-standing:
+
+- **The renderer was never actually on demand.** `OrbitControls.update()`
+  returns `true` on every frame even when the camera has not moved — its settle
+  test compares quaternions against a 1e-6 epsilon and the jitter from calling
+  `lookAt()` each update sits on that threshold. The loop trusted that return
+  value, so an idle Gear3D redrew at 60 fps for the whole life of the app. It
+  now compares position, orientation, target and zoom itself. **Idle is now
+  zero renders per second.**
+- **A grid line is one DEVICE pixel wide** whatever the ratio, so at 3.78x it is
+  a quarter of a CSS pixel and the grid does not look sharper, it looks like it
+  faded out. Its alpha is scaled by the ratio to hold the integrated weight
+  constant, which is the quantity the eye actually reads.
+
+`Tyre detail` is separate for when you want to override: `auto` scales segment
+count by tyre count, which is what the README has always claimed and what — see
+below — the app never actually did.
+
+**Bug fixed in passing.** `view.quality` defaulted to `'standard'`, which is a
+valid `QUALITY` key and therefore an *override*, so `pickQuality`'s adaptive
+step-down never ran once. A 34-tyre turnpike double got the same segment count
+as a single isolated axle. The default is now `'auto'`.
+
 ## Quad view — the default since v1.9
 
 `Quad` renders plan, 3D, side and front in one frame — the layout for

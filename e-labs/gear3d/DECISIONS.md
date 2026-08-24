@@ -6,6 +6,75 @@ why, so a later maintainer can overturn it on the merits rather than guessing.
 
 ---
 
+## D32. Resolution is adaptive, and the tier moves pixels and geometry together (v1.10)
+
+**Decision.** The viewport renders into a buffer far larger than itself — 3840
+pixels wide at the default Ultra tier — and drops to a 1.25x buffer for the
+duration of any pointer or wheel interaction, restoring the full frame 220 ms
+after the last input.
+
+**Why supersample at all.** `min(devicePixelRatio, 2)` sounds like a cap and is
+in fact a floor: on an ordinary 1x monitor it evaluates to **one**, so the
+viewport was being rasterised at its CSS size, around 0.7 megapixels. MSAA
+antialiases geometry edges and does nothing for specular shimmer on a rim lip
+or for the sub-pixel detail in a tread groove. The export path has supersampled
+2x since v1.1 for exactly this reason; the live view simply never did.
+
+**Why adaptive rather than always-on.** A 10 MP frame costs about 7 ms here,
+which is nothing for an image that is going to sit on screen and far too much
+to pay 60 times a second during an orbit drag. Dropping for the interaction and
+restoring on settle puts the whole cost on the still frame — the one anybody
+actually looks at.
+
+**Why the tier also sets a geometry floor.** Raising either resolution or
+segment count alone is wasted. A 4K buffer does not hide a 112-segment
+silhouette, it resolves the faceting more clearly than 1x ever could; and 352
+segments behind a 1x buffer are never seen. One control moves both, plus the
+shadow map, whose radius is rescaled with it so the softness the user chose
+looks the same at every tier.
+
+**Why the number is printed.** The ratio depends on the viewport's CSS width,
+the display's own pixel ratio and what the GL context will allocate, so "Ultra"
+is not the same number of pixels on two machines. This app is a measurement
+instrument; a reader who asked for UHD should be able to read back what they
+got rather than take it on trust. It appears in the Rendering panel and in the
+status strip.
+
+**Where.** `RENDER_TIERS`, `targetRatio()`, `markInteracting()` and
+`renderResolution()` in `src/scene/renderer.js`; `setShadowMapSize()` in
+`lighting.js`; the `minLevel` argument to `pickQuality()`.
+
+---
+
+## D33. The renderer trusts its own comparison, not OrbitControls' return value (v1.10)
+
+**Decision.** The render loop decides whether the camera moved by comparing
+position, orientation, target and zoom against the previous frame. Nothing is
+hung off `cameras.onChange`.
+
+**Why.** `OrbitControls.update()` returns `true` on **every frame** when damping
+is enabled, even on a camera that has not moved at all: its settle test compares
+quaternions against a 1e-6 epsilon, and the numerical jitter from calling
+`lookAt()` each update sits right on that threshold. The loop took that return
+value as "the camera moved", so an idle Gear3D had been redrawing at 60 fps
+since v1.0 — a renderer documented as on-demand, and advertised as such in its
+own header comment, that had never once been on demand.
+
+**How it surfaced.** It did not surface on its own; it was invisible except as
+battery drain. It only became a *defect* when v1.10 hung the resolution drop off
+the same signal, at which point the viewport never settled and never rendered
+above the interactive ratio. A bug that costs only power is easy to carry for
+eight releases; the lesson is that "is this event telling me what I think it is"
+is worth asking of a library callback before building on it.
+
+**Result.** Idle is now zero renders per second, measured. Interaction is
+detected instead from `pointerdown`, `pointermove` with a button held, and
+`wheel` on the canvas, which is unambiguous in a way the change event is not.
+
+**Where.** `_cameraMoved()` and the `start()` loop in `src/scene/renderer.js`.
+
+---
+
 ## D29. The gear naming convention is implemented as a grammar, not a table (v1.9)
 
 **Decision.** `src/core/gearcode.js` parses FAA Order 5300.7 names from the

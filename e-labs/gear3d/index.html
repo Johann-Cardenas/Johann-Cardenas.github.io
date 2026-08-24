@@ -413,6 +413,37 @@
                         </details>
 
                         <details>
+                            <summary><i class="fas fa-desktop"></i> Rendering</summary>
+                            <div class="g3-group">
+                                <div class="g3-field">
+                                    <label for="g3-render-tier">Quality</label>
+                                    <select id="g3-render-tier" class="g3-select"></select>
+                                </div>
+                                <div class="g3-resbar" id="g3-resbar">
+                                    <span class="g3-resbar-k">Drawing buffer</span>
+                                    <span class="g3-resbar-v g3-mono" id="g3-res-value">—</span>
+                                    <span class="g3-resbar-n" id="g3-res-note"></span>
+                                </div>
+                                <div class="g3-field">
+                                    <label for="g3-geometry">Tyre detail</label>
+                                    <select id="g3-geometry" class="g3-select">
+                                        <option value="auto">Auto — by tyre count</option>
+                                        <option value="draft">Draft — 112 segments</option>
+                                        <option value="standard">Standard — 240</option>
+                                        <option value="high">High — 352</option>
+                                    </select>
+                                </div>
+                                <p class="g3-note">
+                                    The viewport renders into a buffer larger than itself and the browser
+                                    downsamples it, which is the same supersampling the figure export has
+                                    always used. <strong>Orbiting drops to a lighter ratio and the full
+                                    frame is drawn once the view settles</strong>, so the cost lands on the
+                                    still image rather than on the drag.
+                                </p>
+                            </div>
+                        </details>
+
+                        <details>
                             <summary><i class="fas fa-lightbulb"></i> Lighting</summary>
                             <div class="g3-group">
                                 <div class="g3-field">
@@ -595,6 +626,8 @@
                         <span class="g3-status-item g3-mono" id="g3-status-coords"></span>
                         <span class="g3-status-sep"></span>
                         <span class="g3-status-item g3-mono" id="g3-status-view">—</span>
+                        <span class="g3-status-sep"></span>
+                        <span class="g3-status-item g3-mono" id="g3-status-res" title="Drawing buffer — the resolution the viewport is rasterised at"></span>
                     </div>
 
                 </div>

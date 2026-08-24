@@ -1592,6 +1592,38 @@ test('wheel plans draw the right number of wheels at the right scope', () => {
     assert(wheelPlan('2D').wheels.every((w) => w.role === 'main'), '2D has none');
 });
 
+test('COVERAGE: every configuration the Order names is loadable', () => {
+    // Twenty-one codes: Figure 2's twelve generic cells plus the Table 3 rows
+    // Figure 2 does not already cover. Each must resolve to something in the
+    // library — a measured aircraft where one exists, a schematic otherwise.
+    //
+    // This is the check that would have caught the v1.9 defect where the Gear
+    // configuration picker listed only the schematics: all twenty-one codes
+    // WERE present in the library, but five of them (D, 2D, 3D, 2D/2D2,
+    // 2D/3D2) were answered only by measured aircraft, so a list built from
+    // the schematics alone silently dropped them. Asserting at the LIBRARY
+    // level rather than the picker level is deliberate — it is the invariant
+    // the picker depends on, and it holds however the picker is written.
+    const conventions = [...new Set([
+        ...genericConfigurations(3),
+        ...FAA_TABLE_3.map((r) => r.code)
+    ])];
+    assertEqual(conventions.length, 21, 'the Order names twenty-one distinct configurations');
+
+    const missing = conventions.filter(
+        (c) => !aircraftUnits.some((u) => u.gearDesignation === c)
+    );
+    assertEqual(missing.length, 0,
+        `no unit answers ${missing.join(', ')} — every FAA configuration must be loadable`);
+
+    // And the reverse: nothing in the library carries a designation the Order's
+    // own grammar cannot read.
+    for (const u of aircraftUnits) {
+        assertEqual(parseGearCode(u.gearDesignation).canonical, u.gearDesignation,
+            `${u.id} carries a non-canonical gear designation`);
+    }
+});
+
 test('gears in line are drawn ALONG the aircraft, not across it', () => {
     // Figures 18 and 20 both put the second strut BEHIND the first. Drawing
     // them side by side instead turns a Q2 into an eight-wheel axle line,

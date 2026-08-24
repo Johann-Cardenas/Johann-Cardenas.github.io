@@ -35,7 +35,7 @@ import { CAMERA_PRESETS, ENG_AXES } from './src/core/coords.js';
 
 import { MaterialLibrary, MATERIAL_SPECS } from './src/scene/materials.js';
 import { LIGHTING_PRESETS } from './src/scene/lighting.js';
-import { Viewport } from './src/scene/renderer.js';
+import { Viewport, RENDER_TIERS } from './src/scene/renderer.js';
 import { VIEW_META } from './src/scene/cameras.js';
 import { buildAssembly } from './src/geometry/assembly.js';
 
@@ -127,7 +127,14 @@ function defaultView() {
         exportSize: '2400x1800',
         exportW: 2400,
         exportH: 1800,
-        quality: 'standard',
+        // 'auto' lets pickQuality actually adapt to the tire count. It used
+        // to read 'standard', which is a valid QUALITY key and therefore an
+        // OVERRIDE — so the adaptive picker documented in the README and in
+        // tire.js never once ran in the app. A 34-tire turnpike double got the
+        // same segment count as a single isolated axle.
+        quality: 'auto',
+        /** Render tier: drawing-buffer target, geometry floor, shadow map. */
+        renderTier: 'ultra',
         supersample: 2,
         /** Appearance overrides per material family. View state, not document:
          *  they cannot affect a dimension, a patch or an export. */
@@ -157,6 +164,7 @@ async function boot() {
     setupUnitPanel();
     setupGearCodePanel();
     setupCatalogue();
+    setupRenderPanel();
     setupIsolationPanel();
     setupDimensionPanel();
     setupContactPanel();
@@ -253,6 +261,11 @@ function setupViewport() {
     app.viewport.setMaterialLibrary(app.materials);
 
     app.viewport.onFrame = (info) => drawOverlay(info);
+    // The buffer size changes on resize, on a tier change and when an orbit
+    // settles; the readout follows all three rather than being pushed from
+    // each call site.
+    app.viewport.onResolutionChange = () => renderResolutionReadout();
+
     app.viewport.onContextLost = () => {
         toast('The WebGL context was lost. Reload the page to continue — your work is autosaved.', 'error');
     };
@@ -331,6 +344,7 @@ function rebuild(opts = {}) {
     app.assembly = buildAssembly(app.layout, app.materials, {
         showAxles: true,
         quality: app.store.view.quality,
+        minQuality: RENDER_TIERS[app.store.view.renderTier]?.minGeometry || null,
         seed: app.store.doc.seed
     });
     app.viewport.setAssembly(app.assembly);
@@ -1077,6 +1091,81 @@ function setViewMode(mode) {
     updateStatus();
 }
 
+/* ============================================================
+   Render quality
+   ------------------------------------------------------------
+   One control for two things that have to move together: how
+   many pixels the viewport rasterises into, and how many
+   segments a tyre carries. Raising either alone is a waste —
+   more pixels on a faceted silhouette resolves the facets, and
+   more segments behind a 1x buffer are never seen.
+   ============================================================ */
+
+function setupRenderPanel() {
+    const tierSel = /** @type {HTMLSelectElement} */ ($('g3-render-tier'));
+    if (!tierSel) return;
+
+    for (const [key, t] of Object.entries(RENDER_TIERS)) {
+        const o = document.createElement('option');
+        o.value = key;
+        o.textContent = t.label;
+        o.title = t.note;
+        tierSel.appendChild(o);
+    }
+    tierSel.value = app.store.view.renderTier;
+    tierSel.addEventListener('change', () => {
+        app.store.view.renderTier = tierSel.value;
+        app.viewport.setRenderTier(tierSel.value);
+        // The tier carries a geometry floor, so the assembly has to be rebuilt
+        // — the segment count is baked into the buffers, not a render flag.
+        rebuild();
+        renderResolutionReadout();
+        scheduleAutosave();
+    });
+
+    const geo = /** @type {HTMLSelectElement} */ ($('g3-geometry'));
+    geo.value = app.store.view.quality || 'auto';
+    geo.addEventListener('change', () => {
+        app.store.view.quality = geo.value;
+        rebuild();
+        scheduleAutosave();
+    });
+
+    app.viewport.setRenderTier(app.store.view.renderTier);
+    renderResolutionReadout();
+}
+
+/**
+ * What is actually being rasterised. Worth showing rather than promising:
+ * the ratio depends on the viewport's CSS width, the display's own pixel
+ * ratio and what the GL context will allocate, so "Ultra" does not mean the
+ * same number of pixels on two different machines — and a reader who asked
+ * for UHD is entitled to check whether they got it.
+ */
+function renderResolutionReadout() {
+    const el = $('g3-res-value');
+    const note = $('g3-res-note');
+    if (!el || !app.viewport) return;
+    const r = app.viewport.renderResolution();
+    el.textContent = `${r.width} × ${r.height}`;
+    const mp = r.megapixels;
+    const tier = RENDER_TIERS[app.store.view.renderTier];
+    const uhd = r.width >= 3840 * 0.95;
+    note.textContent = `${mp.toFixed(1)} MP · ${r.ratio.toFixed(2)}× the viewport`
+        + (uhd ? ' · UHD' : '');
+    note.classList.toggle('is-uhd', uhd);
+    el.title = tier ? tier.note : '';
+
+    // Mirror it into the status strip. The Rendering panel is collapsed by
+    // default, and whether the viewport is actually at UHD should not be a
+    // question that requires opening a panel to answer.
+    const strip = $('g3-status-res');
+    if (strip) {
+        strip.textContent = `${r.width}×${r.height}`;
+        strip.classList.toggle('is-uhd', uhd);
+    }
+}
+
 function setupUnitPanel() {
     // Changing Domain or Class must LOAD something, not merely repopulate the
     // Model list. Without autoLoad the Model dropdown shows one vehicle while
@@ -1100,30 +1189,62 @@ function setupUnitPanel() {
 }
 
 /**
+ * Every configuration FAA Order 5300.7 names, in the order it draws them:
+ * Figure 2's twelve generic cells, then the Table 3 rows that Figure 2 does
+ * not already cover, in figure order. Twenty-one in all.
+ */
+const CONVENTIONS = (() => {
+    const out = genericConfigurations(3);
+    const seen = new Set(out);
+    for (const r of [...FAA_TABLE_3].sort((a, b) => a.figure - b.figure)) {
+        if (seen.has(r.code)) continue;
+        seen.add(r.code);
+        out.push(r.code);
+    }
+    return Object.freeze(out);
+})();
+
+/**
  * Units the Domain selector's current value refers to.
  *
- * `generic` is a UI domain, not a data one. Its members are aircraft — they
- * validate as aircraft, resolve as aircraft and export as aircraft — but they
- * are drawings of a gear NAME rather than models of a machine, and putting
- * them in the same list as a measured 747 would invite exactly the confusion
- * the schematic flag exists to prevent. They are separated in the picker and
- * nowhere else.
+ * `generic` is a UI domain, not a data one. It lists ONE ENTRY PER CONVENTION —
+ * all twenty-one of them — rather than one per schematic unit, and that
+ * distinction was a real defect: five codes (D, 2D, 3D, 2D/2D2, 2D/3D2) are
+ * answered by a measured aircraft rather than a schematic, so listing only the
+ * schematics silently dropped them from a list headed "Gear configuration".
+ * Someone looking for 2D found nothing, in the one place in the app that
+ * exists to enumerate the convention.
+ *
+ * Where a code has both, the MEASURED aircraft wins. A drawing of a 747 is
+ * strictly worse than the 747, and the catalogue thumbnails already give the
+ * one-scale comparison that a set of schematics would have provided.
  *
  * @param {string} domain 'truck' | 'aircraft' | 'generic'
  * @returns {object[]}
  */
 function poolFor(domain) {
     if (domain === 'truck') return app.library.trucks;
-    const schematic = (u) => u.kind === 'schematic';
-    return domain === 'generic'
-        ? app.library.aircraft.filter(schematic)
-        : app.library.aircraft.filter((u) => !schematic(u));
+    if (domain === 'aircraft') return app.library.aircraft.filter((u) => u.kind !== 'schematic');
+    return CONVENTIONS.map((code) => unitsForCode(code)[0]).filter(Boolean);
 }
 
-/** The Domain value that shows a given unit. @param {object} u @returns {string} */
-function domainOf(u) {
+/**
+ * The Domain value that shows a given unit.
+ *
+ * Sticky on `generic`: a reader who picked "2D" out of the convention list gets
+ * the 757-200, and flipping the Domain to Aircraft under them would move the
+ * list they were reading out from under their cursor. What they chose was the
+ * convention, so that is the list they stay in.
+ *
+ * @param {object} u
+ * @param {string} [current] the Domain value showing now
+ * @returns {string}
+ */
+function domainOf(u, current) {
     if (u.domain === 'truck') return 'truck';
-    return u.kind === 'schematic' ? 'generic' : 'aircraft';
+    if (u.kind === 'schematic') return 'generic';
+    if (current === 'generic' && CONVENTIONS.includes(u.gearDesignation)) return 'generic';
+    return 'aircraft';
 }
 
 function syncCategories() {
@@ -1146,8 +1267,13 @@ function syncCategories() {
     }
 
     if (label) label.textContent = 'Gear code';
-    const pool = poolFor(domain);
-    const codes = [...new Set(pool.map((u) => u.gearDesignation))];
+    // On the convention domain the list is the CONVENTION, not the inventory:
+    // it must show every code the Order names, in the Order's own drawing
+    // order, whether this library answers it with a measured aircraft or a
+    // schematic. Deriving it from the loaded units is what dropped five codes.
+    const codes = domain === 'generic'
+        ? CONVENTIONS.slice()
+        : [...new Set(poolFor(domain).map((u) => u.gearDesignation))];
     const opt = document.createElement('option');
     opt.value = '';
     opt.textContent = codes.length
@@ -1195,10 +1321,12 @@ function syncUnits(opts = {}) {
         o.textContent = domain === 'truck'
             ? `${u.designation} — ${u.bodyType}`
             : domain === 'generic'
-                // The manufacturer field on a schematic reads "FAA Order
-                // 5300.7", which would be repeated down the whole list; the
-                // model already carries the code and its prose.
-                ? u.model
+                // Lead with the CODE, because the code is what this list is
+                // enumerating, then say what answers it. A convention answered
+                // by a measured aircraft has to name that aircraft or the
+                // reader cannot tell what they are about to load.
+                ? `${u.gearDesignation} — ${describeGearCode(u.gearDesignation).replace(/ main gear$/, '')}`
+                    + (u.kind === 'schematic' ? '  · schematic' : `  · ${u.manufacturer} ${u.model}`)
                 : `${u.manufacturer} ${u.model} (${u.gearDesignation})`;
         sel.appendChild(o);
     }
@@ -1217,8 +1345,8 @@ function syncUnits(opts = {}) {
 function syncUnitSelectors() {
     const u = app.store.doc.unit;
     if (!u) return;
-    const domain = domainOf(u);
     const prevDomain = $('g3-domain').value;
+    const domain = domainOf(u, prevDomain);
     const prevCat = $('g3-category').value;
 
     $('g3-domain').value = domain;
@@ -2690,6 +2818,8 @@ function applyProject(p) {
         annotations: p.view?.annotations !== false,
         showGrid: p.view?.showGrid !== false,
         materials: p.view?.materials || {},
+        quality: p.view?.quality || 'auto',
+        renderTier: p.view?.renderTier || defaultView().renderTier,
         isolation: p.view?.isolation || defaultIsolation(),
         patchModel: p.contact?.model || 'rectangular',
         inflationKpa: p.contact?.inflationKpa ?? DEFAULT_INFLATION_KPA,

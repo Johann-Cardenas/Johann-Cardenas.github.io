@@ -72,7 +72,9 @@ export async function renderSupersampled(viewport, opts) {
     const out = document.createElement('canvas');
     out.width = opts.width;
     out.height = opts.height;
-    const ctx = out.getContext('2d');
+    // willReadFrequently: isBlank() samples this context pixel by pixel, and
+    // without the hint the browser keeps it GPU-backed and reads back each time.
+    const ctx = out.getContext('2d', { willReadFrequently: true });
     if (!ctx) throw new Error('Could not obtain a 2D context for downsampling.');
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
@@ -123,7 +125,9 @@ export async function renderToCanvas(viewport, opts) {
     const out = document.createElement('canvas');
     out.width = width;
     out.height = height;
-    const ctx = out.getContext('2d');
+    // willReadFrequently: isBlank() samples this context pixel by pixel, and
+    // without the hint the browser keeps it GPU-backed and reads back each time.
+    const ctx = out.getContext('2d', { willReadFrequently: true });
     if (!ctx) throw new Error('Could not obtain a 2D context for the export canvas.');
 
     if (!transparent) {
@@ -245,7 +249,7 @@ export async function compositeOverlay(canvas, overlay, geom) {
 
     try {
         const img = await loadImage(url);
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.drawImage(img, 0, 0, geom.width, geom.height);
     } finally {
         URL.revokeObjectURL(url);

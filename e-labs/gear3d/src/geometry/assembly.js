@@ -47,7 +47,7 @@ export const MM_TO_SCENE = 0.001;
 /**
  * @param {import('../core/layout.js').Layout} layout
  * @param {import('../scene/materials.js').MaterialLibrary} materials
- * @param {{ghost?: boolean, showAxles?: boolean, radialSegments?: number}} [opts]
+ * @param {{ghost?: boolean, showAxles?: boolean, radialSegments?: number, quality?: string, minQuality?: string}} [opts]
  * @returns {Assembly}
  */
 export function buildAssembly(layout, materials, opts = {}) {
@@ -80,7 +80,7 @@ export function buildAssembly(layout, materials, opts = {}) {
     // Detail is chosen from how many tires actually have to be rasterised,
     // so a single isolated axle gets the full treatment and a 34-tire
     // turnpike double stays interactive.
-    const quality = pickQuality(layout.wheels.length, opts.quality);
+    const quality = pickQuality(layout.wheels.length, opts.quality, opts.minQuality);
 
     /** @type {Map<string, import('../core/layout.js').Wheel[]>} */
     const byKind = new Map();

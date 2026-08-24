@@ -66,7 +66,9 @@ export class LightingRig {
         this.rim = new THREE.DirectionalLight(0xffffff, 0.0);
 
         this.key.castShadow = true;
-        this.key.shadow.mapSize.set(2048, 2048);
+        /** Baseline the softness radius is calibrated against — see setShadowMapSize. */
+        this.shadowMapSize = 2048;
+        this.key.shadow.mapSize.set(this.shadowMapSize, this.shadowMapSize);
         this.key.shadow.bias = -0.0006;
         this.key.shadow.normalBias = 0.02;
 
@@ -137,11 +139,41 @@ export class LightingRig {
 
         // Shadow softness is expressed in the same 0-12 range as
         // Cross-Section Studio; three.js maps it to PCF radius.
-        this.key.shadow.radius = Math.max(1, s.shadowSoftness);
+        //
+        // The radius is in SHADOW TEXELS, so the same number gives a visibly
+        // crisper edge on a bigger map. Scaling by the map size keeps the
+        // softness the user asked for looking the same at every render tier,
+        // which is the whole point of raising the map: more samples across the
+        // same penumbra, not a different penumbra.
+        this.key.shadow.radius = Math.max(1, s.shadowSoftness) * (this.shadowMapSize / 2048);
         this.key.castShadow = s.groundShadow;
 
         this._place();
         if (this.ground) this.ground.material.opacity = s.shadowOpacity;
+    }
+
+    /**
+     * Resize the shadow map. Driven by the render tier: a 4K drawing buffer
+     * resolves shadow-map aliasing that a 2048 map hides at 1x, so the map has
+     * to grow with the buffer or the crisper render just shows its stairsteps
+     * more clearly.
+     *
+     * three.js allocates the depth target lazily and caches it, so the old one
+     * must be disposed or the new size is ignored.
+     *
+     * @param {number} size
+     */
+    setShadowMapSize(size) {
+        const n = Math.max(512, Math.min(8192, Math.round(size)));
+        if (n === this.shadowMapSize) return;
+        this.shadowMapSize = n;
+        this.key.shadow.mapSize.set(n, n);
+        if (this.key.shadow.map) {
+            this.key.shadow.map.dispose();
+            this.key.shadow.map = null;
+        }
+        // Re-apply so the softness radius is recalculated against the new map.
+        if (this.state) this.apply(this.state);
     }
 
     /** Reposition the lights from the current azimuth/elevation. */
