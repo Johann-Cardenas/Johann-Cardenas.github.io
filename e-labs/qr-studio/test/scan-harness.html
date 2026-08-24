@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>QR Studio — scan harness</title>
+<style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; background: #0f1720; color: #dfe7ee; }
+    h1 { font-size: 18px; }
+    #summary { padding: 12px 16px; border-radius: 8px; background: #16202b; margin-bottom: 16px; font-weight: 600; }
+    #summary.ok { color: #4cb583; }
+    #summary.bad { color: #e06c7c; }
+    table { border-collapse: collapse; font-size: 12px; width: 100%; }
+    td, th { padding: 4px 8px; border-bottom: 1px solid #253340; text-align: left; }
+    .pass { color: #4cb583; }
+    .fail { color: #e06c7c; font-weight: 700; }
+</style>
+</head>
+<body>
+<h1>QR Studio — rendered-output scan harness</h1>
+<p>Renders styled codes through the real pipeline and decodes the resulting pixels with jsQR, an independent
+image-based decoder. This is what the Node suite cannot check: that a <em>styled</em> symbol still reads.</p>
+<div id="summary">Running…</div>
+<table id="rows"><thead><tr><th>Case</th><th>Result</th><th>Detail</th></tr></thead><tbody></tbody></table>
+
+<script src="../qrcode.js"></script>
+<script src="../render.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+(function () {
+    'use strict';
+    var QR = window.QRCodeEngine, R = window.QRRender;
+    var results = [];
+
+    function baseStyle(over) {
+        var s = {
+            margin: 4,
+            moduleShape: 'square',
+            eyeFrameShape: 'square',
+            eyeBallShape: 'square',
+            fg: { type: 'solid', color: '#0f172a' },
+            bg: { type: 'solid', color: '#ffffff' },
+            eyeFrameColor: null,
+            eyeBallColor: null,
+            logo: { enabled: false, size: 0.22, padding: 1, shape: 'rounded', bgColor: '#ffffff', excavate: true, clip: true },
+            frame: { style: 'none', text: 'SCAN ME', font: 'source-sans', fontWeight: '700', fontSize: 3, letterSpacing: 0, color: '#0f172a', textColor: '#ffffff' }
+        };
+        if (over) Object.keys(over).forEach(function (k) {
+            if (over[k] && typeof over[k] === 'object' && !Array.isArray(over[k]) && s[k] && typeof s[k] === 'object') {
+                Object.keys(over[k]).forEach(function (j) { s[k][j] = over[k][j]; });
+            } else s[k] = over[k];
+        });
+        return s;
+    }
+
+    // Sizes are swept deliberately. jsQR thresholds 8x8 pixel blocks, so a
+    // single render size can pass or fail on how module size happens to align
+    // with that grid — decoding at one size proves very little. A style that
+    // reads at every size has real margin.
+    var SIZES = [340, 500, 700, 1000, 1400];
+
+    function renderAt(sym, style, target) {
+        var lay = R.computeLayout(sym, style);
+        var scale = target / lay.width;
+        var c = document.createElement('canvas');
+        c.width = Math.round(lay.width * scale);
+        c.height = Math.round(lay.height * scale);
+        var ctx = c.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, c.width, c.height);
+        R.render(sym, style, new R.CanvasSurface(ctx, scale), lay, {});
+        return { canvas: c, ctx: ctx, layout: lay, scale: scale };
+    }
+
+    /** How many module centres render the wrong colour — a structural check. */
+    function centreMisses(sym, style) {
+        var r = renderAt(sym, style, 900);
+        var img = r.ctx.getImageData(0, 0, r.canvas.width, r.canvas.height).data;
+        var miss = 0;
+        for (var y = 0; y < sym.size; y++) {
+            for (var x = 0; x < sym.size; x++) {
+                var cx = Math.floor((r.layout.qrX + x + 0.5) * r.scale);
+                var cy = Math.floor((r.layout.qrY + y + 0.5) * r.scale);
+                var dark = img[(cy * r.canvas.width + cx) * 4] < 128;
+                if (dark !== sym.modules[y][x]) miss++;
+            }
+        }
+        return miss;
+    }
+
+    function run(label, payload, style, ecl, sizes) {
+        var sym = QR.encode(payload, { ecl: ecl || 'M', boostEcl: false });
+        var list = sizes || SIZES;
+        var pass = 0, notes = [];
+        list.forEach(function (px) {
+            var r = renderAt(sym, style, px);
+            var img = r.ctx.getImageData(0, 0, r.canvas.width, r.canvas.height);
+            var got = jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
+            if (got && got.data === payload) pass++;
+            else notes.push(px + (got ? 'px:wrong' : 'px:none'));
+        });
+        var miss = centreMisses(sym, style);
+        results.push({
+            label: label,
+            ok: pass === list.length,
+            pass: pass,
+            of: list.length,
+            miss: miss,
+            detail: pass + '/' + list.length + ' sizes' +
+                (miss ? ' · ' + miss + ' centre deviations' : '') +
+                (notes.length ? ' · ' + notes.join(' ') : '')
+        });
+    }
+
+    var URL1 = 'https://www.johanncardenas.com/e-labs/qr-studio/';
+
+    // Every module shape.
+    Object.keys(R.MODULE_SHAPES).forEach(function (m) {
+        run('module: ' + m, URL1, baseStyle({ moduleShape: m }));
+    });
+
+    // Every eye frame and eye ball shape.
+    Object.keys(R.EYE_FRAME_SHAPES).forEach(function (e) {
+        run('eye frame: ' + e, URL1, baseStyle({ moduleShape: 'fluid', eyeFrameShape: e }));
+    });
+    Object.keys(R.EYE_BALL_SHAPES).forEach(function (e) {
+        run('eye ball: ' + e, URL1, baseStyle({ moduleShape: 'fluid', eyeBallShape: e }));
+    });
+
+    // Every frame style, with a caption.
+    Object.keys(R.FRAMES).forEach(function (f) {
+        run('frame: ' + f, URL1, baseStyle({
+            moduleShape: 'rounded', eyeFrameShape: 'rounded', eyeBallShape: 'rounded',
+            frame: { style: f, text: 'SCAN ME' }
+        }));
+    });
+
+    // Gradients and inverted colour.
+    run('gradient linear', URL1, baseStyle({
+        moduleShape: 'fluid',
+        fg: { type: 'linear', angle: 45, stops: [{ offset: 0, color: '#0d7f7e' }, { offset: 1, color: '#312e81' }] }
+    }));
+    run('gradient radial', URL1, baseStyle({
+        moduleShape: 'fluid',
+        fg: { type: 'radial', stops: [{ offset: 0, color: '#0f172a' }, { offset: 1, color: '#0d7f7e' }] }
+    }));
+    run('inverted', URL1, baseStyle({
+        moduleShape: 'fluid',
+        fg: { type: 'solid', color: '#e2e8f0' },
+        bg: { type: 'solid', color: '#0f172a' }
+    }));
+
+    // Excavated logo region at level H, across sizes.
+    [0.18, 0.25, 0.30].forEach(function (sz) {
+        run('logo hole ' + Math.round(sz * 100) + '% @H', URL1, baseStyle({
+            moduleShape: 'fluid',
+            logo: { enabled: true, size: sz, padding: 1, excavate: true }
+        }), 'H');
+    });
+
+    // Quiet-zone floor and a long payload at a high version.
+    run('margin 2', URL1, baseStyle({ margin: 2, moduleShape: 'fluid' }));
+    run('long payload v10+', URL1 + '?' + 'x'.repeat(400), baseStyle({ moduleShape: 'fluid' }), 'M');
+
+    // A dense symbol at a small render size — the print-shrink case.
+    run('dense small sizes', URL1 + '?' + 'y'.repeat(200), baseStyle({ moduleShape: 'fluid' }), 'M', [300, 420, 600]);
+
+    var bad = results.filter(function (r) { return !r.ok; });
+    var sum = document.getElementById('summary');
+    sum.className = bad.length ? 'bad' : 'ok';
+    sum.textContent = (results.length - bad.length) + ' / ' + results.length + ' rendered codes decoded' +
+        (bad.length ? '  —  FAILURES: ' + bad.map(function (r) { return r.label; }).join(', ') : '  —  all good');
+
+    var tb = document.querySelector('#rows tbody');
+    results.forEach(function (r) {
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + r.label + '</td><td class="' + (r.ok ? 'pass' : 'fail') + '">' +
+            (r.ok ? 'PASS' : 'FAIL') + '</td><td>' + r.detail + '</td>';
+        tb.appendChild(tr);
+    });
+
+    window.__harness = { total: results.length, failed: bad.length, failures: bad };
+})();
+</script>
+</body>
+</html>

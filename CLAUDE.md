@@ -82,7 +82,7 @@ assets/js/           Frontend JS (components.js, search.js, theme-toggle.js, etc
 data/                JSON content store (navigation, blog-posts, news, projects, footer, site-config, github)
 blog/                Individual blog post HTML (Liquid-processed by Jekyll)
 projects/            Detailed project pages
-e-labs/              Interactive web apps (Gear3D, LEAPS, Cross-Section Studio, Finite-Elemented, Frontier, AirCrafter, Asphera) + Python preprocessing
+e-labs/              Interactive web apps (Gear3D, QR Studio, LEAPS, Cross-Section Studio, Finite-Elemented, Frontier, AirCrafter, Asphera) + Python preprocessing
 images/              All media assets organized by section
 documents/           PDFs (resume, etc.)
 scripts/             Build / content-refresh utilities (fetch-github-data.mjs)
@@ -199,6 +199,14 @@ ASCE2025, ATLAS, Datathon2024, Fulbright, Graduation, ISAP2024, TRB2022-2026, Vi
 ACRP_FEM (password-protected), EV_Trucks, FAA_Data, MS_Thesis
 
 ### E-Labs apps (`e-labs/`)
+- **QR Studio** (`e-labs/qr-studio/`) — Designed QR code generator, public. App **v1.0**. Four plain `<script>` files, no bundler and no runtime dependency: `qrcode.js` (UMD encoder) + `render.js` (styling/layout) + `app.js` (UI) + `styles.css`.
+  - **The encoder is ours, to ISO/IEC 18004** — segment encoding, Reed-Solomon over GF(256) (0x11D, narrow-sense, roots a^0..a^(n-1)), block interleaving, function patterns, mask selection by penalty score, BCH format/version info. Block geometry follows Nayuki's formulation (two short tables + derived short/long split) rather than transcribing ~500 magic numbers.
+  - **Testing is two-layer, and both layers matter.** `test/test-qr.cjs` (397 checks, `node test/test-qr.cjs`) carries an *independent decoder* — it reads format info back out of the matrix, unmasks, walks the zigzag, de-interleaves, checks every Reed-Solomon syndrome is zero, and parses the payload; round-trips 4 ECLs x 17 payloads plus 250 random ones plus all 8 masks. `test/scan-harness.html` (open in a browser) renders styled codes through the real pipeline and decodes the *pixels* with jsQR at five sizes — the Node suite cannot tell you a styled code stopped scanning.
+  - **`SHAPE_RISK` in `render.js` is measured data, not opinion** — how many of five render sizes jsQR read back per shape. Rerun the harness and update it if shapes change. Circular/leaf eye centres score 0/5 because a circle inscribed in the finder's 3x3 core narrows to ~2.2 modules off-centre and strict locators reject the 1:1:3:1:1 ratio; they are kept because phone cameras tolerate them, and the readability panel says so explicitly. The same harness run against qr-code-styling shows the same pattern, so this is decoder tolerance, not a defect here. `diamond` was removed outright (1/5).
+  - **One geometry pass, two backends.** All layout is in module units and emitted through a surface interface; `CanvasSurface` (preview/PNG/JPEG) and `SvgSurface` (vector export) consume it. Verified equal to **0 differing pixels of 360,000**. Curves are cubic beziers only — arcs would need per-backend code. PNG text is drawn with canvas `fillText` so webfonts work; SVG emits real `<text>`.
+  - 8 module shapes, 6 eye-frame + 5 eye-centre shapes, 9 frames (caption/bubble/card/badge...), solid+linear+radial fills, logo upload with module excavation (raises ECL to H automatically), 8 presets, 6 content types (link/text/email/phone/SMS/Wi-Fi), hex fields on every colour, undo/redo, localStorage autosave, `.qrstudio.json` save/load, PNG/JPEG/SVG export, clipboard copy with and without background, and a **Test decode** button that runs jsQR (lazy-loaded from CDN, degrades gracefully offline) over the rendered pixels at four sizes.
+  - Nothing leaves the browser — no API, no upload; the payload and logo stay on the page.
+  - NOTE: site FontAwesome is **FA5**; site-wide `button` CSS (incl. `color:#fff !important`) requires the `.QrStudio`-scoped override block at the end of `styles.css` — every new button class needs a line there.
 - **Gear3D** (`e-labs/gear3d/`) — True-to-scale 3D visualizer of truck axle configurations and aircraft landing gear (Three.js ES modules via CDN import map), public. App **v1.10**. Modular: `main.js` (single DOM controller, deliberately — see DECISIONS.md) + `src/core` (schema, layout, tires, units, coords, gearcode, prng, store, bridge) + `src/geometry`, `src/scene`, `src/annotate`, `src/contact`, `src/io`, `src/views`. **The whole app is a provenance claim**: every geometry-bearing number carries a `source` string or a `{value,unit,basis}` quantity, a value that had to be chosen rather than read must appear in the unit's `assumedFields[]`, and `test/run.mjs` (176 checks, `npm test`) FAILS THE BUILD when one does not — including a negative control that the validator actually rejects. Never add a number without a citation; `null` is the correct answer for an unknown. Library: 22 FHWA-classified trucks + 7 measured aircraft + 16 FAA gear configurations. **FAA Order 5300.7 nomenclature** (`src/core/gearcode.js`) is implemented as a GRAMMAR, not a lookup table — parse/format/describe/wheel-count/wheel-plan, Table 3 transcribed with the historic FAA/USAF/Navy concordance, validation by parsing so open-ended names like `9Q` are legal. Gear catalogue overlay (`C`), designation panel listing **all 21 conventions** (measured aircraft preferred over schematics), quad view **is the default** (`V`+`1`; the four panes share one ortho scale), **adaptive UHD rendering** (`RENDER_TIERS` in `scene/renderer.js` — a 3840px drawing buffer on Ultra, dropping to 1.25x during interaction and restoring 220ms after settle; the tier also sets the tyre-segment floor and shadow-map size). The render loop compares camera state itself because `OrbitControls.update()` returns true every frame with damping on. Measurement snapping, contact-patch models + FEM/CSV export, PNG/JPEG/SVG/PDF figure export, glTF/OBJ geometry export in the engineering frame (mm), `.gear3d` project save/load, undo/redo. Aircraft geometry is corroborated against the FAARFIELD 2.1.1 library in `../FAARFIELD-2.1.1/FF2/Defaults/Aircraft/aircraft.xml` (read-only, another agent's repo). NOTE: site-wide `button` CSS requires the `body.Gear3D` override block near the end of `styles.css` — every new button/card class needs a line there.
 - **Asphera** (`e-labs/asphera/`) — FEM pavement visualizer (Plotly), password-protected
 - **AirCrafter** (`e-labs/aircrafter/`) — Contact stress calculator (Plotly), password-protected
@@ -225,14 +233,14 @@ Which DOM placeholders each page uses (determines which JSON files `components.j
 All pages have hardcoded `<nav>` in HTML — no page uses `#nav-placeholder`.
 
 ## Navigation & Site Map
-- **Top nav**: Home | Projects (dropdown→4) | Publications | Resume | Blog | News | E-Labs (dropdown→7: Gear3D, LEAPS, Cross-Section Studio, Finite-Elemented, Frontier, AirCrafter, Asphera)
+- **Top nav**: Home | Projects (dropdown→4) | Publications | Resume | Blog | News | E-Labs (dropdown→8: Gear3D, QR Studio, LEAPS, Cross-Section Studio, Finite-Elemented, Frontier, AirCrafter, Asphera)
 - All pages share: hardcoded `<nav>` in HTML + dynamic footer via `#footer-placeholder`
 - Subdirectory pages (`blog/`, `projects/`, `e-labs/`) use `../` relative paths for assets
 
 ## E-Labs Architecture
 
-### Responsive ladder (Gear3D, Cross-Section Studio, LEAPS)
-These three are CAD-style workbenches and share one breakpoint ladder, so the same device behaves the same way in each:
+### Responsive ladder (Gear3D, QR Studio, Cross-Section Studio, LEAPS)
+These four are CAD-style workbenches and share one breakpoint ladder, so the same device behaves the same way in each:
 
 | Band | Layout |
 |---|---|

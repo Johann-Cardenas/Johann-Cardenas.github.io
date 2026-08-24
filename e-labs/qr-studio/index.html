@@ -1,0 +1,488 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <script>
+        (function() {
+            // Follow the global site theme; default to dark like other E-Labs apps
+            var theme = localStorage.getItem('theme-preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme-preference', theme);
+        })();
+    </script>
+    <title>QR Studio | Designed QR Code Generator</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+    <!-- Social Sharing: Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="QR Studio | Designed QR Code Generator">
+    <meta property="og:description" content="Generate QR codes from a link and design them end to end — module and eye shapes, gradients, logos, and captioned frames — with a built-in decode check and vector export.">
+    <meta property="og:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_QR-Studio.webp">
+    <meta property="og:url" content="https://www.johanncardenas.com/e-labs/qr-studio/index.html">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="QR Studio | Designed QR Code Generator">
+    <meta name="twitter:description" content="Design-grade QR codes with shapes, gradients, logos and frames — verified by a real decode.">
+    <meta name="twitter:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_QR-Studio.webp">
+
+    <link rel="stylesheet" href="../../assets/css/main.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="canonical" href="https://www.johanncardenas.com/e-labs/qr-studio/">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+<body class="QrStudio is-preload">
+    <div id="page-wrapper">
+
+        <!-- Header -->
+        <section id="header">
+            <h1><a href="../../index.html">Johann Cardenas</a></h1>
+            <nav id="nav">
+                <ul>
+                    <li><a href="../../index.html">Home</a></li>
+                    <li>
+                        <a href="../../Projects.html">Projects</a>
+                        <ul>
+                            <li><a href="../../projects/ACRP_FEM.html">ME Overload Permitting for Airfields</a></li>
+                            <li><a href="../../projects/EV_Trucks.html">Impact of HDEVs on Flexible Pavements</a></li>
+                            <li><a href="../../projects/FAA_Data.html">ML-Based Models for Airfield Pavements</a></li>
+                            <li><a href="../../projects/MS_Thesis.html">Impact of DWL on Flexible Pavements</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="../../Publications.html">Publications</a></li>
+                    <li><a href="../../Resume.html">Resume</a></li>
+                    <li><a href="../../Blog.html">Blog</a></li>
+                    <li><a href="../../News.html">News</a></li>
+                    <li class="current">
+                        <a href="../../E-Labs.html">E-Labs</a>
+                        <ul>
+                            <li><a href="../../e-labs/gear3d/index.html">Gear3D</a></li>
+                            <li><a href="../../e-labs/qr-studio/index.html">QR Studio</a></li>
+                            <li><a href="../../e-labs/leaps/index.html">LEAPS</a></li>
+                            <li><a href="../../e-labs/cross-section-studio/index.html">Cross-Section Studio</a></li>
+                            <li><a href="../../e-labs/finite-elemented/index.html">Finite-Elemented</a></li>
+                            <li><a href="../../e-labs/frontier/index.html">Frontier</a></li>
+                            <li><a href="https://curly-adventure-y724nlw.pages.github.io/apps/aircrafter/" target="_blank" rel="noopener">AirCrafter</a></li>
+                            <li><a href="https://curly-adventure-y724nlw.pages.github.io/apps/asphera/" target="_blank" rel="noopener">Asphera</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </section>
+
+        <!-- Main App -->
+        <section id="main">
+            <div class="qs-app" id="main-content" tabindex="-1">
+
+                <!-- App Header -->
+                <div class="app-header">
+                    <div class="header-nav">
+                        <a href="../../E-Labs.html" class="back-btn">
+                            <i class="fas fa-arrow-left"></i> Back to E-Labs
+                        </a>
+                        <div class="header-badges">
+                            <span class="header-badge"><i class="fas fa-qrcode"></i> ISO/IEC 18004</span>
+                            <span class="header-badge"><i class="fas fa-code-branch"></i> v1.0</span>
+                        </div>
+                    </div>
+                    <div class="header-content">
+                        <h1>
+                            <span class="qs-icon"><i class="fas fa-qrcode"></i></span>
+                            <span>QR <span class="highlight">Studio</span></span>
+                        </h1>
+                        <p>Turn a link into a QR code you would actually put on a poster — shaped modules, gradients, a logo and a captioned frame, checked by a real decode before you ship it.</p>
+                    </div>
+                </div>
+
+                <!-- Studio -->
+                <div class="qs-studio">
+
+                    <!-- Toolbar -->
+                    <div class="qs-toolbar">
+                        <div class="qs-toolbar-group">
+                            <button id="qs-undo" class="qs-btn qs-btn--icon" title="Undo (Ctrl+Z)" aria-label="Undo"><i class="fas fa-undo"></i></button>
+                            <button id="qs-redo" class="qs-btn qs-btn--icon" title="Redo (Ctrl+Shift+Z)" aria-label="Redo"><i class="fas fa-redo"></i></button>
+                            <button id="qs-reset" class="qs-btn" title="Reset to defaults"><i class="fas fa-rotate-left"></i> <span>Reset</span></button>
+                        </div>
+                        <div class="qs-toolbar-group">
+                            <button id="qs-save" class="qs-btn" title="Save design as .qrstudio.json"><i class="fas fa-floppy-disk"></i> <span>Save</span></button>
+                            <button id="qs-load" class="qs-btn" title="Load a saved design"><i class="fas fa-folder-open"></i> <span>Load</span></button>
+                            <input type="file" id="qs-load-input" accept=".json,.qrstudio.json" hidden>
+                        </div>
+                        <div class="qs-toolbar-group qs-toolbar-group--end">
+                            <button id="qs-copy" class="qs-btn" title="Copy PNG to clipboard (Ctrl+Alt+C)"><i class="fas fa-copy"></i> <span>Copy</span></button>
+                            <button id="qs-download" class="qs-btn qs-btn--primary" title="Download"><i class="fas fa-download"></i> <span>Download</span></button>
+                        </div>
+                    </div>
+
+                    <div class="qs-workspace">
+
+                        <!-- ===================== LEFT RAIL ===================== -->
+                        <aside class="qs-rail qs-rail--left">
+
+                            <!-- Content -->
+                            <section class="qs-panel" data-panel="content">
+                                <button class="qs-panel-head" aria-expanded="true">
+                                    <span><i class="fas fa-link"></i> Content</span>
+                                    <i class="fas fa-chevron-down qs-chev"></i>
+                                </button>
+                                <div class="qs-panel-body">
+                                    <div class="qs-seg" id="qs-type" role="tablist" aria-label="Content type">
+                                        <button class="qs-seg-btn is-active" data-type="link">Link</button>
+                                        <button class="qs-seg-btn" data-type="text">Text</button>
+                                        <button class="qs-seg-btn" data-type="email">Email</button>
+                                        <button class="qs-seg-btn" data-type="phone">Phone</button>
+                                        <button class="qs-seg-btn" data-type="sms">SMS</button>
+                                        <button class="qs-seg-btn" data-type="wifi">Wi-Fi</button>
+                                    </div>
+
+                                    <div class="qs-fields" data-fields="link">
+                                        <label class="qs-field">
+                                            <span>Destination URL</span>
+                                            <input type="url" id="qs-link" inputmode="url" spellcheck="false" placeholder="https://www.johanncardenas.com" value="https://www.johanncardenas.com">
+                                        </label>
+                                        <p class="qs-hint" id="qs-link-hint"></p>
+                                    </div>
+
+                                    <div class="qs-fields" data-fields="text" hidden>
+                                        <label class="qs-field">
+                                            <span>Text</span>
+                                            <textarea id="qs-text" rows="3" placeholder="Any text you want encoded"></textarea>
+                                        </label>
+                                    </div>
+
+                                    <div class="qs-fields" data-fields="email" hidden>
+                                        <label class="qs-field"><span>To</span><input type="email" id="qs-email-to" spellcheck="false" placeholder="name@example.com"></label>
+                                        <label class="qs-field"><span>Subject</span><input type="text" id="qs-email-subject" placeholder="Optional"></label>
+                                        <label class="qs-field"><span>Body</span><textarea id="qs-email-body" rows="2" placeholder="Optional"></textarea></label>
+                                    </div>
+
+                                    <div class="qs-fields" data-fields="phone" hidden>
+                                        <label class="qs-field"><span>Phone number</span><input type="tel" id="qs-phone" spellcheck="false" placeholder="+1 555 123 4567"></label>
+                                    </div>
+
+                                    <div class="qs-fields" data-fields="sms" hidden>
+                                        <label class="qs-field"><span>Phone number</span><input type="tel" id="qs-sms-to" spellcheck="false" placeholder="+1 555 123 4567"></label>
+                                        <label class="qs-field"><span>Message</span><textarea id="qs-sms-body" rows="2" placeholder="Optional"></textarea></label>
+                                    </div>
+
+                                    <div class="qs-fields" data-fields="wifi" hidden>
+                                        <label class="qs-field"><span>Network name (SSID)</span><input type="text" id="qs-wifi-ssid" spellcheck="false" placeholder="My Network"></label>
+                                        <label class="qs-field"><span>Password</span><input type="text" id="qs-wifi-pass" spellcheck="false" placeholder="Password"></label>
+                                        <div class="qs-row">
+                                            <label class="qs-field qs-field--grow"><span>Security</span>
+                                                <select id="qs-wifi-auth">
+                                                    <option value="WPA">WPA / WPA2 / WPA3</option>
+                                                    <option value="WEP">WEP</option>
+                                                    <option value="nopass">Open (no password)</option>
+                                                </select>
+                                            </label>
+                                            <label class="qs-check"><input type="checkbox" id="qs-wifi-hidden"> <span>Hidden</span></label>
+                                        </div>
+                                    </div>
+
+                                    <div class="qs-row qs-row--split">
+                                        <label class="qs-field qs-field--grow">
+                                            <span>Error correction</span>
+                                            <select id="qs-ecl">
+                                                <option value="L">L — recovers ~7%</option>
+                                                <option value="M" selected>M — recovers ~15%</option>
+                                                <option value="Q">Q — recovers ~25%</option>
+                                                <option value="H">H — recovers ~30%</option>
+                                            </select>
+                                        </label>
+                                        <label class="qs-field qs-field--grow">
+                                            <span>Quiet zone <b id="qs-margin-val">4</b></span>
+                                            <input type="range" id="qs-margin" min="0" max="8" step="1" value="4">
+                                        </label>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Design tabs -->
+                            <section class="qs-panel qs-panel--tabs" data-panel="design">
+                                <div class="qs-tabs" role="tablist" aria-label="Design">
+                                    <button class="qs-tab is-active" data-tab="modules"><i class="fas fa-th"></i><span>Modules</span></button>
+                                    <button class="qs-tab" data-tab="eyes"><i class="fas fa-bullseye"></i><span>Eyes</span></button>
+                                    <button class="qs-tab" data-tab="colors"><i class="fas fa-palette"></i><span>Colors</span></button>
+                                    <button class="qs-tab" data-tab="logo"><i class="fas fa-image"></i><span>Logo</span></button>
+                                    <button class="qs-tab" data-tab="frame"><i class="fas fa-crop-simple"></i><span>Frame</span></button>
+                                </div>
+
+                                <!-- Modules -->
+                                <div class="qs-tabpane is-active" data-pane="modules">
+                                    <p class="qs-label">Module shape</p>
+                                    <div class="qs-swatches" id="qs-module-shapes"></div>
+                                </div>
+
+                                <!-- Eyes -->
+                                <div class="qs-tabpane" data-pane="eyes">
+                                    <p class="qs-label">Eye frame</p>
+                                    <div class="qs-swatches qs-swatches--eye" id="qs-eye-frame-shapes"></div>
+                                    <p class="qs-label">Eye centre</p>
+                                    <div class="qs-swatches qs-swatches--eye" id="qs-eye-ball-shapes"></div>
+                                    <div class="qs-row qs-row--split">
+                                        <label class="qs-field qs-field--grow">
+                                            <span>Frame colour</span>
+                                            <span class="qs-colorwrap">
+                                                <input type="color" id="qs-eye-frame-color" value="#0f172a">
+                                                <button class="qs-linkbtn" id="qs-eye-frame-reset" type="button">Match code</button>
+                                            </span>
+                                        </label>
+                                        <label class="qs-field qs-field--grow">
+                                            <span>Centre colour</span>
+                                            <span class="qs-colorwrap">
+                                                <input type="color" id="qs-eye-ball-color" value="#0f172a">
+                                                <button class="qs-linkbtn" id="qs-eye-ball-reset" type="button">Match code</button>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Colors -->
+                                <div class="qs-tabpane" data-pane="colors">
+                                    <p class="qs-label">Code colour</p>
+                                    <div class="qs-seg qs-seg--sm" id="qs-fg-type">
+                                        <button class="qs-seg-btn is-active" data-fg="solid">Solid</button>
+                                        <button class="qs-seg-btn" data-fg="linear">Linear</button>
+                                        <button class="qs-seg-btn" data-fg="radial">Radial</button>
+                                    </div>
+                                    <div class="qs-row qs-row--split">
+                                        <label class="qs-field qs-field--grow"><span id="qs-fg1-label">Colour</span><input type="color" id="qs-fg1" value="#0f172a"></label>
+                                        <label class="qs-field qs-field--grow" id="qs-fg2-wrap" hidden><span>Second colour</span><input type="color" id="qs-fg2" value="#18a9a8"></label>
+                                        <button class="qs-btn qs-btn--icon qs-swap" id="qs-fg-swap" type="button" title="Swap the two colours" aria-label="Swap gradient colours" hidden><i class="fas fa-right-left"></i></button>
+                                    </div>
+                                    <div class="qs-palette" id="qs-fg-palette"></div>
+                                    <label class="qs-field" id="qs-fg-angle-wrap" hidden>
+                                        <span>Gradient angle <b id="qs-fg-angle-val">45</b>&deg;</span>
+                                        <input type="range" id="qs-fg-angle" min="0" max="360" step="5" value="45">
+                                    </label>
+
+                                    <p class="qs-label">Background</p>
+                                    <div class="qs-row qs-row--split">
+                                        <label class="qs-field qs-field--grow"><span>Colour</span><input type="color" id="qs-bg" value="#ffffff"></label>
+                                        <label class="qs-check"><input type="checkbox" id="qs-bg-transparent"> <span>Transparent</span></label>
+                                    </div>
+                                    <div class="qs-palette" id="qs-bg-palette"></div>
+                                </div>
+
+                                <!-- Logo -->
+                                <div class="qs-tabpane" data-pane="logo">
+                                    <div class="qs-drop" id="qs-logo-drop" tabindex="0" role="button" aria-label="Add a logo image">
+                                        <i class="fas fa-cloud-arrow-up"></i>
+                                        <p><b>Drop an image</b> or click to browse</p>
+                                        <small>PNG, JPG or SVG — kept entirely in your browser</small>
+                                        <input type="file" id="qs-logo-input" accept="image/*" hidden>
+                                    </div>
+                                    <div class="qs-logo-preview" id="qs-logo-preview" hidden>
+                                        <img id="qs-logo-thumb" alt="Logo preview">
+                                        <div>
+                                            <p id="qs-logo-name">logo.png</p>
+                                            <button class="qs-linkbtn qs-linkbtn--danger" id="qs-logo-remove" type="button">Remove</button>
+                                        </div>
+                                    </div>
+                                    <div id="qs-logo-controls" hidden>
+                                        <label class="qs-field">
+                                            <span>Size <b id="qs-logo-size-val">22</b>% of code</span>
+                                            <input type="range" id="qs-logo-size" min="8" max="40" step="1" value="22">
+                                        </label>
+                                        <label class="qs-field">
+                                            <span>Padding <b id="qs-logo-pad-val">1.0</b> modules</span>
+                                            <input type="range" id="qs-logo-pad" min="0" max="4" step="0.5" value="1">
+                                        </label>
+                                        <div class="qs-row qs-row--split">
+                                            <label class="qs-field qs-field--grow">
+                                                <span>Backing</span>
+                                                <select id="qs-logo-shape">
+                                                    <option value="none">None</option>
+                                                    <option value="square">Square</option>
+                                                    <option value="rounded" selected>Rounded</option>
+                                                    <option value="circle">Circle</option>
+                                                </select>
+                                            </label>
+                                            <label class="qs-field qs-field--grow"><span>Backing colour</span><input type="color" id="qs-logo-bg" value="#ffffff"></label>
+                                        </div>
+                                        <label class="qs-check"><input type="checkbox" id="qs-logo-excavate" checked> <span>Clear modules behind the logo</span></label>
+                                        <p class="qs-hint">Clearing is safer than covering: the decoder sees a clean gap instead of ambiguous pixels.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Frame -->
+                                <div class="qs-tabpane" data-pane="frame">
+                                    <p class="qs-label">Frame style</p>
+                                    <div class="qs-swatches qs-swatches--frame" id="qs-frame-styles"></div>
+                                    <p class="qs-hint" id="qs-frame-none-note">Pick a frame above to add a caption, a border and a phrase.</p>
+                                    <div id="qs-frame-controls">
+                                        <label class="qs-field">
+                                            <span>Frame phrase</span>
+                                            <input type="text" id="qs-frame-text" maxlength="60" placeholder="SCAN ME" value="SCAN ME">
+                                        </label>
+                                        <div class="qs-row qs-row--split">
+                                            <label class="qs-field qs-field--grow">
+                                                <span>Font</span>
+                                                <select id="qs-frame-font"></select>
+                                            </label>
+                                            <label class="qs-field qs-field--grow">
+                                                <span>Weight</span>
+                                                <select id="qs-frame-weight">
+                                                    <option value="400">Regular</option>
+                                                    <option value="600">Semibold</option>
+                                                    <option value="700" selected>Bold</option>
+                                                </select>
+                                            </label>
+                                        </div>
+                                        <div class="qs-row qs-row--split">
+                                            <label class="qs-field qs-field--grow">
+                                                <span>Size <b id="qs-frame-size-val">3.0</b></span>
+                                                <input type="range" id="qs-frame-size" min="1.5" max="6" step="0.1" value="3">
+                                            </label>
+                                            <label class="qs-field qs-field--grow">
+                                                <span>Tracking <b id="qs-frame-track-val">0.0</b></span>
+                                                <input type="range" id="qs-frame-track" min="0" max="1" step="0.05" value="0">
+                                            </label>
+                                        </div>
+                                        <div class="qs-row qs-row--split">
+                                            <label class="qs-field qs-field--grow"><span>Frame colour</span><input type="color" id="qs-frame-color" value="#0f172a"></label>
+                                            <label class="qs-field qs-field--grow"><span>Text colour</span><input type="color" id="qs-frame-text-color" value="#ffffff"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </aside>
+
+                        <!-- ===================== STAGE ===================== -->
+                        <div class="qs-stage">
+                            <div class="qs-stage-inner">
+                                <div class="qs-canvas-wrap" id="qs-canvas-wrap">
+                                    <canvas id="qs-canvas" aria-label="QR code preview" role="img"></canvas>
+                                    <div class="qs-empty" id="qs-empty" hidden>
+                                        <i class="fas fa-link-slash"></i>
+                                        <p><b>Nothing to encode yet</b></p>
+                                        <small id="qs-empty-hint">Enter a destination URL to see your code.</small>
+                                    </div>
+                                </div>
+                                <div class="qs-stage-meta" id="qs-stage-meta">
+                                    <span id="qs-meta-version">—</span>
+                                    <span id="qs-meta-ecl">—</span>
+                                    <span id="qs-meta-bytes">—</span>
+                                </div>
+                                <p class="qs-stage-error" id="qs-stage-error" hidden></p>
+                            </div>
+                        </div>
+
+                        <!-- ===================== RIGHT RAIL ===================== -->
+                        <aside class="qs-rail qs-rail--right">
+
+                            <!-- Presets -->
+                            <section class="qs-panel" data-panel="presets">
+                                <button class="qs-panel-head" aria-expanded="true">
+                                    <span><i class="fas fa-wand-magic-sparkles"></i> Presets</span>
+                                    <i class="fas fa-chevron-down qs-chev"></i>
+                                </button>
+                                <div class="qs-panel-body">
+                                    <div class="qs-presets" id="qs-presets"></div>
+                                </div>
+                            </section>
+
+                            <!-- Readability -->
+                            <section class="qs-panel" data-panel="check">
+                                <button class="qs-panel-head" aria-expanded="true">
+                                    <span><i class="fas fa-shield-halved"></i> Readability</span>
+                                    <i class="fas fa-chevron-down qs-chev"></i>
+                                </button>
+                                <div class="qs-panel-body">
+                                    <div class="qs-score" role="status" aria-live="polite">
+                                        <div class="qs-score-ring" id="qs-score-ring">
+                                            <svg viewBox="0 0 44 44" aria-hidden="true">
+                                                <circle class="qs-ring-bg" cx="22" cy="22" r="19"></circle>
+                                                <circle class="qs-ring-fg" cx="22" cy="22" r="19" id="qs-ring-fg"></circle>
+                                            </svg>
+                                            <b id="qs-score-num">—</b>
+                                        </div>
+                                        <div class="qs-score-text">
+                                            <p id="qs-score-label">Checking…</p>
+                                            <small id="qs-score-contrast"></small>
+                                        </div>
+                                    </div>
+                                    <ul class="qs-issues" id="qs-issues"></ul>
+                                    <button class="qs-btn qs-btn--wide" id="qs-verify"><i class="fas fa-camera"></i> Test decode</button>
+                                    <p class="qs-verify-out" id="qs-verify-out" hidden></p>
+                                </div>
+                            </section>
+
+                            <!-- Export -->
+                            <section class="qs-panel" data-panel="export">
+                                <button class="qs-panel-head" aria-expanded="true">
+                                    <span><i class="fas fa-file-export"></i> Export</span>
+                                    <i class="fas fa-chevron-down qs-chev"></i>
+                                </button>
+                                <div class="qs-panel-body">
+                                    <div class="qs-seg qs-seg--sm" id="qs-format">
+                                        <button class="qs-seg-btn is-active" data-format="png">PNG</button>
+                                        <button class="qs-seg-btn" data-format="svg">SVG</button>
+                                        <button class="qs-seg-btn" data-format="jpeg">JPEG</button>
+                                    </div>
+                                    <label class="qs-field" id="qs-size-wrap">
+                                        <span>Width <b id="qs-size-val">1024</b> px</span>
+                                        <input type="range" id="qs-size" min="256" max="4096" step="128" value="1024">
+                                    </label>
+                                    <p class="qs-hint" id="qs-export-hint">SVG is vector — resolution independent, ideal for print.</p>
+                                    <p class="qs-hint qs-print-hint" id="qs-print-hint"></p>
+                                    <label class="qs-field">
+                                        <span>File name</span>
+                                        <input type="text" id="qs-filename" spellcheck="false" value="qr-code">
+                                    </label>
+                                    <div class="qs-export-actions">
+                                        <button class="qs-btn qs-btn--primary qs-btn--wide" id="qs-download-2"><i class="fas fa-download"></i> Download</button>
+                                        <div class="qs-row">
+                                            <button class="qs-btn qs-btn--grow" id="qs-copy-2"><i class="fas fa-copy"></i> Copy</button>
+                                            <button class="qs-btn qs-btn--grow" id="qs-copy-nobg"><i class="fas fa-clone"></i> Copy (no bg)</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </aside>
+                    </div>
+
+                    <!-- About -->
+                    <div class="qs-about">
+                        <p>
+                            <b>How this works.</b> The symbol is built here in your browser to ISO/IEC 18004 — segment
+                            encoding, Reed-Solomon error correction, and mask selection by penalty score — then drawn
+                            through one geometry pass that feeds both the on-screen canvas and the vector export, so
+                            what you see is what you ship. Nothing is uploaded: your link and your logo never leave
+                            this page. <b>Test decode</b> runs an actual image-based decoder over the rendered pixels,
+                            which is the only honest way to know a styled code still scans.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <div id="footer-placeholder"></div>
+
+    </div>
+
+    <div class="qs-toast-wrap" id="qs-toast-wrap"></div>
+
+    <!-- App -->
+    <script src="qrcode.js"></script>
+    <script src="render.js"></script>
+    <script src="app.js"></script>
+
+    <!-- Site scripts -->
+    <script src="../../assets/js/components.js"></script>
+    <script src="../../assets/js/jquery.min.js"></script>
+    <script src="../../assets/js/jquery.dropotron.min.js"></script>
+    <script src="../../assets/js/breakpoints.min.js"></script>
+    <script src="../../assets/js/util.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/theme-toggle.js"></script>
+    <script src="../../assets/js/back-to-top.js"></script>
+</body>
+</html>
