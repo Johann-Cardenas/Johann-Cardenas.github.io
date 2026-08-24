@@ -50,7 +50,21 @@
     --qs-shadow: 0 1px 2px rgba(0, 0, 0, 0.30), 0 10px 28px rgba(0, 0, 0, 0.28);
 }
 
+/* App shell — matches the other E-Labs workbenches so the whole set frames
+   the same way on a wide screen (Cross-Section Studio 1500, Gear3D 1620,
+   LEAPS 1660). Without the cap this page ran the full width of #main and
+   read as a different site. */
+/* The `hidden` attribute only carries the UA's `display: none`, which any
+   author `display` rule outranks. Much of this app is display:flex/block and
+   is shown or hidden from script — without this the empty state, the second
+   gradient colour, the logo dropzone and its preview would all stay visible
+   while script believed them hidden. Scoped, so it cannot leak site-wide. */
+.QrStudio [hidden] { display: none !important; }
+
 .qs-app {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 0 1rem 2rem;
     color: var(--qs-ink);
     font-size: 1rem;
     line-height: 1.55;

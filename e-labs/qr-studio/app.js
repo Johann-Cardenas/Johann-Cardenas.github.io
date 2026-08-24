@@ -273,9 +273,12 @@
         var canvas = $('qs-canvas');
         var wrap = $('qs-canvas-wrap');
         var avail = Math.max(140, wrap.clientWidth - 32);
-        var cssW = Math.min(avail, 520);
+        // The upper bound is height-led, not width-led: on a wide screen the
+        // stage column is far wider than the code needs, so letting width run
+        // free would just push the frame off the bottom of the viewport.
+        var cssW = Math.min(avail, 640);
         // Keep the whole drawing inside the stage when a frame makes it tall.
-        var maxH = Math.min(window.innerHeight * 0.62, 560);
+        var maxH = Math.min(window.innerHeight * 0.62, 580);
         if (layout.height / layout.width * cssW > maxH) cssW = maxH * layout.width / layout.height;
 
         var scale = cssW / layout.width;
