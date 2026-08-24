@@ -57,15 +57,39 @@
       "url": "E-Labs.html",
       "type": "dropdown",
       "children": [
-        { "name": "Gear3D", "url": "e-labs/gear3d/index.html" },
-        { "name": "LEAPS", "url": "e-labs/leaps/index.html" },
-        { "name": "Cross-Section Studio", "url": "e-labs/cross-section-studio/index.html" },
-        { "name": "Finite-Elemented", "url": "e-labs/finite-elemented/index.html" },
-        { "name": "Frontier", "url": "e-labs/frontier/index.html" },
-        { "name": "AirCrafter", "url": "https://curly-adventure-y724nlw.pages.github.io/apps/aircrafter/" },
-        { "name": "Asphera", "url": "https://curly-adventure-y724nlw.pages.github.io/apps/asphera/" }
+        {
+          "name": "Gear3D",
+          "url": "e-labs/gear3d/index.html"
+        },
+        {
+          "name": "QR Studio",
+          "url": "e-labs/qr-studio/index.html"
+        },
+        {
+          "name": "LEAPS",
+          "url": "e-labs/leaps/index.html"
+        },
+        {
+          "name": "Cross-Section Studio",
+          "url": "e-labs/cross-section-studio/index.html"
+        },
+        {
+          "name": "Finite-Elemented",
+          "url": "e-labs/finite-elemented/index.html"
+        },
+        {
+          "name": "Frontier",
+          "url": "e-labs/frontier/index.html"
+        },
+        {
+          "name": "AirCrafter",
+          "url": "https://curly-adventure-y724nlw.pages.github.io/apps/aircrafter/"
+        },
+        {
+          "name": "Asphera",
+          "url": "https://curly-adventure-y724nlw.pages.github.io/apps/asphera/"
+        }
       ]
     }
   ]
 }
-
