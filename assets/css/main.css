@@ -1763,12 +1763,25 @@ body.Publications .pub-article .pub-section:first-of-type {
 	margin-top: 0;
 }
 
+/* Left-aligned, NOT justified: every entry ends in a DOI URL, which is a
+   single unbreakable token. When one does not fit in the space left on a
+   line it is pushed whole to the next line, and justify then stretches the
+   abandoned line's word spaces to fill the column — 37px gaps were showing
+   up mid-citation. Ragged right is also the conventional setting for
+   reference lists, and matches .cv-pub-list on Resume.html. */
 .pub-article .pub-list {
 	list-style: none;
 	margin: 0.5rem 0 0 0;
 	padding: 0 0 0 1.5rem;
-	text-align: justify;
+	text-align: left;
 	position: relative;
+}
+
+/* Narrow viewports only: a DOI wider than the whole column would otherwise
+   overflow horizontally. Breaking it is the lesser evil, and left alignment
+   means this never fires while the URL still fits on a line of its own. */
+.pub-article .pub-list a[href*="doi.org"] {
+	overflow-wrap: break-word;
 }
 
 .pub-article .pub-list li[data-type] {
