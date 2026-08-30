@@ -1,6 +1,28 @@
 {
   "projects": [
     {
+      "id": "traffic-factors",
+      "title": "Update of Traffic Factor Equations for IDOT Mechanistic-Empirical Pavement Design",
+      "shortTitle": "Traffic Factors for ME Pavement Design",
+      "image": "images/project/RP06_Cover.webp",
+      "url": "projects/IDOT_Traffic.html",
+      "excerpt": "This IDOT project updates the equations used by Illinois pavement designers to convert mixed-traffic axle loadings into traffic factors for asphalt and concrete pavements, accounting for current axle configurations and for emerging technologies such as electric trucks and platooning.",
+      "pis": ["Imad L. Al-Qadi"],
+      "advisor": null,
+      "status": "Active"
+    },
+    {
+      "id": "ccat-hydroplaning",
+      "title": "Improving Traffic Safety Through Quantification of Road Network Hydroplaning Risks",
+      "shortTitle": "Quantification of Hydroplaning Risks",
+      "image": "images/project/RP05_Cover.webp",
+      "url": "projects/CCAT_Hydroplaning.html",
+      "excerpt": "This CCAT-sponsored project develops a computational framework to quantify tire–water–pavement interaction under wet surface conditions, assess its impact on pavement friction, and feed hydroplaning risk into an integrated asset management framework for treatment prioritization and scheduling.",
+      "pis": ["Imad L. Al-Qadi", "Yanfeng Ouyang"],
+      "advisor": null,
+      "status": "Active"
+    },
+    {
       "id": "acrp-fem",
       "title": "Mechanistic Overload Permitting for Flexible Airfield Pavements via Damage Factors",
       "shortTitle": "ME Overload Permitting for Airfield Pavements",
