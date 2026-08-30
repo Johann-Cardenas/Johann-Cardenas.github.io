@@ -15,6 +15,14 @@
       "type": "dropdown",
       "children": [
         {
+          "name": "Traffic Factors for ME Pavement Design",
+          "url": "projects/IDOT_Traffic.html"
+        },
+        {
+          "name": "Quantification of Hydroplaning Risks",
+          "url": "projects/CCAT_Hydroplaning.html"
+        },
+        {
           "name": "ME Overload Permitting for Airfields",
           "url": "projects/ACRP_FEM.html"
         },
