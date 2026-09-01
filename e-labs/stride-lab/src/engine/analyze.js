@@ -9,6 +9,7 @@
    ============================================================ */
 
 import { condition } from './signal/condition.js';
+import { gateImplausibleSegments, frameIsWorldFixed } from './pose/plausible.js';
 import { travelDirection, classifyView, frontalFacing, perFrameScale } from './calib/scale.js';
 import { detectEvents } from './events/detect.js';
 import { computeMetrics } from './metrics/compute.js';
@@ -69,6 +70,22 @@ export function runPipeline(series, opts) {
         });
     }
 
+    /* ---- anatomical plausibility ---------------------------------------
+       Before anything is measured: a pose estimator asked for a landmark it
+       cannot see guesses, and reports a comfortable confidence while doing so.
+       Bones do not change length, so a segment that disagrees with its own
+       median across the clip identifies the guess without reference to how
+       sure the model claimed to be. */
+    const plausibility = gateImplausibleSegments(series);
+    if (plausibility.total > 0 && plausibility.gated / plausibility.total > 0.10) {
+        const worst = Object.entries(plausibility.bySegment)
+            .sort((x, y) => y[1] - x[1])[0];
+        warnings.push({
+            code: 'implausible-landmarks',
+            message: `${(100 * plausibility.gated / plausibility.total).toFixed(0)}% of limb positions were anatomically impossible — a segment changing length — and were discarded${worst ? `, worst on ${worst[0].replace('->', ' to ')}` : ''}. That normally means one side of the body is hidden from the camera for much of the clip. Measurements for that side will be sparse or missing.`
+        });
+    }
+
     /* ---- direction, then condition once in the travel frame -------------
        Sagittal analysis runs in a frame where +x is always the direction of
        travel, so downstream code never handles both cases and no sign
@@ -120,6 +137,16 @@ export function runPipeline(series, opts) {
         });
     }
 
+    /* ---- is the frame fixed to the world? ------------------------------- */
+    const travel = frameIsWorldFixed(cond, scale.legLengthPx);
+    const spatialFromDisplacement = (opts.surface || 'treadmill') !== 'treadmill' && travel.worldFixed;
+    if ((opts.surface || 'treadmill') !== 'treadmill' && !travel.worldFixed) {
+        warnings.push({
+            code: 'camera-not-world-fixed',
+            message: `You selected ${opts.surface}, but the runner barely moves across the frame (${travel.travelLegs.toFixed(1)} leg lengths over the whole clip). Either this is a treadmill, or the camera followed the runner. Step length, stride length and speed cannot be measured from displacement that is not there — select Treadmill and enter the belt speed to get them.`
+        });
+    }
+
     /* ---- events --------------------------------------------------------- */
     const events = detectEvents(cond, { stage2: opts.stage2 });
     if (!events.alternation.ok) {
@@ -151,6 +178,12 @@ export function runPipeline(series, opts) {
     /* ---- metrics, scores, findings --------------------------------------- */
     const ctx = {
         view,
+        /* Whether displacement across the frame is measurable at all. A
+           treadmill and a camera that pans with the runner are the same
+           situation as far as spatial measurement is concerned. */
+        spatialFromDisplacement,
+        travelLegs: travel.travelLegs,
+        viewQuality: auto.view === 'oblique' ? 'oblique' : 'planar',
         surface: opts.surface || 'treadmill',
         speedMs: Number.isFinite(opts.speedMs) ? opts.speedMs : null,
         heightM: opts.heightM,
@@ -182,6 +215,9 @@ export function runPipeline(series, opts) {
         capture: {
             view,
             viewAuto: auto.view,
+            viewOverridden: !!(opts.view && opts.view !== 'auto' && opts.view !== auto.view),
+            travelLegs: travel.travelLegs,
+            spatialFromDisplacement,
             viewRatio: auto.ratio,
             facing,
             surface: ctx.surface,
@@ -201,6 +237,7 @@ export function runPipeline(series, opts) {
             legLengthPx: scale.legLengthPx
         },
         events,
+        plausibility,
         strideCount: computed.strideCount,
         metrics: computed.metrics,
         scores,

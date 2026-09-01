@@ -534,6 +534,115 @@ implementation of one interface rather than a redesign.
 
 ---
 
+## D30. The track-header matrix was read four bytes early
+
+**Decision.** Fixed, and pinned by a hand-built MP4 fixture in the test suite.
+
+**Why it matters more than an off-by-four usually does.** The display matrix in
+`tkhd` begins at byte 40 for a version-0 track header and 52 for version 1. The
+parser used 36 and 48. It therefore read the tail of a reserved field instead of
+the matrix, got `a = 256, b = 0`, and concluded every video on earth was
+unrotated.
+
+The consequence was silent and total. A phone recording in portrait stores
+landscape pixels plus a quarter turn in that matrix. WebCodecs decodes the
+CODED frame and knows nothing about the matrix, so the pose model was handed a
+runner lying on their side. BlazePose is trained on upright people: given a
+sideways one it does not fail loudly, it produces a confident and entirely
+wrong skeleton, and every angle, every event and every measurement downstream
+was computed from it. Nothing threw. The report looked normal.
+
+Found because a user uploaded a 9:16 clip and said it was being treated as
+landscape. The fixture now asserts all four quarter turns, both track-header
+versions, and the display-dimension swap.
+
+---
+
+## D31. Rotation is applied to the pixels, not to the landmarks
+
+**Decision.** Frames are rotated to display orientation before inference, in the
+same pass as the downscale.
+
+**Why not rotate the landmarks afterwards**, which moves no pixels: because the
+model has to see an upright person to produce landmarks worth rotating. The
+whole problem is upstream of the coordinates.
+
+**Why it also fixes a disagreement between the two decode paths.** A `<video>`
+element applies the display matrix itself, so the fallback decoder was already
+producing upright frames while WebCodecs was not. The same clip analysed in two
+browsers would have given two different answers. The fallback now reports zero
+rotation and the WebCodecs path reports the real one, so both arrive upright.
+
+**Mirroring is handled too.** A negative matrix determinant means the frame is
+flipped, which front-camera recordings carry. A flipped frame swaps the
+runner's left and right, so every per-side measurement and every asymmetry
+index would be confidently reported for the wrong leg — the same class of
+silent, plausible error, and it is detected, corrected and announced.
+
+---
+
+## D32. A limb that changes length is disbelieved
+
+**Decision.** `pose/plausible.js` measures each rigid segment against its own
+median across the clip and marks the distal landmark missing on any frame where
+it departs by more than 40%.
+
+**Why visibility was not enough.** A pose estimator asked for a landmark it
+cannot see does not decline; it guesses, and often reports a comfortable
+confidence while doing so. On the real test clip — a runner on a treadmill
+filmed from behind and to one side — the far leg was hallucinated below the
+treadmill deck for much of the cycle and passed the visibility gate. Six left
+strides and two right ones were being reported from it.
+
+Bones do not change length. That is checkable without any reference to how sure
+the model claims to be, and it uses the runner's own proportions rather than a
+population's. After the gate: three left and one right, which is fewer strides
+and a truthful number of them.
+
+---
+
+## D33. Displacement is only measured when the frame is fixed to the world
+
+**Decision.** If the runner travels less than two leg lengths across the whole
+clip, step length, stride length and speed are not reported for an overground
+capture, and the warning says to select Treadmill and enter the belt speed.
+
+**Why.** On the real test clip, marked "road" but actually a treadmill, the app
+reported a speed of **0.10 m/s — a pace of 166 minutes per kilometre**. The
+displacement between foot strikes was near zero because the runner was not
+going anywhere relative to the camera.
+
+A treadmill and a hand-held camera that follows the runner are indistinguishable
+in the data, and both make displacement-based measurement meaningless rather
+than merely noisy. The damage does not stop at the one number: speed feeds the
+vertical ratio, the spring-mass stiffness model, and the choice of
+speed-conditional reference band, so a single undetected capture condition
+quietly corrupts a whole column of the report.
+
+---
+
+## D34. An oblique camera caps every plane-sensitive measurement
+
+**Decision.** When the view classifies as oblique, the 24 measurements marked
+`planeSensitive` in the catalogue are capped at low confidence — which puts them
+below the threshold for scoring and for firing any rule. They are still
+displayed, with the reason attached.
+
+**Why capping rather than widening an interval.** An oblique camera does not
+make a planar angle noisy, it makes it wrong: the angle is measured in a plane
+the movement did not happen in. Averaging more strides cannot help, so a wider
+confidence interval would misrepresent the problem as imprecision. The
+measurements that do not depend on the camera azimuth — cadence, the timing
+metrics, the vertical oscillations — keep their normal confidence.
+
+This is the difference between a tool that produces a report from any clip and
+one that says which clips it can read. The real test clip is 30 fps, oblique,
+and on a treadmill labelled as road; after these fixes it yields cadence and
+centre-of-mass oscillation, three warnings each naming what to change, and
+nothing else. That is the correct output for that recording.
+
+---
+
 ## Open questions the specification left for the human
 
 These were answered with the conservative default and are easy to change.

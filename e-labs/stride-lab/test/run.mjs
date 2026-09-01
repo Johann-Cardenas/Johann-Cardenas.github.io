@@ -51,6 +51,8 @@ import { REFERENCES, REFERENCE_BY_ID } from '../src/engine/scoring/references.js
 import { scoreValue, bandStatus, scoreAnalysis } from '../src/engine/scoring/score.js';
 import { RULES, MAX_FINDINGS, recommend } from '../src/engine/recommend/rules.js';
 import { EXERCISES, EXERCISE_BY_ID } from '../src/engine/recommend/exercises.js';
+import { parseMp4, displaySize, measuredFps } from '../src/engine/decode/mp4.js';
+import { gateImplausibleSegments, frameIsWorldFixed, LENGTH_TOLERANCE } from '../src/engine/pose/plausible.js';
 import { runPipeline, gaitCycleCurves } from '../src/engine/analyze.js';
 import { synthGait, DEFAULTS, rng, STANCE_ALIGN_FRACTION } from '../src/synth/gait.js';
 import { ENGINE_VERSION } from '../src/engine/version.js';
@@ -411,6 +413,162 @@ test('view classification separates sagittal from frontal', () => {
         const c = classifyView(cond);
         assertEqual(c.view, view, `a ${view} clip must classify as ${view} (ratio ${c.ratio.toFixed(2)})`);
     }
+});
+
+
+/* ============================================================
+   3b. Container orientation
+   ============================================================ */
+
+group('Container — rotation and mirroring');
+
+/**
+ * A minimal but structurally valid MP4, built here so the parser can be tested
+ * against a display matrix whose meaning is known exactly.
+ *
+ * This fixture exists because of a real bug. The track-header matrix was being
+ * read four bytes early, so EVERY rotation parsed as zero, and a clip recorded
+ * in portrait on a phone was analysed on its side — the pose model given a
+ * runner lying down. Nothing threw, nothing looked wrong in the code, and the
+ * numbers that came out were confident and meaningless. The offsets below are
+ * spelled out for the same reason.
+ */
+function buildMp4({ matrix, codedW = 848, codedH = 480, version = 0 }) {
+    const chunks = [];
+    const box = (type, body) => {
+        const b = new Uint8Array(8 + body.length);
+        const dv = new DataView(b.buffer);
+        dv.setUint32(0, b.length);
+        for (let i = 0; i < 4; i++) b[4 + i] = type.charCodeAt(i);
+        b.set(body, 8);
+        return b;
+    };
+    const cat = (...arrs) => {
+        const total = arrs.reduce((a, x) => a + x.length, 0);
+        const out = new Uint8Array(total);
+        let o = 0;
+        for (const a of arrs) { out.set(a, o); o += a.length; }
+        return out;
+    };
+    const u8a = (n) => new Uint8Array(n);
+    const be32 = (...vals) => {
+        const b = new Uint8Array(vals.length * 4);
+        const dv = new DataView(b.buffer);
+        vals.forEach((v, i) => dv.setInt32(i * 4, v));
+        return b;
+    };
+    const be16 = (...vals) => {
+        const b = new Uint8Array(vals.length * 2);
+        const dv = new DataView(b.buffer);
+        vals.forEach((v, i) => dv.setUint16(i * 2, v));
+        return b;
+    };
+
+    /* tkhd: version+flags, times, track_ID, reserved, duration, reserved[2],
+       layer, alternate_group, volume, reserved, matrix[9], width, height */
+    const tkhdBody = version === 1
+        ? cat(be32(0x01000000), u8a(8), u8a(8), be32(1), be32(0), u8a(8),
+            u8a(8), be16(0, 0, 0, 0), be32(...matrix), be32(codedW << 16, codedH << 16))
+        : cat(be32(0x00000000), be32(0), be32(0), be32(1), be32(0), be32(0),
+            u8a(8), be16(0, 0, 0, 0), be32(...matrix), be32(codedW << 16, codedH << 16));
+
+    const hdlrBody = cat(be32(0), be32(0), new Uint8Array([118, 105, 100, 101]), u8a(12), new Uint8Array([0]));
+    const mdhdBody = cat(be32(0), be32(0), be32(0), be32(600), be32(600), be16(0, 0));
+
+    /* one avc1 sample entry: 78 bytes of visual fields, then avcC */
+    const avcC = box('avcC', new Uint8Array([1, 0x42, 0x00, 0x1f, 0xff, 0xe0, 0, 0, 0]));
+    const avc1Body = cat(
+        u8a(6), be16(1),                       /* reserved, data_reference_index */
+        be16(0, 0), u8a(12),                   /* pre_defined, reserved, pre_defined[3] */
+        be16(codedW, codedH),                  /* width, height at +24, +26 */
+        be32(0x00480000, 0x00480000), be32(0), /* resolutions, reserved */
+        be16(1), u8a(32), be16(0x0018), be16(0xffff),
+        avcC
+    );
+    const stsd = box('stsd', cat(be32(0), be32(1), box('avc1', avc1Body)));
+    const stts = box('stts', cat(be32(0), be32(1), be32(2), be32(300)));
+    const stsc = box('stsc', cat(be32(0), be32(1), be32(1), be32(2), be32(1)));
+    const stsz = box('stsz', cat(be32(0), be32(0), be32(2), be32(100), be32(100)));
+    const stco = box('stco', cat(be32(0), be32(1), be32(4096)));
+    const stbl = box('stbl', cat(stsd, stts, stsc, stsz, stco));
+    const minf = box('minf', stbl);
+    const mdia = box('mdia', cat(box('mdhd', mdhdBody), box('hdlr', hdlrBody), minf));
+    const trak = box('trak', cat(box('tkhd', tkhdBody), mdia));
+    const moov = box('moov', trak);
+    const ftyp = box('ftyp', new Uint8Array([105, 115, 111, 109, 0, 0, 2, 0]));
+    chunks.push(ftyp, moov, box('mdat', u8a(200)));
+    const all = cat(...chunks);
+    return all.buffer.slice(all.byteOffset, all.byteOffset + all.byteLength);
+}
+
+const M = {
+    /* 16.16 fixed point; the third column is the fixed 2.30 perspective row */
+    none: [0x10000, 0, 0, 0, 0x10000, 0, 0, 0, 0x40000000],
+    rot90: [0, 0x10000, 0, -0x10000, 0, 0, 0, 0, 0x40000000],
+    rot180: [-0x10000, 0, 0, 0, -0x10000, 0, 0, 0, 0x40000000],
+    rot270: [0, -0x10000, 0, 0x10000, 0, 0, 0, 0, 0x40000000],
+    flipped: [-0x10000, 0, 0, 0, 0x10000, 0, 0, 0, 0x40000000]
+};
+
+test('the fixture parses at all, so the rest of this group means something', () => {
+    const r = parseMp4(buildMp4({ matrix: M.none }));
+    assert(r.ok, `the hand-built fixture must parse; got ${r.reason}`);
+    assertEqual(r.track.codec, 'avc1.42001f');
+    assertEqual(r.track.width, 848);
+    assertEqual(r.track.height, 480);
+    assertEqual(r.track.samples.length, 2);
+    assertClose(measuredFps(r.track), 2, 1e-9, '600 ticks per second, 300 per sample');
+});
+
+test('REGRESSION: every quarter turn in the display matrix is read', () => {
+    /* The bug this guards: the matrix was read four bytes early and every
+       rotation came back as zero. */
+    for (const [name, deg] of [['none', 0], ['rot90', 90], ['rot180', 180], ['rot270', 270]]) {
+        const r = parseMp4(buildMp4({ matrix: M[name] }));
+        assert(r.ok, `${name} must parse`);
+        assertEqual(r.track.rotationDeg, deg, `${name}`);
+        assertEqual(r.track.mirrored, false, `${name} is not mirrored`);
+    }
+});
+
+test('the matrix offset is right for version 1 track headers too', () => {
+    const r = parseMp4(buildMp4({ matrix: M.rot90, version: 1 }));
+    assert(r.ok, 'version 1 tkhd must parse');
+    assertEqual(r.track.rotationDeg, 90, 'a 64-bit track header shifts the matrix by 12 bytes');
+});
+
+test('a quarter turn swaps the display dimensions', () => {
+    /* The size the user recognises. A phone recording in portrait stores
+       landscape pixels; reporting the coded size would tell them their 9:16
+       clip is 16:9. */
+    const upright = displaySize(parseMp4(buildMp4({ matrix: M.none })).track);
+    assertEqual(upright.width, 848);
+    assertEqual(upright.height, 480);
+    for (const name of ['rot90', 'rot270']) {
+        const d = displaySize(parseMp4(buildMp4({ matrix: M[name] })).track);
+        assertEqual(d.width, 480, `${name} display width`);
+        assertEqual(d.height, 848, `${name} display height`);
+        assert(d.height > d.width, `${name} must come out portrait`);
+    }
+    const half = displaySize(parseMp4(buildMp4({ matrix: M.rot180 })).track);
+    assertEqual(half.width, 848, 'a half turn does not swap the axes');
+});
+
+test('a mirrored source is detected, and is not mistaken for a rotation', () => {
+    /* A flip swaps the runner's left and right sides. Every per-side
+       measurement and every asymmetry index would then be reported
+       confidently for the wrong leg — which looks entirely normal in the
+       output, and is the reason this is detected rather than ignored. */
+    const r = parseMp4(buildMp4({ matrix: M.flipped }));
+    assert(r.ok, 'a mirrored track must still parse');
+    assertEqual(r.track.mirrored, true, 'the negative determinant must be seen');
+    assertEqual(r.track.rotationDeg, 0, 'and must not read as a 180 degree turn');
+});
+
+test('a malformed container is refused rather than half-read', () => {
+    assertEqual(parseMp4(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]).buffer).ok, false, 'not ISO-BMFF');
+    const noVideo = parseMp4(buildMp4({ matrix: M.none }));
+    assert(noVideo.ok, 'sanity');
 });
 
 /* ============================================================
@@ -820,6 +978,134 @@ test('the evidence-based bands say what the evidence says', () => {
     /* the honest caveat about effect size has to be somewhere a reader meets it */
     assert(/4-12%/.test(REFERENCE_BY_ID['vanhooren-2024'].used),
         'the reference must carry how little of running economy technique explains');
+});
+
+
+/* ============================================================
+   6c. Refusing to measure what cannot be measured
+   ============================================================ */
+
+group('Refusal — capture conditions the app must not measure through');
+
+test('a limb that changes length is a tracking failure, and is discarded', () => {
+    /* A pose estimator asked for a landmark it cannot see guesses, and reports
+       a comfortable confidence while doing so. Visibility cannot catch that.
+       Bone length can: this is the far leg of a runner filmed at an angle,
+       hallucinated somewhere below the body. */
+    const g = synthGait({ fps: 120, durationS: 5 });
+    const K = CANONICAL.length;
+    const ankle = CANONICAL.indexOf('ankleR');
+    const bad = [];
+    for (let f = 20; f < g.series.n; f += 3) {
+        /* put the right ankle somewhere anatomically impossible, and claim to
+           be confident about it */
+        g.series.xy[(f * K + ankle) * 2] = 0.92;
+        g.series.xy[(f * K + ankle) * 2 + 1] = 0.98;
+        g.series.vis[f * K + ankle] = 0.95;
+        bad.push(f);
+    }
+    const report = gateImplausibleSegments(g.series);
+    assert(report.gated > 0, 'the implanted failures must be caught');
+    let caught = 0;
+    for (const f of bad) if (g.series.vis[f * K + ankle] === 0) caught++;
+    assert(caught / bad.length > 0.9,
+        `most implanted failures must be gated; caught ${caught} of ${bad.length}`);
+    /* and it must not gate a clean clip */
+    const clean = synthGait({ fps: 120, durationS: 5 });
+    const cleanReport = gateImplausibleSegments(clean.series);
+    assert(cleanReport.gated / Math.max(1, cleanReport.total) < 0.02,
+        `a clean clip must survive; gated ${cleanReport.gated} of ${cleanReport.total}`);
+    note(`tolerance ${(LENGTH_TOLERANCE * 100).toFixed(0)}%, caught ${caught}/${bad.length}, clean clip gated ${cleanReport.gated}`);
+});
+
+test('a runner who does not cross the frame has no measurable displacement', () => {
+    const tread = synthGait({ fps: 120, durationS: 5, mode: 'treadmill' });
+    const over = synthGait({ fps: 120, durationS: 5, mode: 'overground' });
+    const condT = condition(tread.series, { fps: 120 });
+    const condO = condition(over.series, { fps: 120 });
+    const legPx = perFrameScale(condT, 1.75).legLengthPx;
+    const t1 = frameIsWorldFixed(condT, legPx);
+    const t2 = frameIsWorldFixed(condO, perFrameScale(condO, 1.75).legLengthPx);
+    assertEqual(t1.worldFixed, false, 'a treadmill runner stays put');
+    assertEqual(t2.worldFixed, true, 'an overground runner crosses the frame');
+    note(`treadmill ${t1.travelLegs.toFixed(2)} leg lengths, overground ${t2.travelLegs.toFixed(2)}`);
+});
+
+test('REGRESSION: a treadmill clip labelled overground refuses to invent a speed', () => {
+    /* The failure this guards produced "0.10 m/s, 166:36 per km" on a real
+       clip: a treadmill recording marked as road, where displacement between
+       foot strikes is near zero. That number then feeds the vertical ratio,
+       the stiffness model and the choice of speed-conditional reference band,
+       so one undetected condition corrupts a whole column of the report. */
+    const g = synthGait({ fps: 240, durationS: 6, mode: 'treadmill' });
+    const r = runPipeline(g.series, { heightM: 1.75, massKg: 70, surface: 'road' });
+    assert(r.ok, r.message);
+    assertEqual(r.capture.spatialFromDisplacement, false, 'displacement is not measurable here');
+    for (const id of ['speed', 'stepLength', 'strideLength']) {
+        assertEqual(r.metrics[id].sides.L.value, null, `${id} must not be reported`);
+        assert(/treadmill|followed them/i.test(r.metrics[id].sides.L.note || ''),
+            `${id} must say what to do instead, got: ${r.metrics[id].sides.L.note}`);
+    }
+    assert(r.warnings.some(w => w.code === 'camera-not-world-fixed'), 'and the clip must be flagged');
+    /* stiffness depends on speed, so it must go too rather than use a zero */
+    assertEqual(r.metrics.verticalStiffness.combined.value, null,
+        'stiffness must not be computed from a speed that does not exist');
+    /* cadence and the angles do not depend on displacement and must survive */
+    assert(r.metrics.cadence.combined.value != null, 'cadence is unaffected');
+    assertClose(r.metrics.cadence.combined.value, g.truth.cadenceSpm, 3, 'and is still right');
+});
+
+test('the same clip labelled treadmill, with a speed, measures everything', () => {
+    const g = synthGait({ fps: 240, durationS: 6, mode: 'treadmill' });
+    const r = runPipeline(g.series, {
+        heightM: 1.75, massKg: 70, surface: 'treadmill', speedMs: g.params.speedMs
+    });
+    assert(r.metrics.speed.combined.value != null, 'the entered speed is used');
+    assert(r.metrics.stepLength.sides.L.value != null, 'and step length follows from it');
+    assert(r.metrics.verticalStiffness.combined.value != null, 'and so does stiffness');
+    assert(!r.warnings.some(w => w.code === 'camera-not-world-fixed'), 'no complaint when told the truth');
+});
+
+test('an oblique camera makes planar angles wrong, not noisy, and they are capped', () => {
+    /* A three-quarter view measures every angle in a plane the movement did
+       not happen in. That is not a precision problem — averaging more strides
+       cannot help — so nothing plane-sensitive may reach the confidence at
+       which it gets scored or advised on. */
+    const g = synthGait({ fps: 240, durationS: 6, view: 'oblique' });
+    const r = runPipeline(g.series, { heightM: 1.75, massKg: 70, surface: 'treadmill', speedMs: 3.0 });
+    assert(r.ok, r.message);
+    assertEqual(r.capture.viewAuto, 'oblique', 'the camera angle must be detected');
+    assert(r.warnings.some(w => w.code === 'oblique-view'), 'and reported');
+
+    for (const spec of METRICS.filter(m => m.planeSensitive)) {
+        const slot = spec.sided ? r.metrics[spec.id].sides.L : r.metrics[spec.id].combined;
+        assert(!atLeast(slot.confidence, 'medium'),
+            `${spec.id} is plane-sensitive and must not exceed low confidence on an oblique view, got ${slot.confidence}`);
+    }
+    /* nothing plane-sensitive may be scored, and no rule may cite one */
+    for (const spec of METRICS.filter(m => m.planeSensitive)) {
+        const e = r.scores.perMetric[spec.id];
+        if (!e) continue;
+        assertEqual(e.sides.L.score, null, `${spec.id} must not be scored`);
+    }
+    for (const f of r.findings) {
+        if (!f.detail || !f.detail.metric) continue;
+        const spec = METRIC_BY_ID[f.detail.metric];
+        assert(!spec || !spec.planeSensitive,
+            `finding ${f.id} rests on ${f.detail.metric}, measured in the wrong plane`);
+    }
+    /* cadence does not care which way the camera points */
+    assert(r.metrics.cadence.combined.value != null, 'cadence survives an oblique view');
+    assertClose(r.metrics.cadence.combined.value, g.truth.cadenceSpm, 4, 'and is still right');
+});
+
+test('a square-on view is not penalised', () => {
+    const g = synthGait({ fps: 240, durationS: 6, view: 'sagittal' });
+    const r = runPipeline(g.series, { heightM: 1.75, massKg: 70, surface: 'treadmill', speedMs: 3.0 });
+    assertEqual(r.capture.viewAuto, 'sagittal');
+    assert(!r.warnings.some(w => w.code === 'oblique-view'), 'no complaint about a good capture');
+    assert(atLeast(r.metrics.trunkLean.combined.confidence, 'medium'),
+        'and planar angles keep their confidence');
 });
 
 group('Metrics — suppression and confidence');

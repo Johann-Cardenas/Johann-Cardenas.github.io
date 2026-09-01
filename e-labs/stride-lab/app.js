@@ -262,7 +262,10 @@ async function preflight(file) {
     await new Promise(res => { v.onloadedmetadata = res; v.onerror = res; });
 
     const dur = v.duration || 0;
-    const w = v.videoWidth, h = v.videoHeight;
+    /* videoWidth/videoHeight are the DISPLAY dimensions: the element applies the
+       rotation the container asks for. The probe below reports the coded size,
+       and the two disagreeing is exactly what a portrait recording looks like. */
+    let w = v.videoWidth, h = v.videoHeight;
     S.trim.duration = dur;
 
     if (dur < 2) add('bad', `${dur.toFixed(1)} s is too short. Record at least three seconds so several strides are visible.`);
@@ -271,8 +274,8 @@ async function preflight(file) {
     else add('ok', `${dur.toFixed(1)} s of video`);
 
     const shortSide = Math.min(w, h);
-    if (shortSide < 480) add('warn', `${w}x${h} is below 480 on the short side. Landmark accuracy degrades.`);
-    else add('ok', `${w} x ${h}`);
+    if (shortSide < 480) add('warn', `${w} x ${h} — below 480 on the short side, so landmark accuracy degrades.`);
+    else add('ok', `${w} x ${h}${h > w ? ' portrait' : ' landscape'}`);
 
     /* Frame rate is measured from the decoded timestamps, not read from the
        container, because container metadata about frame rate is routinely
@@ -285,7 +288,12 @@ async function preflight(file) {
             else if (info.fps < 60) add('warn', `${info.fps.toFixed(0)} fps. Contact time, flight time and duty factor will be suppressed; one frame is ${(1000 / info.fps).toFixed(0)} ms and contact is only about 230 ms.`);
             else if (info.fps < 120) add('ok', `${info.fps.toFixed(0)} fps — timing shown with a wider interval`);
             else add('ok', `${info.fps.toFixed(0)} fps — full timing precision`);
-            if (info.rotationDeg) add('ok', `rotation ${info.rotationDeg}° will be applied before analysis`);
+            if (info.rotationDeg) {
+                add('ok', `stored ${info.codedWidth} x ${info.codedHeight} with a ${info.rotationDeg}° turn — it will be rotated upright before analysis`);
+            }
+            if (info.mirrored) {
+                add('warn', 'this clip is mirrored in its metadata; it will be un-mirrored so left and right are not swapped');
+            }
         } else {
             add('warn', `This browser will decode by playback rather than frame by frame (${info.reason || 'no WebCodecs'}). Timing precision is reduced.`);
         }
@@ -710,7 +718,13 @@ function renderFacts(r) {
         d.appendChild(el('dd', '', v));
         host.appendChild(d);
     };
-    add('View', r.capture.view + (r.capture.viewAuto !== r.capture.view ? ' (overridden)' : ''));
+    add('View', r.capture.view + (
+        r.capture.viewOverridden ? ' (you chose this)'
+            : r.capture.viewAuto === 'oblique' ? ' (camera looks oblique)'
+                : ''));
+    if (Number.isFinite(r.capture.travelLegs)) {
+        add('Travel in frame', `${r.capture.travelLegs.toFixed(1)} leg lengths`);
+    }
     add('Frame rate', `${r.capture.fps.toFixed(1)} fps`);
     add('Frames', String(r.capture.frameCount));
     add('Strides used', `${r.strideCount.L} L / ${r.strideCount.R} R`);

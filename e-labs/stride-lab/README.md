@@ -24,7 +24,7 @@ python -m http.server 8000        # from the repository root
 ## Test it
 
 ```bash
-npm test          # node test/run.mjs — 92 checks, no dependencies
+npm test          # node test/run.mjs — 104 checks, no dependencies
 npm run banner    # regenerate the E-Labs card image from the engine
 ```
 
@@ -48,6 +48,7 @@ src/engine/         PURE. No DOM, no fetch, no framework. This is the product.
   decode/frames.js    WebCodecs, with a requestVideoFrameCallback fallback
   pose/skeleton.js    the canonical 17-landmark vocabulary + backend adapters
   pose/mediapipe.js   BlazePose backend, person selection, tracking
+  pose/plausible.js   anatomical gating; is the frame fixed to the world?
   signal/filter.js    zero-phase Butterworth, Hampel, gap fill, derivatives
   signal/peaks.js     extrema, plateau onset/end, zero crossings, FFT
   signal/condition.js stage E, in the order that matters
@@ -94,6 +95,15 @@ Stages D–L are `runPipeline()` in `analyze.js`, and it is a pure function.
   D12 in `DECISIONS.md` before touching `events/detect.js`; three separate
   attempts at the dispersion statistic were wrong in ways that only showed up as
   "every stride discarded" or "error grows with noise".
+- **Orientation is not metadata, it is pixels.** WebCodecs ignores the
+  container's display matrix, so portrait clips arrive on their side and the
+  pose model produces a confident, wrong skeleton. Frames are rotated before
+  inference. `tkhd`'s matrix starts at byte 40 (52 for version 1) — reading it
+  four bytes early makes every video look unrotated, which is D30.
+- **Refuse rather than approximate.** Three capture conditions produce numbers
+  that are meaningless rather than imprecise, and each is detected: a camera
+  that is not square to the plane of motion, a runner who does not travel
+  across the frame, and a limb the model hallucinated. See D32-D34.
 - **Confidence is not decoration.** A metric below medium confidence is never
   scored and no rule may fire on it. Timing metrics are suppressed outright below
   60 fps rather than shown with a ±14% interval.

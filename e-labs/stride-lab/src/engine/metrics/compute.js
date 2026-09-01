@@ -108,30 +108,26 @@ export function computeMetrics(cond, scale, events, ctx) {
             const vo = excursion(kp.hipMid.y, i0, i1) * mpp;
             push('verticalOscillation', side, vo * 100);
 
-            let stepLen;
-            if (ctx.surface === 'treadmill') {
-                /* On a treadmill the runner does not translate, so there is no
-                   spatial displacement to measure. Step length is speed times
-                   step time, and it is only available because the user told us
-                   the belt speed. */
-                stepLen = Number.isFinite(ctx.speedMs) ? ctx.speedMs * st.stepTime : NaN;
-            } else {
+            /* Spatial measurements come from displacement, and displacement
+               only exists when the frame is fixed to the world. On a treadmill
+               it is not, and neither is it when a hand-held camera follows the
+               runner — the two are indistinguishable in the data and both make
+               a measured step length meaningless rather than merely noisy. */
+            let stepLen, strideLen, speed;
+            if (ctx.spatialFromDisplacement) {
                 const xa = val(kp['ankle' + side].x, t0);
                 const xb = val(kp['ankle' + other].x, tOpp);
                 stepLen = Math.abs(xb - xa) * mpp;
+                strideLen = Math.abs(val(kp['ankle' + side].x, t1) - val(kp['ankle' + side].x, t0)) * mpp;
+                speed = strideLen / st.strideTime;
+            } else {
+                stepLen = Number.isFinite(ctx.speedMs) ? ctx.speedMs * st.stepTime : NaN;
+                strideLen = Number.isFinite(stepLen) ? 2 * stepLen : NaN;
+                speed = ctx.speedMs;
             }
             push('stepLength', side, stepLen);
-
-            let strideLen;
-            if (ctx.surface === 'treadmill') {
-                strideLen = Number.isFinite(stepLen) ? 2 * stepLen : NaN;
-            } else {
-                strideLen = Math.abs(val(kp['ankle' + side].x, t1) - val(kp['ankle' + side].x, t0)) * mpp;
-            }
             push('strideLength', side, strideLen);
-            push('speed', side, ctx.surface === 'treadmill'
-                ? ctx.speedMs
-                : strideLen / st.strideTime);
+            push('speed', side, speed);
             push('verticalRatio', side, Number.isFinite(stepLen) && stepLen > 0 ? 100 * vo / stepLen : NaN);
 
             /* --- sagittal angles ---------------------------------------- */
@@ -185,10 +181,12 @@ export function computeMetrics(cond, scale, events, ctx) {
             /* Spring-mass stiffness. Every input is required; without body mass
                or speed there is no estimate, and substituting a population
                average for the person's own mass would be inventing the answer. */
-            if (Number.isFinite(ctx.massKg) && Number.isFinite(speedForStiffness(ctx, st, mpp))) {
+            const vForK = Number.isFinite(ctx.speedMs) ? ctx.speedMs
+                : (ctx.spatialFromDisplacement && Number.isFinite(speed) ? speed : NaN);
+            if (Number.isFinite(ctx.massKg) && Number.isFinite(vForK)) {
                 const k = springMassStiffness({
                     massKg: ctx.massKg,
-                    speedMs: speedForStiffness(ctx, st, mpp),
+                    speedMs: vForK,
                     contactS: st.stanceTime,
                     flightS: Math.max(0, st.flightTime),
                     legLengthM: legPx > 0 ? legPx * mpp : NaN
@@ -294,17 +292,6 @@ export function computeMetrics(cond, scale, events, ctx) {
     };
 }
 
-/**
- * The speed the spring-mass model should use for one stride: the entered
- * treadmill speed where there is one, otherwise the stride's own measured
- * speed. Never a default.
- */
-function speedForStiffness(ctx, stride, mpp) {
-    if (Number.isFinite(ctx.speedMs)) return ctx.speedMs;
-    void stride; void mpp;
-    return NaN;
-}
-
 /* ------------------------------------------------------------------ */
 
 function aggregate(spec, values, env) {
@@ -345,7 +332,12 @@ function aggregate(spec, values, env) {
             /* A metric whose INPUTS were never supplied is not a metric that
                failed to measure; the difference matters to whoever is trying to
                get a number out of it. */
-            if ((spec.id === 'verticalStiffness' || spec.id === 'legStiffness') && !Number.isFinite(ctx.massKg)) {
+            const spatialIds = ['stepLength', 'strideLength', 'speed', 'verticalRatio'];
+            if (spatialIds.includes(spec.id) && !ctx.spatialFromDisplacement && !Number.isFinite(ctx.speedMs)) {
+                notes.push(ctx.surface === 'treadmill'
+                    ? 'on a treadmill there is no displacement to measure, so this needs the belt speed'
+                    : `the runner barely moves across the frame (${Number.isFinite(ctx.travelLegs) ? ctx.travelLegs.toFixed(1) : '?'} leg lengths), so this is either a treadmill or a camera that followed them — select Treadmill and enter the speed`);
+            } else if ((spec.id === 'verticalStiffness' || spec.id === 'legStiffness') && !Number.isFinite(ctx.massKg)) {
                 notes.push('needs your body mass — the spring-mass model scales with it, and a population average would be inventing the answer');
             } else if ((spec.id === 'verticalStiffness' || spec.id === 'legStiffness') && !Number.isFinite(ctx.speedMs)) {
                 notes.push('needs your running speed');
@@ -367,6 +359,15 @@ function aggregate(spec, values, env) {
                 if (nEff < 3) confidence = weakest(confidence, 'low');
                 else if (nEff < 5) confidence = weakest(confidence, 'medium');
                 if (viewMargin != null && viewMargin < 0.15) confidence = weakest(confidence, 'medium');
+                /* An oblique camera does not make a planar angle noisy, it makes
+                   it wrong: the angle is measured in a plane the movement did
+                   not happen in, and averaging more strides cannot help. Every
+                   plane-sensitive measurement is therefore capped below the
+                   threshold at which anything gets scored or advised on. */
+                if (ctx.viewQuality === 'oblique' && spec.planeSensitive) {
+                    confidence = weakest(confidence, 'low');
+                    notes.push('the camera is not square to the plane of motion, so this angle is measured in the wrong plane');
+                }
                 /* landmark availability for the joints this metric touches */
                 const lm = requiredLandmarks(spec.id, side);
                 for (const name of lm) {

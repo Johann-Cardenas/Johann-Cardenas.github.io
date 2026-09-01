@@ -200,7 +200,7 @@ export function synthGait(overrides = {}) {
             x: world.shoulderMid.x + p.direction * headRise * Math.sin(lean * 0.5 + headForward),
             y: world.shoulderMid.y + headRise * Math.cos(lean * 0.5 + headForward)
         };
-        const earHalf = (p.view === 'frontal' ? 0.075 * H : 0.012 * H) / 2;
+        const earHalf = ((p.view === 'frontal' ? 0.075 : p.view === 'oblique' ? 0.046 : 0.012) * H) / 2;
         world.earL = { x: earMid.x - earHalf, y: earMid.y };
         world.earR = { x: earMid.x + earHalf, y: earMid.y };
         /* nose ahead of and slightly below the ears */
@@ -224,13 +224,19 @@ export function synthGait(overrides = {}) {
            reporting the angle at an offset hip manufactures a left/right
            difference in a runner that was built perfectly symmetric — which is
            exactly the kind of artefact an asymmetry test must not chase. */
-        const halfSep = (p.view === 'frontal' ? WINTER.shoulderWidth * H : 0.012 * H) / 2;
+        /* A three-quarter view projects part of the shoulder width, which is
+           exactly the cue classifyView keys off — so the generator can produce
+           the camera angle the app is supposed to refuse to measure. */
+        const sepFrac = p.view === 'frontal' ? WINTER.shoulderWidth
+            : p.view === 'oblique' ? 0.158
+                : 0.012;
+        const halfSep = (sepFrac * H) / 2;
         /* Axial rotation appears in a frontal view as a symmetric NARROWING of
            the projected shoulder line. Symmetric matters: an asymmetric wobble
            would move the shoulder midpoint and inject a fake trunk lean into
            the very metric the regression test checks. */
         const rot = 1 - 0.09 * Math.abs(Math.sin(2 * Math.PI * t / strideTime));
-        const hipHalf = (p.view === 'frontal' ? 0.191 * H : 0.012 * H) / 2;
+        const hipHalf = ((p.view === 'frontal' ? 0.191 : p.view === 'oblique' ? 0.115 : 0.012) * H) / 2;
         world.shoulderL = { x: world.shoulderMid.x - halfSep * rot, y: world.shoulderMid.y };
         world.shoulderR = { x: world.shoulderMid.x + halfSep * rot, y: world.shoulderMid.y };
         world.hipL = { x: hipX - hipHalf, y: hipY };
@@ -323,7 +329,7 @@ export function synthGait(overrides = {}) {
                frontal-plane hand crossing out of a perfectly ordinary arm
                action, and the hand-crossing metric would be measuring the
                generator rather than the runner. */
-            const swingX = p.view === 'frontal' ? 0.10 : 1;
+            const swingX = p.view === 'frontal' ? 0.10 : p.view === 'oblique' ? 0.6 : 1;
             const el = {
                 x: sh.x + p.direction * upperArm * Math.sin(shoulderAngle) * swingX,
                 y: sh.y - upperArm * Math.cos(shoulderAngle)

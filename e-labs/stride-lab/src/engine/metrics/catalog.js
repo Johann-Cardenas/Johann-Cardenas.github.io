@@ -110,98 +110,98 @@ export const METRICS = [
         dimension: 'posture', decimals: 1,
         definition: 'Forward tilt of the trunk SEGMENT relative to vertical, at mid-stance. Positive is forward. This is not whole-body lean measured from the ankle, which is a different and larger number.',
         formula: 'Angle between vertical and the hip-centre-to-shoulder-centre vector.',
-        drivers: ['view classification']
+        drivers: ['view classification'], planeSensitive: true
     },
     {
         id: 'footStrikeAngle', label: 'Foot-strike angle', unit: 'deg', view: 'sagittal', sided: true,
         dimension: 'contact', decimals: 1,
         definition: 'How the foot is tilted when it lands. Positive means toe-up, i.e. a rearfoot landing.',
         formula: 'Angle between horizontal and the heel-to-toe vector at foot strike.',
-        drivers: ['foot landmark quality', 'frame rate']
+        drivers: ['foot landmark quality', 'frame rate'], planeSensitive: true
     },
     {
         id: 'strikePattern', label: 'Strike pattern', unit: 'class', view: 'sagittal', sided: true,
         dimension: 'contact', decimals: 0,
         definition: 'Rearfoot, midfoot or forefoot, from the foot-strike angle.',
         formula: 'Threshold on foot-strike angle: rearfoot above 8 deg, forefoot below -2 deg (Altman & Davis 2012).',
-        drivers: ['foot landmark quality', 'frame rate']
+        drivers: ['foot landmark quality', 'frame rate'], planeSensitive: true
     },
     {
         id: 'shankAngleContact', label: 'Shank angle at contact', unit: 'deg', view: 'sagittal', sided: true,
         dimension: 'contact', decimals: 1,
         definition: 'Tilt of the lower leg from vertical at landing. Near vertical means the foot lands under the body.',
         formula: 'Angle of the ankle-to-knee vector from vertical; positive means the knee is behind the ankle.',
-        drivers: ['knee and ankle landmark quality']
+        drivers: ['knee and ankle landmark quality'], planeSensitive: true
     },
     {
         id: 'overstride', label: 'Overstride', unit: '% height', view: 'sagittal', sided: true,
         dimension: 'contact', decimals: 1, scaleDependent: true,
         definition: 'How far ahead of your hips the foot lands, as a percentage of your standing height.',
         formula: 'Horizontal ankle-minus-hip-centre distance at foot strike, divided by standing height.',
-        drivers: ['scaling']
+        drivers: ['scaling'], planeSensitive: true
     },
     {
         id: 'kneeFlexionContact', label: 'Knee flexion at contact', unit: 'deg', view: 'sagittal', sided: true,
         dimension: 'contact', decimals: 1,
         definition: 'How bent the knee is when the foot lands. 0 would be a straight leg.',
         formula: '180 minus the interior hip-knee-ankle angle at foot strike.',
-        drivers: []
+        drivers: [], planeSensitive: true
     },
     {
         id: 'peakKneeFlexionStance', label: 'Peak knee flexion in stance', unit: 'deg', view: 'sagittal', sided: true,
         dimension: 'contact', decimals: 1,
         definition: 'The most the knee bends while the foot is on the ground.',
         formula: 'Maximum knee flexion between foot strike and toe-off.',
-        drivers: []
+        drivers: [], planeSensitive: true
     },
     {
         id: 'kneeFlexionToeoff', label: 'Knee flexion at toe-off', unit: 'deg', view: 'sagittal', sided: true,
         dimension: 'posture', decimals: 1,
         definition: 'How bent the knee still is as the foot leaves the ground.',
         formula: 'Knee flexion at toe-off.',
-        drivers: []
+        drivers: [], planeSensitive: true
     },
     {
         id: 'hipExtensionToeoff', label: 'Hip extension at toe-off', unit: 'deg', view: 'sagittal', sided: true,
         dimension: 'posture', decimals: 1,
         definition: 'How far the thigh has swung behind the trunk as the foot leaves the ground.',
         formula: 'Angle between the trunk axis and the hip-to-knee vector at toe-off; positive is behind.',
-        drivers: []
+        drivers: [], planeSensitive: true
     },
     {
         id: 'ankleDorsiflexionContact', label: 'Ankle dorsiflexion at contact', unit: 'deg', view: 'sagittal', sided: true,
         dimension: 'contact', decimals: 1,
         definition: 'Toes-up angle of the ankle at landing, relative to an assumed neutral.',
         formula: 'Interior knee-ankle-toe angle at foot strike, subtracted from an assumed neutral of 100 deg. The neutral is a modelling assumption, not a measurement, so this metric never reports above medium confidence.',
-        drivers: ['foot landmark quality', 'assumed neutral']
+        drivers: ['foot landmark quality', 'assumed neutral'], planeSensitive: true
     },
     {
         id: 'heelRecovery', label: 'Heel-to-hip gap at peak recovery', unit: '% leg length', view: 'sagittal', sided: true,
         dimension: 'posture', decimals: 1,
         definition: 'How close the heel comes to the hip during swing. Smaller means a higher heel recovery.',
         formula: 'Minimum vertical hip-to-heel distance during swing, divided by leg length.',
-        drivers: []
+        drivers: [], planeSensitive: true
     },
     {
         id: 'elbowAngle', label: 'Elbow angle', unit: 'deg', view: 'sagittal', sided: true,
         dimension: 'posture', decimals: 1,
         definition: 'Average bend at the elbow through the stride. 180 would be a straight arm.',
         formula: 'Mean interior shoulder-elbow-wrist angle over the stride.',
-        drivers: ['occlusion']
+        drivers: ['occlusion'], planeSensitive: true
     },
     {
         id: 'armSwingAmplitude', label: 'Arm swing amplitude', unit: 'deg', view: 'sagittal', sided: true,
         dimension: 'posture', decimals: 1,
         definition: 'How far the upper arm swings through a stride.',
         formula: 'Range of the shoulder-to-elbow angle from vertical over the stride.',
-        drivers: ['occlusion']
+        drivers: ['occlusion'], planeSensitive: true
     },
     {
         id: 'headAngle', label: 'Head angle', unit: 'deg', view: 'sagittal', sided: false,
         dimension: 'posture', decimals: 1,
         definition: 'Head position relative to the trunk. Positive is forward of the trunk line.',
         formula: 'Angle between the trunk axis and the shoulder-centre-to-nose vector.',
-        drivers: []
+        drivers: [], planeSensitive: true
     },
 
     /* ---------------- Frontal ---------------- */
@@ -210,35 +210,35 @@ export const METRICS = [
         dimension: 'posture', decimals: 1,
         definition: 'How far the opposite hip drops while this leg supports you. Reported for each stance side.',
         formula: 'Angle of the hip line from horizontal at mid-stance, signed so a drop on the swing side is positive.',
-        drivers: []
+        drivers: [], planeSensitive: true
     },
     {
         id: 'fppa', label: 'Frontal-plane knee projection angle', unit: 'deg', view: 'frontal', sided: true,
         dimension: 'posture', decimals: 1,
         definition: 'How far the knee appears to fall inside the line from hip to ankle, in the camera image. This is a PROJECTION angle. It is not true knee valgus and cannot be measured as such from one camera.',
         formula: 'Departure from a colinear hip-knee-ankle in the image, at peak knee flexion; positive is medial.',
-        drivers: ['view classification']
+        drivers: ['view classification'], planeSensitive: true
     },
     {
         id: 'stepWidth', label: 'Step width', unit: '% leg length', view: 'frontal', sided: true,
         dimension: 'posture', decimals: 1, scaleDependent: true,
         definition: 'Side-to-side distance between successive foot placements. Negative means the feet cross the midline.',
         formula: 'Mediolateral distance between consecutive contralateral contact positions, divided by leg length.',
-        drivers: ['scaling']
+        drivers: ['scaling'], planeSensitive: true
     },
     {
         id: 'trunkLateralLean', label: 'Trunk lateral lean', unit: 'deg', view: 'frontal', sided: true,
         dimension: 'posture', decimals: 1,
         definition: 'Sideways tilt of the trunk at mid-stance. Positive is leaning towards the supporting leg.',
         formula: 'Angle between vertical and the hip-centre-to-shoulder-centre vector in the frontal plane.',
-        drivers: []
+        drivers: [], planeSensitive: true
     },
     {
         id: 'rearfootProxy', label: 'Rearfoot alignment (proxy)', unit: 'deg', view: 'frontal', sided: true,
         dimension: 'contact', decimals: 1,
         definition: 'Alignment of the heel under the knee at mid-stance. This is a rough PROXY. Rearfoot eversion — what people mean by pronation — needs markers on the shoe and shank; a single rear-view camera cannot resolve it, and this number should not be read as one.',
         formula: 'Angle between vertical and the heel-to-knee vector at mid-stance.',
-        drivers: ['no shoe markers', 'view classification']
+        drivers: ['no shoe markers', 'view classification'], planeSensitive: true
     },
 
     /* ---------------- Whole-body model ---------------- */
@@ -282,35 +282,35 @@ export const METRICS = [
         dimension: 'posture', decimals: 1, scaleDependent: true,
         definition: 'How far in front of your shoulders you carry your head, as a percentage of your standing height.',
         formula: 'Horizontal distance from the shoulder centre to the ear midpoint, averaged over the stride, divided by standing height.',
-        drivers: ['ear landmark quality', 'view classification']
+        drivers: ['ear landmark quality', 'view classification'], planeSensitive: true
     },
     {
         id: 'handCrossing', label: 'Hand crossing', unit: '% shoulder width', view: 'frontal', sided: true,
         dimension: 'posture', decimals: 1,
         definition: 'How far each hand travels across the midline of your body. Negative means the hand crosses to the other side.',
         formula: 'Most medial hand position over the stride, relative to the body midline, divided by shoulder width. The hand is the centroid of the finger landmarks, not the wrist, so a rotated forearm is not mistaken for a crossing hand.',
-        drivers: ['hand landmark quality', 'view classification']
+        drivers: ['hand landmark quality', 'view classification'], planeSensitive: true
     },
     {
         id: 'footProgressionAngle', label: 'Foot progression angle', unit: 'deg', view: 'frontal', sided: true,
         dimension: 'contact', decimals: 1,
         definition: 'How far your foot points outward or inward relative to the direction you are travelling, at mid-stance. Positive is toes-out.',
         formula: 'Angle of the line across the forefoot, from the big toe to the lateral forefoot, in the frontal projection. This needs the foot to be a PLANE rather than a line, so it requires a keypoint set with a lateral forefoot landmark — the default backend does not have one and reports this unavailable.',
-        drivers: ['needs a lateral forefoot landmark', 'view classification']
+        drivers: ['needs a lateral forefoot landmark', 'view classification'], planeSensitive: true
     },
     {
         id: 'shoulderRotation', label: 'Shoulder rotation', unit: 'deg', view: 'frontal', sided: false,
         dimension: 'posture', decimals: 1,
         definition: 'How much the shoulder line rotates about the body axis over a stride.',
         formula: 'Range of the apparent axial rotation recovered from the projected shoulder width.',
-        drivers: ['view classification']
+        drivers: ['view classification'], planeSensitive: true
     },
     {
         id: 'pelvisRotation', label: 'Pelvis rotation', unit: 'deg', view: 'frontal', sided: false,
         dimension: 'posture', decimals: 1,
         definition: 'How much the hip line rotates about the body axis over a stride.',
         formula: 'Range of the apparent axial rotation recovered from the projected hip width.',
-        drivers: ['view classification']
+        drivers: ['view classification'], planeSensitive: true
     }
 ];
 

@@ -13,7 +13,7 @@
    WebCodecs, which is precisely the browser that needs one.
    ============================================================ */
 
-import { probe, extractFrames, downscaleSize } from '../engine/decode/frames.js';
+import { probe, extractFrames, downscaleSize, orientFrame } from '../engine/decode/frames.js';
 import {
     createMediaPipeBackend, createTracker, seriesFromTrack, worldLegLength,
     defaultVariant, MEDIAPIPE_CDN
@@ -73,6 +73,16 @@ export async function analyseFile(file, opts) {
     let worldLeg = null;
     let frameIndex = 0;
 
+    /* Orientation. WebCodecs decodes the CODED frame and ignores the
+       container's display matrix, so a clip recorded in portrait arrives on its
+       side. Everything downstream — the pose model, the scaling, every angle —
+       assumes an upright person, so the frames are rotated here, once, before
+       inference. The <video> fallback has already done this itself and reports
+       no rotation, which keeps the two decode paths agreeing. */
+    const rotationDeg = info.rotationDeg || 0;
+    const mirrored = !!info.mirrored;
+    const swapAxes = rotationDeg === 90 || rotationDeg === 270;
+
     await extractFrames(file, {
         probe: info,
         startS: opts.startS,
@@ -80,15 +90,19 @@ export async function analyseFile(file, opts) {
         cancelled: opts.cancelled,
         onFrame: async (frame) => {
             const src = frame.image;
-            const w = src.displayWidth || src.width;
-            const h = src.displayHeight || src.height;
+            const cw = src.displayWidth || src.width;
+            const ch = src.displayHeight || src.height;
+            /* display dimensions, after the quarter turn */
+            const dw = swapAxes ? ch : cw;
+            const dh = swapAxes ? cw : ch;
             if (!width) {
-                const d = downscaleSize(w, h);
+                const d = downscaleSize(dw, dh);
                 width = d.width; height = d.height;
             }
-            /* Downscale before inference. The landmark model resizes internally
-               anyway, so feeding 4K costs memory and time and buys nothing. */
-            const bitmap = await createImageBitmap(src, { resizeWidth: width, resizeHeight: height, resizeQuality: 'medium' });
+            /* Rotate and downscale in one pass. Downscaling matters on its own:
+               the landmark model resizes internally anyway, so feeding it 4K
+               costs memory and time and buys nothing. */
+            const bitmap = await orientFrame(src, rotationDeg, mirrored, width, height);
             const poses = await runner.infer(bitmap, frame.timestampUs / 1000, frameIndex);
             times.push(frame.timestampUs / 1e6);
             if (poses && poses.length) {
@@ -166,7 +180,22 @@ export async function analyseFile(file, opts) {
         result.engine.crossOriginIsolated = typeof crossOriginIsolated !== 'undefined' ? crossOriginIsolated : false;
         result.engine.decodePath = info.path;
         result.capture.timingConfidence = info.timingConfidence;
-        result.capture.rotationDeg = info.rotationDeg || 0;
+        result.capture.rotationDeg = rotationDeg;
+        result.capture.sourceMirrored = mirrored;
+        if (info.codedWidth) result.capture.codedResolution = [info.codedWidth, info.codedHeight];
+        if (info.width) result.capture.resolution = [info.width, info.height];
+        if (rotationDeg) {
+            result.warnings.push({
+                code: 'rotation-applied',
+                message: `This clip is stored ${info.codedWidth}x${info.codedHeight} with a ${rotationDeg}-degree turn in its metadata, which is how phones record in portrait. It was rotated to ${info.width}x${info.height} before analysis, so the measurements are in the orientation you filmed.`
+            });
+        }
+        if (mirrored) {
+            result.warnings.push({
+                code: 'mirrored-source',
+                message: 'This clip carries a mirror flag in its metadata, which front-facing cameras often add. It was un-mirrored before analysis — without that, every left and right measurement would have been reported for the wrong leg.'
+            });
+        }
         if (info.timingConfidence === 'reduced') {
             result.warnings.unshift({
                 code: 'reduced-timing',

@@ -24,7 +24,7 @@
    then closed.
    ============================================================ */
 
-import { parseMp4, measuredFps } from './mp4.js';
+import { parseMp4, measuredFps, displaySize } from './mp4.js';
 
 /**
  * @typedef {Object} Frame
@@ -66,6 +66,11 @@ export async function probe(file) {
     } catch { ok = false; }
     if (!ok) return { path: 'video-element', reason: 'codec-unsupported', timingConfidence: 'reduced' };
 
+    /* Display orientation, not coded orientation. A phone recording in portrait
+       stores landscape pixels plus a quarter-turn in the display matrix; the
+       decoder hands back the landscape pixels and knows nothing about the
+       matrix, so the size the user recognises is this one. */
+    const display = displaySize(parsed.track);
     return {
         path: 'webcodecs',
         timingConfidence: 'full',
@@ -73,9 +78,12 @@ export async function probe(file) {
         buffer: head,
         fps: measuredFps(parsed.track),
         frameCount: parsed.track.samples.length,
-        width: parsed.track.width,
-        height: parsed.track.height,
+        codedWidth: parsed.track.width,
+        codedHeight: parsed.track.height,
+        width: display.width,
+        height: display.height,
         rotationDeg: parsed.track.rotationDeg,
+        mirrored: parsed.track.mirrored,
         durationS: parsed.track.samples.length
             ? (Math.max(...parsed.track.samples.map(s => s.cts)) + parsed.track.samples[0].duration) / parsed.track.timescale
             : 0
@@ -183,7 +191,10 @@ async function decodeWithWebCodecs(info, opts) {
     decoder.close();
     if (error) throw error;
 
-    return { frames: emitted, path: 'webcodecs', timingConfidence: 'full', rotationDeg: track.rotationDeg };
+    return {
+        frames: emitted, path: 'webcodecs', timingConfidence: 'full',
+        rotationDeg: track.rotationDeg, mirrored: track.mirrored
+    };
 }
 
 /**
@@ -250,10 +261,57 @@ async function decodeWithVideoElement(file, opts) {
     video.pause();
     URL.revokeObjectURL(url);
 
+    /* A <video> element applies the display matrix itself, so these frames are
+       already upright and must NOT be rotated again. The two decode paths
+       disagreeing about orientation would mean the same clip analysed
+       differently on two browsers. */
     return {
         frames: emitted, dropped, path: 'video-element',
-        timingConfidence: 'reduced', rotationDeg: 0
+        timingConfidence: 'reduced', rotationDeg: 0, mirrored: false
     };
+}
+
+/**
+ * Turn a decoded frame into an upright, downscaled bitmap for inference.
+ *
+ * This is the step that has to exist. WebCodecs decodes the CODED frame and
+ * ignores the container's display matrix, so portrait phone video arrives on
+ * its side. BlazePose is trained on upright people: given a runner lying
+ * sideways it does not degrade gracefully, it produces a confidently wrong
+ * skeleton. Rotating the pixels here — rather than rotating the landmarks
+ * afterwards — is what lets the model see what the user saw.
+ *
+ * @param {VideoFrame|ImageBitmap} src
+ * @param {number} rotationDeg  0, 90, 180 or 270, clockwise
+ * @param {boolean} mirrored
+ * @param {number} outW  target width, already in DISPLAY orientation
+ * @param {number} outH
+ */
+export async function orientFrame(src, rotationDeg, mirrored, outW, outH) {
+    const rot = ((Math.round((rotationDeg || 0) / 90) * 90) % 360 + 360) % 360;
+    if (!rot && !mirrored) {
+        return createImageBitmap(src, { resizeWidth: outW, resizeHeight: outH, resizeQuality: 'medium' });
+    }
+    const canvas = typeof OffscreenCanvas !== 'undefined'
+        ? new OffscreenCanvas(outW, outH)
+        : Object.assign(document.createElement('canvas'), { width: outW, height: outH });
+    const ctx = canvas.getContext('2d');
+    /* the drawing box, in the rotated coordinate system */
+    const swap = rot === 90 || rot === 270;
+    const drawW = swap ? outH : outW;
+    const drawH = swap ? outW : outH;
+
+    ctx.save();
+    if (rot === 90) { ctx.translate(outW, 0); ctx.rotate(Math.PI / 2); }
+    else if (rot === 180) { ctx.translate(outW, outH); ctx.rotate(Math.PI); }
+    else if (rot === 270) { ctx.translate(0, outH); ctx.rotate(-Math.PI / 2); }
+    if (mirrored) { ctx.translate(drawW, 0); ctx.scale(-1, 1); }
+    ctx.drawImage(src, 0, 0, drawW, drawH);
+    ctx.restore();
+
+    return canvas.transferToImageBitmap
+        ? canvas.transferToImageBitmap()
+        : createImageBitmap(canvas);
 }
 
 /**

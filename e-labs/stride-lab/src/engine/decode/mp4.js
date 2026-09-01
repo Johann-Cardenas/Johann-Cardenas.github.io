@@ -109,14 +109,35 @@ export function parseMp4(buffer) {
         const timescale = mv === 1 ? u32(dv, mdhd.start + 20) : u32(dv, mdhd.start + 12);
         if (!(timescale > 0)) return { ok: false, reason: 'bad-timescale' };
 
-        let id = 0, width = 0, height = 0, rotationDeg = 0;
+        let id = 0, width = 0, height = 0, rotationDeg = 0, mirrored = false;
         if (tkhd) {
             const tv = u8(dv, tkhd.start);
             id = tv === 1 ? u32(dv, tkhd.start + 20) : u32(dv, tkhd.start + 12);
-            const base = tkhd.start + (tv === 1 ? 32 : 20);
-            /* 3x3 matrix, 16.16 fixed point, at base + 16 */
-            const a = u32(dv, base + 16) | 0, b = u32(dv, base + 20) | 0;
-            rotationDeg = matrixRotation(a / 65536, b / 65536);
+            /* Display matrix, 3x3 of 16.16 fixed point.
+               The offset is worth spelling out, because getting it wrong is
+               silent: every rotation reads as zero and portrait phone video is
+               analysed sideways.
+                 version + flags                4
+                 creation, modification         8   (16 when version 1)
+                 track_ID                       4
+                 reserved                       4
+                 duration                       4   (8 when version 1)
+                 reserved[2]                    8
+                 layer, alternate_group         4
+                 volume, reserved               4
+                                              ----
+                 matrix begins at              40   (52 when version 1) */
+            const m = tkhd.start + (tv === 1 ? 52 : 40);
+            const a = (u32(dv, m) | 0) / 65536;
+            const b = (u32(dv, m + 4) | 0) / 65536;
+            const c = (u32(dv, m + 12) | 0) / 65536;
+            const d = (u32(dv, m + 16) | 0) / 65536;
+            const t = transformFromMatrix(a, b, c, d);
+            rotationDeg = t.rotationDeg;
+            mirrored = t.mirrored;
+            /* tkhd width/height are the PRE-rotation dimensions on most phone
+               encoders, so they cannot be used as the display size. The coded
+               size from the sample entry plus the rotation is what gives it. */
             width = u32(dv, tkhd.end - 8) / 65536;
             height = u32(dv, tkhd.end - 4) / 65536;
         }
@@ -133,7 +154,7 @@ export function parseMp4(buffer) {
             track: {
                 id, timescale, width, height,
                 codec: sd.codec, description: sd.description,
-                samples, rotationDeg
+                samples, rotationDeg, mirrored
             }
         };
     }
@@ -156,9 +177,26 @@ function hasNonTrivialEdit(dv, elst) {
     return false;
 }
 
-function matrixRotation(a, b) {
-    const deg = Math.round(Math.atan2(b, a) * 180 / Math.PI);
-    return ((deg % 360) + 360) % 360;
+/**
+ * Rotation and mirroring from the display matrix.
+ *
+ * The mirror check is not decoration. A negative determinant means the frame is
+ * flipped, which some front-camera recordings carry, and a flipped frame swaps
+ * the runner's left and right sides. Every per-side measurement and every
+ * asymmetry index in this app would then be confidently reported for the wrong
+ * leg — the exact class of error that looks completely normal in the output.
+ */
+function transformFromMatrix(a, b, c, d) {
+    const det = a * d - b * c;
+    const mirrored = det < 0;
+    /* undo the mirror before reading the angle, or a flip reads as a rotation */
+    const ax = mirrored ? -a : a;
+    const bx = mirrored ? -b : b;
+    let deg = Math.atan2(bx, ax) * 180 / Math.PI;
+    /* snap: a matrix is meant to hold exact quarter turns, and float noise in a
+       16.16 fixed-point value must not become an 89-degree rotation */
+    deg = Math.round(deg / 90) * 90;
+    return { rotationDeg: ((deg % 360) + 360) % 360, mirrored };
 }
 
 function readStsd(dv, stbl) {
@@ -287,6 +325,21 @@ function readSampleTable(dv, stbl) {
         }
     }
     return samples;
+}
+
+/**
+ * The size the viewer sees, which is the coded size with the display matrix
+ * applied. A quarter turn swaps the axes; the tkhd width and height cannot be
+ * used for this because most phone encoders write the PRE-rotation values
+ * there.
+ * @param {VideoTrackInfo} track
+ */
+export function displaySize(track) {
+    const swap = track.rotationDeg === 90 || track.rotationDeg === 270;
+    return {
+        width: swap ? track.height : track.width,
+        height: swap ? track.width : track.height
+    };
 }
 
 /**
