@@ -230,6 +230,23 @@ export function median(values) {
 }
 
 /** Median absolute deviation, scaled to be a consistent sigma estimate. */
+/**
+ * Linear-interpolated quantile. Used where a RANGE would be wrong: the spread
+ * of a set that may contain a couple of outliers, such as frame intervals over
+ * a clip that skipped a frame.
+ *
+ * @param {number[]} values
+ * @param {number} q  in [0, 1]
+ */
+export function quantile(values, q) {
+    const v = values.filter(Number.isFinite).sort((a, b) => a - b);
+    if (!v.length) return NaN;
+    if (v.length === 1) return v[0];
+    const pos = clamp(q, 0, 1) * (v.length - 1);
+    const lo = Math.floor(pos), hi = Math.ceil(pos);
+    return lo === hi ? v[lo] : v[lo] + (v[hi] - v[lo]) * (pos - lo);
+}
+
 export function mad(values, med) {
     const m = Number.isFinite(med) ? med : median(values);
     const d = [];

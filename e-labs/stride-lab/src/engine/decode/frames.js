@@ -232,6 +232,7 @@ async function decodeWithVideoElement(file, opts) {
     await new Promise(res => { video.onseeked = res; });
 
     let emitted = 0, dropped = 0, lastPresented = 0;
+    let firstMediaTime = null, lastMediaTime = null;
     let finish;
     const done = new Promise(res => { finish = res; });
 
@@ -241,9 +242,24 @@ async function decodeWithVideoElement(file, opts) {
             dropped += meta.presentedFrames - lastPresented - 1;
         }
         lastPresented = meta.presentedFrames;
-        if (meta.mediaTime >= startS && meta.mediaTime <= endS && emitted < total) {
+        /* Pausing and resuming can re-present the frame already handled. */
+        const fresh = lastMediaTime == null || meta.mediaTime > lastMediaTime + 1e-6;
+        if (fresh && meta.mediaTime >= startS && meta.mediaTime <= endS && emitted < total) {
+            /* STOP THE CLOCK. `onFrame` is pose inference — 100 ms and up per
+               frame — and the video does not wait for it. Registering the next
+               callback only after the await, as this did, means every frame
+               presented while the model was busy is simply gone: the decode
+               then samples at the speed of inference rather than at the frame
+               rate of the clip. Measured on a 30 fps recording, a free
+               consumer got 24 fps, a 40 ms consumer 11.5, and real inference
+               5 — at which point the pipeline refused the clip and told the
+               user to re-record at 60 fps, which would not have helped,
+               because the recording was never the problem. */
+            video.pause();
             const bmp = await createImageBitmap(video);
             const index = emitted++;
+            if (firstMediaTime == null) firstMediaTime = meta.mediaTime;
+            lastMediaTime = meta.mediaTime;
             try {
                 await opts.onFrame({ image: bmp, timestampUs: Math.round(meta.mediaTime * 1e6), index });
             } finally {
@@ -252,7 +268,10 @@ async function decodeWithVideoElement(file, opts) {
             if (opts.onProgress) opts.onProgress(emitted, Number.isFinite(total) ? total : 0);
         }
         if (meta.mediaTime > endS || emitted >= total || video.ended) { finish(); return; }
+        /* Register BEFORE resuming, or the first frame after the resume can be
+           presented with nobody listening for it. */
         video.requestVideoFrameCallback(step);
+        if (video.paused) await video.play().catch(() => { finish(); });
     };
 
     video.requestVideoFrameCallback(step);
@@ -261,12 +280,20 @@ async function decodeWithVideoElement(file, opts) {
     video.pause();
     URL.revokeObjectURL(url);
 
+    /* What the SOURCE ran at, as distinct from what we managed to sample. The
+       two differ only when frames were lost, and telling them apart is what
+       lets the pipeline say "this browser could not keep up" rather than
+       "your camera is too slow". */
+    const spanS = (firstMediaTime != null && lastMediaTime > firstMediaTime)
+        ? lastMediaTime - firstMediaTime : 0;
+    const sourceFps = spanS > 0 ? (emitted - 1 + dropped) / spanS : null;
+
     /* A <video> element applies the display matrix itself, so these frames are
        already upright and must NOT be rotated again. The two decode paths
        disagreeing about orientation would mean the same clip analysed
        differently on two browsers. */
     return {
-        frames: emitted, dropped, path: 'video-element',
+        frames: emitted, dropped, sourceFps, path: 'video-element',
         timingConfidence: 'reduced', rotationDeg: 0, mirrored: false
     };
 }
