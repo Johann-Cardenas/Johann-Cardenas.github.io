@@ -745,6 +745,266 @@
     }
   };
 
+
+  /* ===========================================================
+     Engine 7 — Stride Lab: pose skeleton over a gait timeline
+
+     A miniature of what the app actually shows: a runner traced by
+     the same seventeen-landmark skeleton, left solid and right
+     dashed exactly as in the app, with foot-strike and toe-off
+     ticks marching along a timeline underneath and a knee-angle
+     arc following the near leg.
+
+     The pose is a small closed-form running model rather than a
+     port of the app's inverse kinematics — the card needs a legible
+     silhouette at 200 px, not a validated one, and keeping it
+     self-contained means this file stays dependency-free like the
+     six engines above it.
+     =========================================================== */
+  var strideLab = {
+    init: function (w, h) {
+      return {
+        // seventeen canonical landmarks, in the app's own order
+        names: ['nose', 'shoulderL', 'shoulderR', 'elbowL', 'elbowR', 'wristL', 'wristR',
+                'hipL', 'hipR', 'kneeL', 'kneeR', 'ankleL', 'ankleR',
+                'heelL', 'heelR', 'toeL', 'toeR'],
+        bones: [
+          ['nose', 'shoulderL', 'C'], ['nose', 'shoulderR', 'C'],
+          ['shoulderL', 'shoulderR', 'C'], ['hipL', 'hipR', 'C'],
+          ['shoulderL', 'hipL', 'L'], ['shoulderR', 'hipR', 'R'],
+          ['shoulderL', 'elbowL', 'L'], ['elbowL', 'wristL', 'L'],
+          ['shoulderR', 'elbowR', 'R'], ['elbowR', 'wristR', 'R'],
+          ['hipL', 'kneeL', 'L'], ['kneeL', 'ankleL', 'L'],
+          ['hipR', 'kneeR', 'R'], ['kneeR', 'ankleR', 'R'],
+          ['ankleL', 'heelL', 'L'], ['heelL', 'toeL', 'L'], ['ankleL', 'toeL', 'L'],
+          ['ankleR', 'heelR', 'R'], ['heelR', 'toeR', 'R'], ['ankleR', 'toeR', 'R']
+        ],
+        duty: 0.32,        // ground contact as a fraction of the stride
+        period: 1.45,      // seconds per stride, slowed for legibility
+        trail: []
+      };
+    },
+
+    draw: function (ctx, st, w, h, ts) {
+      var t = ts * 0.001;
+      var TEAL = '#22d3d1', AMBER = '#f0a44a', INK2 = '#93a5c4', LINE = '#24344f';
+
+      ctx.fillStyle = '#0a111f';
+      ctx.fillRect(0, 0, w, h);
+
+      // faint measurement grid
+      ctx.strokeStyle = 'rgba(36,52,79,0.5)';
+      ctx.lineWidth = 1;
+      for (var gx = 0; gx < w; gx += 26) {
+        ctx.beginPath(); ctx.moveTo(gx + 0.5, 0); ctx.lineTo(gx + 0.5, h); ctx.stroke();
+      }
+      for (var gy = 0; gy < h; gy += 26) {
+        ctx.beginPath(); ctx.moveTo(0, gy + 0.5); ctx.lineTo(w, gy + 0.5); ctx.stroke();
+      }
+
+      var ground = h * 0.74;
+      var scale = h * 0.052;              // one "unit" ~ a tenth of body height
+      var cx = w * 0.5;
+
+      // ---- the running model -------------------------------------
+      // phase 0 at left foot strike; the right leg is half a stride behind
+      var ph = (t / st.period) % 1;
+      var duty = st.duty;
+
+      function legPhase(side) {
+        var p = side === 'L' ? ph : (ph + 0.5) % 1;
+        return p;
+      }
+
+      // pelvis: lowest at mid-stance, highest in flight — the same phase
+      // relationship the app's detector depends on
+      function pelvisY() {
+        var p = (ph * 2) % 1;                       // once per step
+        return p < duty * 2
+          ? -Math.sin(Math.PI * p / (duty * 2)) * scale * 0.7
+          : Math.sin(Math.PI * (p - duty * 2) / (1 - duty * 2)) * scale * 0.45;
+      }
+
+      var hipY = ground - scale * 5.3 + pelvisY();
+      var thigh = scale * 2.45, shank = scale * 2.46, foot = scale * 1.5;
+
+      function anklePos(side) {
+        var p = legPhase(side);
+        var reach = scale * 3.4;
+        if (p < duty) {
+          // stance: the foot travels backwards under the body
+          var s = p / duty;
+          return { x: cx + reach * (0.32 - s) * 1.6, y: ground - scale * 0.28 };
+        }
+        // swing: forward with an arched lift
+        var q = (p - duty) / (1 - duty);
+        var e = q * q * (3 - 2 * q);
+        return {
+          x: cx + reach * (-1.09 + 1.41 * e) * 1.6,
+          y: ground - scale * 0.28 - Math.sin(Math.PI * q) * Math.sin(Math.PI * q) * scale * 2.4
+        };
+      }
+
+      function knee(hip, ankle) {
+        var dx = ankle.x - hip.x, dy = ankle.y - hip.y;
+        var d = Math.min(Math.hypot(dx, dy), (thigh + shank) * 0.995) || 0.001;
+        var ux = dx / Math.hypot(dx, dy), uy = dy / Math.hypot(dx, dy);
+        var a = (thigh * thigh - shank * shank + d * d) / (2 * d);
+        var hh = Math.sqrt(Math.max(0, thigh * thigh - a * a));
+        // the knee bends forwards; pick the anterior root
+        return { x: hip.x + a * ux - uy * hh * -1, y: hip.y + a * uy + ux * hh * -1 };
+      }
+
+      var lean = 0.12;
+      var P = {};
+      P.hipL = { x: cx - scale * 0.12, y: hipY };
+      P.hipR = { x: cx + scale * 0.12, y: hipY };
+      var shoulderY = hipY - scale * 2.9;
+      var shoulderX = cx + Math.sin(lean) * scale * 2.9;
+      P.shoulderL = { x: shoulderX - scale * 0.2, y: shoulderY };
+      P.shoulderR = { x: shoulderX + scale * 0.2, y: shoulderY };
+      P.nose = { x: shoulderX + Math.sin(lean) * scale * 0.7, y: shoulderY - scale * 1.15 };
+
+      ['L', 'R'].forEach(function (side) {
+        var hip = P['hip' + side];
+        var ankle = anklePos(side);
+        var kn = knee(hip, ankle);
+        P['knee' + side] = kn;
+        P['ankle' + side] = ankle;
+        // foot pitch: toe-up at strike, flat through stance, pushed off at the end
+        var p = legPhase(side);
+        var pitch = p < duty
+          ? (p < duty * 0.35 ? 0.22 * (1 - p / (duty * 0.35)) : -0.5 * ((p - duty * 0.35) / (duty * 0.65)))
+          : -0.5 + 0.72 * Math.min(1, (p - duty) / (1 - duty) / 0.85);
+        var fx = Math.cos(pitch), fy = -Math.sin(pitch);
+        P['heel' + side] = { x: ankle.x - foot * 0.32 * fx, y: ankle.y - foot * 0.32 * fy + scale * 0.28 };
+        P['toe' + side] = { x: ankle.x + foot * 0.68 * fx, y: ankle.y + foot * 0.68 * fy + scale * 0.28 };
+      });
+
+      // ---- ground and toe trail ----------------------------------
+      ctx.strokeStyle = LINE;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(0, ground); ctx.lineTo(w, ground); ctx.stroke();
+
+      st.trail.push({ x: P.toeL.x, y: P.toeL.y });
+      if (st.trail.length > 48) st.trail.shift();
+      ctx.beginPath();
+      for (var i = 0; i < st.trail.length; i++) {
+        if (i === 0) ctx.moveTo(st.trail[i].x, st.trail[i].y);
+        else ctx.lineTo(st.trail[i].x, st.trail[i].y);
+      }
+      ctx.strokeStyle = 'rgba(34,211,209,0.32)';
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+
+      // ---- skeleton: casing, then bones ---------------------------
+      ctx.lineCap = 'round';
+      for (var pass = 0; pass < 2; pass++) {
+        for (var b = 0; b < st.bones.length; b++) {
+          var bone = st.bones[b];
+          var A = P[bone[0]], B = P[bone[1]];
+          if (!A || !B) continue;
+          ctx.beginPath();
+          ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y);
+          if (pass === 0) {
+            ctx.strokeStyle = 'rgba(6,10,20,0.65)';
+            ctx.lineWidth = 5.5;
+            ctx.setLineDash([]);
+          } else {
+            ctx.strokeStyle = bone[2] === 'L' ? TEAL : bone[2] === 'R' ? AMBER : INK2;
+            ctx.lineWidth = 2.4;
+            // right side dashed, never colour alone — as in the app
+            ctx.setLineDash(bone[2] === 'R' ? [6, 4] : []);
+          }
+          ctx.stroke();
+        }
+      }
+      ctx.setLineDash([]);
+
+      for (var n = 0; n < st.names.length; n++) {
+        var name = st.names[n], pt = P[name];
+        if (!pt) continue;
+        if (name === 'nose') {
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, scale * 0.62, 0, 6.2832);
+          ctx.fillStyle = INK2;
+          ctx.fill();
+          continue;
+        }
+        var isFoot = /heel|toe|ankle/.test(name);
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, isFoot ? 3.2 : 2.6, 0, 6.2832);
+        ctx.fillStyle = name.charAt(name.length - 1) === 'R' ? AMBER : TEAL;
+        ctx.fill();
+      }
+
+      // ---- knee angle arc on the near leg -------------------------
+      (function () {
+        var hip = P.hipL, kn = P.kneeL, an = P.ankleL;
+        var r = Math.min(20, scale * 1.5);
+        var a1 = Math.atan2(hip.y - kn.y, hip.x - kn.x);
+        var a2 = Math.atan2(an.y - kn.y, an.x - kn.x);
+        var sweep = a2 - a1;
+        while (sweep > Math.PI) sweep -= 6.2832;
+        while (sweep < -Math.PI) sweep += 6.2832;
+        ctx.beginPath();
+        ctx.arc(kn.x, kn.y, r, a1, a1 + sweep, sweep < 0);
+        ctx.strokeStyle = TEAL;
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+        var mid = a1 + sweep / 2;
+        var deg = Math.round(180 - Math.abs(sweep) * 57.2958);
+        ctx.font = '600 10px ui-monospace, Menlo, Consolas, monospace';
+        ctx.fillStyle = '#e8eef9';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(deg + '\u00B0', kn.x + Math.cos(mid) * (r + 12) - 8, kn.y + Math.sin(mid) * (r + 12));
+      })();
+
+      // ---- event timeline ----------------------------------------
+      var tlY = h - 16;
+      ctx.strokeStyle = LINE;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(10, tlY); ctx.lineTo(w - 10, tlY); ctx.stroke();
+
+      // ticks scroll leftwards at one stride per period, so a strike tick
+      // crosses the playhead exactly when the foot lands
+      var span = w - 20;
+      var pxPerStride = span / 2.6;
+      for (var k = -1; k < 5; k++) {
+        for (var s2 = 0; s2 < 2; s2++) {
+          var evPh = k + (s2 === 0 ? 0 : 0.5);
+          var x = 10 + span * 0.5 + (evPh - ph) * pxPerStride;
+          if (x < 8 || x > w - 8) continue;
+          ctx.strokeStyle = s2 === 0 ? TEAL : AMBER;
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(x, tlY - 6); ctx.lineTo(x, tlY + 6); ctx.stroke();
+          var xo = x + duty * pxPerStride;
+          if (xo > 8 && xo < w - 8) {
+            ctx.globalAlpha = 0.45;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(xo, tlY - 3.5); ctx.lineTo(xo, tlY + 3.5); ctx.stroke();
+            ctx.globalAlpha = 1;
+          }
+        }
+      }
+      // playhead
+      ctx.strokeStyle = '#e8eef9';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(10 + span * 0.5, tlY - 10); ctx.lineTo(10 + span * 0.5, tlY + 10);
+      ctx.stroke();
+
+      // ---- on-device badge ---------------------------------------
+      ctx.font = '700 9px ui-monospace, Menlo, Consolas, monospace';
+      ctx.fillStyle = '#34d399';
+      ctx.textBaseline = 'top';
+      ctx.beginPath();
+      ctx.arc(14, 15, 3, 0, 6.2832);
+      ctx.fill();
+      ctx.fillText('ON-DEVICE', 22, 11);
+    }
+  };
+
   /* ===========================================================
      Controller: DPR-aware sizing, hover-gated rAF loop
      =========================================================== */
@@ -754,7 +1014,8 @@
     'frontier': frontier,
     'finite-elemented': finiteElemented,
     'cross-section-studio': crossSectionStudio,
-    'leaps': leaps
+    'leaps': leaps,
+    'stride-lab': strideLab
   };
 
   function initCard(card) {

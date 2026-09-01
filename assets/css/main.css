@@ -2733,6 +2733,9 @@ body.Publications .pub-article .pub-section:first-of-type {
 .gradient-noun[data-app="leaps"] {
 	background-image: linear-gradient(90deg, #2166ac, #22d3d1, #b2182b, #2166ac);
 }
+.gradient-noun[data-app="stride-lab"] {
+	background-image: linear-gradient(90deg, #22d3d1, #34d399, #f0a44a, #22d3d1);
+}
 
 .app-card .status-badge {
 	position: absolute;
