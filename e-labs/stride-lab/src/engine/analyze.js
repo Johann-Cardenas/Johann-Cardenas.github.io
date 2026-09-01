@@ -18,7 +18,7 @@ import { recommend } from './recommend/rules.js';
 import { ENGINE_VERSION } from './version.js';
 import {
     DEFAULT_CUTOFF_HZ, FPS_REJECT_BELOW, FPS_TIMING_MIN, SUBJECT_FILL_MIN,
-    median, mean
+    median, mean, quantile
 } from './types.js';
 
 /**
@@ -51,18 +51,43 @@ export function runPipeline(series, opts) {
     if (!Number.isFinite(fps) || fps <= 0) {
         return fail('no-timebase', 'The clip has no usable frame timestamps.');
     }
-    const jitter = intervals.length > 1
-        ? (Math.max(...intervals) - Math.min(...intervals)) / dtMed
+    /* Spread between the 10th and 90th percentile, NOT max minus min.
+       A range is the least robust statistic there is: one skipped frame makes
+       one interval twice the others and reports 100% variation, which is what a
+       genuinely variable-frame-rate recording looks like too. The two need
+       telling apart, because they call for different things — VFR means the
+       timing metrics rest on a median rate, a single skip means almost nothing.
+       Everything else in this engine gates on a robust statistic (D10, D12);
+       this was the exception, and it fired on healthy 30 fps clips. */
+    const jitter = intervals.length > 3
+        ? (quantile(intervals, 0.9) - quantile(intervals, 0.1)) / dtMed
         : 0;
+    const skips = intervals.filter(dt => dt > dtMed * 1.5).length;
     if (jitter > 0.5) {
         warnings.push({
             code: 'variable-frame-rate',
-            message: `Frame intervals vary by ${(jitter * 100).toFixed(0)}%. Timing metrics use the measured median rate of ${fps.toFixed(1)} fps.`
+            message: `Frame intervals vary by ${(jitter * 100).toFixed(0)}%, so this was recorded at a variable frame rate. Timing metrics use the measured median rate of ${fps.toFixed(1)} fps.`
+        });
+    } else if (skips > 0 && skips <= intervals.length * 0.1) {
+        warnings.push({
+            code: 'frames-skipped',
+            message: `${skips} frame${skips === 1 ? ' was' : 's were'} skipped in an otherwise steady ${fps.toFixed(0)} fps clip. `
+                + 'Too few to affect the measurements; the gaps are interpolated over.'
         });
     }
     if (fps < FPS_REJECT_BELOW) {
-        return fail('fps-too-low',
-            `This clip is ${fps.toFixed(0)} fps. Below ${FPS_REJECT_BELOW} fps there is not enough time resolution for any of these measurements. Record at 60 fps or higher.`);
+        /* Blame the right thing. `fps` here is measured from the timestamps of
+           the frames that ARRIVED, so when the playback fallback could not keep
+           up with the model it is our sampling rate, not the camera's — and
+           telling somebody to re-record at 60 fps when they already shot at 30
+           sends them to do something that cannot help. */
+        const lost = opts.droppedFrames > 0 && Number.isFinite(opts.sourceFps)
+            && opts.sourceFps > fps * 1.25;
+        return fail('fps-too-low', lost
+            ? `Only ${fps.toFixed(0)} of this clip's ${opts.sourceFps.toFixed(0)} frames per second reached the analysis: `
+              + 'this browser had to decode by playing the clip rather than frame by frame, and could not keep up with the '
+              + 'pose model. The recording is fine. An MP4 (rather than WebM) will take the fast path, and so will a browser with WebCodecs.'
+            : `This clip is ${fps.toFixed(0)} fps. Below ${FPS_REJECT_BELOW} fps there is not enough time resolution for any of these measurements. Record at 60 fps or higher.`);
     }
     if (fps < FPS_TIMING_MIN) {
         warnings.push({

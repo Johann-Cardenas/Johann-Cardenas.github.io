@@ -835,6 +835,97 @@ what made it certain, and therefore visible.
 
 ---
 
+## D40. The playback decoder has to stop the clock
+
+**Decision.** `decodeWithVideoElement` pauses the video around the awaited
+`onFrame`, and registers the next `requestVideoFrameCallback` before resuming.
+
+**Why.** It did not, and the consequence was severe and silent. `onFrame` is
+pose inference — a hundred milliseconds and up per frame — and a playing video
+does not wait for it. Re-registering the callback only after the await meant
+every frame presented while the model was busy was gone: the decoder sampled at
+the speed of inference rather than at the frame rate of the clip.
+
+Measured on a real 30 fps recording: a free consumer got 24 fps, a 40 ms
+consumer 11.5 fps with 51 of 117 frames dropped, and real inference about 5.
+The pipeline then read 5 fps off the timestamps of the frames that survived,
+refused the clip, and told the user to **re-record at 60 fps or higher** — about
+a recording that was already 30, and whose frames the app had thrown away
+itself. After the fix the same clip yields 119 frames at 29.8 fps and analyses.
+
+This is not an exotic path. The demuxer here is ISO-BMFF only, so **every WebM
+file falls back to it on every browser**, including files the app's own camera
+recorder produces whenever `MediaRecorder` cannot give it MP4 — Firefox always,
+and Chrome depending on the build. Record a clip in the app, and the app could
+refuse it.
+
+The cost is honest: decode now takes as long as inference does, which is what
+the WebCodecs path costs too. There is no way to get every frame out of a
+`<video>` except to stop time, and a sampling decoder that quietly discards
+four fifths of a clip is worse than a slow one.
+
+**And the refusal now names the right culprit.** `runPipeline` is told how many
+frames the decoder lost and what the source rate was, and when the two disagree
+it says the browser could not keep up rather than blaming the camera. Advice
+that cannot help is worse than no advice.
+
+---
+
+## D41. One skipped frame is not a variable frame rate
+
+**Decision.** Frame-interval spread is the 10th-to-90th-percentile range over
+the median, not max minus min. A few isolated long gaps are reported separately,
+as skips.
+
+**Why.** A range is the least robust statistic available, and it was the one
+gating this warning. One skipped frame makes one interval twice the others and
+reports "Frame intervals vary by 100%" — which is what a genuinely
+variable-frame-rate phone recording looks like too, and the two call for
+different things. On the two-runner test clip it read 121% for a clip that was
+steady 30 fps apart from two skips in 119 frames.
+
+Every other gate in this engine rests on a robust statistic — D10 uses the
+standard error rather than the spread, D12 a weighted median before a mean.
+This was the exception, and it fired on healthy clips.
+
+---
+
+## D42. Four more defects, found by exercising what the demo could not
+
+The filmed demo has one runner in it and is an MP4, so it exercises neither the
+person-picker nor the fallback decoder. Both were reached with a clip built for
+the purpose: the demo composited beside a time-shifted copy of itself, recorded
+to WebM through `MediaRecorder`. Everything in D40 and D41 came out of that, and
+so did these.
+
+**The picker was unreachable by keyboard.** The choice is a gate — the analysis
+stops until it is answered — and the only way to answer was clicking a canvas.
+There is now a real `<button>` per candidate beside the prompt, carrying the
+same number its box is labelled with, focused on open, and highlighting its box
+on focus so the two readings of one choice stay tied together.
+
+**The picker was drawn into a letterbox.** The live canvas is pinned to 360px
+for the progress display, which left each candidate about 80px wide to hit on a
+desktop viewport and far less on a phone. It grows to `min(64vh, 620px)` while
+choosing and is put back afterwards.
+
+**The share link was built and never shown.** `shareLink` awaited
+`navigator.clipboard.writeText` and only then wrote any text. Without transient
+user activation Chrome does not reject that promise, it leaves it pending
+forever — so the panel opened, stayed empty, and the link the user had asked
+for was never displayed. A `catch` cannot catch a promise that never settles.
+The link now goes on screen first, in a selectable field, and the clipboard
+attempt is bounded and merely upgrades the status line. This is the same lesson
+Cross-Section Studio already learned: never let the clipboard be the only path.
+
+**A note on method.** Two of the four were invisible to the test suite and
+always would have been — they live in the DOM half, which is deliberately not
+unit-tested (D-series preamble). They were found by driving the real interface
+with a fixture built to reach the branches the shipped demo cannot. That is the
+argument for keeping a fixture generator around rather than only golden files.
+
+---
+
 ## Open questions the specification left for the human
 
 These were answered with the conservative default and are easy to change.

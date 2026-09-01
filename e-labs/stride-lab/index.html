@@ -334,8 +334,9 @@
                             <!-- processing -->
                             <div class="sl-stage" id="sl-stage-run" hidden>
                                 <canvas id="sl-live" class="sl-live"></canvas>
-                                <div class="sl-choose" id="sl-choose" hidden>
-                                    <span id="sl-choose-text">More than one person is in frame. Click the runner you want analysed.</span>
+                                <div class="sl-choose" id="sl-choose" hidden role="group" aria-labelledby="sl-choose-text">
+                                    <span id="sl-choose-text">More than one person is in frame. Choose the runner you want analysed.</span>
+                                    <div class="sl-choose-picks" id="sl-choose-picks"></div>
                                     <button class="sl-btn" id="sl-choose-cancel">Cancel</button>
                                 </div>
                                 <div class="sl-progress-panel" id="sl-progress-panel">

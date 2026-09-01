@@ -30,7 +30,7 @@ import {
 
 import {
     signedAngle, interiorAngle, median, mad, mean, sd, trimmedMean, weightedMedian,
-    asymmetryIndex, clamp, weakest, atLeast, CANONICAL, WINTER, sampleAt, indexAtTime,
+    asymmetryIndex, clamp, weakest, atLeast, quantile, CANONICAL, WINTER, sampleAt, indexAtTime,
     OPTIONAL_KEYPOINTS, SEGMENTS, SEGMENT_FALLBACK, G
 } from '../src/engine/types.js';
 import {
@@ -1524,6 +1524,89 @@ test('the question is asked on a frame where every candidate is actually visible
     const [a, b] = res.candidates.map(c => (c.box.x0 + c.box.x1) / 2);
     assert(Math.abs(a - b) > 0.2, `the candidates must be distinct people (centres ${a.toFixed(2)}, ${b.toFixed(2)})`);
     note(`asked on frame ${res.pickFrame} of ${N}; both candidates boxed there`);
+});
+
+group('Frame timing — a skipped frame is not a variable frame rate');
+
+/** Re-time a synthetic series onto given intervals, keeping the poses. */
+function retime(series, intervals) {
+    const t = new Float64Array(series.n);
+    for (let i = 1; i < series.n; i++) t[i] = t[i - 1] + intervals[(i - 1) % intervals.length];
+    return { ...series, t };
+}
+
+test('quantile interpolates, and resists outliers where a range cannot', () => {
+    assertClose(quantile([0, 10], 0.5), 5, 1e-9, 'interpolates between two');
+    assertClose(quantile([0, 10], 0.25), 2.5, 1e-9);
+    assert(Number.isNaN(quantile([], 0.5)), 'no values, no quantile');
+    assertClose(quantile([7], 0.9), 7, 1e-9, 'one value is every quantile');
+    assertClose(quantile([3, 1, 2], 0.5), 2, 1e-9, 'sorts before it reads');
+
+    /* The property this exists for, at the sample size it is used at: frame
+       intervals over a clip, where a couple of skips must not look like the
+       whole clip wandering. A range reports the outlier at full strength
+       however many good samples surround it; p90 does not. */
+    const v = new Array(120).fill(1);
+    v[17] = 100; v[93] = 100;
+    assertClose(quantile(v, 0.9), 1, 1e-9, 'two outliers in 120 do not reach the 90th percentile');
+    assertClose(quantile(v, 0.5), 1, 1e-9, 'nor the median');
+    assertEqual(Math.max(...v), 100, 'while the range is dragged all the way out by them');
+});
+
+test('one skipped frame in a steady clip is NOT reported as a variable frame rate', () => {
+    /* The regression: jitter was (max - min) / median, so a single doubled
+       interval — one frame skipped by the decoder, which the playback fallback
+       does routinely — reported "Frame intervals vary by 100%" on a clip that
+       was recorded at a perfectly steady rate. Measured on a real 30 fps
+       recording it said 121%. */
+    const g = synthGait({ fps: 120, durationS: 6 });
+    const dt = 1 / 120;
+    const intervals = new Array(g.series.n - 1).fill(dt);
+    intervals[40] = dt * 2;          /* exactly one skip */
+    intervals[300] = dt * 2;         /* and a second, far away */
+    const r = runPipeline(retime(g.series, intervals), { heightM: 1.75, surface: 'treadmill', speedMs: 3.0 });
+    assert(r.ok, r.message);
+    assert(!r.warnings.some(w => w.code === 'variable-frame-rate'),
+        'two skips in 700 frames is not a variable frame rate');
+    const skipped = r.warnings.find(w => w.code === 'frames-skipped');
+    assert(skipped, 'but the skips are still reported, as skips');
+    assert(/2 frames were skipped/.test(skipped.message), skipped.message);
+});
+
+test('a genuinely variable frame rate is still caught', () => {
+    const g = synthGait({ fps: 120, durationS: 6 });
+    const dt = 1 / 120;
+    /* phone VFR: intervals wander over a wide range, most of them */
+    const intervals = [];
+    for (let i = 0; i < g.series.n - 1; i++) intervals.push(dt * (0.6 + 0.9 * ((i * 7919) % 1000) / 1000));
+    const r = runPipeline(retime(g.series, intervals), { heightM: 1.75, surface: 'treadmill', speedMs: 3.0 });
+    assert(r.ok, r.message);
+    assert(r.warnings.some(w => w.code === 'variable-frame-rate'),
+        'a clip whose intervals really do wander must say so');
+    assert(!r.warnings.some(w => w.code === 'frames-skipped'),
+        'and must not also be described as a steady clip with a few skips');
+});
+
+test('a slow decoder is not allowed to blame the camera', () => {
+    /* The playback fallback measures fps from the frames that ARRIVED. When it
+       could not keep up with the pose model, that is our number and not the
+       camera's, and "record at 60 fps or higher" is advice that cannot help. */
+    const g = synthGait({ fps: 120, durationS: 6 });
+    const dt = 1 / 10;                       /* only 10 fps reached us */
+    const slow = retime(g.series, new Array(g.series.n - 1).fill(dt));
+    const blamed = runPipeline(slow, { heightM: 1.75, surface: 'treadmill', speedMs: 3.0 });
+    assertEqual(blamed.code, 'fps-too-low');
+    assert(/Record at 60 fps or higher/.test(blamed.message),
+        'with no decode information, the honest reading is that the clip is slow');
+
+    const known = runPipeline(slow, {
+        heightM: 1.75, surface: 'treadmill', speedMs: 3.0,
+        droppedFrames: 240, sourceFps: 30
+    });
+    assertEqual(known.code, 'fps-too-low', 'it still cannot be analysed');
+    assert(!/Record at 60 fps/.test(known.message), 'but the camera must not be blamed for it');
+    assert(/The recording is fine/.test(known.message), known.message);
+    assert(/30 frames per second/.test(known.message), 'and the real rate is named');
 });
 
 group('Proposing the analysis window');

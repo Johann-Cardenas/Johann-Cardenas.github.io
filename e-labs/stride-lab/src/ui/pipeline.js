@@ -83,7 +83,7 @@ export async function analyseFile(file, opts) {
     const mirrored = !!info.mirrored;
     const swapAxes = rotationDeg === 90 || rotationDeg === 270;
 
-    await extractFrames(file, {
+    const decode = await extractFrames(file, {
         probe: info,
         startS: opts.startS,
         endS: opts.endS,
@@ -186,7 +186,12 @@ export async function analyseFile(file, opts) {
         view: opts.view,
         backend: runner.backendId,
         stage2,
-        worldLegLengthM: worldLeg
+        worldLegLengthM: worldLeg,
+        /* What the decoder managed, as distinct from what the camera did. Only
+           the playback fallback can lose frames, and when it has, the sampled
+           rate is ours and not the clip's. */
+        droppedFrames: decode ? decode.dropped : 0,
+        sourceFps: decode ? decode.sourceFps : null
     });
     progress('metrics');
     progress('score');

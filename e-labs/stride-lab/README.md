@@ -24,7 +24,7 @@ python -m http.server 8000        # from the repository root
 ## Test it
 
 ```bash
-npm test          # node test/run.mjs — 118 checks, no dependencies
+npm test          # node test/run.mjs — 122 checks, no dependencies
 npm run banner    # regenerate the E-Labs card image from the engine
 ```
 
@@ -117,6 +117,13 @@ replacing the file without updating the note fails the build. See D36.
   D12 in `DECISIONS.md` before touching `events/detect.js`; three separate
   attempts at the dispersion statistic were wrong in ways that only showed up as
   "every stride discarded" or "error grows with noise".
+- **The playback decoder must pause around `onFrame`.** It is the fallback for
+  every non-MP4 file on every browser (the demuxer is ISO-BMFF only), and
+  inference takes longer than a frame interval. Letting the video play through
+  the await sampled at the speed of the model — 5 fps out of a 30 fps clip —
+  and the pipeline then refused the clip and blamed the camera. See D40.
+- **Frame-interval spread is a percentile range, never max minus min.** One
+  skipped frame is not a variable frame rate. See D41.
 - **A score of 0 must mean out of range.** `scoreValue` divides by the reach
   from the optimal centre to the acceptable edge *on the side the value falls*,
   because 21 of the 24 bands are asymmetric. Using one half-width for both sides

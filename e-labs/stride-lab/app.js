@@ -712,8 +712,14 @@ async function askWhichRunner(ask) {
     prompt.hidden = false;
     panel.hidden = true;
     $('sl-choose-text').textContent =
-        `${cands.length} people are in frame for much of this clip. Click the runner you want analysed.`;
+        `${cands.length} people are in frame for much of this clip. Choose the runner you want analysed.`;
     canvas.classList.add('sl-live-pick');
+
+    /* Choosing needs a bigger picture than watching a progress bar does. The
+       live canvas is pinned to 360px for the run, which on a desktop viewport
+       leaves a candidate about 80px wide to hit, and far less on a phone. */
+    const priorHeight = canvas.style.height;
+    canvas.style.height = 'min(64vh, 620px)';
 
     const theme = themeFrom($('sl-viewport'));
     let boxes = [];
@@ -776,11 +782,35 @@ async function askWhichRunner(ask) {
             return best;
         };
         const onMove = (ev) => { const b = hit(ev); paint(b ? b.id : null); };
+
+        /* One real button per candidate, beside the prompt.
+           The picture is the good way to choose and the only way that was
+           offered, which left the choice unreachable by keyboard and invisible
+           to a screen reader — and it is not an optional step that can be
+           skipped, it is a gate the analysis stops at. The buttons carry the
+           same numbers the boxes are labelled with, and focusing one highlights
+           its box, so the two readings of the same choice stay tied together. */
+        const picks = $('sl-choose-picks');
+        picks.innerHTML = '';
+        const buttons = cands.map((c, i) => {
+            const b = el('button', 'sl-btn sl-choose-pick', `Runner ${i + 1}`);
+            b.type = 'button';
+            b.setAttribute('aria-label', `Analyse runner ${i + 1}, in frame for ${(c.coverage * 100).toFixed(0)}% of the clip`);
+            b.addEventListener('click', () => finish(c.id));
+            b.addEventListener('focus', () => paint(c.id));
+            b.addEventListener('mouseenter', () => paint(c.id));
+            b.addEventListener('blur', () => paint(null));
+            picks.appendChild(b);
+            return b;
+        });
+
         const finish = (id) => {
             canvas.removeEventListener('click', onClick);
             canvas.removeEventListener('mousemove', onMove);
             $('sl-choose-cancel').removeEventListener('click', onCancel);
             canvas.classList.remove('sl-live-pick');
+            canvas.style.height = priorHeight;
+            picks.innerHTML = '';
             prompt.hidden = true;
             panel.hidden = false;
             resolve(id);
@@ -790,6 +820,8 @@ async function askWhichRunner(ask) {
         canvas.addEventListener('click', onClick);
         canvas.addEventListener('mousemove', onMove);
         $('sl-choose-cancel').addEventListener('click', onCancel);
+        /* Move focus into the choice, or a keyboard user has to find it. */
+        if (buttons[0]) buttons[0].focus();
     });
 }
 
@@ -2231,22 +2263,55 @@ async function exportOverlayVideo() {
     toast('Overlay video saved.');
 }
 
+/**
+ * Share the summary as a link.
+ *
+ * The link goes ON SCREEN before the clipboard is attempted, and that ordering
+ * is the whole fix. `navigator.clipboard.writeText` needs transient user
+ * activation, and when it does not have it Chrome does not reject — it leaves
+ * the promise pending forever. The previous version awaited it and only then
+ * wrote any text, so a stalled copy left the panel open, empty, and silent:
+ * the link had been built and the user could neither see nor use it. A catch
+ * cannot catch a promise that never settles, so the await is bounded too.
+ */
 async function shareLink() {
     if (!S.result) return;
     const code = await store.makeShareCode(S.result);
     const url = `${location.origin}${location.pathname}#s=${code}`;
     const note = $('sl-share-note');
     note.hidden = false;
+    note.textContent = '';
     if (url.length > 4000) {
         note.textContent = 'The summary is too large for a link. Export the JSON instead.';
         return;
     }
+
+    const field = document.createElement('input');
+    field.type = 'text';
+    field.readOnly = true;
+    field.value = url;
+    field.className = 'sl-share-url';
+    field.setAttribute('aria-label', 'Shareable link to this summary');
+    field.addEventListener('focus', () => field.select());
+    note.appendChild(field);
+    const status = el('span', 'sl-share-status', 'Copying…');
+    note.appendChild(status);
+    note.appendChild(el('span', '', 'Everything travels after the "#", which browsers never send to a server — so the numbers reach whoever you send it to and nobody else.'));
+
     try {
-        await navigator.clipboard.writeText(url);
-        note.textContent = 'Link copied. Everything travels after the "#", which browsers never send to a server — so the numbers reach whoever you send it to and nobody else.';
+        await withTimeout(navigator.clipboard.writeText(url), 1500);
+        status.textContent = 'Copied to the clipboard.';
     } catch {
-        note.textContent = url;
+        status.textContent = 'This browser would not let the page use the clipboard — select the link above and copy it.';
     }
+}
+
+/** Reject after `ms` if the promise has not settled. */
+function withTimeout(promise, ms) {
+    return Promise.race([
+        promise,
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))
+    ]);
 }
 
 async function exportBundle() {
