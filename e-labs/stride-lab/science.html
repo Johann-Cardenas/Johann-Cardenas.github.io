@@ -1,0 +1,691 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <script>
+        (function () {
+            var theme = localStorage.getItem('theme-preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme-preference', theme);
+        })();
+    </script>
+    <title>Method and limits | Stride Lab</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="What Stride Lab measures, exactly how each number is computed, what has and has not been validated, and the limitations of two-dimensional single-camera gait analysis." />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../../assets/css/main.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="science.css" />
+    <link rel="canonical" href="https://www.johanncardenas.com/e-labs/stride-lab/science.html">
+</head>
+<body class="StrideLab is-preload">
+<div id="page-wrapper">
+
+    <section id="header">
+        <h1><a href="../../index.html">Johann Cardenas</a></h1>
+        <nav id="nav">
+            <ul>
+                <li><a href="../../index.html">Home</a></li>
+                <li>
+                    <a href="../../Projects.html">Projects</a>
+                    <ul>
+                        <li><a href="../../projects/IDOT_Traffic.html">Traffic Factors for ME Pavement Design</a></li>
+                        <li><a href="../../projects/CCAT_Hydroplaning.html">Quantification of Hydroplaning Risks</a></li>
+                        <li><a href="../../projects/ACRP_FEM.html">ME Overload Permitting for Airfields</a></li>
+                        <li><a href="../../projects/EV_Trucks.html">Impact of HDEVs on Flexible Pavements</a></li>
+                        <li><a href="../../projects/FAA_Data.html">ML-Based Models for Airfield Pavements</a></li>
+                        <li><a href="../../projects/MS_Thesis.html">Impact of DWL on Flexible Pavements</a></li>
+                    </ul>
+                </li>
+                <li><a href="../../Publications.html">Publications</a></li>
+                <li><a href="../../Resume.html">Resume</a></li>
+                <li><a href="../../Blog.html">Blog</a></li>
+                <li><a href="../../News.html">News</a></li>
+                <li class="current">
+                    <a href="../../E-Labs.html">E-Labs</a>
+                    <ul>
+                        <li><a href="../../e-labs/gear3d/index.html">Gear3D</a></li>
+                        <li><a href="../../e-labs/qr-studio/index.html">QR Studio</a></li>
+                        <li><a href="../../e-labs/leaps/index.html">LEAPS</a></li>
+                        <li><a href="../../e-labs/stride-lab/index.html">Stride Lab</a></li>
+                        <li><a href="../../e-labs/cross-section-studio/index.html">Cross-Section Studio</a></li>
+                        <li><a href="../../e-labs/finite-elemented/index.html">Finite-Elemented</a></li>
+                        <li><a href="../../e-labs/frontier/index.html">Frontier</a></li>
+                        <li><a href="https://curly-adventure-y724nlw.pages.github.io/apps/aircrafter/" target="_blank" rel="noopener">AirCrafter</a></li>
+                        <li><a href="https://curly-adventure-y724nlw.pages.github.io/apps/asphera/" target="_blank" rel="noopener">Asphera</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </section>
+
+    <section id="main">
+        <div class="sl-app sl-doc" id="main-content" tabindex="-1">
+
+            <div class="app-header">
+                <div class="header-nav">
+                    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Stride Lab</a>
+                    <div class="header-badges">
+                        <span class="header-badge"><i class="fas fa-flask"></i> Method</span>
+                        <span class="header-badge"><i class="fas fa-code-branch"></i> engine v1.0.0</span>
+                    </div>
+                </div>
+                <div class="header-content">
+                    <h1><span class="sl-icon"><i class="fas fa-flask"></i></span> <span>Method and <span class="highlight">limits</span></span></h1>
+                    <p>
+                        What is measured, exactly how, what the error is, and what this cannot do.
+                        The last of those is the longest section, which is the correct proportion for a tool
+                        that estimates biomechanics from one camera.
+                    </p>
+                </div>
+            </div>
+
+            <nav class="sl-toc" aria-label="On this page">
+                <a href="#claims">What is and is not claimed</a>
+                <a href="#pipeline">The pipeline</a>
+                <a href="#events">Detecting foot strike and toe-off</a>
+                <a href="#error">The error budget</a>
+                <a href="#body">The body model</a>
+                <a href="#evidence">What the evidence supports</a>
+                <a href="#metrics">Every measurement, defined</a>
+                <a href="#norms">The reference ranges</a>
+                <a href="#validation">Validation status</a>
+                <a href="#limits">Limitations</a>
+                <a href="#privacy">Privacy</a>
+                <a href="#references">References</a>
+            </nav>
+
+            <!-- ============================================ -->
+            <section class="sl-doc-section" id="claims">
+                <h2>What is and is not claimed</h2>
+
+                <div class="sl-claimgrid">
+                    <div class="sl-claim yes">
+                        <h3>What this does</h3>
+                        <ul>
+                            <li>Estimates 2D body landmarks per frame with a published pose model, then computes joint and segment angles, gait event times and derived measurements from them.</li>
+                            <li>Reports every measurement with a 95% interval built from frame-rate quantisation, the disagreement between independent event detectors, and the stride-to-stride spread.</li>
+                            <li>Suppresses measurements it cannot support — contact time below 60 fps, frontal-plane measurements on a side view, anything whose landmarks are missing for more than a quarter of the relevant frames.</li>
+                            <li>Compares each measurement against a stated range with a stated source and a stated evidence strength, and shows you all three.</li>
+                            <li>Runs entirely in your browser.</li>
+                        </ul>
+                    </div>
+                    <div class="sl-claim no">
+                        <h3>What this does not do</h3>
+                        <ul>
+                            <li>It is <strong>not a medical device</strong>. It does not diagnose, treat, or prevent anything.</li>
+                            <li>It does <strong>not predict injury</strong>. Where the literature links a measurement to injury risk, that is an association observed in a population. It supports the statement "pelvic drop is associated with injury risk in the literature". It does not support "your injury risk is X".</li>
+                            <li>It is <strong>not lab-grade</strong> and is not described as such anywhere. No claim of "lab quality" or "clinically validated" appears in this app, because no validation study backs one.</li>
+                            <li>It does <strong>not measure force</strong>. Nothing here is a loading rate or an impact force, and no metric is labelled as one — you cannot get force from video.</li>
+                            <li>It does <strong>not measure pronation</strong>. See the rearfoot proxy in the limitations below.</li>
+                            <li>It is <strong>not 3D</strong>. It is a planar analysis from one camera, and every angle inherits that.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================ -->
+            <section class="sl-doc-section" id="pipeline">
+                <h2>The pipeline</h2>
+                <p>
+                    Thirteen stages, from a file to a report. Stages A to C are the browser layer; D to L are a
+                    pure function with no access to the DOM, the network or a clock, which is what makes it
+                    testable against signals whose answers are known.
+                </p>
+
+                <ol class="sl-pipeline">
+                    <li><span class="sl-pl-tag">A</span><div><strong>Ingest and validate</strong> — duration, resolution, rotation metadata, and the frame rate <em>measured from the decoded timestamps rather than read from the container</em>, because container metadata about frame rate on phone video is routinely wrong.</div></li>
+                    <li><span class="sl-pl-tag">B</span><div><strong>Frame extraction</strong> — WebCodecs over a sample table parsed from the MP4, giving the exact presentation timestamp of every frame. Never <code>currentTime</code> seeking: frame-accurate seeking is not guaranteed and every timing measurement here is a difference between two frame timestamps. Where WebCodecs is unavailable, playback with <code>requestVideoFrameCallback</code> is used and the result is flagged as reduced timing precision.</div></li>
+                    <li><span class="sl-pl-tag">C</span><div><strong>Pose estimation</strong> — MediaPipe Tasks Vision <code>PoseLandmarker</code>, BlazePose GHUM, 33 landmarks. Chosen for the keypoint set, not the speed: it has heel and toe, and foot-strike angle cannot be computed without both.</div></li>
+                    <li><span class="sl-pl-tag">D</span><div><strong>Person selection</strong> — several people are detected, tracked by overlap and centroid distance through up to eight frames of occlusion, and one is chosen. If two candidates each appear in more than 40% of frames the app stops and asks, rather than guessing: guessing wrong produces a normal-looking report about somebody else.</div></li>
+                    <li><span class="sl-pl-tag">E</span><div><strong>Signal conditioning</strong> — in this order and no other: convert to a y-up frame; gate out samples below 0.5 visibility as <em>missing</em>, not zero; interpolate gaps of three frames or fewer and leave longer ones missing; a Hampel filter to remove single-frame limb swaps <em>before</em> smoothing, because a low-pass smears an outlier across its neighbours rather than removing it; then a zero-phase Butterworth.</div></li>
+                    <li><span class="sl-pl-tag">F</span><div><strong>View and direction</strong> — sagittal or frontal from the projected shoulder width relative to torso height; a view between the thresholds is reported as oblique and flagged. Direction of travel comes from the <em>foot orientation</em> — the toe is in front of the heel for every runner moving forwards — and not from body velocity, which is zero on a treadmill.</div></li>
+                    <li><span class="sl-pl-tag">G</span><div><strong>Scaling</strong> — pixels to metres from your height and Winter's segment-length fractions, measured on your own thigh and shin, <em>per frame</em>. A single global scale makes vertical oscillation appear to change as you cross the frame, which is indistinguishable in the output from a real change in technique.</div></li>
+                    <li><span class="sl-pl-tag">H</span><div><strong>Gait events</strong> — five independent foot-strike detectors and three toe-off detectors, clustered and voted. Detailed below.</div></li>
+                    <li><span class="sl-pl-tag">I</span><div><strong>Stride segmentation</strong> — strides that violate any sanity constraint (alternating feet, stance 100–400 ms, stride 500–1100 ms, duty factor 0.20–0.50) are discarded, as are the first and last stride of every clip.</div></li>
+                    <li><span class="sl-pl-tag">J</span><div><strong>Measurements</strong> — per stride, then a 10% trimmed mean with the standard deviation across strides. Left and right always separately, plus the asymmetry index. This is also where the fourteen-segment inertial model produces the whole-body centre of mass and the spring-mass stiffness estimates.</div></li>
+                    <li><span class="sl-pl-tag">K</span><div><strong>Scoring</strong> — against stated ranges, weighted by evidence strength, and never computed at all for a measurement below medium confidence.</div></li>
+                    <li><span class="sl-pl-tag">L</span><div><strong>Recommendations</strong> — deterministic rules over the scored measurements. No language model, no classifier. Capped at three findings.</div></li>
+                    <li><span class="sl-pl-tag">M</span><div><strong>Render</strong> — overlay, charts, report.</div></li>
+                </ol>
+
+                <h3>The filter, and the correction that is usually missing</h3>
+                <p>
+                    Trajectories are low-pass filtered with a 2nd-order Butterworth applied forward and then
+                    backward, which gives a 4th-order magnitude response with <strong>zero phase lag</strong>.
+                    Phase lag is disqualifying here: a lagged signal shifts every gait event by the same amount,
+                    so the bias survives averaging over any number of strides.
+                </p>
+                <p>
+                    Applying a filter twice narrows the passband, so the design cutoff has to be raised to land on
+                    the intended effective cutoff:
+                </p>
+                <pre><code>C = (2^(1/n) - 1)^(1/(2·order))     n = 2 passes, order = 2
+C = (√2 - 1)^(1/4) ≈ 0.8022
+designFc = effectiveFc / C ≈ 1.247 · effectiveFc</code></pre>
+                <p>
+                    So a 12 Hz effective cutoff is designed at 14.96 Hz. The default is 12 Hz rather than the 6 Hz
+                    conventional for walking, because impact transients and fast distal-segment motion in running
+                    live above 6 Hz. The validation suite checks this directly: a 2 Hz plus 30 Hz sum at 240 fps
+                    must come back with the 2 Hz component within 1% of its amplitude and no sample of lag, and the
+                    30 Hz component below 5%.
+                </p>
+            </section>
+
+            <!-- ============================================ -->
+            <section class="sl-doc-section" id="events">
+                <h2>Detecting foot strike and toe-off</h2>
+                <p>
+                    Everything with a unit of milliseconds depends on these two instants, so they get more
+                    machinery than anything else here.
+                </p>
+                <p>
+                    Two facts shape the design. First, against force-plate ground truth and using <em>marker</em>
+                    data, the best published kinematic methods land at roughly 22–25 ms for foot strike and about
+                    5 ms for toe-off (Fellin et al. 2010). Pose estimation adds error on top of that, so those are
+                    a floor, not a target — and foot strike is four to five times harder than toe-off, so it
+                    dominates the contact-time error budget.
+                </p>
+                <p>
+                    Second, and more important: <strong>heel-based strike detectors carry a strike-pattern-dependent
+                    offset.</strong> On a forefoot striker the heel does not reach the ground until roughly 70 ms
+                    after the foot does. A detector that keys off the heel therefore places every forefoot
+                    striker's contact 70 ms late and shortens their measured contact time by the same amount —
+                    a bias applied to one population and not the other, falling exactly on the distinction this
+                    app exists to measure. Measured on the synthetic forefoot runner in the test suite before the
+                    pattern-independent detector was added: <strong>72 ms</strong> mean absolute error, against 6 ms
+                    for the rearfoot runner. After: 4 ms and 0.1 ms.
+                </p>
+
+                <div class="sl-tablewrap">
+                    <table class="sl-doctable">
+                        <caption>Foot-strike detectors, and the weight each carries in the vote</caption>
+                        <thead><tr><th>Method</th><th>What it keys off</th><th>Weight</th><th>How it fails</th></tr></thead>
+                        <tbody>
+                        <tr><td>M0</td><td>The lower of heel and toe reaching the ground, taken at the <em>onset</em> of the plateau</td><td>1.3</td><td>Needs both foot landmarks; strike-pattern independent by construction</td></tr>
+                        <tr><td>M1</td><td>Heel vertical position minimum, plateau onset</td><td>1.0</td><td>Late on forefoot strikers</td></tr>
+                        <tr><td>M2</td><td>The heel's descent being arrested — first upward velocity crossing after a real descent</td><td>1.0</td><td>Noisy under motion blur; same bias as M1</td></tr>
+                        <tr><td>M3</td><td>Toe vertical position minimum, plateau onset</td><td>0.8</td><td>Late on rearfoot strikers; this is the one that carries forefoot strikers</td></tr>
+                        <tr><td>M4</td><td>The foot settling to its stance velocity — not to zero, because on a treadmill the planted foot travels at belt speed</td><td>0.6</td><td>Blunt; weakest voter</td></tr>
+                        <tr><td>M5</td><td>Pelvis vertical velocity minimum (Milner &amp; Paquette 2015)</td><td>0.9</td><td>Small constant lag, but strike-pattern <em>independent</em></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>
+                    Toe-off is searched only inside the plausible stance window after a detected strike, using peak
+                    knee extension (1.2), the toe starting to rise (0.8) and peak forward foot acceleration (0.6).
+                    That window is not an optimisation: the knee reaches full extension twice per stride, once
+                    approaching toe-off and again in terminal swing, and the two peaks are the same height. No
+                    amount of prominence ranking separates them; restricting the search does, by construction.
+                </p>
+                <p>
+                    Candidates within ±40 ms are clustered, and the event time is the weighted median of the
+                    cluster followed by the weighted mean of whatever survives a window around it — the median for
+                    its resistance to a detector firing in the wrong place, the mean because once the outliers are
+                    gone it uses all the information. The dispersion of the cluster is carried forward as that
+                    event's own uncertainty, and a stride whose events disagree by more than 25 ms is excluded.
+                </p>
+                <p>
+                    Independently of all of this, cadence is also estimated from the dominant frequency of pelvis
+                    vertical motion — the pelvis rises and falls once per step, so that frequency <em>is</em> the
+                    step frequency, arrived at without looking at a single event. If the two disagree by more than
+                    5%, the event detection is wrong and the report says so instead of printing a number.
+                </p>
+            </section>
+
+            <!-- ============================================ -->
+            <section class="sl-doc-section" id="error">
+                <h2>The error budget</h2>
+                <p>
+                    Frame-rate quantisation dominates every timing measurement. Ground contact lasts about 230 ms.
+                    At 30 fps a single frame is 33 ms, so a third of a contact time can be quantisation alone.
+                </p>
+                <div class="sl-tablewrap">
+                    <table class="sl-doctable">
+                        <thead><tr><th>Capture</th><th>Frame period</th><th>±1 frame on contact time</th><th>Relative</th><th>What this app does</th></tr></thead>
+                        <tbody>
+                        <tr><td>30 fps</td><td>33.3 ms</td><td>±33 ms</td><td>±14%</td><td><strong>Contact time, flight time and duty factor are suppressed.</strong> Cadence and angles are shown.</td></tr>
+                        <tr><td>60 fps</td><td>16.7 ms</td><td>±17 ms</td><td>±7%</td><td>Shown with an explicit interval</td></tr>
+                        <tr><td>120 fps</td><td>8.3 ms</td><td>±8 ms</td><td>±3.6%</td><td>Shown with an interval</td></tr>
+                        <tr><td>240 fps</td><td>4.2 ms</td><td>±4 ms</td><td>±1.8%</td><td>Full precision</td></tr>
+                        <tr><td>below 30 fps</td><td>—</td><td>—</td><td>—</td><td><strong>Rejected.</strong></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>The reported interval combines three independent contributions in quadrature:</p>
+                <pre><code>σ_quant  = T/√12 per event, so T·√(2/12) for an interval between two
+σ_method = the dispersion of the detectors that voted for each event
+σ_stride = the standard deviation across strides, divided by √n
+
+interval = 1.96 · √(σ_quant² + σ_method² + σ_stride²)</code></pre>
+                <p>
+                    <strong>Pose-estimation error is not in that figure.</strong> There is no honest way to put it
+                    there without a validation study, and the intervals shown are therefore optimistic by an
+                    unknown amount. Treat them as the <em>lower bound</em> on the uncertainty, not the whole of it.
+                </p>
+                <p>
+                    Scaling error propagates linearly into every distance. If the anthropometric scale and the
+                    pose model's own metric-space landmarks disagree by more than 20%, every length measurement is
+                    downgraded to low confidence and the report says why.
+                </p>
+            </section>
+
+
+            <!-- ============================================ -->
+            <section class="sl-doc-section" id="body">
+                <h2>The body model</h2>
+                <p>
+                    Twenty-five landmarks are tracked and fourteen body segments are built from them. The
+                    landmarks come from the pose model; the segments, and the whole-body centre of mass that
+                    follows, are constructed here.
+                </p>
+
+                <h3>Landmarks</h3>
+                <p>
+                    Nose, both ears, both eyes, shoulders, elbows, wrists, a hand centre from the finger
+                    landmarks, hips, knees, ankles, heels, big toes, and — where the keypoint set has one — the
+                    lateral forefoot. From these, four more points are derived: the pelvis and neck (the two ends
+                    of the trunk segment), the head centre at the ear midpoint, and mid-trunk.
+                </p>
+                <p>
+                    The ears matter more than they look. They are where Winter places the centre of mass of the
+                    head-and-neck segment, they survive a profile view far better than the eyes, and they are
+                    what makes head position and head stability measurable at all. The hand centre is the mean
+                    of the finger landmarks rather than the wrist, so a rotated forearm is not mistaken for a
+                    hand crossing the midline.
+                </p>
+                <p>
+                    Where a keypoint set genuinely lacks a landmark, the measurements that need it report
+                    themselves unavailable and name the missing landmark. The default backend has no lateral
+                    forefoot point, so the foot is a line rather than a plane and the foot progression angle
+                    cannot be formed — that is stated rather than approximated.
+                </p>
+
+                <h3>Segments and the centre of mass</h3>
+                <p>
+                    Fourteen segments — head and neck, trunk, and upper arm, forearm, hand, thigh, shank and
+                    foot on each side — each carrying Winter's mass fraction and centre-of-mass location. The
+                    fractions sum to 1.000 and a test asserts it. The mass-weighted mean of the segment centres
+                    is the whole-body centre of mass, and it is drawn on the annotated video as a crosshair.
+                </p>
+                <p class="sl-callout">
+                    <strong>The centre of mass is not the pelvis, and the difference is the point.</strong>
+                    Most video tools report the vertical movement of a hip landmark and call it vertical
+                    oscillation. The swinging limbs move opposite to the trunk and partly cancel its rise and
+                    fall, so the centre of mass moves measurably less — on the synthetic runner, about 7.4 cm
+                    against the pelvis's 8.5 cm. Since vertical oscillation of the centre of mass is the
+                    best-evidenced technique variable available to this app, it is worth measuring the thing
+                    rather than a proxy for it. Both are reported, and the pelvis one says which it is.
+                </p>
+
+                <h3>Stiffness, from a spring-mass model</h3>
+                <p>
+                    Vertical and leg stiffness are estimated by the method of Morin et al. (2005), which needs
+                    only contact time, flight time, body mass, running speed and leg length — all of which this
+                    app already has, and none of which requires a force plate:
+                </p>
+                <pre><code>Fmax  = m·g·(π/2)·(tf/tc + 1)
+Δy    = −Fmax·tc²/(m·π²) + g·tc²/8      centre-of-mass drop during contact
+Kvert = Fmax / |Δy|
+ΔL    = L0 − √(L0² − (v·tc/2)²) + |Δy|  leg compression
+Kleg  = Fmax / ΔL</code></pre>
+                <p class="sl-callout sl-callout-warn">
+                    <strong>Fmax is an output of the model, not a measurement, and this app never reports it as
+                    one.</strong> You cannot measure ground reaction force from video. The sine-wave force trace
+                    the method assumes is a modelling assumption that happens to predict stiffness well; it is
+                    not a force sensor. Stiffness is also reported only when body mass is entered — substituting
+                    a population average for somebody's own mass would be inventing the answer, so the
+                    measurement is withheld and says why.
+                </p>
+            </section>
+
+            <!-- ============================================ -->
+            <section class="sl-doc-section" id="evidence">
+                <h2>What the evidence supports</h2>
+                <p>
+                    Van Hooren et al. (2024) pooled the observational literature on running biomechanics and
+                    running economy. It is the most useful single source this app has, and it is uncomfortable
+                    reading for a running-form tool, so it is reproduced here rather than summarised
+                    selectively.
+                </p>
+                <div class="sl-tablewrap">
+                    <table class="sl-doctable">
+                        <caption>Associations with running economy, pooled (Van Hooren et al. 2024)</caption>
+                        <thead><tr><th>Variable</th><th>r</th><th>Effect</th><th>Direction</th></tr></thead>
+                        <tbody>
+                        <tr><td><strong>Vertical oscillation</strong></td><td>0.35</td><td>moderate, significant</td><td>less is better</td></tr>
+                        <tr><td><strong>Vertical stiffness</strong></td><td>−0.31</td><td>moderate, significant</td><td>more is better</td></tr>
+                        <tr><td><strong>Leg stiffness</strong></td><td>−0.28</td><td>moderate, significant</td><td>more is better</td></tr>
+                        <tr><td><strong>Cadence</strong></td><td>−0.20</td><td>small, significant</td><td>more is better</td></tr>
+                        <tr><td>Ground contact time</td><td>−0.02</td><td>trivial, <em>not</em> significant</td><td>—</td></tr>
+                        <tr><td>Duty factor</td><td>−0.06</td><td>trivial, <em>not</em> significant</td><td>—</td></tr>
+                        <tr><td>Stride length</td><td>0.12</td><td>trivial, <em>not</em> significant</td><td>—</td></tr>
+                        <tr><td>Foot-strike pattern</td><td>—</td><td><em>not</em> significant</td><td>—</td></tr>
+                        <tr><td>Knee flexion</td><td>—</td><td><em>not</em> significant</td><td>—</td></tr>
+                        <tr><td>Trunk lean</td><td>—</td><td><em>not</em> significant</td><td>—</td></tr>
+                        <tr><td>Shank angle at contact</td><td>—</td><td><em>not</em> significant</td><td>—</td></tr>
+                        <tr><td>Braking</td><td>—</td><td><em>not</em> significant</td><td>—</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="sl-callout sl-callout-warn">
+                    <strong>And the number that matters most: taken in isolation, these variables explain
+                    4–12% of the differences in running economy between people.</strong> Nearly everything that
+                    makes one runner more economical than another is not visible in a video of their technique.
+                    Any tool of this kind that leaves you with the impression otherwise — including this one, if
+                    you read only the dashboard — has misled you.
+                </p>
+                <h3>What was changed because of it</h3>
+                <ul class="sl-list">
+                    <li>Duty factor was described in this app as "one of the better-evidenced technique correlates of running economy". It is not. Its band now cites this review, is weighted at the lowest evidence level, and says plainly that the association is trivial and non-significant.</li>
+                    <li>Ground contact time carries the same correction.</li>
+                    <li>Centre-of-mass oscillation, vertical stiffness and leg stiffness were added, because they are the variables with the strongest support and all three were computable from what was already being measured.</li>
+                    <li>The key-measurement panel is now ordered by evidence rather than by familiarity.</li>
+                    <li>In every case, the DIRECTION of a band is what this review supports. The band EDGES — the numbers that decide whether your value is called typical — are still not sourced.</li>
+                </ul>
+            </section>
+
+            <!-- ============================================ -->
+            <section class="sl-doc-section" id="metrics">
+                <h2>Every measurement, defined</h2>
+                <p>
+                    Generated directly from the metric catalogue the app itself uses, so a measurement cannot
+                    appear in a report without also appearing here, defined.
+                </p>
+                <div id="sl-metric-doc" class="sl-tablewrap"></div>
+            </section>
+
+            <!-- ============================================ -->
+            <section class="sl-doc-section" id="norms">
+                <h2>The reference ranges</h2>
+                <p>
+                    Ranges are <strong>speed-conditional</strong> where the target genuinely moves with speed.
+                    Cadence is the obvious case: a fixed 180 steps-per-minute target is folklore — it comes from a
+                    count of elite athletes racing — and applying it to somebody running at 2.8 m/s gives bad
+                    advice. Where a speed is not known, a speed-conditional range refuses to resolve rather than
+                    picking the middle one, and the measurement is reported unscored.
+                </p>
+                <p class="sl-callout">
+                    <strong>Read this before reading any range below.</strong> Most of these ranges cite
+                    <em>"no primary source traced"</em>. They are values in common use for adult
+                    recreational-to-trained runners at easy-to-moderate pace, and they have not been traced to a
+                    study in this build. They are scored at the lowest evidence weight for exactly that reason.
+                    Replacing them with sourced, speed- and sex-conditional bands is the single highest-value
+                    improvement available to this app, and until that happens the ranges are orientation rather
+                    than targets.
+                </p>
+                <div id="sl-norm-doc" class="sl-tablewrap"></div>
+            </section>
+
+            <!-- ============================================ -->
+            <section class="sl-doc-section" id="validation">
+                <h2>Validation status</h2>
+
+                <p class="sl-callout sl-callout-warn">
+                    <strong>This app has not been validated against force plates, an instrumented treadmill, or
+                    motion capture.</strong> No accuracy figure derived from human subjects is claimed anywhere in
+                    it, because none has been measured. What follows is what <em>has</em> been tested, stated
+                    precisely so it is not mistaken for more than it is.
+                </p>
+
+                <h3>What has been tested</h3>
+                <p>
+                    The engine is verified against a <strong>synthetic runner</strong>: a parametric, physically
+                    consistent 2D model whose cadence, contact time, duty factor, step length, trunk lean and
+                    foot-strike angle are known exactly because they were prescribed. Its pelvis follows a
+                    half-sine through contact and an exact free-fall parabola through flight, matched for velocity
+                    continuity, so the pelvis arrives at contact with its most negative vertical velocity and
+                    reaches its lowest point at mid-stance — as a real one does. Injectable keypoint noise,
+                    dropout and frame-rate resampling are all part of it.
+                </p>
+                <div class="sl-tablewrap">
+                    <table class="sl-doctable">
+                        <caption>Mean absolute error against synthetic ground truth, 6 s clips, no injected noise</caption>
+                        <thead><tr><th>Capture</th><th>Strike pattern</th><th>Foot strike</th><th>Toe-off</th></tr></thead>
+                        <tbody>
+                        <tr><td>60 fps</td><td>rearfoot</td><td>2.1 ms</td><td>6.5 ms</td></tr>
+                        <tr><td>60 fps</td><td>midfoot</td><td>1.7 ms</td><td>7.3 ms</td></tr>
+                        <tr><td>60 fps</td><td>forefoot</td><td>3.2 ms</td><td>35.9 ms</td></tr>
+                        <tr><td>120 fps</td><td>rearfoot</td><td>0.5 ms</td><td>3.1 ms</td></tr>
+                        <tr><td>120 fps</td><td>midfoot</td><td>0.1 ms</td><td>3.1 ms</td></tr>
+                        <tr><td>120 fps</td><td>forefoot</td><td>4.0 ms</td><td>3.1 ms</td></tr>
+                        <tr><td>240 fps</td><td>rearfoot</td><td>0.1 ms</td><td>2.7 ms</td></tr>
+                        <tr><td>240 fps</td><td>midfoot</td><td>0.3 ms</td><td>2.7 ms</td></tr>
+                        <tr><td>240 fps</td><td>forefoot</td><td>4.2 ms</td><td>2.7 ms</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="sl-callout sl-callout-warn">
+                    <strong>These numbers are not an accuracy claim about real running, and reading them as one
+                    would be a serious mistake.</strong> They measure whether the geometry, filtering, event
+                    detection and metric mathematics are correct given <em>perfect</em> landmarks. They say
+                    nothing whatsoever about the error the pose model contributes on a real video, which is the
+                    larger term. A number like "0.1 ms" is evidence that the arithmetic is right, not that the app
+                    can time your foot strike to a tenth of a millisecond.
+                </p>
+
+                <h3>What the suite covers</h3>
+                <ul class="sl-list">
+                    <li>92 automated checks, run with <code>node test/run.mjs</code>, no dependencies.</li>
+                    <li>The inertial model: segment masses summing to a whole body, the centre of mass moving less than the pelvis, a lost hand not deleting mass, and the spring-mass stiffness reproducing hand-checked values from the published equations.</li>
+                    <li>Filter design, including the dual-pass cutoff correction, and an explicit test that a single causal pass <em>does</em> lag while the forward-backward pass does not — otherwise the zero-phase test proves nothing.</li>
+                    <li>A coordinate-convention regression test: a runner leaning forward must produce a positive trunk lean, in both directions of travel. This one test catches the most damaging class of bug in the system.</li>
+                    <li>Mirror invariance: a right-to-left clip must produce the same numbers as a left-to-right one.</li>
+                    <li>Every measurement recovered from prescribed ground truth, at 30, 60, 120 and 240 fps.</li>
+                    <li>Suppression rules, confidence propagation, and the error-budget arithmetic against the table above.</li>
+                    <li>Data integrity: every reference range resolves to a real reference entry; every rule resolves to real exercises; every unsourced range is labelled unsourced and weighted lowest.</li>
+                    <li>Golden values, pinned twice — against the engine's own committed output <em>and</em> against physical truth, because a golden file alone will happily preserve a bug forever.</li>
+                </ul>
+
+                <h3>What would be needed for a real accuracy figure</h3>
+                <ol class="sl-list">
+                    <li>Ten or more clips spanning rearfoot and forefoot strikers, treadmill and overground, at 60, 120 and 240 fps, with foot strikes and toe-offs hand-labelled frame by frame.</li>
+                    <li>Better: simultaneous force-plate or instrumented-treadmill ground truth.</li>
+                    <li>Mean absolute error and Bland–Altman limits of agreement for foot strike, toe-off, contact time and cadence, and a confusion matrix for strike pattern.</li>
+                    <li>Splitting by <em>subject</em>, never by clip. A random clip split overstates accuracy by a wide margin.</li>
+                    <li>Publication of the results here, including the bad ones.</li>
+                </ol>
+
+                <h3>The learned gait-phase model</h3>
+                <p>
+                    None ships. The specification this app was built to describes a small temporal convolutional
+                    network for per-frame stance segmentation, and the complete inference and fusion path for it
+                    is implemented — it is one more weighted voter in the event detection above, at weight 1.5 —
+                    but no model file is included, because training one honestly needs running video with
+                    force-plate ground truth split by subject, and none was available. The analysis metadata
+                    records <code>stage2: not-shipped</code> for that reason, so a result can never imply a
+                    capability this build does not have. Quoting somebody else's published accuracy as though it
+                    were ours would have been the dishonest alternative.
+                </p>
+                <p>
+                    What was explicitly rejected: a black-box model that outputs a "running form score". There is
+                    no labelled ground truth for good form, the output would be unauditable, and explainability is
+                    the entire product.
+                </p>
+            </section>
+
+            <!-- ============================================ -->
+            <section class="sl-doc-section" id="limits">
+                <h2>Limitations</h2>
+                <p>Written to be the section a biomechanist would not object to.</p>
+
+                <h3>It is two-dimensional</h3>
+                <p>
+                    Every angle here is a <em>projected</em> angle in the image plane. A joint that moves out of
+                    that plane is measured shorter than it is, and rotation about the long axis of a segment is
+                    invisible. This is not a small caveat on a large claim: it is the nature of the measurement.
+                    A camera that is not square to the plane of motion adds a systematic error to every angle,
+                    which is why an oblique view is detected and flagged rather than silently analysed.
+                </p>
+
+                <h3>Pose estimation is the dominant error term, and it is not quantified here</h3>
+                <p>
+                    Stenum, Rossi and Roemmich (2021) is the paper to read before believing any number in this
+                    app. Pose-estimation-based gait analysis has real, measurable disagreement with marker-based
+                    reference systems, and the foot landmarks — heel and toe, the two this app most depends on —
+                    are the least reliable in the set, worst under exactly the condition running produces: motion
+                    blur at high foot velocity. The confidence gating and the multi-method vote exist to mitigate
+                    that. They do not remove it, and the intervals shown do not include it.
+                </p>
+
+                <h3>Scaling depends entirely on the height you typed</h3>
+                <p>
+                    Pixels become centimetres through your standing height and Winter's segment-length fractions.
+                    Those fractions are population averages: an individual with proportionally long shins is
+                    scaled wrongly, and so is anybody who mistyped their height. A 10% height error is a 10% error
+                    in every distance — stride length, vertical oscillation, overstride, step width — and it is
+                    invisible in the output because everything scales together and stays internally consistent.
+                </p>
+
+                <h3>There is no force here at all</h3>
+                <p>
+                    Vertical loading rate, impact peak, ground reaction force: none of these can be computed from
+                    video, and none is reported. Where something like loading is discussed it is a rank ordering
+                    of kinematic proxies, never a force, and it is never labelled as one.
+                </p>
+
+                <h3>The rearfoot measurement is a proxy and a weak one</h3>
+                <p>
+                    Rearfoot eversion — what people mean by pronation — needs markers on the shoe heel counter and
+                    the shank. A single rear-view camera without them cannot resolve it. What is reported is the
+                    alignment of the heel under the knee, labelled a proxy, capped at low confidence, and never
+                    called pronation. It was retained rather than dropped so that a reader looking for pronation
+                    finds an explanation of why it is absent rather than nothing at all; if that trade turns out
+                    to mislead more than it informs, dropping it entirely is the right call.
+                </p>
+
+                <h3>The frontal-plane knee angle is a projection, not valgus</h3>
+                <p>
+                    The frontal-plane knee projection angle is the departure from a colinear hip–knee–ankle
+                    <em>in the image</em>. It correlates with, and is not, true knee valgus. Hip rotation moves it
+                    without any change at the knee.
+                </p>
+
+                <h3>Reference ranges are the weakest part of this app</h3>
+                <p>
+                    Most cite no traced primary source, are not conditioned on sex or training level, and are
+                    based on adult recreational-to-trained runners at easy-to-moderate pace. If you are outside
+                    that description — a junior, a masters athlete, a sprinter, somebody returning from injury —
+                    they may not describe you at all. They are scored at the lowest evidence weight and shown with
+                    their source so the weakness is visible rather than implied.
+                </p>
+
+                <h3>A single clip is a single day</h3>
+                <p>
+                    Running technique varies with fatigue, footwear, surface, speed and how you felt that morning.
+                    One clip captures one moment. An asymmetry seen once is a hypothesis; the same asymmetry
+                    across several clips on different days is a finding. The comparison view refuses to call a
+                    change an improvement when it is smaller than the two intervals combined.
+                </p>
+
+                <h3>Cause and effect run both ways</h3>
+                <p>
+                    A measurement outside a typical range is a description, not a fault, and changing it is not
+                    automatically an improvement. Technique adaptations redistribute load rather than removing it:
+                    raising cadence shortens the stride and reduces load at the knee while increasing it at the
+                    ankle. Shorter ground contact is not universally more economical (Lussiana et al. 2019). The
+                    cues in this app are suggestions to try, not corrections to apply.
+                </p>
+            </section>
+
+            <!-- ============================================ -->
+            <section class="sl-doc-section" id="privacy">
+                <h2>Privacy</h2>
+                <p>
+                    The video, the extracted landmarks and every derived number are processed in your browser and
+                    stored in this browser on this device, in IndexedDB. There is no account, no server and no
+                    upload — this app is served as static files from GitHub Pages, which has nowhere to put a
+                    video even if it wanted one.
+                </p>
+                <ul class="sl-list">
+                    <li><strong>Outbound requests.</strong> Two, and only at the moment you first analyse a clip: the pose model weights and its WebAssembly runtime, fetched from a public CDN and then cached. Those are downloads <em>to</em> your device. Nothing is sent from it.</li>
+                    <li><strong>Analytics.</strong> None in this app.</li>
+                    <li><strong>Share links.</strong> The summary travels after the <code>#</code> in the URL. Browsers never send a fragment to the server, so a shared link reaches whoever you send it to and nobody else — not GitHub, not any log.</li>
+                    <li><strong>Deleting it.</strong> Clearing site data for this domain removes everything. Which also means clearing site data <em>loses</em> everything: export a bundle if you want to keep it.</li>
+                    <li><strong>Offline.</strong> After one visit the app works with the network switched off. The model is cached, and there was never anything to send anyway.</li>
+                </ul>
+            </section>
+
+            <!-- ============================================ -->
+            <section class="sl-doc-section" id="references">
+                <h2>References</h2>
+                <p>Each entry states what this app actually takes from it, rather than being cited for atmosphere.</p>
+                <div id="sl-ref-doc"></div>
+            </section>
+
+            <p class="sl-doc-foot">
+                <a href="index.html">Back to Stride Lab</a> ·
+                <a href="../../E-Labs.html">All E-Labs apps</a>
+            </p>
+        </div>
+    </section>
+
+    <div id="footer-placeholder"></div>
+</div>
+
+<script src="../../assets/js/components.js" defer></script>
+<script src="../../assets/js/jquery.min.js" defer></script>
+<script src="../../assets/js/jquery.dropotron.min.js" defer></script>
+<script src="../../assets/js/breakpoints.min.js" defer></script>
+<script src="../../assets/js/util.js" defer></script>
+<script src="../../assets/js/main.js" defer></script>
+<script src="../../assets/js/theme-toggle.js" defer></script>
+<script src="../../assets/js/back-to-top.js" defer></script>
+
+<script type="module">
+    /* The tables below are generated from the same catalogue the app uses, so a
+       measurement cannot exist in a report without also existing here, defined. */
+    import { METRICS } from './src/engine/metrics/catalog.js';
+    import { NORMS } from './src/engine/scoring/norms.js';
+    import { REFERENCES, REFERENCE_BY_ID } from './src/engine/scoring/references.js';
+
+    const esc = (s) => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    const unit = (u) => (u === 'deg' ? '°' : u || '—');
+
+    document.getElementById('sl-metric-doc').innerHTML = `
+      <table class="sl-doctable">
+        <thead><tr><th>Measurement</th><th>Unit</th><th>View</th><th>What it is</th><th>How it is computed</th><th>Confidence limited by</th></tr></thead>
+        <tbody>${METRICS.map(m => `
+          <tr id="m-${m.id}">
+            <td><strong>${esc(m.label)}</strong>${m.sided ? '<br><span class="sl-tag">left and right</span>' : ''}</td>
+            <td>${unit(m.unit)}</td>
+            <td>${m.view}</td>
+            <td>${esc(m.definition)}</td>
+            <td>${esc(m.formula)}</td>
+            <td>${m.drivers.length ? esc(m.drivers.join(', ')) : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+
+    document.getElementById('sl-norm-doc').innerHTML = `
+      <table class="sl-doctable">
+        <thead><tr><th>Measurement</th><th>Applies when</th><th>Typical</th><th>Acceptable</th><th>Evidence</th><th>Source</th></tr></thead>
+        <tbody>${NORMS.map(b => {
+            const r = REFERENCE_BY_ID[b.source];
+            const cond = b.conditions.speedMs && b.conditions.speedMs[1] < 99
+                ? `${b.conditions.speedMs[0]}–${b.conditions.speedMs[1]} m/s`
+                : 'any speed';
+            return `<tr>
+              <td><strong>${esc(b.metric)}</strong>${b.comment ? `<br><span class="sl-tag">${esc(b.comment)}</span>` : ''}</td>
+              <td>${cond}</td>
+              <td>${b.optimal[0]} to ${b.optimal[1]}</td>
+              <td>${b.acceptable[0]} to ${b.acceptable[1]}</td>
+              <td><span class="sl-strength ${b.strength}">${b.strength}</span></td>
+              <td>${r ? (r.doi ? `<a href="https://doi.org/${r.doi}" target="_blank" rel="noopener">${esc(r.authors)}${r.year ? ` ${r.year}` : ''}</a>` : esc(r.authors)) : esc(b.source)}</td>
+            </tr>`;
+        }).join('')}
+        </tbody>
+      </table>`;
+
+    document.getElementById('sl-ref-doc').innerHTML = REFERENCES.map(r => `
+      <div class="sl-ref">
+        <div class="sl-ref-cite">
+          ${esc(r.authors)}${r.year ? ` (${r.year})` : ''}. <em>${esc(r.title)}</em>. ${esc(r.venue)}.
+          ${r.doi ? ` <a href="https://doi.org/${r.doi}" target="_blank" rel="noopener">doi:${esc(r.doi)}</a>` : ''}
+        </div>
+        <div class="sl-ref-used">${esc(r.used)}</div>
+      </div>`).join('');
+</script>
+</body>
+</html>

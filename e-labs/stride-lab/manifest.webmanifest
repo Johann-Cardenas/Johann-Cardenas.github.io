@@ -1,0 +1,14 @@
+{
+  "name": "Stride Lab — on-device running form analysis",
+  "short_name": "Stride Lab",
+  "description": "Pose-based running gait analysis computed entirely in the browser. The video never leaves the device.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f1829",
+  "theme_color": "#0f1829",
+  "icons": [
+    { "src": "../../apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}

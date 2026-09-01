@@ -1,0 +1,12 @@
+{
+  "name": "stride-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Stride Lab — client-side running-form and gait analysis. Pose estimation, gait-event detection and biomechanical metrics, computed entirely in the browser.",
+  "scripts": {
+    "test": "node test/run.mjs",
+    "banner": "node tools/make-banner.mjs"
+  },
+  "engines": { "node": ">=18" }
+}

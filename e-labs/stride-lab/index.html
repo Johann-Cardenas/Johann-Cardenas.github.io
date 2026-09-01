@@ -1,0 +1,485 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <script>
+        (function () {
+            // Follow the global site theme; default to dark like the other E-Labs apps
+            var theme = localStorage.getItem('theme-preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme-preference', theme);
+        })();
+    </script>
+    <title>Stride Lab | On-device running form analysis</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Upload a short running clip and get pose-based gait metrics, confidence intervals and a corrective plan. The video is analysed in your browser and never leaves your device." />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0f1829">
+
+    <!-- Social Sharing: Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Stride Lab | On-device running form analysis">
+    <meta property="og:description" content="Pose-based running gait analysis that runs entirely in the browser. 40 biomechanical measurements, every one with its confidence interval. Your video never leaves your device.">
+    <meta property="og:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_Stride-Lab.png">
+    <meta property="og:url" content="https://www.johanncardenas.com/e-labs/stride-lab/index.html">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Stride Lab | On-device running form analysis">
+    <meta name="twitter:description" content="Pose-based running gait analysis, computed in your browser.">
+    <meta name="twitter:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_Stride-Lab.png">
+
+    <link rel="stylesheet" href="../../assets/css/main.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="canonical" href="https://www.johanncardenas.com/e-labs/stride-lab/">
+</head>
+<body class="StrideLab is-preload">
+<div id="page-wrapper">
+
+    <!-- Header -->
+    <section id="header">
+        <h1><a href="../../index.html">Johann Cardenas</a></h1>
+        <nav id="nav">
+            <ul>
+                <li><a href="../../index.html">Home</a></li>
+                <li>
+                    <a href="../../Projects.html">Projects</a>
+                    <ul>
+                        <li><a href="../../projects/IDOT_Traffic.html">Traffic Factors for ME Pavement Design</a></li>
+                        <li><a href="../../projects/CCAT_Hydroplaning.html">Quantification of Hydroplaning Risks</a></li>
+                        <li><a href="../../projects/ACRP_FEM.html">ME Overload Permitting for Airfields</a></li>
+                        <li><a href="../../projects/EV_Trucks.html">Impact of HDEVs on Flexible Pavements</a></li>
+                        <li><a href="../../projects/FAA_Data.html">ML-Based Models for Airfield Pavements</a></li>
+                        <li><a href="../../projects/MS_Thesis.html">Impact of DWL on Flexible Pavements</a></li>
+                    </ul>
+                </li>
+                <li><a href="../../Publications.html">Publications</a></li>
+                <li><a href="../../Resume.html">Resume</a></li>
+                <li><a href="../../Blog.html">Blog</a></li>
+                <li><a href="../../News.html">News</a></li>
+                <li class="current">
+                    <a href="../../E-Labs.html">E-Labs</a>
+                    <ul>
+                        <li><a href="../../e-labs/gear3d/index.html">Gear3D</a></li>
+                        <li><a href="../../e-labs/qr-studio/index.html">QR Studio</a></li>
+                        <li><a href="../../e-labs/leaps/index.html">LEAPS</a></li>
+                        <li><a href="../../e-labs/stride-lab/index.html">Stride Lab</a></li>
+                        <li><a href="../../e-labs/cross-section-studio/index.html">Cross-Section Studio</a></li>
+                        <li><a href="../../e-labs/finite-elemented/index.html">Finite-Elemented</a></li>
+                        <li><a href="../../e-labs/frontier/index.html">Frontier</a></li>
+                        <li><a href="https://curly-adventure-y724nlw.pages.github.io/apps/aircrafter/" target="_blank" rel="noopener">AirCrafter</a></li>
+                        <li><a href="https://curly-adventure-y724nlw.pages.github.io/apps/asphera/" target="_blank" rel="noopener">Asphera</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </section>
+
+    <!-- Main App -->
+    <section id="main">
+        <div class="sl-app" id="main-content" tabindex="-1">
+
+            <!-- App Header -->
+            <div class="app-header">
+                <div class="header-nav">
+                    <a href="../../E-Labs.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to E-Labs</a>
+                    <div class="header-badges">
+                        <a href="science.html" class="header-badge header-badge-link"><i class="fas fa-flask"></i> Method &amp; limits</a>
+                        <span class="header-badge sl-badge-device"><i class="fas fa-lock"></i> On-device</span>
+                        <span class="header-badge"><i class="fas fa-code-branch"></i> v1.0</span>
+                    </div>
+                </div>
+                <div class="header-content">
+                    <h1>
+                        <span class="sl-icon"><i class="fas fa-running"></i></span>
+                        <span>Stride<span class="highlight">Lab</span></span>
+                    </h1>
+                    <p>
+                        Pose-based running gait analysis. Upload or record a short clip and it is decoded, tracked
+                        and measured entirely in this browser — 40 biomechanical measurements, each with the
+                        confidence interval that goes with it. The video never leaves your device, because there is
+                        nowhere for it to go.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Workspace -->
+            <div class="sl-workspace">
+
+                <!-- Top bar -->
+                <div class="sl-topbar">
+                    <div class="sl-topbar-group">
+                        <input id="sl-name" class="sl-name" type="text" value="Untitled analysis" spellcheck="false" aria-label="Analysis name" />
+                    </div>
+                    <div class="sl-topbar-group">
+                        <button id="sl-open" class="sl-tool" title="Import a .stridelab.json bundle"><i class="fas fa-folder-open"></i></button>
+                        <button id="sl-save" class="sl-tool" title="Export all local analyses"><i class="fas fa-download"></i></button>
+                        <input type="file" id="sl-import-file" accept=".json,.gz,application/json,application/gzip" hidden />
+                        <span class="sl-sep"></span>
+                        <select id="sl-units" class="sl-select" title="Unit system" aria-label="Unit system">
+                            <option value="metric" selected>Metric</option>
+                            <option value="imperial">Imperial</option>
+                        </select>
+                    </div>
+                    <div class="sl-topbar-spacer"></div>
+                    <div class="sl-topbar-group">
+                        <span class="sl-device" id="sl-device-chip" title="No video, frame or landmark is ever uploaded">
+                            <i class="fas fa-microchip"></i> <span id="sl-device-text">Processed on your device</span>
+                        </span>
+                        <button id="sl-demo" class="sl-btn"><i class="fas fa-vial"></i> Demo</button>
+                        <button id="sl-run" class="sl-run" disabled><i class="fas fa-play"></i> Analyse run</button>
+                    </div>
+                </div>
+
+                <div class="sl-body">
+
+                    <!-- ============ LEFT RAIL: the wizard ============ -->
+                    <aside class="sl-left" id="sl-left">
+
+                        <details class="sl-section" open id="sl-step-profile">
+                            <summary><span class="sl-step-n">1</span> About you</summary>
+                            <div class="sl-section-body">
+                                <label class="sl-field">
+                                    <span>Standing height <em class="sl-req">required</em></span>
+                                    <span class="sl-inline" id="sl-height-metric">
+                                        <input type="number" id="sl-height-cm" min="120" max="220" step="1" value="175" />
+                                        <span class="sl-suffix">cm</span>
+                                    </span>
+                                    <span class="sl-inline" id="sl-height-imperial" hidden>
+                                        <input type="number" id="sl-height-ft" min="4" max="7" step="1" value="5" />
+                                        <span class="sl-suffix">ft</span>
+                                        <input type="number" id="sl-height-in" min="0" max="11" step="1" value="9" />
+                                        <span class="sl-suffix">in</span>
+                                    </span>
+                                </label>
+                                <p class="sl-help">
+                                    Your height is what converts pixels into centimetres. The app measures your thigh
+                                    and shin in the image and scales from there, so every distance below — stride
+                                    length, bounce, how far ahead your foot lands — is only as accurate as this number.
+                                </p>
+                                <label class="sl-field">
+                                    <span>Body mass <em class="sl-opt">unlocks stiffness</em></span>
+                                    <span class="sl-inline">
+                                        <input type="number" id="sl-mass" min="30" max="200" step="1" placeholder="—" />
+                                        <span class="sl-suffix" id="sl-mass-unit">kg</span>
+                                    </span>
+                                </label>
+                                <label class="sl-field">
+                                    <span>Sex <em class="sl-opt">optional</em></span>
+                                    <select id="sl-sex" class="sl-select">
+                                        <option value="unspecified" selected>Prefer not to say</option>
+                                        <option value="f">Female</option>
+                                        <option value="m">Male</option>
+                                    </select>
+                                </label>
+                                <p class="sl-help sl-help-quiet">
+                                    Mass is what the spring-mass model needs to estimate vertical and leg
+                                    stiffness — two of the four variables with a significant pooled
+                                    association with running economy. Without it those two are not reported,
+                                    because a population average would be inventing the answer. Sex is used
+                                    only to pick a reference band where the literature gives one. Both stay
+                                    on this device.
+                                </p>
+                            </div>
+                        </details>
+
+                        <details class="sl-section" open id="sl-step-capture">
+                            <summary><span class="sl-step-n">2</span> The clip</summary>
+                            <div class="sl-section-body">
+                                <label class="sl-field">
+                                    <span>Camera view</span>
+                                    <select id="sl-view" class="sl-select">
+                                        <option value="auto" selected>Detect automatically</option>
+                                        <option value="sagittal">Side on</option>
+                                        <option value="frontal">From behind</option>
+                                    </select>
+                                </label>
+                                <label class="sl-field">
+                                    <span>Surface</span>
+                                    <select id="sl-surface" class="sl-select">
+                                        <option value="treadmill" selected>Treadmill</option>
+                                        <option value="road">Road</option>
+                                        <option value="track">Track</option>
+                                        <option value="trail">Trail</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </label>
+                                <label class="sl-field" id="sl-speed-field">
+                                    <span>Treadmill speed <em class="sl-opt">strongly recommended</em></span>
+                                    <span class="sl-inline">
+                                        <input type="number" id="sl-speed" min="1" max="8" step="0.1" placeholder="—" />
+                                        <span class="sl-suffix" id="sl-speed-unit">m/s</span>
+                                    </span>
+                                </label>
+                                <p class="sl-help" id="sl-speed-help">
+                                    On a treadmill you do not move through the frame, so there is no displacement to
+                                    measure. Without the belt speed there is no step length, no running speed, and no
+                                    way to pick the right cadence band — a cadence target that ignores speed is folklore.
+                                </p>
+                                <div class="sl-drop" id="sl-drop">
+                                    <input type="file" id="sl-file" accept="video/mp4,video/quicktime,video/webm,video/*" hidden />
+                                    <i class="fas fa-film"></i>
+                                    <strong>Drop a clip here</strong>
+                                    <span>or <button type="button" class="sl-linkbtn" id="sl-pick">choose a file</button></span>
+                                    <span class="sl-drop-alt">
+                                        <button type="button" class="sl-linkbtn" id="sl-record">record with the camera</button>
+                                    </span>
+                                </div>
+                                <div class="sl-filecard" id="sl-filecard" hidden>
+                                    <div class="sl-filecard-row">
+                                        <span class="sl-filename" id="sl-filename">—</span>
+                                        <button class="sl-linkbtn" id="sl-clearfile">remove</button>
+                                    </div>
+                                    <ul class="sl-checks" id="sl-checks"></ul>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details class="sl-section" id="sl-step-guidance">
+                            <summary><span class="sl-step-n">3</span> How to film it</summary>
+                            <div class="sl-section-body">
+                                <ul class="sl-guide">
+                                    <li><strong>Shoot at 120 or 240 fps</strong> if the phone offers it. At 30 fps one frame is 33 ms and ground contact is only about 230 ms, so a third of the measurement is quantisation. Below 60 fps this app refuses to report contact time at all.</li>
+                                    <li><strong>Camera square to the running path</strong>, at hip height, on something that does not move. An angled camera measures angles out of the plane they happen in.</li>
+                                    <li><strong>Fill 60–80% of the frame height</strong> with the runner, whole body, feet included.</li>
+                                    <li><strong>Side on</strong> for timing, stride and sagittal angles. <strong>From behind</strong> for pelvic drop and crossover. They measure different things and neither substitutes for the other.</li>
+                                    <li><strong>Three seconds minimum</strong>, six is better. The first and last stride are always discarded, and the numbers are aggregates over what is left.</li>
+                                    <li><strong>Plain background, even light.</strong> Motion blur on a fast-moving foot is what breaks the foot landmarks, and the foot landmarks are what most of this depends on.</li>
+                                </ul>
+                            </div>
+                        </details>
+
+                        <details class="sl-section" id="sl-step-advanced">
+                            <summary><span class="sl-step-n">4</span> Engine settings</summary>
+                            <div class="sl-section-body">
+                                <label class="sl-field">
+                                    <span>Filter cutoff</span>
+                                    <select id="sl-cutoff" class="sl-select">
+                                        <option value="6">6 Hz — walking convention</option>
+                                        <option value="10">10 Hz</option>
+                                        <option value="12" selected>12 Hz — running default</option>
+                                        <option value="15">15 Hz</option>
+                                    </select>
+                                </label>
+                                <p class="sl-help sl-help-quiet">
+                                    Zero-phase, forward and backward, with the dual-pass cutoff correction applied so
+                                    the effective cutoff is the one shown. 12 Hz because impact transients and fast
+                                    distal-segment motion in running live above the 6 Hz used for walking.
+                                </p>
+                                <label class="sl-check">
+                                    <input type="checkbox" id="sl-gpu" checked /> Use the GPU where available
+                                </label>
+                                <label class="sl-check">
+                                    <input type="checkbox" id="sl-worker" checked /> Run inference in a worker
+                                </label>
+                                <label class="sl-check">
+                                    <input type="checkbox" id="sl-keepvideo" /> Keep the video with this analysis
+                                </label>
+                                <p class="sl-help sl-help-quiet" id="sl-storage">Checking storage…</p>
+                            </div>
+                        </details>
+                    </aside>
+
+                    <!-- ============ CENTRE: viewport ============ -->
+                    <main class="sl-centre">
+                        <div class="sl-viewport" id="sl-viewport">
+
+                            <!-- empty state -->
+                            <div class="sl-stage sl-stage-empty" id="sl-stage-empty">
+                                <div class="sl-empty-art" aria-hidden="true"><canvas id="sl-empty-canvas"></canvas></div>
+                                <h2>Start with a clip</h2>
+                                <p>
+                                    Drop in a few seconds of running, or run the synthetic demo to see the whole
+                                    pipeline work on a runner whose numbers are known exactly.
+                                </p>
+                                <div class="sl-empty-actions">
+                                    <button class="sl-btn sl-btn-primary" id="sl-pick2"><i class="fas fa-film"></i> Choose a clip</button>
+                                    <button class="sl-btn" id="sl-demo2"><i class="fas fa-vial"></i> Run the demo</button>
+                                </div>
+                            </div>
+
+                            <!-- camera -->
+                            <div class="sl-stage" id="sl-stage-camera" hidden>
+                                <video id="sl-cam" playsinline muted></video>
+                                <canvas id="sl-cam-guide" class="sl-guide-canvas"></canvas>
+                                <div class="sl-cam-bar">
+                                    <span class="sl-cam-hint" id="sl-cam-hint">Fill the outline, whole body in frame</span>
+                                    <button class="sl-btn" id="sl-cam-cancel">Cancel</button>
+                                    <button class="sl-btn sl-btn-primary" id="sl-cam-shoot"><i class="fas fa-circle"></i> Record</button>
+                                </div>
+                            </div>
+
+                            <!-- trim -->
+                            <div class="sl-stage" id="sl-stage-trim" hidden>
+                                <video id="sl-trim-video" playsinline muted></video>
+                                <div class="sl-trim">
+                                    <div class="sl-filmstrip" id="sl-filmstrip"></div>
+                                    <div class="sl-trim-range">
+                                        <input type="range" id="sl-trim-start" min="0" max="100" value="0" aria-label="Window start" />
+                                        <input type="range" id="sl-trim-end" min="0" max="100" value="100" aria-label="Window end" />
+                                    </div>
+                                    <div class="sl-trim-readout" id="sl-trim-readout">—</div>
+                                </div>
+                            </div>
+
+                            <!-- processing -->
+                            <div class="sl-stage" id="sl-stage-run" hidden>
+                                <canvas id="sl-live" class="sl-live"></canvas>
+                                <div class="sl-progress-panel">
+                                    <ol class="sl-stages" id="sl-stages"></ol>
+                                    <div class="sl-progress"><div class="sl-progress-fill" id="sl-progress-fill"></div></div>
+                                    <div class="sl-progress-row">
+                                        <span id="sl-progress-text">Starting</span>
+                                        <button class="sl-btn" id="sl-cancel">Cancel</button>
+                                    </div>
+                                    <p class="sl-ondevice"><i class="fas fa-lock"></i> Every frame is being decoded and measured on this device. Nothing is uploaded.</p>
+                                </div>
+                            </div>
+
+                            <!-- result player -->
+                            <div class="sl-stage" id="sl-stage-player" hidden>
+                                <div class="sl-player" id="sl-player">
+                                    <video id="sl-video" playsinline muted></video>
+                                    <canvas id="sl-overlay" class="sl-overlay"></canvas>
+                                </div>
+                                <div class="sl-transport">
+                                    <button class="sl-tool" id="sl-play" aria-label="Play or pause"><i class="fas fa-play"></i></button>
+                                    <button class="sl-tool" id="sl-prev" aria-label="Previous frame"><i class="fas fa-step-backward"></i></button>
+                                    <button class="sl-tool" id="sl-next" aria-label="Next frame"><i class="fas fa-step-forward"></i></button>
+                                    <div class="sl-scrub-wrap">
+                                        <input type="range" id="sl-scrub" min="0" max="1000" value="0"
+                                               aria-label="Timeline. Arrow keys step one frame, shift and arrow steps ten." />
+                                        <div class="sl-eventtrack" id="sl-eventtrack" aria-hidden="true"></div>
+                                    </div>
+                                    <select id="sl-rate" class="sl-select sl-select-sm" aria-label="Playback speed">
+                                        <option value="0.15">0.15x</option>
+                                        <option value="0.25" selected>0.25x</option>
+                                        <option value="0.5">0.5x</option>
+                                        <option value="1">1x</option>
+                                    </select>
+                                    <span class="sl-time" id="sl-time">0.00 s</span>
+                                </div>
+                                <div class="sl-layers" role="group" aria-label="Overlay layers">
+                                    <label class="sl-chip"><input type="checkbox" id="sl-l-skeleton" checked /> Skeleton</label>
+                                    <label class="sl-chip"><input type="checkbox" id="sl-l-angles" checked /> Angles</label>
+                                    <label class="sl-chip"><input type="checkbox" id="sl-l-trails" /> Trails</label>
+                                    <label class="sl-chip"><input type="checkbox" id="sl-l-events" checked /> Events</label>
+                                    <label class="sl-chip" title="Whole-body centre of mass, from a fourteen-segment inertial model"><input type="checkbox" id="sl-l-com" checked /> Centre of mass</label>
+                                </div>
+                            </div>
+
+                            <!-- error -->
+                            <div class="sl-stage sl-stage-error" id="sl-stage-error" hidden>
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <h2 id="sl-error-title">That did not work</h2>
+                                <p id="sl-error-body"></p>
+                                <div id="sl-error-actions" class="sl-empty-actions"></div>
+                            </div>
+                        </div>
+                    </main>
+
+                    <!-- ============ RIGHT RAIL ============ -->
+                    <aside class="sl-right" id="sl-right">
+                        <div class="sl-rail-empty" id="sl-rail-empty">
+                            <p>Scores and key measurements appear here once a clip has been analysed.</p>
+                        </div>
+                        <div id="sl-rail-content" hidden>
+                            <div class="sl-rail-block">
+                                <h3>Four dimensions</h3>
+                                <p class="sl-rail-note">
+                                    There is no single score out of 100 here, on purpose. These four measure
+                                    different, non-comparable things; one number would hide which.
+                                </p>
+                                <div id="sl-dimensions"></div>
+                            </div>
+                            <div class="sl-rail-block">
+                                <h3>Key measurements</h3>
+                                <div id="sl-key"></div>
+                            </div>
+                            <div class="sl-rail-block">
+                                <h3>Capture</h3>
+                                <dl class="sl-facts" id="sl-facts"></dl>
+                            </div>
+                            <div class="sl-rail-block">
+                                <h3>Export</h3>
+                                <div class="sl-export">
+                                    <button class="sl-btn" id="sl-ex-json"><i class="fas fa-file-code"></i> JSON</button>
+                                    <button class="sl-btn" id="sl-ex-csv"><i class="fas fa-table"></i> CSV</button>
+                                    <button class="sl-btn" id="sl-ex-video"><i class="fas fa-video"></i> Overlay video</button>
+                                    <button class="sl-btn" id="sl-ex-print"><i class="fas fa-print"></i> Report</button>
+                                    <button class="sl-btn" id="sl-ex-share"><i class="fas fa-link"></i> Share link</button>
+                                </div>
+                                <p class="sl-rail-note" id="sl-share-note" hidden></p>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+
+                <!-- ============ BOTTOM DOCK ============ -->
+                <div class="sl-dock" id="sl-dock">
+                    <div class="sl-dock-tabs" role="tablist">
+                        <button class="sl-dtab is-active" data-pane="findings" role="tab" aria-selected="true">Findings</button>
+                        <button class="sl-dtab" data-pane="metrics" role="tab" aria-selected="false">All measurements</button>
+                        <button class="sl-dtab" data-pane="cycle" role="tab" aria-selected="false">Gait cycle</button>
+                        <button class="sl-dtab" data-pane="strides" role="tab" aria-selected="false">Per stride</button>
+                        <button class="sl-dtab" data-pane="history" role="tab" aria-selected="false">History</button>
+                        <button class="sl-dtab" data-pane="compare" role="tab" aria-selected="false">Compare</button>
+                        <div class="sl-dock-spacer"></div>
+                        <button class="sl-dock-collapse" id="sl-dock-collapse" aria-label="Collapse the panel"><i class="fas fa-chevron-down"></i></button>
+                    </div>
+                    <div class="sl-dock-body" id="sl-dock-body">
+                        <div class="sl-pane is-active" data-pane="findings" id="sl-pane-findings"></div>
+                        <div class="sl-pane" data-pane="metrics" id="sl-pane-metrics"></div>
+                        <div class="sl-pane" data-pane="cycle" id="sl-pane-cycle"></div>
+                        <div class="sl-pane" data-pane="strides" id="sl-pane-strides"></div>
+                        <div class="sl-pane" data-pane="history" id="sl-pane-history"></div>
+                        <div class="sl-pane" data-pane="compare" id="sl-pane-compare"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standing disclaimer. Not dismissable on a first view, by design. -->
+            <aside class="sl-disclaimer" id="sl-disclaimer">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <strong>This is a movement-analysis tool for general fitness use. It is not a medical device
+                    and it does not diagnose, treat or predict injury.</strong>
+                    It measures two-dimensional angles and timings from a single camera using pose estimation, and
+                    it has not been validated against force plates or motion capture. Where the literature links a
+                    measurement to injury, that is an association reported in a population, not a statement about
+                    you. If something hurts, see a qualified professional.
+                    <a href="science.html">What is measured, how, and what it cannot do</a>.
+                </div>
+            </aside>
+
+            <!-- Metric detail sheet -->
+            <div class="sl-sheet" id="sl-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sl-sheet-title">
+                <div class="sl-sheet-panel">
+                    <div class="sl-sheet-head">
+                        <h3 id="sl-sheet-title">Metric</h3>
+                        <button class="sl-tool" id="sl-sheet-close" aria-label="Close"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="sl-sheet-body" id="sl-sheet-body"></div>
+                </div>
+            </div>
+
+            <div class="sl-toast" id="sl-toast" hidden role="status" aria-live="polite"></div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <div id="footer-placeholder"></div>
+</div>
+
+<script src="../../assets/js/components.js" defer></script>
+<script src="../../assets/js/jquery.min.js" defer></script>
+<script src="../../assets/js/jquery.dropotron.min.js" defer></script>
+<script src="../../assets/js/breakpoints.min.js" defer></script>
+<script src="../../assets/js/util.js" defer></script>
+<script src="../../assets/js/main.js" defer></script>
+<script src="../../assets/js/theme-toggle.js" defer></script>
+<script src="../../assets/js/back-to-top.js" defer></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
