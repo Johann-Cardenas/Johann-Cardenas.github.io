@@ -109,7 +109,12 @@
     background: var(--sl-bg1);
     flex-wrap: wrap;
 }
-.sl-topbar-group { display: flex; align-items: center; gap: 0.45em; }
+/* Wraps, because it is a flex ITEM of a wrapping bar and that is not the same
+   thing: the bar wrapping only moves whole groups onto new rows, and a group
+   too wide for the viewport stays too wide. `.sl-workspace` clips rather than
+   scrolls below 1080, so what overflowed here did not appear at all — on a
+   380px phone the Analyse run button sat at x=506 and could not be reached. */
+.sl-topbar-group { display: flex; align-items: center; gap: 0.45em; flex-wrap: wrap; }
 .sl-topbar-spacer { flex: 1; }
 .sl-sep { width: 1px; height: 1.4em; background: var(--sl-line); margin: 0 0.2em; }
 .sl-name {
@@ -145,7 +150,13 @@
 
 .sl-select {
     background: var(--sl-bg2); border: 1px solid var(--sl-line); border-radius: 8px;
-    color: var(--sl-ink); font-size: 0.85em; padding: 0.4em 0.6em; height: 2.1em;
+    color: var(--sl-ink); font-size: 0.85em; padding: 0.4em 0.6em;
+    /* min-height, not height, and a stated line-height. The inherited 1.75
+       line-height is taller than the 2.1em box once the padding and border are
+       taken out of it under border-box, so a fixed height clipped the
+       descenders off every option — invisible on "Metric", obvious the moment
+       a longer label went in one. */
+    min-height: 2.1em; line-height: 1.25;
     appearance: none; -webkit-appearance: none; cursor: pointer;
     background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
     background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%;
@@ -153,7 +164,20 @@
     padding-right: 1.9em;
 }
 .sl-select:focus { outline: 2px solid var(--sl-accent); outline-offset: 1px; }
-.sl-select-sm { height: 1.9em; font-size: 0.78em; }
+.sl-select-sm { min-height: 1.9em; font-size: 0.78em; }
+
+/* Demo picker + its run button, joined so they read as one control. The
+   select carries the longest label in the top bar, so it is allowed to
+   truncate rather than push the Analyse button off a narrow screen. */
+.sl-demo-group { display: flex; align-items: stretch; gap: 0; }
+.sl-demo-group .sl-select {
+    border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: 0;
+    max-width: 15.5em;
+}
+.sl-demo-group .sl-btn {
+    border-top-left-radius: 0; border-bottom-left-radius: 0;
+    white-space: nowrap;
+}
 
 .sl-app input[type="number"], .sl-app input[type="text"] {
     background: var(--sl-bg2); border: 1px solid var(--sl-line); border-radius: 8px;
@@ -241,7 +265,10 @@
 .sl-stage-empty p { max-width: 34em; font-size: 0.88em; margin: 0; }
 .sl-empty-art { width: min(420px, 80%); aspect-ratio: 16 / 7; }
 .sl-empty-art canvas { width: 100%; height: 100%; display: block; }
-.sl-empty-actions { display: flex; gap: 0.6em; flex-wrap: wrap; justify-content: center; }
+.sl-empty-actions { display: flex; gap: 0.6em; flex-wrap: wrap; justify-content: center; align-items: stretch; }
+.sl-stage-empty p.sl-empty-demo-note {
+    max-width: 40em; font-size: 0.78em; color: var(--sl-ink3); line-height: 1.6;
+}
 
 .sl-stage-error { text-align: center; color: var(--sl-ink2); }
 .sl-stage-error i { font-size: 2em; color: var(--sl-warn); }
@@ -290,6 +317,17 @@
 }
 .sl-progress-row { display: flex; align-items: center; justify-content: space-between; gap: 1em; font-size: 0.82em; color: var(--sl-ink2); }
 .sl-ondevice { font-size: 0.76em; color: var(--sl-ok); margin: 0; display: flex; gap: 0.5em; align-items: center; }
+
+.sl-choose {
+    display: flex; align-items: center; gap: 0.9em; flex-wrap: wrap;
+    width: min(560px, 100%);
+    padding: 0.7em 0.95em; border-radius: 10px;
+    border: 1px solid var(--sl-accent);
+    background: color-mix(in srgb, var(--sl-accent) 12%, var(--sl-bg1));
+    color: var(--sl-ink); font-size: 0.85em;
+}
+.sl-choose span { flex: 1; min-width: 12em; }
+.sl-live-pick { cursor: pointer; }
 
 .sl-guide-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .sl-cam-bar { display: flex; align-items: center; gap: 0.6em; }
@@ -379,6 +417,8 @@
     font-size: 0.82em; color: var(--sl-ink2); display: flex; gap: 0.6em;
 }
 .sl-warnbox i { color: var(--sl-warn); margin-top: 0.15em; }
+.sl-warnbox p { margin: 0 0 0.55em; }
+.sl-warnbox p:last-child { margin-bottom: 0; }
 
 /* ---------- Metric grid ---------- */
 .sl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 0.7em; }
@@ -519,6 +559,10 @@
     .sl-dock-body { max-height: none; }
     .sl-name { width: 9em; }
     .sl-topbar { gap: 0.4em; }
+    /* the demo picker carries the longest label in the bar; give it its own
+       row rather than letting it push the run button out of reach */
+    .sl-demo-group { flex: 1 1 100%; }
+    .sl-demo-group .sl-select { flex: 1 1 auto; max-width: none; min-width: 0; }
 }
 
 /* landscape phones: keyed to height, never to width */

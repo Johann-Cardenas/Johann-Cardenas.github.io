@@ -47,7 +47,15 @@ function tx(store, mode, fn) {
         const s = t.objectStore(store);
         let out;
         try { out = fn(s); } catch (e) { rej(e); return; }
-        t.oncomplete = () => res(out && out.result !== undefined ? out.result : out);
+        /* Unwrap the request whenever there IS one, including when it found
+           nothing. Testing `out.result !== undefined` instead meant a miss
+           resolved with the IDBRequest object, which is truthy: `getSetting`
+           then read `.value` off a request, got undefined, and returned that
+           rather than the caller's fallback — so on a first visit the units
+           selector was set to undefined and rendered blank, and the
+           active-profile lookup was handed a request object as a key and threw
+           into a catch that swallowed it. A miss must resolve as undefined. */
+        t.oncomplete = () => res(out instanceof IDBRequest ? out.result : out);
         t.onerror = () => rej(t.error);
         t.onabort = () => rej(t.error);
     }));

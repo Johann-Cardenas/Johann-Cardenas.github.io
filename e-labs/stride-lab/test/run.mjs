@@ -56,6 +56,10 @@ import { gateImplausibleSegments, frameIsWorldFixed, LENGTH_TOLERANCE } from '..
 import { runPipeline, gaitCycleCurves } from '../src/engine/analyze.js';
 import { synthGait, DEFAULTS, rng, STANCE_ALIGN_FRACTION } from '../src/synth/gait.js';
 import { ENGINE_VERSION } from '../src/engine/version.js';
+import { createTracker } from '../src/engine/pose/mediapipe.js';
+import { DEMOS, DEMO_BY_ID } from '../src/ui/demos.js';
+import { bestMotionWindow, MOTION_MARGIN } from '../src/ui/propose.js';
+import { readFileSync } from 'node:fs';
 
 /* ============================================================
    1. Statistics and geometry primitives
@@ -1099,6 +1103,36 @@ test('an oblique camera makes planar angles wrong, not noisy, and they are cappe
     assertClose(r.metrics.cadence.combined.value, g.truth.cadenceSpm, 4, 'and is still right');
 });
 
+test('a runner too small in frame is named as such, and caps every measurement', () => {
+    /* Landmark precision is a fraction of subject size, not an absolute, so a
+       runner who fills a fifth of the frame carries the same relative jitter
+       into every angle and every distance. This is a precision limit rather
+       than a refusal: the numbers mean something, just less than they look
+       like they do, and the app has to say which. */
+    const small = synthGait({ fps: 240, durationS: 6, fillFrac: 0.24 });
+    const r = runPipeline(small.series, { heightM: 1.75, massKg: 70, surface: 'treadmill', speedMs: 3.0 });
+    assert(r.ok, r.message);
+    const w = r.warnings.find(x => x.code === 'subject-too-small');
+    assert(w, 'a runner below the fill floor must be told');
+    assert(/frame height/.test(w.message), 'and told in terms of what to change');
+    assert(r.capture.subjectFill < 0.4, `fill ${r.capture.subjectFill} must be below the floor`);
+    for (const m of Object.values(r.metrics)) {
+        const c = m.sided ? m.sides.L.confidence : m.combined.confidence;
+        if (c === 'unavailable') continue;
+        assertEqual(c, 'low', `${m.label} must not claim better than low confidence on a tiny subject`);
+    }
+    note(`fill ${(r.capture.subjectFill * 100).toFixed(0)}% of frame height, every measurement capped to low`);
+});
+
+test('a well-framed runner is not penalised for subject size', () => {
+    const good = synthGait({ fps: 240, durationS: 6, fillFrac: 0.72 });
+    const r = runPipeline(good.series, { heightM: 1.75, massKg: 70, surface: 'treadmill', speedMs: 3.0 });
+    assert(!r.warnings.some(x => x.code === 'subject-too-small'), 'no complaint about good framing');
+    assertBetween(r.capture.subjectFill, 0.5, 0.95, 'and the fill is measured, not assumed');
+    assert(Object.values(r.metrics).some(m => atLeast(m.sided ? m.sides.L.confidence : m.combined.confidence, 'high')),
+        'something must still be able to reach high confidence');
+});
+
 test('a square-on view is not penalised', () => {
     const g = synthGait({ fps: 240, durationS: 6, view: 'sagittal' });
     const r = runPipeline(g.series, { heightM: 1.75, massKg: 70, surface: 'treadmill', speedMs: 3.0 });
@@ -1204,6 +1238,67 @@ test('bandStatus labels optimal, acceptable and outside', () => {
     assertEqual(bandStatus(22, band), 'acceptable');
     assertEqual(bandStatus(30, band), 'outside');
     assertEqual(bandStatus(30, null), 'unscored');
+});
+
+test('scoreValue reaches zero AT the acceptable edge on an asymmetric band, not before', () => {
+    /* The head-oscillation band, which is where this was found: optimal 4-9 cm
+       so the centre is 6.5, acceptable 3-12 so the reach is 3.5 down and 5.5
+       up. Dividing by one half-width of 4.5 for both sides put the zero at 11
+       cm, inside the acceptable range, and the app then showed 11.7 cm as
+       "Near the typical range" scoring 0 out of 100. */
+    const band = { optimal: [4, 9], acceptable: [3, 12], direction: 'lower-better' };
+    assertClose(scoreValue(6.5, band), 1, 1e-9, 'centre of optimal');
+    assertClose(scoreValue(12, band), 0, 1e-9, 'the far edge, which is 5.5 out');
+    assertClose(scoreValue(3, band), 0, 1e-9, 'the near edge, which is only 3.5 out');
+    assertEqual(bandStatus(11.7, band), 'acceptable');
+    assert(scoreValue(11.7, band) > 0, '11.7 cm is inside acceptable and must not score zero');
+    assert(scoreValue(11.7, band) < 0.15, 'though it is nearly out, and must score like it');
+    /* the two sides fall at different rates, which is the point */
+    assert(scoreValue(6.5 - 2, band) < scoreValue(6.5 + 2, band),
+        'two units below the centre is further out of range than two above');
+});
+
+test('no shipped band can score zero while its own status is still acceptable', () => {
+    let sampled = 0, asymmetric = 0;
+    for (const band of NORMS) {
+        if (!band.optimal || !band.acceptable) continue;
+        const [lo, hi] = band.acceptable;
+        const centre = (band.optimal[0] + band.optimal[1]) / 2;
+        if (Math.abs((hi - centre) - (centre - lo)) > 1e-9) asymmetric++;
+        for (let i = 1; i < 40; i++) {
+            const v = lo + (hi - lo) * i / 40;
+            const s = scoreValue(v, band), st = bandStatus(v, band);
+            assert(s > 0, `${band.metric}: ${v.toPrecision(4)} reads "${st}" but scores ${s}`);
+            assertBetween(s, 0, 1, `${band.metric} score in [0,1]`);
+            sampled++;
+        }
+        assertClose(scoreValue(lo, band), 0, 1e-9, `${band.metric} scores zero at its lower edge`);
+        assertClose(scoreValue(hi, band), 0, 1e-9, `${band.metric} scores zero at its upper edge`);
+        assertEqual(scoreValue(lo - (hi - lo), band), 0, `${band.metric} clamps below, never negative`);
+        assertEqual(scoreValue(hi + (hi - lo), band), 0, `${band.metric} clamps above`);
+    }
+    note(`${NORMS.length} bands (${asymmetric} asymmetric about their optimal centre), ${sampled} sampled values, score > 0 everywhere inside acceptable`);
+});
+
+test('a change is better or worse by the BAND, never by the sign of the change', () => {
+    /* What the compare table reads to fill its Direction column. An earlier
+       version called every significant change an improvement, which told a
+       runner whose pelvic drop had doubled that they had made progress. */
+    const vo = bandFor('verticalOscillation', { speedMs: 3.0 });
+    assert(vo, 'the band must resolve');
+    assert(scoreValue(12.6, vo) < scoreValue(9.0, vo),
+        'bouncing 3.6 cm more is away from typical, whatever the sign of the change');
+    assert(scoreValue(8.5, vo) > scoreValue(12.6, vo), 'and back again is toward it');
+
+    const pd = bandFor('pelvicDrop', {});
+    assert(pd, 'the pelvic-drop band must resolve');
+    assert(scoreValue(9, pd) < scoreValue(4, pd), 'a doubled pelvic drop is not an improvement');
+
+    /* A rise is not automatically bad either: below the band, going UP is
+       going toward it, and a sign-based rule gets this backwards too. */
+    const tl = bandFor('trunkLean', {});
+    assert(scoreValue(5, tl) > scoreValue(1, tl),
+        'leaning 5 degrees is nearer typical than leaning 1, so an increase here is an improvement');
 });
 
 test('normative bands are speed-conditional where the target moves with speed', () => {
@@ -1376,6 +1471,182 @@ test('the low-cadence rule is suppressed when speed is unknown', () => {
 /* ============================================================
    8. Golden values — any change here must be justified
    ============================================================ */
+
+group('Tracking — asking which person is the runner');
+
+/** A synthetic person: eight visible landmarks spread over a box. */
+function personAt(cx, cy, w, h) {
+    const xy = [], vis = [];
+    for (let i = 0; i < 8; i++) {
+        xy.push(cx + (i % 2 ? w / 2 : -w / 2), cy - h / 2 + (h * i) / 7);
+        vis.push(0.9);
+    }
+    return { xy, vis };
+}
+
+test('two people in shot for most of a clip is ambiguous, one person is not', () => {
+    const N = 100;
+    const solo = createTracker();
+    for (let f = 0; f < N; f++) solo.push(f, [personAt(0.5, 0.5, 0.12, 0.5)]);
+    assert(!solo.resolve(N).ambiguous, 'one runner must never trigger the question');
+
+    const pair = createTracker();
+    for (let f = 0; f < N; f++) {
+        const people = [personAt(0.3, 0.5, 0.12, 0.5)];
+        if (f >= 55) people.push(personAt(0.75, 0.5, 0.12, 0.5));  /* 45% coverage */
+        pair.push(f, people);
+    }
+    const res = pair.resolve(N);
+    assert(res.ambiguous, 'two people each in frame for most of the clip must be asked about');
+    assertEqual(res.candidates.length, 2, 'and both must be offered');
+});
+
+test('the question is asked on a frame where every candidate is actually visible', () => {
+    /* Choosing happens on ONE picture. Asking "which of these is you" while
+       only one of them is on screen is not a question anybody can answer, so
+       the frame offered has to be one where they are all in shot — not simply
+       the middle of the clip, which here holds only the first runner. */
+    const N = 100;
+    const tr = createTracker();
+    for (let f = 0; f < N; f++) {
+        const people = [personAt(0.3, 0.5, 0.12, 0.5)];
+        if (f >= 55) people.push(personAt(0.75, 0.5, 0.12, 0.5));
+        tr.push(f, people);
+    }
+    const res = tr.resolve(N);
+    assert(res.pickFrame >= 55, `the pick frame ${res.pickFrame} must be one where both are present, not the midpoint`);
+    for (const c of res.candidates) {
+        assert(c.box, `candidate ${c.id} must carry a box, or there is nothing to click`);
+        assertBetween(c.box.x0, 0, 1, 'boxes are normalised');
+        assert(c.box.x1 > c.box.x0 && c.box.y1 > c.box.y0, 'and non-degenerate');
+    }
+    /* the two boxes must be the two people, not the same one twice */
+    const [a, b] = res.candidates.map(c => (c.box.x0 + c.box.x1) / 2);
+    assert(Math.abs(a - b) > 0.2, `the candidates must be distinct people (centres ${a.toFixed(2)}, ${b.toFixed(2)})`);
+    note(`asked on frame ${res.pickFrame} of ${N}; both candidates boxed there`);
+});
+
+group('Proposing the analysis window');
+
+/** Thumbnails every `dt` seconds, `energy` given by a function of time. */
+function strip(durationS, dt, energyAt) {
+    const out = [];
+    for (let i = 0; i < Math.floor(durationS / dt); i++) {
+        const t = (i + 0.5) * dt;
+        out.push({ t, energy: i === 0 ? 0 : energyAt(t) });  /* the first has no predecessor */
+    }
+    return out;
+}
+
+test('the window moves to the running and away from the standing about', () => {
+    /* The case this exists for: a long clip that opens with the walk to the
+       treadmill and closes with the cool-down, where "just take the middle"
+       is not obviously wrong but is not right either. */
+    const dur = 30;
+    const s = strip(dur, 2, t => (t > 18 && t < 28) ? 40 : 3);
+    const pick = bestMotionWindow(s, dur, 6);
+    assert(pick, 'a clip with an obvious lively stretch must produce a proposal');
+    assertBetween(pick.startS, 17, 22, 'the window must start in the lively stretch');
+    assert(pick.endS <= dur, 'and end inside the clip');
+    assertClose(pick.endS - pick.startS, 6, 1e-9, 'of the length asked for');
+    note(`30 s clip, motion at 18-28 s: proposed ${pick.startS.toFixed(2)}-${pick.endS.toFixed(2)} s`);
+});
+
+test('a clip that moves the same way throughout is left where it was', () => {
+    /* The shipped demo is exactly this: somebody running for the whole 23
+       seconds. Every window scores the same, so moving the selection would
+       look like a decision and be a coin toss. */
+    const dur = 23;
+    const flat = bestMotionWindow(strip(dur, 1.6, () => 20), dur, 6);
+    assertEqual(flat, null, 'uniform motion must produce no proposal');
+    const noisy = bestMotionWindow(strip(dur, 1.6, t => 20 + Math.sin(t * 3) * 1.2), dur, 6);
+    assertEqual(noisy, null, 'and neither must a few percent of wobble');
+});
+
+test('the proposal refuses rather than guesses when it has nothing to go on', () => {
+    assertEqual(bestMotionWindow([], 20, 6), null, 'no thumbnails');
+    assertEqual(bestMotionWindow(strip(20, 5, () => 10), 20, 6), null, 'too few usable thumbnails');
+    assertEqual(bestMotionWindow(strip(20, 2, () => 0), 20, 6), null,
+        'a tainted canvas records zero energy and must not be read as stillness');
+    assertEqual(bestMotionWindow(strip(5, 0.5, () => 10), 5, 6), null,
+        'a clip shorter than the window has nothing to choose');
+    assertEqual(bestMotionWindow(null, 20, 6), null, 'no samples at all');
+});
+
+test('one bright thumbnail cannot drag the bar past itself', () => {
+    /* The threshold is a multiple of the MEDIAN, not the mean, so a single
+       flash — a passing shadow, an autoexposure step — cannot both create the
+       winning window and raise the bar it has to clear. */
+    const dur = 30;
+    const spike = bestMotionWindow(strip(dur, 2, t => (t > 14 && t < 16 ? 400 : 10)), dur, 6);
+    assert(spike, 'a genuine outlier still wins its window');
+    const median = spike.median;
+    assertClose(median, 10, 1e-9, 'the median is unmoved by the spike');
+});
+
+group('Demos — the shipped clip is what the catalogue says it is');
+
+test('the demo catalogue is well formed and its ids are unique', () => {
+    assert(DEMOS.length >= 2, 'a synthetic demo and a filmed one');
+    assertEqual(new Set(DEMOS.map(d => d.id)).size, DEMOS.length, 'ids must be unique');
+    for (const d of DEMOS) {
+        assert(d.label && d.menuLabel && d.summary, `${d.id} must describe itself in the picker`);
+        assert(d.kind === 'synthetic' || d.kind === 'video', `${d.id} has an unknown kind`);
+    }
+});
+
+test('the filmed demo declares the capture context the video actually has', () => {
+    /* The demo's honesty rests on this. Its note tells the visitor the clip is
+       848x480 with a quarter turn at 30 fps; if somebody swaps the file for a
+       different recording, that note becomes a confident lie and nothing else
+       in the app would notice. So it is read back from the shipped bytes. */
+    const d = DEMO_BY_ID.treadmill;
+    const buf = readFileSync(new URL('../demo/treadmill-30fps.mp4', import.meta.url));
+    assertEqual(buf.byteLength, d.bytes, 'the declared size must match the shipped file');
+
+    const parsed = parseMp4(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+    assert(parsed.ok, 'the app must be able to demux its own demo');
+    const t = parsed.track;
+    assertEqual(t.width, d.coded.width, 'coded width');
+    assertEqual(t.height, d.coded.height, 'coded height');
+    assertEqual(t.rotationDeg, d.rotationDeg, 'the quarter turn the note describes');
+    assertEqual(t.mirrored, false, 'a mirrored demo would swap left and right');
+    assertEqual(displaySize(t).width, d.display.width, 'display width after the turn');
+    assertEqual(displaySize(t).height, d.display.height, 'display height after the turn');
+    assertClose(measuredFps(t), d.fps, 0.5, 'frame rate measured from the sample timestamps');
+
+    const ticks = t.samples.reduce((a, s) => a + s.duration, 0);
+    const durationS = ticks / t.timescale;
+    assertClose(durationS, d.durationS, 0.05, 'duration');
+    note(`${t.width}x${t.height} +${t.rotationDeg}deg -> ${displaySize(t).width}x${displaySize(t).height}, `
+        + `${t.samples.length} samples, ${measuredFps(t)} fps, ${durationS.toFixed(2)} s`);
+});
+
+test('the filmed demo asks for a window that exists, and states what it was told', () => {
+    const d = DEMO_BY_ID.treadmill;
+    assert(d.window.startS >= 0, 'the window starts inside the clip');
+    assert(d.window.endS <= d.durationS, `the window must end before the clip does (${d.window.endS} of ${d.durationS})`);
+    assert(d.window.endS - d.window.startS >= 3, 'and be long enough for several strides');
+
+    /* Everything in `stated` is unmeasurable from the video and is quoted to
+       the visitor as supplied. It must therefore all be present: a missing
+       height would silently fall back to whoever is looking at the page. */
+    const s = d.stated;
+    assertBetween(s.heightM, 1.2, 2.2, 'a standing height that sets the scale');
+    assertBetween(s.massKg, 30, 200, 'a body mass');
+    assertEqual(s.surface, 'treadmill', 'the clip is a treadmill clip');
+    assert(s.speedMs > 0, 'a belt speed, which cannot be measured when the runner does not cross the frame');
+
+    /* Cross-check the stated speed against the clip's own cadence. A step
+       length far outside what a body can do would mean the speed is wrong, and
+       every distance in the demo with it. Measured cadence is 180-185 steps
+       per minute across every window tried. */
+    const stepLengthM = s.speedMs / (182 / 60);
+    assertBetween(stepLengthM / s.heightM, 0.4, 0.85,
+        `stated speed ${s.speedMs} m/s implies a step of ${(stepLengthM / s.heightM * 100).toFixed(0)}% of standing height`);
+    note(`${s.speedMs} m/s at 182 steps/min = ${stepLengthM.toFixed(2)} m per step, `
+        + `${(stepLengthM / s.heightM * 100).toFixed(0)}% of standing height`);
+});
 
 group('Golden values');
 

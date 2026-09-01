@@ -135,16 +135,33 @@ export async function analyseFile(file, opts) {
             message: 'We could not find a runner in this clip. Check that the whole body is in frame, including the feet.'
         };
     }
-    if (resolved.ambiguous && opts.trackChoice == null) {
-        return {
-            ok: false, code: 'multiple-people',
-            message: 'More than one person is in frame for most of the clip. Tap the runner you want analysed.',
-            candidates: resolved.candidates,
-            recoverable: true
-        };
+    /* Ask, rather than guess or give up.
+       Silently analysing the wrong person produces a report that looks entirely
+       normal and describes somebody else, so a prompt is better than a guess.
+       But throwing the analysis away and asking the user to start again would
+       mean re-running pose estimation over every frame — the expensive part,
+       already done by this point. So the question is asked HERE, with the
+       tracks in hand, and the answer resumes the same run. */
+    let chosenId = opts.trackChoice;
+    if (resolved.ambiguous && chosenId == null) {
+        if (typeof opts.onAmbiguous === 'function') {
+            chosenId = await opts.onAmbiguous({
+                candidates: resolved.candidates,
+                frameIndex: resolved.pickFrame,
+                timeS: times[resolved.pickFrame] != null ? times[resolved.pickFrame] : times[0]
+            });
+            if (chosenId == null) return { cancelled: true };
+        } else {
+            return {
+                ok: false, code: 'multiple-people',
+                message: 'More than one person is in frame for most of the clip. Tap the runner you want analysed.',
+                candidates: resolved.candidates,
+                recoverable: true
+            };
+        }
     }
-    const track = opts.trackChoice != null
-        ? (tracker.tracks.find(t => t.id === opts.trackChoice) || resolved.chosen)
+    const track = chosenId != null
+        ? (tracker.tracks.find(t => t.id === chosenId) || resolved.chosen)
         : resolved.chosen;
 
     const series = seriesFromTrack(track, times, width, height, runner.backendId);
@@ -205,6 +222,12 @@ export async function analyseFile(file, opts) {
     }
     result.series = series;
     result.trackCandidates = resolved.candidates;
+    if (result.ok && resolved.ambiguous) {
+        result.warnings.push({
+            code: 'multiple-people',
+            message: `More than one person was in frame for much of this clip. The runner you selected was analysed; the others were ignored.`
+        });
+    }
     return result;
 }
 

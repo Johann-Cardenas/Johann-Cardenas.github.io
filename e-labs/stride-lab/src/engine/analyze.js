@@ -17,7 +17,8 @@ import { scoreAnalysis } from './scoring/score.js';
 import { recommend } from './recommend/rules.js';
 import { ENGINE_VERSION } from './version.js';
 import {
-    DEFAULT_CUTOFF_HZ, FPS_REJECT_BELOW, FPS_TIMING_MIN, median, mean
+    DEFAULT_CUTOFF_HZ, FPS_REJECT_BELOW, FPS_TIMING_MIN, SUBJECT_FILL_MIN,
+    median, mean
 } from './types.js';
 
 /**
@@ -137,6 +138,21 @@ export function runPipeline(series, opts) {
         });
     }
 
+    /* ---- how much of the frame does the runner actually fill? -----------
+       Landmark precision is a fraction of subject size, not an absolute: a
+       runner 200 px tall gets the same relative jitter as one 800 px tall, and
+       every angle and every distance inherits it. The capture guidance asks for
+       60-80% of frame height for this reason. */
+    const subjectFill = Number.isFinite(scale.heightPx) && cond.height > 0
+        ? scale.heightPx / cond.height
+        : NaN;
+    if (Number.isFinite(subjectFill) && subjectFill < SUBJECT_FILL_MIN) {
+        warnings.push({
+            code: 'subject-too-small',
+            message: `The runner fills only ${(subjectFill * 100).toFixed(0)}% of the frame height. Below ${(SUBJECT_FILL_MIN * 100).toFixed(0)}% the landmarks are estimated from too few pixels for the angles to be worth much. Move the camera closer, or zoom in, and aim for 60 to 80%.`
+        });
+    }
+
     /* ---- is the frame fixed to the world? ------------------------------- */
     const travel = frameIsWorldFixed(cond, scale.legLengthPx);
     const spatialFromDisplacement = (opts.surface || 'treadmill') !== 'treadmill' && travel.worldFixed;
@@ -184,6 +200,7 @@ export function runPipeline(series, opts) {
         spatialFromDisplacement,
         travelLegs: travel.travelLegs,
         viewQuality: auto.view === 'oblique' ? 'oblique' : 'planar',
+        subjectFill,
         surface: opts.surface || 'treadmill',
         speedMs: Number.isFinite(opts.speedMs) ? opts.speedMs : null,
         heightM: opts.heightM,
@@ -217,6 +234,7 @@ export function runPipeline(series, opts) {
             viewAuto: auto.view,
             viewOverridden: !!(opts.view && opts.view !== 'auto' && opts.view !== auto.view),
             travelLegs: travel.travelLegs,
+            subjectFill,
             spatialFromDisplacement,
             viewRatio: auto.ratio,
             facing,

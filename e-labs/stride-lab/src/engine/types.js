@@ -183,6 +183,10 @@ export const FPS_FULL_PRECISION = 120;
 /* Scaling */
 export const SCALE_DISAGREEMENT_LIMIT = 0.20;  /* anthropometric vs world landmarks */
 export const CENTRAL_BAND = 0.60;         /* analyse only the middle 60% of width   */
+/* Subject height as a fraction of frame height. Below this the landmarks are
+   being estimated from too few pixels to be worth much, and every angle
+   inherits that. The capture guidance asks for 60-80%. */
+export const SUBJECT_FILL_MIN = 0.40;
 
 /* Foot-strike angle class boundaries, degrees, toe-up positive.
    Boundaries after Altman & Davis (2012), "A kinematic method for footstrike

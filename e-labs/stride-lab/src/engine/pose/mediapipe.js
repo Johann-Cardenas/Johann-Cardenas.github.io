@@ -188,6 +188,17 @@ export function boundingBox(pose) {
     return seen >= 6 ? { x0, y0, x1, y1 } : null;
 }
 
+/** A track's bounding box at (or nearest to) a given frame. */
+function boxAtFrame(track, frame) {
+    if (track.poses.has(frame)) return boundingBox(track.poses.get(frame));
+    let best = null, bestD = Infinity;
+    for (const f of track.frames) {
+        const d = Math.abs(f - frame);
+        if (d < bestD) { bestD = d; best = f; }
+    }
+    return best == null ? null : boundingBox(track.poses.get(best));
+}
+
 function iou(a, b) {
     const ix = Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0));
     const iy = Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
@@ -258,11 +269,31 @@ export function createTracker() {
                 }))
                 .sort((a, b) => b.score - a.score);
             const major = ranked.filter(r => r.coverage > 0.4);
+
+            /* A frame on which to ASK. Choosing has to happen on one picture, so
+               it should be the picture where the most candidates are visible at
+               once — asking "which of these" while only one is on screen is not
+               a question anybody can answer. Ties break towards the middle of
+               the clip, where a runner is most likely to be in shot and up to
+               speed. */
+            const mid = totalFrames / 2;
+            const counts = new Map();
+            for (const r of major) for (const f of r.track.frames) counts.set(f, (counts.get(f) || 0) + 1);
+            let pickFrame = Math.floor(mid), bestCount = -1;
+            for (const [f, n] of counts) {
+                if (n > bestCount || (n === bestCount && Math.abs(f - mid) < Math.abs(pickFrame - mid))) {
+                    bestCount = n; pickFrame = f;
+                }
+            }
+
             return {
                 chosen: ranked[0] ? ranked[0].track : null,
                 ambiguous: major.length > 1,
+                pickFrame,
                 candidates: ranked.slice(0, 4).map(r => ({
-                    id: r.id, coverage: r.coverage, box: r.track.box
+                    id: r.id,
+                    coverage: r.coverage,
+                    box: boxAtFrame(r.track, pickFrame) || r.track.box
                 }))
             };
         },

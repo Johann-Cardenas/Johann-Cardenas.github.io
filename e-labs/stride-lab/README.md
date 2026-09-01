@@ -24,7 +24,7 @@ python -m http.server 8000        # from the repository root
 ## Test it
 
 ```bash
-npm test          # node test/run.mjs — 104 checks, no dependencies
+npm test          # node test/run.mjs — 118 checks, no dependencies
 npm run banner    # regenerate the E-Labs card image from the engine
 ```
 
@@ -40,6 +40,8 @@ science.html        method, error budget, validation status, limitations
 app.js              DOM controller — the only impure part
 styles.css          workspace; science.css for the method page
 sw.js               offline shell + model cache, scoped to this directory
+
+demo/               the filmed demo clip, shipped with the app
 
 src/engine/         PURE. No DOM, no fetch, no framework. This is the product.
   types.js            constants, anthropometry, statistics, sign conventions
@@ -83,6 +85,24 @@ gait events → stride segmentation → measurements → scoring → recommendat
 
 Stages D–L are `runPipeline()` in `analyze.js`, and it is a pure function.
 
+## The two demos
+
+`src/ui/demos.js` is the catalogue, and the picker in the top bar is built from
+it rather than from markup.
+
+- **Synthetic runner** — generated from a physical model, so the true cadence,
+  contact time, trunk lean and strike angle are known and the report can be
+  marked against them. The only clip here that can show the engine's *error*.
+- **Filmed on a treadmill** — a real 30 fps portrait phone clip, run through the
+  ordinary path. Much of the report is withheld and the app says why; that is
+  the point of including it. Height, mass and belt speed were supplied by the
+  person filmed, are unmeasurable from the video, and are quoted as such in
+  `stated`.
+
+The suite reads the shipped MP4 back with the app's own demuxer and asserts the
+catalogue's declared geometry, rotation, frame rate and duration match it, so
+replacing the file without updating the note fails the build. See D36.
+
 ## Things worth knowing before changing anything
 
 - **Sign conventions live in `metrics/angles.js` and nowhere else.** A mirrored
@@ -97,6 +117,18 @@ Stages D–L are `runPipeline()` in `analyze.js`, and it is a pure function.
   D12 in `DECISIONS.md` before touching `events/detect.js`; three separate
   attempts at the dispersion statistic were wrong in ways that only showed up as
   "every stride discarded" or "error grows with noise".
+- **A score of 0 must mean out of range.** `scoreValue` divides by the reach
+  from the optimal centre to the acceptable edge *on the side the value falls*,
+  because 21 of the 24 bands are asymmetric. Using one half-width for both sides
+  put the zero inside the acceptable range and let the app show "Near the
+  typical range" next to 0/100. The suite sweeps every band and asserts
+  `scoreValue > 0` iff `bandStatus !== 'outside'`. See D37.
+- **`.sl-select` uses `min-height`, never `height`.** The app inherits a 1.75
+  line-height, which is taller than a fixed 2.1em box once padding and border
+  come out of it under border-box, and every option clipped its descenders.
+- **`.sl-topbar-group` must keep `flex-wrap: wrap`.** `.sl-workspace` is
+  `overflow: clip` below 1080 so its sticky bar works, so a row that overflows
+  is not scrollable — it is simply not on screen. See D39.
 - **Orientation is not metadata, it is pixels.** WebCodecs ignores the
   container's display matrix, so portrait clips arrive on their side and the
   pose model produces a confident, wrong skeleton. Frames are rotated before
