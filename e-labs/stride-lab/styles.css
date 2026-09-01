@@ -264,7 +264,8 @@
 .sl-eventtrack span.off { opacity: 0.5; height: 5px; top: 3px; }
 .sl-time { font-family: var(--sl-mono); font-size: 0.78em; color: var(--sl-ink2); min-width: 5.5em; text-align: right; }
 
-.sl-layers { display: flex; gap: 0.4em; flex-wrap: wrap; }
+.sl-layers { display: flex; gap: 0.4em; flex-wrap: wrap; align-items: center; }
+.sl-layer-sep { width: 1px; align-self: stretch; background: var(--sl-line); margin: 0.1em 0.15em; }
 .sl-chip {
     display: inline-flex; align-items: center; gap: 0.4em;
     font-size: 0.76em; color: var(--sl-ink2);

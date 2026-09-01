@@ -60,7 +60,9 @@ src/engine/         PURE. No DOM, no fetch, no framework. This is the product.
   scoring/            normative bands, references, dimension scores
   recommend/          rules and exercises, as reviewable data
 
-src/ui/             browser glue: pipeline, overlay, charts, IndexedDB, format
+src/ui/overlay.js   the annotated player: skeleton, angle arcs, construction
+                    lines, dimension callouts, per-frame readout, phase lanes
+src/ui/             browser glue: pipeline, charts, IndexedDB, format
 src/synth/gait.js   the synthetic runner — test oracle and demo mode
 workers/            pose inference
 test/               validation suite

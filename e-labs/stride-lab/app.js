@@ -1020,15 +1020,39 @@ function wirePlayer() {
     $('sl-rate').addEventListener('change', (e) => {
         if (playerState && playerState.video) playerState.video.playbackRate = Number(e.target.value);
     });
-    for (const id of ['skeleton', 'angles', 'trails', 'events']) {
-        $(`sl-l-${id}`).addEventListener('change', drawPlayerFrame);
+    for (const id of OVERLAY_LAYERS) {
+        const el = $(`sl-l-${id}`);
+        if (el) el.addEventListener('change', drawPlayerFrame);
     }
+    const preset = $('sl-overlay-preset');
+    if (preset) preset.addEventListener('change', () => applyOverlayPreset(preset.value));
     window.addEventListener('resize', debounce(() => { if (playerState) drawPlayerFrame(); }, 180));
+}
+
+/**
+ * The ground, as the lowest foot landmark anywhere in the clip. Approximate by
+ * construction — it assumes a level surface — and used only to draw a
+ * reference line, never to measure anything.
+ */
+function estimateGround(result) {
+    const S = result.series;
+    const K = CANONICAL.length;
+    let lowest = -Infinity;
+    for (const name of ['heelL', 'heelR', 'toeL', 'toeR']) {
+        const c = CANONICAL.indexOf(name);
+        for (let f = 0; f < S.n; f++) {
+            if (!(S.vis[f * K + c] >= 0.5)) continue;
+            const y = S.xy[(f * K + c) * 2 + 1];
+            if (Number.isFinite(y) && y > lowest) lowest = y;
+        }
+    }
+    return Number.isFinite(lowest) && lowest > -Infinity ? lowest : null;
 }
 
 function setupPlayer(result, synthetic) {
     const series = result.series;
     const video = $('sl-video');
+    if (result._internal) result._internal.groundY = estimateGround(result);
     playerState = {
         result, series, synthetic: !!synthetic,
         frame: 0,
@@ -1174,16 +1198,14 @@ function drawPlayerFrame() {
     ctx.translate(box.x, box.y);
     drawOverlay(ctx, {
         xy, vis, w: box.w, h: box.h, theme: playerState.theme,
-        layers: {
-            skeleton: $('sl-l-skeleton').checked,
-            angles: $('sl-l-angles').checked,
-            trails: $('sl-l-trails').checked,
-            events: $('sl-l-events').checked,
-            com: $('sl-l-com').checked
-        },
-        angles: anglesFor(result.capture.view),
-        trails: $('sl-l-trails').checked ? buildTrails(series, f) : null,
+        layers: currentLayers(),
+        angles: liveAngles(result, f),
+        trails: $('sl-l-trails').checked ? buildTrails(result, f) : null,
         com: comAt(result, f),
+        readout: $('sl-l-readout').checked ? frameReadout(result, f) : null,
+        phase: phaseAt(result, f),
+        measures: $('sl-l-measures').checked ? measuresAt(result, f) : null,
+        metresPerPx: metresPerCanvasPx(result, f, box.w),
         eventLabel: label
     });
     ctx.restore();
@@ -1204,16 +1226,257 @@ function comAt(result, frame) {
     return { x: x / w, y: 1 - com.y[frame] / h };
 }
 
-function buildTrails(series, frame) {
+const OVERLAY_LAYERS = ['skeleton', 'angles', 'guides', 'readout', 'phase', 'measures', 'trails', 'events', 'com'];
+
+/* Three densities, because the right amount of annotation depends on what you
+   are doing. "Clean" is for showing somebody the video; "analytical" is the
+   working default; "everything" is for reading one frame carefully. */
+const OVERLAY_PRESETS = {
+    clean: { skeleton: 1, angles: 0, guides: 0, readout: 0, phase: 0, measures: 0, trails: 0, events: 1, com: 0 },
+    analytical: { skeleton: 1, angles: 1, guides: 1, readout: 1, phase: 1, measures: 1, trails: 0, events: 1, com: 1 },
+    everything: { skeleton: 1, angles: 1, guides: 1, readout: 1, phase: 1, measures: 1, trails: 1, events: 1, com: 1 }
+};
+
+function applyOverlayPreset(name) {
+    const p = OVERLAY_PRESETS[name];
+    if (!p) return;
+    for (const id of OVERLAY_LAYERS) {
+        const el = $(`sl-l-${id}`);
+        if (el) el.checked = !!p[id];
+    }
+    drawPlayerFrame();
+}
+
+function currentLayers() {
+    const out = {};
+    for (const id of OVERLAY_LAYERS) {
+        const el = $(`sl-l-${id}`);
+        out[id] = el ? el.checked : true;
+    }
+    return out;
+}
+
+/**
+ * Angle annotations with THIS FRAME's value attached.
+ *
+ * The arc and the number come from the same place: `metric` names the
+ * per-frame series the engine computed, so the drawing and the reading cannot
+ * describe different joints or disagree about a sign convention.
+ */
+function liveAngles(result, frame) {
+    const S = result._internal && result._internal.series;
+    const specs = anglesFor(result.capture.view);
+    if (!S) return specs;
+    return specs.map(spec => {
+        const src = S[spec.metric];
+        const arr = src && (src[spec.side] || src);
+        const v = arr && Number.isFinite(arr[frame]) ? arr[frame] : null;
+        return { ...spec, text: v == null ? null : `${spec.label}  ${v.toFixed(0)}°` };
+    });
+}
+
+/**
+ * The values at this frame, for the heads-up readout.
+ *
+ * Deliberately different from the dashboard, which shows stride aggregates.
+ * Stepping frame by frame through a contact and watching knee flexion rise is
+ * how a gait cycle is actually read, and that needs the instantaneous value.
+ */
+function frameReadout(result, frame) {
+    const inner = result._internal;
+    if (!inner) return null;
+    const S = inner.series;
+    const rows = [];
+    const at = (arr) => (arr && Number.isFinite(arr[frame]) ? arr[frame] : null);
+    const deg = (label, arr, side) => {
+        const v = at(arr);
+        if (v == null) return null;
+        return { label, value: `${v.toFixed(1)}°`, side };
+    };
+
+    if (result.capture.view === 'frontal') {
+        rows.push(deg('pelvis', S.obliquity));
+        rows.push(deg('knee', S.fppa && S.fppa.L, 'L'));
+        rows.push(deg('knee', S.fppa && S.fppa.R, 'R'));
+        rows.push(deg('lean', S.lateral));
+    } else {
+        rows.push(deg('knee', S.kneeFlex && S.kneeFlex.L, 'L'));
+        rows.push(deg('knee', S.kneeFlex && S.kneeFlex.R, 'R'));
+        rows.push(deg('hip', S.hipExt && S.hipExt.L, 'L'));
+        rows.push(deg('foot', S.footAngle && S.footAngle.L, 'L'));
+        rows.push(deg('trunk', S.trunkLean));
+    }
+
+    /* Centre-of-mass height ABOVE THE GROUND, not above the bottom of the
+       image — the frame edge is an arbitrary datum and a height measured from
+       it is a number with no meaning. */
+    const com = inner.com;
+    const mpp = inner.scale && inner.scale.mPerPx;
+    if (com && mpp && Number.isFinite(com.y[frame]) && Number.isFinite(mpp[frame])
+        && Number.isFinite(inner.groundY)) {
+        const groundUpPx = (1 - inner.groundY) * result.series.height;
+        const above = (com.y[frame] - groundUpPx) * mpp[frame];
+        if (above > 0) rows.push({ label: 'com ht', value: `${above.toFixed(2)} m`, dim: true });
+    }
+
+    const strides = (result.events.strides || []).filter(s => s.valid);
+    const t = result.series.t[frame];
+    const idx = strides.findIndex(s => t >= s.strike.t && t < s.nextStrike.t);
+    return {
+        rows: rows.filter(Boolean),
+        time: t,
+        frame,
+        /* An oblique camera measures every planar angle in a plane the movement
+           did not happen in. The findings say so at length; the frame itself
+           should not stay silent about it while displaying those angles. */
+        stride: [
+            idx >= 0 ? `stride ${idx + 1}/${strides.length}` : null,
+            result.capture.viewAuto === 'oblique' ? 'oblique view' : null
+        ].filter(Boolean).join('  ·  ') || null
+    };
+}
+
+/**
+ * Which foot is on the ground now, and the stance blocks across the whole clip.
+ *
+ * The lanes make the event detection inspectable: if the two feet do not
+ * alternate, the detection is wrong and it is visible without reading a number.
+ */
+function phaseAt(result, frame) {
+    if (!$('sl-l-phase') || !$('sl-l-phase').checked) {
+        /* the contact brackets still need to know who is down */
+        return contactState(result, frame);
+    }
+    const state = contactState(result, frame);
+    const t0 = result.series.t[0];
+    const t1 = result.series.t[result.series.n - 1];
+    const span = (t1 - t0) || 1;
+    const lanes = { L: [], R: [] };
+    /* a record reloaded from storage keeps its events but not its strides */
+    for (const st of (result.events.strides || [])) {
+        if (!st.toeoff) continue;
+        lanes[st.side].push({
+            from: Math.max(0, (st.strike.t - t0) / span),
+            to: Math.min(1, (st.toeoff.t - t0) / span)
+        });
+    }
+    return { ...state, lanes, playhead: (result.series.t[frame] - t0) / span };
+}
+
+function contactState(result, frame) {
+    const t = result.series.t[frame];
+    const out = { L: { stance: false }, R: { stance: false } };
+    for (const st of (result.events.strides || [])) {
+        if (!st.toeoff) continue;
+        if (t >= st.strike.t && t <= st.toeoff.t) out[st.side].stance = true;
+    }
+    return out;
+}
+
+/**
+ * Dimensioned callouts: overstride at the frames near a foot strike, and the
+ * centre-of-mass excursion across the stride containing this frame.
+ */
+const trusted = (c) => c === 'high' || c === 'medium';
+
+function measuresAt(result, frame) {
+    const inner = result._internal;
+    if (!inner) return null;
+    const t = result.series.t[frame];
+    const K = CANONICAL.length;
+    const S = result.series;
+    const norm = (name, f) => ({
+        x: S.xy[(f * K + CANONICAL.indexOf(name)) * 2],
+        y: S.xy[(f * K + CANONICAL.indexOf(name)) * 2 + 1]
+    });
+    const out = {};
+
+    /* ground: the lowest foot landmark seen in this clip */
+    if (Number.isFinite(inner.groundY)) out.groundY = inner.groundY;
+
+    /* overstride, only near a contact — it is defined at that instant */
+    const strike = result.events.strikes
+        .map(e => ({ e, d: Math.abs(e.t - t) }))
+        .sort((p, q) => p.d - q.d)[0];
+    if (strike && strike.d < 0.12) {
+        const side = strike.e.side;
+        const ankle = norm('ankle' + side, frame);
+        const hipL = norm('hipL', frame), hipR = norm('hipR', frame);
+        const hx = (hipL.x + hipR.x) / 2;
+        const m = result.metrics.overstride.sides[side];
+        /* A dimension line is an assertion. The engine already refuses to score
+           or advise on a measurement below medium confidence; drawing it as a
+           confident annotation on the frame would let the overlay contradict
+           the report it belongs to. */
+        if (Number.isFinite(ankle.x) && Number.isFinite(hx)
+            && m && m.value != null && trusted(m.confidence)) {
+            out.overstride = {
+                x0: hx, x1: ankle.x, y: ankle.y - 0.03,
+                text: `overstride ${m.value.toFixed(1)}% ht`
+            };
+        }
+    }
+
+    /* centre-of-mass excursion across the stride containing this frame */
+    const st = (result.events.strides || []).find(s => s.valid && t >= s.strike.t && t < s.nextStrike.t);
+    const com = inner.com;
+    const mCom = result.metrics.comVerticalOscillation.combined;
+    if (st && com && mCom && mCom.value != null && trusted(mCom.confidence)) {
+        let lo = Infinity, hi = -Infinity;
+        for (let f = st.i0; f <= Math.min(S.n - 1, st.i1); f++) {
+            const v = com.y[f];
+            if (!Number.isFinite(v)) continue;
+            lo = Math.min(lo, v); hi = Math.max(hi, v);
+        }
+        if (hi > lo) {
+            const H = S.height;
+            out.comBand = {
+                x: Math.min(0.93, Math.max(0.07, (com.x[frame] / S.width) + 0.16)),
+                yMin: 1 - hi / H,
+                yMax: 1 - lo / H,
+                text: `bounce ${mCom.value.toFixed(1)} cm`
+            };
+        }
+    }
+    return out;
+}
+
+/**
+ * Metres per canvas pixel, for the scale bar.
+ * The engine works in SOURCE pixels; the canvas draws the source width into
+ * `boxW`, so the two scales have to be composed rather than confused.
+ */
+function metresPerCanvasPx(result, frame, boxW) {
+    const inner = result._internal;
+    const mpp = inner && inner.scale && inner.scale.mPerPx;
+    if (!mpp || !Number.isFinite(mpp[frame]) || !(boxW > 0)) return null;
+    return mpp[frame] * (result.series.width / boxW);
+}
+
+function buildTrails(result, frame) {
+    const series = result.series;
     const K = CANONICAL.length;
     const out = [];
+    const from = Math.max(0, frame - 75);
     for (const [name, side] of [['toeL', 'L'], ['toeR', 'R']]) {
         const c = CANONICAL.indexOf(name);
         const pts = [];
-        for (let f = Math.max(0, frame - 60); f <= frame; f++) {
+        for (let f = from; f <= frame; f++) {
             pts.push(series.xy[(f * K + c) * 2], series.xy[(f * K + c) * 2 + 1]);
         }
         out.push({ side, pts });
+    }
+    /* the centre-of-mass path, which is the one trace worth watching */
+    const com = result._internal && result._internal.com;
+    if (com) {
+        const pts = [];
+        for (let f = from; f <= frame; f++) {
+            pts.push(
+                (result.capture.mirrored ? (series.width - com.x[f]) : com.x[f]) / series.width,
+                1 - com.y[f] / series.height
+            );
+        }
+        out.push({ side: 'C', pts, colour: null });
     }
     return out;
 }

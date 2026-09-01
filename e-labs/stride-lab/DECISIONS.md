@@ -643,6 +643,54 @@ nothing else. That is the correct output for that recording.
 
 ---
 
+## D35. The overlay shows the measurement, not just the number
+
+**Decision.** The annotated player was rebuilt around one idea: an analytical
+overlay draws the thing it measured. Nine layers, three density presets, and a
+heads-up readout of the values AT THE CURRENT FRAME rather than the stride
+aggregates the dashboard shows.
+
+**Why per-frame values.** This is the difference between a video with a skeleton
+on it and an analysis tool. Stepping frame by frame through a contact and
+watching knee flexion rise is how a gait cycle is actually read, and for that
+the numbers have to be on the frame. The arc and the number come from the same
+per-frame series, keyed by name, so the drawing and the reading cannot describe
+different joints or disagree about a sign convention.
+
+**Why dimension lines.** "Overstride 11% of standing height" is an abstraction.
+The same thing drawn between the plumb line through the hips and the ankle, on
+the frame where it is taken, is a fact about the picture. Same for the
+centre-of-mass excursion, which is otherwise the least visible of the
+well-evidenced variables. The construction lines — ground, plumb, hip horizon,
+scale bar — exist so the reader can see what each measurement is taken FROM.
+
+**Why the phase lanes.** Stance and swing for both feet across the whole clip
+makes the event detection inspectable: if the two feet do not alternate, the
+detection is wrong, and that is visible without reading a number.
+
+**Three things the drawing refuses to do.**
+
+An angle with no readable value is not annotated at all. An arc without a number
+is an annotation that cannot say what it found, so if the conditioned series
+gated that joint out, nothing is drawn.
+
+A dimension line is not drawn for a measurement below medium confidence. Drawing
+one would let the overlay contradict the report it belongs to — the engine
+already declines to score or advise on those, and a confident-looking annotation
+on the frame would undo that. On an oblique capture the frame says so, next to
+the timecode.
+
+A landmark the pose model was unsure of is drawn hollow and dimmed, and the bones
+resting on it are drawn faint. A skeleton standing on a guess should look like
+one.
+
+**One sizing note worth keeping.** The design unit comes from the geometric mean
+of the frame, not its short side. A 9:16 phone clip has a short side barely a
+third of its long one, so sizing from the minimum shrinks every label and lane to
+illegibility on exactly the videos people actually record.
+
+---
+
 ## Open questions the specification left for the human
 
 These were answered with the conservative default and are easy to change.

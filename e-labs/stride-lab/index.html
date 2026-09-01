@@ -361,10 +361,20 @@
                                     <span class="sl-time" id="sl-time">0.00 s</span>
                                 </div>
                                 <div class="sl-layers" role="group" aria-label="Overlay layers">
+                                    <select id="sl-overlay-preset" class="sl-select sl-select-sm" aria-label="Overlay density" title="How much annotation to draw">
+                                        <option value="clean">Clean</option>
+                                        <option value="analytical" selected>Analytical</option>
+                                        <option value="everything">Everything</option>
+                                    </select>
+                                    <span class="sl-layer-sep"></span>
                                     <label class="sl-chip"><input type="checkbox" id="sl-l-skeleton" checked /> Skeleton</label>
-                                    <label class="sl-chip"><input type="checkbox" id="sl-l-angles" checked /> Angles</label>
+                                    <label class="sl-chip" title="Joint angle arcs with this frame's value"><input type="checkbox" id="sl-l-angles" checked /> Angles</label>
+                                    <label class="sl-chip" title="Ground line, plumb line through the hips, and the scale bar"><input type="checkbox" id="sl-l-guides" checked /> Guides</label>
+                                    <label class="sl-chip" title="Live values at the current frame, not the stride averages"><input type="checkbox" id="sl-l-readout" checked /> Readout</label>
+                                    <label class="sl-chip" title="Stance and swing for both feet across the clip"><input type="checkbox" id="sl-l-phase" checked /> Phase</label>
+                                    <label class="sl-chip" title="Dimension lines for overstride and centre-of-mass bounce"><input type="checkbox" id="sl-l-measures" checked /> Dimensions</label>
                                     <label class="sl-chip"><input type="checkbox" id="sl-l-trails" /> Trails</label>
-                                    <label class="sl-chip"><input type="checkbox" id="sl-l-events" checked /> Events</label>
+                                    <label class="sl-chip"><input type="checkbox" id="sl-l-events" checked /> Contacts</label>
                                     <label class="sl-chip" title="Whole-body centre of mass, from a fourteen-segment inertial model"><input type="checkbox" id="sl-l-com" checked /> Centre of mass</label>
                                 </div>
                             </div>
