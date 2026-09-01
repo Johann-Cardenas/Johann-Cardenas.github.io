@@ -356,6 +356,14 @@ function aggregate(spec, values, env) {
             } else {
                 if (spec.dimension === 'timing') confidence = fpsClass;
                 if (spec.scaleDependent) confidence = weakest(confidence, scale.confidence);
+                /* Too few pixels on the subject is a precision limit on every
+                   measurement, not a reason to refuse any one of them. */
+                if (Number.isFinite(ctx.subjectFill) && ctx.subjectFill < 0.40) {
+                    confidence = weakest(confidence, 'low');
+                    notes.push(`the runner fills only ${(ctx.subjectFill * 100).toFixed(0)}% of the frame height`);
+                } else if (Number.isFinite(ctx.subjectFill) && ctx.subjectFill < 0.50) {
+                    confidence = weakest(confidence, 'medium');
+                }
                 if (nEff < 3) confidence = weakest(confidence, 'low');
                 else if (nEff < 5) confidence = weakest(confidence, 'medium');
                 if (viewMargin != null && viewMargin < 0.15) confidence = weakest(confidence, 'medium');

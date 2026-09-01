@@ -56,6 +56,8 @@ const SHELL_FILES = [
     './src/ui/charts.js',
     './src/ui/store.js',
     './src/ui/format.js',
+    './src/ui/demos.js',
+    './src/ui/propose.js',
     './src/synth/gait.js',
     './workers/pose.worker.js',
     '../../assets/css/main.css'
@@ -101,6 +103,14 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
     const req = e.request;
     if (req.method !== 'GET') return;
+
+    /* A ranged request must go to the network untouched. `cache.match` would
+       answer it with a whole 200, and a media element handed a 200 where it
+       asked for bytes 0-1 stops seeking — Safari refuses to play at all. The
+       demo clip is the only large media this app serves and it is fetched
+       whole, into a blob, so nothing here needs a range; a worker that
+       silently broke one if it did would be a trap for later. */
+    if (req.headers.has('range')) return;
 
     const url = new URL(req.url);
 

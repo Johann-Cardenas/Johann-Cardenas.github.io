@@ -127,7 +127,10 @@
                         <span class="sl-device" id="sl-device-chip" title="No video, frame or landmark is ever uploaded">
                             <i class="fas fa-microchip"></i> <span id="sl-device-text">Processed on your device</span>
                         </span>
-                        <button id="sl-demo" class="sl-btn"><i class="fas fa-vial"></i> Demo</button>
+                        <span class="sl-demo-group">
+                            <select id="sl-demo-pick" class="sl-select" aria-label="Which demo to run"></select>
+                            <button id="sl-demo" class="sl-btn" title="Run the selected demo"><i class="fas fa-vial"></i> Run demo</button>
+                        </span>
                         <button id="sl-run" class="sl-run" disabled><i class="fas fa-play"></i> Analyse run</button>
                     </div>
                 </div>
@@ -290,13 +293,18 @@
                                 <div class="sl-empty-art" aria-hidden="true"><canvas id="sl-empty-canvas"></canvas></div>
                                 <h2>Start with a clip</h2>
                                 <p>
-                                    Drop in a few seconds of running, or run the synthetic demo to see the whole
-                                    pipeline work on a runner whose numbers are known exactly.
+                                    Drop in a few seconds of running, or pick one of the two demos: a synthetic
+                                    runner whose true numbers are known, or a real phone clip filmed on a
+                                    treadmill.
                                 </p>
                                 <div class="sl-empty-actions">
                                     <button class="sl-btn sl-btn-primary" id="sl-pick2"><i class="fas fa-film"></i> Choose a clip</button>
-                                    <button class="sl-btn" id="sl-demo2"><i class="fas fa-vial"></i> Run the demo</button>
+                                    <span class="sl-demo-group">
+                                        <select id="sl-demo-pick2" class="sl-select" aria-label="Which demo to run"></select>
+                                        <button class="sl-btn" id="sl-demo2"><i class="fas fa-vial"></i> Run</button>
+                                    </span>
                                 </div>
+                                <p class="sl-empty-demo-note" id="sl-demo-note"></p>
                             </div>
 
                             <!-- camera -->
@@ -326,7 +334,11 @@
                             <!-- processing -->
                             <div class="sl-stage" id="sl-stage-run" hidden>
                                 <canvas id="sl-live" class="sl-live"></canvas>
-                                <div class="sl-progress-panel">
+                                <div class="sl-choose" id="sl-choose" hidden>
+                                    <span id="sl-choose-text">More than one person is in frame. Click the runner you want analysed.</span>
+                                    <button class="sl-btn" id="sl-choose-cancel">Cancel</button>
+                                </div>
+                                <div class="sl-progress-panel" id="sl-progress-panel">
                                     <ol class="sl-stages" id="sl-stages"></ol>
                                     <div class="sl-progress"><div class="sl-progress-fill" id="sl-progress-fill"></div></div>
                                     <div class="sl-progress-row">

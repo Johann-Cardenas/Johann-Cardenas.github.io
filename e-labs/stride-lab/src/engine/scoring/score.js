@@ -21,17 +21,32 @@ import { atLeast, clamp, ASYMMETRY_ATTENTION, ASYMMETRY_NOTABLE } from '../types
 /**
  * Score one measured value against its band.
  *
- *   s = clamp(1 - |value - centre(optimal)| / halfWidth(acceptable), 0, 1)
+ *   reach = |acceptableEdge(on the value's side) - centre(optimal)|
+ *   s     = clamp(1 - |value - centre(optimal)| / reach, 0, 1)
  *
  * so a value in the middle of the optimal band scores 1, a value at the edge
  * of the acceptable band scores 0, and everything outside scores 0 rather than
  * going negative.
+ *
+ * The reach is measured PER SIDE, and that is the whole subtlety. Almost every
+ * band here is asymmetric about its own optimal centre — being a little under
+ * is rarely as bad as being a lot over, or the reverse — and an earlier version
+ * divided by half the total acceptable width, one number for both sides. On the
+ * wider side the score then reached zero BEFORE the acceptable edge did: head
+ * oscillation, optimal 4-9 cm and acceptable 3-12, scored a flat 0 from 11 cm
+ * upward while `bandStatus` went on calling 11.7 cm "acceptable". Twenty-one of
+ * the twenty-four bands had a dead zone like that, so the app could show a
+ * half-filled status glyph and a zero score for the same measurement and mean
+ * both. Dividing by the reach on the side the value actually falls removes it:
+ * `scoreValue > 0` is now exactly `bandStatus !== 'outside'`, by construction,
+ * and symmetric bands are unaffected.
  */
 export function scoreValue(value, band) {
     if (!band || !Number.isFinite(value)) return null;
     const centre = (band.optimal[0] + band.optimal[1]) / 2;
-    const half = Math.max(1e-9, (band.acceptable[1] - band.acceptable[0]) / 2);
-    return clamp(1 - Math.abs(value - centre) / half, 0, 1);
+    const edge = value < centre ? band.acceptable[0] : band.acceptable[1];
+    const reach = Math.max(1e-9, Math.abs(edge - centre));
+    return clamp(1 - Math.abs(value - centre) / reach, 0, 1);
 }
 
 /** Where a value sits relative to its bands, for the UI's range bar. */

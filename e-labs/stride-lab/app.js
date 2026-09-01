@@ -13,10 +13,13 @@ import { synthGait } from './src/synth/gait.js';
 import { METRICS, METRIC_BY_ID, DIMENSIONS } from './src/engine/metrics/catalog.js';
 import { REFERENCE_BY_ID } from './src/engine/scoring/references.js';
 import { bandFor } from './src/engine/scoring/norms.js';
+import { scoreValue } from './src/engine/scoring/score.js';
 import { EXERCISE_BY_ID } from './src/engine/recommend/exercises.js';
 import { CANONICAL, ASYMMETRY_ATTENTION, ASYMMETRY_NOTABLE } from './src/engine/types.js';
 import { APP_VERSION } from './src/engine/version.js';
 import * as store from './src/ui/store.js';
+import { DEMOS, DEMO_BY_ID } from './src/ui/demos.js';
+import { bestMotionWindow } from './src/ui/propose.js';
 import { drawOverlay, anglesFor, fitCanvas, contain } from './src/ui/overlay.js';
 import { drawGaitCycle, drawRangeBar, drawSparkline, drawStrideDots, drawScoreBar, themeFrom } from './src/ui/charts.js';
 import {
@@ -37,6 +40,7 @@ const S = {
     videoUrl: null,
     result: null,
     demo: null,
+    demoId: null,
     units: 'metric',
     trim: { start: 0, end: 0, duration: 0 },
     playing: false,
@@ -106,8 +110,7 @@ function wireTopbar() {
         if (S.result) renderResult(S.result);
     });
     $('sl-run').addEventListener('click', () => startAnalysis());
-    $('sl-demo').addEventListener('click', runDemo);
-    $('sl-demo2').addEventListener('click', runDemo);
+    wireDemoPickers();
     $('sl-save').addEventListener('click', exportBundle);
     $('sl-open').addEventListener('click', () => $('sl-import-file').click());
     $('sl-import-file').addEventListener('change', async (e) => {
@@ -124,6 +127,50 @@ function wireTopbar() {
     });
 }
 
+/**
+ * The two demo pickers — one in the top bar, one in the empty state.
+ *
+ * Both are filled from the catalogue rather than from markup, so a demo
+ * cannot exist in the list and not in the code, or the reverse. They are kept
+ * in step with each other because they are two views of one choice, and a
+ * visitor who picks the filmed clip in the empty state and then looks up at
+ * the top bar should not find it disagreeing with them.
+ */
+function wireDemoPickers() {
+    const picks = [$('sl-demo-pick'), $('sl-demo-pick2')].filter(Boolean);
+    for (const sel of picks) {
+        sel.innerHTML = '';
+        for (const d of DEMOS) {
+            const o = document.createElement('option');
+            o.value = d.id;
+            o.textContent = d.menuLabel;
+            sel.appendChild(o);
+        }
+        sel.value = DEMOS[0].id;
+        sel.addEventListener('change', () => {
+            for (const other of picks) other.value = sel.value;
+            describeDemo();
+        });
+    }
+    for (const id of ['sl-demo', 'sl-demo2']) {
+        const b = $(id);
+        if (b) b.addEventListener('click', () => runDemo(picks[0] ? picks[0].value : DEMOS[0].id));
+    }
+    describeDemo();
+}
+
+/** One line under the empty-state buttons saying what the selected demo is. */
+function describeDemo() {
+    const note = $('sl-demo-note');
+    if (!note) return;
+    const sel = $('sl-demo-pick') || $('sl-demo-pick2');
+    const d = DEMO_BY_ID[sel ? sel.value : DEMOS[0].id];
+    if (!d) { note.textContent = ''; return; }
+    note.textContent = d.kind === 'video'
+        ? `${d.summary} ${fmtBytes(d.bytes)} is downloaded to your browser and decoded here; nothing is sent back.`
+        : d.summary;
+}
+
 function applyUnits() {
     const imperial = S.units === 'imperial';
     $('sl-height-metric').hidden = imperial;
@@ -136,13 +183,56 @@ function wireProfile() {
     for (const id of ['sl-height-cm', 'sl-height-ft', 'sl-height-in', 'sl-mass', 'sl-sex', 'sl-speed', 'sl-surface', 'sl-view']) {
         $(id).addEventListener('change', () => { saveProfile(); updateRunEnabled(); });
     }
-    $('sl-surface').addEventListener('change', () => {
-        const treadmill = $('sl-surface').value === 'treadmill';
-        $('sl-speed-field').style.opacity = treadmill ? '1' : '0.65';
-        $('sl-speed-help').textContent = treadmill
-            ? 'On a treadmill you do not move through the frame, so there is no displacement to measure. Without the belt speed there is no step length, no running speed, and no way to pick the right cadence band — a cadence target that ignores speed is folklore.'
-            : 'Overground, speed and step length are measured from how far you travel between foot strikes, so this field is optional. Enter it if you know it and it will be used as a cross-check.';
-    });
+    $('sl-surface').addEventListener('change', syncSurfaceHelp);
+}
+
+/* Kept out of the listener so it can also be called after the surface is set
+   from code — a demo, or a restored profile — without dispatching a synthetic
+   `change`, which would write the demo's numbers over the visitor's own
+   stored profile. */
+function syncSurfaceHelp() {
+    const treadmill = $('sl-surface').value === 'treadmill';
+    $('sl-speed-field').style.opacity = treadmill ? '1' : '0.65';
+    $('sl-speed-help').textContent = treadmill
+        ? 'On a treadmill you do not move through the frame, so there is no displacement to measure. Without the belt speed there is no step length, no running speed, and no way to pick the right cadence band — a cadence target that ignores speed is folklore.'
+        : 'Overground, speed and step length are measured from how far you travel between foot strikes, so this field is optional. Enter it if you know it and it will be used as a cross-check.';
+}
+
+/* ---------- the demo borrows the form, and gives it back ----------
+   A filmed demo has to put ITS runner's height, mass and belt speed into the
+   left rail, because those are the inputs that produced the report on screen
+   and a rail disagreeing with the report is worse than no rail at all. But
+   they are somebody else's numbers. They are written with `.value` and never
+   with a dispatched `change`, so the stored profile is untouched, and the
+   visitor's own entries are put back the moment the demo is left. */
+const PROFILE_FIELDS = ['sl-height-cm', 'sl-height-ft', 'sl-height-in', 'sl-mass', 'sl-sex', 'sl-speed', 'sl-surface', 'sl-view'];
+let profileStash = null;
+
+function stashProfileFields() {
+    if (profileStash) return;   /* one demo after another must not stash the demo */
+    profileStash = Object.fromEntries(PROFILE_FIELDS.map(id => [id, $(id).value]));
+}
+
+function restoreProfileFields() {
+    if (!profileStash) return;
+    for (const id of PROFILE_FIELDS) $(id).value = profileStash[id];
+    profileStash = null;
+    syncSurfaceHelp();
+    updateRunEnabled();
+}
+
+function applyStatedProfile(stated) {
+    $('sl-height-cm').value = String(Math.round(stated.heightM * 100));
+    const fi = cmToFeetInches(stated.heightM * 100);
+    $('sl-height-ft').value = String(fi.feet);
+    $('sl-height-in').value = String(fi.inches);
+    $('sl-mass').value = String(S.units === 'imperial' ? Math.round(stated.massKg * 2.20462) : Math.round(stated.massKg));
+    $('sl-surface').value = stated.surface;
+    $('sl-speed').value = stated.speedMs == null ? ''
+        : (S.units === 'imperial' ? (stated.speedMs * 2.23694).toFixed(1) : stated.speedMs.toFixed(2));
+    $('sl-view').value = stated.view || 'auto';
+    syncSurfaceHelp();
+    updateRunEnabled();
 }
 
 function applyProfile(p) {
@@ -222,19 +312,33 @@ function wireCapture() {
     $('sl-trim-end').addEventListener('input', onTrim);
 }
 
-async function acceptFile(file) {
+/**
+ * @param {File} file
+ * @param {{demo?: object}} [opts] the demo this file came from, if any. A demo
+ *   brings its own stated profile and a fixed analysis window; a file the
+ *   visitor chose brings neither, and hands the rail back to them.
+ */
+async function acceptFile(file, opts = {}) {
     if (!/^video\//.test(file.type) && !/\.(mp4|mov|m4v|webm)$/i.test(file.name)) {
         toast('That does not look like a video. MP4 or MOV from a phone camera works best.');
         return;
     }
     clearFile(true);
+    if (opts.demo) {
+        stashProfileFields();
+        applyStatedProfile(opts.demo.stated);
+        S.demoId = opts.demo.id;
+    } else {
+        restoreProfileFields();
+        S.demoId = null;
+    }
     S.file = file;
     S.videoUrl = URL.createObjectURL(file);
     $('sl-filename').textContent = `${file.name} · ${fmtBytes(file.size)}`;
     $('sl-filecard').hidden = false;
     $('sl-drop').hidden = true;
     await preflight(file);
-    showTrim();
+    await showTrim(opts.demo ? opts.demo.window : null);
     updateRunEnabled();
 }
 
@@ -244,7 +348,12 @@ function clearFile(silent) {
     $('sl-filecard').hidden = true;
     $('sl-drop').hidden = false;
     $('sl-checks').innerHTML = '';
-    if (!silent) { showStage('empty'); updateRunEnabled(); }
+    if (!silent) {
+        S.demoId = null;
+        restoreProfileFields();
+        showStage('empty');
+        updateRunEnabled();
+    }
 }
 
 /**
@@ -381,23 +490,33 @@ function stopCamera() {
 
 /* ---------- trim ---------- */
 
-async function showTrim() {
+/**
+ * @param {{startS:number, endS:number}} [fixed] a committed window. A demo
+ *   supplies one so that it answers the same thing twice; a proposal that
+ *   moved with the decode timing would make the demo unreproducible.
+ */
+async function showTrim(fixed) {
     showStage('trim');
     const v = $('sl-trim-video');
     v.src = S.videoUrl;
     await new Promise(res => { v.onloadedmetadata = res; });
     const dur = v.duration;
     S.trim.duration = dur;
-    /* Propose the best six-second window. With no analysis yet the only cheap
-       proxy is "the middle", which is where a runner filming themselves is
-       most likely to be in frame and up to speed. */
     const want = Math.min(6, dur);
-    S.trim.start = Math.max(0, (dur - want) / 2);
-    S.trim.end = S.trim.start + want;
-    $('sl-trim-start').value = String(Math.round(S.trim.start / dur * 100));
-    $('sl-trim-end').value = String(Math.round(S.trim.end / dur * 100));
+    if (fixed) {
+        S.trim.start = Math.max(0, Math.min(fixed.startS, Math.max(0, dur - 1)));
+        S.trim.end = Math.min(dur, Math.max(S.trim.start + 1, fixed.endS));
+    } else {
+        /* Start on the middle, then move it once the filmstrip has been built —
+           the thumbnails are decoded anyway, and the motion between them is a
+           usable proxy for where the running is. */
+        S.trim.start = Math.max(0, (dur - want) / 2);
+        S.trim.end = S.trim.start + want;
+    }
+    setTrimInputs(dur);
     onTrim();
-    buildFilmstrip(v, dur);
+    const motion = await buildFilmstrip(v, dur);
+    if (!fixed) proposeWindow(motion, dur, want);
 }
 
 function onTrim() {
@@ -411,20 +530,69 @@ function onTrim() {
     if (v.readyState >= 1) v.currentTime = a;
 }
 
+function setTrimInputs(dur) {
+    $('sl-trim-start').value = String(Math.round(S.trim.start / dur * 100));
+    $('sl-trim-end').value = String(Math.round(S.trim.end / dur * 100));
+}
+
+/**
+ * Build the scrubber thumbnails, and measure how much the picture changes
+ * between them on the way past.
+ *
+ * @returns {Promise<{t:number, energy:number}[]>}
+ */
 async function buildFilmstrip(video, dur) {
     const strip = $('sl-filmstrip');
     strip.innerHTML = '';
-    const n = 10;
+    const n = 14;
+    const samples = [];
+    let prev = null;
     for (let i = 0; i < n; i++) {
         const c = document.createElement('canvas');
         c.width = 120; c.height = 68;
         strip.appendChild(c);
         const t = (i + 0.5) / n * dur;
         video.currentTime = t;
-        await new Promise(res => { video.onseeked = res; setTimeout(res, 400); });
-        try { c.getContext('2d').drawImage(video, 0, 0, c.width, c.height); } catch { /* frame not ready */ }
+        await new Promise(res => { video.onseeked = res; setTimeout(res, 320); });
+        const ctx = c.getContext('2d', { willReadFrequently: true });
+        try { ctx.drawImage(video, 0, 0, c.width, c.height); } catch { /* not ready */ }
+        let energy = 0;
+        try {
+            const img = ctx.getImageData(0, 0, c.width, c.height).data;
+            if (prev) {
+                let sum = 0;
+                /* luma difference, every 4th pixel — this is a proxy, not a
+                   measurement, and it does not need to be exact */
+                for (let k = 0; k < img.length; k += 16) {
+                    const a1 = 0.299 * img[k] + 0.587 * img[k + 1] + 0.114 * img[k + 2];
+                    const b1 = 0.299 * prev[k] + 0.587 * prev[k + 1] + 0.114 * prev[k + 2];
+                    sum += Math.abs(a1 - b1);
+                }
+                energy = sum / (img.length / 16);
+            }
+            prev = img;
+        } catch { /* a tainted canvas would throw; the proposal is optional */ }
+        samples.push({ t, energy });
     }
     video.currentTime = S.trim.start;
+    return samples;
+}
+
+/**
+ * Move the analysis window to where the picture is moving most, if anywhere is.
+ *
+ * The choosing is in `src/ui/propose.js` and tested there; this is only the
+ * part that touches the DOM.
+ */
+function proposeWindow(samples, dur, want) {
+    const pick = bestMotionWindow(samples, dur, want);
+    if (!pick) return;      /* nothing stood out; leave the middle alone */
+    S.trim.start = pick.startS;
+    S.trim.end = pick.endS;
+    setTrimInputs(dur);
+    onTrim();
+    const note = $('sl-trim-readout');
+    if (note) note.textContent += '  ·  proposed from where the clip moves most';
 }
 
 /* ============================================================
@@ -469,6 +637,7 @@ async function startAnalysis() {
             useWorker: $('sl-worker').checked,
             cutoffHz: Number($('sl-cutoff').value),
             cancelled: () => S.cancelled,
+            onAmbiguous: askWhichRunner,
             onProgress: (p) => {
                 renderStages(p.stage);
                 const frac = p.total ? p.done / p.total : 0;
@@ -495,7 +664,8 @@ async function startAnalysis() {
 
         if (S.cancelled || result.cancelled) { showStage('trim'); return; }
         if (!result.ok) { showError(result); return; }
-        await adoptResult(result, S.file.name.replace(/\.[^.]+$/, ''));
+        const demo = S.demoId ? DEMO_BY_ID[S.demoId] : null;
+        await adoptResult(result, demo ? demo.label : S.file.name.replace(/\.[^.]+$/, ''));
     } catch (err) {
         showError({ code: 'decode-failed', message: String(err && err.message || err) });
     } finally {
@@ -504,6 +674,123 @@ async function startAnalysis() {
         $('sl-device-text').textContent = 'Processed on your device';
         updateRunEnabled();
     }
+}
+
+/**
+ * Ask which of several people in frame is the runner.
+ *
+ * The specification is blunt about why this exists: silently guessing wrong
+ * produces a report that looks entirely normal and describes somebody else.
+ * But it is asked HERE, mid-run, rather than by failing and making the user
+ * start again — pose estimation over every frame is the expensive part and it
+ * is already done by the time the ambiguity is known.
+ *
+ * @param {{candidates:Array, frameIndex:number, timeS:number}} ask
+ * @returns {Promise<number|null>} the chosen track id, or null to cancel
+ */
+async function askWhichRunner(ask) {
+    const canvas = $('sl-live');
+    const prompt = $('sl-choose');
+    const panel = $('sl-progress-panel');
+    const cands = (ask.candidates || []).filter(c => c && c.box);
+    if (!cands.length) return null;
+
+    /* the frame to choose on, drawn from the source video where there is one */
+    let frame = null;
+    if (S.videoUrl) {
+        try {
+            const v = document.createElement('video');
+            v.src = S.videoUrl;
+            v.muted = true;
+            await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = rej; });
+            v.currentTime = ask.timeS;
+            await new Promise(res => { v.onseeked = res; setTimeout(res, 600); });
+            frame = v;
+        } catch { frame = null; }
+    }
+
+    prompt.hidden = false;
+    panel.hidden = true;
+    $('sl-choose-text').textContent =
+        `${cands.length} people are in frame for much of this clip. Click the runner you want analysed.`;
+    canvas.classList.add('sl-live-pick');
+
+    const theme = themeFrom($('sl-viewport'));
+    let boxes = [];
+
+    const paint = (hoverId) => {
+        const r = canvas.getBoundingClientRect();
+        const ctx = fitCanvas(canvas, r.width, r.height);
+        ctx.clearRect(0, 0, r.width, r.height);
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(0, 0, r.width, r.height);
+        const sw = frame && frame.videoWidth ? frame.videoWidth : 16;
+        const sh = frame && frame.videoHeight ? frame.videoHeight : 9;
+        const box = contain(sw, sh, r.width, r.height);
+        if (frame) {
+            try { ctx.drawImage(frame, box.x, box.y, box.w, box.h); } catch { /* not ready */ }
+        }
+        boxes = cands.map((c, i) => {
+            const x = box.x + c.box.x0 * box.w;
+            const y = box.y + c.box.y0 * box.h;
+            const w = (c.box.x1 - c.box.x0) * box.w;
+            const h = (c.box.y1 - c.box.y0) * box.h;
+            const on = hoverId === c.id;
+            ctx.lineWidth = on ? 3 : 2;
+            ctx.strokeStyle = on ? theme.accent : theme.ink2;
+            ctx.setLineDash(on ? [] : [7, 5]);
+            ctx.strokeRect(x, y, w, h);
+            ctx.setLineDash([]);
+            if (on) {
+                ctx.fillStyle = 'rgba(34,211,209,0.16)';
+                ctx.fillRect(x, y, w, h);
+            }
+            const label = `${i + 1}  ·  in frame ${(c.coverage * 100).toFixed(0)}%`;
+            ctx.font = '600 12px ui-monospace, Menlo, Consolas, monospace';
+            const tw = ctx.measureText(label).width + 14;
+            ctx.fillStyle = 'rgba(8,14,26,0.9)';
+            ctx.fillRect(x, Math.max(0, y - 22), tw, 20);
+            ctx.strokeStyle = on ? theme.accent : theme.line;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, Math.max(0, y - 22), tw, 20);
+            ctx.fillStyle = theme.ink;
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, x + 7, Math.max(0, y - 22) + 10);
+            return { id: c.id, x, y, w, h };
+        });
+    };
+
+    paint(null);
+
+    return new Promise((resolve) => {
+        const hit = (ev) => {
+            const r = canvas.getBoundingClientRect();
+            const mx = ev.clientX - r.left, my = ev.clientY - r.top;
+            /* the smallest box containing the point, so a person standing in
+               front of a larger one is still selectable */
+            let best = null;
+            for (const b of boxes) {
+                if (mx < b.x || mx > b.x + b.w || my < b.y || my > b.y + b.h) continue;
+                if (!best || b.w * b.h < best.w * best.h) best = b;
+            }
+            return best;
+        };
+        const onMove = (ev) => { const b = hit(ev); paint(b ? b.id : null); };
+        const finish = (id) => {
+            canvas.removeEventListener('click', onClick);
+            canvas.removeEventListener('mousemove', onMove);
+            $('sl-choose-cancel').removeEventListener('click', onCancel);
+            canvas.classList.remove('sl-live-pick');
+            prompt.hidden = true;
+            panel.hidden = false;
+            resolve(id);
+        };
+        const onClick = (ev) => { const b = hit(ev); if (b) finish(b.id); };
+        const onCancel = () => { S.cancelled = true; finish(null); };
+        canvas.addEventListener('click', onClick);
+        canvas.addEventListener('mousemove', onMove);
+        $('sl-choose-cancel').addEventListener('click', onCancel);
+    });
 }
 
 /** BlazePose's 33 landmarks arrive raw from the worker; map to canonical. */
@@ -518,8 +805,16 @@ function reindex(raw) {
     return out;
 }
 
-async function runDemo() {
+/** Dispatch to whichever demo the picker has selected. */
+async function runDemo(id) {
+    if (S.running) return;
+    const demo = DEMO_BY_ID[id] || DEMOS[0];
+    return demo.kind === 'video' ? runVideoDemo(demo) : runSyntheticDemo(demo);
+}
+
+async function runSyntheticDemo(demo) {
     S.running = true;
+    S.demoId = demo.id;
     updateRunEnabled();
     showStage('run');
     renderStages('metrics');
@@ -528,7 +823,7 @@ async function runDemo() {
 
     const h = heightCm() / 100 || 1.75;
     const g = synthGait({
-        heightM: h, fps: 240, durationS: 6, seed: Date.now() & 0xffff,
+        heightM: h, fps: demo.fps, durationS: demo.durationS, seed: Date.now() & 0xffff,
         noiseFrac: 0.008, dropout: 0.01, asymmetry: 0.05
     });
     await new Promise(r => setTimeout(r, 120));
@@ -542,6 +837,49 @@ async function runDemo() {
     updateRunEnabled();
     if (!result.ok) { showError(result); return; }
     await adoptResult(result, 'Synthetic demo', true);
+}
+
+/**
+ * Run a real clip that ships with the app.
+ *
+ * This takes the ORDINARY path — fetch it, hand it to `acceptFile`, let the
+ * pre-flight checks run, let pose estimation run frame by frame in front of
+ * the visitor. Short-circuiting to a stored result would have been faster and
+ * would have demonstrated nothing: the point of a filmed demo is that the
+ * decode, the rotation, the tracking and the refusals are all real, and on
+ * this clip several of them fire.
+ */
+async function runVideoDemo(demo) {
+    S.running = true;
+    updateRunEnabled();
+    showStage('run');
+    renderStages('decode');
+    $('sl-progress-fill').style.width = '0%';
+    $('sl-progress-text').textContent = `Fetching ${demo.filename} — ${fmtBytes(demo.bytes)}`;
+
+    let file;
+    try {
+        const res = await fetch(new URL(demo.src, import.meta.url), { cache: 'force-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        file = new File([blob], demo.filename, { type: blob.type || 'video/mp4' });
+    } catch (err) {
+        S.running = false;
+        updateRunEnabled();
+        showError({
+            code: 'decode-failed',
+            message: `The demo clip could not be fetched (${err && err.message || err}). It is ${fmtBytes(demo.bytes)} `
+                + 'and has to be downloaded once before it can be analysed here. The synthetic demo needs no download and works offline.'
+        });
+        return;
+    }
+
+    /* Hand the running flag back before acceptFile: it clears the stage and
+       startAnalysis refuses to begin while something else is running. */
+    S.running = false;
+    await acceptFile(file, { demo });
+    if (!S.file) return;    /* rejected by acceptFile, which has already said so */
+    await startAnalysis();
 }
 
 async function adoptResult(result, name, synthetic) {
@@ -611,12 +949,11 @@ function showError(result) {
     $('sl-error-body').textContent = result.message || copy.body;
     const actions = $('sl-error-actions');
     actions.innerHTML = '';
-    if (result.code === 'multiple-people' && result.candidates) {
-        for (const c of result.candidates) {
-            const b = el('button', 'sl-btn', `Runner ${c.id} · in frame ${(c.coverage * 100).toFixed(0)}%`);
-            b.onclick = () => toast('Tap-to-select is not wired to a re-run yet — record a clip with one runner in frame.');
-            actions.appendChild(b);
-        }
+    if (result.code === 'multiple-people') {
+        /* Reached only when no chooser was supplied — the interactive path asks
+           during the run instead, with the tracks already in hand. */
+        actions.appendChild(el('p', 'sl-empty-note',
+            'Record a clip with one runner in frame, or run it again and pick the runner when asked.'));
     }
     const again = el('button', 'sl-btn', 'Choose another clip');
     again.onclick = () => { clearFile(); };
@@ -754,6 +1091,31 @@ function renderFindings(r) {
             `Synthetic demo. This runner was generated, not filmed, so the true answers are known: cadence ${r.synthetic.cadenceSpm} steps/min, `
             + `contact ${r.synthetic.gctMs.L.toFixed(0)} ms left and ${r.synthetic.gctMs.R.toFixed(0)} ms right, trunk lean ${r.synthetic.trunkLeanDeg}°, `
             + `foot-strike angle ${r.synthetic.strikeAngleDeg}°. Compare them with the measurements below — that difference is the engine's error, not a person's form.`));
+        host.appendChild(box);
+    }
+
+    const filmed = S.demoId ? DEMO_BY_ID[S.demoId] : null;
+    if (filmed && filmed.kind === 'video' && !r.synthetic) {
+        const box = el('div', 'sl-warnbox');
+        box.appendChild(el('i', 'fas fa-vial'));
+        const body = el('div', '');
+        const windowS = filmed.window.endS - filmed.window.startS;
+        body.appendChild(el('p', '',
+            `Filmed demo — a real phone clip, not a rendering. ${filmed.coded.width}×${filmed.coded.height} stored with a `
+            + `${filmed.rotationDeg}° turn so it plays ${filmed.display.width}×${filmed.display.height}, ${filmed.fps} fps, `
+            + `${filmed.durationS.toFixed(1)} s, filmed from behind and to one side of a treadmill. `
+            + `${windowS.toFixed(0)} seconds of it were analysed — twice the six the app proposes for a clip you bring, `
+            + 'because on this one six seconds left almost nothing above low confidence and twelve did not.'));
+        body.appendChild(el('p', '',
+            `Three numbers were SUPPLIED and could not be measured from the video: standing height ${filmed.stated.heightM.toFixed(2)} m, `
+            + `which sets the pixels-to-metres scale; body mass ${filmed.stated.massKg} kg; and belt speed `
+            + `${filmed.stated.speedMs.toFixed(2)} m/s, which on a treadmill is unmeasurable because the runner does not move `
+            + `through the frame. Everything else on this page was worked out from the pixels.`));
+        body.appendChild(el('p', '',
+            'This clip was chosen for the demo because it is ordinary rather than ideal, and the warnings above are the '
+            + 'honest result of that. A capture shot square-on at 120 fps, with the runner filling the frame, returns the '
+            + 'full report; this one does not, and the app says so instead of estimating.'));
+        box.appendChild(body);
         host.appendChild(box);
     }
 
@@ -1686,25 +2048,64 @@ function renderCompare() {
     const wrap = el('div', 'sl-tablewrap');
     const t = el('table', 'sl-datatable');
     const head = document.createElement('tr');
-    ['Measurement', 'Earlier', 'Later', 'Change'].forEach(h => head.appendChild(el('th', '', h)));
+    ['Measurement', 'Side', 'Earlier', 'Later', 'Change', 'Direction']
+        .forEach(h => head.appendChild(el('th', '', h)));
     t.appendChild(head);
     const [older, newer] = a.createdAt <= b.createdAt ? [a, b] : [b, a];
+    /* Score both readings against the SAME band to decide which way a change
+       went. Speed comes from the later analysis, because the band that matters
+       is the one the runner is being judged against now. */
+    const ctx = { speedMs: newer.capture.speedMs, sex: null };
+
     for (const spec of METRICS) {
         const ma = older.metrics[spec.id], mb = newer.metrics[spec.id];
         if (!ma || !mb) continue;
-        const sa = ma.sided ? ma.sides.L : ma.combined;
-        const sb = mb.sided ? mb.sides.L : mb.combined;
-        if (!sa || !sb || sa.value == null || sb.value == null) continue;
-        const d = sb.value - sa.value;
-        const combined = Math.hypot(sa.ci95 || 0, sb.ci95 || 0);
-        const cls = Math.abs(d) <= combined ? 'same' : 'better';
-        const tr = document.createElement('tr');
-        tr.appendChild(el('td', '', spec.label));
-        tr.appendChild(el('td', '', fmt(sa.value, spec.decimals)));
-        tr.appendChild(el('td', '', fmt(sb.value, spec.decimals)));
-        tr.appendChild(el('td', `sl-delta ${cls}`,
-            Math.abs(d) <= combined ? 'no measurable change' : `${d > 0 ? '+' : ''}${fmt(d, spec.decimals)}`));
-        t.appendChild(tr);
+        const band = bandFor(spec.id, ctx);
+        const sides = spec.sided ? [['L', 'left'], ['R', 'right']] : [[null, 'both']];
+        for (const [key, sideLabel] of sides) {
+            const sa = key ? ma.sides[key] : ma.combined;
+            const sb = key ? mb.sides[key] : mb.combined;
+            if (!sa || !sb || sa.value == null || sb.value == null) continue;
+
+            const d = sb.value - sa.value;
+            const combined = Math.hypot(sa.ci95 || 0, sb.ci95 || 0);
+            const measurable = Math.abs(d) > combined;
+
+            /* Direction, from the band rather than from the sign of the change.
+               An earlier version coloured every significant change green, which
+               told a runner whose pelvic drop had doubled that they had
+               improved. Without a band there is no better or worse to report,
+               and saying nothing is the correct answer. */
+            let dirClass = 'same', dirText = '—';
+            if (!measurable) {
+                dirText = 'within noise';
+            } else if (!band) {
+                dirClass = 'same';
+                dirText = 'no reference band';
+            } else {
+                const before = scoreValue(sa.value, band);
+                const after = scoreValue(sb.value, band);
+                if (before == null || after == null) {
+                    dirText = 'not scored';
+                } else if (after > before + 0.02) {
+                    dirClass = 'better'; dirText = 'toward typical';
+                } else if (after < before - 0.02) {
+                    dirClass = 'worse'; dirText = 'away from typical';
+                } else {
+                    dirText = 'no change in score';
+                }
+            }
+
+            const tr = document.createElement('tr');
+            tr.appendChild(el('td', '', spec.label));
+            tr.appendChild(el('td', '', sideLabel));
+            tr.appendChild(el('td', '', fmt(sa.value, spec.decimals)));
+            tr.appendChild(el('td', '', fmt(sb.value, spec.decimals)));
+            tr.appendChild(el('td', `sl-delta ${measurable ? '' : 'same'}`,
+                measurable ? `${d > 0 ? '+' : ''}${fmt(d, spec.decimals)}` : 'no measurable change'));
+            tr.appendChild(el('td', `sl-delta ${dirClass}`, dirText));
+            t.appendChild(tr);
+        }
     }
     wrap.appendChild(t);
     host.appendChild(wrap);

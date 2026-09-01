@@ -691,6 +691,150 @@ illegibility on exactly the videos people actually record.
 
 ---
 
+## D36. There are two demos, and the filmed one is deliberately imperfect
+
+**Decision.** The Demo button became a dropdown with two entries. The synthetic
+runner stays; a real phone clip of somebody on a treadmill was added beside it,
+shipped in `demo/` and analysed through the ordinary path — fetch, pre-flight,
+decode, pose over every frame, the same refusals as anyone's own video.
+
+**Why two.** They answer different questions and neither can answer the other's.
+The synthetic runner is the only clip in existence for which this app knows the
+true cadence, contact time, trunk lean and strike angle, because they were
+inputs to the model that generated it — so it is the only one that can show the
+engine's *error*. A filmed runner has no ground truth, only a second
+measurement. But the synthetic clip is 240 fps, square on, and perfectly
+tracked, which is not what anybody has on their phone, so on its own it
+demonstrates the app under conditions the app will rarely meet.
+
+**Why this clip, which measures badly.** It is 30 fps, portrait, and shot from
+behind and to one side of a treadmill. The app answers it with cadence, the
+oscillation metrics and one finding, and withholds the twenty-four
+plane-sensitive angles, the three timing metrics and both stiffnesses, naming a
+reason for each. That *is* the demonstration. An app whose demo only ever shows
+the capture it was designed for teaches a visitor nothing about the capture they
+have, and the refusals are the part of this engine most worth seeing.
+
+**Why it runs the real pipeline rather than replaying a stored result.** Faster,
+and it would demonstrate nothing. The rotation is really detected, the tracker
+really runs, the limb-length gate really throws away two thirds of the detected
+strides. A recorded answer would be a screenshot with extra steps.
+
+**Twelve seconds, not the six the app proposes.** Eight candidate windows were
+measured. Six seconds gives three or four usable strides and three measurements
+at medium confidence and fires no rule; twelve gives nine, eight, and one
+finding with advice attached, for about four more seconds of compute. The
+six-second default for a clip you bring is a latency choice, and this is the
+evidence for what it costs. The window is committed rather than proposed so the
+demo answers the same thing twice.
+
+**What is quoted rather than measured.** Standing height 1.68 m, mass 75 kg and
+belt speed 3.33 m/s were supplied by the person filmed. Height sets the
+pixels-to-metres scale; belt speed cannot be measured at all here, because a
+runner on a treadmill does not move through the frame. All three live in
+`stated` in `src/ui/demos.js` and the report says so on its face, so what the
+app was told stays separable from what the app worked out.
+
+**Two guards in the test suite.** The declared container metadata is read back
+out of the shipped bytes with the app's own demuxer, so swapping the file for a
+different recording fails the build rather than turning the demo's note into a
+confident lie. And the stated belt speed is cross-checked against the measured
+cadence: 3.33 m/s at the 182 steps/min this clip returns is a step of 65% of
+standing height, which is ordinary. The 5 m/s that was briefly on the table
+would have implied 98%, which is not a thing a body does, so the arbitration is
+recorded as an assertion rather than as a memory.
+
+**The camera was checked, not assumed.** The clip reports about 16 cm of
+vertical oscillation, high enough to suspect the handheld camera rather than the
+runner. Matching the left and right 22% of the frame — wall and machine, static
+in the world — across 58 sample pairs returns zero displacement, on a
+sum-of-absolute-differences surface that is sharply peaked at zero (7.1 at no
+shift, 11.9 at one pixel, 20.8 at four) and that recovers an artificially
+shifted control exactly. The camera does not move. The number is the runner's.
+
+---
+
+## D37. A score of zero must mean out of range, and used not to
+
+**Decision.** `scoreValue` now divides by the distance from the optimal centre
+to the acceptable edge **on the side the value falls**, not by half the total
+acceptable width.
+
+**Why.** Twenty-one of the twenty-four bands here are asymmetric about their own
+optimal centre — being a little under is rarely as bad as being a lot over. One
+half-width for both sides puts the zero closer in on the wider side, inside the
+acceptable range. Head oscillation, optimal 4–9 cm and acceptable 3–12, scored a
+flat zero from 11 cm upward while `bandStatus` went on calling 11.7 cm
+acceptable, so the app showed a half-filled glyph reading "Near the typical
+range" next to a score of 0 out of 100 for the same measurement, and meant both.
+Every one of the twenty-one had a dead zone like it.
+
+This was a bug against the function's own documented contract, which already
+said "a value at the edge of the acceptable band scores 0" — true only for a
+symmetric band, and none of the interesting ones are. `scoreValue > 0` is now
+exactly `bandStatus !== 'outside'` by construction, and symmetric bands are
+unaffected. The suite sweeps all 24 bands at 39 points each and asserts the
+equivalence; reverting the formula fails those checks, which is the negative
+control.
+
+**Found by the filmed demo**, which put "Posture and alignment 0 / 100" on
+screen underneath a measurement labelled near-typical. It now reads 5 / 100.
+
+---
+
+## D38. The window proposal is a separate, pure module
+
+**Decision.** The arithmetic that picks the analysis window moved out of the DOM
+controller into `src/ui/propose.js`; app.js keeps only the measuring, which
+needs a canvas, and the applying, which needs the sliders.
+
+**Why.** The heuristic's important behaviour is that it *declines* — a clip of
+somebody running the whole way through has no quiet part to skip, every window
+scores the same, and moving the selection then looks like a decision and is a
+coin toss. That guard cannot be exercised against the shipped demo, because the
+shipped demo is exactly the uniform case: it correctly proposes nothing, which
+looks identical to a proposal that never worked. Splitting the decision out
+makes both paths testable, and the positive path — a 30 s clip with the running
+in the middle ten — is now a check rather than a hope.
+
+The threshold is a multiple of the median rather than the mean, so a single
+bright thumbnail (a passing shadow, an autoexposure step) cannot both create the
+winning window and raise the bar that window has to clear.
+
+---
+
+## D39. Three defects the demo work surfaced, fixed on the way
+
+**A missing IndexedDB key returned the request object, not the default.** `tx()`
+resolved with `out.result !== undefined ? out.result : out`, so a `get` that
+found nothing resolved with the IDBRequest itself, which is truthy.
+`getSetting('units', 'metric')` then read `.value` off a request, got
+`undefined`, and returned that instead of the caller's fallback — so on a first
+visit the units selector was set to `undefined`, `selectedIndex` went to −1, and
+the control rendered blank. `activeProfile()` had it worse: it was handed a
+request object as a primary key and threw into a `catch` that swallowed it. A
+miss now resolves as `undefined`.
+
+**Every select clipped its own descenders.** `.sl-select` set `height: 2.1em`
+while inheriting the app's 1.75 line-height; under border-box that leaves 15.7px
+of content box for a 23.8px line. Invisible on "Metric", obvious the moment
+"Demo — synthetic runner" went in one. Now `min-height` plus a stated
+`line-height: 1.25`.
+
+**The Analyse run button was unreachable on a phone.** `.sl-topbar` wraps, but
+`.sl-topbar-group` is a flex *item* and did not, so the group holding the device
+chip, the demo control and the two buttons stayed one row wide however narrow
+the viewport got. `.sl-workspace` uses `overflow: clip` below 1080 (so its
+sticky bar works), which meant the overflow was not scrollable — it simply was
+not there. At 380px the primary action sat at x=506 and could not be tapped.
+The group wraps now, and below 720px the demo control takes a row of its own.
+
+Worth noting that the third one was latent before this change and would have
+bitten at a slightly narrower width; adding 232px of dropdown to that row is
+what made it certain, and therefore visible.
+
+---
+
 ## Open questions the specification left for the human
 
 These were answered with the conservative default and are easy to change.
