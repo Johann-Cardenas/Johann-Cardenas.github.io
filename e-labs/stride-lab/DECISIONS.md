@@ -926,6 +926,64 @@ argument for keeping a fixture generator around rather than only golden files.
 
 ---
 
+## D43. A shared summary has to carry its own context
+
+**Decision.** `renderSharedSummary` now shows units, confidence intervals, the
+side each reading belongs to, confidence spelled out, and the capture context
+that travels in the link. Low-confidence rows are marked and counted.
+
+**Why.** It showed a bare number, a "Left"/"Right" pair that non-sided metrics
+half-filled, and a single letter — `l`, `m` — in a column headed Confidence,
+because `makeShareCode` stores `confidence[0]` to save bytes and the renderer
+printed the stored value. So "Step time 305" reached the recipient with no unit
+(milliseconds? seconds?), no interval, and a one-character quality flag.
+
+The link already carried `summary.c` — frame rate, view, surface, speed — and
+the renderer ignored it. That is the worst of the set: a cadence measured on a
+30 fps oblique treadmill clip is a different claim from one measured square-on
+at 240 fps, and the difference is this app's entire argument. A shared summary
+that drops it is the one view of these numbers with none of the apparatus that
+qualifies them.
+
+Also fixed while there: a sided metric whose LEFT slot was empty was skipped
+entirely, taking its measured right side with it. Row count on the demo went
+from 24 to 28.
+
+**And the link is now read when it arrives, not only at startup.** The hash was
+parsed once in `init`. Pasting a share link into a tab already showing this page
+changes only the fragment, so the browser fires `hashchange` and does not
+reload — and that link silently did nothing.
+
+---
+
+## D44. The overlay video is recorded in real time because it is played, not seeked
+
+**Decision.** `exportOverlayVideo` plays the source clip and draws on
+`requestVideoFrameCallback`, instead of seeking to each frame in turn.
+
+**Why.** `MediaRecorder` timestamps by wall clock, so whatever the render loop
+does slowly is what the exported video plays slowly. Seeking once per frame and
+awaiting each `seeked` made a 2.05 s window come out at 2.52 s — 23% slow.
+Somebody counting steps in the exported video would get a cadence 23% below the
+one in the report it came from, which for this app is the exact failure it
+exists to avoid.
+
+Playing the clip makes media time and wall clock advance together by
+construction, and `indexAtTime` picks the matching series frame for each
+presented one. Measured after: a 4.11 s window exports as 4.00 s, −2.7%, and
+rendering costs 1.3x real time rather than 2x. The seek loop is kept for the
+synthetic demo, which has no source video, and there it now paces against the
+clip's own timeline so a slow paint steals from the next frame's wait rather
+than stretching the whole export. Recording starts once there is something to
+record, rather than capturing the blank canvas as lead-in.
+
+**What was checked and was fine:** `series.t` holds absolute media time, not
+time relative to the trim window, so the per-frame seek was pointing at the
+right part of the clip. That was verified rather than assumed — had it been
+relative, the overlay would have been drawn over unrelated video.
+
+---
+
 ## Open questions the specification left for the human
 
 These were answered with the conservative default and are easy to change.

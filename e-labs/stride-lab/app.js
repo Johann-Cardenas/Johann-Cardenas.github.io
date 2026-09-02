@@ -15,7 +15,7 @@ import { REFERENCE_BY_ID } from './src/engine/scoring/references.js';
 import { bandFor } from './src/engine/scoring/norms.js';
 import { scoreValue } from './src/engine/scoring/score.js';
 import { EXERCISE_BY_ID } from './src/engine/recommend/exercises.js';
-import { CANONICAL, ASYMMETRY_ATTENTION, ASYMMETRY_NOTABLE } from './src/engine/types.js';
+import { CANONICAL, ASYMMETRY_ATTENTION, ASYMMETRY_NOTABLE, indexAtTime } from './src/engine/types.js';
 import { APP_VERSION } from './src/engine/version.js';
 import * as store from './src/ui/store.js';
 import { DEMOS, DEMO_BY_ID } from './src/ui/demos.js';
@@ -77,13 +77,13 @@ async function init() {
     renderStages(null);
 
     /* A shared link carries its payload after the '#', which is never sent to
-       any server. Read it if there is one. */
-    if (location.hash.startsWith('#s=')) {
-        try {
-            const summary = await store.readShareCode(location.hash.slice(3));
-            renderSharedSummary(summary);
-        } catch { /* an unreadable code is not worth an error dialog */ }
-    }
+       any server. Read it if there is one — and again if one arrives later.
+       Pasting a share link into the address bar of a tab already showing this
+       page changes only the fragment, so the browser fires `hashchange` and
+       does NOT reload: reading it once at startup meant that link silently did
+       nothing. */
+    await readShareHash();
+    window.addEventListener('hashchange', readShareHash);
 
     registerServiceWorker();
 }
@@ -1879,19 +1879,26 @@ function buildTrails(result, frame) {
    Dock, sheet, history, compare
    ============================================================ */
 
+/** Show one dock pane and mark its tab, from anywhere. */
+function selectPane(name) {
+    let found = false;
+    for (const t of document.querySelectorAll('.sl-dtab')) {
+        const on = t.dataset.pane === name;
+        if (on) found = true;
+        t.classList.toggle('is-active', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+    }
+    if (!found) return;
+    for (const p of document.querySelectorAll('.sl-pane')) {
+        p.classList.toggle('is-active', p.dataset.pane === name);
+    }
+    if (name === 'history') refreshHistory();
+    if (name === 'compare') renderCompare();
+}
+
 function wireDock() {
     for (const tab of document.querySelectorAll('.sl-dtab')) {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.sl-dtab').forEach(t => {
-                t.classList.toggle('is-active', t === tab);
-                t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
-            });
-            document.querySelectorAll('.sl-pane').forEach(p => {
-                p.classList.toggle('is-active', p.dataset.pane === tab.dataset.pane);
-            });
-            if (tab.dataset.pane === 'history') refreshHistory();
-            if (tab.dataset.pane === 'compare') renderCompare();
-        });
+        tab.addEventListener('click', () => selectPane(tab.dataset.pane));
     }
     $('sl-dock-collapse').addEventListener('click', () => {
         const d = $('sl-dock');
@@ -2143,6 +2150,19 @@ function renderCompare() {
     host.appendChild(wrap);
 }
 
+async function readShareHash() {
+    if (!location.hash.startsWith('#s=')) return;
+    try {
+        const summary = await store.readShareCode(location.hash.slice(3));
+        renderSharedSummary(summary);
+        showStage('empty');
+        selectPane('findings');
+    } catch { /* an unreadable code is not worth an error dialog */ }
+}
+
+/** The share code stores confidence as its first letter, to save bytes. */
+const CONFIDENCE_BY_LETTER = { l: 'low', m: 'medium', h: 'high', u: 'unavailable' };
+
 function renderSharedSummary(summary) {
     const host = $('sl-pane-findings');
     host.innerHTML = '';
@@ -2151,24 +2171,68 @@ function renderSharedSummary(summary) {
     box.appendChild(el('div', '',
         'Shared summary. The numbers below came from the link, which carries them after the "#" and therefore never reached any server. There is no video and no keypoint data here — only the measurements.'));
     host.appendChild(box);
+
+    /* The capture context travels in the link and used not to be shown, which
+       left the reader with a column of numbers and no way to judge them. A
+       cadence measured on a 30 fps oblique treadmill clip is not the same
+       claim as one measured square-on at 240, and the difference is the whole
+       argument of this app. */
+    const c = summary.c || {};
+    const bits = [];
+    if (c.fps) bits.push(`${c.fps} fps`);
+    if (c.view) bits.push(c.view);
+    if (c.surface) bits.push(c.surface);
+    if (c.speed) bits.push(`${convert(c.speed, 'm/s', S.units).value.toFixed(2)} ${fmtUnit(convert(c.speed, 'm/s', S.units).unit)}`);
+    if (bits.length) {
+        host.appendChild(el('p', 'sl-empty-note', `Captured: ${bits.join(' · ')}.`));
+    }
+
     const wrap = el('div', 'sl-tablewrap');
     const t = el('table', 'sl-datatable');
     const head = document.createElement('tr');
-    ['Measurement', 'Left', 'Right', 'Confidence'].forEach(h => head.appendChild(el('th', '', h)));
+    ['Measurement', 'Side', 'Value', 'Confidence'].forEach(h => head.appendChild(el('th', '', h)));
     t.appendChild(head);
+    let shown = 0, lowCount = 0;
     for (const id of Object.keys(summary.m || {})) {
         const spec = METRIC_BY_ID[id];
         const vals = summary.m[id];
-        if (!spec || !vals || !vals[0]) continue;
-        const tr = document.createElement('tr');
-        tr.appendChild(el('td', '', spec.label));
-        tr.appendChild(el('td', '', vals[0] ? fmt(vals[0][0], spec.decimals) : '—'));
-        tr.appendChild(el('td', '', vals[1] ? fmt(vals[1][0], spec.decimals) : '—'));
-        tr.appendChild(el('td', '', vals[0] ? vals[0][2] : '—'));
-        t.appendChild(tr);
+        if (!spec || !vals) continue;
+        /* A sided metric may have lost one side and kept the other; showing the
+           row keyed off the left slot alone dropped those entirely. */
+        const slots = spec.sided ? [['left', vals[0]], ['right', vals[1]]] : [['both sides', vals[0]]];
+        for (const [sideLabel, slot] of slots) {
+            if (!slot || slot[0] == null) continue;
+            const conv = convert(slot[0], spec.unit, S.units);
+            const conf = CONFIDENCE_BY_LETTER[slot[2]] || slot[2] || 'unavailable';
+            const copy = CONFIDENCE_COPY[conf];
+            const tr = document.createElement('tr');
+            tr.appendChild(el('td', '', spec.label));
+            tr.appendChild(el('td', '', sideLabel));
+            /* Units, which were missing entirely: "Step time 305" is not a
+               measurement, it is a number, and the person receiving the link
+               has no other way to find out it is milliseconds. */
+            const v = el('td', '', fmt(conv.value, spec.decimals));
+            if (slot[1] != null) v.appendChild(el('span', 'sl-unit', ` ± ${fmt(convert(slot[1], spec.unit, S.units).value, spec.decimals)}`));
+            v.appendChild(el('span', 'sl-unit', ` ${fmtUnit(conv.unit)}`));
+            tr.appendChild(v);
+            tr.appendChild(el('td', '', copy ? copy.label.toLowerCase() : conf));
+            if (conf === 'low') { tr.classList.add('sl-row-low'); lowCount++; }
+            t.appendChild(tr);
+            shown++;
+        }
     }
     wrap.appendChild(t);
     host.appendChild(wrap);
+    if (!shown) {
+        host.appendChild(el('p', 'sl-empty-note', 'This link carries no measurements.'));
+        return;
+    }
+    if (lowCount) {
+        host.appendChild(el('p', 'sl-empty-note',
+            `${lowCount} of these ${shown} readings ${lowCount === 1 ? 'is' : 'are'} at low confidence, which in this app means `
+            + `${lowCount === 1 ? 'it was' : 'they were'} not scored and no advice was based on ${lowCount === 1 ? 'it' : 'them'}. `
+            + 'Treat those as an indication of magnitude, not a measurement.'));
+    }
 }
 
 /* ============================================================
@@ -2230,32 +2294,75 @@ async function exportOverlayVideo() {
     const chunks = [];
     rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
     const done = new Promise(res => { rec.onstop = res; });
-    rec.start();
 
     const video = (!playerState.synthetic && S.videoUrl) ? document.createElement('video') : null;
     if (video) {
-        video.src = S.videoUrl; video.muted = true;
+        video.src = S.videoUrl; video.muted = true; video.playsInline = true;
         await new Promise(r => { video.onloadedmetadata = r; });
     }
 
     toast('Rendering the overlay video…');
     const K = CANONICAL.length;
-    for (let f = 0; f < series.n; f++) {
-        ctx.fillStyle = theme.bg;
-        ctx.fillRect(0, 0, w, h);
-        if (video) {
-            video.currentTime = series.t[f];
-            await new Promise(r => { video.onseeked = r; setTimeout(r, 60); });
-            try { ctx.drawImage(video, 0, 0, w, h); } catch { /* frame not ready */ }
-        }
+    const angles = anglesFor(result.capture.view);
+    const paintFrame = (f) => {
         const xy = new Float64Array(K * 2), vis = new Float64Array(K);
         for (let c = 0; c < K; c++) {
             xy[c * 2] = series.xy[(f * K + c) * 2];
             xy[c * 2 + 1] = series.xy[(f * K + c) * 2 + 1];
             vis[c] = series.vis[f * K + c];
         }
-        drawOverlay(ctx, { xy, vis, w, h, theme, angles: anglesFor(result.capture.view), layers: { skeleton: true, angles: true, trails: false, events: false } });
-        await new Promise(r => setTimeout(r, Math.max(4, 1000 / fps)));
+        drawOverlay(ctx, { xy, vis, w, h, theme, angles, layers: { skeleton: true, angles: true, trails: false, events: false } });
+    };
+    const endS = series.t[series.n - 1];
+
+    /* MediaRecorder timestamps by WALL CLOCK, so whatever this loop does slowly
+       is what the exported video plays slowly. Seeking the source once per
+       frame and waiting for each `seeked` made the export drift: a 2.05 s
+       window came out 2.52 s, 23% slow, and someone counting steps in the
+       export would get a different cadence from the one in the report. The
+       fix is to stop seeking and let the clip PLAY, drawing on each presented
+       frame — then wall clock and media time advance together by construction
+       and the export is real time because it was recorded in real time. */
+    if (video && 'requestVideoFrameCallback' in video) {
+        video.currentTime = series.t[0];
+        await new Promise(r => { video.onseeked = r; setTimeout(r, 600); });
+        /* Start recording only once there is something to record. Starting
+           before the seek captured the blank canvas as lead-in. */
+        rec.start();
+        await video.play().catch(() => { });
+        await new Promise((resolve) => {
+            const step = (_now, meta) => {
+                if (meta.mediaTime > endS + 1e-3 || video.ended) { resolve(); return; }
+                ctx.fillStyle = theme.bg;
+                ctx.fillRect(0, 0, w, h);
+                try { ctx.drawImage(video, 0, 0, w, h); } catch { /* not ready */ }
+                paintFrame(Math.round(indexAtTime(meta.mediaTime, series.t)));
+                video.requestVideoFrameCallback(step);
+            };
+            video.requestVideoFrameCallback(step);
+            /* A clip that never presents another frame must not hang the export. */
+            setTimeout(resolve, (endS - series.t[0]) * 1000 + 4000);
+        });
+        video.pause();
+    } else {
+        /* No source video (the synthetic demo) or no frame callback: pace the
+           loop against the clip's own timeline rather than sleeping a fixed
+           amount per frame, so a slow paint steals from the next frame's wait
+           instead of stretching the whole export. */
+        rec.start();
+        const t0 = performance.now();
+        for (let f = 0; f < series.n; f++) {
+            ctx.fillStyle = theme.bg;
+            ctx.fillRect(0, 0, w, h);
+            if (video) {
+                video.currentTime = series.t[f];
+                await new Promise(r => { video.onseeked = r; setTimeout(r, 60); });
+                try { ctx.drawImage(video, 0, 0, w, h); } catch { /* not ready */ }
+            }
+            paintFrame(f);
+            const wait = (series.t[f] - series.t[0]) * 1000 - (performance.now() - t0);
+            if (wait > 0) await new Promise(r => setTimeout(r, wait));
+        }
     }
     rec.stop();
     await done;

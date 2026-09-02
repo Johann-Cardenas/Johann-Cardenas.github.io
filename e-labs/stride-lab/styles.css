@@ -336,6 +336,9 @@
     font-family: var(--sl-mono); font-size: 0.9em;
 }
 .sl-share-status { display: block; color: var(--sl-ink2); margin-bottom: 0.3em; }
+/* A low-confidence reading in a SHARED summary has none of the surrounding
+   apparatus that qualifies it in the app, so it is marked in the row itself. */
+.sl-row-low td { color: var(--sl-ink3); }
 .sl-live-pick { cursor: pointer; }
 
 .sl-guide-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
