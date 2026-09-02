@@ -44,7 +44,7 @@ export const STAGES = [
  * @param {number} [opts.startS]
  * @param {number} [opts.endS]
  * @param {(s:{stage:string, done:number, total:number, label:string}) => void} [opts.onProgress]
- * @param {(p:{index:number, landmarks:Float32Array, width:number, height:number}) => void} [opts.onPreview]
+ * @param {(p:{index:number, landmarks:Float32Array, vis:Float32Array, people:number, width:number, height:number}) => void} [opts.onPreview]
  * @param {() => boolean} [opts.cancelled]
  * @param {number} [opts.trackChoice]  a track id, when the user has picked one
  */
@@ -111,7 +111,10 @@ export async function analyseFile(file, opts) {
                 /* preview at most every third frame: the overlay does not need
                    every frame and the message traffic would otherwise dominate */
                 if (opts.onPreview && frameIndex % 3 === 0) {
-                    opts.onPreview({ index: frameIndex, landmarks: poses[0].xy, width, height });
+                    opts.onPreview({
+                        index: frameIndex, landmarks: poses[0].xy, vis: poses[0].vis,
+                        people: poses.length, width, height
+                    });
                 }
             }
             frameIndex++;

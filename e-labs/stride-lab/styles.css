@@ -301,15 +301,35 @@
 }
 .sl-chip input { accent-color: var(--sl-accent); }
 
-.sl-progress-panel { width: min(560px, 100%); display: flex; flex-direction: column; gap: 0.7em; }
+.sl-progress-panel {
+    width: min(620px, 100%); display: flex; flex-direction: column; gap: 0.75em;
+    padding: 1em 1.1em; border-radius: 12px;
+    border: 1px solid var(--sl-line);
+    background: color-mix(in srgb, var(--sl-bg1) 88%, transparent);
+}
 .sl-stages { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.35em; }
 .sl-stages li {
     font-size: 0.72em; color: var(--sl-ink3);
-    padding: 0.25em 0.6em; border-radius: 999px; border: 1px solid var(--sl-line-soft);
+    padding: 0.25em 0.65em; border-radius: 999px; border: 1px solid var(--sl-line-soft);
+    display: inline-flex; align-items: center; gap: 0.45em;
 }
+.sl-stage-mark { display: inline-flex; width: 1em; justify-content: center; font-size: 0.85em; }
 .sl-stages li.done { color: var(--sl-ok); border-color: color-mix(in srgb, var(--sl-ok) 35%, transparent); }
-.sl-stages li.active { color: var(--sl-accent); border-color: var(--sl-accent); }
-.sl-progress { height: 6px; border-radius: 3px; background: var(--sl-bg2); overflow: hidden; }
+.sl-stages li.active {
+    color: var(--sl-accent); border-color: var(--sl-accent);
+    background: color-mix(in srgb, var(--sl-accent) 10%, transparent);
+}
+/* the numbers that make a forty-second wait legible */
+.sl-progress-meta { display: flex; align-items: baseline; gap: 0.9em; flex-wrap: wrap; }
+.sl-progress-pct {
+    font-family: var(--sl-mono); font-size: 1.5em; font-weight: 700;
+    color: var(--sl-ink); line-height: 1; font-variant-numeric: tabular-nums;
+}
+.sl-progress-stat {
+    font-family: var(--sl-mono); font-size: 0.76em; color: var(--sl-ink3);
+    font-variant-numeric: tabular-nums;
+}
+.sl-progress { height: 8px; border-radius: 4px; background: var(--sl-bg2); overflow: hidden; }
 .sl-progress-fill {
     height: 100%; width: 0;
     background: linear-gradient(90deg, var(--sl-accent-deep), var(--sl-accent));
@@ -622,13 +642,46 @@
 .sl-app :focus-visible { outline: 2px solid var(--sl-accent); outline-offset: 2px; border-radius: 4px; }
 
 @media print {
+    /* Paper is white and browsers do not print background colours, so the
+       dark palette this app is built in prints as near-white text on nothing.
+       The report was legible only for a reader who happened to be in light
+       mode. Force the light tokens for print regardless of the theme. */
+    .StrideLab, [data-theme="dark"] .StrideLab {
+        --sl-bg0: #ffffff;
+        --sl-bg1: #ffffff;
+        --sl-bg2: #ffffff;
+        --sl-bg3: #f2f5fa;
+        --sl-line: #b9c4d4;
+        --sl-line-soft: #d7dfeb;
+        --sl-ink: #101a2b;
+        --sl-ink2: #33455f;
+        --sl-ink3: #55677f;
+        --sl-accent: #0b6f66;
+        --sl-accent-deep: #0b6f66;
+        --sl-left: #0b6f66;
+        --sl-right: #8a4b06;
+        --sl-warn: #8a4b06;
+        --sl-bad: #a12222;
+        --sl-ok: #14612f;
+        --sl-shadow: none;
+    }
+    .StrideLab, .StrideLab body, .sl-app, .sl-workspace, .sl-dock, .sl-pane {
+        background: #fff !important;
+        color: var(--sl-ink) !important;
+    }
+
     #header, #footer-placeholder, .sl-topbar, .sl-left, .sl-dock-tabs,
     .sl-export, .sl-transport, .sl-layers, .back-btn, .sl-toast { display: none !important; }
     .sl-app { padding: 0; max-width: none; }
     .sl-body { grid-template-columns: 1fr; }
     .sl-workspace { border: none; box-shadow: none; }
     .sl-pane { display: block !important; page-break-inside: avoid; }
+    /* History and Compare are workspace furniture, not report content. Compare
+       with nothing selected prints the sentence "Pick two analyses in the
+       History tab", which on paper is an instruction nobody can follow. */
+    .sl-pane[data-pane="history"], .sl-pane[data-pane="compare"] { display: none !important; }
     .sl-dock-body { max-height: none; overflow: visible; }
+    .sl-dock.is-collapsed .sl-dock-body { display: block !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

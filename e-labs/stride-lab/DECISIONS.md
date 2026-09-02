@@ -984,6 +984,109 @@ relative, the overlay would have been drawn over unrelated video.
 
 ---
 
+## D45. The printed report is forced light, because paper is
+
+**Decision.** `@media print` redefines the palette tokens to the light set, and
+a `beforeprint` handler re-renders the charts in the light theme.
+
+**Why.** This app is dark-first and browsers do not print background colours.
+`--sl-ink` is `#e8eef9`, so a reader in dark mode — the default — pressed
+"Printable report" and got near-white text on white paper. The feature produced
+a blank sheet for most of its users. Charts are canvases and print the bitmap
+they hold rather than taking any CSS, hence the re-render; `renderResult` was
+already re-entrant because changing units calls it. The player canvas is left
+alone deliberately, being a video frame.
+
+Also hidden in print: the History and Compare panes, which
+`.sl-pane { display: block !important }` had been printing along with
+everything else. Compare with nothing selected printed the sentence "Pick two
+analyses in the History tab", which on paper is an instruction nobody can
+follow.
+
+---
+
+## D46. A stored analysis can be opened, which is what makes keeping the video mean anything
+
+**Decision.** History rows gained an **Open** action that restores a stored
+analysis into the player, with the kept video when there is one.
+
+**Why.** `store.getVideo` was called from nowhere in the app. The checkbox
+"Keep the video with this analysis" wrote the clip into IndexedDB — tens of
+megabytes, five retained — and nothing ever read it back: it was write-only
+storage, spending the user's quota in an app that warns them about quota, and
+buying nothing at all. Stored analyses could only be compared or deleted.
+
+What comes back says what it is not: the record keeps measurements, scores,
+findings, warnings, events and keypoints, but not the engine's internal
+per-frame series, so the gait-cycle curves and the richer overlay layers are
+unavailable and a warning says so rather than quietly drawing less.
+
+`scores.perMetric` is recomputed on open rather than stored twice —
+`stripMetrics` keeps only the dimension scores, and the metric grid reads
+`perMetric` for every card's status. Scoring is a pure function of the
+measurements and the speed band, so what comes back is what was stored.
+
+---
+
+## D47. The overlay follows presented frames, not `timeupdate`
+
+**Decision.** The player's overlay is driven by `requestVideoFrameCallback`,
+with an animation-frame loop as fallback and `timeupdate` demoted to a backstop
+for a paused element being scrubbed.
+
+**Why.** Reported as: the overlay tracks perfectly at 0.15x and 0.25x and falls
+apart at 0.5x and 1x. It was hanging off `timeupdate`, which browsers throttle
+to roughly four events a second — measured here at a **266 ms** median
+interval. That is a fixed budget in WALL time, so what it buys in MEDIA time
+scales with the playback rate: at 0.15x, 266 ms is about one frame of a 30 fps
+clip and the overlay looks exact; at 1x it is eight frames, and the skeleton
+sits on a pose the runner left a quarter of a second ago, jumping eight frames
+at a time to catch up. At 180 steps per minute that lag is more than a whole
+step, which is why it looked like the detection had failed rather than like a
+sync problem. The detection was never wrong; the overlay was drawing the wrong
+frame.
+
+Measured, overlay-to-picture lag in frames, median (max):
+
+| rate | before | after |
+|---|---|---|
+| 0.15x | 1 (2) | 0 (1) |
+| 1x | 4 (8) | 0 (1) |
+
+`requestVideoFrameCallback` fires once per presented frame and hands over that
+frame's exact `mediaTime`, so the pose drawn is the pose of the picture
+underneath it at any rate, by construction. The callback chain is cancelled
+when the player is re-armed, or two chains would draw over each other.
+
+---
+
+## D48. The wait shows the detection, and one mapping table does it
+
+**Decision.** The processing stage draws a detection HUD — acquisition
+brackets around the landmarks found, joints sized by the confidence the model
+reported, a sweep line, and chips reading the frame index, the number of
+landmarks locked and whether more than one person is in shot — over a stepper
+that marks each stage done or running, a percentage, a throughput in frames per
+second and an estimated time left.
+
+**Why.** Forty seconds is a long time to look at a stick figure on an empty
+rectangle with no idea how long is left. Everything drawn is real: the box is
+the landmark extent, the joint sizes are reported visibilities, the rate and
+the estimate come from frames actually completed. None of it is decoration
+imitating telemetry, which in this app would be the wrong kind of joke.
+
+**And it found a duplicate mapping.** The preview had its own hand-written copy
+of the backend-to-canonical landmark table, and it was already out of step with
+the engine's: it knew 17 of the 25 canonical landmarks and produced nothing for
+the ears, eyes, hands and outer feet, which `adaptFrame` builds as centroids of
+several raw points. So the live preview drew a poorer skeleton than the report
+of the same frame, and the HUD's "landmarks locked" count ran against a
+denominator eight of which could never be filled. The preview now calls
+`adaptFrame`, and the second table is gone. Two copies of a mapping is two
+things that can disagree, and these already had.
+
+---
+
 ## Open questions the specification left for the human
 
 These were answered with the conservative default and are easy to change.

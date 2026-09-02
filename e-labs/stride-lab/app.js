@@ -13,9 +13,10 @@ import { synthGait } from './src/synth/gait.js';
 import { METRICS, METRIC_BY_ID, DIMENSIONS } from './src/engine/metrics/catalog.js';
 import { REFERENCE_BY_ID } from './src/engine/scoring/references.js';
 import { bandFor } from './src/engine/scoring/norms.js';
-import { scoreValue } from './src/engine/scoring/score.js';
+import { scoreValue, scoreAnalysis } from './src/engine/scoring/score.js';
 import { EXERCISE_BY_ID } from './src/engine/recommend/exercises.js';
 import { CANONICAL, ASYMMETRY_ATTENTION, ASYMMETRY_NOTABLE, indexAtTime } from './src/engine/types.js';
+import { adaptFrame } from './src/engine/pose/skeleton.js';
 import { APP_VERSION } from './src/engine/version.js';
 import * as store from './src/ui/store.js';
 import { DEMOS, DEMO_BY_ID } from './src/ui/demos.js';
@@ -601,12 +602,27 @@ function proposeWindow(samples, dur, want) {
 
 function renderStages(active) {
     const ol = $('sl-stages');
+    /* Rebuilt only when the active stage changes: this is called on every
+       progress tick, and replacing eight nodes 700 times is work the model
+       could have been doing instead. */
+    if (ol.dataset.active === String(active)) return;
+    ol.dataset.active = String(active);
     ol.innerHTML = '';
     let seen = false;
     for (const s of STAGES) {
-        const li = el('li', '', s.label);
-        if (s.id === active) { li.className = 'active'; seen = true; }
-        else if (!seen) li.className = 'done';
+        const li = el('li', '');
+        const mark = el('span', 'sl-stage-mark');
+        if (s.id === active) {
+            li.className = 'active'; seen = true;
+            mark.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+        } else if (!seen) {
+            li.className = 'done';
+            mark.innerHTML = '<i class="fas fa-check"></i>';
+        } else {
+            mark.textContent = '·';
+        }
+        li.appendChild(mark);
+        li.appendChild(el('span', 'sl-stage-label', s.label));
         ol.appendChild(li);
     }
 }
@@ -614,6 +630,7 @@ function renderStages(active) {
 async function startAnalysis() {
     if (!S.file || S.running) return;
     S.running = true; S.cancelled = false;
+    runStartedAt = performance.now();
     updateRunEnabled();
     showStage('run');
     $('sl-device-chip').classList.add('is-busy');
@@ -645,20 +662,28 @@ async function startAnalysis() {
                 $('sl-progress-text').textContent = p.total > 1
                     ? `${p.label} — ${p.done} of ${p.total}`
                     : p.label;
+                $('sl-progress-pct').textContent = `${Math.round(frac * 100)}%`;
+                /* Throughput and a finish estimate, from what has actually
+                   happened rather than a guess: a forty-second wait with no
+                   sense of its own length is the thing people abandon. */
+                if (p.total > 1 && p.done > 2) {
+                    const elapsed = (performance.now() - runStartedAt) / 1000;
+                    const rate = p.done / Math.max(0.001, elapsed);
+                    const left = (p.total - p.done) / Math.max(0.001, rate);
+                    $('sl-progress-rate').textContent = `${rate.toFixed(1)} frames/s`;
+                    $('sl-progress-eta').textContent = left > 1
+                        ? `about ${left < 60 ? `${Math.ceil(left)} s` : `${Math.ceil(left / 60)} min`} left`
+                        : 'finishing';
+                } else {
+                    $('sl-progress-rate').textContent = '';
+                    $('sl-progress-eta').textContent = '';
+                }
             },
             onPreview: (p) => {
                 const r = live.getBoundingClientRect();
-                liveCtx.clearRect(0, 0, r.width, r.height);
-                liveCtx.fillStyle = theme.bg;
-                liveCtx.fillRect(0, 0, r.width, r.height);
-                const box = contain(p.width, p.height, r.width, r.height);
-                liveCtx.save();
-                liveCtx.translate(box.x, box.y);
-                drawOverlay(liveCtx, {
-                    xy: reindex(p.landmarks), vis: null, w: box.w, h: box.h, theme,
-                    layers: { skeleton: true, angles: false, trails: false, events: false }
-                });
-                liveCtx.restore();
+                if (!r.width) return;
+                const ctx = fitCanvas(live, r.width, r.height);
+                drawDetectionHud(ctx, p, theme, r);
             }
         });
 
@@ -673,6 +698,131 @@ async function startAnalysis() {
         $('sl-device-chip').classList.remove('is-busy');
         $('sl-device-text').textContent = 'Processed on your device';
         updateRunEnabled();
+    }
+}
+
+/* ---------- the detection heads-up display ----------
+   What this replaces: a bare skeleton on a flat rectangle. The wait is forty
+   seconds of the most interesting thing the app does — a model finding a body
+   in every frame — and it was being shown as an empty box with a stick figure
+   in it. This draws the ACQUISITION instead: the bracketed box the landmarks
+   occupy, joints sized by the confidence the model actually reported, a sweep
+   line, and a count of how many of the 25 landmarks are currently locked. All
+   of it is real data; none of it is decoration pretending to be telemetry. */
+
+const HUD = { sweep: 0, locked: 0, people: 1, index: 0, box: null };
+let runStartedAt = 0;
+
+function drawDetectionHud(ctx, p, theme, rect) {
+    const W = rect.width, H = rect.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = theme.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    /* a faint measurement grid, so the frame reads as an instrument */
+    ctx.save();
+    ctx.strokeStyle = theme.line;
+    ctx.globalAlpha = 0.35;
+    ctx.lineWidth = 1;
+    const gap = Math.max(28, Math.round(Math.min(W, H) / 14));
+    ctx.beginPath();
+    for (let x = gap; x < W; x += gap) { ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, H); }
+    for (let y = gap; y < H; y += gap) { ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); }
+    ctx.stroke();
+    ctx.restore();
+
+    const box = contain(p.width, p.height, W, H);
+    const { xy, vis } = adaptPreview(p.landmarks, p.vis);
+
+    /* the bounding box of what was found, with corner brackets */
+    let x0 = 1, y0 = 1, x1 = 0, y1 = 0, seen = 0;
+    for (let i = 0; i < CANONICAL.length; i++) {
+        const vx = xy[i * 2], vy = xy[i * 2 + 1];
+        if (!Number.isFinite(vx) || !Number.isFinite(vy)) continue;
+        if (vis && !(vis[i] >= 0.5)) continue;
+        x0 = Math.min(x0, vx); y0 = Math.min(y0, vy);
+        x1 = Math.max(x1, vx); y1 = Math.max(y1, vy);
+        seen++;
+    }
+    HUD.locked = seen;
+    if (seen >= 4) {
+        const bx = box.x + x0 * box.w - 10, by = box.y + y0 * box.h - 10;
+        const bw = (x1 - x0) * box.w + 20, bh = (y1 - y0) * box.h + 20;
+        HUD.box = { bx, by, bw, bh };
+        const arm = Math.max(12, Math.min(bw, bh) * 0.18);
+        ctx.strokeStyle = theme.accent;
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.9;
+        for (const [cx, cy, sx, sy] of [[bx, by, 1, 1], [bx + bw, by, -1, 1], [bx, by + bh, 1, -1], [bx + bw, by + bh, -1, -1]]) {
+            ctx.beginPath();
+            ctx.moveTo(cx, cy + sy * arm); ctx.lineTo(cx, cy); ctx.lineTo(cx + sx * arm, cy);
+            ctx.stroke();
+        }
+        ctx.globalAlpha = 0.18;
+        ctx.setLineDash([4, 6]);
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx, by, bw, bh);
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+    }
+
+    /* the skeleton itself, drawn by the same code the report uses */
+    ctx.save();
+    ctx.translate(box.x, box.y);
+    drawOverlay(ctx, {
+        xy, vis, w: box.w, h: box.h, theme,
+        layers: { skeleton: true, angles: false, trails: false, events: false }
+    });
+    ctx.restore();
+
+    /* joints, sized by the confidence the model reported for each one */
+    if (vis) {
+        for (let i = 0; i < CANONICAL.length; i++) {
+            const v = vis[i];
+            if (!(v > 0.2)) continue;
+            const jx = box.x + xy[i * 2] * box.w, jy = box.y + xy[i * 2 + 1] * box.h;
+            if (!Number.isFinite(jx) || !Number.isFinite(jy)) continue;
+            ctx.beginPath();
+            ctx.arc(jx, jy, 1.5 + v * 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = theme.accent;
+            ctx.globalAlpha = 0.25 + v * 0.6;
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    /* the sweep: a line travelling down the acquisition box, so the panel is
+       visibly alive even on a frame where nothing moved */
+    HUD.sweep = (HUD.sweep + 0.012) % 1;
+    const sy = box.y + HUD.sweep * box.h;
+    const grad = ctx.createLinearGradient(0, sy - 26, 0, sy + 26);
+    grad.addColorStop(0, 'rgba(34,211,209,0)');
+    grad.addColorStop(0.5, 'rgba(34,211,209,0.30)');
+    grad.addColorStop(1, 'rgba(34,211,209,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(box.x, sy - 26, box.w, 52);
+    ctx.strokeStyle = 'rgba(34,211,209,0.65)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(box.x, sy); ctx.lineTo(box.x + box.w, sy); ctx.stroke();
+
+    /* readouts */
+    ctx.font = '600 11px ui-monospace, Menlo, Consolas, monospace';
+    ctx.textBaseline = 'top';
+    const chips = [
+        `FRAME ${String(p.index).padStart(4, '0')}`,
+        `LANDMARKS ${seen}/${CANONICAL.length}`,
+        p.people > 1 ? `${p.people} PEOPLE` : 'SUBJECT LOCKED'
+    ];
+    let cx = box.x + 8;
+    for (const t of chips) {
+        const tw = ctx.measureText(t).width + 14;
+        ctx.fillStyle = 'rgba(8,14,26,0.82)';
+        ctx.fillRect(cx, box.y + 8, tw, 20);
+        ctx.strokeStyle = theme.line; ctx.lineWidth = 1;
+        ctx.strokeRect(cx + 0.5, box.y + 8.5, tw - 1, 19);
+        ctx.fillStyle = t.includes('PEOPLE') ? theme.warn || theme.accent : theme.accent;
+        ctx.fillText(t, cx + 7, box.y + 13);
+        cx += tw + 6;
     }
 }
 
@@ -825,16 +975,27 @@ async function askWhichRunner(ask) {
     });
 }
 
-/** BlazePose's 33 landmarks arrive raw from the worker; map to canonical. */
-function reindex(raw) {
-    const map = { nose: 0, shoulderL: 11, shoulderR: 12, elbowL: 13, elbowR: 14, wristL: 15, wristR: 16, hipL: 23, hipR: 24, kneeL: 25, kneeR: 26, ankleL: 27, ankleR: 28, heelL: 29, heelR: 30, toeL: 31, toeR: 32 };
-    const out = new Float64Array(CANONICAL.length * 2);
-    CANONICAL.forEach((n, i) => {
-        const s = map[n];
-        out[i * 2] = raw[s * 2];
-        out[i * 2 + 1] = raw[s * 2 + 1];
-    });
-    return out;
+/**
+ * Raw backend landmarks to the canonical 25, via the ENGINE's adapter.
+ *
+ * This used to be a second, hand-written copy of the mapping table, and it was
+ * already out of step: it knew 17 of the 25 canonical landmarks and silently
+ * produced nothing for the ears, eyes, hands and outer feet, which the engine
+ * builds as centroids of several raw points. So the live preview drew a
+ * poorer skeleton than the report, and the heads-up count of locked landmarks
+ * was against a denominator eight of which could never be filled. One mapping,
+ * in one place, is the only way those two stay in agreement.
+ */
+function adaptPreview(rawXY, rawVis) {
+    const xy = new Float64Array(CANONICAL.length * 2);
+    const vis = new Float64Array(CANONICAL.length);
+    const v = rawVis || new Float64Array(rawXY.length / 2).fill(1);
+    try {
+        adaptFrame(rawXY, v, 'mediapipe-blazepose', xy, vis);
+    } catch {
+        xy.fill(NaN);
+    }
+    return { xy, vis };
 }
 
 /** Dispatch to whichever demo the picker has selected. */
@@ -953,6 +1114,72 @@ async function adoptResult(result, name, synthetic) {
     } catch {
         toast('The analysis is shown but could not be saved locally. Storage may be full or blocked.');
     }
+}
+
+/**
+ * Reopen a stored analysis in the player.
+ *
+ * This existed nowhere, and its absence made two other things pointless. The
+ * "Keep the video with this analysis" checkbox wrote the clip into IndexedDB —
+ * tens of megabytes, five retained — and `store.getVideo` was then called from
+ * nowhere in the app: the video was write-only, costing the user quota in an
+ * app that warns them about quota, and buying nothing. Stored analyses could
+ * only be compared or deleted, never looked at again.
+ *
+ * What comes back is honest about being less than a fresh run: the record
+ * keeps the metrics, scores, findings, warnings, events and keypoints, but not
+ * the engine's internal per-frame series, so the gait-cycle curves and the
+ * richer overlay layers are unavailable and say so rather than being redrawn
+ * from nothing.
+ */
+async function openStoredAnalysis(a) {
+    if (S.running) return;
+    const result = {
+        ok: true,
+        engine: a.engine, capture: a.capture, scale: a.scale,
+        strideCount: a.strideCount, metrics: a.metrics,
+        scores: a.scores, findings: a.findings || [], warnings: (a.warnings || []).slice(),
+        events: a.events, series: a.keypoints || null
+    };
+    /* A stored record keeps only the dimension scores — `stripMetrics` drops
+       `scores.perMetric`, which the metric grid reads for every card's status
+       glyph. Scoring is a pure function of the measurements and the speed
+       band, so recompute it rather than storing it twice; the dimensions that
+       come back are the same ones that were stored. */
+    try {
+        const rescored = scoreAnalysis(a.metrics, { speedMs: a.capture.speedMs, sex: null });
+        result.scores = { ...rescored, ...a.scores, perMetric: rescored.perMetric };
+    } catch {
+        result.scores = { ...a.scores, perMetric: {} };
+    }
+    if (!result.series) {
+        toast('That analysis was stored without keypoints, so there is nothing to replay.');
+        return;
+    }
+    result.warnings.unshift({
+        code: 'reopened',
+        message: 'Reopened from this browser\'s storage. The measurements are exactly as they were computed; '
+            + 'the gait-cycle curves and the per-frame overlay detail are not stored with an analysis and are not shown.'
+    });
+
+    if (S.videoUrl) { URL.revokeObjectURL(S.videoUrl); S.videoUrl = null; }
+    S.file = null;
+    let stored = null;
+    try { stored = await store.getVideo(a.id); } catch { /* none kept */ }
+    if (stored && stored.blob) S.videoUrl = URL.createObjectURL(stored.blob);
+
+    S.result = result;
+    S.demo = false;
+    S.demoId = null;
+    S.recordId = a.id;
+    $('sl-name').value = a.label || 'Untitled analysis';
+    $('sl-filecard').hidden = true;
+    $('sl-drop').hidden = false;
+    renderResult(result);
+    showStage('player');
+    setupPlayer(result, !S.videoUrl);
+    selectPane('findings');
+    toast(S.videoUrl ? 'Reopened with the video that was kept with it.' : 'Reopened. No video was kept with this one.');
 }
 
 function stripMetrics(metrics) {
@@ -1462,12 +1689,7 @@ function setupPlayer(result, synthetic) {
         video.src = S.videoUrl;
         video.playbackRate = Number($('sl-rate').value);
         video.currentTime = series.t[0];
-        video.ontimeupdate = () => {
-            const i = nearestFrame(series.t, video.currentTime);
-            playerState.frame = i;
-            $('sl-scrub').value = String(Math.round(i / Math.max(1, series.n - 1) * 1000));
-            drawPlayerFrame();
-        };
+        syncOverlayToVideo(video, series);
         video.onended = () => { S.playing = false; $('sl-play').innerHTML = '<i class="fas fa-play"></i>'; };
     }
     renderEventTrack(result);
@@ -1540,6 +1762,65 @@ function seekFraction(f) {
         playerState.video.currentTime = playerState.series.t[playerState.frame];
     }
     drawPlayerFrame();
+}
+
+/**
+ * Keep the overlay on the frame the video is actually showing.
+ *
+ * This used to hang off `timeupdate`, and that is why the skeleton held
+ * together at 0.15x and fell apart at 1x. Browsers throttle `timeupdate` to
+ * about four events a second, so the overlay was redrawn every ~250 ms of WALL
+ * time whatever the clip was doing. At 0.15x that is about one video frame and
+ * looks perfect; at 1x it is seven or eight frames of a 30 fps clip, so the
+ * skeleton sat on a pose the runner had already left, jumping to catch up
+ * eight frames at a time. The overlay was never wrong about the frame it drew
+ * — it was drawing the wrong frame.
+ *
+ * `requestVideoFrameCallback` fires once per PRESENTED frame and hands over the
+ * exact `mediaTime` of that frame, so the pose drawn is by construction the
+ * pose of the picture underneath it, at any playback rate. Where it does not
+ * exist, an animation-frame loop reading `currentTime` is still far closer than
+ * four updates a second, and `timeupdate` remains only as a coarse backstop for
+ * a paused element being scrubbed.
+ */
+function syncOverlayToVideo(video, series) {
+    /* A previous analysis may have left a callback chain running on this same
+       element; without cancelling it two chains would draw over each other. */
+    if (playerState.rvfc != null && video.cancelVideoFrameCallback) {
+        try { video.cancelVideoFrameCallback(playerState.rvfc); } catch { /* gone */ }
+    }
+    if (playerState.raf != null) cancelAnimationFrame(playerState.raf);
+    playerState.rvfc = null;
+    playerState.raf = null;
+
+    const showTime = (t) => {
+        if (!playerState || playerState.video !== video) return;
+        const i = nearestFrame(series.t, t);
+        if (i !== playerState.frame) {
+            playerState.frame = i;
+            $('sl-scrub').value = String(Math.round(i / Math.max(1, series.n - 1) * 1000));
+        }
+        drawPlayerFrame();
+    };
+
+    if ('requestVideoFrameCallback' in video) {
+        const step = (_now, meta) => {
+            showTime(meta.mediaTime);
+            playerState.rvfc = video.requestVideoFrameCallback(step);
+        };
+        playerState.rvfc = video.requestVideoFrameCallback(step);
+    } else {
+        const tick = () => {
+            showTime(video.currentTime);
+            playerState.raf = requestAnimationFrame(tick);
+        };
+        playerState.raf = requestAnimationFrame(tick);
+    }
+
+    /* Scrubbing a PAUSED video presents a frame, so the callback above covers
+       it; this is the belt to that pair of braces. */
+    video.onseeked = () => showTime(video.currentTime);
+    video.ontimeupdate = () => { if (video.paused) showTime(video.currentTime); };
 }
 
 function drawPlayerFrame() {
@@ -2031,8 +2312,11 @@ async function refreshHistory() {
             else { S.compareIds.push(a.id); if (S.compareIds.length > 2) S.compareIds.shift(); }
             refreshHistory();
         };
+        const open = el('button', 'sl-btn', 'Open');
+        open.onclick = () => openStoredAnalysis(a);
         const del = el('button', 'sl-btn', 'Delete');
         del.onclick = async () => { await store.deleteAnalysis(a.id); await refreshHistory(); refreshStorage(); };
+        actions.appendChild(open);
         actions.appendChild(cmp);
         actions.appendChild(del);
         row.appendChild(actions);
@@ -2250,8 +2534,38 @@ function wireExports() {
     });
     $('sl-ex-csv').addEventListener('click', exportCsv);
     $('sl-ex-print').addEventListener('click', () => window.print());
+    wirePrintTheme();
     $('sl-ex-video').addEventListener('click', exportOverlayVideo);
     $('sl-ex-share').addEventListener('click', shareLink);
+}
+
+/**
+ * Redraw the charts in the light palette while printing.
+ *
+ * The stylesheet can recolour text for print, but a canvas prints the bitmap
+ * it already holds — the charts were drawn against the dark theme and would
+ * come out as dark blocks on white paper. `renderResult` reads its colours
+ * from the computed style of the viewport, and is already re-entrant because
+ * changing units calls it, so switching the theme attribute and re-rendering
+ * is enough. The player canvas is deliberately left alone: it is a video
+ * frame, and a video frame is meant to look like one.
+ */
+function wirePrintTheme() {
+    let restore = null;
+    window.addEventListener('beforeprint', () => {
+        if (!S.result || restore !== null) return;
+        restore = document.documentElement.getAttribute('data-theme') || '';
+        if (restore === 'light') { restore = null; return; }
+        document.documentElement.setAttribute('data-theme', 'light');
+        try { renderResult(S.result); } catch { /* printing must not throw */ }
+    });
+    window.addEventListener('afterprint', () => {
+        if (restore === null) return;
+        if (restore) document.documentElement.setAttribute('data-theme', restore);
+        else document.documentElement.removeAttribute('data-theme');
+        restore = null;
+        if (S.result) { try { renderResult(S.result); } catch { /* ignore */ } }
+    });
 }
 
 function exportCsv() {
