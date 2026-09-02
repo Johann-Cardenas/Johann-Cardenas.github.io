@@ -4,7 +4,7 @@
 [![License: CC BY 3.0](https://img.shields.io/badge/License-CC%20BY%203.0-lightgrey.svg?style=flat-square)](http://creativecommons.org/licenses/by/3.0/)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg?style=flat-square&logo=python)](https://www.python.org/)
 
-Welcome to the official repository of my personal website and scientific research tools. This project serves as both a professional portfolio and a collection of Python-based utilities for civil engineering simulations and data visualization.
+Welcome to the official repository of my personal website and scientific research tools. This project serves as both a professional portfolio and a collection of engineering applications — nine browser-based labs under `e-labs/`, plus Python utilities for civil engineering simulations and data visualization.
 
 Site lives at **[www.johanncardenas.com](https://www.johanncardenas.com)** — hosted on GitHub Pages from the `main` branch, served via the custom domain declared in `CNAME`.
 
@@ -60,7 +60,7 @@ This repository implements a dual-purpose architecture: a high-performance stati
 ├── data/                 # JSON content store (navigation, blog, projects, news, footer, publications, site-config)
 ├── blog/                 # Blog post collection (Liquid-processed)
 ├── projects/             # Individual project pages
-├── e-labs/               # Interactive SPAs (Asphera, AirCrafter, Frontier, Finite-Elemented)
+├── e-labs/               # Nine interactive SPAs — see the E-Labs section below
 ├── images/               # Optimized WebP media
 ├── documents/            # PDFs (resume, etc.)
 ├── pdfjs/                # Vendored PDF.js viewer (do-not-edit)
@@ -97,6 +97,56 @@ Foundational runtime tokens declared on `:root` in `main.css`. Full list lives i
 
 ---
 
+## 🧪 E-Labs
+
+Nine self-contained applications under `e-labs/`, each a standalone SPA with its
+own stylesheet, its own theme bootstrap synced to the site's, and no build step.
+Everything runs in the browser — there is no API behind any of them, and the
+ones that take a file never upload it.
+
+| App | What it is | Notes |
+| :--- | :--- | :--- |
+| **Gear3D** | True-to-scale 3D visualiser of truck axle configurations and aircraft landing gear | Three.js. 22 FHWA trucks, 7 measured aircraft, 16 FAA gear configurations; FAA Order 5300.7 nomenclature implemented as a grammar |
+| **QR Studio** | Designed QR generator — shaped modules, gradients, logo excavation, frames | Its own ISO/IEC 18004 encoder; no runtime dependency |
+| **Stride Lab** | Running gait analysis from a phone clip — 40 biomechanical measurements | Pose estimation, gait-event detection and metrics computed **entirely on device**; ships an offline service worker |
+| **LEAPS** | Linear elastic analysis of pavement structures (Burmister multilayer) | Own solver engine (LEAF-JS), runs in a worker |
+| **Cross-Section Studio** | Procedural 3D pavement cross-section renderer | Three.js; deterministic seeded PBR textures, 18 materials |
+| **Finite-Elemented** | FEA teaching platform, 12 modules | Live plane-stress/plane-strain solver (Q4/T3, banded Cholesky) in pure JS |
+| **Frontier** | HPC intuition engine | Canvas 2D |
+| **AirCrafter** | Contact-stress calculator | Plotly · password-protected |
+| **Asphera** | FEM pavement visualiser | Plotly · password-protected |
+
+### Provenance and refusal
+
+Two of these are built around a rule that is unusual enough to be worth stating.
+**Gear3D** treats every geometry-bearing number as a provenance claim: each one
+carries a source string, a value that had to be assumed rather than read must be
+declared as such, and the test suite fails the build when one is not. **Stride
+Lab** applies the same idea to measurement — below 60 fps the timing metrics are
+suppressed rather than hedged, an oblique camera caps every angle measured out
+of the plane of motion, and a limb that changes length between frames is
+disbelieved and its strides discarded. In both, `null` is the correct answer for
+something that is not known, and neither will produce a confident wrong number
+in preference to admitting the gap.
+
+### Testing
+
+Four of the labs carry dependency-free Node suites — **764 checks** in total,
+run with nothing but Node 18+:
+
+```bash
+cd e-labs/gear3d      && npm test     # 176 checks — provenance validator, geometry, gear grammar
+cd e-labs/qr-studio   && node test/test-qr.cjs      # 397 checks — includes an independent decoder
+cd e-labs/stride-lab  && npm test     # 122 checks — filter design, gait events, refusal rules
+cd e-labs/leaps       && node test/test-solver.cjs  #  69 checks — closed forms, equilibrium, symmetry
+```
+
+QR Studio additionally ships `test/scan-harness.html`, which decodes the
+*rendered pixels* with jsQR at five sizes — the Node suite cannot tell you a
+styled code has stopped scanning.
+
+---
+
 ## 🔎 SEO & Accessibility
 
 *   **Structured data:** `Person` JSON-LD on the homepage with `sameAs` (ORCID, Scholar, LinkedIn, GitHub, Medium, Twitter, Stack Overflow), `alumniOf`, `affiliation`, `knowsAbout`. `BlogPosting` JSON-LD on blog posts.
@@ -122,7 +172,7 @@ Foundational runtime tokens declared on `:root` in `main.css`. Full list lives i
 - [x] **SEO foundation:** Canonical URLs, Person + BlogPosting JSON-LD, OpenGraph normalization, `robots.txt`, `theme-color` meta.
 - [x] **Accessibility harmonization:** Global `:focus-visible`, dropdown ARIA, reduced-motion coverage.
 - [ ] **Headless CMS (Build-time):** Integrate a headless CMS (e.g., Contentful, Strapi) for easier content updates.
-- [ ] **PWA Support:** Service Workers for offline access to publications and resume.
+- [ ] **PWA Support:** Service Workers for offline access to publications and resume. Stride Lab already ships one scoped to its own directory (offline shell + cached pose model); the site-wide case is still open.
 - [ ] **Automated CI/CD:** GitHub Actions to compile Sass, run Lighthouse regression, and deploy.
 - [ ] **Internationalization (i18n):** Spanish/English via static routing or client-side localization.
 - [ ] **Interactive Data Dashboards:** Research-data visualizations using D3.js or Plotly.
@@ -151,4 +201,4 @@ Specific software components and scripts may be subject to different terms:
 - **Python Scripts:** Internal research use license (see individual file headers).
 
 ---
-*Last Updated: April 2026*
+*Last Updated: September 2026*
