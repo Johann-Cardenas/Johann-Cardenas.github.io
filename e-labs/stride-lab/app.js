@@ -462,20 +462,58 @@ function drawFramingGuide() {
     if (camStream) requestAnimationFrame(drawFramingGuide);
 }
 
+/**
+ * Record from the camera.
+ *
+ * Worth knowing, because it decides which decoder every in-app recording gets:
+ * `MediaRecorder` writes a FRAGMENTED container — samples live in `moof`/`trun`
+ * boxes rather than in the `moov` sample table — and it cannot write anything
+ * else, because it is describing a stream whose length it does not yet know.
+ * The demuxer here reads sample tables, recognises the fragmented layout and
+ * says so (`reason: 'fragmented'`), so a clip recorded in this app always takes
+ * the `<video>` playback decoder rather than the WebCodecs fast path. That is
+ * correct and it is flagged to the user as reduced timing precision — but it is
+ * also why the playback decoder dropping four fifths of its frames (D40)
+ * mattered as much as it did: it was the path this feature always uses.
+ *
+ * Preferring mp4 over webm in the list below therefore buys no speed. It is
+ * kept because an mp4 is the more portable thing for somebody to keep.
+ */
 function toggleRecording() {
     if (S.recorder && S.recorder.state === 'recording') {
         S.recorder.stop();
         return;
     }
+    if (!camStream) { toast('The camera is not open.'); return; }
     camChunks = [];
     const mime = ['video/mp4', 'video/webm;codecs=vp9', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t));
-    S.recorder = new MediaRecorder(camStream, mime ? { mimeType: mime, videoBitsPerSecond: 12e6 } : undefined);
+    try {
+        S.recorder = new MediaRecorder(camStream, mime ? { mimeType: mime, videoBitsPerSecond: 12e6 } : undefined);
+    } catch (err) {
+        toast(`This browser would not start a recording (${err && err.message || err}). You can still choose a file.`);
+        return;
+    }
+    const startedAt = performance.now();
     S.recorder.ondataavailable = (e) => { if (e.data.size) camChunks.push(e.data); };
+    S.recorder.onerror = () => { toast('The recording failed part way through.'); stopCamera(); };
     S.recorder.onstop = async () => {
-        const blob = new Blob(camChunks, { type: camChunks[0] ? camChunks[0].type : 'video/webm' });
+        /* The recorder's own negotiated type, not the first chunk's: a chunk
+           may carry an empty type, and if nothing was recorded at all there is
+           no chunk to ask. */
+        const type = S.recorder.mimeType || (camChunks[0] && camChunks[0].type) || 'video/webm';
+        const heldMs = performance.now() - startedAt;
+        if (!camChunks.length) {
+            stopCamera();
+            toast('Nothing was recorded. Hold the button long enough for a few strides — three seconds or more.');
+            return;
+        }
+        const blob = new Blob(camChunks, { type });
         stopCamera();
-        const ext = /mp4/.test(blob.type) ? 'mp4' : 'webm';
-        await acceptFile(new File([blob], `recording.${ext}`, { type: blob.type }));
+        const ext = /mp4/.test(type) ? 'mp4' : 'webm';
+        if (heldMs < 2000) {
+            toast(`That clip is only ${(heldMs / 1000).toFixed(1)} s. Three seconds or more gives enough strides to measure.`);
+        }
+        await acceptFile(new File([blob], `recording.${ext}`, { type }));
     };
     S.recorder.start();
     $('sl-cam-shoot').innerHTML = '<i class="fas fa-stop"></i> Stop';
@@ -1224,6 +1262,26 @@ function showError(result) {
    Result rendering
    ============================================================ */
 
+/**
+ * Draw a chart canvas, on the next animation frame or right now.
+ *
+ * Deferring is the normal case and it is a batching choice, not a requirement:
+ * `setup()` in charts.js reads `getBoundingClientRect()`, which flushes layout
+ * on its own, so a canvas can be drawn the instant it is in the document. What
+ * the frame buys is doing that once for forty cards instead of forty times.
+ *
+ * Printing cannot afford the deferral. `beforeprint` runs synchronously and the
+ * browser lays the page out for paper as soon as the handler returns, so a
+ * repaint parked on an animation frame is a race — one this happened to win in
+ * Chrome and Firefox and had no promise of winning anywhere else. During print
+ * the draws run inline instead, and the outcome stops depending on scheduling.
+ */
+let chartsDrawSync = false;
+function scheduleChart(fn) {
+    if (chartsDrawSync) { fn(); return; }
+    requestAnimationFrame(fn);
+}
+
 function renderResult(r) {
     $('sl-rail-empty').hidden = true;
     $('sl-rail-content').hidden = false;
@@ -1266,7 +1324,7 @@ function renderDimensions(r) {
         }
         if (dim.note) wrap.appendChild(el('div', 'sl-rail-note', dim.note));
         host.appendChild(wrap);
-        requestAnimationFrame(() => drawScoreBar(c, dim.score));
+        scheduleChart(() => drawScoreBar(c, dim.score));
     }
 }
 
@@ -1492,7 +1550,7 @@ function metricCard(r, id) {
     if (primary && primary.value != null && id !== 'strikePattern') {
         const c = document.createElement('canvas');
         card.appendChild(c);
-        requestAnimationFrame(() => drawRangeBar(c, { value: primary.value, ci95: primary.ci95, band }));
+        scheduleChart(() => drawRangeBar(c, { value: primary.value, ci95: primary.ci95, band }));
     }
 
     const foot = el('div', 'sl-mcard-foot');
@@ -1549,7 +1607,7 @@ function renderCycles(r) {
         if (R) sets.push({ ...R, side: 'R', label: 'right' });
         card.appendChild(dataTable(sets, s.unit));
         grid.appendChild(card);
-        requestAnimationFrame(() => drawGaitCycle(c, sets, { yLabel: s.unit }));
+        scheduleChart(() => drawGaitCycle(c, sets, { yLabel: s.unit }));
     }
     host.appendChild(grid);
 }
@@ -1602,7 +1660,7 @@ function renderStrides(r) {
             values: strides[side].map(st => strideValue(r, st, id, side))
         }));
         grid.appendChild(card);
-        requestAnimationFrame(() => drawStrideDots(c, sets, { yLabel: fmtUnit(m.unit) }));
+        scheduleChart(() => drawStrideDots(c, sets, { yLabel: fmtUnit(m.unit) }));
     }
     host.appendChild(grid);
 }
@@ -2343,7 +2401,7 @@ async function refreshHistory() {
             c.style.height = '120px';
             card.appendChild(c);
             grid.appendChild(card);
-            requestAnimationFrame(() => drawSparkline(c, pts));
+            scheduleChart(() => drawSparkline(c, pts));
         }
         host.appendChild(grid);
     }
@@ -2557,7 +2615,10 @@ function wirePrintTheme() {
         restore = document.documentElement.getAttribute('data-theme') || '';
         if (restore === 'light') { restore = null; return; }
         document.documentElement.setAttribute('data-theme', 'light');
-        try { renderResult(S.result); } catch { /* printing must not throw */ }
+        chartsDrawSync = true;
+        try { renderResult(S.result); }
+        catch { /* printing must not throw */ }
+        finally { chartsDrawSync = false; }
     });
     window.addEventListener('afterprint', () => {
         if (restore === null) return;

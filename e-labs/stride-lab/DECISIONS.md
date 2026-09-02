@@ -997,6 +997,20 @@ they hold rather than taking any CSS, hence the re-render; `renderResult` was
 already re-entrant because changing units calls it. The player canvas is left
 alone deliberately, being a video frame.
 
+**The re-render is synchronous, and that is the load-bearing part.** Chart
+canvases are normally drawn on the next animation frame, which is a batching
+choice rather than a requirement — `setup()` in charts.js reads
+`getBoundingClientRect()`, which flushes layout on its own, so a canvas can be
+drawn the moment it is in the document; the frame buys doing that once for
+forty cards instead of forty times. Printing cannot afford the deferral.
+`beforeprint` runs synchronously and the browser lays the page out for paper as
+soon as the handler returns, so a repaint parked on an animation frame is a
+race — one that happened to be won in Chrome and Firefox with no promise of
+being won anywhere else. `scheduleChart` draws inline while printing, and the
+outcome no longer depends on scheduling: dispatching `beforeprint` and reading
+a chart pixel with no await in between now returns the light value, where
+before it needed most of a second.
+
 Also hidden in print: the History and Compare panes, which
 `.sl-pane { display: block !important }` had been printing along with
 everything else. Compare with nothing selected printed the sentence "Pick two
@@ -1084,6 +1098,53 @@ of the same frame, and the HUD's "landmarks locked" count ran against a
 denominator eight of which could never be filled. The preview now calls
 `adaptFrame`, and the second table is gone. Two copies of a mapping is two
 things that can disagree, and these already had.
+
+---
+
+## D49. What the camera path is, and what could not be tested without a camera
+
+**Found.** `MediaRecorder` writes a FRAGMENTED container — samples live in
+`moof`/`trun` boxes rather than in the `moov` sample table — and it cannot write
+anything else, because it is describing a stream whose final length it does not
+yet know. The demuxer here reads sample tables; it recognises the fragmented
+layout and reports `reason: 'fragmented'`, so `probe` correctly falls back.
+Verified by recording through `MediaRecorder` and parsing the result: the file
+carries `moof`, `traf`, `trun` and `mvex`, and `parseMp4` returns
+`ok: false, reason: 'fragmented'` rather than a track with an empty sample list.
+
+**So every clip recorded inside this app takes the `<video>` playback decoder,
+always.** Nothing recorded here will ever reach the WebCodecs fast path. That is
+correct behaviour and it is surfaced to the user as reduced timing precision —
+and it is why the playback decoder silently dropping four fifths of its frames
+(D40) mattered as much as it did: it was not an edge case, it was the path this
+feature uses every time. Preferring `video/mp4` over WebM in the recorder's
+format list therefore buys no speed; it is kept only because an mp4 is the more
+portable thing for somebody to keep.
+
+**Hardened while there:** the produced file takes the recorder's own negotiated
+`mimeType` rather than the first chunk's, which can be empty and does not exist
+at all if nothing was captured; a recording that produced no chunks now says so
+instead of handing an empty file to the pre-flight; a clip under two seconds is
+called out at the point of recording rather than only in the checks; and the
+record button refuses politely when no stream is open.
+
+**What was verified without a device.** Stubbing `getUserMedia` with a canvas
+stream drives the whole path for real: the camera stage opens, the hint reads
+the actual stream settings back, Record becomes Stop, stopping produces
+`recording.mp4` of the negotiated type, and it lands in the pre-flight and trim
+stage with the fragmented-container fallback correctly flagged.
+
+**What could not be.** A synthetic camera cannot produce a realistic frame rate
+in an automated browser: the page is not being painted, so
+`requestAnimationFrame` and `requestVideoFrameCallback` are both throttled to
+about 1 Hz, and the recording comes out at 1 fps — which the app then refuses,
+correctly and for the right reason. That refusal is the app being right about a
+genuinely 1 fps file, not a defect; a plain `<video>` reading the same file
+sees the same four frames a second apart. The remaining gap is therefore narrow
+and specific: a real camera recording at a real frame rate, end to end. The
+decode half of that join is separately verified — the same fragmented/WebM
+fallback path recovers 29.8 fps out of a 30 fps clip (D40) — so what is
+untested is the hardware, not the code it feeds.
 
 ---
 

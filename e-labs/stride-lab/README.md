@@ -133,6 +133,14 @@ replacing the file without updating the note fails the build. See D36.
 - **`.sl-select` uses `min-height`, never `height`.** The app inherits a 1.75
   line-height, which is taller than a fixed 2.1em box once padding and border
   come out of it under border-box, and every option clipped its descenders.
+- **Chart canvases draw on an animation frame, except while printing.**
+  `scheduleChart` exists for that one exception: `beforeprint` runs
+  synchronously and the browser lays out for paper as soon as it returns, so a
+  deferred repaint is a race. See D45.
+- **Anything recorded in-app takes the playback decoder, always.**
+  `MediaRecorder` can only write a fragmented container and the demuxer reads
+  sample tables, so `probe` falls back every time. That is correct, and it is
+  why the fallback dropping frames (D40) was not an edge case. See D49.
 - **`.sl-topbar-group` must keep `flex-wrap: wrap`.** `.sl-workspace` is
   `overflow: clip` below 1080 so its sticky bar works, so a row that overflows
   is not scrollable — it is simply not on screen. See D39.
