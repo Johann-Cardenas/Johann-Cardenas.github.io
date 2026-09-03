@@ -13,7 +13,7 @@
    ever breaks, the banner breaks with it, which is the right coupling
    for a picture whose whole claim is "this is what the app computes".
 
-   No image library. A small software rasteriser (anti-aliased lines,
+   No image library. A small software rasterizer (anti-aliased lines,
    circles, a 5x7 bitmap font) into an RGBA buffer, then PNG through
    Node's own zlib. Same reasoning as everywhere else in this app:
    one fewer dependency, and the subset needed is small.
@@ -312,7 +312,7 @@ function drawFigure(frame, atX, alpha, bright) {
 /* Pick the hero frame at MID-STANCE of a clean left stride. A flight-phase
    pose has both legs scissored in mid-air and reads as a tangle at this size;
    mid-stance has one leg planted and the other driving through, which is the
-   pose everybody recognises as running. */
+   pose everybody recognizes as running. */
 const heroStride = ev.strides.find(s => s.valid && s.side === 'L' && s.toeoff) || ev.strides[0];
 const tMid = heroStride ? heroStride.strike.t + (heroStride.stanceTime || 0.2) * 0.55 : 0.3;
 const heroFrame = Math.max(2, Math.min(g.series.n - 3, Math.round(tMid * 120)));

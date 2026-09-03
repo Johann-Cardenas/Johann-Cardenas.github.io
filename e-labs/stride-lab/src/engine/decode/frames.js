@@ -69,7 +69,7 @@ export async function probe(file) {
     /* Display orientation, not coded orientation. A phone recording in portrait
        stores landscape pixels plus a quarter-turn in the display matrix; the
        decoder hands back the landscape pixels and knows nothing about the
-       matrix, so the size the user recognises is this one. */
+       matrix, so the size the user recognizes is this one. */
     const display = displaySize(parsed.track);
     return {
         path: 'webcodecs',
@@ -102,7 +102,7 @@ export async function probe(file) {
  * @param {number} [opts.maxFrames]
  * @param {(f: Frame) => Promise<void>|void} opts.onFrame
  * @param {(done:number, total:number) => void} [opts.onProgress]
- * @param {() => boolean} [opts.cancelled]
+ * @param {() => boolean} [opts.canceled]
  */
 export async function extractFrames(file, opts) {
     const info = opts.probe || await probe(file);
@@ -143,7 +143,7 @@ async function decodeWithWebCodecs(info, opts) {
         output: (frame) => {
             pending = pending.then(async () => {
                 const tS = frame.timestamp / 1e6;
-                if (error || (opts.cancelled && opts.cancelled()) ||
+                if (error || (opts.canceled && opts.canceled()) ||
                     tS < startS - 1e-6 || tS > endS + 1e-6 || emitted >= total) {
                     frame.close();
                     return;
@@ -173,7 +173,7 @@ async function decodeWithWebCodecs(info, opts) {
     });
 
     for (const s of wanted) {
-        if (error || (opts.cancelled && opts.cancelled())) break;
+        if (error || (opts.canceled && opts.canceled())) break;
         decoder.decode(new EncodedVideoChunk({
             type: s.sync ? 'key' : 'delta',
             timestamp: Math.round(s.cts / ts * 1e6),
@@ -237,7 +237,7 @@ async function decodeWithVideoElement(file, opts) {
     const done = new Promise(res => { finish = res; });
 
     const step = async (_now, meta) => {
-        if (opts.cancelled && opts.cancelled()) { finish(); return; }
+        if (opts.canceled && opts.canceled()) { finish(); return; }
         if (lastPresented && meta.presentedFrames > lastPresented + 1) {
             dropped += meta.presentedFrames - lastPresented - 1;
         }
@@ -290,7 +290,7 @@ async function decodeWithVideoElement(file, opts) {
 
     /* A <video> element applies the display matrix itself, so these frames are
        already upright and must NOT be rotated again. The two decode paths
-       disagreeing about orientation would mean the same clip analysed
+       disagreeing about orientation would mean the same clip analyzed
        differently on two browsers. */
     return {
         frames: emitted, dropped, sourceFps, path: 'video-element',
@@ -306,7 +306,7 @@ async function decodeWithVideoElement(file, opts) {
  * its side. BlazePose is trained on upright people: given a runner lying
  * sideways it does not degrade gracefully, it produces a confidently wrong
  * skeleton. Rotating the pixels here — rather than rotating the landmarks
- * afterwards — is what lets the model see what the user saw.
+ * afterward — is what lets the model see what the user saw.
  *
  * @param {VideoFrame|ImageBitmap} src
  * @param {number} rotationDeg  0, 90, 180 or 270, clockwise

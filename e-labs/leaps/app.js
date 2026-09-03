@@ -808,7 +808,7 @@
         }
         return shapes;
     }
-    /* dotted vertical markers at each wheel centre, for the surface/basin charts */
+    /* dotted vertical markers at each wheel center, for the surface/basin charts */
     function wheelRefLines() {
         var danger = cssVar('--lp-danger');
         return state.wheels.map(function (w) {
@@ -1371,7 +1371,7 @@
 
         /* loads — tires with contact patch, pressure arrows and labels.
          * Wheels off the section plane (|y − ySec| > 0) fade with distance
-         * and are drawn behind, so the on-section tyres read clearly. */
+         * and are drawn behind, so the on-section tires read clearly. */
         var danger = cssVar('--lp-danger');
         var minTop = Infinity, sumX = 0, yMax = 1;
         state.wheels.forEach(function (w) { yMax = Math.max(yMax, Math.abs(w.y - state.ySec)); });
@@ -2494,7 +2494,7 @@
         setupResponsive();
     }
 
-    /* ---------- Responsive behaviour ----------
+    /* ---------- Responsive behavior ----------
      * Two things the stylesheet cannot do on its own.
      *
      * 1. Plotly sizes a chart when it draws it and does not watch the window.

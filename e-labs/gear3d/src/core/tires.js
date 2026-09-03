@@ -1,11 +1,11 @@
 /* ============================================================
    Gear3D — tire designation parsing and derived dimensions
    ------------------------------------------------------------
-   Turns a tire designation string into real millimetre dimensions.
+   Turns a tire designation string into real millimeter dimensions.
    Pure domain logic: no three.js, no DOM. Runs under Node for the
    test suite.
 
-   Four designation families are recognised:
+   Four designation families are recognized:
 
    1. metric truck / bus      445/50R22.5, 295/75R22.5, 315/80R22.5
         section width (mm) / aspect (%) R rim diameter (in)
@@ -33,7 +33,7 @@
           - metric: overall diameter and section width in mm, rim
                     still in inches (1400x530R23)
         They are told apart by magnitude: an overall diameter of
-        100 or more is millimetres. No real aircraft tire is 100 in
+        100 or more is millimeters. No real aircraft tire is 100 in
         (2.54 m) in diameter, and none is under 100 mm, so the test
         is unambiguous across the whole domain.
         A leading `H` marks the high-flotation ("H-series") family;
@@ -53,7 +53,7 @@ import { MM_PER_IN } from './units.js';
 
 /**
  * @typedef {Object} TireSpec
- * @property {string}  designation      the input string, normalised
+ * @property {string}  designation      the input string, normalized
  * @property {'metric'|'passenger'|'inch-nominal'|'aircraft-inch'|'aircraft-metric'} family
  * @property {'radial'|'bias'} construction
  * @property {number|null} sectionWidth  mm
@@ -93,7 +93,7 @@ export const SLR_DEFAULTS = Object.freeze({
 });
 
 /**
- * Fraction of section width taken as the moulded tread (rendering only).
+ * Fraction of section width taken as the molded tread (rendering only).
  * The contact-patch module uses its own, separately documented ratio.
  */
 export const TREAD_WIDTH_RATIO = 0.82;
@@ -128,7 +128,7 @@ const RE_AIRCRAFT = /^(H)?\s*(\d{1,4}(?:\.\d{1,2})?)\s*[xX]\s*(\d{1,4}(?:\.\d{1,
 const AIRCRAFT_METRIC_THRESHOLD = 100;
 
 /**
- * Parse a tire designation into millimetre dimensions.
+ * Parse a tire designation into millimeter dimensions.
  *
  * @param {string} designation
  * @param {{domainHint?: 'truck'|'aircraft'}} [opts]
@@ -223,7 +223,7 @@ export function parseTire(designation, opts = {}) {
     }
 
     throw new Error(
-        `Unrecognised tire designation: "${designation}". Expected metric (295/75R22.5), `
+        `Unrecognized tire designation: "${designation}". Expected metric (295/75R22.5), `
         + 'inch-nominal (11R22.5), or aircraft (H44.5x16.5-21, 1400x530R23).'
     );
 }

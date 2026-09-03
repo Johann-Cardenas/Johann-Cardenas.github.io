@@ -10,13 +10,13 @@
        accessible table alternative, which is easier to guarantee when
        the rendering is ours;
      - the dense figure this app actually needs — a mean joint-angle
-       curve with a +-1 SD band across strides, normalised to the gait
+       curve with a +-1 SD band across strides, normalized to the gait
        cycle — is about thirty lines of canvas and an awkward fit for
        a general-purpose library.
 
-   Rules applied throughout: direct labelling instead of legends where
-   there is room, every axis labelled with its unit, no category
-   encoded by colour alone, and a stated y range so two charts in a
+   Rules applied throughout: direct labeling instead of legends where
+   there is room, every axis labeled with its unit, no category
+   encoded by color alone, and a stated y range so two charts in a
    comparison can be read against each other.
    ============================================================ */
 
@@ -35,9 +35,9 @@ export function themeFrom(el) {
         right: v('--sl-right', '#f0a44a'),
         /* used by the overlay for bones that belong to neither side. Missing it
            does not throw: assigning undefined to strokeStyle is ignored, so the
-           centre bones silently keep the dark casing colour from the previous
+           center bones silently keep the dark casing color from the previous
            pass and the head and pelvis render as black bars. */
-        centre: v('--sl-ink2', '#93a5c4'),
+        center: v('--sl-ink2', '#93a5c4'),
         band: v('--sl-band', 'rgba(34,211,209,0.18)'),
         ok: v('--sl-ok', '#34d399'),
         warn: v('--sl-warn', '#d97706'),
@@ -106,7 +106,7 @@ function axes(ctx, plot, theme, xLabel, yLabel, xTicks, yTicks, fmtY) {
 }
 
 /**
- * Mean joint-angle curve across strides, with a +-1 SD band, normalised to
+ * Mean joint-angle curve across strides, with a +-1 SD band, normalized to
  * 0-100% of the gait cycle. This is the standard biomechanics presentation and
  * it communicates CONSISTENCY, which no single number does: a wide band and a
  * narrow band around the same mean are very different runners.
@@ -172,12 +172,12 @@ export function drawGaitCycle(canvas, series, opts = {}) {
         }
         ctx.strokeStyle = s.side === 'R' ? theme.right : theme.left;
         ctx.lineWidth = 2;
-        /* never colour alone: the right side is dashed everywhere in this app */
+        /* never color alone: the right side is dashed everywhere in this app */
         ctx.setLineDash(s.side === 'R' ? [6, 4] : []);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        /* direct labelling, at the end of the curve */
+        /* direct labeling, at the end of the curve */
         const last = s.mean[n - 1];
         if (Number.isFinite(last)) {
             ctx.fillStyle = s.side === 'R' ? theme.right : theme.left;
@@ -329,7 +329,7 @@ export function drawStrideDots(canvas, strides, o = {}) {
         s.values.forEach((v, i) => {
             if (!Number.isFinite(v)) return;
             ctx.beginPath();
-            /* left is a filled circle, right an open square: shape, not colour */
+            /* left is a filled circle, right an open square: shape, not color */
             if (s.side === 'R') ctx.rect(X(i) - 3, Y(v) - 3, 6, 6);
             else ctx.arc(X(i), Y(v), 3.2, 0, Math.PI * 2);
             if (s.side === 'R') ctx.stroke(); else ctx.fill();
@@ -337,7 +337,7 @@ export function drawStrideDots(canvas, strides, o = {}) {
     }
 }
 
-/** Horizontal bars for the dimension scores. Shape and label, never colour alone. */
+/** Horizontal bars for the dimension scores. Shape and label, never color alone. */
 export function drawScoreBar(canvas, score, o = {}) {
     const theme = o.theme || themeFrom(canvas);
     const { ctx, w, h } = setup(canvas, { l: 0, r: 0, t: 0, b: 0 });

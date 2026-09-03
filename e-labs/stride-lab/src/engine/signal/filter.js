@@ -1,7 +1,7 @@
 /* ============================================================
    Stride Lab — signal conditioning primitives.
 
-   Everything here is zero-phase or explicitly labelled otherwise.
+   Everything here is zero-phase or explicitly labeled otherwise.
    Phase lag is disqualifying in this application: a lagged signal
    shifts every gait event in time and therefore biases every
    timing metric by the same amount, invisibly.
@@ -28,7 +28,7 @@ export function designCutoff(effectiveFc) {
 
 /**
  * 2nd-order Butterworth low-pass, bilinear transform with frequency pre-warping.
- * Returns normalised coefficients (a0 = 1).
+ * Returns normalized coefficients (a0 = 1).
  */
 export function butter2LowpassCoeffs(fcHz, fsHz) {
     const w = Math.tan(Math.PI * fcHz / fsHz);       /* pre-warped */
@@ -116,7 +116,7 @@ export function filtfilt(x, fcHz, fsHz, pad) {
  *
  * This runs BEFORE the low-pass, and the order matters. Pose estimators produce
  * single-frame left/right limb swaps — a genuine outlier, not noise. A low-pass
- * would smear one bad frame across its neighbours instead of removing it.
+ * would smear one bad frame across its neighbors instead of removing it.
  *
  * Returns `{ y, replaced }`.
  */

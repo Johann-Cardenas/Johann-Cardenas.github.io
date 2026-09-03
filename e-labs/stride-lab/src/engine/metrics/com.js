@@ -1,10 +1,10 @@
 /* ============================================================
-   Stride Lab — whole-body centre of mass, and the spring-mass
+   Stride Lab — whole-body center of mass, and the spring-mass
    stiffness that follows from it.
 
    Why this exists, and why it is worth the extra machinery.
 
-   Van Hooren et al. (2024) meta-analysed the observational
+   Van Hooren et al. (2024) meta-analyzed the observational
    literature on running biomechanics and running economy. Of every
    technique variable examined, the ones with significant
    associations were:
@@ -23,7 +23,7 @@
 
    First, vertical oscillation is the best-evidenced thing this app
    can measure, so it should be measured properly. A pelvis landmark
-   is an APPROXIMATION of the centre of mass; it misses the
+   is an APPROXIMATION of the center of mass; it misses the
    counter-motion of the swinging limbs, which is exactly the part
    that differs between runners. A fourteen-segment inertial model
    built from the landmarks already being tracked gives the real
@@ -48,11 +48,11 @@ import { SEGMENTS, SEGMENT_FALLBACK, G, mean, median } from '../types.js';
 import { derivative, missingFraction } from '../signal/filter.js';
 
 /**
- * Whole-body centre of mass, per frame, in pixels.
+ * Whole-body center of mass, per frame, in pixels.
  *
- * Segment masses are renormalised over the segments actually available, so a
+ * Segment masses are renormalized over the segments actually available, so a
  * lost hand shifts the estimate slightly rather than deleting mass from the
- * body and dragging the centre of mass towards the feet.
+ * body and dragging the center of mass toward the feet.
  *
  * @param {import('../signal/condition.js').Conditioned} cond
  * @returns {{x:Float64Array, y:Float64Array, vx:Float64Array, vy:Float64Array,
@@ -87,7 +87,7 @@ export function bodyCoM(cond) {
             sy += seg.mass * (ay + (by - ay) * seg.com);
             m += seg.mass;
         }
-        /* Require most of the body before reporting a centre of mass at all.
+        /* Require most of the body before reporting a center of mass at all.
            A COM computed from half the segments is not a noisy COM, it is a
            different quantity. */
         if (m >= 0.75 * massCovered && m > 0) { x[f] = sx / m; y[f] = sy / m; }
@@ -135,8 +135,8 @@ function maskLike(a, ref) {
  *
  * `Fmax` is an OUTPUT OF THE MODEL, not a measurement, and this function does
  * not return it as one. You cannot measure ground reaction force from video,
- * and nothing in this app is labelled as though you could — the sine-wave
- * approximation to the force trace is a modelling assumption that happens to
+ * and nothing in this app is labeled as though you could — the sine-wave
+ * approximation to the force trace is a modeling assumption that happens to
  * predict stiffness well, not a force sensor.
  *
  * Every input is required. Without body mass and speed there is no estimate,
@@ -176,7 +176,7 @@ export function springMassStiffness(o) {
 }
 
 /**
- * Braking and propulsion, from the horizontal velocity of the centre of mass.
+ * Braking and propulsion, from the horizontal velocity of the center of mass.
  *
  * Reported because it is mechanically informative and it is what people mean
  * by "braking": the body slows through early stance and speeds up again
@@ -202,7 +202,7 @@ export function brakingProfile(com, stride, times, scaleAt) {
     const mpp = scaleAt(stride.strike.t);
     return {
         /* how much horizontal speed is lost between touchdown and the slowest
-           instant of stance, in metres per second */
+           instant of stance, in meters per second */
         brakingMs: (vIn - vMin) * mpp,
         propulsionMs: (vOut - vMin) * mpp,
         rangeMs: (vMax - vMin) * mpp

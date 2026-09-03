@@ -135,7 +135,7 @@ export function plateauEnd(x, index, tol, maxAhead) {
 
 /**
  * The single largest (or smallest) sample in an index window, refined to
- * sub-frame by a parabola through its neighbours.
+ * sub-frame by a parabola through its neighbors.
  *
  * Used instead of a local-extremum search wherever the quantity has exactly
  * ONE extremum in the window by definition — peak knee extension during

@@ -21,15 +21,15 @@ import { atLeast, clamp, ASYMMETRY_ATTENTION, ASYMMETRY_NOTABLE } from '../types
 /**
  * Score one measured value against its band.
  *
- *   reach = |acceptableEdge(on the value's side) - centre(optimal)|
- *   s     = clamp(1 - |value - centre(optimal)| / reach, 0, 1)
+ *   reach = |acceptableEdge(on the value's side) - center(optimal)|
+ *   s     = clamp(1 - |value - center(optimal)| / reach, 0, 1)
  *
  * so a value in the middle of the optimal band scores 1, a value at the edge
  * of the acceptable band scores 0, and everything outside scores 0 rather than
  * going negative.
  *
  * The reach is measured PER SIDE, and that is the whole subtlety. Almost every
- * band here is asymmetric about its own optimal centre — being a little under
+ * band here is asymmetric about its own optimal center — being a little under
  * is rarely as bad as being a lot over, or the reverse — and an earlier version
  * divided by half the total acceptable width, one number for both sides. On the
  * wider side the score then reached zero BEFORE the acceptable edge did: head
@@ -43,10 +43,10 @@ import { atLeast, clamp, ASYMMETRY_ATTENTION, ASYMMETRY_NOTABLE } from '../types
  */
 export function scoreValue(value, band) {
     if (!band || !Number.isFinite(value)) return null;
-    const centre = (band.optimal[0] + band.optimal[1]) / 2;
-    const edge = value < centre ? band.acceptable[0] : band.acceptable[1];
-    const reach = Math.max(1e-9, Math.abs(edge - centre));
-    return clamp(1 - Math.abs(value - centre) / reach, 0, 1);
+    const center = (band.optimal[0] + band.optimal[1]) / 2;
+    const edge = value < center ? band.acceptable[0] : band.acceptable[1];
+    const reach = Math.max(1e-9, Math.abs(edge - center));
+    return clamp(1 - Math.abs(value - center) / reach, 0, 1);
 }
 
 /** Where a value sits relative to its bands, for the UI's range bar. */
@@ -76,7 +76,7 @@ export function scoreAnalysis(metrics, ctx) {
             const v = m.sides[side];
             /* A score is not computed at all below medium confidence. A
                low-confidence measurement scored against a band produces a
-               confident-looking judgement resting on a number the engine has
+               confident-looking judgment resting on a number the engine has
                already said it does not trust. */
             const eligible = v && v.value != null && atLeast(v.confidence, 'medium');
             entry.sides[side] = {

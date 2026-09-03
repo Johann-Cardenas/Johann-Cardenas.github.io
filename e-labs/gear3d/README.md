@@ -40,7 +40,7 @@ npm test          # 141 checks, no dependencies
 
 ## Architecture
 
-Scene units are **metres**; everything else is **millimetres**. The single
+Scene units are **meters**; everything else is **millimeters**. The single
 1/1000 scale lives on the assembly root and nowhere else.
 
 ```
@@ -71,11 +71,11 @@ tire is: all three consume the same `resolveLayout()` output.
 
 Defined once in `src/core/coords.js` and never deviated from:
 
-- `x` longitudinal, **positive rearward**, origin at the front-most axle centreline
-- `y` transverse, **positive right** of the direction of travel, origin on the centreline
+- `x` longitudinal, **positive rearward**, origin at the front-most axle centerline
+- `y` transverse, **positive right** of the direction of travel, origin on the centerline
 - `z` vertical, **positive up**, `z = 0` at the pavement surface
 
-Right-handed, millimetres. three.js is Y-up, so `(x,y,z)_eng → (y,z,x)_three`
+Right-handed, millimeters. three.js is Y-up, so `(x,y,z)_eng → (y,z,x)_three`
 at the scene boundary only — a cyclic permutation, so handedness is preserved.
 Render coordinates never appear in data or exports.
 
@@ -130,7 +130,7 @@ render.
 | Abaqus parameter table | Patch rectangles and pressures, with the assumptions stated in the header. Not a runnable deck — see `DECISIONS.md` §D11. |
 | `unit.json` | The full parametric definition, citations included. |
 | `.gear3d` | Unit + customizations + camera (all four modes) + lighting + annotations + materials + seed. Quad view exports as a single check sheet. |
-| **`.glb`** (glTF) | The visible geometry, in the **engineering frame** and in **millimetres** — the same coordinates as `footprint.csv`, not the render frame and not glTF's metre convention. Instances share geometry, so 34 tyres reference one mesh. Frame and unit are written into the file's `extras`. |
+| **`.glb`** (glTF) | The visible geometry, in the **engineering frame** and in **millimeters** — the same coordinates as `footprint.csv`, not the render frame and not glTF's meter convention. Instances share geometry, so 34 tires reference one mesh. Frame and unit are written into the file's `extras`. |
 | **`.obj`** | Same geometry for pre-processors that will not read glTF. OBJ has no instancing, so a full unit is large — the app says so at export time and suggests isolating an axle or using `.glb`. |
 | Gear matrix | N×M comparison sheet with shared camera, lighting and **shared scale**, so cells are genuinely comparable. |
 
@@ -140,7 +140,7 @@ render.
 
 The **Full unit** isolation level draws the vehicle envelope around the
 running gear. It is a *schematic*, and deliberately looks like one —
-translucent panels with picked-out edges, never a modelled body.
+translucent panels with picked-out edges, never a modeled body.
 
 That is not a shortcut. Gear3D has no sourced body dimensions, so the
 envelope is built only from bounds that are citable: the unit's own overall
@@ -154,14 +154,14 @@ Aircraft show no fuselage: nothing in the sourced data constrains one.
 ## Measuring
 
 Press **`M`** (or the Measure button) and click two features. Endpoints snap
-only to real geometry — tire centres and edges, contact patch centres, axle
-centrelines — because a free-hand endpoint produces a number that looks
+only to real geometry — tire centers and edges, contact patch centers, axle
+centerlines — because a free-hand endpoint produces a number that looks
 authoritative and is quietly wrong. Snap targets follow visibility, so a
 dimension can never be anchored to something the reader cannot see.
 
 Measurements land in `customDimensions`, are undoable, list in the Dimensions
 panel with a delete control, and save into the `.gear3d` file. A measurement
-that is essentially axis-aligned is labelled with that axis and behaves like an
+that is essentially axis-aligned is labeled with that axis and behaves like an
 automatic one; a diagonal is marked `free` and its dimension line is offset
 perpendicular to the measurement itself rather than to a coordinate axis.
 
@@ -170,7 +170,7 @@ perpendicular to the measurement itself rather than to a coordinate axis.
 | Key | Action |
 |---|---|
 | `V` then `1`–`5` | Quad / 3D / Plan / Side / Front |
-| `C` | Gear configuration catalogue |
+| `C` | Gear configuration catalog |
 | `M` | Measure mode |
 | `A` | Annotations on/off |
 | `G` | Ground grid on/off |
@@ -204,10 +204,10 @@ can be read straight from the console, without trusting the UI.
 ## Rendering (v1.1)
 
 - **Image-based lighting.** A studio environment is generated at runtime
-  (`src/scene/environment.js`) and PMREM-filtered. Machined aluminium is
+  (`src/scene/environment.js`) and PMREM-filtered. Machined aluminum is
   defined by what it reflects; without IBL no roughness value makes a rim read
   as metal. Built procedurally rather than loaded from an HDRI so there is no
-  asset dependency, no third-party licence in the repo, and the environment
+  asset dependency, no third-party license in the repo, and the environment
   stays a pure function of the lighting parameters. The softbox positions
   follow the key light's azimuth, so reflections agree with cast shadows.
 - **Tread is geometry, not texture.** The tire is a custom revolve whose outer
@@ -217,9 +217,9 @@ can be read straight from the console, without trusting the UI.
   fine detail geometry cannot afford.
 - **Sidewall and tread are separate materials**, via geometry groups — they are
   genuinely different surfaces.
-- **Wheel handedness is modelled.** Dual wheels bolt together back-to-back, so
+- **Wheel handedness is modeled.** Dual wheels bolt together back-to-back, so
   the two wheels of a dual pair are mirror images, and each disc sits near its
-  outboard face rather than at the tire's centre plane.
+  outboard face rather than at the tire's center plane.
 - **Adaptive detail.** `pickQuality()` steps segment counts down as tire count
   rises, so an isolated axle gets the full treatment and a 34-tire turnpike
   double stays interactive.
@@ -268,7 +268,7 @@ caption — *increase numeric value for additional tandem axles* — means `9Q` 
 a legal name whether or not anyone has built one. Validation is by parsing, not
 by membership of a table.
 
-Press `C` for the **catalogue**: all 21 configurations as Figure 2-style wheel
+Press `C` for the **catalog**: all 21 configurations as Figure 2-style wheel
 plans, each with its wheel count, its reference figure, the aircraft the Order
 names against it, and whether this library answers it with a measured aircraft
 or a schematic. Click one to load it. The thumbnails come from the same
@@ -290,7 +290,7 @@ amber panel notice, and the distinction is worth keeping sharp:
   tandem spacing, body-gear offset — of the ten configurations whose
   representative aircraft appears in the **FAARFIELD 2.1.1 aircraft library**
   (C-130, C-17, DC-10-30, A340-600, An-124, An-225, C-5, B-52, IL-76, F-15).
-  That library publishes per-wheel coordinates in millimetres and is already
+  That library publishes per-wheel coordinates in millimeters and is already
   what this project uses to corroborate the 747 and A380.
 - **Nominal, and declared:** the tire and the wheelbase, on all sixteen.
   FAARFIELD carries a contact patch and an inflation pressure, not a Tire and
@@ -317,7 +317,7 @@ C-5's quadruple axle sits in two pairs with a wider gap up the middle
 1079.5 and 1028.7 mm. Absent the array a bogie is spread evenly at
 `dualSpacing`, which is every other gear in the library.
 
-The C-5 is modelled as **eight axles rather than four bogies**, because each of
+The C-5 is modeled as **eight axles rather than four bogies**, because each of
 its bogies carries a quadruple axle *and* a dual axle — which is exactly why
 §6h declines to name it by the convention at all, and the only honest way to
 express a mixed bogie in a schema built on wheels-across times rows.
@@ -328,9 +328,9 @@ Four Boeing aircraft spanning gear codes **D, 2D and 3D**: 737-800, 757-200,
 767-400ER, 777-300ER.
 
 The important detail: the FAA publishes main gear **outer** width — its data
-dictionary says *"distance between outer tires"* — not the centreline tread.
+dictionary says *"distance between outer tires"* — not the centerline tread.
 Gear3D therefore **derives** the track from it rather than assuming they are
-the same, which on a 777 would misplace every main wheel by nearly a metre per
+the same, which on a 777 would misplace every main wheel by nearly a meter per
 side. With the recorded dual spacings, that derivation reproduces each
 manufacturer's separately published tread to within 10–26 mm on all four
 aircraft; the test suite asserts it.
@@ -346,7 +346,7 @@ outer width survives whatever you enter. Full breakdown in
 777-300ER declared `MLG.tandemSpacing` as assumed; the FAARFIELD 2.1.1 library
 constrains all three. Two were wrong — the 767-400ER by 50.4 mm and the
 777-300ER by 15.0 mm — and the 757-200's assumed 45 in was exactly right. A
-tandem spread is symmetric about the bogie centre, so a wrong one moves both
+tandem spread is symmetric about the bogie center, so a wrong one moves both
 axle lines and leaves the wheelbase, the track and the outer width untouched;
 that is precisely why it could sit undetected for seven releases while every
 other check on those aircraft passed.
@@ -390,7 +390,7 @@ asserts the coverage at library level. 176 checks.
 
 The viewport used to render at `min(devicePixelRatio, 2)`, which on an ordinary
 1x desktop monitor is a pixel ratio of **one**. A viewport around 1000 x 660 CSS
-pixels was therefore rasterised at 0.7 megapixels, and it showed — faceted tyre
+pixels was therefore rasterized at 0.7 megapixels, and it showed — faceted tire
 silhouettes, stair-stepped shadow edges, specular shimmer on the rim lips that
 MSAA cannot touch because it only antialiases geometry edges. The figure export
 has always supersampled; the live view had not.
@@ -400,14 +400,14 @@ and the geometry together, because raising either alone is wasted: more pixels
 on a faceted silhouette merely resolve the facets, and more segments behind a
 1x buffer are never seen.
 
-| Tier | Drawing buffer | Tyre floor | Shadow map |
+| Tier | Drawing buffer | Tire floor | Shadow map |
 |---|---|---|---|
 | Balanced | 1920 px wide | adaptive | 2048 |
 | High | 2560 px | 240 segments | 3072 |
 | **Ultra — UHD** (default) | **3840 px** | 352 segments | 4096 |
 
 On a 1017 x 693 viewport that is **3840 x 2617, 10.0 MP, a 3.78x buffer**. The
-panel and the status strip both print what is actually being rasterised, because
+panel and the status strip both print what is actually being rasterized, because
 the ratio depends on the viewport's CSS width, the display's own pixel ratio and
 what the GL context will allocate — "Ultra" is not the same number of pixels on
 two machines, and a reader who asked for UHD is entitled to check.
@@ -439,13 +439,13 @@ plausible way to lose the WebGL context. The map is the nearest power of two to
 the buffer's long edge, bounded by the tier: 4096 on a desktop viewport,
 2048 on a tablet, 1024 on a phone. No device sniffing.
 
-`Tyre detail` is separate for when you want to override: `auto` scales segment
-count by tyre count, which is what the README has always claimed and what — see
+`Tire detail` is separate for when you want to override: `auto` scales segment
+count by tire count, which is what the README has always claimed and what — see
 below — the app never actually did.
 
 **Bug fixed in passing.** `view.quality` defaulted to `'standard'`, which is a
 valid `QUALITY` key and therefore an *override*, so `pickQuality`'s adaptive
-step-down never ran once. A 34-tyre turnpike double got the same segment count
+step-down never ran once. A 34-tire turnpike double got the same segment count
 as a single isolated axle. The default is now `'auto'`.
 
 ## Quad view — the default since v1.9
@@ -487,7 +487,7 @@ outer width closes a two-strut layout, but it cannot close a four-bogie one.
 The body gear's offset from the wing gear is a free parameter, and no summary
 table carries it.
 
-It turned out to be a **data** problem, not a modelling one. The manufacturers'
+It turned out to be a **data** problem, not a modeling one. The manufacturers'
 own footprint figures — Boeing ACAP §7.2, Airbus AC §7-2-0 — state the track,
 both gear positions and every spacing outright. So for these three the sourcing
 is **inverted**: the geometry is read off the figure and the outer width becomes
@@ -496,7 +496,7 @@ the 747-8 or the A380 at all.
 
 Every dimension is corroborated independently by the FAA's FAARFIELD 2.1.1
 aircraft library, which stores explicit per-wheel coordinates and agrees with
-the manufacturer figures **to the millimetre** — including the A380 body
+the manufacturer figures **to the millimeter** — including the A380 body
 bogie's 20 mm wider middle axle (1530 / 1550 / 1530 mm), which is carried in
 `dualSpacingByRow` rather than averaged away.
 
@@ -533,18 +533,18 @@ why it lasted seven releases.
 tabbable, which a keyboard user had to walk through to reach anything past the
 panel. It now behaves as `role="tree"` implies: a single tab stop with
 Up/Down/Home/End moving within it, and `aria-selected` so the current row is
-announced rather than being conveyed by colour alone.
+announced rather than being conveyed by color alone.
 
 ## Interface (v1.7)
 
-The design system did not change — no new colours, no new controls. What
+The design system did not change — no new colors, no new controls. What
 changed is craft.
 
 **Chrome on the figure follows the figure.** The viewport shows publication
 white in both themes, because it is a preview of the exported figure and the
 annotation halo depends on that. The HUD and axis badge were nonetheless
 themed, so dark mode put near-black pills on white paper. They now take their
-colours from `--g3-fig-*`, declared on the viewport itself. The rule: on the
+colors from `--g3-fig-*`, declared on the viewport itself. The rule: on the
 figure, follow the figure; on the interface, follow the theme.
 
 **The viewport is a sheet.** Given an edge, a mat and a lift, the white plate

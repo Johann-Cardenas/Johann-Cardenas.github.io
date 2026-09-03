@@ -832,7 +832,7 @@
         var p = legPhase(side);
         var reach = scale * 3.4;
         if (p < duty) {
-          // stance: the foot travels backwards under the body
+          // stance: the foot travels backward under the body
           var s = p / duty;
           return { x: cx + reach * (0.32 - s) * 1.6, y: ground - scale * 0.28 };
         }
@@ -851,7 +851,7 @@
         var ux = dx / Math.hypot(dx, dy), uy = dy / Math.hypot(dx, dy);
         var a = (thigh * thigh - shank * shank + d * d) / (2 * d);
         var hh = Math.sqrt(Math.max(0, thigh * thigh - a * a));
-        // the knee bends forwards; pick the anterior root
+        // the knee bends forward; pick the anterior root
         return { x: hip.x + a * ux - uy * hh * -1, y: hip.y + a * uy + ux * hh * -1 };
       }
 
@@ -913,7 +913,7 @@
           } else {
             ctx.strokeStyle = bone[2] === 'L' ? TEAL : bone[2] === 'R' ? AMBER : INK2;
             ctx.lineWidth = 2.4;
-            // right side dashed, never colour alone — as in the app
+            // right side dashed, never color alone — as in the app
             ctx.setLineDash(bone[2] === 'R' ? [6, 4] : []);
           }
           ctx.stroke();

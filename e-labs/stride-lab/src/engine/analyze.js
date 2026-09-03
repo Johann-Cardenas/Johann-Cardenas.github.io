@@ -3,7 +3,7 @@
 
    PURE. No DOM, no worker, no fetch. It takes a PoseSeries in and
    returns a result object. That is what makes it testable against
-   synthetic signals in Node, which is the only way to know the maths
+   synthetic signals in Node, which is the only way to know the math
    is right, and it is why the browser code around it is a thin shell
    rather than the product.
    ============================================================ */
@@ -126,7 +126,7 @@ export function runPipeline(series, opts) {
     if (!dir.agrees) {
         warnings.push({
             code: 'direction-ambiguous',
-            message: 'Foot orientation and body motion point opposite ways. That normally means the video has been mirrored, or the runner is moving backwards. Check the clip before trusting the angles.'
+            message: 'Foot orientation and body motion point opposite ways. That normally means the video has been mirrored, or the runner is moving backward. Check the clip before trusting the angles.'
         });
     }
     const cond = mirrored

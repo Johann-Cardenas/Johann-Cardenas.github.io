@@ -68,7 +68,7 @@ export const RULES = [
             };
         },
         finding: 'You land with your foot well ahead of your hips',
-        mechanism: 'A foot planted far in front of the body arrives with the shin angled backwards, which lengthens the braking phase of each step; landing closer to underneath the hips shortens it.',
+        mechanism: 'A foot planted far in front of the body arrives with the shin angled backward, which lengthens the braking phase of each step; landing closer to underneath the hips shortens it.',
         cue: 'Think about picking the feet up quicker rather than reaching them further forward. The stride shortens by itself.',
         exercises: ['high-cadence-strides', 'ankling', 'wall-drill-posture'],
         references: ['pagnon-2024', 'indicative-unsourced']
@@ -126,7 +126,7 @@ export const RULES = [
             };
         },
         finding: 'Your feet cross the midline as you land',
-        mechanism: 'A narrow or crossing foot placement increases the sideways lever between the foot and the body centre, which is described alongside iliotibial band problems in the literature.',
+        mechanism: 'A narrow or crossing foot placement increases the sideways lever between the foot and the body center, which is described alongside iliotibial band problems in the literature.',
         cue: 'Imagine running with one foot either side of a narrow line rather than along it.',
         exercises: ['lateral-band-walk', 'single-leg-balance', 'step-down'],
         references: ['indicative-unsourced']
@@ -200,7 +200,7 @@ export const RULES = [
             };
         },
         finding: 'You run very upright, or slightly behind vertical',
-        mechanism: 'A small forward lean from the ankles is associated with landing closer under the body; leaning back tends to go with reaching the foot forwards.',
+        mechanism: 'A small forward lean from the ankles is associated with landing closer under the body; leaning back tends to go with reaching the foot forward.',
         cue: 'Lean forward a little from the ankles, not the waist, keeping the body in one line.',
         exercises: ['wall-drill-posture', 'hip-flexor-stretch'],
         references: ['folland-2017']

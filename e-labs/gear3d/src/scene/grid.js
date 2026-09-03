@@ -16,7 +16,7 @@
       A viewport decoration that vanishes on export would break
       the promise that what you frame is what you get.
 
-   Drawn a fraction of a millimetre below z = 0 so it never
+   Drawn a fraction of a millimeter below z = 0 so it never
    z-fights with the contact patches, which live exactly on the
    pavement plane.
    ============================================================ */
@@ -26,7 +26,7 @@
 import * as THREE from 'three';
 import { MM_TO_SCENE } from '../geometry/assembly.js';
 
-/** How far below the pavement plane the grid sits, in scene metres. */
+/** How far below the pavement plane the grid sits, in scene meters. */
 const GRID_DROP = 0.0015;
 
 /**
@@ -45,7 +45,7 @@ function niceStep(v) {
  * @typedef {Object} GridOptions
  * @property {number} [targetDivisions=24] approximate minor divisions across the model
  * @property {number} [majorEvery=5]       heavier line every N minor lines
- * @property {string} [color='#16202b']    line colour
+ * @property {string} [color='#16202b']    line color
  * @property {number} [minorOpacity=0.16]
  * @property {number} [majorOpacity=0.34]
  * @property {number} [extentFactor=1.9]   grid size relative to the model
@@ -67,7 +67,7 @@ export function buildGrid(extentMm, opts = {}) {
     const halfMm = Math.ceil((extentMm * extentFactor) / 2 / spacingMm) * spacingMm;
     const lines = Math.round((halfMm * 2) / spacingMm);
 
-    const colour = new THREE.Color(opts.color ?? '#16202b');
+    const color = new THREE.Color(opts.color ?? '#16202b');
     const minorA = opts.minorOpacity ?? 0.16;
     const majorA = opts.majorOpacity ?? 0.34;
 
@@ -80,7 +80,7 @@ export function buildGrid(extentMm, opts = {}) {
     const step = spacingMm * MM_TO_SCENE;
 
     /**
-     * Alpha falls off with distance from the centre so the grid dissolves
+     * Alpha falls off with distance from the center so the grid dissolves
      * instead of ending in a hard square edge.
      * @param {number} x @param {number} z @param {number} base
      */
@@ -88,12 +88,12 @@ export function buildGrid(extentMm, opts = {}) {
         const r = Math.hypot(x, z) / half;
         const fade = Math.max(0, 1 - Math.pow(Math.min(1, r), 1.7));
         positions.push(x, -GRID_DROP, z);
-        colors.push(colour.r, colour.g, colour.b, base * fade);
+        colors.push(color.r, color.g, color.b, base * fade);
     };
 
     // Each grid line is SUBDIVIDED rather than drawn as a single segment.
     // A full-length segment has both of its endpoints on the outer edge of
-    // the fade, where alpha is zero — and since the colour attribute is
+    // the fade, where alpha is zero — and since the color attribute is
     // interpolated between endpoints, the whole line renders invisible.
     // Subdividing lets the alpha rise through the middle, which is the
     // entire point of a faded grid.
@@ -125,7 +125,7 @@ export function buildGrid(extentMm, opts = {}) {
     const object = new THREE.LineSegments(geo, mat);
     // The grid is generated about its own origin and positioned by the
     // caller: a truck's engineering origin is its FRONT AXLE, not its
-    // centre, so a grid left at the world origin would sit under only the
+    // center, so a grid left at the world origin would sit under only the
     // front half of the vehicle.
     object.name = 'ground-grid';
     object.userData.pickable = false;

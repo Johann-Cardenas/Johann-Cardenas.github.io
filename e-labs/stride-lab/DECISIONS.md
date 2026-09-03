@@ -18,13 +18,13 @@ the deploy, and introducing one would mean restructuring the deployment of the
 whole site for one app. Every other E-Labs app is a standalone SPA of plain
 modules, and consistency across them is worth more here than any framework
 would be. The spec's real requirement — marketing pages ship no JavaScript, the
-analyser is one contained island — is satisfied trivially: the analyser is a
+analyzer is one contained island — is satisfied trivially: the analyzer is a
 separate page and nothing else on the site loads any of it.
 
 **What was kept.** The architectural point the framework choice was serving:
 `src/engine/` imports nothing from the DOM, no browser API and no UI code. It
 takes typed arrays in and returns results, which is what makes it testable
-against synthetic signals, which is the only way to know the maths is right.
+against synthetic signals, which is the only way to know the math is right.
 
 ---
 
@@ -57,7 +57,7 @@ history pane says plainly that history lives in one browser on one device.
 after one visit, and a plotting library from a CDN does not. Every chart must be
 readable at 360 px and must have a table alternative, which is easier to
 guarantee when the rendering is ours. And the figure this app actually needs —
-a mean joint-angle curve with a ±1 SD band across strides, normalised to the
+a mean joint-angle curve with a ±1 SD band across strides, normalized to the
 gait cycle, with the stance fraction shaded — is thirty lines of canvas and an
 awkward fit for a general-purpose library. LEAPS uses Plotly from a CDN; that
 was considered for consistency and rejected on the offline requirement.
@@ -161,11 +161,11 @@ and the window is the sanity constraint the spec already states.
 gives the direction. Hip velocity is computed as a cross-check only.
 
 **Why.** Hip velocity is zero on a treadmill by construction. Foot velocity
-fails too, and less obviously: on a treadmill the planted foot travels backwards
+fails too, and less obviously: on a treadmill the planted foot travels backward
 at belt speed for two thirds of the cycle while the swing lasts about a tenth of
 a second, so once the trajectories are low-pass filtered the sustained backward
 stance velocity is LARGER in magnitude than the brief forward swing peak, and
-"whichever way the foot moves fastest" points backwards. That produced a
+"whichever way the foot moves fastest" points backward. That produced a
 mirrored analysis frame in which every angle was reflected and still looked
 plausible. Foot orientation is an anatomical invariant, available on every
 frame, and independent of the surface.
@@ -199,12 +199,12 @@ different questions and the diagnostics show the spread.
 ## D11. Cluster seeding is mode-seeking
 
 **Decision.** A cluster is seeded on the candidate with the heaviest
-neighbourhood, not on the heaviest candidate.
+neighborhood, not on the heaviest candidate.
 
 **Why.** Seeding on "the heaviest, earliest" meant that when noise scattered
 several candidates of one method across the window, the earliest of them
 anchored the cluster and dragged the event early. The bias therefore grew with
-noise, which is backwards for something meant to be robust: measured contact
+noise, which is backward for something meant to be robust: measured contact
 time fell from 216 ms to 191 ms as landmark noise rose from zero to 0.8% of leg
 length, against a truth of 215 ms. Asking which candidate has the most agreement
 around it does not depend on ordering at all.
@@ -232,7 +232,7 @@ are linear times, not phases.)
 `stanceVx` is estimated from the data.
 
 **Why.** The spec describes M4 as "local minimum of foot horizontal velocity
-magnitude". On a treadmill the planted foot travels backwards at belt speed for
+magnitude". On a treadmill the planted foot travels backward at belt speed for
 the whole of stance, so a detector looking for a stationary foot finds nothing
 at all. What is invariant across surfaces is that stance velocity is CONSTANT,
 whatever its value. `stanceVx` is the median of the slower half of the foot's
@@ -268,7 +268,7 @@ Shipping a model trained on nothing, or quoting FootNet's published accuracy as
 though it were ours, were the dishonest alternatives.
 
 What was rejected outright, per the spec and independently on the merits: a
-black-box model emitting a "running form score". No labelled ground truth for
+black-box model emitting a "running form score". No labeled ground truth for
 good form exists, the output would be unauditable, and explainability is the
 entire product.
 
@@ -383,7 +383,7 @@ amplitude.
 **Why.** A cosine at step frequency puts its lowest point at foot strike and its
 most negative velocity a quarter period earlier. Both are wrong, and wrong in a
 way that would have quietly rewarded the pelvis-based contact detector (M5) for
-agreeing with an artefact. What actually happens: the body is in free fall
+agreeing with an artifact. What actually happens: the body is in free fall
 through flight, so the pelvis arrives at contact with its most negative vertical
 velocity, and the ground reaction force then reverses it, so the lowest point is
 at mid-stance. A test oracle that gets its own physics wrong validates nothing.
@@ -400,7 +400,7 @@ runner nobody resembles.
 
 **Decision.** `tools/make-banner.mjs` renders the E-Labs card image from real
 frames of the synthetic runner and real detected events, through a small
-software rasteriser and Node's zlib.
+software rasterizer and Node's zlib.
 
 **Why.** A picture whose claim is "this is what the app computes" should break
 when the app breaks. It also avoids adding an image dependency for one asset.
@@ -414,12 +414,12 @@ by six other cards and stays dependency-free.
 
 **Decision.** Ears, eyes, a hand centroid per side and a lateral forefoot per
 side were added to the canonical vocabulary, plus four derived points (pelvis,
-neck, head centre, mid-trunk).
+neck, head center, mid-trunk).
 
 **Why.** Everything except the lateral forefoot was already in the pose model's
 output and was being discarded. BlazePose returns 33 landmarks; the engine was
 using 17. The ears in particular are not decoration: Winter places the
-head-and-neck centre of mass at the ear canal, so they are the structural
+head-and-neck center of mass at the ear canal, so they are the structural
 landmark for the head segment, and they survive a profile view — which is the
 view most of this app runs in — far better than the eyes or the nose. The hand
 centroid is the mean of the three finger landmarks, which distinguishes a hand
@@ -433,19 +433,19 @@ honest way for a backend difference to surface, and it is why the adapter exists
 
 ---
 
-## D26. A fourteen-segment centre-of-mass model was added
+## D26. A fourteen-segment center-of-mass model was added
 
 **Decision.** Winter's segment inertial parameters, mass-weighted over fourteen
-segments, giving a whole-body centre of mass per frame. Its vertical oscillation
+segments, giving a whole-body center of mass per frame. Its vertical oscillation
 is reported alongside — not instead of — the pelvis measurement.
 
 **Why.** This was prompted by reading Van Hooren et al. (2024), which pooled the
 observational literature on running biomechanics and running economy. Vertical
-oscillation of the centre of mass is the single strongest association it found
+oscillation of the center of mass is the single strongest association it found
 (r = 0.35, moderate). Most video tools, including this one until now, report the
 vertical movement of a hip landmark and call it vertical oscillation. It is not
 the same quantity: the swinging limbs move opposite to the trunk and partly
-cancel its rise and fall. On the synthetic runner the centre of mass moves
+cancel its rise and fall. On the synthetic runner the center of mass moves
 7.4 cm against the pelvis's 8.5 cm, and a test now asserts that ordering — if it
 ever inverts, the model is wrong.
 
@@ -453,8 +453,8 @@ Since the best-evidenced variable in the app is this one, it was worth measuring
 the thing rather than a proxy for it. Both are reported and the pelvis one says
 which it is.
 
-A lost hand does not delete 0.6% of body mass and drag the centre of mass
-towards the feet: segment masses are renormalised over what is available, and a
+A lost hand does not delete 0.6% of body mass and drag the center of mass
+toward the feet: segment masses are renormalized over what is available, and a
 missing distal landmark falls back to the next joint up.
 
 ---
@@ -483,7 +483,7 @@ answer, so the measurement says what it needs instead of appearing.
 
 **Decision.** Duty factor's band no longer describes it as well evidenced;
 ground contact time carries the same correction; cadence's direction now cites a
-real source; centre-of-mass oscillation and both stiffness terms are the only
+real source; center-of-mass oscillation and both stiffness terms are the only
 bands in the app rated `moderate`.
 
 **Why.** This app shipped a band comment reading "Duty factor is one of the
@@ -563,13 +563,13 @@ versions, and the display-dimension swap.
 **Decision.** Frames are rotated to display orientation before inference, in the
 same pass as the downscale.
 
-**Why not rotate the landmarks afterwards**, which moves no pixels: because the
+**Why not rotate the landmarks afterward**, which moves no pixels: because the
 model has to see an upright person to produce landmarks worth rotating. The
 whole problem is upstream of the coordinates.
 
 **Why it also fixes a disagreement between the two decode paths.** A `<video>`
 element applies the display matrix itself, so the fallback decoder was already
-producing upright frames while WebCodecs was not. The same clip analysed in two
+producing upright frames while WebCodecs was not. The same clip analyzed in two
 browsers would have given two different answers. The fallback now reports zero
 rotation and the WebCodecs path reports the real one, so both arrive upright.
 
@@ -608,7 +608,7 @@ clip, step length, stride length and speed are not reported for an overground
 capture, and the warning says to select Treadmill and enter the belt speed.
 
 **Why.** On the real test clip, marked "road" but actually a treadmill, the app
-reported a speed of **0.10 m/s — a pace of 166 minutes per kilometre**. The
+reported a speed of **0.10 m/s — a pace of 166 minutes per kilometer**. The
 displacement between foot strikes was near zero because the runner was not
 going anywhere relative to the camera.
 
@@ -624,7 +624,7 @@ quietly corrupts a whole column of the report.
 ## D34. An oblique camera caps every plane-sensitive measurement
 
 **Decision.** When the view classifies as oblique, the 24 measurements marked
-`planeSensitive` in the catalogue are capped at low confidence — which puts them
+`planeSensitive` in the catalog are capped at low confidence — which puts them
 below the threshold for scoring and for firing any rule. They are still
 displayed, with the reason attached.
 
@@ -637,8 +637,8 @@ metrics, the vertical oscillations — keep their normal confidence.
 
 This is the difference between a tool that produces a report from any clip and
 one that says which clips it can read. The real test clip is 30 fps, oblique,
-and on a treadmill labelled as road; after these fixes it yields cadence and
-centre-of-mass oscillation, three warnings each naming what to change, and
+and on a treadmill labeled as road; after these fixes it yields cadence and
+center-of-mass oscillation, three warnings each naming what to change, and
 nothing else. That is the correct output for that recording.
 
 ---
@@ -660,7 +660,7 @@ different joints or disagree about a sign convention.
 **Why dimension lines.** "Overstride 11% of standing height" is an abstraction.
 The same thing drawn between the plumb line through the hips and the ankle, on
 the frame where it is taken, is a fact about the picture. Same for the
-centre-of-mass excursion, which is otherwise the least visible of the
+center-of-mass excursion, which is otherwise the least visible of the
 well-evidenced variables. The construction lines — ground, plumb, hip horizon,
 scale bar — exist so the reader can see what each measurement is taken FROM.
 
@@ -695,7 +695,7 @@ illegibility on exactly the videos people actually record.
 
 **Decision.** The Demo button became a dropdown with two entries. The synthetic
 runner stays; a real phone clip of somebody on a treadmill was added beside it,
-shipped in `demo/` and analysed through the ordinary path — fetch, pre-flight,
+shipped in `demo/` and analyzed through the ordinary path — fetch, pre-flight,
 decode, pose over every frame, the same refusals as anyone's own video.
 
 **Why two.** They answer different questions and neither can answer the other's.
@@ -730,7 +730,7 @@ demo answers the same thing twice.
 
 **What is quoted rather than measured.** Standing height 1.68 m, mass 75 kg and
 belt speed 3.33 m/s were supplied by the person filmed. Height sets the
-pixels-to-metres scale; belt speed cannot be measured at all here, because a
+pixels-to-meters scale; belt speed cannot be measured at all here, because a
 runner on a treadmill does not move through the frame. All three live in
 `stated` in `src/ui/demos.js` and the report says so on its face, so what the
 app was told stays separable from what the app worked out.
@@ -756,12 +756,12 @@ shifted control exactly. The camera does not move. The number is the runner's.
 
 ## D37. A score of zero must mean out of range, and used not to
 
-**Decision.** `scoreValue` now divides by the distance from the optimal centre
+**Decision.** `scoreValue` now divides by the distance from the optimal center
 to the acceptable edge **on the side the value falls**, not by half the total
 acceptable width.
 
 **Why.** Twenty-one of the twenty-four bands here are asymmetric about their own
-optimal centre — being a little under is rarely as bad as being a lot over. One
+optimal center — being a little under is rarely as bad as being a lot over. One
 half-width for both sides puts the zero closer in on the wider side, inside the
 acceptable range. Head oscillation, optimal 4–9 cm and acceptable 3–12, scored a
 flat zero from 11 cm upward while `bandStatus` went on calling 11.7 cm
@@ -778,7 +778,7 @@ equivalence; reverting the formula fails those checks, which is the negative
 control.
 
 **Found by the filmed demo**, which put "Posture and alignment 0 / 100" on
-screen underneath a measurement labelled near-typical. It now reads 5 / 100.
+screen underneath a measurement labeled near-typical. It now reads 5 / 100.
 
 ---
 
@@ -788,7 +788,7 @@ screen underneath a measurement labelled near-typical. It now reads 5 / 100.
 controller into `src/ui/propose.js`; app.js keeps only the measuring, which
 needs a canvas, and the applying, which needs the sliders.
 
-**Why.** The heuristic's important behaviour is that it *declines* — a clip of
+**Why.** The heuristic's important behavior is that it *declines* — a clip of
 somebody running the whole way through has no quiet part to skip, every window
 scores the same, and moving the selection then looks like a decision and is a
 coin toss. That guard cannot be exercised against the shipped demo, because the
@@ -821,7 +821,7 @@ of content box for a 23.8px line. Invisible on "Metric", obvious the moment
 "Demo — synthetic runner" went in one. Now `min-height` plus a stated
 `line-height: 1.25`.
 
-**The Analyse run button was unreachable on a phone.** `.sl-topbar` wraps, but
+**The Analyze run button was unreachable on a phone.** `.sl-topbar` wraps, but
 `.sl-topbar-group` is a flex *item* and did not, so the group holding the device
 chip, the demo control and the two buttons stayed one row wide however narrow
 the viewport got. `.sl-workspace` uses `overflow: clip` below 1080 (so its
@@ -851,7 +851,7 @@ consumer 11.5 fps with 51 of 117 frames dropped, and real inference about 5.
 The pipeline then read 5 fps off the timestamps of the frames that survived,
 refused the clip, and told the user to **re-record at 60 fps or higher** — about
 a recording that was already 30, and whose frames the app had thrown away
-itself. After the fix the same clip yields 119 frames at 29.8 fps and analyses.
+itself. After the fix the same clip yields 119 frames at 29.8 fps and analyzes.
 
 This is not an exotic path. The demuxer here is ISO-BMFF only, so **every WebM
 file falls back to it on every browser**, including files the app's own camera
@@ -901,13 +901,13 @@ so did these.
 **The picker was unreachable by keyboard.** The choice is a gate — the analysis
 stops until it is answered — and the only way to answer was clicking a canvas.
 There is now a real `<button>` per candidate beside the prompt, carrying the
-same number its box is labelled with, focused on open, and highlighting its box
+same number its box is labeled with, focused on open, and highlighting its box
 on focus so the two readings of one choice stay tied together.
 
 **The picker was drawn into a letterbox.** The live canvas is pinned to 360px
 for the progress display, which left each candidate about 80px wide to hit on a
 desktop viewport and far less on a phone. It grows to `min(64vh, 620px)` while
-choosing and is put back afterwards.
+choosing and is put back afterward.
 
 **The share link was built and never shown.** `shareLink` awaited
 `navigator.clipboard.writeText` and only then wrote any text. Without transient
@@ -989,7 +989,7 @@ relative, the overlay would have been drawn over unrelated video.
 **Decision.** `@media print` redefines the palette tokens to the light set, and
 a `beforeprint` handler re-renders the charts in the light theme.
 
-**Why.** This app is dark-first and browsers do not print background colours.
+**Why.** This app is dark-first and browsers do not print background colors.
 `--sl-ink` is `#e8eef9`, so a reader in dark mode — the default — pressed
 "Printable report" and got near-white text on white paper. The feature produced
 a blank sheet for most of its users. Charts are canvases and print the bitmap
@@ -1069,7 +1069,7 @@ Measured, overlay-to-picture lag in frames, median (max):
 
 `requestVideoFrameCallback` fires once per presented frame and hands over that
 frame's exact `mediaTime`, so the pose drawn is the pose of the picture
-underneath it at any rate, by construction. The callback chain is cancelled
+underneath it at any rate, by construction. The callback chain is canceled
 when the player is re-armed, or two chains would draw over each other.
 
 ---
@@ -1106,7 +1106,7 @@ things that can disagree, and these already had.
 **Found.** `MediaRecorder` writes a FRAGMENTED container — samples live in
 `moof`/`trun` boxes rather than in the `moov` sample table — and it cannot write
 anything else, because it is describing a stream whose final length it does not
-yet know. The demuxer here reads sample tables; it recognises the fragmented
+yet know. The demuxer here reads sample tables; it recognizes the fragmented
 layout and reports `reason: 'fragmented'`, so `probe` correctly falls back.
 Verified by recording through `MediaRecorder` and parsing the result: the file
 carries `moof`, `traf`, `trun` and `mvex`, and `parseMp4` returns
@@ -1114,7 +1114,7 @@ carries `moof`, `traf`, `trun` and `mvex`, and `parseMp4` returns
 
 **So every clip recorded inside this app takes the `<video>` playback decoder,
 always.** Nothing recorded here will ever reach the WebCodecs fast path. That is
-correct behaviour and it is surfaced to the user as reduced timing precision —
+correct behavior and it is surfaced to the user as reduced timing precision —
 and it is why the playback decoder silently dropping four fifths of its frames
 (D40) mattered as much as it did: it was not an edge case, it was the path this
 feature uses every time. Preferring `video/mp4` over WebM in the recorder's
@@ -1158,8 +1158,8 @@ These were answered with the conservative default and are easy to change.
 2. **Single headline score** (§5.12) — not shipped. See D16.
 3. **Validation data** (§13.4) — none available. `/science` states this plainly
    and publishes only what was actually measured, against synthetic ground truth,
-   labelled as such.
-4. **Pronation** (§5.10 #30) — shipped as an explicitly labelled low-confidence
+   labeled as such.
+4. **Pronation** (§5.10 #30) — shipped as an explicitly labeled low-confidence
    proxy called "Rearfoot alignment (proxy)", never "pronation", with the reason
    it cannot be measured stated on the metric and again on `/science`. Retained
    rather than dropped so a reader looking for pronation finds the explanation

@@ -3,7 +3,7 @@
    ------------------------------------------------------------
    A dimension is only worth drawing if its endpoints sit exactly
    on real features. Free-hand endpoints produce numbers that look
-   authoritative and are quietly wrong by a few millimetres, which
+   authoritative and are quietly wrong by a few millimeters, which
    is worse than no measurement at all — so a user-added dimension
    can ONLY be anchored to a snap point generated here.
 
@@ -12,8 +12,8 @@
 
    The candidate set is deliberately small and semantic. Every
    point is somewhere an engineer would actually measure to:
-   tire centres and edges, contact patch centres, axle
-   centrelines. Offering arbitrary surface points would let a
+   tire centers and edges, contact patch centers, axle
+   centerlines. Offering arbitrary surface points would let a
    user anchor to a spot on a sidewall with no defined meaning.
    ============================================================ */
 
@@ -26,25 +26,25 @@
  * @property {string} id
  * @property {SnapKind} kind
  * @property {string} label     shown while hovering
- * @property {Vec3} point       engineering millimetres
+ * @property {Vec3} point       engineering millimeters
  * @property {string} ownerId   the wheel or axle this belongs to
  * @property {number} priority  breaks ties when targets overlap on screen
  */
 
 /**
- * @typedef {'tire-centre'|'tire-edge'|'tire-top'|'contact'|'axle-centreline'|'axle-end'|'ground'} SnapKind
+ * @typedef {'tire-center'|'tire-edge'|'tire-top'|'contact'|'axle-centerline'|'axle-end'|'ground'} SnapKind
  */
 
 /**
  * Tie-break order when several targets land within the pick radius.
- * Centres beat edges because a measurement between centres is almost always
+ * Centers beat edges because a measurement between centers is almost always
  * what was meant; ground points come last because they are the least
  * specific thing under the cursor.
  */
 export const SNAP_PRIORITY = Object.freeze({
-    'tire-centre': 6,
+    'tire-center': 6,
     'contact': 5,
-    'axle-centreline': 5,
+    'axle-centerline': 5,
     'tire-edge': 4,
     'tire-top': 3,
     'axle-end': 2,
@@ -53,11 +53,11 @@ export const SNAP_PRIORITY = Object.freeze({
 
 /** Human labels, used in the hover readout. */
 export const SNAP_LABEL = Object.freeze({
-    'tire-centre': 'tire centre',
+    'tire-center': 'tire center',
     'tire-edge': 'tire edge',
     'tire-top': 'tire crown',
-    'contact': 'contact patch centre',
-    'axle-centreline': 'axle centreline',
+    'contact': 'contact patch center',
+    'axle-centerline': 'axle centerline',
     'axle-end': 'axle end',
     'ground': 'ground'
 });
@@ -87,7 +87,7 @@ export function buildSnapPoints(layout, opts = {}) {
     for (const w of layout.wheels) {
         if (!visible(w)) continue;
         const g = w.geometry;
-        add('tire-centre', `${w.id}:c`, w.id, { x: w.x, y: w.y, z: w.z });
+        add('tire-center', `${w.id}:c`, w.id, { x: w.x, y: w.y, z: w.z });
         add('tire-top', `${w.id}:t`, w.id, { x: w.x, y: w.y, z: w.z + g.freeRadius });
         add('contact', `${w.id}:p`, w.id, { x: w.x, y: w.y, z: 0 });
         // The two sidewall faces, at hub height — the points a caliper would
@@ -99,7 +99,7 @@ export function buildSnapPoints(layout, opts = {}) {
     const shownAxles = new Set(layout.wheels.filter(visible).map((w) => w.axleId));
     for (const a of layout.axles) {
         if (!shownAxles.has(a.id)) continue;
-        add('axle-centreline', `${a.id}:c`, a.id, { x: a.x, y: 0, z: a.axleHeight });
+        add('axle-centerline', `${a.id}:c`, a.id, { x: a.x, y: 0, z: a.axleHeight });
         add('ground', `${a.id}:g`, a.id, { x: a.x, y: 0, z: 0 });
         if (a.trackWidth > 0) {
             add('axle-end', `${a.id}:l`, a.id, { x: a.x, y: -a.trackWidth / 2, z: a.axleHeight }, 'left');
@@ -114,7 +114,7 @@ export function buildSnapPoints(layout, opts = {}) {
  * Drop targets that coincide in space, keeping the highest-priority one.
  *
  * Coincidences are real: a single-wheel motorcycle axle has zero track, so
- * its ends sit exactly on its centreline. Two stacked targets one pixel
+ * its ends sit exactly on its centerline. Two stacked targets one pixel
  * apart make a picker feel broken because which one you get looks random.
  *
  * @param {SnapPoint[]} points
@@ -149,7 +149,7 @@ export function nearestSnapPoint(points, project, sx, sy, maxPx = 26) {
         const d = Math.hypot(s.x - sx, s.y - sy);
         if (d > maxPx) continue;
         // Nearer wins; on a near-tie (within 6 px) the more meaningful
-        // target wins, so centres are not stolen by the edges beside them.
+        // target wins, so centers are not stolen by the edges beside them.
         if (!best
             || d < best.distance - 6
             || (Math.abs(d - best.distance) <= 6 && p.priority > best.snap.priority)) {
@@ -168,11 +168,11 @@ export function nearestSnapPoint(points, project, sx, sy, maxPx = 26) {
  * measurement itself rather than to a coordinate axis.
  *
  * The tolerance is deliberately tight. A measurement 99 % aligned to x still
- * has a perpendicular component — over 17 m of truck that is two metres — and
+ * has a perpendicular component — over 17 m of truck that is two meters — and
  * offsetting it as though it were purely longitudinal skews the dimension
  * line against the thing it measures. Genuinely axis-aligned picks (two tire
- * centres on one axle, a contact patch to its own hub) differ on exactly one
- * axis and land at 1.0, so nothing that should be axis-labelled misses out.
+ * centers on one axle, a contact patch to its own hub) differ on exactly one
+ * axis and land at 1.0, so nothing that should be axis-labeled misses out.
  *
  * @param {Vec3} from
  * @param {Vec3} to

@@ -6,7 +6,7 @@
     "TWO DIFFERENT SOURCING METHODS LIVE IN THIS FILE.",
     "",
     "The four two-strut aircraft (737, 757, 767, 777) record `mainGearOuterWidth`",
-    "as authoritative, from the FAA database, and DERIVE the gear centrelines",
+    "as authoritative, from the FAA database, and DERIVE the gear centerlines",
     "from it, because no consulted source publishes their track directly. See",
     "index.json for that method.",
     "",
@@ -51,13 +51,13 @@
           "id": "MLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 1,
           "x": 15606, "y": -2863, "dualSpacing": 864, "tandemSpacing": null,
           "tire": "H44.5x16.5-21",
-          "source": "Longitudinal position = the FAA wheelbase of 51.2 ft (15 606 mm). Transverse position derived from the FAA main gear outer width of 23.0 ft (7010 mm), which the FAA data dictionary defines as the distance between outer tires: track = 7010 - 864 - 419.1 = 5727 mm, so the strut centreline sits at 2863 mm. That derived track agrees with Boeing's separately published 737 tread of 18 ft 9 in (5715 mm) to within 12 mm, which is the cross-check that supports the 864 mm (34 in) dual spacing. Tire H44.5x16.5-21, 28PR from Boeing 737 ACAP section 7.2.1."
+          "source": "Longitudinal position = the FAA wheelbase of 51.2 ft (15 606 mm). Transverse position derived from the FAA main gear outer width of 23.0 ft (7010 mm), which the FAA data dictionary defines as the distance between outer tires: track = 7010 - 864 - 419.1 = 5727 mm, so the strut centerline sits at 2863 mm. That derived track agrees with Boeing's separately published 737 tread of 18 ft 9 in (5715 mm) to within 12 mm, which is the cross-check that supports the 864 mm (34 in) dual spacing. Tire H44.5x16.5-21, 28PR from Boeing 737 ACAP section 7.2.1."
         },
         {
           "id": "MLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 1,
           "x": 15606, "y": 2863, "dualSpacing": 864, "tandemSpacing": null,
           "tire": "H44.5x16.5-21",
-          "source": "Mirror of MLG-L about the aircraft centreline; same derivation."
+          "source": "Mirror of MLG-L about the aircraft centerline; same derivation."
         }
       ],
       "notes": "The most common narrowbody in the world traffic mix and the usual reference case for a D gear.",
@@ -94,13 +94,13 @@
           "id": "MLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 18288, "y": -3651, "dualSpacing": 864, "tandemSpacing": 1143,
           "tire": "H40x14.5-19",
-          "source": "Longitudinal position = the FAA wheelbase of 60.0 ft (18 288 mm), measured to the main gear centroid, so the tandem spread does not shift it. Transverse position derived from the FAA main gear outer width of 28.0 ft (8534 mm): track = 8534 - 864 - 368.3 = 7302 mm, strut centreline at 3651 mm. That agrees with Boeing's published 757 tread of 24 ft (7315 mm) to within 13 mm. Tire H40x14.5-19 from Boeing 757 ACAP section 7.2. ASSUMED: tandem spacing 1143 mm (45 in) — no source consulted constrains it, and the wheelbase is measured to the centroid so nothing else pins it down. Declared in assumedFields. Tandem spacing 1143 mm is no longer assumed: it is the FAARFIELD 2.1.1 aircraft library value for B757-200 (wheel coordinates Y ±571.5 mm), the same source this library already relies on to corroborate the 747 and A380 geometry. The v1.2 assumption of 45 in was exactly right, and is now sourced rather than guessed."
+          "source": "Longitudinal position = the FAA wheelbase of 60.0 ft (18 288 mm), measured to the main gear centroid, so the tandem spread does not shift it. Transverse position derived from the FAA main gear outer width of 28.0 ft (8534 mm): track = 8534 - 864 - 368.3 = 7302 mm, strut centerline at 3651 mm. That agrees with Boeing's published 757 tread of 24 ft (7315 mm) to within 13 mm. Tire H40x14.5-19 from Boeing 757 ACAP section 7.2. ASSUMED: tandem spacing 1143 mm (45 in) — no source consulted constrains it, and the wheelbase is measured to the centroid so nothing else pins it down. Declared in assumedFields. Tandem spacing 1143 mm is no longer assumed: it is the FAARFIELD 2.1.1 aircraft library value for B757-200 (wheel coordinates Y ±571.5 mm), the same source this library already relies on to corroborate the 747 and A380 geometry. The v1.2 assumption of 45 in was exactly right, and is now sourced rather than guessed."
         },
         {
           "id": "MLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 18288, "y": 3651, "dualSpacing": 864, "tandemSpacing": 1143,
           "tire": "H40x14.5-19",
-          "source": "Mirror of MLG-L about the aircraft centreline; same derivation."
+          "source": "Mirror of MLG-L about the aircraft centerline; same derivation."
         }
       ],
       "notes": "A 2D gear on a narrowbody airframe — the classic high-ACN narrowbody and a useful contrast with the 737's single-axle D gear at similar span.",
@@ -137,13 +137,13 @@
           "id": "MLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 26152, "y": -4651, "dualSpacing": 1163, "tandemSpacing": 1371.6,
           "tire": "50x20.0R22",
-          "source": "Longitudinal position = the FAA wheelbase of 85.8 ft (26 152 mm). Transverse position derived from the FAA main gear outer width of 36.0 ft (10 973 mm): track = 10973 - 1163 - 508 = 9302 mm, strut centreline at 4651 mm. That agrees with Boeing's published 767 tread of 30 ft 6 in (9296 mm) to within 6 mm. Tire 50x20.0R22, 32PR from Boeing 767 ACAP section 7.2.3. CORRECTED in v1.6.1: this entry previously carried a dual spacing of 1143 mm, taken as a round 45 in because no consulted source stated it. The FAARFIELD 2.1.1 aircraft library gives 45.800 in (1163.32 mm) as an explicit wheel coordinate (X +/-22.900 in), and it is the better number in the strongest available sense — because the track is DERIVED from the dual spacing, the error propagated, and 1143 was what made this aircraft's tread cross-check the worst of the four at 26 mm against 12, -13 and -10 for the others. At 1163 the residual falls to 6 mm and the outlier disappears. What moves: the OUTBOARD tire of each dual pair does not move at all, because the FAA outer width is the authoritative datum and is held; the INBOARD tire moves 20 mm inboard, and the strut centreline 10 mm. That is the derivation behaving exactly as intended — a corrected dual spacing is absorbed inside the fixed outer width rather than displacing the whole gear. ASSUMED: tandem spacing 1422 mm (56 in), declared in assumedFields; FAARFIELD gives 54.000 in for this too, but replacing it is a separate change and is not made here. Tandem spacing 1371.6 mm is no longer assumed: it is the FAARFIELD 2.1.1 aircraft library value for B767-400 ER (wheel coordinates Y ±685.8 mm), the same source this library already relies on to corroborate the 747 and A380 geometry. CORRECTED in v1.9 from the v1.2 assumption of 1422 mm (56 in), which was 50.4 mm too long. The tandem spread is symmetric about the bogie centre, so it moves both axle lines and leaves the wheelbase, the track and the outer width untouched — which is exactly the property that let a wrong value sit here undetected while every other check on this aircraft passed."
+          "source": "Longitudinal position = the FAA wheelbase of 85.8 ft (26 152 mm). Transverse position derived from the FAA main gear outer width of 36.0 ft (10 973 mm): track = 10973 - 1163 - 508 = 9302 mm, strut centerline at 4651 mm. That agrees with Boeing's published 767 tread of 30 ft 6 in (9296 mm) to within 6 mm. Tire 50x20.0R22, 32PR from Boeing 767 ACAP section 7.2.3. CORRECTED in v1.6.1: this entry previously carried a dual spacing of 1143 mm, taken as a round 45 in because no consulted source stated it. The FAARFIELD 2.1.1 aircraft library gives 45.800 in (1163.32 mm) as an explicit wheel coordinate (X +/-22.900 in), and it is the better number in the strongest available sense — because the track is DERIVED from the dual spacing, the error propagated, and 1143 was what made this aircraft's tread cross-check the worst of the four at 26 mm against 12, -13 and -10 for the others. At 1163 the residual falls to 6 mm and the outlier disappears. What moves: the OUTBOARD tire of each dual pair does not move at all, because the FAA outer width is the authoritative datum and is held; the INBOARD tire moves 20 mm inboard, and the strut centerline 10 mm. That is the derivation behaving exactly as intended — a corrected dual spacing is absorbed inside the fixed outer width rather than displacing the whole gear. ASSUMED: tandem spacing 1422 mm (56 in), declared in assumedFields; FAARFIELD gives 54.000 in for this too, but replacing it is a separate change and is not made here. Tandem spacing 1371.6 mm is no longer assumed: it is the FAARFIELD 2.1.1 aircraft library value for B767-400 ER (wheel coordinates Y ±685.8 mm), the same source this library already relies on to corroborate the 747 and A380 geometry. CORRECTED in v1.9 from the v1.2 assumption of 1422 mm (56 in), which was 50.4 mm too long. The tandem spread is symmetric about the bogie center, so it moves both axle lines and leaves the wheelbase, the track and the outer width untouched — which is exactly the property that let a wrong value sit here undetected while every other check on this aircraft passed."
         },
         {
           "id": "MLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 26152, "y": 4651, "dualSpacing": 1163, "tandemSpacing": 1371.6,
           "tire": "50x20.0R22",
-          "source": "Mirror of MLG-L about the aircraft centreline; same derivation."
+          "source": "Mirror of MLG-L about the aircraft centerline; same derivation."
         }
       ],
       "notes": "A widebody 2D gear. Useful against the 757 for showing how the same gear code scales.",
@@ -180,13 +180,13 @@
           "id": "MLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 3,
           "x": 31212, "y": -5481, "dualSpacing": 1397, "tandemSpacing": 1463.04,
           "tire": "52x21.0R22",
-          "source": "Longitudinal position = the FAA wheelbase of 102.4 ft (31 212 mm), measured to the main gear centroid. Transverse position derived from the FAA main gear outer width of 42.3 ft (12 893 mm): track = 12893 - 1397 - 533.4 = 10963 mm, strut centreline at 5481 mm. That agrees with Boeing's published 777 tread of 36 ft (10 973 mm) to within 10 mm, supporting the 1397 mm (55 in) dual spacing. Tire 52x21.0R22, 36PR from Boeing 777 ACAP section 7.2. ASSUMED: tandem spacing 1448 mm (57 in) between adjacent rows of the six-wheel truck, declared in assumedFields. Tandem spacing 1463.04 mm is no longer assumed: it is the FAARFIELD 2.1.1 aircraft library value for B777-300 ER (wheel coordinates Y -1463.04, 0 and +1463.04 mm), the same source this library already relies on to corroborate the 747 and A380 geometry. CORRECTED in v1.9 from the v1.2 assumption of 1448 mm (57 in), which was 15.0 mm too short."
+          "source": "Longitudinal position = the FAA wheelbase of 102.4 ft (31 212 mm), measured to the main gear centroid. Transverse position derived from the FAA main gear outer width of 42.3 ft (12 893 mm): track = 12893 - 1397 - 533.4 = 10963 mm, strut centerline at 5481 mm. That agrees with Boeing's published 777 tread of 36 ft (10 973 mm) to within 10 mm, supporting the 1397 mm (55 in) dual spacing. Tire 52x21.0R22, 36PR from Boeing 777 ACAP section 7.2. ASSUMED: tandem spacing 1448 mm (57 in) between adjacent rows of the six-wheel truck, declared in assumedFields. Tandem spacing 1463.04 mm is no longer assumed: it is the FAARFIELD 2.1.1 aircraft library value for B777-300 ER (wheel coordinates Y -1463.04, 0 and +1463.04 mm), the same source this library already relies on to corroborate the 747 and A380 geometry. CORRECTED in v1.9 from the v1.2 assumption of 1448 mm (57 in), which was 15.0 mm too short."
         },
         {
           "id": "MLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 3,
           "x": 31212, "y": 5481, "dualSpacing": 1397, "tandemSpacing": 1463.04,
           "tire": "52x21.0R22",
-          "source": "Mirror of MLG-L about the aircraft centreline; same derivation."
+          "source": "Mirror of MLG-L about the aircraft centerline; same derivation."
         }
       ],
       "notes": "Six wheels per main truck — the 3D gear, and the heaviest twin in service. Fourteen tires in total.",
@@ -223,25 +223,25 @@
           "id": "WLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 24067, "y": -5499, "dualSpacing": 1118, "tandemSpacing": 1473,
           "tire": "H49x19.0-22",
-          "source": "WING gear, the outboard pair. Longitudinal position 24 067 mm = 78 ft 11.5 in, read directly from the ACAP section 7.2.1 footprint figure. Track 10 998 mm = 36 ft 1 in from the same figure, putting the strut centreline at 5499 mm — published here, not derived from the outer width as it must be for the two-strut aircraft. Cross-check: 10 998 + 1118 + 482.6 = 12 598.6 mm against the figure's own stated outer width of 41 ft 4 in (12 598.4 mm), agreeing to within 1 mm. Dual spacing 44 in and tandem spacing 58 in are the figure's TYPICAL values, and match the FAARFIELD aircraft library's B747-400 wheel coordinates exactly (X +/-22 in, Y 58 in). Tire H49X19.0-22, 32PR from the same figure."
+          "source": "WING gear, the outboard pair. Longitudinal position 24 067 mm = 78 ft 11.5 in, read directly from the ACAP section 7.2.1 footprint figure. Track 10 998 mm = 36 ft 1 in from the same figure, putting the strut centerline at 5499 mm — published here, not derived from the outer width as it must be for the two-strut aircraft. Cross-check: 10 998 + 1118 + 482.6 = 12 598.6 mm against the figure's own stated outer width of 41 ft 4 in (12 598.4 mm), agreeing to within 1 mm. Dual spacing 44 in and tandem spacing 58 in are the figure's TYPICAL values, and match the FAARFIELD aircraft library's B747-400 wheel coordinates exactly (X +/-22 in, Y 58 in). Tire H49X19.0-22, 32PR from the same figure."
         },
         {
           "id": "WLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 24067, "y": 5499, "dualSpacing": 1118, "tandemSpacing": 1473,
           "tire": "H49x19.0-22",
-          "source": "Mirror of WLG-L about the aircraft centreline; same derivation."
+          "source": "Mirror of WLG-L about the aircraft centerline; same derivation."
         },
         {
           "id": "BLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 27140, "y": -1918, "dualSpacing": 1118, "tandemSpacing": 1473,
           "tire": "H49x19.0-22",
-          "source": "BODY gear, the inboard pair — the geometry whose absence kept this aircraft out of the library until now. Longitudinal position = the wing gear's 24 067 mm plus the figure's 10 ft 1 in (3073 mm) body-gear offset. Track 3835 mm = 12 ft 7 in, strut centreline 1918 mm. Both read directly from the ACAP section 7.2.1 footprint figure. Dual and tandem spacings are that figure's TYPICAL values, which it applies to all four main bogies."
+          "source": "BODY gear, the inboard pair — the geometry whose absence kept this aircraft out of the library until now. Longitudinal position = the wing gear's 24 067 mm plus the figure's 10 ft 1 in (3073 mm) body-gear offset. Track 3835 mm = 12 ft 7 in, strut centerline 1918 mm. Both read directly from the ACAP section 7.2.1 footprint figure. Dual and tandem spacings are that figure's TYPICAL values, which it applies to all four main bogies."
         },
         {
           "id": "BLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 27140, "y": 1918, "dualSpacing": 1118, "tandemSpacing": 1473,
           "tire": "H49x19.0-22",
-          "source": "Mirror of BLG-L about the aircraft centreline; same derivation."
+          "source": "Mirror of BLG-L about the aircraft centerline; same derivation."
         }
       ],
       "notes": "Wing-plus-body gear: four main struts, sixteen main tires, eighteen in total. The body gear sits 3073 mm aft of the wing gear and 3581 mm inboard of it, so the four bogies share neither an axle line nor a track, and no single track figure describes the aircraft. The stated wheelbase is the main gear centroid, midway between wing and body gear; every bogie carries four tires, so the load centroid is the same point. NOTE: the FAA Aircraft Characteristics Database lists this aircraft's wheelbase as 87.9 ft (26 792 mm), which matches neither the wing gear, nor the body gear, nor their centroid. Boeing's figure gives 84.0 ft, the commonly published 747-400 wheelbase, and that is what is used here.",
@@ -279,25 +279,25 @@
           "id": "WLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 28118, "y": -5499, "dualSpacing": 1189, "tandemSpacing": 1435,
           "tire": "52x21.0R22",
-          "source": "WING gear, the outboard pair. Longitudinal position 28 118 mm = 92 ft 3 in, and track 10 998 mm = 36 ft 1 in (strut centreline 5499 mm), both read directly from the ACAP section 7.2 footprint figure. Cross-check: 10 998 + 1189 + 533.4 = 12 720.4 mm against the figure's stated outer width of 41 ft 9 in (12 725.4 mm), agreeing to 5 mm — the residual is the figure's own rounding to the nearest inch. Dual spacing 46.8 in and tandem spacing 56.5 in are the figure's TYPICAL values and match the FAARFIELD library's B747-8 wheel coordinates exactly (X +/-23.4 in, Y 56.5 in). Tire 52X21.0 R22, 36PR."
+          "source": "WING gear, the outboard pair. Longitudinal position 28 118 mm = 92 ft 3 in, and track 10 998 mm = 36 ft 1 in (strut centerline 5499 mm), both read directly from the ACAP section 7.2 footprint figure. Cross-check: 10 998 + 1189 + 533.4 = 12 720.4 mm against the figure's stated outer width of 41 ft 9 in (12 725.4 mm), agreeing to 5 mm — the residual is the figure's own rounding to the nearest inch. Dual spacing 46.8 in and tandem spacing 56.5 in are the figure's TYPICAL values and match the FAARFIELD library's B747-8 wheel coordinates exactly (X +/-23.4 in, Y 56.5 in). Tire 52X21.0 R22, 36PR."
         },
         {
           "id": "WLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 28118, "y": 5499, "dualSpacing": 1189, "tandemSpacing": 1435,
           "tire": "52x21.0R22",
-          "source": "Mirror of WLG-L about the aircraft centreline; same derivation."
+          "source": "Mirror of WLG-L about the aircraft centerline; same derivation."
         },
         {
           "id": "BLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 31191, "y": -1918, "dualSpacing": 1189, "tandemSpacing": 1435,
           "tire": "52x21.0R22",
-          "source": "BODY gear, the inboard pair. Longitudinal position = the wing gear's 28 118 mm plus the figure's 10 ft 1 in (3073 mm) body-gear offset — the same offset as the 747-400, stated independently by the two figures. Track 3835 mm = 12 ft 7 in, strut centreline 1918 mm. Cross-check on the layout as a whole: the centroid of the four bogies falls at 29 655 mm, and the FAA database's tabulated wheelbase of 97.3 ft is 29 657 mm, agreeing to 2 mm."
+          "source": "BODY gear, the inboard pair. Longitudinal position = the wing gear's 28 118 mm plus the figure's 10 ft 1 in (3073 mm) body-gear offset — the same offset as the 747-400, stated independently by the two figures. Track 3835 mm = 12 ft 7 in, strut centerline 1918 mm. Cross-check on the layout as a whole: the centroid of the four bogies falls at 29 655 mm, and the FAA database's tabulated wheelbase of 97.3 ft is 29 657 mm, agreeing to 2 mm."
         },
         {
           "id": "BLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 31191, "y": 1918, "dualSpacing": 1189, "tandemSpacing": 1435,
           "tire": "52x21.0R22",
-          "source": "Mirror of BLG-L about the aircraft centreline; same derivation."
+          "source": "Mirror of BLG-L about the aircraft centerline; same derivation."
         }
       ],
       "notes": "The stretched 747, and the last one built. Same wing-plus-body architecture as the 747-400 and the same 3073 mm body-gear offset, but a longer wheelbase and a differently proportioned bogie: 46.8 in dual by 56.5 in tandem, against the -400's 44 by 58. Sixteen main tires, eighteen in total. Nothing on this aircraft is assumed — the ACAP figure publishes every spacing it needs.",
