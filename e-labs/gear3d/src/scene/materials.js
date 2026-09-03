@@ -39,6 +39,7 @@ import { TextureLibrary } from './textures.js';
  * @property {number} [clearcoat]
  * @property {number} [clearcoatRoughness]
  * @property {number} [envIntensity]
+ * @property {boolean} [doubleSided]  the part is a thin shell, seen from both faces
  * @property {string} description
  */
 
@@ -54,24 +55,37 @@ export const MATERIAL_SPECS = Object.freeze({
     rubberSidewall: {
         name: 'Sidewall rubber',
         color: 0x24282e, roughness: 0.74, metalness: 0.0, normalScale: 0.7, envIntensity: 0.8,
+        doubleSided: true,
         description: 'Smoother and slightly glossier than the tread, with a soft sheen along the '
-            + 'bulge. Carries the moulded ribbing and lettering relief.'
+            + 'bulge. Carries the moulded ribbing and lettering relief. Drawn DOUBLE-SIDED, and '
+            + 'it is the sidewall alone that needs to be: a tire is a shell, and the hand holes '
+            + 'in the wheel look through it at the far sidewall from inside. Culled to the front '
+            + 'only, that is a line of sight out of the back of the wheel — five white discs on '
+            + 'a black tire on every wheel seen near end-on. The TREAD stays single-sided; it is '
+            + 'the larger half of the mesh and nothing ever sees its back.'
     },
     aluminium: {
         name: 'Machined aluminium rim',
         color: 0xb9bfc6, roughness: 0.30, metalness: 0.92,
         clearcoat: 0.30, clearcoatRoughness: 0.24, envIntensity: 1.0,
+        doubleSided: true,
         description: 'Polished forged aluminium wheel disc — the face you actually see, with a '
-            + 'light clearcoat for the lacquer.'
+            + 'light clearcoat for the lacquer. Drawn DOUBLE-SIDED: the dish between the web '
+            + 'and the barrel is a single-thickness pressing, and from inboard — which is how '
+            + 'you see the near wheel of a dual pair — its back face was culled, leaving a '
+            + 'crescent of daylight through the wheel.'
     },
     rimBarrel: {
         name: 'Rim barrel',
-        color: 0x5d646b, roughness: 0.68, metalness: 0.55, envIntensity: 0.45,
+        color: 0x50575e, roughness: 0.80, metalness: 0.35, envIntensity: 0.36,
+        doubleSided: true,
         description: 'The inside of the wheel well. Deliberately NOT the polished disc material: '
             + 'the barrel sits inside the tire, in shadow, and is painted rather than machined. '
             + 'Given the polished treatment it reads as a chrome spool and becomes the brightest '
             + 'object in the figure, which is exactly backwards — it should recede behind the '
-            + 'tread and the disc face.'
+            + 'tread and the disc face. Drawn DOUBLE-SIDED, because a rim is a thin shell and '
+            + 'the hand holes in the disc look straight through it at its inside face; culled '
+            + 'to the front only, the barrel simply vanished when seen from within the wheel.'
     },
     steelWheel: {
         name: 'Painted steel rim',
@@ -210,7 +224,8 @@ export class MaterialLibrary {
         const params = {
             color: new THREE.Color(spec.color),
             roughness: spec.roughness,
-            metalness: spec.metalness
+            metalness: spec.metalness,
+            side: spec.doubleSided ? THREE.DoubleSide : THREE.FrontSide
         };
         const m = spec.clearcoat != null
             ? new THREE.MeshPhysicalMaterial({
@@ -278,7 +293,8 @@ export class MaterialLibrary {
             roughness: spec.roughness,
             metalness: 0,
             normalMap: maps.normalMap,
-            roughnessMap: maps.roughnessMap
+            roughnessMap: maps.roughnessMap,
+            side: spec.doubleSided ? THREE.DoubleSide : THREE.FrontSide
         });
         m.normalScale = new THREE.Vector2(spec.normalScale ?? 1, spec.normalScale ?? 1);
         m.name = key;

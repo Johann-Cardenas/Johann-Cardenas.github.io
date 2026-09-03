@@ -6,6 +6,171 @@ why, so a later maintainer can overturn it on the merits rather than guessing.
 
 ---
 
+## D33. The wheel is laid out from one table of stations, and the tire is placed against the rim (v1.11)
+
+**Decision.** `rim.js` exports `wheelStations()`, and it is the only place that
+answers where any part of a wheel sits. `hub.js` and `tire.js` both read it
+rather than deriving the same figures from parameters of their own.
+
+**Why.** Three defects, all of them invisible in code review and all of them
+the same defect. The disc's axial station was computed in `rim.js` from
+`offsetRatio` and in `hub.js` from the boss length, which is not a function of
+it; the two disagreed by 24 to 74 mm on every tire in the library and **all ten
+lug nuts were drawn inside the disc**, where nothing could ever see them. The
+hub boss was sized at 0.28 of the rim radius against a bore of 0.30, so the
+part whose stated job is to close the bore left a 5.7 mm ring of daylight into
+the barrel. And the tire's bead was placed at the barrel's half-width — a
+number that has nothing to do with where a bead seats — so the two surfaces
+interpenetrated into a ring of alternating rubber-and-rim teeth around every
+wheel in every view.
+
+**What else it forced.** The rim's two bead seats had been at different
+distances from their own flanges (a flange-height in on the inboard side, 0.255
+of the width on the outboard). A tire is symmetric by construction — its
+meridian is mirrored from a half, which is the guarantee `tire.js` is built on
+— so no tire could seat on both. The seats are now symmetric and only the
+drop-centre well is offset, which is what a real rim does.
+
+**Rejected: fixing it in the assembly.** Passing the same `offsetRatio` to both
+builders removes today's disagreement and nothing else; the next parameter one
+of them invents is the next bug of this shape. A published table is what makes
+the class of error impossible.
+
+---
+
+## D34. The tire's silhouette is measured, not sampled at a fixed budget (v1.11)
+
+**Decision.** The meridian is a **centripetal** Catmull-Rom, subdivided
+adaptively until the polyline is within a sagitta tolerance of the curve, no
+chord is longer than a limit, and no vertex turns through more than 7 degrees.
+
+**Why centripetal.** Uniform parameterisation overshoots between control points
+that are unevenly spaced, and the meridian's are deliberately uneven — the step
+from maximum section width to the top of the sidewall is 1.2% of the section
+half-width while the one across the crown is 60% of it. The carcass came out
+0.6 to 1.1 mm wider than its section width on every tire in the library, and
+the true maximum sat 11 mm below the station the profile puts it at. Section
+width is a published dimension that the dimension engine draws and the
+footprint export writes out; a tire quietly a millimetre too wide is not
+cosmetic. The overshoot is now exactly zero, which the test asserts.
+
+**Why the maximum-width control point's neighbours share an axial station.**
+Centripetal parameterisation alone did not remove the overshoot, because the
+cause was upstream of it: a Catmull-Rom tangent is proportional to the chord
+between a point's neighbours, and while those were at 0.930 and 0.988 of the
+half-width the tangent at the widest point still had a positive axial
+component. The curve was heading outboard as it passed the widest control point
+and had to overshoot before turning back. Equal stations make that tangent
+purely radial. The asymmetry a real carcass has near its maximum is carried by
+the radii instead, which is where a maximum's asymmetry belongs.
+
+**Why adaptive, and why an explicit angle.** A fixed budget divided equally
+between spans gave the short, tightly-curved shoulder the same four points as
+the long, nearly flat crown. Vertex normals are averaged from the faces meeting
+at each row, so the resulting 31-degree facets became a terraced shading band
+around each sidewall — a stack of washers rather than one carcass, and the
+loudest artefact on a close render. A sagitta tolerance alone still left
+13-degree creases at the draft profile detail, and it also has to be checked at
+the SPAN JOINTS: the curve is only tangent-continuous there, so two chords
+meeting at a knot are as collinear as they are short. Bounding the angle
+directly bounds the artefact. Worst case across the library is now under 10
+degrees at every quality.
+
+**What it costs.** Row counts rise by about two thirds — 81 to 103 at draft.
+34 tires at draft is 0.78 M triangles against a 1.2 M ceiling the test holds.
+
+---
+
+## D35. A tire is a shell, and so is a rim (v1.11)
+
+**Decision.** The tire's SIDEWALL, the rim barrel and the rim disc are drawn
+double-sided. The tread is not.
+
+**Why.** Every one of them is a single-thickness pressing or casting that the
+viewer genuinely sees from both faces, and back-face culling made each of them
+vanish from the side it was supposed to be seen from. The wheel's hand holes
+look through the wheel at the far sidewall from inside; culled to the front,
+that is a line of sight out of the back of the wheel, and the holes rendered as
+five white discs on a black tire on every wheel seen near end-on. The barrel's
+inside is what you expect to find through those same holes. The disc's dish is
+what closes the wheel when the near wheel of a dual pair is seen from inboard.
+
+**Why not the tread.** It is the larger half of the tire's mesh, it is closed
+by the sidewalls at both edges, and nothing ever sees its back. Culling is free
+performance wherever it is also correct.
+
+**What it replaced.** The hand holes were briefly pulled in to 0.660 of the rim
+radius so that a much-enlarged brake drum could stand behind every one of them.
+That removed the white discs and was the wrong cause: on a real wheel the holes
+DO reach past the drum, and what stops the light is the inside of the tire. The
+ratios are back at the real proportions and the drum is a 16.5 in drum in a
+22.5 in wheel, which is what it should always have been — at the old 0.48 it
+was a small cylinder lost inside the wheel.
+
+---
+
+## D36. The lighting rig follows what is VISIBLE, not what is loaded (v1.11)
+
+**Decision.** `assembly.setWheelFilter` announces every isolation change, and
+the viewport refits the lighting rig — and therefore the shadow camera and the
+shadow catcher — to `assembly.visibleBounds()`.
+
+**Why.** A shadow map is a fixed number of texels spread over the shadow
+camera's frustum, so its resolution on the ground is set entirely by how large
+that frustum is. Fitted once to the whole unit, an isolated axle of a class 9
+was shaded by a map covering 27 m of pavement — roughly 13 mm per texel, with a
+PCF radius of several texels on top, which is a penumbra wider than the tread
+casting it. Every shadow in every isolated view was a soft grey smear. Fitting
+to the visible extent is a four- to tenfold gain in exactly the views where the
+shadow is being looked at, and costs one Box3 per isolation change.
+
+**The shadow catcher had to move too.** It was left at the world origin, which
+was invisibly fine only because the rig was vehicle-sized and so was the plane.
+Fitted to an isolated rear axle five metres down a semitrailer, a three-metre
+plane at the origin catches nothing, and the axle rendered with no shadow at
+all. It is centred on the fit.
+
+**What is NOT refitted.** The grid and the camera. The grid is a scale
+reference and must not resize as parts are hidden, and re-framing the camera on
+every isolation change would take the view out from under the reader.
+
+---
+
+## D37. A dimension is placed by where the unit is, not by how well it projects (v1.11)
+
+**Decision.** `chooseOffsetDirection` still ranks the four candidate directions
+by projected length, but multiplies that by three terms: the offset must take
+the line further from the unit (`away`, supplied per dimension by
+`autoDimensions`, which is the only place that knows where the unit is), must
+not put it below the pavement, and must not put it on the FAR side of the unit.
+
+**Why.** Projected length asks whether an offset is legible and says nothing
+about whether it lands anywhere sensible. On a class 9 the axle spacings were
+pushed 420 mm inboard of the left tires — the direction the comment above them
+says they must avoid — and the tandem spacing was stood at hub height and
+printed across the tandem it was measuring.
+
+**Why the far-side term is needed at all.** The annotation layer is SVG over
+the canvas and has no depth buffer, so a dimension standing off the far side of
+the unit is drawn on top of the unit rather than behind it. Correcting the
+offset direction without it moved the line outboard and left the label exactly
+where it was.
+
+**Why `away` is a field and not a computation.** The chooser sees one
+dimension, not a vehicle. The vertical centre of a running gear is a tire
+radius up, not on the ground, and nothing local to a dimension can know that —
+taking the ground as the centre is what made "up" look like an escape.
+
+**Also fixed here.** Spacings are drawn between distinct longitudinal STATIONS
+rather than between axles. On a truck the two are the same; on an aircraft a
+main gear is a left and a right axle at one station, so walking the axle list
+drew a zero-length dimension between them and then drew the nose-to-main
+distance twice — once as a spacing and once as the outer bridge. Where the
+aircraft wheelbase coincides with a spacing, the named quantity wins and the
+anonymous one steps aside.
+
+---
+
 ## D32. Resolution is adaptive, and the tier moves pixels and geometry together (v1.10)
 
 **Decision.** The viewport renders into a buffer far larger than itself — 3840

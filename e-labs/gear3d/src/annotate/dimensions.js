@@ -61,6 +61,12 @@ export const DIMENSION_SETS = Object.freeze({
  * @property {string} [label]    overrides the formatted value
  * @property {number} [precision]
  * @property {number} [priority] higher survives contested label positions
+ * @property {Vec3} [away]   unit direction OUT of the unit at this dimension's
+ *           own position. `chooseOffsetDirection` cannot work this out for
+ *           itself — it sees one dimension, not a vehicle — and without it the
+ *           only thing it can rank a candidate by is how well the offset
+ *           projects, which says nothing about whether the line ends up beside
+ *           the running gear or inside it.
  * @property {string} [note]
  */
 
@@ -85,37 +91,69 @@ export function autoDimensions(layout, opts = {}) {
     const minY = layout.extents.minY;
     const maxY = layout.extents.maxY;
 
+    // The centre of the running gear, used only to work out which way is OUT
+    // of it from any given dimension. y = 0 because a unit is arranged about
+    // its own centreline, and z = maxTireR because it stands on the pavement:
+    // the vertical centre of the thing being dimensioned is a tire radius up,
+    // NOT on the ground. Taking the ground as the centre is what made "up"
+    // look like an escape and stood the tandem spacing at hub height, printed
+    // across the tandem it was measuring.
+    const xs = layout.axles.map((a) => a.x);
+    const hub = { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: 0, z: maxTireR };
+    /** @param {Vec3} a @param {Vec3} b @returns {Vec3} */
+    const outOf = (a, b) => {
+        const v = { x: (a.x + b.x) / 2 - hub.x, y: (a.y + b.y) / 2 - hub.y, z: (a.z + b.z) / 2 - hub.z };
+        const m = Math.hypot(v.x, v.y, v.z) || 1;
+        return { x: v.x / m, y: v.y / m, z: v.z / m };
+    };
+
     /* ---------- longitudinal ---------- */
-    if (want.has('longitudinal') && layout.axles.length > 1) {
-        // Consecutive axle spacings, drawn just outboard of the left tires.
-        layout.axles.slice(1).forEach((a, i) => {
-            const prev = layout.axles[i];
+    //
+    // SPACINGS ARE BETWEEN STATIONS, NOT BETWEEN AXLES. On a truck the two are
+    // the same thing. On an aircraft they are not: a main gear is a left and a
+    // right axle at the SAME longitudinal station, so walking the axle list
+    // drew a spacing of zero between them — a dimension with no length, whose
+    // label reads "0 mm" and whose arrowheads land on top of each other — and
+    // then drew the nose-to-main distance twice, once as a consecutive spacing
+    // and once as the outer bridge. Collapsing to distinct stations first is
+    // what the truck path was already relying on being true.
+    const stations = [];
+    for (const a of layout.axles) {
+        const at = stations.find((t) => Math.abs(t.x - a.x) < 1);
+        if (at) at.ids.push(a.id); else stations.push({ x: a.x, ids: [a.id] });
+    }
+    stations.sort((p, q) => p.x - q.x);
+
+    if (want.has('longitudinal') && stations.length > 1) {
+        // Consecutive station spacings, drawn just outboard of the left tires.
+        stations.slice(1).forEach((t, i) => {
+            const prev = stations[i];
             dims.push({
-                id: `lon:${prev.id}-${a.id}`,
+                id: `lon:${prev.ids[0]}-${t.ids[0]}`,
                 set: 'longitudinal',
                 from: { x: prev.x, y: minY, z: groundZ },
-                to: { x: a.x, y: minY, z: groundZ },
+                to: { x: t.x, y: minY, z: groundZ },
                 axis: 'x',
                 offset: -420,
+                away: outOf({ x: prev.x, y: minY, z: groundZ }, { x: t.x, y: minY, z: groundZ }),
                 priority: 6,
-                note: `${prev.id} to ${a.id} centreline spacing`
+                note: `${prev.ids.join('/')} to ${t.ids.join('/')} centreline spacing`
             });
         });
 
-        // Outer bridge: first to last axle. Skipped when there are only two
-        // axles, because it would then be numerically identical to the single
-        // spacing already drawn — two labels reading the same value invite the
-        // reader to look for a difference that is not there.
-        if (layout.axles.length > 2) {
-            const first = layout.axles[0];
-            const last = layout.axles[layout.axles.length - 1];
+        // Outer bridge: first to last station. Skipped when there are only two,
+        // because it would then be numerically identical to the single spacing
+        // already drawn — two labels reading the same value invite the reader
+        // to look for a difference that is not there.
+        if (stations.length > 2) {
             dims.push({
                 id: 'lon:outer-bridge',
                 set: 'longitudinal',
-                from: { x: first.x, y: minY, z: groundZ },
-                to: { x: last.x, y: minY, z: groundZ },
+                from: { x: stations[0].x, y: minY, z: groundZ },
+                to: { x: stations[stations.length - 1].x, y: minY, z: groundZ },
                 axis: 'x',
                 offset: -1050,
+                away: { x: 0, y: -1, z: 0 },
                 priority: 9,
                 note: 'Outer bridge — first to last axle centreline'
             });
@@ -140,6 +178,7 @@ export function autoDimensions(layout, opts = {}) {
                     to: { x: a.x, y: a.trackWidth / 2, z: groundZ },
                     axis: 'y',
                     offset: -520,
+                    away: outOf({ x: a.x, y: 0, z: groundZ }, { x: a.x, y: 0, z: groundZ }),
                     priority: 7,
                     note: `Track width at ${a.id} — centre to centre of wheel positions`
                 });
@@ -175,6 +214,7 @@ export function autoDimensions(layout, opts = {}) {
             to: { x: layout.axles[0].x, y: maxY, z: groundZ },
             axis: 'y',
             offset: -900,
+            away: outOf({ x: layout.axles[0].x, y: 0, z: groundZ }, { x: layout.axles[0].x, y: 0, z: groundZ }),
             priority: 5,
             note: 'Overall outside width across the tires'
         });
@@ -216,6 +256,19 @@ export function autoDimensions(layout, opts = {}) {
         const noses = layout.axles.filter((a) => a.role === 'nose');
         if (mains.length && noses.length) {
             const mainX = mains.reduce((s, a) => s + a.x, 0) / mains.length;
+            // The named quantity wins where the two coincide. On a gear whose
+            // mains all sit at one station the wheelbase IS the nose-to-main
+            // spacing, and the longitudinal set has already drawn it as an
+            // anonymous distance; "Wheelbase" is what the reader wants that
+            // number called, so the generic one steps aside rather than
+            // printing the same figure on a second line just below it.
+            for (let i = dims.length - 1; i >= 0; i--) {
+                const d = dims[i];
+                if (d.set !== 'longitudinal') continue;
+                if (Math.abs(d.from.x - noses[0].x) < 1 && Math.abs(d.to.x - mainX) < 1) {
+                    dims.splice(i, 1);
+                }
+            }
             dims.push({
                 id: 'air:wheelbase',
                 set: 'aircraft',
@@ -223,6 +276,7 @@ export function autoDimensions(layout, opts = {}) {
                 to: { x: mainX, y: minY, z: 0 },
                 axis: 'x',
                 offset: -1400,
+                away: { x: 0, y: -1, z: 0 },
                 priority: 10,
                 note: 'Wheelbase — nose gear to main gear centroid'
             });
@@ -237,6 +291,7 @@ export function autoDimensions(layout, opts = {}) {
                 to: { x: mains[0].x, y: right, z: 0 },
                 axis: 'y',
                 offset: -1100,
+                away: outOf({ x: mains[0].x, y: 0, z: 0 }, { x: mains[0].x, y: 0, z: 0 }),
                 priority: 10,
                 note: 'Main gear track — centreline to centreline of the main gear legs'
             });
@@ -418,6 +473,24 @@ function dimensionGeometry(d, o) {
  * dimension definition read correctly in plan, side, front and 3D without
  * per-view special cases.
  *
+ * LONGEST IS NOT ENOUGH, THOUGH: it only asks whether the offset is legible,
+ * never whether it lands anywhere sensible. Scored on projected length alone,
+ * the axle spacings on a class 9 were pushed 420 mm INBOARD of the left tires
+ * — the direction the comment above them says they must avoid — and the value
+ * came to rest on top of the tandem it was measuring. The two extra terms
+ * below are the two ways an offset can be wrong regardless of how well it
+ * projects, and both are questions the engineering frame can answer with no
+ * knowledge of the model at all, because the frame is built around it: the
+ * unit is arranged about y = 0 and it stands on z = 0.
+ *
+ *   OUTWARD  the offset must take the dimension line further from the
+ *            vehicle's own axis, not across it
+ *   ABOVE    and not below the pavement, where nothing can be read and the
+ *            line is hidden by the ground shadow in every view but plan
+ *
+ * They are weights, not vetoes. A view where every candidate is bad still has
+ * to draw something, and the least bad one is still the right answer.
+ *
  * @param {Dimension} d
  * @param {RenderOptions} o
  * @returns {Vec3} unit vector, engineering frame
@@ -442,18 +515,40 @@ export function chooseOffsetDirection(d, o) {
 
     let best = candidates[0];
     let bestScore = -Infinity;
-    const sign = d.offset < 0 ? -1 : 1;
+
+    // How far this dimension already sits from the vehicle's own axis, in the
+    // transverse-vertical plane. `d.offset` carries the sign, so the actual
+    // displacement is the candidate scaled by it, not by its magnitude.
+    const axisDist = (y, z) => Math.hypot(y, z);
+    const here = axisDist(mid.y, mid.z);
 
     for (const c of candidates) {
-        const p1 = projectEng(addVec(mid, scaleVec(c, probe)), o.vp, o.viewport);
+        // The probe is the offset the dimension will ACTUALLY be drawn at,
+        // sign and all, rather than an unsigned one: the sign is half of what
+        // decides whether the result lands in front of the unit or behind it.
+        const moved = addVec(mid, scaleVec(c, d.offset || probe));
+        const p1 = projectEng(moved, o.vp, o.viewport);
         const len = Math.hypot(p1.x - p0.x, p1.y - p0.y);
+
+        const outward = d.away
+            ? (dot(scaleVec(c, d.offset), d.away) > 0 ? 1 : 0.35)
+            : (axisDist(moved.y, moved.z) >= here - 1 ? 1 : 0.4);
+        const above = mid.z >= -1 && moved.z < -1 ? 0.2 : 1;
+        // NEAR SIDE. The annotation layer is SVG over the canvas and has no
+        // depth buffer, so a dimension standing off the FAR side of the unit is
+        // drawn on top of the unit rather than behind it — which is how the
+        // tandem spacing came to be printed across the tandem it measures even
+        // once the line itself was correctly outboard of the tires. Depth is
+        // the projected NDC z, which the projector already returns.
+        const near = (p1.behind ? 0.05 : 1) * (p1.depth <= p0.depth + 1e-6 ? 1 : 0.5);
+
         // Prefer directions that also match the sign the author asked for,
         // so an author who wrote a negative offset still gets "below/left".
         const preference = candidates.indexOf(c) === 0 ? 1.15 : 1;
-        const score = len * preference;
+        const score = len * preference * outward * above * near;
         if (score > bestScore) { bestScore = score; best = c; }
     }
-    return scaleVec(best, sign > 0 ? 1 : 1);
+    return best;
 }
 
 /**
@@ -470,6 +565,9 @@ function perpendicularCandidates(d) {
     const p2 = unit(cross3(dir, p1));
     return [p1, p2, scaleVec(p1, -1), scaleVec(p2, -1)];
 }
+
+/** @param {Vec3} a @param {Vec3} b @returns {number} */
+function dot(a, b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 
 /** @param {Vec3} a @param {Vec3} b @returns {Vec3} */
 function cross3(a, b) {

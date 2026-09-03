@@ -216,6 +216,14 @@ export class LightingRig {
      * background into a grey slab. The shadow camera spans +/- 1.6 r, so the
      * plane is capped at a half-extent of 1.4 r with margin to spare.
      *
+     * IT ALSO HAS TO BE UNDER THE MODEL. The plane used to be left at the
+     * world origin, which was invisibly fine only because the rig was fitted
+     * once to the whole vehicle and the plane was therefore vehicle-sized. Fit
+     * it to an isolated rear axle instead — five metres down a semitrailer —
+     * and a three-metre plane at the origin is nowhere near the shadow it is
+     * supposed to catch, so the axle renders with no shadow at all. It is
+     * centred on the fit, and stays on the pavement plane.
+     *
      * @param {number} [size] metres; clamped to the shadow camera's coverage
      * @returns {THREE.Mesh}
      */
@@ -239,6 +247,8 @@ export class LightingRig {
         geo.rotateX(-Math.PI / 2);
         const mat = new THREE.ShadowMaterial({ opacity: this.state.shadowOpacity });
         const mesh = new THREE.Mesh(geo, mat);
+        const c = this._center;
+        if (c) mesh.position.set(c.x, 0, c.z);
         mesh.receiveShadow = true;
         mesh.name = 'ground-shadow';
         mesh.userData.pickable = false;
