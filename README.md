@@ -106,7 +106,7 @@ ones that take a file never upload it.
 
 | App | What it is | Notes |
 | :--- | :--- | :--- |
-| **Gear3D** | True-to-scale 3D visualiser of truck axle configurations and aircraft landing gear | Three.js. 22 FHWA trucks, 7 measured aircraft, 16 FAA gear configurations; FAA Order 5300.7 nomenclature implemented as a grammar |
+| **Gear3D** | True-to-scale 3D visualizer of truck axle configurations and aircraft landing gear | Three.js. 22 FHWA trucks, 7 measured aircraft, 16 FAA gear configurations; FAA Order 5300.7 nomenclature implemented as a grammar |
 | **QR Studio** | Designed QR generator — shaped modules, gradients, logo excavation, frames | Its own ISO/IEC 18004 encoder; no runtime dependency |
 | **Stride Lab** | Running gait analysis from a phone clip — 40 biomechanical measurements | Pose estimation, gait-event detection and metrics computed **entirely on device**; ships an offline service worker |
 | **LEAPS** | Linear elastic analysis of pavement structures (Burmister multilayer) | Own solver engine (LEAF-JS), runs in a worker |
@@ -114,7 +114,7 @@ ones that take a file never upload it.
 | **Finite-Elemented** | FEA teaching platform, 12 modules | Live plane-stress/plane-strain solver (Q4/T3, banded Cholesky) in pure JS |
 | **Frontier** | HPC intuition engine | Canvas 2D |
 | **AirCrafter** | Contact-stress calculator | Plotly · password-protected |
-| **Asphera** | FEM pavement visualiser | Plotly · password-protected |
+| **Asphera** | FEM pavement visualizer | Plotly · password-protected |
 
 ### Provenance and refusal
 

@@ -31,7 +31,7 @@ import {
 export const SCHEMA_VERSION = '1.0';
 
 /**
- * Section width of a tire, in millimetres, from its designation.
+ * Section width of a tire, in millimeters, from its designation.
  * Aircraft designations encode it directly, so this needs no lookup table.
  * @param {string} designation
  * @returns {number|null}
@@ -205,7 +205,7 @@ function validateTruck(u, E, W) {
         if (typeof a.x !== 'number') E(`${tag} x must be a number (mm from front axle)`);
         if (i === 0) firstAxleX = a.x;
 
-        // Class 1 motorcycles carry a single wheel on the vehicle centreline,
+        // Class 1 motorcycles carry a single wheel on the vehicle centerline,
         // so an axle may legitimately have one wheel position and zero track.
         const positions = a.wheelPositions ?? 2;
         if (positions !== 1 && positions !== 2) {
@@ -236,7 +236,7 @@ function validateTruck(u, E, W) {
     });
 
     if (firstAxleX !== null && firstAxleX !== 0) {
-        E(`first axle x must be 0 (origin is the front-most axle centreline), got ${firstAxleX}`);
+        E(`first axle x must be 0 (origin is the front-most axle centerline), got ${firstAxleX}`);
     }
 
     const sorted = u.axles.every((a, i, arr) => i === 0 || arr[i - 1].x <= a.x);
@@ -283,7 +283,7 @@ function validateAircraft(u, E, W) {
     else if (!isValidGearCode(u.gearDesignation)) {
         // A designation that does not parse is an ERROR, not a warning. The
         // gear name is how every downstream reader — a pavement engineer, an
-        // export header, this app's own catalogue — identifies the
+        // export header, this app's own catalog — identifies the
         // configuration, and one that the naming convention cannot read is
         // simply wrong. Being absent from Table 3 is a different matter and
         // is not flagged at all: the convention is open-ended by design.
@@ -291,7 +291,7 @@ function validateAircraft(u, E, W) {
         try { parseGearCode(u.gearDesignation); } catch (err) { why = ` — ${err.message}`; }
         E(`gearDesignation "${u.gearDesignation}" is not a valid FAA Order 5300.7 gear name${why}`);
     } else {
-        // The name and the geometry must agree. A unit labelled 2D that
+        // The name and the geometry must agree. A unit labeled 2D that
         // carries three tandem rows is a transcription error in one of the
         // two, and which one it is cannot be decided here — but that they
         // disagree can.
@@ -321,7 +321,7 @@ function validateAircraft(u, E, W) {
     // The published record for an aircraft constrains its gear envelope — the
     // outer width and the wheelbase — but not necessarily every spacing
     // inside it. Where a value had to be chosen rather than read, saying so is
-    // the difference between a modelling assumption and a fabricated
+    // the difference between a modeling assumption and a fabricated
     // measurement. An empty array is a valid and meaningful answer: it asserts
     // that nothing was assumed.
     if (!Array.isArray(u.assumedFields)) {
@@ -355,19 +355,19 @@ function validateAircraft(u, E, W) {
         // A bogie states its lateral geometry either as an even pitch or, where
         // the published one is not even, as explicit offsets. Exactly one has
         // to be there. Offsets must describe every wheel on the axle and must
-        // be centred on the strut, or the strut's own y stops meaning what the
+        // be centered on the strut, or the strut's own y stops meaning what the
         // track derivation assumes it means.
         const offsets = g.wheelOffsets;
         if (offsets != null) {
             if (!Array.isArray(offsets) || !offsets.every((v) => typeof v === 'number')) {
-                E(`${tag} wheelOffsets must be an array of numbers, mm from the strut centreline`);
+                E(`${tag} wheelOffsets must be an array of numbers, mm from the strut centerline`);
             } else if (offsets.length !== wheelsAcross) {
                 E(`${tag} wheelOffsets has ${offsets.length} entries but the axle carries ${wheelsAcross} wheels`);
             } else {
                 const mean = offsets.reduce((s, v) => s + v, 0) / offsets.length;
                 if (Math.abs(mean) > 0.5) {
-                    E(`${tag} wheelOffsets are not centred on the strut (mean ${mean.toFixed(2)} mm). `
-                        + 'They are measured from the strut centreline, so they must sum to zero.');
+                    E(`${tag} wheelOffsets are not centered on the strut (mean ${mean.toFixed(2)} mm). `
+                        + 'They are measured from the strut centerline, so they must sum to zero.');
                 }
                 if (!offsets.every((v, i, a) => i === 0 || a[i - 1] < v)) {
                     E(`${tag} wheelOffsets must be ordered left to right and distinct`);

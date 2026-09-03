@@ -20,7 +20,7 @@
    capability the build does not have.
 
    What NOT to build, and why it was rejected outright: a black-box
-   model that outputs a "running form score". There is no labelled
+   model that outputs a "running form score". There is no labeled
    ground truth for good form, the output would be unauditable, and
    explainability is the entire product.
 
@@ -89,9 +89,9 @@ export async function loadStage2(url) {
 /**
  * Build the scale-invariant input tensor for one window.
  *
- * Every channel is normalised: lengths by leg length, velocities by
- * sqrt(g * legLength), angles by 180 degrees. A model fed unnormalised pixel
- * coordinates learns the camera distance of its training set and generalises
+ * Every channel is normalized: lengths by leg length, velocities by
+ * sqrt(g * legLength), angles by 180 degrees. A model fed unnormalized pixel
+ * coordinates learns the camera distance of its training set and generalizes
  * to nothing.
  *
  * @param {import('../signal/condition.js').Conditioned} cond
@@ -104,7 +104,7 @@ export function buildWindow(cond, legLengthPx, startS) {
     const out = new Float32Array(C * STAGE2_WINDOW);
     const { kp, t } = cond;
     const L = legLengthPx > 0 ? legLengthPx : 1;
-    /* velocity scale: sqrt(g * legLength) in pixel units, so the normalisation
+    /* velocity scale: sqrt(g * legLength) in pixel units, so the normalization
        is dimensionless and independent of how big the runner is in frame */
     const legM = 0.491 * 1.75;
     const pxPerM = L / legM;

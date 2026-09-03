@@ -133,9 +133,9 @@ test('the dual-pass cutoff correction is (sqrt(2)-1)^(1/4)', () => {
     assertClose(designCutoff(12), 14.96, 0.05, '12 Hz effective at 240 fps designs at ~14.96 Hz');
 });
 
-test('butter2 coefficients are normalised and stable', () => {
+test('butter2 coefficients are normalized and stable', () => {
     const { b, a } = butter2LowpassCoeffs(12, 240);
-    assertEqual(a[0], 1, 'a0 normalised');
+    assertEqual(a[0], 1, 'a0 normalized');
     /* DC gain must be exactly 1 for a low-pass */
     assertClose((b[0] + b[1] + b[2]) / (a[0] + a[1] + a[2]), 1, 1e-12, 'DC gain');
     /* poles inside the unit circle: |a2| < 1 and |a1| < 1 + a2 */
@@ -432,7 +432,7 @@ group('Container — rotation and mirroring');
  *
  * This fixture exists because of a real bug. The track-header matrix was being
  * read four bytes early, so EVERY rotation parsed as zero, and a clip recorded
- * in portrait on a phone was analysed on its side — the pose model given a
+ * in portrait on a phone was analyzed on its side — the pose model given a
  * runner lying down. Nothing threw, nothing looked wrong in the code, and the
  * numbers that came out were confident and meaningless. The offsets below are
  * spelled out for the same reason.
@@ -542,7 +542,7 @@ test('the matrix offset is right for version 1 track headers too', () => {
 });
 
 test('a quarter turn swaps the display dimensions', () => {
-    /* The size the user recognises. A phone recording in portrait stores
+    /* The size the user recognizes. A phone recording in portrait stores
        landscape pixels; reporting the coded size would tell them their 9:16
        clip is 16:9. */
     const upright = displaySize(parseMp4(buildMp4({ matrix: M.none })).track);
@@ -581,13 +581,13 @@ test('a malformed container is refused rather than half-read', () => {
 
 group('Scaling');
 
-test('the per-frame scale recovers the true pixels-per-metre', () => {
+test('the per-frame scale recovers the true pixels-per-meter', () => {
     const H = 1.82, imageH = 720, fill = 0.72;
     const { series } = synthGait({ fps: 120, durationS: 3, heightM: H, imageH, fillFrac: fill });
     const cond = condition(series, { fps: 120 });
     const s = perFrameScale(cond, H);
     const truePxPerM = (fill * imageH) / H;
-    assertClose(1 / s.mPerPxMedian, truePxPerM, truePxPerM * 0.02, 'pixels per metre');
+    assertClose(1 / s.mPerPxMedian, truePxPerM, truePxPerM * 0.02, 'pixels per meter');
     assertEqual(s.confidence, 'high', 'clean synthetic data scales confidently');
 });
 
@@ -694,7 +694,7 @@ test('event uncertainty reproduces the specified error budget', () => {
     for (const [fps, expected] of [[30, 33.3], [60, 16.7], [120, 8.3], [240, 4.2]]) {
         const sigma = intervalUncertaintyMs(fps, 0, 0);
         const ci = 1.96 * sigma;
-        assertClose(ci, expected * 0.8, expected * 0.12, `${fps} fps quantisation interval`);
+        assertClose(ci, expected * 0.8, expected * 0.12, `${fps} fps quantization interval`);
     }
     assert(intervalUncertaintyMs(240, 10, 10) > intervalUncertaintyMs(240, 0, 0),
         'method disagreement must widen the interval');
@@ -830,25 +830,25 @@ test('overground clips measure speed instead of being told it', () => {
    6b. The whole-body model
    ============================================================ */
 
-group('Whole-body model — centre of mass and stiffness');
+group('Whole-body model — center of mass and stiffness');
 
 test('segment masses are a complete body', () => {
     const total = SEGMENTS.reduce((a, s) => a + s.mass, 0);
     assertClose(total, 1.0, 1e-9, "Winter's segment mass fractions must sum to the whole body");
     for (const seg of SEGMENTS) {
         assert(seg.mass > 0, `${seg.id} must have mass`);
-        assertBetween(seg.com, 0, 1, `${seg.id} centre of mass along the segment`);
+        assertBetween(seg.com, 0, 1, `${seg.id} center of mass along the segment`);
         assert(seg.from && seg.to, `${seg.id} must name both endpoints`);
     }
     /* every endpoint must be a landmark the conditioning stage produces */
-    const known = new Set([...CANONICAL, 'hipMid', 'shoulderMid', 'pelvis', 'neck', 'headCentre', 'thorax', 'footL', 'footR']);
+    const known = new Set([...CANONICAL, 'hipMid', 'shoulderMid', 'pelvis', 'neck', 'headCenter', 'thorax', 'footL', 'footR']);
     for (const seg of SEGMENTS) {
         assert(known.has(seg.from), `${seg.id} proximal endpoint ${seg.from} is not a landmark`);
         assert(known.has(seg.to) || SEGMENT_FALLBACK[seg.to], `${seg.id} distal endpoint ${seg.to} is not a landmark and has no fallback`);
     }
 });
 
-test('the centre of mass uses the whole body when the whole body is visible', () => {
+test('the center of mass uses the whole body when the whole body is visible', () => {
     const { series } = synthGait({ fps: 240, durationS: 4 });
     const cond = condition(series, { fps: 240 });
     const com = bodyCoM(cond);
@@ -857,9 +857,9 @@ test('the centre of mass uses the whole body when the whole body is visible', ()
     assertClose(com.missing, 0, 1e-9, 'no missing frames on a clean clip');
 });
 
-test('the centre of mass is NOT the pelvis, and oscillates less', () => {
+test('the center of mass is NOT the pelvis, and oscillates less', () => {
     /* The whole point of the inertial model. The swinging limbs move opposite
-       to the trunk and partly cancel its rise and fall, so the centre of mass
+       to the trunk and partly cancel its rise and fall, so the center of mass
        moves less than the pelvis landmark that is usually substituted for it.
        If this ever inverts, the model is wrong. */
     const { series } = synthGait({ fps: 240, durationS: 6 });
@@ -872,9 +872,9 @@ test('the centre of mass is NOT the pelvis, and oscillates less', () => {
     };
     const comSpan = span(com.y);
     const pelvisSpan = span(cond.kp.hipMid.y);
-    assert(comSpan < pelvisSpan, `centre of mass ${comSpan.toFixed(1)} px must move less than the pelvis ${pelvisSpan.toFixed(1)} px`);
+    assert(comSpan < pelvisSpan, `center of mass ${comSpan.toFixed(1)} px must move less than the pelvis ${pelvisSpan.toFixed(1)} px`);
     assert(comSpan > 0.5 * pelvisSpan, 'but not absurdly less — they are still the same body');
-    note(`centre of mass ${comSpan.toFixed(1)} px, pelvis ${pelvisSpan.toFixed(1)} px`);
+    note(`center of mass ${comSpan.toFixed(1)} px, pelvis ${pelvisSpan.toFixed(1)} px`);
 });
 
 test('a lost hand does not delete mass from the body', () => {
@@ -885,19 +885,19 @@ test('a lost hand does not delete mass from the body', () => {
     const cond = condition(g.series, { fps: 240 });
     const com = bodyCoM(cond);
     assertClose(com.massCovered, 1.0, 1e-9, 'the hand segment falls back to the wrist rather than vanishing');
-    assert(com.segmentsUsed.includes('handL'), 'the segment is still modelled');
+    assert(com.segmentsUsed.includes('handL'), 'the segment is still modeled');
 });
 
 test('Morin spring-mass stiffness reproduces known values', () => {
     /* 70 kg runner at 3.0 m/s, 226 ms contact, 114 ms flight, 0.859 m leg.
-       Published typical ranges: vertical 25-35 kN/m, leg 10-14 kN/m, centre of
+       Published typical ranges: vertical 25-35 kN/m, leg 10-14 kN/m, center of
        mass drop 5-7 cm during contact, model peak force around 2.2-2.6 body
        weights. Hand-checked against the paper's equations. */
     const k = springMassStiffness({ massKg: 70, speedMs: 3.0, contactS: 0.226, flightS: 0.114, legLengthM: 0.859 });
     assert(k, 'the estimate must be produced');
     assertClose(k.kVert, 28.3, 0.5, 'vertical stiffness, kN/m');
     assertClose(k.kLeg, 12.8, 0.5, 'leg stiffness, kN/m');
-    assertClose(k.comDropM * 100, 5.7, 0.3, 'centre-of-mass drop during contact, cm');
+    assertClose(k.comDropM * 100, 5.7, 0.3, 'center-of-mass drop during contact, cm');
     assertClose(k.modelPeakForceBW, 2.36, 0.05, 'model peak force, body weights');
     note(`Kvert ${k.kVert.toFixed(1)} kN/m, Kleg ${k.kLeg.toFixed(1)} kN/m, drop ${(k.comDropM * 100).toFixed(1)} cm`);
 });
@@ -931,7 +931,7 @@ test('stiffness is reported only when body mass is given, and says why', () => {
     /* never presented as a measurement */
     assert(/not a force measurement/.test(withMass.metrics.verticalStiffness.sides.L.note || ''),
         'a model estimate must announce itself as one');
-    assert(!/force/i.test(METRIC_BY_ID.verticalStiffness.label), 'and must not be labelled a force');
+    assert(!/force/i.test(METRIC_BY_ID.verticalStiffness.label), 'and must not be labeled a force');
 });
 
 test('the extra head and hand landmarks produce measurements', () => {
@@ -1035,7 +1035,7 @@ test('a runner who does not cross the frame has no measurable displacement', () 
     note(`treadmill ${t1.travelLegs.toFixed(2)} leg lengths, overground ${t2.travelLegs.toFixed(2)}`);
 });
 
-test('REGRESSION: a treadmill clip labelled overground refuses to invent a speed', () => {
+test('REGRESSION: a treadmill clip labeled overground refuses to invent a speed', () => {
     /* The failure this guards produced "0.10 m/s, 166:36 per km" on a real
        clip: a treadmill recording marked as road, where displacement between
        foot strikes is near zero. That number then feeds the vertical ratio,
@@ -1059,7 +1059,7 @@ test('REGRESSION: a treadmill clip labelled overground refuses to invent a speed
     assertClose(r.metrics.cadence.combined.value, g.truth.cadenceSpm, 3, 'and is still right');
 });
 
-test('the same clip labelled treadmill, with a speed, measures everything', () => {
+test('the same clip labeled treadmill, with a speed, measures everything', () => {
     const g = synthGait({ fps: 240, durationS: 6, mode: 'treadmill' });
     const r = runPipeline(g.series, {
         heightM: 1.75, massKg: 70, surface: 'treadmill', speedMs: g.params.speedMs
@@ -1124,7 +1124,7 @@ test('a runner too small in frame is named as such, and caps every measurement',
     note(`fill ${(r.capture.subjectFill * 100).toFixed(0)}% of frame height, every measurement capped to low`);
 });
 
-test('a well-framed runner is not penalised for subject size', () => {
+test('a well-framed runner is not penalized for subject size', () => {
     const good = synthGait({ fps: 240, durationS: 6, fillFrac: 0.72 });
     const r = runPipeline(good.series, { heightM: 1.75, massKg: 70, surface: 'treadmill', speedMs: 3.0 });
     assert(!r.warnings.some(x => x.code === 'subject-too-small'), 'no complaint about good framing');
@@ -1133,7 +1133,7 @@ test('a well-framed runner is not penalised for subject size', () => {
         'something must still be able to reach high confidence');
 });
 
-test('a square-on view is not penalised', () => {
+test('a square-on view is not penalized', () => {
     const g = synthGait({ fps: 240, durationS: 6, view: 'sagittal' });
     const r = runPipeline(g.series, { heightM: 1.75, massKg: 70, surface: 'treadmill', speedMs: 3.0 });
     assertEqual(r.capture.viewAuto, 'sagittal');
@@ -1179,7 +1179,7 @@ test('the rearfoot proxy never claims more than low confidence', () => {
     const f = synthGait({ fps: 240, durationS: 5, view: 'frontal' });
     const rf = runPipeline(f.series, { heightM: 1.75, surface: 'treadmill', speedMs: 3.0, view: 'frontal' });
     assertEqual(rf.metrics.rearfootProxy.sides.L.confidence, 'low',
-        'a proxy for something that needs shoe markers must be labelled low confidence');
+        'a proxy for something that needs shoe markers must be labeled low confidence');
     assert(!/pronation/i.test(METRIC_BY_ID.rearfootProxy.label), 'and must not be called pronation');
     assert(/proxy/i.test(METRIC_BY_ID.rearfootProxy.label), 'the label must say it is a proxy');
 });
@@ -1210,7 +1210,7 @@ test('noise and dropout widen the intervals without breaking the pipeline', () =
 test('gait-cycle curves are produced for the results charts', () => {
     const c = gaitCycleCurves(GTR, 'kneeFlex', 'L');
     assert(c, 'knee flexion curve must exist');
-    assertEqual(c.mean.length, 101, 'normalised to 0-100% of the gait cycle');
+    assertEqual(c.mean.length, 101, 'normalized to 0-100% of the gait cycle');
     assert(c.n >= 3, `expected several strides in the mean curve, got ${c.n}`);
     assertBetween(c.stanceFraction, 0.20, 0.50, 'stance fraction shading');
     assert(Math.max(...c.mean) > Math.min(...c.mean) + 20, 'the knee must actually move');
@@ -1224,7 +1224,7 @@ group('Scoring');
 
 test('scoreValue peaks in the middle of the optimal band and falls to zero', () => {
     const band = { optimal: [10, 20], acceptable: [5, 25], direction: 'target-range' };
-    assertClose(scoreValue(15, band), 1, 1e-9, 'centre of optimal');
+    assertClose(scoreValue(15, band), 1, 1e-9, 'center of optimal');
     assertClose(scoreValue(5, band), 0, 1e-9, 'edge of acceptable');
     assertClose(scoreValue(25, band), 0, 1e-9, 'other edge of acceptable');
     assertEqual(scoreValue(1000, band), 0, 'far outside clamps to zero, never negative');
@@ -1242,12 +1242,12 @@ test('bandStatus labels optimal, acceptable and outside', () => {
 
 test('scoreValue reaches zero AT the acceptable edge on an asymmetric band, not before', () => {
     /* The head-oscillation band, which is where this was found: optimal 4-9 cm
-       so the centre is 6.5, acceptable 3-12 so the reach is 3.5 down and 5.5
+       so the center is 6.5, acceptable 3-12 so the reach is 3.5 down and 5.5
        up. Dividing by one half-width of 4.5 for both sides put the zero at 11
        cm, inside the acceptable range, and the app then showed 11.7 cm as
        "Near the typical range" scoring 0 out of 100. */
     const band = { optimal: [4, 9], acceptable: [3, 12], direction: 'lower-better' };
-    assertClose(scoreValue(6.5, band), 1, 1e-9, 'centre of optimal');
+    assertClose(scoreValue(6.5, band), 1, 1e-9, 'center of optimal');
     assertClose(scoreValue(12, band), 0, 1e-9, 'the far edge, which is 5.5 out');
     assertClose(scoreValue(3, band), 0, 1e-9, 'the near edge, which is only 3.5 out');
     assertEqual(bandStatus(11.7, band), 'acceptable');
@@ -1255,7 +1255,7 @@ test('scoreValue reaches zero AT the acceptable edge on an asymmetric band, not 
     assert(scoreValue(11.7, band) < 0.15, 'though it is nearly out, and must score like it');
     /* the two sides fall at different rates, which is the point */
     assert(scoreValue(6.5 - 2, band) < scoreValue(6.5 + 2, band),
-        'two units below the centre is further out of range than two above');
+        'two units below the center is further out of range than two above');
 });
 
 test('no shipped band can score zero while its own status is still acceptable', () => {
@@ -1263,8 +1263,8 @@ test('no shipped band can score zero while its own status is still acceptable', 
     for (const band of NORMS) {
         if (!band.optimal || !band.acceptable) continue;
         const [lo, hi] = band.acceptable;
-        const centre = (band.optimal[0] + band.optimal[1]) / 2;
-        if (Math.abs((hi - centre) - (centre - lo)) > 1e-9) asymmetric++;
+        const center = (band.optimal[0] + band.optimal[1]) / 2;
+        if (Math.abs((hi - center) - (center - lo)) > 1e-9) asymmetric++;
         for (let i = 1; i < 40; i++) {
             const v = lo + (hi - lo) * i / 40;
             const s = scoreValue(v, band), st = bandStatus(v, band);
@@ -1277,7 +1277,7 @@ test('no shipped band can score zero while its own status is still acceptable', 
         assertEqual(scoreValue(lo - (hi - lo), band), 0, `${band.metric} clamps below, never negative`);
         assertEqual(scoreValue(hi + (hi - lo), band), 0, `${band.metric} clamps above`);
     }
-    note(`${NORMS.length} bands (${asymmetric} asymmetric about their optimal centre), ${sampled} sampled values, score > 0 everywhere inside acceptable`);
+    note(`${NORMS.length} bands (${asymmetric} asymmetric about their optimal center), ${sampled} sampled values, score > 0 everywhere inside acceptable`);
 });
 
 test('a change is better or worse by the BAND, never by the sign of the change', () => {
@@ -1295,7 +1295,7 @@ test('a change is better or worse by the BAND, never by the sign of the change',
     assert(scoreValue(9, pd) < scoreValue(4, pd), 'a doubled pelvic drop is not an improvement');
 
     /* A rise is not automatically bad either: below the band, going UP is
-       going toward it, and a sign-based rule gets this backwards too. */
+       going toward it, and a sign-based rule gets this backward too. */
     const tl = bandFor('trunkLean', {});
     assert(scoreValue(5, tl) > scoreValue(1, tl),
         'leaning 5 degrees is nearer typical than leaning 1, so an increase here is an improvement');
@@ -1382,7 +1382,7 @@ test('every band has optimal inside acceptable, and ordered', () => {
     }
 });
 
-test('unsourced bands are labelled unsourced and weighted lowest', () => {
+test('unsourced bands are labeled unsourced and weighted lowest', () => {
     const placeholder = REFERENCE_BY_ID['indicative-unsourced'];
     assert(placeholder, 'the honest placeholder must exist');
     assert(/not traced to a primary source/i.test(placeholder.title + placeholder.used),
@@ -1394,7 +1394,7 @@ test('unsourced bands are labelled unsourced and weighted lowest', () => {
     assert(STRENGTH_WEIGHT['consensus-only'] < STRENGTH_WEIGHT.moderate, 'and must count for least');
 });
 
-test('the metric catalogue is complete and self-describing', () => {
+test('the metric catalog is complete and self-describing', () => {
     assertEqual(new Set(METRICS.map(m => m.id)).size, METRICS.length, 'metric ids are unique');
     assert(METRICS.length >= 30, `expected the full metric set, got ${METRICS.length}`);
     for (const m of METRICS) {
@@ -1517,12 +1517,12 @@ test('the question is asked on a frame where every candidate is actually visible
     assert(res.pickFrame >= 55, `the pick frame ${res.pickFrame} must be one where both are present, not the midpoint`);
     for (const c of res.candidates) {
         assert(c.box, `candidate ${c.id} must carry a box, or there is nothing to click`);
-        assertBetween(c.box.x0, 0, 1, 'boxes are normalised');
+        assertBetween(c.box.x0, 0, 1, 'boxes are normalized');
         assert(c.box.x1 > c.box.x0 && c.box.y1 > c.box.y0, 'and non-degenerate');
     }
     /* the two boxes must be the two people, not the same one twice */
     const [a, b] = res.candidates.map(c => (c.box.x0 + c.box.x1) / 2);
-    assert(Math.abs(a - b) > 0.2, `the candidates must be distinct people (centres ${a.toFixed(2)}, ${b.toFixed(2)})`);
+    assert(Math.abs(a - b) > 0.2, `the candidates must be distinct people (centers ${a.toFixed(2)}, ${b.toFixed(2)})`);
     note(`asked on frame ${res.pickFrame} of ${N}; both candidates boxed there`);
 });
 
@@ -1603,7 +1603,7 @@ test('a slow decoder is not allowed to blame the camera', () => {
         heightM: 1.75, surface: 'treadmill', speedMs: 3.0,
         droppedFrames: 240, sourceFps: 30
     });
-    assertEqual(known.code, 'fps-too-low', 'it still cannot be analysed');
+    assertEqual(known.code, 'fps-too-low', 'it still cannot be analyzed');
     assert(!/Record at 60 fps/.test(known.message), 'but the camera must not be blamed for it');
     assert(/The recording is fine/.test(known.message), known.message);
     assert(/30 frames per second/.test(known.message), 'and the real rate is named');
@@ -1667,9 +1667,9 @@ test('one bright thumbnail cannot drag the bar past itself', () => {
     assertClose(median, 10, 1e-9, 'the median is unmoved by the spike');
 });
 
-group('Demos — the shipped clip is what the catalogue says it is');
+group('Demos — the shipped clip is what the catalog says it is');
 
-test('the demo catalogue is well formed and its ids are unique', () => {
+test('the demo catalog is well formed and its ids are unique', () => {
     assert(DEMOS.length >= 2, 'a synthetic demo and a filmed one');
     assertEqual(new Set(DEMOS.map(d => d.id)).size, DEMOS.length, 'ids must be unique');
     for (const d of DEMOS) {

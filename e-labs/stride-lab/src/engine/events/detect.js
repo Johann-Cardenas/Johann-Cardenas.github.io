@@ -165,7 +165,7 @@ export function detectEvents(cond, opts = {}) {
 
         /* M4 — the foot settling to its stance velocity.
            Not to ZERO velocity: on a treadmill the planted foot travels
-           backwards at belt speed for the whole of stance, so a detector
+           backward at belt speed for the whole of stance, so a detector
            looking for a stationary foot finds nothing at all. What is invariant
            is that stance velocity is CONSTANT, whatever its value, so the
            reference is estimated from the data (the slow half of the foot's
@@ -328,18 +328,18 @@ function vote(cands, side, kind) {
     /** @type {import('../types.js').GaitEvent[]} */
     const out = [];
 
-    /* Seed each cluster on the candidate with the heaviest NEIGHBOURHOOD, not
+    /* Seed each cluster on the candidate with the heaviest NEIGHBORHOOD, not
        on the heaviest candidate and not on the first one.
 
        This is where an earlier version of this went wrong, and the failure was
        instructive: seeding on "the heaviest, earliest" candidate meant that
        when noise scattered several candidates of one method across the window,
        the earliest of them anchored the cluster and dragged the event early.
-       The bias therefore GREW with noise, which is exactly backwards for
+       The bias therefore GREW with noise, which is exactly backward for
        something meant to be robust. Asking which candidate has the most
        agreement around it is a mode-seeking choice and does not depend on
        ordering at all. */
-    const neighbourWeight = pool.map((c, i) => {
+    const neighborWeight = pool.map((c, i) => {
         let s = 0;
         for (let j = 0; j < pool.length; j++) if (Math.abs(pool[j].t - c.t) <= win) s += pool[j].w;
         void i;
@@ -350,7 +350,7 @@ function vote(cands, side, kind) {
         let best = -1, bestScore = -1;
         for (let i = 0; i < pool.length; i++) {
             if (used[i]) continue;
-            const score = neighbourWeight[i] + pool[i].w * 1e-3;
+            const score = neighborWeight[i] + pool[i].w * 1e-3;
             if (score > bestScore) { bestScore = score; best = i; }
         }
         if (best < 0) break;
@@ -562,12 +562,12 @@ function estimateStanceVx(vx) {
 }
 
 /**
- * Quantisation and method uncertainty for an interval measured between two
+ * Quantization and method uncertainty for an interval measured between two
  * detected events.
  *
  *   sigma_total = sqrt(sigma_quant^2 + sigma_a^2 + sigma_b^2)
  *
- * The quantisation term is the uniform-distribution sigma T/sqrt(12) per event,
+ * The quantization term is the uniform-distribution sigma T/sqrt(12) per event,
  * which reproduces the spec's error table: two events at 30 fps give
  * 1.96 * 33.3/sqrt(6) = 26.7 ms, i.e. the stated "+/- one frame".
  */

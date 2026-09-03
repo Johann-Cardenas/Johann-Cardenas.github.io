@@ -60,10 +60,10 @@ export const EXERCISES = [
         setup: 'Side plank from the forearm and the lower foot, body in one line.',
         cues: [
             'Lift the hips until the trunk is straight, then raise the top leg a hand-width.',
-            'Keep the top hip stacked over the bottom hip — do not roll backwards.',
+            'Keep the top hip stacked over the bottom hip — do not roll backward.',
             'Breathe normally; if you are holding your breath the hold is too long.'
         ],
-        commonErrors: ['Hips sinking towards the floor.', 'Rolling open so the movement becomes a hip flexor exercise.'],
+        commonErrors: ['Hips sinking toward the floor.', 'Rolling open so the movement becomes a hip flexor exercise.'],
         contraindications: 'Stop if you feel pinching at the side of the hip or pain in the shoulder you are leaning on.'
     },
     {
@@ -75,7 +75,7 @@ export const EXERCISES = [
         progression: ['step-down-low', 'step-down', 'step-down-slow-tempo'],
         setup: 'Stand on one leg on a step about 15-20 cm high, the other foot hanging free.',
         cues: [
-            'Lower the free heel towards the floor over three seconds, touch lightly, and return.',
+            'Lower the free heel toward the floor over three seconds, touch lightly, and return.',
             'Watch the knee: it should track over the middle of the foot, not fall inwards.',
             'Keep the pelvis level — use a mirror or a phone camera to check.'
         ],
@@ -127,7 +127,7 @@ export const EXERCISES = [
             'Keep the movement quiet — noise is a proxy for a heavy landing.',
             'Stay tall; this drill is about the foot, not about the stride.'
         ],
-        commonErrors: ['Turning it into a bounding drill.', 'Reaching the foot forwards.'],
+        commonErrors: ['Turning it into a bounding drill.', 'Reaching the foot forward.'],
         contraindications: 'Stop if the calf or Achilles becomes sore. Build volume slowly.'
     },
     {
@@ -155,7 +155,7 @@ export const EXERCISES = [
         progression: ['hip-flexor-stretch', 'hip-flexor-stretch-reach', 'couch-stretch'],
         setup: 'Half-kneeling, back knee down, front foot flat.',
         cues: [
-            'Tuck the pelvis under FIRST, then move forward a few centimetres. The tuck is what makes it a hip flexor stretch.',
+            'Tuck the pelvis under FIRST, then move forward a few centimeters. The tuck is what makes it a hip flexor stretch.',
             'Squeeze the glute on the kneeling side.',
             'Stop at a stretch, not at a strain.'
         ],
@@ -220,10 +220,10 @@ export const EXERCISES = [
         setup: 'Stand on one leg, knee softly bent.',
         cues: [
             'Keep the pelvis level and the knee tracking over the middle of the foot.',
-            'Reach the free foot slowly forwards, then diagonally back, without touching down.',
+            'Reach the free foot slowly forward, then diagonally back, without touching down.',
             'Grip the floor lightly with the toes rather than clawing.'
         ],
-        commonErrors: ['Letting the arch collapse.', 'Hitching the free hip upwards.'],
+        commonErrors: ['Letting the arch collapse.', 'Hitching the free hip upward.'],
         contraindications: 'Hold a wall if balance is a problem; the point is control, not difficulty.'
     }
 ];

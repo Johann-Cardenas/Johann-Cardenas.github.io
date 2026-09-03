@@ -2,8 +2,8 @@
    Stride Lab — value formatting and copy.
 
    Voice, applied consistently: sentence case, active voice, no
-   apology. A button that says "Analyse run" leads to a screen that
-   says "Analysing run" and a result that says "Run analysed".
+   apology. A button that says "Analyze run" leads to a screen that
+   says "Analyzing run" and a result that says "Run analyzed".
    Errors state what happened and what to do next. Empty states are
    invitations to act.
    ============================================================ */
@@ -15,7 +15,7 @@ export const CONFIDENCE_COPY = {
     unavailable: { label: 'Not measured', hint: 'This one could not be measured from this clip.' }
 };
 
-/** Shape as well as colour, so status never depends on colour alone. */
+/** Shape as well as color, so status never depends on color alone. */
 export const STATUS_GLYPH = {
     optimal: '●',        /* filled circle   */
     acceptable: '◐',     /* half circle     */
@@ -116,7 +116,7 @@ export function announce(metric, side) {
         + `${fmt(slot.value, metric.decimals)} ${unit}${ci}. Confidence ${CONFIDENCE_COPY[slot.confidence].label.toLowerCase()}.`;
 }
 
-/** Errors say what happened and what to do next, and do not apologise. */
+/** Errors say what happened and what to do next, and do not apologize. */
 export const ERROR_COPY = {
     'fps-too-low': {
         title: 'This clip has too few frames per second',
@@ -128,7 +128,7 @@ export const ERROR_COPY = {
     },
     'multiple-people': {
         title: 'More than one person in frame',
-        body: 'Tap the runner you want analysed.'
+        body: 'Tap the runner you want analyzed.'
     },
     'no-strides': {
         title: 'No complete stride could be measured',

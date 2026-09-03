@@ -57,7 +57,7 @@
 /* The `hidden` attribute only carries the UA's `display: none`, which any
    author `display` rule outranks. Much of this app is display:flex/block and
    is shown or hidden from script — without this the empty state, the second
-   gradient colour, the logo dropzone and its preview would all stay visible
+   gradient color, the logo dropzone and its preview would all stay visible
    while script believed them hidden. Scoped, so it cannot leak site-wide. */
 .QrStudio [hidden] { display: none !important; }
 
@@ -224,7 +224,7 @@
 .qs-tab i { font-size: 0.85rem; }
 .qs-tab.is-active { color: var(--qs-accent-ink); border-bottom-color: var(--qs-accent); background: var(--qs-panel); }
 /* A dot marks a tab holding settings changed from the defaults, so nothing
-   a user customised stays hidden behind an unopened tab. */
+   a user customized stays hidden behind an unopened tab. */
 .qs-tab { position: relative; }
 .qs-tab.is-changed::after {
     content: "";
@@ -309,7 +309,7 @@
 }
 .qs-hint.is-warn { color: var(--qs-warn); }
 
-/* colour inputs — swatch plus a hex field, so brand colours can be pasted */
+/* color inputs — swatch plus a hex field, so brand colors can be pasted */
 .qs-color {
     display: flex;
     align-items: stretch;
@@ -964,6 +964,6 @@
 .QrStudio .qs-linkbtn { color: var(--qs-accent-ink) !important; }
 .QrStudio .qs-linkbtn--danger { color: var(--qs-danger) !important; }
 .QrStudio .qs-drop { color: var(--qs-ink-dim) !important; }
-/* Chips carry their colour as an inline background; the site-wide button rule
+/* Chips carry their color as an inline background; the site-wide button rule
    would otherwise paint them all teal. */
 .QrStudio .qs-chip { color: transparent !important; transition: transform 0.12s ease; }

@@ -10,10 +10,10 @@
      1. It is the oracle for the validation suite. Every metric is
         asserted against a number the generator was told to produce,
         across frame rates, strike patterns and noise levels. Without
-        it there is no way to know the maths is right.
+        it there is no way to know the math is right.
      2. It is the app's demo mode. A visitor with no running video can
         still drive the entire pipeline end to end and see what the
-        engine produces — clearly labelled synthetic, never presented
+        engine produces — clearly labeled synthetic, never presented
         as a measurement of a person.
    ============================================================ */
 
@@ -92,7 +92,7 @@ export function synthGait(overrides = {}) {
     const trunkLen = WINTER.torso * H;
     const upperArm = 0.186 * H;
     const forearm = 0.146 * H;
-    const handLen = 0.054 * H;   /* wrist to hand centre of mass */
+    const handLen = 0.054 * H;   /* wrist to hand center of mass */
 
     const stepTime = 60 / p.cadenceSpm;
     const strideTime = 2 * stepTime;
@@ -118,9 +118,9 @@ export function synthGait(overrides = {}) {
     /* Overground translation is deliberately modest. A fixed camera at this
        scale only holds two or three strides before the runner leaves the
        frame — which is itself the reason the capture guidance pushes people
-       towards a treadmill or a longer lens for spatial metrics. */
+       toward a treadmill or a longer lens for spatial metrics. */
     const drift = p.mode === 'overground' ? p.speedMs : 0;
-    const xCentre = drift * p.durationS / 2;
+    const xCenter = drift * p.durationS / 2;
 
     const truthStrikes = [];
     const truthToeoffs = [];
@@ -143,7 +143,7 @@ export function synthGait(overrides = {}) {
      * A cosine at step frequency puts its LOWEST point at foot strike and its
      * most negative VELOCITY a quarter period earlier — both wrong, and wrong
      * in a way that would quietly reward the pelvis-based contact detector for
-     * agreeing with an artefact. What actually happens: the body is in free
+     * agreeing with an artifact. What actually happens: the body is in free
      * fall through the flight phase, so the pelvis arrives at contact with its
      * most negative vertical velocity; the ground reaction force then arrests
      * and reverses it, so the pelvis reaches its LOWEST point at mid-stance.
@@ -179,7 +179,7 @@ export function synthGait(overrides = {}) {
 
         /* --- pelvis: rises and falls once per step, lowest at mid-stance --- */
         const hipY = pelvisHeight(t);
-        const hipX = p.direction * (drift * t - xCentre);
+        const hipX = p.direction * (drift * t - xCenter);
 
         const world = {};
         world.hipMid = { x: hipX, y: hipY };
@@ -189,8 +189,8 @@ export function synthGait(overrides = {}) {
             x: hipX + p.direction * trunkLen * Math.sin(lean),
             y: hipY + trunkLen * Math.cos(lean)
         };
-        /* Head. The ear midpoint is where Winter puts the head-and-neck centre
-           of mass, so it is modelled as the primary head landmark and the nose
+        /* Head. The ear midpoint is where Winter puts the head-and-neck center
+           of mass, so it is modeled as the primary head landmark and the nose
            hangs off it — the other way round would make the inertial model
            depend on a facial feature. `headForward` is the runner's forward
            head posture, which is what the head-position metrics measure. */
@@ -223,7 +223,7 @@ export function synthGait(overrides = {}) {
            metrics later read. Solving the knee from the midline and then
            reporting the angle at an offset hip manufactures a left/right
            difference in a runner that was built perfectly symmetric — which is
-           exactly the kind of artefact an asymmetry test must not chase. */
+           exactly the kind of artifact an asymmetry test must not chase. */
         /* A three-quarter view projects part of the shoulder width, which is
            exactly the cue classifyView keys off — so the generator can produce
            the camera angle the app is supposed to refuse to measure. */
@@ -255,18 +255,18 @@ export function synthGait(overrides = {}) {
             const tStrike = (k + phaseOffset) * strideTime;
 
             /* Foot plant. On a treadmill the belt carries the planted foot
-               backwards at running speed; overground the plant is fixed in
+               backward at running speed; overground the plant is fixed in
                the world and the body passes over it. Either way the foot is
                under the hip at mid-stance, which is what makes the resulting
                overstride a consequence of the model rather than a knob. */
             const dir = p.direction;
-            const plantMid = dir * (drift * (tStrike + STANCE_ALIGN_FRACTION * gct) - xCentre);
+            const plantMid = dir * (drift * (tStrike + STANCE_ALIGN_FRACTION * gct) - xCenter);
 
             let ankleX, footPitchDeg, arc;
             if (ph < duty) {
                 /* ---- stance ---- */
                 const s = ph / duty;                    /* 0 at strike, 1 at toe-off */
-                /* On a treadmill the belt carries the planted foot backwards at
+                /* On a treadmill the belt carries the planted foot backward at
                    running speed; overground the plant is fixed in the world and
                    the body passes over it. */
                 ankleX = plantMid + (p.mode === 'treadmill'
@@ -325,7 +325,7 @@ export function synthGait(overrides = {}) {
             const sh = world['shoulder' + side];
             /* Arm swing happens in the plane of travel. Seen from behind, that
                plane is edge-on and almost none of the swing projects into the
-               image — modelling it as a left-right swing would manufacture a
+               image — modeling it as a left-right swing would manufacture a
                frontal-plane hand crossing out of a perfectly ordinary arm
                action, and the hand-crossing metric would be measuring the
                generator rather than the runner. */
@@ -355,7 +355,7 @@ export function synthGait(overrides = {}) {
            on top of each other; in a frontal view they are a real width apart.
            This is exactly the cue classifyView() keys off, so the generator has
            to produce it honestly. */
-        /* --- project to normalised image coordinates, y DOWN ------------- */
+        /* --- project to normalized image coordinates, y DOWN ------------- */
         for (let c = 0; c < K; c++) {
             const name = CANONICAL[c];
             const w = world[name];
@@ -432,7 +432,7 @@ function smooth(s) {
  * Two-link inverse kinematics for the knee.
  * Of the two solutions, take the one that puts the knee ANTERIOR — a human
  * knee bends one way, and picking the wrong root produces a runner with
- * backwards legs whose joint angles all look almost plausible.
+ * backward legs whose joint angles all look almost plausible.
  */
 function solveKnee(hip, ankle, thigh, shank, dir) {
     let dx = ankle.x - hip.x, dy = ankle.y - hip.y;

@@ -165,7 +165,7 @@ export function describeIsolation(iso, layout) {
 }
 
 /**
- * Bounding box, in engineering millimetres, of whatever is currently
+ * Bounding box, in engineering millimeters, of whatever is currently
  * isolated — so the camera can auto-frame it.
  *
  * @param {IsolationState} iso

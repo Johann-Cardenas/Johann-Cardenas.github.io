@@ -6,14 +6,14 @@
 
    WHAT THESE MAPS DO AND DO NOT DO
 
-   They carry MICRO-DETAIL: the fine pebbling of moulded rubber,
-   the machining marks on an aluminium rim. That is detail below
-   the scale of any modelled geometry, and it is what makes a
+   They carry MICRO-DETAIL: the fine pebbling of molded rubber,
+   the machining marks on an aluminum rim. That is detail below
+   the scale of any modeled geometry, and it is what makes a
    surface read as a material rather than as shaded plastic.
 
    They carry NO dimensional meaning whatsoever. Tread pattern is
-   geometry (see geometry/tire.js), tyre size comes from the
-   designation, and base colour comes from the material spec so
+   geometry (see geometry/tire.js), tire size comes from the
+   designation, and base color comes from the material spec so
    the user's tint and brightness controls stay meaningful. A
    scanned photograph's baked-in lighting must never contaminate
    a figure, which is why the Color map is deliberately not used.
@@ -25,11 +25,11 @@
    surface refinement and nothing else. The procedural path
    remains the reference implementation.
 
-   PHYSICAL SCALE IS HONOURED. Each set records the real-world
+   PHYSICAL SCALE IS HONORED. Each set records the real-world
    size of one tile, so the repeat count is computed from the
    actual dimensions of the part rather than guessed. Rubber
-   grain is therefore the same physical size on a motorcycle tyre
-   and on an aircraft tyre, as it is in life.
+   grain is therefore the same physical size on a motorcycle tire
+   and on an aircraft tire, as it is in life.
 
    Provenance for every file is in assets/textures/CREDITS.md.
    ============================================================ */
@@ -43,7 +43,7 @@ import * as THREE from 'three';
  * @property {string} id
  * @property {string} normal    file name, relative to the texture directory
  * @property {string} rough
- * @property {number} tileMm    real-world size of one tile, millimetres
+ * @property {number} tileMm    real-world size of one tile, millimeters
  * @property {string} source
  * @property {string} license
  */
@@ -59,7 +59,7 @@ export const TEXTURE_SETS = Object.freeze({
         license: 'CC0 1.0 Universal'
     },
     // No metal set. One was evaluated and rejected — see CREDITS.md. Machined
-    // metal is characterised by what it REFLECTS, which the studio
+    // metal is characterized by what it REFLECTS, which the studio
     // environment map already supplies; a scanned roughness map on top only
     // made the rims look wet.
 });
@@ -142,7 +142,7 @@ export class TextureLibrary {
     /**
      * How many times a tile fits across a real span. The caller turns this
      * into a `repeat`, because only the caller knows whether the mesh's UVs
-     * already carry a repeat of their own — the tyre's do, the rim's do not.
+     * already carry a repeat of their own — the tire's do, the rim's do not.
      *
      * @param {keyof typeof TEXTURE_SETS} name
      * @param {number} spanMm
@@ -155,7 +155,7 @@ export class TextureLibrary {
     /**
      * A per-use clone with explicit repeats.
      *
-     * Cloning shares the GPU image, so a class 13 unit with 34 tyres uploads
+     * Cloning shares the GPU image, so a class 13 unit with 34 tires uploads
      * the bitmap once no matter how many distinct repeats it needs.
      *
      * @param {{normal: THREE.Texture, rough: THREE.Texture}} set

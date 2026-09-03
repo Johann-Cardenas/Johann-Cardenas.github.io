@@ -20,7 +20,7 @@
 
     var KAPPA = 0.5522847498307936;   // circle-to-bezier control point ratio
 
-    // ------------------------------------------------------------ path maths
+    // ------------------------------------------------------------ path math
 
     /** Rounded rectangle with independent corner radii [tl, tr, br, bl]. */
     function roundRectPath(x, y, w, h, radii) {
@@ -67,11 +67,11 @@
     };
 
     /**
-     * Path for one data module. `has(dx, dy)` reports whether the neighbouring
+     * Path for one data module. `has(dx, dy)` reports whether the neighboring
      * module is dark, which is what lets the connected shapes join up.
      *
      * Ink coverage is deliberately kept high across every shape. A decoder
-     * thresholds local blocks of pixels rather than sampling module centres
+     * thresholds local blocks of pixels rather than sampling module centers
      * alone, so a shape that paints only ~60% of its cell leaves the binarizer
      * no margin and starts to fail non-monotonically with render size. Each
      * shape below fills as much of its cell as its silhouette allows; the
@@ -151,12 +151,12 @@
     }
 
     /**
-     * Eye centre: the 3x3 core of a finder pattern.
+     * Eye center: the 3x3 core of a finder pattern.
      *
      * Scanners locate a symbol by the 1:1:3:1:1 dark/light run ratio through a
      * finder, where the "3" is this core. The rounded variants keep a 3-module
      * run on every scan line that crosses them; a true circle does not — off
-     * the centre row its chord narrows to about 2.2 modules, which strict
+     * the center row its chord narrows to about 2.2 modules, which strict
      * locators reject outright. Circle and leaf are kept because phone cameras
      * do tolerate them and the look is popular, but SHAPE_RISK below records
      * what the scan harness actually measured so the UI can say so.
@@ -685,7 +685,7 @@
 
         // Shape choices, scored from what the harness actually measured.
         var shapeChecks = [
-            ['eyeBall', style.eyeBallShape, 'Eye centre'],
+            ['eyeBall', style.eyeBallShape, 'Eye center'],
             ['eyeFrame', style.eyeFrameShape, 'Eye frame'],
             ['module', style.moduleShape, 'Module']
         ];

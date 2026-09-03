@@ -229,7 +229,7 @@ export async function renderToCanvas(viewport, opts) {
 
 /**
  * Composite the SVG annotation overlay onto an already-rendered canvas.
- * Used by the PNG/JPEG path, where annotations have to be rasterised.
+ * Used by the PNG/JPEG path, where annotations have to be rasterized.
  *
  * @param {HTMLCanvasElement} canvas
  * @param {SVGSVGElement} overlay
@@ -300,7 +300,7 @@ export function loadImage(src) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error('Could not rasterise the annotation overlay.'));
+        img.onerror = () => reject(new Error('Could not rasterize the annotation overlay.'));
         img.src = src;
     });
 }

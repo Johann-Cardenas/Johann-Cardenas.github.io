@@ -10,7 +10,7 @@
    where P is the wheel load and p the contact pressure. Gear3D
    follows the usual pavement-engineering simplification of taking
    contact pressure equal to inflation pressure. That is an
-   IDEALISATION, and the FEM export says so in its header: real
+   IDEALIZATION, and the FEM export says so in its header: real
    contact pressure exceeds inflation pressure near the tread ribs
    and falls below it at the shoulders, and the vertical stress
    distribution over a real patch is markedly non-uniform.
@@ -21,7 +21,7 @@
       Width fixed at a documented fraction of section width
       (default 0.85), length follows from area.
 
-   B  rectangle with semicircular ends  — Huang's idealisation
+   B  rectangle with semicircular ends  — Huang's idealization
       Total length L, overall width 0.6 L. The two end semicircles
       have radius 0.3 L, so the central rectangle is 0.4 L long:
 
@@ -149,8 +149,8 @@ export function equivalentRadius(areaMm2) {
 }
 
 /**
- * Outline of a patch as engineering-frame (x, y) offsets from its centre,
- * in millimetres, counter-clockwise. Used for plan-view rendering and for
+ * Outline of a patch as engineering-frame (x, y) offsets from its center,
+ * in millimeters, counter-clockwise. Used for plan-view rendering and for
  * the FEM corner export.
  *
  * @param {Patch} patch

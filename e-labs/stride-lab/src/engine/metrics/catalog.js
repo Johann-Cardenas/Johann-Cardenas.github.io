@@ -1,5 +1,5 @@
 /* ============================================================
-   Stride Lab — the metric catalogue.
+   Stride Lab — the metric catalog.
 
    One entry per reported quantity: what it is, in what unit, from
    which view, how it is defined, and which dimension score it
@@ -21,7 +21,7 @@
  * @property {string} formula       how it is actually computed
  * @property {string[]} drivers     what limits its confidence
  * @property {boolean} [timingGated] suppressed below 60 fps
- * @property {boolean} [scaleDependent] error scales with the pixel-to-metre scale
+ * @property {boolean} [scaleDependent] error scales with the pixel-to-meter scale
  * @property {number} [decimals]
  */
 
@@ -73,21 +73,21 @@ export const METRICS = [
     {
         id: 'verticalOscillation', label: 'Vertical oscillation', unit: 'cm', view: 'sagittal', sided: false,
         dimension: 'spatial', decimals: 1, scaleDependent: true,
-        definition: 'How far your hips rise and fall within a stride. This is the pelvis landmark, not your centre of mass — see "Centre-of-mass oscillation" for the quantity the research is actually about.',
-        formula: 'Peak-to-trough excursion of the hip centre, converted with the per-frame scale.',
+        definition: 'How far your hips rise and fall within a stride. This is the pelvis landmark, not your center of mass — see "Center-of-mass oscillation" for the quantity the research is actually about.',
+        formula: 'Peak-to-trough excursion of the hip center, converted with the per-frame scale.',
         drivers: ['scaling', 'camera stability']
     },
     {
         id: 'verticalRatio', label: 'Vertical ratio', unit: '%', view: 'sagittal', sided: false,
         dimension: 'spatial', decimals: 1, scaleDependent: true,
-        definition: 'Vertical oscillation as a percentage of step length. Normalises bounce for stride size.',
+        definition: 'Vertical oscillation as a percentage of step length. Normalizes bounce for stride size.',
         formula: '100 x vertical oscillation / step length.',
         drivers: ['scaling']
     },
     {
         id: 'stepLength', label: 'Step length', unit: 'm', view: 'sagittal', sided: true,
         dimension: 'spatial', decimals: 2, scaleDependent: true,
-        definition: 'Distance travelled between one foot strike and the next.',
+        definition: 'Distance traveled between one foot strike and the next.',
         formula: 'Overground: horizontal ankle displacement between contralateral strikes. Treadmill: speed x step time.',
         drivers: ['scaling', 'surface']
     },
@@ -109,7 +109,7 @@ export const METRICS = [
         id: 'trunkLean', label: 'Trunk lean', unit: 'deg', view: 'sagittal', sided: false,
         dimension: 'posture', decimals: 1,
         definition: 'Forward tilt of the trunk SEGMENT relative to vertical, at mid-stance. Positive is forward. This is not whole-body lean measured from the ankle, which is a different and larger number.',
-        formula: 'Angle between vertical and the hip-centre-to-shoulder-centre vector.',
+        formula: 'Angle between vertical and the hip-center-to-shoulder-center vector.',
         drivers: ['view classification'], planeSensitive: true
     },
     {
@@ -137,7 +137,7 @@ export const METRICS = [
         id: 'overstride', label: 'Overstride', unit: '% height', view: 'sagittal', sided: true,
         dimension: 'contact', decimals: 1, scaleDependent: true,
         definition: 'How far ahead of your hips the foot lands, as a percentage of your standing height.',
-        formula: 'Horizontal ankle-minus-hip-centre distance at foot strike, divided by standing height.',
+        formula: 'Horizontal ankle-minus-hip-center distance at foot strike, divided by standing height.',
         drivers: ['scaling'], planeSensitive: true
     },
     {
@@ -172,7 +172,7 @@ export const METRICS = [
         id: 'ankleDorsiflexionContact', label: 'Ankle dorsiflexion at contact', unit: 'deg', view: 'sagittal', sided: true,
         dimension: 'contact', decimals: 1,
         definition: 'Toes-up angle of the ankle at landing, relative to an assumed neutral.',
-        formula: 'Interior knee-ankle-toe angle at foot strike, subtracted from an assumed neutral of 100 deg. The neutral is a modelling assumption, not a measurement, so this metric never reports above medium confidence.',
+        formula: 'Interior knee-ankle-toe angle at foot strike, subtracted from an assumed neutral of 100 deg. The neutral is a modeling assumption, not a measurement, so this metric never reports above medium confidence.',
         drivers: ['foot landmark quality', 'assumed neutral'], planeSensitive: true
     },
     {
@@ -200,7 +200,7 @@ export const METRICS = [
         id: 'headAngle', label: 'Head angle', unit: 'deg', view: 'sagittal', sided: false,
         dimension: 'posture', decimals: 1,
         definition: 'Head position relative to the trunk. Positive is forward of the trunk line.',
-        formula: 'Angle between the trunk axis and the shoulder-centre-to-nose vector.',
+        formula: 'Angle between the trunk axis and the shoulder-center-to-nose vector.',
         drivers: [], planeSensitive: true
     },
 
@@ -229,8 +229,8 @@ export const METRICS = [
     {
         id: 'trunkLateralLean', label: 'Trunk lateral lean', unit: 'deg', view: 'frontal', sided: true,
         dimension: 'posture', decimals: 1,
-        definition: 'Sideways tilt of the trunk at mid-stance. Positive is leaning towards the supporting leg.',
-        formula: 'Angle between vertical and the hip-centre-to-shoulder-centre vector in the frontal plane.',
+        definition: 'Sideways tilt of the trunk at mid-stance. Positive is leaning toward the supporting leg.',
+        formula: 'Angle between vertical and the hip-center-to-shoulder-center vector in the frontal plane.',
         drivers: [], planeSensitive: true
     },
     {
@@ -243,9 +243,9 @@ export const METRICS = [
 
     /* ---------------- Whole-body model ---------------- */
     {
-        id: 'comVerticalOscillation', label: 'Centre-of-mass oscillation', unit: 'cm', view: 'sagittal', sided: false,
+        id: 'comVerticalOscillation', label: 'Center-of-mass oscillation', unit: 'cm', view: 'sagittal', sided: false,
         dimension: 'spatial', decimals: 1, scaleDependent: true,
-        definition: 'How far your whole-body centre of mass rises and falls within a stride. Of everything measured here, this is the variable with the strongest evidenced link to running economy — less is associated with better economy.',
+        definition: 'How far your whole-body center of mass rises and falls within a stride. Of everything measured here, this is the variable with the strongest evidenced link to running economy — less is associated with better economy.',
         formula: 'Peak-to-trough excursion of a fourteen-segment inertial model built from the tracked landmarks, weighted by Winter\'s segment masses. This is not the pelvis: the swinging limbs move opposite to the trunk and partly cancel it, which is exactly what a single landmark cannot see.',
         drivers: ['scaling', 'landmark coverage', 'camera stability']
     },
@@ -260,14 +260,14 @@ export const METRICS = [
         id: 'legStiffness', label: 'Leg stiffness', unit: 'kN/m', view: 'sagittal', sided: false,
         dimension: 'timing', decimals: 1,
         definition: 'How much your leg compresses under load, expressed as a spring. Higher is associated with better running economy.',
-        formula: 'Morin et al. (2005), from the same inputs as vertical stiffness plus the horizontal distance travelled during contact. A model output, not a measurement.',
+        formula: 'Morin et al. (2005), from the same inputs as vertical stiffness plus the horizontal distance traveled during contact. A model output, not a measurement.',
         drivers: ['body mass', 'speed', 'frame rate'], timingGated: true
     },
     {
         id: 'brakingLoss', label: 'Braking', unit: 'm/s', view: 'sagittal', sided: true,
         dimension: 'contact', decimals: 2, scaleDependent: true,
-        definition: 'How much forward speed your centre of mass loses between landing and the slowest moment of stance. Mechanically informative; NOT an economy variable — the meta-analysis found braking measures unrelated to running economy.',
-        formula: 'Horizontal centre-of-mass velocity at foot strike minus its minimum during stance.',
+        definition: 'How much forward speed your center of mass loses between landing and the slowest moment of stance. Mechanically informative; NOT an economy variable — the meta-analysis found braking measures unrelated to running economy.',
+        formula: 'Horizontal center-of-mass velocity at foot strike minus its minimum during stance.',
         drivers: ['scaling', 'landmark coverage']
     },
     {
@@ -281,7 +281,7 @@ export const METRICS = [
         id: 'forwardHeadPosture', label: 'Forward head position', unit: '% height', view: 'sagittal', sided: false,
         dimension: 'posture', decimals: 1, scaleDependent: true,
         definition: 'How far in front of your shoulders you carry your head, as a percentage of your standing height.',
-        formula: 'Horizontal distance from the shoulder centre to the ear midpoint, averaged over the stride, divided by standing height.',
+        formula: 'Horizontal distance from the shoulder center to the ear midpoint, averaged over the stride, divided by standing height.',
         drivers: ['ear landmark quality', 'view classification'], planeSensitive: true
     },
     {
@@ -294,7 +294,7 @@ export const METRICS = [
     {
         id: 'footProgressionAngle', label: 'Foot progression angle', unit: 'deg', view: 'frontal', sided: true,
         dimension: 'contact', decimals: 1,
-        definition: 'How far your foot points outward or inward relative to the direction you are travelling, at mid-stance. Positive is toes-out.',
+        definition: 'How far your foot points outward or inward relative to the direction you are traveling, at mid-stance. Positive is toes-out.',
         formula: 'Angle of the line across the forefoot, from the big toe to the lateral forefoot, in the frontal projection. This needs the foot to be a PLANE rather than a line, so it requires a keypoint set with a lateral forefoot landmark — the default backend does not have one and reports this unavailable.',
         drivers: ['needs a lateral forefoot landmark', 'view classification'], planeSensitive: true
     },
@@ -320,7 +320,7 @@ export const METRIC_BY_ID = Object.fromEntries(METRICS.map(m => [m.id, m]));
 export const DIMENSIONS = [
     {
         id: 'timing', label: 'Timing and rhythm',
-        blurb: 'How the stride is organised in time: cadence, contact, flight and the balance between them.'
+        blurb: 'How the stride is organized in time: cadence, contact, flight and the balance between them.'
     },
     {
         id: 'posture', label: 'Posture and alignment',

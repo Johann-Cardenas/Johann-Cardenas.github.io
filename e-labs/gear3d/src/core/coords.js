@@ -5,12 +5,12 @@
    dimensions, all contact patches are expressed in this frame):
 
      x  longitudinal, POSITIVE REARWARD.
-        Origin at the FIRST (front-most) axle centreline.
+        Origin at the FIRST (front-most) axle centerline.
      y  transverse, POSITIVE TO THE RIGHT of the direction
-        of travel. Origin on the vehicle centreline.
+        of travel. Origin on the vehicle centerline.
      z  vertical, POSITIVE UP. z = 0 at the PAVEMENT SURFACE.
 
-   Right-handed. Units: millimetres.
+   Right-handed. Units: millimeters.
 
    RENDER FRAME (three.js, Y-up):
         (x, y, z)_eng  ->  (y, z, x)_three
@@ -32,8 +32,8 @@ export const CANONICAL_LENGTH_UNIT = 'mm';
 
 /** Human-readable axis metadata, used by axis badges and UI copy. */
 export const ENG_AXES = Object.freeze({
-    x: { label: 'X', name: 'longitudinal', positive: 'rearward', origin: 'front-most axle centreline' },
-    y: { label: 'Y', name: 'transverse', positive: 'right of travel', origin: 'vehicle centreline' },
+    x: { label: 'X', name: 'longitudinal', positive: 'rearward', origin: 'front-most axle centerline' },
+    y: { label: 'Y', name: 'transverse', positive: 'right of travel', origin: 'vehicle centerline' },
     z: { label: 'Z', name: 'vertical', positive: 'up', origin: 'pavement surface' }
 });
 
@@ -244,7 +244,7 @@ export function engToOrbit(v) {
    ------------------------------------------------------------ */
 
 /**
- * Render frame (three.js, metres) -> engineering frame (millimetres), as a
+ * Render frame (three.js, meters) -> engineering frame (millimeters), as a
  * COLUMN-MAJOR 4x4 suitable for `THREE.Matrix4.fromArray`.
  *
  * This lives here, with the rest of the frame conversion, rather than in the
@@ -255,7 +255,7 @@ export function engToOrbit(v) {
  * The linear part is the cyclic permutation (x,y,z) -> (z,x,y), determinant
  * +1, so handedness is preserved and no surface normal is inverted.
  *
- * @param {number} [scale=1000] metres to millimetres
+ * @param {number} [scale=1000] meters to millimeters
  * @returns {number[]} 16 elements, column-major
  */
 export function renderToEngMatrix(scale = 1000) {

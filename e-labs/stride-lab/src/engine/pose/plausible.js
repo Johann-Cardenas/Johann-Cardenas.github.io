@@ -23,7 +23,7 @@
    clip — the runner's own proportions, not a population's — and the
    distal landmark of any frame that disagrees is marked missing.
    The existing gating then treats it as missing, which is the
-   behaviour that was always wanted.
+   behavior that was always wanted.
    ============================================================ */
 
 import { CANONICAL, median } from '../types.js';
@@ -46,7 +46,7 @@ export const RIGID_SEGMENTS = [
  * disbelieved. Generous on purpose: real foreshortening in a slightly oblique
  * view shortens a limb legitimately, and the target here is the gross failure
  * — a limb placed somewhere it anatomically cannot be — not the honest few
- * per cent of perspective.
+ * percent of perspective.
  */
 export const LENGTH_TOLERANCE = 0.40;
 
@@ -68,7 +68,7 @@ export function gateImplausibleSegments(series) {
         const ia = idx[a], ib = idx[b];
         if (ia == null || ib == null) return NaN;
         if (!(series.vis[f * K + ia] >= 0.5) || !(series.vis[f * K + ib] >= 0.5)) return NaN;
-        /* pixels, not normalised units: normalised coordinates are scaled
+        /* pixels, not normalized units: normalized coordinates are scaled
            differently on each axis, so a length computed in them changes with
            the aspect ratio of the frame */
         const dx = (series.xy[(f * K + ia) * 2] - series.xy[(f * K + ib) * 2]) * width;

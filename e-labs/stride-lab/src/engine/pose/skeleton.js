@@ -1,5 +1,5 @@
 /* ============================================================
-   Stride Lab — normalised skeleton adapter.
+   Stride Lab — normalized skeleton adapter.
 
    Two backends produce two different keypoint sets. Everything
    downstream addresses landmarks by NAME through this module, so
@@ -44,8 +44,8 @@ export const BLAZEPOSE_CENTROIDS = {
 /**
  * Halpe-26, the RTMPose research backend.
  * Halpe describes the foot better than BlazePose (big toe, small toe and heel
- * per side) and carries a genuine pelvis centre at 19. `toe*` maps to the big
- * toe, which is the closest analogue of BlazePose's foot index.
+ * per side) and carries a genuine pelvis center at 19. `toe*` maps to the big
+ * toe, which is the closest analog of BlazePose's foot index.
  */
 export const HALPE_26 = {
     nose: 0,
@@ -78,7 +78,7 @@ export const BACKEND_MAPS = {
 /**
  * Re-index a raw per-frame landmark array onto the canonical order.
  *
- * @param {Float32Array|number[]} rawXY   [kp][2], normalised image coords
+ * @param {Float32Array|number[]} rawXY   [kp][2], normalized image coords
  * @param {Float32Array|number[]} rawVis  [kp]
  * @param {string} backendId
  * @param {Float64Array} outXY  destination slice, 2 * CANONICAL.length

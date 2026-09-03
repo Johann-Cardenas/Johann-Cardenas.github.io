@@ -26,7 +26,7 @@
     --sl-bad: #e05252;
     --sl-ok: #34d399;
     /* left is teal, right is amber — and the right is ALWAYS dashed as
-       well, so the distinction never rests on colour alone */
+       well, so the distinction never rests on color alone */
     --sl-left: #22d3d1;
     --sl-right: #f0a44a;
     --sl-shadow: 0 10px 30px rgba(2, 6, 16, 0.55);
@@ -113,7 +113,7 @@
    thing: the bar wrapping only moves whole groups onto new rows, and a group
    too wide for the viewport stays too wide. `.sl-workspace` clips rather than
    scrolls below 1080, so what overflowed here did not appear at all — on a
-   380px phone the Analyse run button sat at x=506 and could not be reached. */
+   380px phone the Analyze run button sat at x=506 and could not be reached. */
 .sl-topbar-group { display: flex; align-items: center; gap: 0.45em; flex-wrap: wrap; }
 .sl-topbar-spacer { flex: 1; }
 .sl-sep { width: 1px; height: 1.4em; background: var(--sl-line); margin: 0 0.2em; }
@@ -168,7 +168,7 @@
 
 /* Demo picker + its run button, joined so they read as one control. The
    select carries the longest label in the top bar, so it is allowed to
-   truncate rather than push the Analyse button off a narrow screen. */
+   truncate rather than push the Analyze button off a narrow screen. */
 .sl-demo-group { display: flex; align-items: stretch; gap: 0; }
 .sl-demo-group .sl-select {
     border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: 0;
@@ -255,8 +255,8 @@
 .sl-checks li.warn::before { content: "◐"; color: var(--sl-warn); }
 .sl-checks li.bad::before { content: "△"; color: var(--sl-bad); }
 
-/* ---------- Centre viewport ---------- */
-.sl-centre { display: flex; flex-direction: column; background: var(--sl-bg0); min-width: 0; }
+/* ---------- Center viewport ---------- */
+.sl-center { display: flex; flex-direction: column; background: var(--sl-bg0); min-width: 0; }
 .sl-viewport { position: relative; flex: 1; display: flex; min-height: 420px; }
 .sl-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.2em; gap: 0.9em; min-width: 0; }
 
@@ -581,7 +581,7 @@
     .sl-app .header-content h1 { font-size: 1.6em; }
     .sl-body { grid-template-columns: 1fr; }
     /* viewport directly under the toolbar, panels beneath */
-    .sl-centre { order: -1; }
+    .sl-center { order: -1; }
     .sl-left, .sl-right { max-height: none; border-right: none; border-left: none; border-top: 1px solid var(--sl-line); }
     .sl-right { grid-template-columns: 1fr; }
     .sl-rail-block { border-right: none; border-bottom: 1px solid var(--sl-line-soft); }
@@ -642,7 +642,7 @@
 .sl-app :focus-visible { outline: 2px solid var(--sl-accent); outline-offset: 2px; border-radius: 4px; }
 
 @media print {
-    /* Paper is white and browsers do not print background colours, so the
+    /* Paper is white and browsers do not print background colors, so the
        dark palette this app is built in prints as near-white text on nothing.
        The report was legible only for a reader who happened to be in light
        mode. Force the light tokens for print regardless of the theme. */

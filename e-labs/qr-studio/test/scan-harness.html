@@ -71,8 +71,8 @@ image-based decoder. This is what the Node suite cannot check: that a <em>styled
         return { canvas: c, ctx: ctx, layout: lay, scale: scale };
     }
 
-    /** How many module centres render the wrong colour — a structural check. */
-    function centreMisses(sym, style) {
+    /** How many module centers render the wrong color — a structural check. */
+    function centerMisses(sym, style) {
         var r = renderAt(sym, style, 900);
         var img = r.ctx.getImageData(0, 0, r.canvas.width, r.canvas.height).data;
         var miss = 0;
@@ -98,7 +98,7 @@ image-based decoder. This is what the Node suite cannot check: that a <em>styled
             if (got && got.data === payload) pass++;
             else notes.push(px + (got ? 'px:wrong' : 'px:none'));
         });
-        var miss = centreMisses(sym, style);
+        var miss = centerMisses(sym, style);
         results.push({
             label: label,
             ok: pass === list.length,
@@ -106,7 +106,7 @@ image-based decoder. This is what the Node suite cannot check: that a <em>styled
             of: list.length,
             miss: miss,
             detail: pass + '/' + list.length + ' sizes' +
-                (miss ? ' · ' + miss + ' centre deviations' : '') +
+                (miss ? ' · ' + miss + ' center deviations' : '') +
                 (notes.length ? ' · ' + notes.join(' ') : '')
         });
     }
@@ -134,7 +134,7 @@ image-based decoder. This is what the Node suite cannot check: that a <em>styled
         }));
     });
 
-    // Gradients and inverted colour.
+    // Gradients and inverted color.
     run('gradient linear', URL1, baseStyle({
         moduleShape: 'fluid',
         fg: { type: 'linear', angle: 45, stops: [{ offset: 0, color: '#0d7f7e' }, { offset: 1, color: '#312e81' }] }

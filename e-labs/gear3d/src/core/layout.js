@@ -26,7 +26,7 @@ import { TIRE_CONFIGS } from './schema.js';
  * @property {'L'|'R'|'C'} side
  * @property {number} x             mm, engineering longitudinal
  * @property {number} y             mm, engineering transverse
- * @property {number} z             mm, wheel CENTRE height above pavement
+ * @property {number} z             mm, wheel CENTER height above pavement
  * @property {string} tire          designation
  * @property {import('./tires.js').TireGeometry} geometry
  * @property {number|null} loadKn   load carried by THIS tire
@@ -41,7 +41,7 @@ import { TIRE_CONFIGS } from './schema.js';
  * @property {string} role
  * @property {number} x
  * @property {number} trackWidth
- * @property {number} axleHeight    mm, centre height = tire static loaded radius
+ * @property {number} axleHeight    mm, center height = tire static loaded radius
  * @property {string} tireConfig
  * @property {number|null} dualSpacing
  * @property {number} wheelPositions
@@ -124,9 +124,9 @@ function resolveTruck(unit, opts) {
 
             if (a.tireConfig === 'DTA') {
                 // Inner and outer tire of the dual pair, straddling the
-                // wheel-position centreline by half the dual spacing.
+                // wheel-position centerline by half the dual spacing.
                 const half = (a.dualSpacing || 0) / 2;
-                // "Inner" is the one nearer the vehicle centreline.
+                // "Inner" is the one nearer the vehicle centerline.
                 const inner = yPos - sign * half;
                 const outer = yPos + sign * half;
                 // Dual wheels bolt together BACK TO BACK, so each disc faces
@@ -139,7 +139,7 @@ function resolveTruck(unit, opts) {
                 wheels.push(makeWheel(`${positionId}-out`, a, positionId, s, outer, geometry, perTireKn, groupOf, /** @type {1|-1} */(-d)));
             } else {
                 // A single wheel's disc faces outboard, away from the
-                // vehicle centreline.
+                // vehicle centerline.
                 const d = /** @type {1|-1} */ (sign >= 0 ? 1 : -1);
                 wheels.push(makeWheel(`${positionId}`, a, positionId, s, yPos, geometry, perTireKn, groupOf, d));
             }
@@ -263,7 +263,7 @@ function resolveAircraft(unit, opts) {
                 : dual;
             for (let i = 0; i < across; i++) {
                 // Explicit offsets win over the even spread. They are absolute
-                // positions relative to the strut centreline, so they are NOT
+                // positions relative to the strut centerline, so they are NOT
                 // scaled by the row's dual spacing — a bogie that states both
                 // is stating the offsets and a nominal pitch, and the offsets
                 // are the measurement.
@@ -327,13 +327,13 @@ function finish(unit, wheels, axles, groups, domain) {
     const derived = {
         /** Outside-to-outside width over the widest axle. */
         overallWidth: extents.maxY - extents.minY,
-        /** First to last axle centreline. */
+        /** First to last axle centerline. */
         outerBridge: axles.length > 1 ? axles[axles.length - 1].x - axles[0].x : 0,
         /** Consecutive axle spacings, front to rear. */
         axleSpacings: axles.slice(1).map((a, i) => ({
             from: axles[i].id, to: a.id, value: a.x - axles[i].x
         })),
-        /** Group spacings, centre of first axle to centre of last within a group. */
+        /** Group spacings, center of first axle to center of last within a group. */
         groupSpans: groups
             .filter((g) => (g.axles || []).length > 1)
             .map((g) => {
@@ -364,7 +364,7 @@ function finish(unit, wheels, axles, groups, domain) {
             derived.wheelbase = num / den - noses[0].x;
         }
         if (mains.length >= 2) {
-            // Centreline-to-centreline track between the main gear struts.
+            // Centerline-to-centerline track between the main gear struts.
             const ys = mains.map((a) => mainGearY(a, wheels));
             derived.mainGearTrack = Math.max(...ys) - Math.min(...ys);
 
@@ -372,7 +372,7 @@ function finish(unit, wheels, axles, groups, domain) {
             // quantity the FAA Aircraft Characteristics Database publishes,
             // and it is NOT the track — the database defines it as the
             // distance between outer tires. Reporting both, explicitly
-            // labelled, is what stops the two being confused.
+            // labeled, is what stops the two being confused.
             const mainWheels = wheels.filter((w) => mains.some((a) => a.id === w.axleId));
             if (mainWheels.length) {
                 const lo = Math.min(...mainWheels.map((w) => w.y - w.geometry.sectionWidth / 2));
@@ -394,7 +394,7 @@ function finish(unit, wheels, axles, groups, domain) {
 }
 
 /**
- * Transverse centre of a gear, taken from its wheels.
+ * Transverse center of a gear, taken from its wheels.
  * @param {ResolvedAxle} a
  * @param {Wheel[]} wheels
  * @returns {number}
@@ -413,11 +413,11 @@ function mainGearY(a, wheels) {
  * is what happens in practice: the wheel offset changes but the vehicle's
  * legal width does not.
  *
- * The wheel-position centreline consequently moves OUTBOARD, and the reported
+ * The wheel-position centerline consequently moves OUTBOARD, and the reported
  * track widens. That is not a bug and it is the number a wide-base study is
  * after: the outer tire of a dual pair sits half a dual spacing outboard of
- * the pair's centreline, so a single wide tire whose outer edge lands in the
- * same place has its centre further out than the pair's centreline was. The
+ * the pair's centerline, so a single wide tire whose outer edge lands in the
+ * same place has its center further out than the pair's centerline was. The
  * load centroid moves outboard with it.
  *
  * @param {object} axle a truck axle definition (not mutated)
@@ -433,7 +433,7 @@ export function swapToWideBase(axle, wbtDesignation, opts = {}) {
     const after = resolveTire(wbtDesignation, opts.slr);
 
     const half = (axle.dualSpacing || 0) / 2;
-    // Outer edge of the outer dual, measured from the vehicle centreline.
+    // Outer edge of the outer dual, measured from the vehicle centerline.
     const outerEdge = axle.trackWidth / 2 + half + before.geometry.sectionWidth / 2;
     // Put the wide-base tire's outer edge in the same place.
     const newTrackWidth = 2 * (outerEdge - after.geometry.sectionWidth / 2);

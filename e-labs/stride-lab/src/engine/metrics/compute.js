@@ -62,7 +62,7 @@ export function computeMetrics(cond, scale, events, ctx) {
         pelvisRot: axialRotationSeries(cond, 'hipL', 'hipR')
     };
 
-    /* The whole-body centre of mass, from a fourteen-segment inertial model.
+    /* The whole-body center of mass, from a fourteen-segment inertial model.
        This is the reference for the best-evidenced technique variable in the
        literature, and it is not the pelvis: the swinging limbs move opposite
        to the trunk and partly cancel it. */
@@ -170,9 +170,9 @@ export function computeMetrics(cond, scale, events, ctx) {
 
             /* --- whole-body model ---------------------------------------- */
             push('comVerticalOscillation', side, excursion(com.y, i0, i1) * mpp * 100);
-            push('headOscillation', side, excursion(kp.headCentre.y, i0, i1) * mpp * 100);
+            push('headOscillation', side, excursion(kp.headCenter.y, i0, i1) * mpp * 100);
             push('forwardHeadPosture', side, heightPx > 0
-                ? 100 * windowMean(diff(kp.headCentre.x, kp.shoulderMid.x), i0, i1) / heightPx
+                ? 100 * windowMean(diff(kp.headCenter.x, kp.shoulderMid.x), i0, i1) / heightPx
                 : NaN);
 
             const brake = brakingProfile(com, st, times, scaleAt);
@@ -321,7 +321,7 @@ function aggregate(spec, values, env) {
 
         if (viewMismatch) {
             confidence = 'unavailable';
-            notes.push(`needs a ${spec.view} view; this clip was analysed as ${ctx.view}`);
+            notes.push(`needs a ${spec.view} view; this clip was analyzed as ${ctx.view}`);
         } else if (!Number.isFinite(value) || nEff < 1) {
             confidence = 'unavailable';
             /* Say WHICH landmark is missing where one is. "No complete strides
@@ -418,7 +418,7 @@ function aggregate(spec, values, env) {
         }
 
         /* 95% interval. Three independent contributions where they apply:
-           frame-rate quantisation, the inter-method event spread, and the
+           frame-rate quantization, the inter-method event spread, and the
            stride-to-stride standard error. Pose-estimation error is NOT in
            here and the science page says so. */
         let ci95 = null;
@@ -522,7 +522,7 @@ function requiredLandmarks(id, side) {
         case 'armSwingAmplitude': return ['shoulder' + s, 'elbow' + s];
         case 'headAngle': return ['nose', 'shoulderMid', 'hipMid'];
         case 'trunkLean': case 'trunkLateralLean': return ['shoulderMid', 'hipMid'];
-        case 'headOscillation': case 'forwardHeadPosture': return ['headCentre', 'shoulderMid'];
+        case 'headOscillation': case 'forwardHeadPosture': return ['headCenter', 'shoulderMid'];
         case 'handCrossing': return ['hand' + s, 'hipMid'];
         case 'footProgressionAngle': return ['toe' + s, 'footOuter' + s];
         case 'comVerticalOscillation': case 'brakingLoss': return ['hipMid', 'shoulderMid', 'knee' + s];

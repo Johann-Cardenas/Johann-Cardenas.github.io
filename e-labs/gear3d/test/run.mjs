@@ -149,9 +149,9 @@ test('locked views form right-handed screen bases', () => {
     }
 });
 
-test('bounds() reports centre and size', () => {
+test('bounds() reports center and size', () => {
     const b = bounds([eng(0, -100, 0), eng(1000, 100, 500)]);
-    assertEqual(b.center.x, 500, 'centre x');
+    assertEqual(b.center.x, 500, 'center x');
     assertEqual(b.size.y, 200, 'size y');
     assertEqual(b.size.z, 500, 'size z');
 });
@@ -305,7 +305,7 @@ test('inch-nominal 11R22.5 resolves from the size table', () => {
 });
 
 test('inch-nominal is case- and space-insensitive', () => {
-    assertEqual(parseTire(' 11r22.5 ').overallDiameter, 1054, 'normalised lookup');
+    assertEqual(parseTire(' 11r22.5 ').overallDiameter, 1054, 'normalized lookup');
 });
 
 test('an inch-nominal size absent from the table is reported unknown, never guessed', () => {
@@ -333,7 +333,7 @@ test('aircraft inch radial: 52x21.0R22', () => {
     assertClose(t.overallDiameter, 1320.8, 1e-9, 'OD');
 });
 
-test('aircraft metric: 1400x530R23 is read as millimetres', () => {
+test('aircraft metric: 1400x530R23 is read as millimeters', () => {
     const t = parseTire('1400x530R23');
     assertEqual(t.family, 'aircraft-metric', 'family');
     assertClose(t.overallDiameter, 1400, 1e-9, 'OD in mm');
@@ -436,8 +436,8 @@ test('polygon area of the outline agrees with the reported area', () => {
             a2 += q.x * r.y - r.x * q.y;
         }
         const polyArea = Math.abs(a2) / 2;
-        // discretised curves under-report slightly; 0.1 % is ample at 256 segments
-        assertClose(polyArea / p.area, 1, 1e-3, `${p.model} discretised area`);
+        // discretized curves under-report slightly; 0.1 % is ample at 256 segments
+        assertClose(polyArea / p.area, 1, 1e-3, `${p.model} discretized area`);
     }
 });
 
@@ -780,7 +780,7 @@ test('the class 9 resolves to 18 tires on 5 axles', () => {
     assertEqual(c9layout.domain, 'truck', 'domain');
 });
 
-test('the steer axle carries one tire per side, on the track centreline', () => {
+test('the steer axle carries one tire per side, on the track centerline', () => {
     const steer = c9layout.wheels.filter((w) => w.axleId === 'A1');
     assertEqual(steer.length, 2, 'steer tires');
     assertClose(steer.find((w) => w.side === 'L').y, -1016, 1e-9, 'left');
@@ -793,10 +793,10 @@ test('dual pairs straddle the wheel position by half the dual spacing', () => {
     const ys = right.map((w) => w.y).sort((a, b) => a - b);
     assertClose(ys[0], 1829 / 2 - 165, 1e-9, 'inner tire');
     assertClose(ys[1], 1829 / 2 + 165, 1e-9, 'outer tire');
-    assertClose(ys[1] - ys[0], 330, 1e-9, 'centre-to-centre equals the dual spacing');
+    assertClose(ys[1] - ys[0], 330, 1e-9, 'center-to-center equals the dual spacing');
 });
 
-test('the dual pair is symmetric about the vehicle centreline', () => {
+test('the dual pair is symmetric about the vehicle centerline', () => {
     const left = c9layout.wheels.filter((w) => w.axleId === 'A2' && w.side === 'L').map((w) => w.y).sort((a, b) => a - b);
     const right = c9layout.wheels.filter((w) => w.axleId === 'A2' && w.side === 'R').map((w) => w.y).sort((a, b) => a - b);
     assertClose(left[0], -right[1], 1e-9, 'outermost mirror');
@@ -824,10 +824,10 @@ test('the two sides of an axle are mirror images of each other', () => {
     assertEqual(byRole(l, '-out').discSign, -byRole(r, '-out').discSign, 'outer tires mirror');
 });
 
-test('a single-tire axle faces its disc outboard, away from the centreline', () => {
+test('a single-tire axle faces its disc outboard, away from the centerline', () => {
     const steer = c9layout.wheels.filter((w) => w.axleId === 'A1');
     for (const w of steer) {
-        assertEqual(w.discSign, Math.sign(w.y), `${w.id} must face away from the centreline`);
+        assertEqual(w.discSign, Math.sign(w.y), `${w.id} must face away from the centerline`);
     }
 });
 
@@ -840,9 +840,9 @@ test('every wheel carries a valid handedness', () => {
     }
 });
 
-test('every tire centre sits at its own static loaded radius, so it touches z = 0', () => {
+test('every tire center sits at its own static loaded radius, so it touches z = 0', () => {
     for (const w of c9layout.wheels) {
-        assertClose(w.z, w.geometry.staticLoadedRadius, 1e-9, `${w.id} centre height`);
+        assertClose(w.z, w.geometry.staticLoadedRadius, 1e-9, `${w.id} center height`);
         assert(w.z > 0, `${w.id} must be above the pavement`);
     }
 });
@@ -880,12 +880,12 @@ test('every unit in the library resolves without throwing', () => {
     }
 });
 
-test('the class 1 motorcycle resolves to one wheel per axle on the centreline', () => {
+test('the class 1 motorcycle resolves to one wheel per axle on the centerline', () => {
     const moto = resolveLayout(truckUnits.find((u) => u.classification.class === 1));
     assertEqual(moto.wheels.length, 2, 'two wheels');
     for (const w of moto.wheels) {
-        assertEqual(w.y, 0, 'on the centreline');
-        assertEqual(w.side, 'C', 'centre');
+        assertEqual(w.y, 0, 'on the centerline');
+        assertEqual(w.side, 'C', 'center');
     }
 });
 
@@ -912,11 +912,11 @@ test('the swap holds the outer tire edge, which moves the load centroid outboard
 
     // Holding the outer edge WIDENS the track, and that is the physically
     // correct consequence rather than a bug. The outer tire of a dual pair
-    // sits half a dual spacing outboard of the pair's centreline, so its
-    // centre is much further out than the pair's. A single wide tire whose
-    // outer edge lands in the same place has its centre only half its own
+    // sits half a dual spacing outboard of the pair's centerline, so its
+    // center is much further out than the pair's. A single wide tire whose
+    // outer edge lands in the same place has its center only half its own
     // section inboard of that edge — further outboard than the pair's
-    // centreline was. The load centroid therefore moves outboard, which is
+    // centerline was. The load centroid therefore moves outboard, which is
     // exactly the effect a wide-base retrofit study needs reported.
     assert(axle.trackWidth > a2.trackWidth,
         `track should widen: ${a2.trackWidth} -> ${axle.trackWidth}`);
@@ -1002,11 +1002,11 @@ const snaps = buildSnapPoints(c9layout);
 
 test('every wheel and axle contributes snap targets', () => {
     const kinds = new Set(snaps.map((s) => s.kind));
-    for (const k of ['tire-centre', 'tire-edge', 'contact', 'axle-centreline', 'axle-end']) {
+    for (const k of ['tire-center', 'tire-edge', 'contact', 'axle-centerline', 'axle-end']) {
         assert(kinds.has(k), `no ${k} targets`);
     }
-    // One centre per tire.
-    assertEqual(snaps.filter((s) => s.kind === 'tire-centre').length, 18, 'tire centres');
+    // One center per tire.
+    assertEqual(snaps.filter((s) => s.kind === 'tire-center').length, 18, 'tire centers');
 });
 
 test('contact targets sit exactly on the pavement', () => {
@@ -1015,7 +1015,7 @@ test('contact targets sit exactly on the pavement', () => {
     }
 });
 
-test('tire edge targets are half a section width from the centre', () => {
+test('tire edge targets are half a section width from the center', () => {
     const w = c9layout.wheels.find((x) => x.id === 'A2-R-out');
     const edges = snaps.filter((s) => s.ownerId === w.id && s.kind === 'tire-edge');
     assertEqual(edges.length, 2, 'two edges');
@@ -1024,7 +1024,7 @@ test('tire edge targets are half a section width from the centre', () => {
 });
 
 test('coincident targets are deduplicated, keeping the more meaningful one', () => {
-    // A motorcycle axle has zero track, so its ends land on its centreline.
+    // A motorcycle axle has zero track, so its ends land on its centerline.
     const moto = resolveLayout(truckUnits.find((u) => u.classification.class === 1));
     const pts = buildSnapPoints(moto);
     const seen = new Set();
@@ -1046,7 +1046,7 @@ test('hidden wheels contribute no snap targets', () => {
 test('nearestSnapPoint finds the target under the cursor', () => {
     // Fake projector: engineering x,y -> screen, scaled down.
     const project = (p) => ({ x: p.x / 10, y: -p.z / 10 + 200, behind: false });
-    const target = snaps.find((s) => s.kind === 'tire-centre' && s.ownerId === 'A1-R');
+    const target = snaps.find((s) => s.kind === 'tire-center' && s.ownerId === 'A1-R');
     const s = project(target.point);
     const hit = nearestSnapPoint(snaps, project, s.x, s.y, 26);
     assert(hit, 'expected a hit');
@@ -1067,15 +1067,15 @@ test('a near-tie prefers the more meaningful target', () => {
     /** @type {any[]} */
     const pair = [
         { id: 'edge', kind: 'tire-edge', label: 'edge', point: { x: 0, y: 0, z: 0 }, ownerId: 'w', priority: 4 },
-        { id: 'centre', kind: 'tire-centre', label: 'centre', point: { x: 1, y: 0, z: 0 }, ownerId: 'w', priority: 6 }
+        { id: 'center', kind: 'tire-center', label: 'center', point: { x: 1, y: 0, z: 0 }, ownerId: 'w', priority: 6 }
     ];
     // The edge is marginally nearer, but within the tie window.
     const project = (p) => ({ x: p.x, y: p.y, behind: false });
     const hit = nearestSnapPoint(pair, project, 0, 0, 26);
-    assertEqual(hit.snap.id, 'centre', 'the centre should win a near-tie');
+    assertEqual(hit.snap.id, 'center', 'the center should win a near-tie');
 });
 
-test('inferAxis recognises axis-aligned measurements and diagonals', () => {
+test('inferAxis recognizes axis-aligned measurements and diagonals', () => {
     assertEqual(inferAxis({ x: 0, y: 0, z: 0 }, { x: 100, y: 0, z: 0 }), 'x', 'pure x');
     assertEqual(inferAxis({ x: 0, y: 0, z: 0 }, { x: 0, y: -250, z: 0 }), 'y', 'pure y');
     assertEqual(inferAxis({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 520 }), 'z', 'pure z');
@@ -1084,19 +1084,19 @@ test('inferAxis recognises axis-aligned measurements and diagonals', () => {
 });
 
 test('a dimension built from two snaps measures the true distance', () => {
-    const a = snaps.find((s) => s.kind === 'tire-centre' && s.ownerId === 'A1-L');
-    const b = snaps.find((s) => s.kind === 'tire-centre' && s.ownerId === 'A1-R');
+    const a = snaps.find((s) => s.kind === 'tire-center' && s.ownerId === 'A1-L');
+    const b = snaps.find((s) => s.kind === 'tire-center' && s.ownerId === 'A1-R');
     const d = dimensionFromSnaps(a, b);
     assertEqual(d.set, 'custom', 'set');
     assertEqual(d.axis, 'y', 'a track measurement is transverse');
     assertClose(dimensionValue(d), 2032, 1e-6, 'steer track');
-    assert(d.note.includes('tire centre'), 'note records what was measured');
+    assert(d.note.includes('tire center'), 'note records what was measured');
     assert(d.offset !== 0, 'must stand off the feature');
 });
 
 test('a diagonal measurement is marked free so it can be offset perpendicular', () => {
     const a = snaps.find((s) => s.kind === 'contact' && s.ownerId === 'A1-L');
-    const b = snaps.find((s) => s.kind === 'tire-centre' && s.ownerId === 'A5-R-out');
+    const b = snaps.find((s) => s.kind === 'tire-center' && s.ownerId === 'A5-R-out');
     const d = dimensionFromSnaps(a, b);
     assertEqual(d.axis, 'free', 'not axis aligned');
     const expected = Math.hypot(b.point.x - a.point.x, b.point.y - a.point.y, b.point.z - a.point.z);
@@ -1122,7 +1122,7 @@ group('12b-ii. Project round trip');
 
 test('EVERY view flag survives save and reopen', () => {
     // This exists because it did not. serializeProject re-listed the view
-    // fields, so anything added afterwards was written by the caller and
+    // fields, so anything added afterward was written by the caller and
     // dropped by the writer — the grid and annotation toggles came back on
     // after reopening a project that had them off. A whitelist nobody
     // remembers to update is worse than no whitelist.
@@ -1226,7 +1226,7 @@ test('paneAt finds the pane under a point, and nothing outside the frame', () =>
     const panes = quadLayout(1000, 600, 2);
     for (const p of panes) {
         const hit = paneAt(panes, p.x + p.w / 2, p.y + p.h / 2);
-        assertEqual(hit?.mode, p.mode, `centre of ${p.mode}`);
+        assertEqual(hit?.mode, p.mode, `center of ${p.mode}`);
     }
     assertEqual(paneAt(panes, 5000, 5000), null, 'outside the frame');
 });
@@ -1254,7 +1254,7 @@ group('12b-iv. Geometry export transform');
 
 test('the export transform maps the render frame back to engineering mm', () => {
     // Internally the scene is three.js Y-up, where render (x,y,z) is
-    // engineering (y,z,x) in METRES. A geometry export has to undo both or it
+    // engineering (y,z,x) in METERS. A geometry export has to undo both or it
     // will not line up with footprint.csv, which is the whole point of having
     // one coordinate system.
     const m = renderToEngMatrix(1000);
@@ -1266,7 +1266,7 @@ test('the export transform maps the render frame back to engineering mm', () => 
 
     // A wheel at engineering (5486, 1079.5, 511.2) mm sits at render
     // (1.0795, 0.5112, 5.486) m. Round-tripping must return the original.
-    assertEqual(apply([1.0795, 0.5112, 5.486]).join(','), '5486,1079.5,511.2', 'wheel centre');
+    assertEqual(apply([1.0795, 0.5112, 5.486]).join(','), '5486,1079.5,511.2', 'wheel center');
     assertEqual(apply([0, 0, 0]).join(','), '0,0,0', 'origin is preserved');
     // Unit render axes land on the right engineering axes, scaled to mm.
     assertEqual(apply([1, 0, 0]).join(','), '0,1000,0', 'render x is engineering y');
@@ -1434,8 +1434,8 @@ test('heavy trucks carry frame rails at the 34 in standard spacing', () => {
     const env = chassisEnvelope(c9layout, c9);
     const rails = env.boxes.filter((b) => b.kind === 'frame');
     assertEqual(rails.length, 2, 'two rails');
-    const centres = rails.map((b) => (b.y0 + b.y1) / 2).sort((a, b) => a - b);
-    assertClose(centres[1] - centres[0], 864, 1e-6, '34 in between rail centres');
+    const centers = rails.map((b) => (b.y0 + b.y1) / 2).sort((a, b) => a - b);
+    assertClose(centers[1] - centers[0], 864, 1e-6, '34 in between rail centers');
 });
 
 /* ============================================================
@@ -1472,7 +1472,7 @@ test('GROUND TRUTH: wheel counts reproduce Table 3 for all eighteen rows', () =>
 });
 
 test('the main multiple is doubled and the body multiple is not', () => {
-    // The asymmetry is section 6e against section 6f, and getting it backwards
+    // The asymmetry is section 6e against section 6f, and getting it backward
     // is the single most plausible way to misread the convention: the main
     // count is PER SIDE of a symmetric gear, the body count is the TOTAL.
     assertEqual(gearWheelCount('D2'), 8, 'D2: 2 sides x 2 struts x 2 wheels');
@@ -1633,7 +1633,7 @@ test('gears in line are drawn ALONG the aircraft, not across it', () => {
     const files = new Set(perSide.map((w) => w.v.toFixed(3)));
     assertEqual(files.size, 2, 'Q2 has two longitudinal files on each side');
     const lanes = new Set(q2.wheels.map((w) => Math.sign(w.u)));
-    assertEqual(lanes.size, 2, 'and two sides, with nothing on the centreline');
+    assertEqual(lanes.size, 2, 'and two sides, with nothing on the centerline');
 });
 
 /* ============================================================
@@ -1656,7 +1656,7 @@ test('every aircraft declares which of its numbers are assumed', () => {
 });
 
 test('DERIVATION: main gear geometry reproduces the FAA outer width exactly', () => {
-    // The FAA publishes the distance between OUTER TIRES, not the centreline
+    // The FAA publishes the distance between OUTER TIRES, not the centerline
     // track. Gear positions are derived from it, so the two must close. If
     // this ever fails, either the outer width or a dual spacing has drifted
     // and every main wheel is in the wrong place.
@@ -1708,7 +1708,7 @@ test('the 767-400ER dual spacing is the FAARFIELD value, not a rounded guess', (
     const mlg = u.gears.filter((g) => g.role === 'main');
     for (const g of mlg) {
         assertEqual(g.dualSpacing, 1163, `${g.id} dual spacing (45.800 in per FAARFIELD)`);
-        assertEqual(Math.abs(g.y), 4651, `${g.id} strut centreline re-derived from the corrected spacing`);
+        assertEqual(Math.abs(g.y), 4651, `${g.id} strut centerline re-derived from the corrected spacing`);
     }
     // And the geometry must still close the authoritative outer width exactly.
     assert(validateUnit(u).ok, '767-400ER must validate after the correction');
@@ -1720,7 +1720,7 @@ test('the 767-400ER dual spacing is the FAARFIELD value, not a rounded guess', (
     // edge does not move. Before the correction the outer tire sat at the same
     // 5232.5 mm it does now; only the inboard tire and the strut moved.
     const ys = l.wheels.filter((w) => w.axleId !== 'NLG').map((w) => Math.abs(w.y));
-    assertClose(Math.max(...ys), 5232.5, 0.1, 'outboard tire centre is unmoved');
+    assertClose(Math.max(...ys), 5232.5, 0.1, 'outboard tire center is unmoved');
     assertClose(Math.min(...ys), 4069.5, 0.1, 'inboard tire moved 20 mm inboard');
     const sec = 508;  // 50x20.0R22 section width, mm
     assertClose(2 * (Math.max(...ys) + sec / 2), u.mainGearOuterWidth, 1,
@@ -1913,8 +1913,8 @@ test('body gear offsets reproduce the published footprint figures', () => {
         const body = u.gears.find((g) => g.id === 'BLG-L');
         assertEqual(wing.x, wx, `${id} wing gear x`);
         assertEqual(body.x, bx, `${id} body gear x`);
-        assertEqual(Math.abs(wing.y), wy, `${id} wing strut centreline`);
-        assertEqual(Math.abs(body.y), by, `${id} body strut centreline`);
+        assertEqual(Math.abs(wing.y), wy, `${id} wing strut centerline`);
+        assertEqual(Math.abs(body.y), by, `${id} body strut centerline`);
     }
     // Both 747 figures state the same body-gear offset, independently.
     for (const id of ['b747-400', 'b747-8']) {
@@ -1944,7 +1944,7 @@ test('the wheelbase is the tire-weighted centroid, which only the A380 distingui
 });
 
 test('the A380 body bogie keeps its 20 mm wider middle axle', () => {
-    // Published as 1.530 / 1.550 / 1.530 m, corroborated to the millimetre by
+    // Published as 1.530 / 1.550 / 1.530 m, corroborated to the millimeter by
     // the FAARFIELD library. Averaging it to one dual spacing would be
     // invisible on screen and wrong in a footprint file.
     const u = aircraftUnits.find((x) => x.id === 'a380-800');
@@ -2025,7 +2025,7 @@ test('footprint CSV carries its assumptions and one row per tire', () => {
     const lines = csv.split('\n');
     const header = lines.findIndex((l) => l.startsWith('tire_id,'));
     assert(header > 10, 'the assumption header must precede the data');
-    assert(csv.includes('UNIFORM'), 'the uniform-pressure idealisation must be stated');
+    assert(csv.includes('UNIFORM'), 'the uniform-pressure idealization must be stated');
     assert(csv.includes('EQUAL TO INFLATION PRESSURE'), 'the pressure assumption must be stated');
     const dataRows = lines.slice(header + 1).filter((l) => l && !l.startsWith('#'));
     assertEqual(dataRows.length, 18, 'one row per tire');
@@ -2062,7 +2062,7 @@ test('a measured patch keeps its load and implies a new pressure', () => {
     }
 });
 
-test('the CSV distinguishes measured patches from modelled ones', () => {
+test('the CSV distinguishes measured patches from modeled ones', () => {
     const p = computePatches(c9layout, c9, {
         model: 'huang',
         overrides: { [c9layout.wheels[0].id]: { length: 300, width: 250 } }
@@ -2074,9 +2074,9 @@ test('the CSV distinguishes measured patches from modelled ones', () => {
 
     const rows = lines.slice(hdr + 1).filter((l) => l && !l.startsWith('#'));
     const measured = rows.filter((l) => l.endsWith(',measured'));
-    const modelled = rows.filter((l) => l.endsWith(',model:huang'));
+    const modeled = rows.filter((l) => l.endsWith(',model:huang'));
     assertEqual(measured.length, 1, 'one measured row');
-    assertEqual(modelled.length, rows.length - 1, 'the rest modelled');
+    assertEqual(modeled.length, rows.length - 1, 'the rest modeled');
 
     // and the header must warn, because assumption 1 no longer holds for all rows
     assert(/MEASURED PATCHES PRESENT/.test(csv), 'header must flag measured patches');
@@ -2103,7 +2103,7 @@ test('the Abaqus export states that it is not a runnable deck', () => {
    14. Design tokens — text contrast
    ------------------------------------------------------------
    styles.css is data as far as this check is concerned: the
-   theme blocks are parsed and the colour pairs are computed.
+   theme blocks are parsed and the color pairs are computed.
    No DOM, no browser.
 
    This exists because --g3-muted spent five releases at 2.72:1
@@ -2127,7 +2127,7 @@ function relLuminance(c) {
 /** @param {string} h @returns {number[]} */
 function hexRGB(h) {
     const m = /^#?([0-9a-f]{6})$/i.exec(h.trim());
-    if (!m) throw new Error(`not a hex colour: ${h}`);
+    if (!m) throw new Error(`not a hex color: ${h}`);
     const n = parseInt(m[1], 16);
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
@@ -2159,7 +2159,7 @@ const CSS = readText(join(ROOT, 'styles.css'));
 
 test('body text tokens clear WCAG AA on every surface they are drawn on', () => {
     // 4.5:1 is the AA minimum for text below 18.66px bold / 24px regular, and
-    // everything these two tokens colour is small.
+    // everything these two tokens color is small.
     const AA = 4.5;
     for (const [theme, sel] of [['light', '[data-theme="light"]'], ['dark', '[data-theme="dark"]']]) {
         const t = themeTokens(CSS, sel);
@@ -2189,7 +2189,7 @@ test('the muted/graphite hierarchy stays visibly two steps wide', () => {
 });
 
 test('chrome drawn on the figure clears AA against the figure, not the theme', () => {
-    // --g3-fig-* colour the HUD and axis badge, which sit on the white plate
+    // --g3-fig-* color the HUD and axis badge, which sit on the white plate
     // whatever the interface theme is. They are declared once, outside the
     // theme blocks, and must be judged against the figure's own paper.
     const i = CSS.indexOf('--g3-fig-paper');

@@ -674,7 +674,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         sectionGroup = new THREE.Group();
 
         const s = state.section;
-        const mm = 0.001;                        // mm -> world (metres)
+        const mm = 0.001;                        // mm -> world (meters)
         const layers = state.layers;             // 0 = top ... last = subgrade
         const stack = [...layers].reverse();     // 0 = bottom (subgrade)
 

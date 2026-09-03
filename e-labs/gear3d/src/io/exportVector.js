@@ -18,7 +18,7 @@
    from the SVG subset that the annotation engine actually emits:
    line, polyline, polygon, rect, circle and text. It is not a
    general SVG-to-PDF converter and does not pretend to be; it
-   throws on anything it does not recognise rather than dropping it
+   throws on anything it does not recognize rather than dropping it
    silently.
    ============================================================ */
 
@@ -296,7 +296,7 @@ function emitText(e, ops, ctx, inherited) {
 let _measureCtx = null;
 
 /**
- * Measure text in the same face the PDF will use, so centred labels land
+ * Measure text in the same face the PDF will use, so centered labels land
  * where the SVG put them.
  * @param {string} text
  * @param {number} fontSize

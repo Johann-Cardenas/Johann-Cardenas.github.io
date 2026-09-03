@@ -39,7 +39,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 /** Reject a mesh that would have to be distorted more than this on any axis. */
 export const MAX_DISTORTION = 1.6;
 
-/** glTF is authored in metres; Gear3D geometry is in millimetres. */
+/** glTF is authored in meters; Gear3D geometry is in millimeters. */
 const M_TO_MM = 1000;
 
 /**
@@ -54,7 +54,7 @@ const M_TO_MM = 1000;
 
 /**
  * @typedef {Object} ResolvedAsset
- * @property {THREE.BufferGeometry} geometry  in millimetres, axis +X
+ * @property {THREE.BufferGeometry} geometry  in millimeters, axis +X
  * @property {THREE.Material|null} material
  * @property {AssetEntry} entry
  * @property {[number, number, number]} scale  the factors that were applied
@@ -139,7 +139,7 @@ export class AssetLibrary {
         }
 
         const geometry = source.geometry.clone();
-        // glTF metres -> Gear3D millimetres, then the fit scale.
+        // glTF meters -> Gear3D millimeters, then the fit scale.
         geometry.scale(M_TO_MM * scale[0], M_TO_MM * scale[1], M_TO_MM * scale[2]);
         geometry.computeVertexNormals();
         geometry.computeBoundingSphere();
@@ -197,7 +197,7 @@ export class AssetLibrary {
         this.log.push(msg);
         // Scale factors and fallbacks are logged, not swallowed: a figure
         // rendered with a silently substituted or silently stretched mesh is
-        // a figure whose provenance nobody can reconstruct afterwards.
+        // a figure whose provenance nobody can reconstruct afterward.
         console.info(`[Gear3D assets] ${msg}`);
     }
 }

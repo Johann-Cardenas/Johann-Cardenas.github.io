@@ -136,7 +136,7 @@
 
                         <section class="lp-doc-sec" id="overview">
                             <h2><i class="fas fa-circle-info"></i> 1 · Overview</h2>
-                            <p>LEAPS computes the stress, strain and displacement fields inside a pavement idealised as a stack of homogeneous, isotropic, linear-elastic layers resting on a semi-infinite elastic halfspace. Each layer is defined by a thickness <code>h</code>, an elastic modulus <code>E</code> and a Poisson's ratio <code>ν</code>; the bottom layer is infinitely deep. Surface loads are uniform circular contact pressures (tyres). This is the classical <em>layered elastic analysis</em> (LEA) idealisation used throughout mechanistic-empirical pavement design.</p>
+                            <p>LEAPS computes the stress, strain and displacement fields inside a pavement idealized as a stack of homogeneous, isotropic, linear-elastic layers resting on a semi-infinite elastic halfspace. Each layer is defined by a thickness <code>h</code>, an elastic modulus <code>E</code> and a Poisson's ratio <code>ν</code>; the bottom layer is infinitely deep. Surface loads are uniform circular contact pressures (tires). This is the classical <em>layered elastic analysis</em> (LEA) idealization used throughout mechanistic-empirical pavement design.</p>
                             <p>The tool is meant for intuition, teaching and rapid mechanistic checks — not as a replacement for a validated design package. Its core assumptions are:</p>
                             <ul>
                                 <li>Each layer is homogeneous, isotropic and linearly elastic (no stress dependence, no visco-elasticity, no temperature gradient).</li>
@@ -170,12 +170,12 @@
                                 <li><strong>Decay-scale refinement</strong> for deep evaluation points, where the integrand's envelope decays fast and panels are re-spaced accordingly.</li>
                                 <li><strong>Closed-form surface tails</strong>: at <code>z = 0</code> the integrals reduce to Weber–Schafheitlin forms evaluated with complete elliptic integrals <code>K</code>, <code>E</code> (arithmetic–geometric mean). Surface deflection of a halfspace is therefore returned to machine precision rather than by truncated quadrature.</li>
                             </ul>
-                            <p>The solver tolerance (Solver panel) sets the convergence target of the accelerated tail; the contour resolution sets the size of the sampling grid used only for the stress-bulb visualisation, not for the reported key responses.</p>
+                            <p>The solver tolerance (Solver panel) sets the convergence target of the accelerated tail; the contour resolution sets the size of the sampling grid used only for the stress-bulb visualization, not for the reported key responses.</p>
                         </section>
 
                         <section class="lp-doc-sec" id="interfaces">
                             <h2><i class="fas fa-grip-lines"></i> 4 · Interfaces</h2>
-                            <p>Between adjacent layers, vertical stress and vertical displacement are always continuous. The shear behaviour is one of three models:</p>
+                            <p>Between adjacent layers, vertical stress and vertical displacement are always continuous. The shear behavior is one of three models:</p>
                             <div class="lp-doc-table-wrap">
                                 <table class="lp-doc-table">
                                     <tr><th>Interface</th><th>Shear condition</th><th>Typical use</th></tr>
@@ -191,7 +191,7 @@
                             <h2><i class="fas fa-truck"></i> 5 · Loads & gears</h2>
                             <p>Each wheel applies a uniform pressure <code>p</code> over a circular contact patch. The contact radius follows from the wheel load <code>F</code> and pressure:</p>
                             <span class="lp-eq">a = √( F / (π · p) )</span>
-                            <p>Multiple wheels are superposed: LEAPS solves each wheel independently in its own axisymmetric frame, then rotates every stress/strain tensor into the global frame before summation, so shear coupling between offset wheels is captured exactly. The <em>Gear generator</em> builds standard layouts, all parameterised by wheel load, pressure, dual spacing <code>Sd</code> (transverse gap between paired tyres) and tandem spacing <code>St</code> (longitudinal gap between axles):</p>
+                            <p>Multiple wheels are superposed: LEAPS solves each wheel independently in its own axisymmetric frame, then rotates every stress/strain tensor into the global frame before summation, so shear coupling between offset wheels is captured exactly. The <em>Gear generator</em> builds standard layouts, all parameterized by wheel load, pressure, dual spacing <code>Sd</code> (transverse gap between paired tires) and tandem spacing <code>St</code> (longitudinal gap between axles):</p>
                             <div class="lp-doc-table-wrap">
                                 <table class="lp-doc-table">
                                     <tr><th>Gear</th><th>Wheels</th><th>Layout</th></tr>
@@ -245,7 +245,7 @@
                             <span class="lp-eq">N_f = 0.0796 · εt^(−3.291) · E^(−0.854)</span>
                             <p>Subgrade rutting is driven by the vertical compressive strain <code>εv</code> at the top of the subgrade:</p>
                             <span class="lp-eq">N_r = 1.365 × 10⁻⁹ · εv^(−4.477)</span>
-                            <p>The governing life is the smaller of the two. <code>N_f</code> and <code>N_r</code> are allowable <em>repetitions of the analysed load</em>, not calendar life — no seasonal, reliability or shift factors are applied.</p>
+                            <p>The governing life is the smaller of the two. <code>N_f</code> and <code>N_r</code> are allowable <em>repetitions of the analyzed load</em>, not calendar life — no seasonal, reliability or shift factors are applied.</p>
                             <div class="lp-callout"><strong>Scope.</strong> These equations are calibrated for conventional flexible pavements with an asphalt-bound surface. LEAPS shows the fatigue estimate only when the surface layer is asphalt-bound; for rigid or composite systems, treat the numbers as indicative and use a slab-fatigue or cracking model appropriate to the structure. Other agency transfer functions (MEPDG, Shell, FAA CDF) can be applied to the same computed strains.</div>
                         </section>
 
