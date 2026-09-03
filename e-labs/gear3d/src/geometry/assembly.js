@@ -41,6 +41,7 @@ export const MM_TO_SCENE = 0.001;
  * @property {(pred: (w: import('../core/layout.js').Wheel) => boolean) => void} setWheelFilter
  * @property {(mesh: THREE.InstancedMesh, instanceId: number) => import('../core/layout.js').Wheel|null} wheelAt
  * @property {() => THREE.Box3} bounds
+ * @property {() => THREE.Box3} visibleBounds
  * @property {() => void} dispose
  */
 
@@ -51,6 +52,8 @@ export const MM_TO_SCENE = 0.001;
  * @returns {Assembly}
  */
 export function buildAssembly(layout, materials, opts = {}) {
+    /** @type {any} assigned at the end; setWheelFilter runs before it exists. */
+    let api;
     const root = new THREE.Group();
     root.name = 'assembly';
     root.scale.setScalar(MM_TO_SCENE);
@@ -113,8 +116,13 @@ export function buildAssembly(layout, materials, opts = {}) {
         // The disc sits near the OUTBOARD face of the rim, not at its centre.
         // Left at the centre it is buried behind a section-width of sidewall
         // and the wheel reads as a hollow ring.
-        const discGeo = buildRimDisc(g, { quality, offsetRatio: 0.30 * sign });
-        const hubGeo = buildHubGeometry(g, { quality, sign });
+        // ONE offset, read by both. The hub has to stand its nuts on the
+        // disc's face and plug the disc's bore, so it is laid out from the
+        // disc's own stations (rim.js `wheelStations`) rather than from
+        // parameters of its own that only happened to be nearby.
+        const discOffset = 0.30 * sign;
+        const discGeo = buildRimDisc(g, { quality, offsetRatio: discOffset });
+        const hubGeo = buildHubGeometry(g, { quality, offsetRatio: discOffset });
         ownedGeometries.push(tireGeo, barrelGeo, discGeo, hubGeo);
 
         // Two materials, ordered to match the geometry groups: sidewall, tread.
@@ -288,6 +296,12 @@ export function buildAssembly(layout, materials, opts = {}) {
             const id = node.userData?.axleId;
             node.visible = id == null ? true : shownAxles.has(id);
         }
+
+        // The scene's EXTENT has just changed, and things are fitted to it —
+        // the shadow camera above all. Announcing it here rather than leaving
+        // each caller to remember is what makes it impossible for the two to
+        // drift apart; see Viewport.refitLighting.
+        if (api && api.onFilterChange) api.onFilterChange();
     }
 
     setWheelFilter(() => true);
@@ -307,6 +321,34 @@ export function buildAssembly(layout, materials, opts = {}) {
         return new THREE.Box3().setFromObject(root);
     }
 
+    /**
+     * Bounds of WHAT IS ACTUALLY DRAWN, as opposed to what the assembly holds.
+     *
+     * The difference is the whole point: `bounds()` measures a 22 m tractor
+     * semitrailer whether one axle is shown or all five, and anything sized
+     * from it is therefore sized for the largest thing the unit could be.
+     * The shadow camera was, and a single isolated axle got a depth map
+     * spanning 27 m — about 13 mm of pavement per texel — which is why every
+     * shadow in an isolated view was a soft grey smear rather than a shadow.
+     *
+     * Instanced wheels are packed and counted by the filter above, and Box3
+     * walks only the live instances of an InstancedMesh, so the count is
+     * enough; the hidden structure nodes have to be skipped explicitly.
+     *
+     * @returns {THREE.Box3}
+     */
+    function visibleBounds() {
+        root.updateWorldMatrix(false, true);
+        const box = new THREE.Box3();
+        for (const { mesh } of instanceSets) {
+            if (mesh.visible && mesh.count > 0) box.expandByObject(mesh);
+        }
+        for (const node of structureGroup.children) {
+            if (node.visible) box.expandByObject(node);
+        }
+        return box.isEmpty() ? bounds() : box;
+    }
+
     function dispose() {
         for (const g of ownedGeometries) g.dispose();
         for (const m of ownedMaterials) m.dispose();
@@ -317,13 +359,17 @@ export function buildAssembly(layout, materials, opts = {}) {
         root.clear();
     }
 
-    return {
-        root, layout, setWheelFilter, wheelAt, bounds, dispose,
+    api = {
+        root, layout, setWheelFilter, wheelAt, bounds, visibleBounds, dispose,
         /** The chassis envelope actually built, or null. Lets the UI say what
          *  was drawn from cited data and what was representative. */
         chassis: envelope,
-        hasChassis: () => chassisGroup.children.length > 0
+        hasChassis: () => chassisGroup.children.length > 0,
+        /** Fired after every isolation change. The viewport installs itself
+         *  here so the lighting rig can follow what is on screen. */
+        onFilterChange: null
     };
+    return api;
 }
 
 /**

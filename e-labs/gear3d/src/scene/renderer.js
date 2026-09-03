@@ -406,13 +406,41 @@ export class Viewport {
         this.assembly = assembly;
         this.scene.add(assembly.root);
 
+        // Isolation changes the extent of the scene, and the lighting rig is
+        // sized to that extent. Following it here means no caller has to
+        // remember to, which is what kept them in step wrongly before: the rig
+        // was fitted once, to the whole vehicle, and never again.
+        assembly.onFilterChange = () => this.refitLighting();
+
         const box = assembly.bounds();
-        this.lighting.fit(box);
+        // The GRID and the CAMERA are fitted to the whole unit and stay there.
+        // The grid is a scale reference and must not resize as parts are
+        // hidden, and re-framing the camera on every isolation change would
+        // take the view out from under the reader.
+        this.rebuildGrid(box);
+        this.cameras.fit(box);
+        this.refitLighting();
+    }
+
+    /**
+     * Fit the lighting rig — and therefore the shadow camera and the shadow
+     * catcher — to what is currently VISIBLE.
+     *
+     * The shadow map is a fixed number of texels spread over the shadow
+     * camera's frustum, so its resolution on the ground is set entirely by how
+     * large that frustum is. Fitted once to the whole unit, an isolated axle
+     * was shaded by a map covering 27 m of pavement: roughly 13 mm per texel,
+     * with a PCF radius of several texels on top, which is a penumbra wider
+     * than the tread it was supposed to be cast by. Fitting to the visible
+     * extent is a four- to tenfold gain in shadow resolution for the views
+     * where the shadow is actually being looked at, and costs nothing.
+     */
+    refitLighting() {
+        if (!this.assembly) return;
+        this.lighting.fit(this.assembly.visibleBounds());
         // Let the rig size its own shadow catcher: it is the only thing that
         // knows how far the shadow camera actually reaches.
         this.lighting.makeGround();
-        this.rebuildGrid(box);
-        this.cameras.fit(box);
         this.invalidate();
     }
 

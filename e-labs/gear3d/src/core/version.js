@@ -16,7 +16,7 @@
 export const APP_NAME = 'Gear3D';
 
 /** Semantic version of the application. */
-export const APP_VERSION = '1.10.0';
+export const APP_VERSION = '1.11.0';
 
 /** Short form for the title block: major.minor only. */
 export const APP_REVISION = APP_VERSION.split('.').slice(0, 2).join('.');

@@ -31,6 +31,7 @@
 
 import * as THREE from 'three';
 import { Rng } from '../core/prng.js';
+import { wheelStations } from './rim.js';
 
 /** Texture resolution for the fine-detail maps. */
 export const TREAD_TEX = 1024;
@@ -117,6 +118,7 @@ export const GROUP_TREAD = 1;
  * @property {number} r  base radius, mm
  * @property {number} v  across-tread parameter 0..1, or -1 outside the tread
  * @property {number} taper 0..1, how strongly tread relief applies here
+ * @property {number} s  arc length along the meridian, normalised bead to bead
  */
 
 /**
@@ -133,7 +135,19 @@ export function tireMeridian(g, opts = {}) {
     const sectionH = g.sectionHeight;
     const halfSection = g.sectionWidth / 2;
     const halfTread = g.treadWidth / 2;
-    const halfRim = (g.sectionWidth * 0.72) / 2;
+    // The bead seat comes from the RIM, because that is what defines it. Taken
+    // as the barrel's half-width instead, the tire's bead landed wherever the
+    // barrel's own profile happened to be and the two surfaces interpenetrated
+    // into a ring of alternating rubber-and-rim teeth around every wheel.
+    //
+    // `beadClear` is the small radial gap that keeps the bead just proud of the
+    // seat. Landing it exactly on the seat is the physically right answer and
+    // the numerically wrong one: two coincident surfaces z-fight, and this pair
+    // is drawn at different circumferential resolutions (352 against 112), so
+    // the fight resolves differently every few degrees and reads as a saw.
+    const rimSt = wheelStations(g);
+    const halfRim = rimSt.beadSeatX;
+    const beadClear = rimSt.flange * 0.35;
     const crownDrop = g.sectionWidth * 0.014;
     const shoulderR = g.sectionWidth * 0.17;
 
@@ -153,16 +167,46 @@ export function tireMeridian(g, opts = {}) {
         [0, rOuter],
         [halfTread * 0.60, rOuter - crownDrop * 0.36],
         [halfTread, rOuter - crownDrop],                        // tread edge
-        [halfSection * 0.930, rOuter - sectionH * 0.16],        // shoulder turn
+        // The two neighbours of the maximum-width point sit at the SAME axial
+        // station, and that is what makes the section width exact.
+        //
+        // A Catmull-Rom tangent at a control point is proportional to the
+        // chord between its neighbours, so while the polygon's widest point
+        // was flanked by 0.930 and 0.988 of the half-width, the tangent there
+        // still had a positive axial component: the curve was heading outboard
+        // as it passed the widest control point and had to overshoot before
+        // turning back. It did, by 0.6-1.1 mm, on every tyre in the library,
+        // and the true maximum landed 11 mm below where the profile says it is.
+        // Equal axial stations make that tangent purely radial, so the widest
+        // control point IS the widest point of the curve.
+        //
+        // The asymmetry a real radial carcass has near its maximum — the
+        // shoulder turning in faster above than the sidewall falls away below
+        // — is carried by the RADII (0.22 and 0.20 of the section height),
+        // which is where it belongs; a maximum is locally symmetric in the
+        // direction it is a maximum in.
+        [halfSection * 0.958, rOuter - sectionH * 0.16],        // shoulder turn
         [halfSection, rOuter - sectionH * 0.38],                // maximum section width
-        [halfSection * 0.988, rimR + sectionH * 0.42],          // sidewall, near vertical
+        [halfSection * 0.958, rimR + sectionH * 0.42],          // sidewall, near vertical
         [halfSection * 0.920, rimR + sectionH * 0.22],
-        [halfRim * 1.15, rimR + sectionH * 0.070],              // bead flange
-        [halfRim, rimR]                                         // bead seat
+        // Both of these are placed relative to the RIM FLANGE, because that is
+        // what they have to clear. Scaled off the section height instead, they
+        // worked on a truck tire — whose section height is 20 times its
+        // flange — and failed on a 120/70R17 motorcycle tire, where the flange
+        // is an eighth of the section height and reached straight through the
+        // bead: the carcass came out 0.46 mm inside the rim.
+        [halfRim + rimSt.flange * 1.15, rimR + Math.max(sectionH * 0.075, rimSt.flange * 1.7)],
+        [halfRim, rimR + beadClear]                             // bead seat
     ];
 
-    const samples = Math.max(20, Math.round(30 * detail));
-    const half = catmullRom(control, samples);
+    // Both tolerances are scaled off the section height rather than fixed, so
+    // a 27x7.75 nose tyre and a 1400x530 main gear tyre get the same SILHOUETTE
+    // QUALITY rather than the same point count.
+    const half = catmullRom(control, {
+        tolerance: (sectionH * 0.0006) / detail,
+        maxChord: (sectionH * 0.045) / detail,
+        maxTurn: 7
+    });
 
     /** @type {MeridianPoint[]} */
     const pts = [];
@@ -181,45 +225,230 @@ export function tireMeridian(g, opts = {}) {
     for (let i = half.length - 1; i >= 0; i--) {
         const [a, r] = half[i];
         const c = classify(-a, r);
-        pts.push({ a: -a, r, v: c.v, taper: c.taper });
+        pts.push({ a: -a, r, v: c.v, taper: c.taper, s: 0 });
     }
     // Outer side: the half itself, skipping the duplicated centreline point.
     for (let i = 1; i < half.length; i++) {
         const [a, r] = half[i];
         const c = classify(a, r);
-        pts.push({ a, r, v: c.v, taper: c.taper });
+        pts.push({ a, r, v: c.v, taper: c.taper, s: 0 });
     }
+
+    // ARC LENGTH, NOT ROW INDEX, is the texture coordinate across the meridian.
+    // It always was the right parameter — the maps are drawn in millimetres of
+    // developed profile — but with an evenly-divided point budget the index was
+    // a fair approximation of it. Adaptive sampling ends that: rows now bunch
+    // where the curve bends, so an index-based v would compress a third of the
+    // sidewall map into the shoulder radius and stretch the rest over the
+    // sidewall. Measuring the profile makes the mapping exact instead.
+    let len = 0;
+    for (let i = 1; i < pts.length; i++) {
+        len += Math.hypot(pts[i].a - pts[i - 1].a, pts[i].r - pts[i - 1].r);
+        pts[i].s = len;
+    }
+    if (len > 0) for (const p of pts) p.s /= len;
+
     return pts;
 }
 
 /**
- * Uniform Catmull-Rom through control points, with duplicated endpoints so
- * the curve starts and ends exactly on the first and last control point.
- * @param {[number, number][]} pts
- * @param {number} samples total output points
+ * Sample a CENTRIPETAL Catmull-Rom spline through control points, subdividing
+ * each span until the polyline is within a tolerance of the true curve.
+ *
+ * TWO DEPARTURES FROM THE OBVIOUS IMPLEMENTATION, BOTH LOAD-BEARING.
+ *
+ * 1. CENTRIPETAL, NOT UNIFORM (alpha = 1/2). Uniform Catmull-Rom overshoots
+ *    between control points that are unevenly spaced, and the meridian's are
+ *    deliberately uneven: the step from maximum section width to the top of
+ *    the sidewall is 1.2% of the section half-width while the one across the
+ *    crown is 60% of it, a fifty-to-one ratio. That overshoot pushed the
+ *    widest point of the carcass 0.6-1.1 mm OUTBOARD of the section width, on
+ *    every tyre in the library. Section width is a published dimension that
+ *    the dimension engine draws and the footprint export writes out, so a
+ *    tyre quietly a millimetre too wide is not a cosmetic matter. Centripetal
+ *    parameterisation is the standard cure and removes the overshoot exactly.
+ *
+ * 2. SAMPLES FOLLOW CURVATURE, NOT SPAN COUNT. Dividing a fixed budget equally
+ *    between spans gave the short, tightly curved shoulder the same four
+ *    points as the long, nearly flat crown, and the polyline through them
+ *    turned the shoulder into a few flat facets meeting at up to 30 degrees.
+ *    Vertex normals are averaged from those facets, so the tyre carried a
+ *    terraced shading band around each sidewall — a stack of washers rather
+ *    than one carcass, and the loudest artefact on a close render. Each span
+ *    is instead bisected until the sagitta (the deviation of the curve from
+ *    its chord) falls below `tolerance`, which puts points exactly where the
+ *    curve bends and nowhere else. `maxChord` then holds a floor under the
+ *    flat runs, because a sidewall three rows tall reflects the environment
+ *    map in three steps.
+ *
+ * `maxTurn` is the third criterion and the one the shading actually cares
+ * about: a sagitta tolerance in millimetres is a statement about SHAPE, and at
+ * the draft profile detail — a fifth of the row budget, chosen because a
+ * 34-tire unit has to stay interactive — a tolerance loose enough to be cheap
+ * still left 13-degree creases on the smallest tires in the library. Bounding
+ * the angle directly bounds the artefact.
+ *
+ * @param {[number, number][]} pts control points
+ * @param {{tolerance?: number, maxChord?: number, maxTurn?: number, maxDepth?: number}} [opts]
  * @returns {[number, number][]}
  */
-function catmullRom(pts, samples) {
-    const p = [pts[0], ...pts, pts[pts.length - 1]];
+function catmullRom(pts, opts = {}) {
+    const tol = Math.max(1e-4, opts.tolerance ?? 0.5);
+    const maxChord = Math.max(tol * 4, opts.maxChord ?? Infinity);
+    const maxTurn = Math.cos(((opts.maxTurn ?? 180) * Math.PI) / 180);
+    const maxDepth = opts.maxDepth ?? 9;
+
+    // Phantom end points by REFLECTION, not duplication. A duplicated endpoint
+    // has a zero-length chord, and the centripetal knot interval is the square
+    // root of that chord, so every Barry-Goldman weight below would divide by
+    // zero. Reflecting keeps the interval finite and gives the natural end
+    // tangent, which is what the duplicate was reaching for in the first place.
+    const n = pts.length;
+    const p = [
+        [2 * pts[0][0] - pts[1][0], 2 * pts[0][1] - pts[1][1]],
+        ...pts,
+        [2 * pts[n - 1][0] - pts[n - 2][0], 2 * pts[n - 1][1] - pts[n - 2][1]]
+    ];
+
     /** @type {[number, number][]} */
-    const out = [];
-    const spans = pts.length - 1;
-    for (let s = 0; s < spans; s++) {
-        const p0 = p[s], p1 = p[s + 1], p2 = p[s + 2], p3 = p[s + 3];
-        const n = Math.max(2, Math.round(samples / spans));
-        for (let i = 0; i < n; i++) {
-            const t = i / n;
-            out.push([cr(p0[0], p1[0], p2[0], p3[0], t), cr(p0[1], p1[1], p2[1], p3[1], t)]);
-        }
+    const out = [[pts[0][0], pts[0][1]]];
+    for (let i = 0; i < n - 1; i++) {
+        const q = /** @type {[number, number][]} */ ([p[i], p[i + 1], p[i + 2], p[i + 3]]);
+        const t = centripetalKnots(q);
+        flattenSpan(out, q, t, 0, 1, out[out.length - 1],
+            /** @type {[number, number]} */([pts[i + 1][0], pts[i + 1][1]]),
+            tol, maxChord, maxTurn, maxDepth);
     }
-    out.push(pts[pts.length - 1]);
     return out;
 }
 
-/** @returns {number} */
-function cr(a, b, c, d, t) {
-    const t2 = t * t, t3 = t2 * t;
-    return 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
+/**
+ * Centripetal knot vector: t[i+1] = t[i] + |P[i+1] - P[i]| ** 0.5.
+ * @param {[number, number][]} q four control points
+ * @returns {number[]}
+ */
+function centripetalKnots(q) {
+    const t = [0, 0, 0, 0];
+    for (let i = 1; i < 4; i++) {
+        const d = Math.hypot(q[i][0] - q[i - 1][0], q[i][1] - q[i - 1][1]);
+        // A repeated control point still gives a zero interval; a floor keeps
+        // the weights finite rather than producing NaN geometry.
+        t[i] = t[i - 1] + Math.max(1e-6, Math.sqrt(d));
+    }
+    return t;
+}
+
+/**
+ * Evaluate the span between q[1] and q[2] at u in [0, 1].
+ *
+ * The Barry-Goldman pyramid rather than the cubic basis, because it is the
+ * formulation that accepts a NON-UNIFORM knot vector — which is the whole
+ * point of going centripetal.
+ *
+ * @param {[number, number][]} q
+ * @param {number[]} t
+ * @param {number} u
+ * @returns {[number, number]}
+ */
+function evalSpan(q, t, u) {
+    const tt = t[1] + u * (t[2] - t[1]);
+    /** @param {number[]} a @param {number[]} b @param {number} ta @param {number} tb */
+    const lerp = (a, b, ta, tb) => {
+        const w = (tb - tt) / (tb - ta);
+        return [a[0] * w + b[0] * (1 - w), a[1] * w + b[1] * (1 - w)];
+    };
+    const a1 = lerp(q[0], q[1], t[0], t[1]);
+    const a2 = lerp(q[1], q[2], t[1], t[2]);
+    const a3 = lerp(q[2], q[3], t[2], t[3]);
+    const b1 = lerp(a1, a2, t[0], t[2]);
+    const b2 = lerp(a2, a3, t[1], t[3]);
+    return /** @type {[number, number]} */ (lerp(b1, b2, t[1], t[2]));
+}
+
+/**
+ * Bisect a span until its chord is within `tol` of the curve, appending each
+ * accepted point. `p0` is already in `out`; `p1` is what this call emits.
+ *
+ * @param {[number, number][]} out
+ * @param {[number, number][]} q
+ * @param {number[]} t
+ * @param {number} u0 @param {number} u1
+ * @param {[number, number]} p0 @param {[number, number]} p1
+ * @param {number} tol @param {number} maxChord
+ * @param {number} maxTurn cosine of the largest crease allowed
+ * @param {number} depth
+ */
+function flattenSpan(out, q, t, u0, u1, p0, p1, tol, maxChord, maxTurn, depth) {
+    const um = 0.5 * (u0 + u1);
+    const pm = evalSpan(q, t, um);
+    const chord = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+    // The turn is checked at the far end of the chord being accepted AND at
+    // the near end, against the chord already emitted. The near end is the one
+    // that matters at a SPAN JOINT: the curve is tangent-continuous there, so
+    // the two chords meeting at a knot are only as collinear as they are
+    // short, and one long chord from a lightly-subdivided neighbour reopened
+    // a 13-degree crease that every within-span test had already passed.
+    const prev = out.length > 1 ? out[out.length - 2] : null;
+    const smooth = turnCos(p0, pm, p1) >= maxTurn
+        && (!prev || turnCos(prev, p0, p1) >= maxTurn);
+    if (depth <= 0 || (chord <= maxChord && sagitta(pm, p0, p1) <= tol && smooth)) {
+        out.push(p1);
+        return;
+    }
+    flattenSpan(out, q, t, u0, um, p0, pm, tol, maxChord, maxTurn, depth - 1);
+    flattenSpan(out, q, t, um, u1, pm, p1, tol, maxChord, maxTurn, depth - 1);
+}
+
+/**
+ * Cosine of the angle the polyline would turn through at `b` — which is the
+ * crease a smooth-shaded surface will show there.
+ * @param {[number, number]} a @param {[number, number]} b @param {[number, number]} c
+ * @returns {number} 1 for straight, falling as the turn opens
+ */
+function turnCos(a, b, c) {
+    const ax = b[0] - a[0], ay = b[1] - a[1];
+    const bx = c[0] - b[0], by = c[1] - b[1];
+    const la = Math.hypot(ax, ay), lb = Math.hypot(bx, by);
+    if (la < 1e-9 || lb < 1e-9) return 1;
+    return Math.max(-1, Math.min(1, (ax * bx + ay * by) / (la * lb)));
+}
+
+/**
+ * Perpendicular distance from `p` to the line through a and b.
+ * @param {[number, number]} p @param {[number, number]} a @param {[number, number]} b
+ * @returns {number}
+ */
+function sagitta(p, a, b) {
+    const dx = b[0] - a[0], dy = b[1] - a[1];
+    const len = Math.hypot(dx, dy);
+    if (len < 1e-9) return Math.hypot(p[0] - a[0], p[1] - a[1]);
+    return Math.abs((p[0] - a[0]) * dy - (p[1] - a[1]) * dx) / len;
+}
+
+/**
+ * Where the tread band sits in the meridian's texture coordinate.
+ *
+ * The detail maps below are drawn in ONE canvas spanning the whole developed
+ * profile, bead to bead, and what belongs on the tread (siping, mould flash)
+ * is not what belongs on the sidewall (ribbing, lettering). Both used to be
+ * placed at hard-coded fractions — 0.30/0.70 for the ribbing, 0.16/0.84 for
+ * the lettering ring — which were fair guesses while v was the row index and
+ * the rows were evenly divided between spans. They are not fair guesses now
+ * that v is measured arc length, and they were never right for a wide-base
+ * tire, whose tread is a far larger share of its developed profile than a
+ * standard one's. Measuring the band is both exact and size-independent.
+ *
+ * @param {import('../core/tires.js').TireGeometry} g
+ * @param {TireBuildOptions} [opts]
+ * @returns {{treadStart: number, treadEnd: number}}
+ */
+export function meridianBands(g, opts = {}) {
+    const m = tireMeridian(g, opts);
+    let lo = 1, hi = 0;
+    for (const p of m) {
+        if (p.taper > 0.5) { lo = Math.min(lo, p.s); hi = Math.max(hi, p.s); }
+    }
+    return hi > lo ? { treadStart: lo, treadEnd: hi } : { treadStart: 0.35, treadEnd: 0.65 };
 }
 
 /* ============================================================
@@ -270,11 +499,27 @@ export function treadSpec(pattern, g, opts = {}) {
         pattern,
         depth,
         grooves,
+        // BLOCK COUNT FROM THE CIRCUMFERENCE, NOT A BARE RANDOM INTEGER.
+        // A fixed 16-19 gave a 700 mm tire and a 1400 mm tire the same number
+        // of blocks, so the big one's were twice the size — a 200 mm lug,
+        // which is a quarry tire, not a drive axle. The count now follows a
+        // roughly constant physical pitch.
+        //
+        // The pitch is 170 mm rather than the 40-50 mm a real drive tire has,
+        // and that is a RESOLUTION limit, not a modelling choice: a groove
+        // taking a fifth of the pitch needs about three circumferential
+        // samples inside it to survive, so a true pitch would want close to a
+        // thousand segments. The true pitch is carried by the tread normal
+        // map instead — which is exactly the division of labour this file's
+        // header describes — and the geometry keeps the coarse relief that
+        // has to break the silhouette.
+        blocks: pattern === 'lug'
+            ? Math.max(14, Math.min(22, Math.round((Math.PI * g.overallDiameter) / 170)))
+            : 0,
         // A highway drive tire is not an off-road tire. Its lateral grooves
         // take roughly a sixth of the block pitch, not a quarter — at 0.26
         // the tread reads as an aggressive mud pattern and the whole
         // assembly looks like a toy rather than a class 8 fitment.
-        blocks: pattern === 'lug' ? rng.int(16, 19) : 0,
         blockGroove: 0.20,
         skew: pattern === 'lug' ? rng.range(0.08, 0.16) : 0,
         sipes: pattern === 'rib' ? rng.int(52, 68) : 0
@@ -301,11 +546,16 @@ export function treadDepthAt(s, theta01, v) {
 
     if (s.pattern === 'lug' && s.blocks > 0) {
         // Lateral grooves between tread blocks, skewed across the tread.
+        //
+        // SHALLOWER than the circumferential grooves, at 60%. On a real drive
+        // tire the lateral slots do not go to the belt; cut to full depth here
+        // they scalloped the silhouette so hard that the tire's outline read as
+        // a gear rather than a circle, which is the opposite of what modelling
+        // the tread into the geometry is for.
         const phase = frac(theta01 * s.blocks + (v - 0.5) * s.skew);
         const half = s.blockGroove / 2;
-        const x = Math.abs(phase - 0.5 < 0 ? phase : phase - 1) / half;
         const near = Math.min(phase, 1 - phase) / half;
-        if (near < 1) d = Math.max(d, s.depth * grooveProfile(near));
+        if (near < 1) d = Math.max(d, s.depth * 0.60 * grooveProfile(near));
     }
 
     if (s.sipes > 0) {
@@ -381,7 +631,7 @@ export function buildTireGeometry(g, opts = {}) {
 
             const u = (j / segments) * uRepeat;
             uvs[(i * cols + j) * 2] = u;
-            uvs[(i * cols + j) * 2 + 1] = i / (rows - 1);
+            uvs[(i * cols + j) * 2 + 1] = m.s;
         }
     }
 
@@ -464,13 +714,15 @@ export function applyFlatSpot(geo, g, softness = 0.55) {
 export function buildTreadMaps(pattern, g, opts = {}) {
     const rng = new Rng(`${opts.seed ?? 'gear3d-01'}:treadmap:${pattern}:${opts.designation ?? ''}`);
     const size = TREAD_TEX;
+    const band = meridianBands(g, opts);
 
     const cv = makeCanvas(size, size);
     const ctx = cv.getContext('2d');
     ctx.fillStyle = '#808080';
     ctx.fillRect(0, 0, size, size);
 
-    // Fine radial mould lines left by the tread mould.
+    // Fine circumferential mould lines left by the tread mould. u is around the
+    // tire, so these run horizontally.
     ctx.strokeStyle = 'rgba(140,140,140,0.35)';
     ctx.lineWidth = 1;
     for (let i = 0; i < 220; i++) {
@@ -478,6 +730,60 @@ export function buildTreadMaps(pattern, g, opts = {}) {
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(size, y + rng.range(-2, 2));
+        ctx.stroke();
+    }
+
+    // SIPING, which is the detail the geometry provably cannot carry.
+    //
+    // A sipe is a 0.5 mm slit at roughly a 10 mm pitch. Resolving that as
+    // geometry would want tens of thousands of circumferential segments, so it
+    // belongs here — and it is the ONE fine feature that can be painted on
+    // without moire, because it is more than an order of magnitude finer than
+    // the block pitch the geometry cuts. Repainting the block pattern itself
+    // would beat against the modelled one, which is the trap this file's
+    // header warns about; nothing below draws a block edge.
+    //
+    // One texture tile spans `tileMm` of circumference — the same figure the
+    // geometry uses to pick its UV repeat — so the pitch below is a real
+    // physical pitch on every tire size rather than a count that happens to
+    // look right on one of them.
+    const tileMm = (Math.PI * g.overallDiameter)
+        / Math.max(4, Math.round((Math.PI * g.overallDiameter) / 300));
+    const y0 = band.treadStart * size;
+    const y1 = band.treadEnd * size;
+
+    if (pattern !== 'aircraft') {
+        const count = Math.max(8, Math.round(tileMm / 10.5));
+        ctx.lineCap = 'round';
+        for (let i = 0; i < count; i++) {
+            // Real siping is a zigzag, not a straight cut — it is what keeps
+            // the block edges from closing up under load — and the wave is
+            // what makes it read as siping rather than as a scratch.
+            const x = ((i + 0.5) / count) * size;
+            const amp = size * 0.004;
+            ctx.strokeStyle = `rgba(60,60,60,${rng.range(0.42, 0.60).toFixed(3)})`;
+            ctx.lineWidth = Math.max(1.5, size * 0.0022);
+            ctx.beginPath();
+            const steps = 12;
+            for (let k = 0; k <= steps; k++) {
+                const t = k / steps;
+                const y = y0 + (y1 - y0) * t;
+                const wobble = Math.sin(t * Math.PI * 5 + i) * amp;
+                if (k === 0) ctx.moveTo(x + wobble, y); else ctx.lineTo(x + wobble, y);
+            }
+            ctx.stroke();
+        }
+    }
+
+    // Mould flash: the thin raised bead left along the mould's parting line,
+    // one on each shoulder. Small, but it is the thing that stops the shoulder
+    // edge reading as a machined chamfer.
+    ctx.strokeStyle = 'rgba(178,178,178,0.55)';
+    ctx.lineWidth = Math.max(1, size * 0.0018);
+    for (const y of [y0, y1]) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(size, y);
         ctx.stroke();
     }
 
@@ -509,15 +815,18 @@ export function buildSidewallMaps(g, opts = {}) {
     ctx.fillStyle = '#808080';
     ctx.fillRect(0, 0, size, size);
 
-    // v runs bead-to-bead across the whole meridian, so the sidewalls sit in
-    // roughly the outer thirds. Ribbing runs circumferentially, which is the
-    // u direction, so it appears here as horizontal bands.
+    // v runs bead-to-bead across the whole meridian; the sidewalls are whatever
+    // is OUTSIDE the measured tread band, which is what `meridianBands` returns
+    // and what the hard-coded 0.30/0.70 below used to approximate. Ribbing runs
+    // circumferentially, which is the u direction, so it appears here as
+    // horizontal bands.
+    const band = meridianBands(g, opts);
     ctx.strokeStyle = 'rgba(168,168,168,0.55)';
     ctx.lineWidth = Math.max(1, size * 0.0022);
     for (let i = 0; i < 130; i++) {
         const v = rng.unit();
         // concentrate the ribbing away from the tread band
-        if (v > 0.30 && v < 0.70) continue;
+        if (v > band.treadStart && v < band.treadEnd) continue;
         const y = v * size;
         ctx.beginPath();
         ctx.moveTo(0, y);
@@ -525,9 +834,16 @@ export function buildSidewallMaps(g, opts = {}) {
         ctx.stroke();
     }
 
-    // Moulded lettering ring: raised glyph-like marks on a smooth band.
-    for (const band of [0.16, 0.84]) {
-        const y = band * size;
+    // Moulded lettering ring: raised glyph-like marks on a smooth band, placed
+    // a third of the way down each sidewall from the shoulder — where a tire's
+    // size marking actually is, and, unlike a fixed 0.16/0.84, where it stays
+    // when the tread is 70% of the developed profile instead of 40%.
+    const lettering = [
+        band.treadStart * 0.62,
+        band.treadEnd + (1 - band.treadEnd) * 0.38
+    ];
+    for (const b of lettering) {
+        const y = b * size;
         ctx.save();
         ctx.fillStyle = 'rgba(198,198,198,0.85)';
         const marks = 40;
