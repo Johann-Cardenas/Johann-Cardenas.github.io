@@ -116,7 +116,7 @@ export function parseMp4(buffer) {
             /* Display matrix, 3x3 of 16.16 fixed point.
                The offset is worth spelling out, because getting it wrong is
                silent: every rotation reads as zero and portrait phone video is
-               analysed sideways.
+               analyzed sideways.
                  version + flags                4
                  creation, modification         8   (16 when version 1)
                  track_ID                       4

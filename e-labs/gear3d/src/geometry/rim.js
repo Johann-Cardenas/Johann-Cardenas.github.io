@@ -1,18 +1,18 @@
 /* ============================================================
    Gear3D — procedural wheel rim
    ------------------------------------------------------------
-   Local frame matches the tire: origin at the wheel centre,
-   rotation axis +X, millimetres.
+   Local frame matches the tire: origin at the wheel center,
+   rotation axis +X, millimeters.
 
    The rim is built from two parts:
      - the barrel, a lathed rim section running from the inboard
        flange tip to the outboard flange tip
      - the disc, a DISHED plate: a flat outboard web carrying the
        hub pad and the hand holes, sweeping back on a cone to
-       where it welds into the drop-centre well
+       where it welds into the drop-center well
 
    Truck wheels are dished: the disc sits offset from the barrel
-   centreline. That offset is what makes a dual pair's two wheels
+   centerline. That offset is what makes a dual pair's two wheels
    mount back-to-back with the correct spacing, so it is a real
    parameter, not decoration.
 
@@ -45,7 +45,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
  */
 export const WHEEL = Object.freeze({
     flange: 0.048,       // flange height above the bead seat
-    drop: 0.062,         // drop-centre well depth below the bead seat
+    drop: 0.062,         // drop-center well depth below the bead seat
     bore: 0.385,         // hub bore
     pad: 0.630,          // raised hub-pad face, outer radius
     studCircle: 0.586,   // stud circle — 335 mm on a 572 mm rim
@@ -59,7 +59,7 @@ export const WHEEL = Object.freeze({
     // background. That was a real defect with the wrong cause. On a real wheel
     // the holes DO reach past the drum; what stops the light is the inside of
     // the tire, and the fix is to draw it (see the `rubberSidewall` material).
-    handHoleRing: 0.745, // hand-hole centres
+    handHoleRing: 0.745, // hand-hole centers
     handHole: 0.095,     // hand-hole radius
     webThickness: 0.035, // web plate thickness
     dishDepth: 0.20      // web-to-weld offset, as a fraction of RIM WIDTH
@@ -68,13 +68,13 @@ export const WHEEL = Object.freeze({
 /**
  * @typedef {Object} RimOptions
  * @property {number} [widthRatio=0.72]   rim width as a fraction of tire section width
- * @property {number} [offsetRatio=0.0]   disc offset from barrel centre, fraction of rim width
+ * @property {number} [offsetRatio=0.0]   disc offset from barrel center, fraction of rim width
  * @property {number} [handHoles=5]       lightening holes in the disc
  * @property {number} [handHoleRatio]     hole radius, fraction of rim radius
  * @property {number} [boreRatio]         hub bore radius, fraction of rim radius
  * @property {number} [radialSegments]   overrides the quality preset
  * @property {'draft'|'standard'|'high'} [quality='standard']
- * @property {'steel'|'aluminium'} [style='aluminium']
+ * @property {'steel'|'aluminum'} [style='aluminum']
  */
 
 /** Circumferential segments per quality level. A rim is a wide, smooth,
@@ -135,13 +135,13 @@ export function wheelStations(g, opts = {}) {
         webX,
         /** The outboard face of the disc — the plane a lug nut has to stand ON. */
         faceX: webX + sign * webThickness / 2,
-        /** Where the dish cone meets the drop-centre well. */
+        /** Where the dish cone meets the drop-center well. */
         weldX: webX - sign * rimWidth * WHEEL.dishDepth
     };
 }
 
 /**
- * Meridian profile of the rim barrel, in (radius, axial) millimetres.
+ * Meridian profile of the rim barrel, in (radius, axial) millimeters.
  *
  * A RIM SECTION, NOT A PULLEY. Both ends used to turn in to 0.60 of the rim
  * radius, which closed the silhouette but drew a pair of deep cones that were
@@ -179,7 +179,7 @@ export function rimProfile(g, opts = {}) {
     // interpenetrated into a ring of alternating rubber-and-rim teeth around
     // every wheel. A real rim's seats ARE symmetric — both beads seat at the
     // same diameter, the same distance from their own flange — and it is only
-    // the drop-centre well that is offset, so that is what is offset here.
+    // the drop-center well that is offset, so that is what is offset here.
     const seat = half - flange * 1.25;
 
     // Inboard flange, rolled over its tip.
@@ -188,7 +188,7 @@ export function rimProfile(g, opts = {}) {
     add(r + flange * 0.72, -half + flange * 0.72);
     add(r, -seat);                                // inboard bead seat
     add(r - drop * 0.55, -half + width * 0.24);
-    add(r - drop, -half + width * 0.34);          // into the drop-centre well
+    add(r - drop, -half + width * 0.34);          // into the drop-center well
     add(r - drop, -half + width * 0.56);
     add(r - drop * 0.45, -half + width * 0.68);
     add(r, seat);                                 // outboard bead seat
@@ -217,7 +217,7 @@ export function buildRimBarrel(g, opts = {}) {
 }
 
 /**
- * Build the rim disc: a dished plate, welded into the drop-centre well at its
+ * Build the rim disc: a dished plate, welded into the drop-center well at its
  * outer edge and carrying the hub pad and the hand holes on its flat face.
  *
  * Three pieces, merged so the whole wheel stays one instanced draw:
@@ -271,7 +271,7 @@ export function buildRimDisc(g, opts = {}) {
     web.translate(s.webX, 0, 0);
     parts.push(web);
 
-    /* ---- dish: the cone from the web's rim out to the drop-centre weld ---- */
+    /* ---- dish: the cone from the web's rim out to the drop-center weld ---- */
     const dish = new THREE.LatheGeometry([
         new THREE.Vector2(s.webOuterR, s.webX),
         new THREE.Vector2(s.webOuterR + (s.wellR - s.webOuterR) * 0.45,

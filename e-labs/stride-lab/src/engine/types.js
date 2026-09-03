@@ -9,7 +9,7 @@
  * @property {string[]} names      Canonical keypoint names, in order.
  * @property {number} n            Frame count.
  * @property {Float64Array} t      Frame times, seconds, strictly increasing.
- * @property {Float64Array} xy     [frame][kp][2], normalised image coords, y DOWN.
+ * @property {Float64Array} xy     [frame][kp][2], normalized image coords, y DOWN.
  * @property {Float64Array} vis    [frame][kp].
  * @property {number} width        Source frame width, px.
  * @property {number} height       Source frame height, px.
@@ -90,8 +90,8 @@ export const OPTIONAL_KEYPOINTS = ['footOuterL', 'footOuterR', 'eyeL', 'eyeR', '
 /**
  * Segment lengths as fractions of standing height, from Winter, "Biomechanics
  * and Motor Control of Human Movement" (segment-length table / Fig. 4.1).
- * Used for the pixel-to-metre scaling in calib/scale.js and for the
- * leg-length normalisation every dimensionless metric divides by.
+ * Used for the pixel-to-meter scaling in calib/scale.js and for the
+ * leg-length normalization every dimensionless metric divides by.
  */
 export const WINTER = {
     /** greater trochanter -> femoral condyle */
@@ -110,18 +110,18 @@ export const WINTER = {
  * Segment inertial parameters, Winter Table 4.1.
  *
  * `mass` is the fraction of total body mass; `com` is the position of the
- * segment centre of mass along the segment, as a fraction of segment length
+ * segment center of mass along the segment, as a fraction of segment length
  * from the PROXIMAL end. The fractions sum to 1.000 and a test asserts it.
  *
- * These are what turn a set of tracked joints into a whole-body centre of
+ * These are what turn a set of tracked joints into a whole-body center of
  * mass. That matters because the strongest evidenced link between running
- * technique and running economy is the vertical oscillation of the centre of
+ * technique and running economy is the vertical oscillation of the center of
  * mass (Van Hooren et al. 2024, moderate association), and a pelvis landmark
  * is an approximation of it rather than the thing itself — it misses the
  * counter-motion of the swinging limbs entirely.
  */
 export const SEGMENTS = [
-    { id: 'headNeck', mass: 0.081, com: 1.000, from: 'neck', to: 'headCentre' },
+    { id: 'headNeck', mass: 0.081, com: 1.000, from: 'neck', to: 'headCenter' },
     { id: 'trunk', mass: 0.497, com: 0.500, from: 'pelvis', to: 'neck' },
     { id: 'upperArmL', mass: 0.028, com: 0.436, from: 'shoulderL', to: 'elbowL' },
     { id: 'upperArmR', mass: 0.028, com: 0.436, from: 'shoulderR', to: 'elbowR' },
@@ -140,7 +140,7 @@ export const SEGMENTS = [
 /**
  * Fallbacks for a segment whose distal landmark the backend does not provide.
  * A missing hand landmark must not delete 0.6% of body mass from the model and
- * shift the centre of mass; the forearm is extended instead.
+ * shift the center of mass; the forearm is extended instead.
  */
 export const SEGMENT_FALLBACK = { handL: 'wristL', handR: 'wristR' };
 
@@ -160,7 +160,7 @@ export const MISSING_FRACTION_LIMIT = 0.25;
 
 /* View classification. Ratio = shoulderWidth_px / torsoHeight_px, median over
    frames. A true frontal view sits near WINTER.shoulderWidth / WINTER.torso
-   = 0.90; a true sagittal view collapses the shoulders towards each other.
+   = 0.90; a true sagittal view collapses the shoulders toward each other.
    Between the two thresholds the view is reported "oblique" and the user is
    asked to confirm, because a 3/4 view breaks every planar assumption. */
 export const VIEW_SAGITTAL_MAX = 0.45;
@@ -182,7 +182,7 @@ export const FPS_FULL_PRECISION = 120;
 
 /* Scaling */
 export const SCALE_DISAGREEMENT_LIMIT = 0.20;  /* anthropometric vs world landmarks */
-export const CENTRAL_BAND = 0.60;         /* analyse only the middle 60% of width   */
+export const CENTRAL_BAND = 0.60;         /* analyze only the middle 60% of width   */
 /* Subject height as a fraction of frame height. Below this the landmarks are
    being estimated from too few pixels to be worth much, and every angle
    inherits that. The capture guidance asks for 60-80%. */

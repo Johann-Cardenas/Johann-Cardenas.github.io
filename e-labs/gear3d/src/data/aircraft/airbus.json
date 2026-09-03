@@ -12,7 +12,7 @@
     "",
     "The geometry is corroborated independently by the FAARFIELD 2.1.1 aircraft",
     "library, whose per-wheel coordinates for A380-800 WV000 reproduce every",
-    "spacing in the Airbus figure to the millimetre — including the body gear's",
+    "spacing in the Airbus figure to the millimeter — including the body gear's",
     "20 mm wider middle axle, which is the reason `dualSpacingByRow` exists.",
     "",
     "Weight variant WV000 throughout. Geometry is identical across variants;",
@@ -47,31 +47,31 @@
           "id": "WLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 28605, "y": -6228, "dualSpacing": 1350, "tandemSpacing": 1700,
           "tire": "1400x530R23",
-          "source": "WING gear, the outboard pair: a four-wheel dual-tandem bogie. Longitudinal position 28 605 mm and track 12 456 mm (strut centreline 6228 mm) are both stated directly in the AC section 7-2-0 figure, in metres, so no derivation from an outer width is involved. Cross-check: 12 456 + 1350 + 530 = 14 336 mm against the FAA Aircraft Characteristics Database main gear width of 47.05 ft (14 341 mm), agreeing to 5 mm from a wholly independent source. Dual spacing 1350 mm and tandem spacing 1700 mm are from the same figure and match the FAARFIELD library's A380-800 WV000 wheel coordinates exactly (X +/-674.37 mm, Y 0 and 1699.26 mm). Tire 1400x530 R23, 40PR."
+          "source": "WING gear, the outboard pair: a four-wheel dual-tandem bogie. Longitudinal position 28 605 mm and track 12 456 mm (strut centerline 6228 mm) are both stated directly in the AC section 7-2-0 figure, in meters, so no derivation from an outer width is involved. Cross-check: 12 456 + 1350 + 530 = 14 336 mm against the FAA Aircraft Characteristics Database main gear width of 47.05 ft (14 341 mm), agreeing to 5 mm from a wholly independent source. Dual spacing 1350 mm and tandem spacing 1700 mm are from the same figure and match the FAARFIELD library's A380-800 WV000 wheel coordinates exactly (X +/-674.37 mm, Y 0 and 1699.26 mm). Tire 1400x530 R23, 40PR."
         },
         {
           "id": "WLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
           "x": 28605, "y": 6228, "dualSpacing": 1350, "tandemSpacing": 1700,
           "tire": "1400x530R23",
-          "source": "Mirror of WLG-L about the aircraft centreline; same derivation."
+          "source": "Mirror of WLG-L about the aircraft centerline; same derivation."
         },
         {
           "id": "BLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 3,
           "x": 31881, "y": -2632, "dualSpacing": 1530, "dualSpacingByRow": [1530, 1550, 1530], "tandemSpacing": 1700,
           "tire": "1400x530R23",
-          "source": "BODY gear, the inboard pair: a six-wheel dual-tridem bogie, and the configuration that gives this aircraft its 3D2 gear code. Longitudinal position 31 881 mm and track 5264 mm (strut centreline 2632 mm) are stated directly in the AC section 7-2-0 figure; the body gear therefore sits 3276 mm aft of the wing gear and 3596 mm inboard of it. The middle axle is 1550 mm wide against 1530 mm for the outer two — a published 20 mm difference, carried in dualSpacingByRow rather than averaged away, and confirmed by the FAARFIELD library's wheel coordinates for A380-800 WV000 Belly (X +/-764.54 mm on the outer axles, +/-774.70 mm on the middle). Tandem spacing 1700 mm between adjacent axles, matching FAARFIELD's Y of 0, 1699.26 and 3398.52 mm."
+          "source": "BODY gear, the inboard pair: a six-wheel dual-tridem bogie, and the configuration that gives this aircraft its 3D2 gear code. Longitudinal position 31 881 mm and track 5264 mm (strut centerline 2632 mm) are stated directly in the AC section 7-2-0 figure; the body gear therefore sits 3276 mm aft of the wing gear and 3596 mm inboard of it. The middle axle is 1550 mm wide against 1530 mm for the outer two — a published 20 mm difference, carried in dualSpacingByRow rather than averaged away, and confirmed by the FAARFIELD library's wheel coordinates for A380-800 WV000 Belly (X +/-764.54 mm on the outer axles, +/-774.70 mm on the middle). Tandem spacing 1700 mm between adjacent axles, matching FAARFIELD's Y of 0, 1699.26 and 3398.52 mm."
         },
         {
           "id": "BLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 3,
           "x": 31881, "y": 2632, "dualSpacing": 1530, "dualSpacingByRow": [1530, 1550, 1530], "tandemSpacing": 1700,
           "tire": "1400x530R23",
-          "source": "Mirror of BLG-L about the aircraft centreline; same derivation."
+          "source": "Mirror of BLG-L about the aircraft centerline; same derivation."
         }
       ],
       "notes": "Twenty main tires on four struts, twenty-two in total — the largest gear in the library and the only one whose two main-gear types differ from each other: a four-wheel wing bogie and a six-wheel body bogie, at different tracks, different longitudinal positions and different dual spacings. The stated wheelbase is the load centroid of the main gear. It is NOT midway between the two: the body gear carries twelve of the twenty main tires, which pulls the centroid aft to 30 571 mm. Each tire carries the same load either way, which the FAARFIELD library confirms independently — 19 percent of aircraft weight per wing strut over four wheels and 28.5 percent per body strut over six both give 4.75 percent per tire, and 2 x 19 + 2 x 28.5 = 95 percent on the main gear. NOTE: the FAA database's tabulated wheelbase of 104.6 ft is the nose-to-body-gear dimension, not a centroid, so it is not used here.",
       "sources": [
         { "id": "airbus-a380-ac", "title": "A380 Aircraft Characteristics - Airport and Maintenance Planning", "publisher": "Airbus S.A.S.", "year": 2024, "url": "https://www.aircraft.airbus.com/", "note": "Issue of Nov 01/24. Section 7-2-0 landing gear footprint, sheets 1 and 2 (all gear geometry, tire sizes and pressures); section 2-1-1 general characteristics (weights by variant). Retrieved and read during this build." },
-        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entries A380-800 WV000 and A380-800 WV000 Belly", "publisher": "U.S. Federal Aviation Administration", "note": "Independent corroboration of the whole bogie geometry, to the millimetre: wing X +/-674.37 mm and Y 1699.26 mm; body X +/-764.54 and +/-774.70 mm and Y 0 / 1699.26 / 3398.52 mm; Cp 218 psi. Its MgPercent values, 0.19 per wing strut and 0.285 per body strut, also reproduce both the 95 percent on the main gear and the equal per-tire load." },
+        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entries A380-800 WV000 and A380-800 WV000 Belly", "publisher": "U.S. Federal Aviation Administration", "note": "Independent corroboration of the whole bogie geometry, to the millimeter: wing X +/-674.37 mm and Y 1699.26 mm; body X +/-764.54 and +/-774.70 mm and Y 0 / 1699.26 / 3398.52 mm; Cp 218 psi. Its MgPercent values, 0.19 per wing strut and 0.285 per body strut, also reproduce both the 95 percent on the main gear and the equal per-tire load." },
         { "id": "faa-acd", "title": "Aircraft Characteristics Database (type A388)", "publisher": "U.S. Federal Aviation Administration", "url": "https://www.faa.gov/airports/engineering/aircraft_char_database", "note": "Gear config 2D/3D2; main gear width 47.05 ft, used as an independent cross-check on the wing gear track. Its Wheelbase_ft field is deliberately not used — see notes." }
       ]
     }

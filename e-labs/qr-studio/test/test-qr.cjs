@@ -1,7 +1,7 @@
 /*
  * Regression suite for the QR encoder — run with `node test/test-qr.cjs`.
  *
- * The centrepiece is a *decoder* written against the standard independently of
+ * The centerpiece is a *decoder* written against the standard independently of
  * the encoder: it reads the format information back out of the matrix, undoes
  * the mask, walks the zigzag, de-interleaves the blocks, checks that every
  * Reed-Solomon syndrome is zero, and parses the payload. If a symbol survives
@@ -46,14 +46,14 @@ eq('v40-H data codewords', I.getNumDataCodewords(40, 3), 1276);
 // The famous headline capacity: 2953 bytes at version 40, level L.
 eq('max byte capacity v40-L', QR.capacityBytes(40, 'L'), 2953);
 
-// Alignment pattern centres, including the version-32 special case.
+// Alignment pattern centers, including the version-32 special case.
 eq('align v1', I.getAlignmentPatternPositions(1), []);
 eq('align v2', I.getAlignmentPatternPositions(2), [6, 18]);
 eq('align v7', I.getAlignmentPatternPositions(7), [6, 22, 38]);
 eq('align v32 (special case)', I.getAlignmentPatternPositions(32), [6, 34, 60, 86, 112, 138]);
 eq('align v40', I.getAlignmentPatternPositions(40), [6, 30, 58, 86, 114, 142, 170]);
 
-// Every version's alignment centres must be inside the symbol and ascending.
+// Every version's alignment centers must be inside the symbol and ascending.
 for (let v = 1; v <= 40; v++) {
     const pos = I.getAlignmentPatternPositions(v);
     const size = v * 4 + 17;
@@ -479,7 +479,7 @@ for (let m = 0; m < 8; m++) {
     }
 }
 
-// Randomised round-trip — the broadest net.
+// Randomized round-trip — the broadest net.
 (function () {
     let seed = 12345;
     const rand = () => (seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF) / 0x7FFFFFFF;
@@ -494,11 +494,11 @@ for (let m = 0; m < 8; m++) {
             if (decode(QR.encode(s, { ecl: ecl, boostEcl: false })).text !== s) bad++;
         } catch (e) { bad++; }
     }
-    check('randomised round-trip (' + n + ' payloads)', bad === 0, bad + ' failures');
+    check('randomized round-trip (' + n + ' payloads)', bad === 0, bad + ' failures');
 })();
 
 // =====================================================================
-// 8. Behavioural contracts
+// 8. Behavioral contracts
 // =====================================================================
 
 // ECL boosting spends leftover capacity on stronger recovery, and must never

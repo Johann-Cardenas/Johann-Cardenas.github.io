@@ -7,7 +7,7 @@
    the other half worth having.
    ============================================================ */
 
-import { analyseFile, STAGES } from './src/ui/pipeline.js';
+import { analyzeFile, STAGES } from './src/ui/pipeline.js';
 import { runPipeline, gaitCycleCurves } from './src/engine/analyze.js';
 import { synthGait } from './src/synth/gait.js';
 import { METRICS, METRIC_BY_ID, DIMENSIONS } from './src/engine/metrics/catalog.js';
@@ -45,7 +45,7 @@ const S = {
     units: 'metric',
     trim: { start: 0, end: 0, duration: 0 },
     playing: false,
-    cancelled: false,
+    canceled: false,
     running: false,
     recorder: null,
     history: [],
@@ -131,7 +131,7 @@ function wireTopbar() {
 /**
  * The two demo pickers — one in the top bar, one in the empty state.
  *
- * Both are filled from the catalogue rather than from markup, so a demo
+ * Both are filled from the catalog rather than from markup, so a demo
  * cannot exist in the list and not in the code, or the reverse. They are kept
  * in step with each other because they are two views of one choice, and a
  * visitor who picks the filmed clip in the empty state and then looks up at
@@ -445,9 +445,9 @@ function drawFramingGuide() {
     const r = v.getBoundingClientRect();
     const ctx = fitCanvas(c, r.width, r.height);
     ctx.clearRect(0, 0, r.width, r.height);
-    /* A silhouette box the runner should fill: 70% of frame height, centred.
+    /* A silhouette box the runner should fill: 70% of frame height, centerd.
        This is a metric-accuracy feature, not decoration — subject size in frame
-       drives landmark quality and the pixel-to-metre scale. */
+       drives landmark quality and the pixel-to-meter scale. */
     const bh = r.height * 0.72, bw = bh * 0.42;
     ctx.strokeStyle = 'rgba(34,211,209,0.85)';
     ctx.lineWidth = 2;
@@ -469,7 +469,7 @@ function drawFramingGuide() {
  * `MediaRecorder` writes a FRAGMENTED container — samples live in `moof`/`trun`
  * boxes rather than in the `moov` sample table — and it cannot write anything
  * else, because it is describing a stream whose length it does not yet know.
- * The demuxer here reads sample tables, recognises the fragmented layout and
+ * The demuxer here reads sample tables, recognizes the fragmented layout and
  * says so (`reason: 'fragmented'`), so a clip recorded in this app always takes
  * the `<video>` playback decoder rather than the WebCodecs fast path. That is
  * correct and it is flagged to the user as reduced timing precision — but it is
@@ -667,20 +667,20 @@ function renderStages(active) {
 
 async function startAnalysis() {
     if (!S.file || S.running) return;
-    S.running = true; S.cancelled = false;
+    S.running = true; S.canceled = false;
     runStartedAt = performance.now();
     updateRunEnabled();
     showStage('run');
     $('sl-device-chip').classList.add('is-busy');
-    $('sl-device-text').textContent = 'Analysing on your device';
+    $('sl-device-text').textContent = 'Analyzing on your device';
     const live = $('sl-live');
     const liveCtx = fitCanvas(live, live.clientWidth || 640, 360);
     const theme = themeFrom($('sl-viewport'));
 
-    $('sl-cancel').onclick = () => { S.cancelled = true; };
+    $('sl-cancel').onclick = () => { S.canceled = true; };
 
     try {
-        const result = await analyseFile(S.file, {
+        const result = await analyzeFile(S.file, {
             heightM: heightCm() / 100,
             massKg: massKg(),
             surface: $('sl-surface').value,
@@ -691,7 +691,7 @@ async function startAnalysis() {
             preferGpu: $('sl-gpu').checked,
             useWorker: $('sl-worker').checked,
             cutoffHz: Number($('sl-cutoff').value),
-            cancelled: () => S.cancelled,
+            canceled: () => S.canceled,
             onAmbiguous: askWhichRunner,
             onProgress: (p) => {
                 renderStages(p.stage);
@@ -725,7 +725,7 @@ async function startAnalysis() {
             }
         });
 
-        if (S.cancelled || result.cancelled) { showStage('trim'); return; }
+        if (S.canceled || result.canceled) { showStage('trim'); return; }
         if (!result.ok) { showError(result); return; }
         const demo = S.demoId ? DEMO_BY_ID[S.demoId] : null;
         await adoptResult(result, demo ? demo.label : S.file.name.replace(/\.[^.]+$/, ''));
@@ -829,7 +829,7 @@ function drawDetectionHud(ctx, p, theme, rect) {
         ctx.globalAlpha = 1;
     }
 
-    /* the sweep: a line travelling down the acquisition box, so the panel is
+    /* the sweep: a line traveling down the acquisition box, so the panel is
        visibly alive even on a frame where nothing moved */
     HUD.sweep = (HUD.sweep + 0.012) % 1;
     const sy = box.y + HUD.sweep * box.h;
@@ -900,7 +900,7 @@ async function askWhichRunner(ask) {
     prompt.hidden = false;
     panel.hidden = true;
     $('sl-choose-text').textContent =
-        `${cands.length} people are in frame for much of this clip. Choose the runner you want analysed.`;
+        `${cands.length} people are in frame for much of this clip. Choose the runner you want analyzed.`;
     canvas.classList.add('sl-live-pick');
 
     /* Choosing needs a bigger picture than watching a progress bar does. The
@@ -976,14 +976,14 @@ async function askWhichRunner(ask) {
            offered, which left the choice unreachable by keyboard and invisible
            to a screen reader — and it is not an optional step that can be
            skipped, it is a gate the analysis stops at. The buttons carry the
-           same numbers the boxes are labelled with, and focusing one highlights
+           same numbers the boxes are labeled with, and focusing one highlights
            its box, so the two readings of the same choice stay tied together. */
         const picks = $('sl-choose-picks');
         picks.innerHTML = '';
         const buttons = cands.map((c, i) => {
             const b = el('button', 'sl-btn sl-choose-pick', `Runner ${i + 1}`);
             b.type = 'button';
-            b.setAttribute('aria-label', `Analyse runner ${i + 1}, in frame for ${(c.coverage * 100).toFixed(0)}% of the clip`);
+            b.setAttribute('aria-label', `Analyze runner ${i + 1}, in frame for ${(c.coverage * 100).toFixed(0)}% of the clip`);
             b.addEventListener('click', () => finish(c.id));
             b.addEventListener('focus', () => paint(c.id));
             b.addEventListener('mouseenter', () => paint(c.id));
@@ -1004,7 +1004,7 @@ async function askWhichRunner(ask) {
             resolve(id);
         };
         const onClick = (ev) => { const b = hit(ev); if (b) finish(b.id); };
-        const onCancel = () => { S.cancelled = true; finish(null); };
+        const onCancel = () => { S.canceled = true; finish(null); };
         canvas.addEventListener('click', onClick);
         canvas.addEventListener('mousemove', onMove);
         $('sl-choose-cancel').addEventListener('click', onCancel);
@@ -1100,7 +1100,7 @@ async function runVideoDemo(demo) {
         showError({
             code: 'decode-failed',
             message: `The demo clip could not be fetched (${err && err.message || err}). It is ${fmtBytes(demo.bytes)} `
-                + 'and has to be downloaded once before it can be analysed here. The synthetic demo needs no download and works offline.'
+                + 'and has to be downloaded once before it can be analyzed here. The synthetic demo needs no download and works offline.'
         });
         return;
     }
@@ -1329,7 +1329,7 @@ function renderDimensions(r) {
 }
 
 /* Ordered by how much the evidence supports them, not by how familiar they
-   are: centre-of-mass oscillation and the two stiffness terms are the only
+   are: center-of-mass oscillation and the two stiffness terms are the only
    variables here with a significant pooled association with running economy. */
 const KEY_METRICS = ['comVerticalOscillation', 'cadence', 'verticalStiffness', 'legStiffness',
     'gct', 'stepLength', 'overstride', 'footStrikeAngle', 'pelvicDrop'];
@@ -1421,11 +1421,11 @@ function renderFindings(r) {
             `Filmed demo — a real phone clip, not a rendering. ${filmed.coded.width}×${filmed.coded.height} stored with a `
             + `${filmed.rotationDeg}° turn so it plays ${filmed.display.width}×${filmed.display.height}, ${filmed.fps} fps, `
             + `${filmed.durationS.toFixed(1)} s, filmed from behind and to one side of a treadmill. `
-            + `${windowS.toFixed(0)} seconds of it were analysed — twice the six the app proposes for a clip you bring, `
+            + `${windowS.toFixed(0)} seconds of it were analyzed — twice the six the app proposes for a clip you bring, `
             + 'because on this one six seconds left almost nothing above low confidence and twelve did not.'));
         body.appendChild(el('p', '',
             `Three numbers were SUPPLIED and could not be measured from the video: standing height ${filmed.stated.heightM.toFixed(2)} m, `
-            + `which sets the pixels-to-metres scale; body mass ${filmed.stated.massKg} kg; and belt speed `
+            + `which sets the pixels-to-meters scale; body mass ${filmed.stated.massKg} kg; and belt speed `
             + `${filmed.stated.speedMs.toFixed(2)} m/s, which on a treadmill is unmeasurable because the runner does not move `
             + `through the frame. Everything else on this page was worked out from the pixels.`));
         body.appendChild(el('p', '',
@@ -1527,7 +1527,7 @@ function metricCard(r, id) {
         const lab = el('div', 'sl-side-label');
         lab.appendChild(document.createTextNode(label + ' '));
         /* the dash marks the right side everywhere in this app, so left and
-           right are never told apart by colour alone */
+           right are never told apart by color alone */
         if (key === 'R') lab.appendChild(el('span', 'sl-dash', '- -'));
         cell.appendChild(lab);
         const v = el('div', 'sl-side-value');
@@ -1843,7 +1843,7 @@ function seekFraction(f) {
  */
 function syncOverlayToVideo(video, series) {
     /* A previous analysis may have left a callback chain running on this same
-       element; without cancelling it two chains would draw over each other. */
+       element; without canceling it two chains would draw over each other. */
     if (playerState.rvfc != null && video.cancelVideoFrameCallback) {
         try { video.cancelVideoFrameCallback(playerState.rvfc); } catch { /* gone */ }
     }
@@ -1938,7 +1938,7 @@ function drawPlayerFrame() {
         readout: $('sl-l-readout').checked ? frameReadout(result, f) : null,
         phase: phaseAt(result, f),
         measures: $('sl-l-measures').checked ? measuresAt(result, f) : null,
-        metresPerPx: metresPerCanvasPx(result, f, box.w),
+        metersPerPx: metersPerCanvasPx(result, f, box.w),
         eventLabel: label
     });
     ctx.restore();
@@ -1947,7 +1947,7 @@ function drawPlayerFrame() {
 }
 
 /**
- * The whole-body centre of mass at one frame, in normalised coordinates.
+ * The whole-body center of mass at one frame, in normalized coordinates.
  * The engine works in a y-up pixel frame, so it has to be converted back for
  * the overlay, which draws in image coordinates.
  */
@@ -2040,7 +2040,7 @@ function frameReadout(result, frame) {
         rows.push(deg('trunk', S.trunkLean));
     }
 
-    /* Centre-of-mass height ABOVE THE GROUND, not above the bottom of the
+    /* Center-of-mass height ABOVE THE GROUND, not above the bottom of the
        image — the frame edge is an arbitrary datum and a height measured from
        it is a number with no meaning. */
     const com = inner.com;
@@ -2108,7 +2108,7 @@ function contactState(result, frame) {
 
 /**
  * Dimensioned callouts: overstride at the frames near a foot strike, and the
- * centre-of-mass excursion across the stride containing this frame.
+ * center-of-mass excursion across the stride containing this frame.
  */
 const trusted = (c) => c === 'high' || c === 'medium';
 
@@ -2150,7 +2150,7 @@ function measuresAt(result, frame) {
         }
     }
 
-    /* centre-of-mass excursion across the stride containing this frame */
+    /* center-of-mass excursion across the stride containing this frame */
     const st = (result.events.strides || []).find(s => s.valid && t >= s.strike.t && t < s.nextStrike.t);
     const com = inner.com;
     const mCom = result.metrics.comVerticalOscillation.combined;
@@ -2175,11 +2175,11 @@ function measuresAt(result, frame) {
 }
 
 /**
- * Metres per canvas pixel, for the scale bar.
+ * Meters per canvas pixel, for the scale bar.
  * The engine works in SOURCE pixels; the canvas draws the source width into
  * `boxW`, so the two scales have to be composed rather than confused.
  */
-function metresPerCanvasPx(result, frame, boxW) {
+function metersPerCanvasPx(result, frame, boxW) {
     const inner = result._internal;
     const mpp = inner && inner.scale && inner.scale.mPerPx;
     if (!mpp || !Number.isFinite(mpp[frame]) || !(boxW > 0)) return null;
@@ -2199,7 +2199,7 @@ function buildTrails(result, frame) {
         }
         out.push({ side, pts });
     }
-    /* the centre-of-mass path, which is the one trace worth watching */
+    /* the center-of-mass path, which is the one trace worth watching */
     const com = result._internal && result._internal.com;
     if (com) {
         const pts = [];
@@ -2209,7 +2209,7 @@ function buildTrails(result, frame) {
                 1 - com.y[f] / series.height
             );
         }
-        out.push({ side: 'C', pts, colour: null });
+        out.push({ side: 'C', pts, color: null });
     }
     return out;
 }
@@ -2453,7 +2453,7 @@ function renderCompare() {
             const measurable = Math.abs(d) > combined;
 
             /* Direction, from the band rather than from the sign of the change.
-               An earlier version coloured every significant change green, which
+               An earlier version colored every significant change green, which
                told a runner whose pelvic drop had doubled that they had
                improved. Without a band there is no better or worse to report,
                and saying nothing is the correct answer. */
@@ -2600,9 +2600,9 @@ function wireExports() {
 /**
  * Redraw the charts in the light palette while printing.
  *
- * The stylesheet can recolour text for print, but a canvas prints the bitmap
+ * The stylesheet can recolor text for print, but a canvas prints the bitmap
  * it already holds — the charts were drawn against the dark theme and would
- * come out as dark blocks on white paper. `renderResult` reads its colours
+ * come out as dark blocks on white paper. `renderResult` reads its colors
  * from the computed style of the viewport, and is already re-entrant because
  * changing units calls it, so switching the theme attribute and re-rendering
  * is enough. The player canvas is deliberately left alone: it is a video

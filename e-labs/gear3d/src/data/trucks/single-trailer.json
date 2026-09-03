@@ -180,7 +180,7 @@
         { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 9 — Five-axle single-trailer trucks", "publisher": "FHWA", "url": "https://www.fhwa.dot.gov/policyinformation/tmguide/", "note": "Class definition and axle topology. Verified during this build." },
         { "id": "mepdg-defaults", "title": "AASHTOWare Pavement ME Design — default traffic inputs (axle configuration and wheelbase)", "publisher": "AASHTO", "url": "https://aashtowarepavementme.org/MEDesign/help/traffic.html", "note": "Tandem axle spacing 51.6 in; wheelbase classes short 12 ft / medium 15 ft / long 18 ft with a 17/22/61 % split; dual tire spacing 12 in; tire pressure 120 psi; average axle width 8.5 ft. All verified against the published help manual during this build." },
         { "id": "cfr-658", "title": "23 CFR 658.17 — Weight; 23 CFR 658.15 — Width", "publisher": "U.S. Government", "note": "20 000 lb single-axle, 34 000 lb tandem-axle and 80 000 lb gross limits; the Federal Bridge Formula; the 102 in width limit." },
-        { "id": "yoder-witczak", "title": "Principles of Pavement Design (Yoder & Witczak); Pavement Analysis and Design (Huang)", "publisher": "Wiley / Pearson", "note": "Classic dual-wheel idealisation: dual tires at 13.5 in centres with the dual sets 72 in apart. Basis for the 1829 mm track." }
+        { "id": "yoder-witczak", "title": "Principles of Pavement Design (Yoder & Witczak); Pavement Analysis and Design (Huang)", "publisher": "Wiley / Pearson", "note": "Classic dual-wheel idealization: dual tires at 13.5 in centers with the dual sets 72 in apart. Basis for the 1829 mm track." }
       ]
     },
 

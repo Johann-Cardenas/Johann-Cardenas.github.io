@@ -4390,12 +4390,12 @@
                 <stop offset="100%" stop-color="rgba(${c.join(',')},${(alpha * 0.5).toFixed(2)})"/>
             </linearGradient>`;
         });
-        // Groove gradient (grey)
-        const grooveGrey = isDark ? '120,120,120' : '160,160,160';
+        // Groove gradient (gray)
+        const grooveGray = isDark ? '120,120,120' : '160,160,160';
         defs += `<linearGradient id="grooveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="rgba(${grooveGrey},0.3)"/>
-            <stop offset="50%" stop-color="rgba(${grooveGrey},0.5)"/>
-            <stop offset="100%" stop-color="rgba(${grooveGrey},0.3)"/>
+            <stop offset="0%" stop-color="rgba(${grooveGray},0.3)"/>
+            <stop offset="50%" stop-color="rgba(${grooveGray},0.5)"/>
+            <stop offset="100%" stop-color="rgba(${grooveGray},0.3)"/>
         </linearGradient>`;
         // Arrow markers
         defs += `
@@ -4433,7 +4433,7 @@
             if (i < p.bi.length - 1) {
                 const grooveWidth = gi[i] || 10.0;
                 const gh = grooveWidth * scaleY;
-                html += `<rect x="${ox}" y="${oy + cumY}" width="${patchW}" height="${gh}" fill="url(#grooveGrad)" stroke="rgba(${grooveGrey},0.5)" stroke-width="0.5"/>`;
+                html += `<rect x="${ox}" y="${oy + cumY}" width="${patchW}" height="${gh}" fill="url(#grooveGrad)" stroke="rgba(${grooveGray},0.5)" stroke-width="0.5"/>`;
                 // Groove label (right side)
                 const grooveLabelY = oy + cumY + gh / 2 + 5;
                 html += `<text x="${ox + patchW + 10}" y="${grooveLabelY}" font-size="9" fill="${dimCol}" font-weight="600" font-style="italic">Groove ${i + 1} <tspan fill="${dimCol}" font-size="7.5"> · ${grooveWidth.toFixed(1)} mm</tspan></text>`;
@@ -6257,14 +6257,14 @@
         }
 
         // For each zone: label start, midpoint, end
-        var labelledPcts = {}; // avoid overlapping labels at same position
+        var labeledPcts = {}; // avoid overlapping labels at same position
         function addYLabel(rowIdx) {
             var mmVal = rowCumY[rowIdx];
             var pxTop = rowPxY[rowIdx];
             var pct = (pxTop / canvasH * 100).toFixed(2);
             var key = Math.round(pxTop); // deduplicate by pixel position
-            if (labelledPcts[key]) return;
-            labelledPcts[key] = true;
+            if (labeledPcts[key]) return;
+            labeledPcts[key] = true;
             yHtml += '<span class="fem-axis-label" style="position:absolute;top:' + pct + '%;transform:translateY(-50%)">' + mmVal.toFixed(1) + '</span>';
         }
 

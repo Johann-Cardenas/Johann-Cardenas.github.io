@@ -96,13 +96,13 @@
                         <!-- Originator block: mark, name, and the way back. -->
                         <div class="g3-tb-mark">
                             <span class="g3-tb-icon" aria-hidden="true">
-                                <!-- A wheel seen face on: tyre ring and hub,
+                                <!-- A wheel seen face on: tire ring and hub,
                                      drawn for this app rather than borrowed
                                      from an icon font. The previous mark was a
                                      dharmachakra, which is a religious symbol
                                      standing in for a wheel; a first attempt
                                      at replacing it drew a front-view axle —
-                                     two tyres on a beam — which at this size
+                                     two tires on a beam — which at this size
                                      read unmistakably as the letter H. -->
                                 <svg viewBox="0 0 24 24" width="21" height="21"
                                      fill="none" stroke="currentColor" stroke-width="3">
@@ -165,8 +165,8 @@
                             <button class="g3-vtab" data-view="front" role="tab" aria-selected="false" title="Front view — locked (V then 5)">Front</button>
                         </div>
                         <span class="g3-tool-sep"></span>
-                        <button id="g3-catalogue" class="g3-btn" title="FAA Order 5300.7 gear configuration catalogue (C)">
-                            <i class="fas fa-th"></i> Gear catalogue
+                        <button id="g3-catalog" class="g3-btn" title="FAA Order 5300.7 gear configuration catalog (C)">
+                            <i class="fas fa-th"></i> Gear catalog
                         </button>
                         <span class="g3-tool-sep"></span>
                         <button id="g3-annot" class="g3-btn is-on" title="Show or hide all dimensions, callouts and the scale bar (A)" aria-pressed="true">
@@ -185,7 +185,7 @@
                         <input type="file" id="g3-file-input" accept=".gear3d,.json,application/json" hidden>
                         <span class="g3-spacer"></span>
                         <div class="g3-unitsys" role="group" aria-label="Display units">
-                            <button class="g3-uswitch is-active" data-units="SI" title="Millimetres, kilonewtons, kilopascals">SI</button>
+                            <button class="g3-uswitch is-active" data-units="SI" title="Millimeters, kilonewtons, kilopascals">SI</button>
                             <button class="g3-uswitch" data-units="US" title="Inches, kips, psi">US</button>
                         </div>
                         <button id="g3-reset" class="g3-btn g3-btn--danger" title="Revert to the cited reference configuration"><i class="fas fa-rotate-left"></i> Revert</button>
@@ -251,7 +251,7 @@
 
                                 <hr class="g3-rule">
                                 <div class="g3-mini-row">
-                                    <button id="g3-gearcode-browse" class="g3-btn"><i class="fas fa-th"></i> Catalogue</button>
+                                    <button id="g3-gearcode-browse" class="g3-btn"><i class="fas fa-th"></i> Catalog</button>
                                     <button id="g3-gearcode-load" class="g3-btn" disabled><i class="fas fa-download"></i> Load this</button>
                                 </div>
                                 <p class="g3-note">
@@ -318,8 +318,8 @@
                                 </div>
                                 <div id="g3-custom-list" class="g3-dimlist"></div>
                                 <p class="g3-note" id="g3-measure-hint" hidden>
-                                    Click two features to measure. Endpoints snap to tire centres and edges,
-                                    contact patches and axle centrelines. <kbd>Esc</kbd> cancels.
+                                    Click two features to measure. Endpoints snap to tire centers and edges,
+                                    contact patches and axle centerlines. <kbd>Esc</kbd> cancels.
                                 </p>
                                 <hr class="g3-rule">
                                 <div class="g3-field">
@@ -388,7 +388,7 @@
                                     <button id="g3-exp-csv" class="g3-btn"><i class="fas fa-file-csv"></i> footprint.csv</button>
                                     <button id="g3-exp-fem" class="g3-btn"><i class="fas fa-cubes"></i> FEM export</button>
                                 </div>
-                                <p class="g3-note">Contact pressure is taken equal to inflation pressure and uniform over the patch. Both are idealisations — the export header states them in full.</p>
+                                <p class="g3-note">Contact pressure is taken equal to inflation pressure and uniform over the patch. Both are idealizations — the export header states them in full.</p>
                             </div>
                         </details>
 
@@ -429,9 +429,9 @@
                                     <span class="g3-resbar-n" id="g3-res-note"></span>
                                 </div>
                                 <div class="g3-field">
-                                    <label for="g3-geometry">Tyre detail</label>
+                                    <label for="g3-geometry">Tire detail</label>
                                     <select id="g3-geometry" class="g3-select">
-                                        <option value="auto">Auto — by tyre count</option>
+                                        <option value="auto">Auto — by tire count</option>
                                         <option value="draft">Draft — 112 segments</option>
                                         <option value="standard">Standard — 240</option>
                                         <option value="high">High — 352</option>
@@ -535,12 +535,12 @@
                                     <label for="g3-bg-mode">Mode</label>
                                     <select id="g3-bg-mode" class="g3-select">
                                         <option value="white">Publication white</option>
-                                        <option value="color">Custom colour</option>
+                                        <option value="color">Custom color</option>
                                         <option value="transparent">Transparent</option>
                                     </select>
                                 </div>
                                 <div class="g3-field" id="g3-bg-color-field">
-                                    <label for="g3-bg-color">Colour</label>
+                                    <label for="g3-bg-color">Color</label>
                                     <input type="color" id="g3-bg-color" class="g3-color" value="#eef1f4">
                                 </div>
                             </div>
@@ -573,10 +573,10 @@
                                     <button id="g3-exp-matrix" class="g3-btn"><i class="fas fa-th-large"></i> Gear matrix</button>
                                 </div>
                                 <div class="g3-mini-row">
-                                    <button id="g3-exp-glb" class="g3-btn" title="Binary glTF geometry, engineering frame, millimetres"><i class="fas fa-cube"></i> Geometry .glb</button>
-                                    <button id="g3-exp-obj" class="g3-btn" title="Wavefront OBJ geometry, engineering frame, millimetres"><i class="fas fa-cube"></i> .obj</button>
+                                    <button id="g3-exp-glb" class="g3-btn" title="Binary glTF geometry, engineering frame, millimeters"><i class="fas fa-cube"></i> Geometry .glb</button>
+                                    <button id="g3-exp-obj" class="g3-btn" title="Wavefront OBJ geometry, engineering frame, millimeters"><i class="fas fa-cube"></i> .obj</button>
                                 </div>
-                                <p class="g3-note">Geometry exports carry the visible model in the <strong>engineering frame, in millimetres</strong> — the same coordinate system and scale as footprint.csv, so the two line up. Isolation applies.</p>
+                                <p class="g3-note">Geometry exports carry the visible model in the <strong>engineering frame, in millimeters</strong> — the same coordinate system and scale as footprint.csv, so the two line up. Isolation applies.</p>
                                 <p class="g3-note">Exports re-render at full resolution. Above the GPU's limit the render is tiled and composited. SVG and PDF keep dimensions and labels vector.</p>
                             </div>
                         </details>
@@ -631,7 +631,7 @@
                         <span class="g3-status-sep"></span>
                         <span class="g3-status-item g3-mono" id="g3-status-view">—</span>
                         <span class="g3-status-sep"></span>
-                        <span class="g3-status-item g3-mono" id="g3-status-res" title="Drawing buffer — the resolution the viewport is rasterised at"></span>
+                        <span class="g3-status-item g3-mono" id="g3-status-res" title="Drawing buffer — the resolution the viewport is rasterized at"></span>
                     </div>
 
                 </div>
@@ -643,16 +643,16 @@
 
     </div>
 
-    <!-- Gear configuration catalogue.
+    <!-- Gear configuration catalog.
          Figure 2 and Table 3 of FAA Order 5300.7, as a browsable sheet. The
          thumbnails are drawn from the same wheel-plan function the app uses
          elsewhere, so a diagram here cannot disagree with the model it loads. -->
-    <div class="g3-modal" id="g3-catalogue-modal" hidden>
+    <div class="g3-modal" id="g3-catalog-modal" hidden>
         <div class="g3-modal-scrim" data-close></div>
         <div class="g3-modal-panel" role="dialog" aria-modal="true" aria-labelledby="g3-cat-title">
             <header class="g3-modal-head">
                 <div>
-                    <h2 id="g3-cat-title">Gear configuration catalogue</h2>
+                    <h2 id="g3-cat-title">Gear configuration catalog</h2>
                     <p>FAA Order 5300.7 — <span id="g3-cat-count">—</span> entries.
                        <span class="g3-cat-legend">
                            <span class="g3-cat-dot g3-cat-dot--real"></span> measured aircraft
@@ -663,7 +663,7 @@
                 <div class="g3-modal-tools">
                     <input type="search" id="g3-cat-search" class="g3-text" placeholder="Filter by code or aircraft…"
                            spellcheck="false" autocomplete="off" aria-label="Filter configurations">
-                    <button class="g3-icon-btn" data-close aria-label="Close catalogue"><i class="fas fa-times"></i></button>
+                    <button class="g3-icon-btn" data-close aria-label="Close catalog"><i class="fas fa-times"></i></button>
                 </div>
             </header>
             <div class="g3-cat-body">

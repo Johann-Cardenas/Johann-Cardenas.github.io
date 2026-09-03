@@ -6,7 +6,7 @@
     "dimensions and are computed arithmetically by src/core/tires.js — they are",
     "deliberately NOT listed here.",
     "",
-    "Dimensions are NOMINAL new-tire values in millimetres. See data/SOURCES.md",
+    "Dimensions are NOMINAL new-tire values in millimeters. See data/SOURCES.md",
     "for the verification status of every entry: values marked confidence",
     "'medium' were reproduced from the standard truck-tire literature but were",
     "NOT checked against a primary Tire and Rim Association yearbook during the",
@@ -19,7 +19,7 @@
       "sectionWidth": 279,
       "overallDiameter": 1054,
       "confidence": "high",
-      "source": "Nominal 11.0 in section / 41.5 in overall diameter. This is the reference truck tire of the flexible-pavement literature and the size assumed by the AASHTO 18-kip ESAL dual-wheel idealisation; dimensions agree across Michelin, Bridgestone and Goodyear medium-truck data books.",
+      "source": "Nominal 11.0 in section / 41.5 in overall diameter. This is the reference truck tire of the flexible-pavement literature and the size assumed by the AASHTO 18-kip ESAL dual-wheel idealization; dimensions agree across Michelin, Bridgestone and Goodyear medium-truck data books.",
       "notes": "Standard drive/trailer fitment for FHWA classes 5-13."
     },
     "11R24.5": {

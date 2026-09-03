@@ -29,7 +29,7 @@ distances from their own flanges (a flange-height in on the inboard side, 0.255
 of the width on the outboard). A tire is symmetric by construction — its
 meridian is mirrored from a half, which is the guarantee `tire.js` is built on
 — so no tire could seat on both. The seats are now symmetric and only the
-drop-centre well is offset, which is what a real rim does.
+drop-center well is offset, which is what a real rim does.
 
 **Rejected: fixing it in the assembly.** Passing the same `offsetRatio` to both
 builders removes today's disagreement and nothing else; the next parameter one
@@ -44,20 +44,20 @@ the class of error impossible.
 adaptively until the polyline is within a sagitta tolerance of the curve, no
 chord is longer than a limit, and no vertex turns through more than 7 degrees.
 
-**Why centripetal.** Uniform parameterisation overshoots between control points
+**Why centripetal.** Uniform parameterization overshoots between control points
 that are unevenly spaced, and the meridian's are deliberately uneven — the step
 from maximum section width to the top of the sidewall is 1.2% of the section
 half-width while the one across the crown is 60% of it. The carcass came out
 0.6 to 1.1 mm wider than its section width on every tire in the library, and
 the true maximum sat 11 mm below the station the profile puts it at. Section
 width is a published dimension that the dimension engine draws and the
-footprint export writes out; a tire quietly a millimetre too wide is not
+footprint export writes out; a tire quietly a millimeter too wide is not
 cosmetic. The overshoot is now exactly zero, which the test asserts.
 
-**Why the maximum-width control point's neighbours share an axial station.**
-Centripetal parameterisation alone did not remove the overshoot, because the
+**Why the maximum-width control point's neighbors share an axial station.**
+Centripetal parameterization alone did not remove the overshoot, because the
 cause was upstream of it: a Catmull-Rom tangent is proportional to the chord
-between a point's neighbours, and while those were at 0.930 and 0.988 of the
+between a point's neighbors, and while those were at 0.930 and 0.988 of the
 half-width the tangent at the widest point still had a positive axial
 component. The curve was heading outboard as it passed the widest control point
 and had to overshoot before turning back. Equal stations make that tangent
@@ -69,11 +69,11 @@ between spans gave the short, tightly-curved shoulder the same four points as
 the long, nearly flat crown. Vertex normals are averaged from the faces meeting
 at each row, so the resulting 31-degree facets became a terraced shading band
 around each sidewall — a stack of washers rather than one carcass, and the
-loudest artefact on a close render. A sagitta tolerance alone still left
+loudest artifact on a close render. A sagitta tolerance alone still left
 13-degree creases at the draft profile detail, and it also has to be checked at
 the SPAN JOINTS: the curve is only tangent-continuous there, so two chords
 meeting at a knot are as collinear as they are short. Bounding the angle
-directly bounds the artefact. Worst case across the library is now under 10
+directly bounds the artifact. Worst case across the library is now under 10
 degrees at every quality.
 
 **What it costs.** Row counts rise by about two thirds — 81 to 103 at draft.
@@ -120,15 +120,15 @@ camera's frustum, so its resolution on the ground is set entirely by how large
 that frustum is. Fitted once to the whole unit, an isolated axle of a class 9
 was shaded by a map covering 27 m of pavement — roughly 13 mm per texel, with a
 PCF radius of several texels on top, which is a penumbra wider than the tread
-casting it. Every shadow in every isolated view was a soft grey smear. Fitting
+casting it. Every shadow in every isolated view was a soft gray smear. Fitting
 to the visible extent is a four- to tenfold gain in exactly the views where the
 shadow is being looked at, and costs one Box3 per isolation change.
 
 **The shadow catcher had to move too.** It was left at the world origin, which
 was invisibly fine only because the rig was vehicle-sized and so was the plane.
-Fitted to an isolated rear axle five metres down a semitrailer, a three-metre
+Fitted to an isolated rear axle five meters down a semitrailer, a three-meter
 plane at the origin catches nothing, and the axle rendered with no shadow at
-all. It is centred on the fit.
+all. It is centerd on the fit.
 
 **What is NOT refitted.** The grid and the camera. The grid is a scale
 reference and must not resize as parts are hidden, and re-framing the camera on
@@ -157,9 +157,9 @@ offset direction without it moved the line outboard and left the label exactly
 where it was.
 
 **Why `away` is a field and not a computation.** The chooser sees one
-dimension, not a vehicle. The vertical centre of a running gear is a tire
+dimension, not a vehicle. The vertical center of a running gear is a tire
 radius up, not on the ground, and nothing local to a dimension can know that —
-taking the ground as the centre is what made "up" look like an escape.
+taking the ground as the center is what made "up" look like an escape.
 
 **Also fixed here.** Spacings are drawn between distinct longitudinal STATIONS
 rather than between axles. On a truck the two are the same; on an aircraft a
@@ -180,7 +180,7 @@ after the last input.
 
 **Why supersample at all.** `min(devicePixelRatio, 2)` sounds like a cap and is
 in fact a floor: on an ordinary 1x monitor it evaluates to **one**, so the
-viewport was being rasterised at its CSS size, around 0.7 megapixels. MSAA
+viewport was being rasterized at its CSS size, around 0.7 megapixels. MSAA
 antialiases geometry edges and does nothing for specular shimmer on a rim lip
 or for the sub-pixel detail in a tread groove. The export path has supersampled
 2x since v1.1 for exactly this reason; the live view simply never did.
@@ -274,7 +274,7 @@ that are easiest to invert:
 
 - The main-gear multiple counts gears in line **on one side** of a symmetric
   gear (§6e) and is doubled; the body-gear multiple is the **total across the
-  aircraft** (§6f) and is not. Getting that backwards gives `2D/D1` twelve
+  aircraft** (§6f) and is not. Getting that backward gives `2D/D1` twelve
   wheels instead of ten.
 - The body count is **never** elided, even when it is 1, "because body gear
   arrangement may not be symmetrical". `2D/D` is therefore refused rather than
@@ -488,7 +488,7 @@ Full rationale and the self-critique are in `DESIGN.md`. In summary: six
 tokens, a system-font stack with tabular figures as a *functional* requirement,
 and one signature element (the **datum tick** on panel headings, which reuses
 the extension-line mark the dimension engine draws in the viewport). The
-instrument-red signal colour is reserved exclusively for the live measurement
+instrument-red signal color is reserved exclusively for the live measurement
 and the current selection.
 
 ---
@@ -522,7 +522,7 @@ and separately asserts that the turnpike double genuinely *fails* the federal
 formula.
 
 **Why.** A 129 000 lb turnpike double does not satisfy the bridge formula —
-that is precisely why it runs under state turnpike permits. Silently labelling
+that is precisely why it runs under state turnpike permits. Silently labeling
 it compliant, or quietly excluding it from the check, would have been the easy
 lie. The negative assertion means that if someone later "fixes" its loads or
 geometry to make it pass, the suite fails and asks why.
@@ -532,7 +532,7 @@ geometry to make it pass, the suite fails and asks why.
 ## D9. Deferred to v1.1: aircraft data library, chassis silhouettes, quad view
 
 The spec's own build order says ship M0–M6 as v1.0 with aircraft (M8) to
-follow. This build honours that, and the **data model, schema, layout
+follow. This build honors that, and the **data model, schema, layout
 resolver, dimension sets and renderer all handle the aircraft domain today** —
 dropping `src/data/aircraft/*.json` in is picked up with no code changes.
 
@@ -557,7 +557,7 @@ covers the comparison use case), and glTF/OBJ scene export.
 
 **Why.** The app's whole claim is that its numbers are real. Being able to read
 the resolved layout, the patch table and the camera state straight out of the
-console is how a sceptical user checks that without having to trust the UI. It
+console is how a skeptical user checks that without having to trust the UI. It
 carries no secrets and enables nothing that is not already in the project file.
 
 ---
@@ -600,7 +600,7 @@ that is quietly wrong. Single-view tiling is untouched.
 
 `--g3-muted` shipped from v1.0 to v1.7 at **2.72:1** against the light theme's
 panel. WCAG AA wants 4.5:1 for text that size. It failed on *every* background
-in that theme — 2.50:1 on a raised surface, 2.32:1 on an inset — and it colours
+in that theme — 2.50:1 on a raised surface, 2.32:1 on an inset — and it colors
 55 elements: the title-block labels, every definition term in the unit stats,
 the tree's tags, the panel notes. The dark theme was marginal at 4.06:1 rather
 than badly wrong, which is probably why it survived: the app is usually looked
@@ -616,7 +616,7 @@ at 5.05:1 and muted would have landed at 5.34:1 — the "secondary" tier would
 have out-weighted the primary one. Graphite is darkened to `#465564` (7.06:1)
 to keep the two tiers a clear step apart, and a test asserts that gap stays.
 
-### Two things this exposed about where colours are judged
+### Two things this exposed about where colors are judged
 
 - **The wordmark is measured against the wrong thing if you measure it against
   the panel.** `Gear3D`'s teal `3D` sits on `.g3-tb-mark`, the inset tile,
@@ -641,7 +641,7 @@ token against every surface it is drawn on, plus the figure tokens against the
 figure. Verified by reverting the old value: the suite fails with
 `--g3-muted (#8b98a5) on --g3-surface (#f4f6f8) is 2.72:1, needs 4.5`.
 
-Measured across the whole interface afterwards: **55 failures to 0, in both
+Measured across the whole interface afterward: **55 failures to 0, in both
 themes.**
 
 ---
@@ -660,7 +660,7 @@ together. The handler is bound to the container, not to each node, because the
 tree is rebuilt wholesale on every selection change and per-node handlers would
 be re-attached each time.
 
-Nodes also now carry `aria-selected`. Selection had been communicated by colour
+Nodes also now carry `aria-selected`. Selection had been communicated by color
 alone, so a screen reader user could move through the tree without ever being
 told which row was current.
 
@@ -670,7 +670,7 @@ told which row was current.
 
 The viewport shows publication white in both themes. That is deliberate and it
 is not going to change: the annotation halo in `annotate/dimensions.js` is
-drawn in the *figure's* background colour so that a figure exported on white
+drawn in the *figure's* background color so that a figure exported on white
 while the app runs dark does not get a dark halo eating its own text. The
 viewport is a preview of the figure, so the figure's background is what it
 shows.
@@ -678,16 +678,16 @@ shows.
 The consequence had not been followed through. The HUD, the axis badge and the
 progress overlay were styled from the *theme's* tokens, so in the dark theme
 they became near-black pills sitting on white paper — blocks with more visual
-weight than the drawing they annotate, which is precisely backwards.
+weight than the drawing they annotate, which is precisely backward.
 
 So `.g3-viewport` now declares `--g3-fig-paper`, `--g3-fig-ink`, `--g3-fig-rule`
-and `--g3-fig-muted`, and everything drawn over the plate takes its colour from
+and `--g3-fig-muted`, and everything drawn over the plate takes its color from
 those. The rule is: **if it sits on the figure, it follows the figure; if it
 sits on the interface, it follows the theme.** The halo already worked this
 way; the rest of the chrome now does too.
 
 The white plate in a dark interface is then handled as a composition rather
-than apologised for. It gets an edge, a mat and a lift, so it reads as drafting
+than apologized for. It gets an edge, a mat and a lift, so it reads as drafting
 film lying on a desk instead of a hole punched through the UI.
 
 ### The one thing not to do to the viewport
@@ -697,7 +697,7 @@ film lying on a desk instead of a hole punched through the UI.
 fills its CONTENT box. Padding would leave the two boxes different sizes, and
 every dimension line would be drawn a few pixels off the geometry it measures.
 That failure looks exactly like a projection bug — it would be hunted for in
-the maths, not in the stylesheet. The mat is therefore a `box-shadow` ring,
+the math, not in the stylesheet. The mat is therefore a `box-shadow` ring,
 which does not affect layout. There is a comment saying so at the rule itself.
 
 ---
@@ -715,7 +715,7 @@ dimension lines. Values sat on top of each other and on the tires, in the one
 part of the app whose whole job is to be read.
 
 `rotatedBox(w, h, angle)` now supplies the true axis-aligned footprint, and the
-declutter pass is given that instead. Measured in the browser afterwards, a
+declutter pass is given that instead. Measured in the browser afterward, a
 five-dimension truck goes from labels overlapping at the default camera to zero
 overlapping pairs at four different orbits, and the 22-tire A380 is clean too.
 
@@ -726,7 +726,7 @@ Two things worth noting about the fix:
   a test asserting `declutter` separates two boxes would have passed throughout.
 - `projection.js` is pure precisely so this is testable under Node, and it had
   no coverage at all. It does now, including the case that distinguishes the
-  two behaviours: two labels 20 px apart that do *not* overlap as flat boxes
+  two behaviors: two labels 20 px apart that do *not* overlap as flat boxes
   and *do* overlap once rotated.
 
 ---
@@ -740,11 +740,11 @@ from the wing gear is a free parameter, and putting a number on it without a
 source would have been inventing geometry — the one thing this library exists
 not to do.
 
-What changed is not the modelling. It is that the number was found. It is
+What changed is not the modeling. It is that the number was found. It is
 stated outright in the manufacturers' own airport planning figures (Boeing
 ACAP §7.2, Airbus AC §7-2-0), which publish the track, both gear positions and
 every spacing. Neither the FAA database nor FAARFIELD carries it: FAARFIELD
-analyses one gear at a time and stores the wing gear and body gear as separate
+analyzes one gear at a time and stores the wing gear and body gear as separate
 entries, so it has the bogie geometry but not the distance between the two.
 Three releases of "deferred" were three releases of not having looked in the
 right document.
@@ -764,7 +764,7 @@ because a reader comparing two entries would otherwise have no way to tell.
 
 **The corroboration is what makes this trustworthy.** FAARFIELD 2.1.1 stores
 explicit per-wheel coordinates, derived from neither source used here, and it
-reproduces every published spacing to the millimetre — including the A380 body
+reproduces every published spacing to the millimeter — including the A380 body
 bogie's 20 mm wider middle axle (±764.54 and ±774.70 mm against the figure's
 1530 and 1550). Its per-strut load percentages independently reproduce the
 95 % on the main gear from a third direction.
@@ -819,16 +819,16 @@ cross-check, not an input, wherever the manufacturer figure is more specific.
 
 ---
 
-## D23. The geometry export is millimetres in the engineering frame, against the glTF convention (v1.5)
+## D23. The geometry export is millimeters in the engineering frame, against the glTF convention (v1.5)
 
-glTF's stated convention is metres, Y-up. The export deliberately does not
-follow it: it writes **millimetres** in the **engineering frame** — x
+glTF's stated convention is meters, Y-up. The export deliberately does not
+follow it: it writes **millimeters** in the **engineering frame** — x
 longitudinal positive rearward, y transverse positive right, z vertical
 positive up.
 
 Both departures are the same decision. This app already emits
 `footprint.csv`, the Abaqus patch table and every printed dimension in
-millimetres in that frame. If the `.glb` alone came out in metres in the
+millimeters in that frame. If the `.glb` alone came out in meters in the
 render frame, the two files describing the same truck would disagree with
 each other by a factor of a thousand *and* by a rotation. Someone would open
 them side by side in a pre-processor, and the failure mode is not a visible
@@ -854,12 +854,12 @@ Two things this cost during implementation, both worth recording:
 - Composing an instance's world matrix with two successive `applyMatrix4`
   calls **premultiplies**, giving `instance x world` rather than
   `world x instance`. That applies the assembly's 1/1000 scale before a
-  translation already expressed in millimetres, and the export comes out a
+  translation already expressed in millimeters, and the export comes out a
   thousand times too large. It is now composed explicitly with
-  `multiplyMatrices`, and verified by checking that every exported tyre node
+  `multiplyMatrices`, and verified by checking that every exported tire node
   lands on its layout coordinate exactly, not approximately.
 - OBJ has no instancing. A full unit is ~737k triangles and ~145 MB, because
-  every tyre is written out in full. That is not a bug to fix — it is what
+  every tire is written out in full. That is not a bug to fix — it is what
   the format is — so the app states it at export time and points at the
   `.glb`, which shares one mesh between all of them.
 
@@ -887,11 +887,11 @@ because the failure mode is specifically "the one nobody remembered".
 ## D18. The chassis is a regulatory envelope, not a vehicle body (v1.4)
 
 **Decision.** The "Full unit" isolation level draws a translucent schematic
-envelope with picked-out edges, not a modelled truck.
+envelope with picked-out edges, not a modeled truck.
 
 **Why.** Gear3D has no sourced body dimensions — it knows axle positions,
 track widths and overall length, and nothing about cab shape, trailer height
-or frame depth. Modelling a body would mean inventing dimensions, which is
+or frame depth. Modeling a body would mean inventing dimensions, which is
 the one thing this app exists not to do. So the silhouette is built from
 bounds that are themselves citable:
 
@@ -945,7 +945,7 @@ silently un-hid its own element the moment the app set `.hidden = true`.
 
 **Why it mattered so much.** `.g3-progress` is absolutely positioned over
 `inset: 0` of the viewport with a translucent backdrop and `backdrop-filter:
-blur(2px)`. Permanently displayed, it put a grey haze over every render and
+blur(2px)`. Permanently displayed, it put a gray haze over every render and
 **swallowed every pointer event** — no orbit, no click-to-select. The app
 looked unfinished and behaved like a static image. The modified badge, the
 aircraft assumption notice and the custom export fields were also all
@@ -983,7 +983,7 @@ count squares, and it is part of the scene so it exports exactly as framed.
 ## D14. Aircraft track is derived from outer width, not assumed equal to it (v1.2)
 
 **Decision.** Aircraft units store the FAA's `mainGearOuterWidth` as the
-transverse datum and **derive** the centreline track from it:
+transverse datum and **derive** the centerline track from it:
 `track = outerWidth − (wheelsAcross − 1)·dualSpacing − sectionWidth`.
 
 **Why.** The FAA Aircraft Characteristics Database's own data dictionary
@@ -991,7 +991,7 @@ defines the field as *"Distance between outer tires in the main landing
 gear."* It is an outside dimension. Treating it as the track — the obvious
 mistake, because both are informally called "main gear width" — displaces every
 main wheel outboard by half a dual spacing plus half a tire. On a 777 that is
-close to a metre per side, and the resulting figure looks entirely plausible.
+close to a meter per side, and the resulting figure looks entirely plausible.
 
 The derivation is validated twice: `validateUnit` fails if the stored gear
 positions do not reproduce the stated outer width, and a separate test checks
@@ -1014,7 +1014,7 @@ were to omit the aircraft entirely (a second deferral, with the code paths
 already built and most of the data authoritative) or to record the values
 silently and let them pass as sourced.
 
-Neither is right. A modelling assumption that is *declared* is legitimate
+Neither is right. A modeling assumption that is *declared* is legitimate
 engineering; the same number presented as a measurement is not. Putting the
 declaration in the schema makes it unskippable, and putting it in the interface
 means the person comparing output against FAARFIELD sees which two numbers to
@@ -1030,7 +1030,7 @@ correcting it keeps the authoritative envelope intact.
 runtime and PMREM-filtered, not from an HDRI file.
 
 **Why.** An HDRI would be one more asset that can 404, one more third-party
-licence living inside a public academic repository, and several megabytes on a
+license living inside a public academic repository, and several megabytes on a
 site whose other E-Labs apps ship as single files. A generated environment
 keeps the app's existing promises — no asset dependency, deterministic output
 — and has the added benefit that its softbox positions can follow the key
@@ -1048,15 +1048,15 @@ committed**.
 **Why.** Two independent reasons, either sufficient on its own.
 
 1. **Licensing.** This repository is public, under a named academic's domain.
-   Committing a mesh redistributes it, and most "free" marketplace licences
+   Committing a mesh redistributes it, and most "free" marketplace licenses
    permit use while prohibiting redistribution. The sourcing rules are written
    out in `ASSETS.md` §8.1: CC0 preferred, CC-BY acceptable with the
-   attribution carried in the manifest, nothing whose licence cannot be
-   stated. This is a judgement about the owner's exposure, not about
+   attribution carried in the manifest, nothing whose license cannot be
+   stated. This is a judgment about the owner's exposure, not about
    convenience.
 2. **Network access was rate-limited** for the remainder of the session in
    which this work was done, so no candidate asset could be fetched or, more
-   importantly, have its licence verified at source.
+   importantly, have its license verified at source.
 
 **What this costs.** Nothing structural. The procedural path is the reference
 implementation and is what the test suite exercises; meshes were always an
@@ -1075,5 +1075,5 @@ an `area_ratio` column — not a generated `*DSLOAD` block.
 and a step definition. A wrong assumption there is expensive to notice and
 easy to miss, and the failure is silent. Handing the pre-processor exact
 numbers and leaving the model author in control is the honest division of
-responsibility. The header states the uniform-pressure idealisation in full,
+responsibility. The header states the uniform-pressure idealization in full,
 including that it is *not* adequate for near-surface analysis.

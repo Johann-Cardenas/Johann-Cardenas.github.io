@@ -1899,7 +1899,7 @@ body.Publications .pub-article .pub-section:first-of-type {
 	.pub-stats {
 		max-width: 100%;
 	}
-	/* Two per row; the odd card centres itself on the last row. */
+	/* Two per row; the odd card centers itself on the last row. */
 	.pub-stat-card {
 		flex: 1 1 calc(50% - 0.5rem);
 		max-width: calc(50% - 0.5rem);
@@ -4125,7 +4125,7 @@ body.Resume ul.social li a.icon.solid.fa-graduation-cap:hover:before {
 	.resume-stats {
 		max-width: 100%;
 	}
-	/* Two per row; the odd card centres itself on the last row. */
+	/* Two per row; the odd card centers itself on the last row. */
 	.resume-stat-card {
 		flex: 1 1 calc(50% - 0.5rem);
 		max-width: calc(50% - 0.5rem);

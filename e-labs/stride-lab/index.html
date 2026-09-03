@@ -12,7 +12,7 @@
     <title>Stride Lab | On-device running form analysis</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="description" content="Upload a short running clip and get pose-based gait metrics, confidence intervals and a corrective plan. The video is analysed in your browser and never leaves your device." />
+    <meta name="description" content="Upload a short running clip and get pose-based gait metrics, confidence intervals and a corrective plan. The video is analyzed in your browser and never leaves your device." />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#0f1829">
@@ -131,7 +131,7 @@
                             <select id="sl-demo-pick" class="sl-select" aria-label="Which demo to run"></select>
                             <button id="sl-demo" class="sl-btn" title="Run the selected demo"><i class="fas fa-vial"></i> Run demo</button>
                         </span>
-                        <button id="sl-run" class="sl-run" disabled><i class="fas fa-play"></i> Analyse run</button>
+                        <button id="sl-run" class="sl-run" disabled><i class="fas fa-play"></i> Analyze run</button>
                     </div>
                 </div>
 
@@ -157,7 +157,7 @@
                                     </span>
                                 </label>
                                 <p class="sl-help">
-                                    Your height is what converts pixels into centimetres. The app measures your thigh
+                                    Your height is what converts pixels into centimeters. The app measures your thigh
                                     and shin in the image and scales from there, so every distance below — stride
                                     length, bounce, how far ahead your foot lands — is only as accurate as this number.
                                 </p>
@@ -243,7 +243,7 @@
                             <summary><span class="sl-step-n">3</span> How to film it</summary>
                             <div class="sl-section-body">
                                 <ul class="sl-guide">
-                                    <li><strong>Shoot at 120 or 240 fps</strong> if the phone offers it. At 30 fps one frame is 33 ms and ground contact is only about 230 ms, so a third of the measurement is quantisation. Below 60 fps this app refuses to report contact time at all.</li>
+                                    <li><strong>Shoot at 120 or 240 fps</strong> if the phone offers it. At 30 fps one frame is 33 ms and ground contact is only about 230 ms, so a third of the measurement is quantization. Below 60 fps this app refuses to report contact time at all.</li>
                                     <li><strong>Camera square to the running path</strong>, at hip height, on something that does not move. An angled camera measures angles out of the plane they happen in.</li>
                                     <li><strong>Fill 60–80% of the frame height</strong> with the runner, whole body, feet included.</li>
                                     <li><strong>Side on</strong> for timing, stride and sagittal angles. <strong>From behind</strong> for pelvic drop and crossover. They measure different things and neither substitutes for the other.</li>
@@ -284,8 +284,8 @@
                         </details>
                     </aside>
 
-                    <!-- ============ CENTRE: viewport ============ -->
-                    <main class="sl-centre">
+                    <!-- ============ CENTER: viewport ============ -->
+                    <main class="sl-center">
                         <div class="sl-viewport" id="sl-viewport">
 
                             <!-- empty state -->
@@ -335,7 +335,7 @@
                             <div class="sl-stage" id="sl-stage-run" hidden>
                                 <canvas id="sl-live" class="sl-live"></canvas>
                                 <div class="sl-choose" id="sl-choose" hidden role="group" aria-labelledby="sl-choose-text">
-                                    <span id="sl-choose-text">More than one person is in frame. Choose the runner you want analysed.</span>
+                                    <span id="sl-choose-text">More than one person is in frame. Choose the runner you want analyzed.</span>
                                     <div class="sl-choose-picks" id="sl-choose-picks"></div>
                                     <button class="sl-btn" id="sl-choose-cancel">Cancel</button>
                                 </div>
@@ -390,10 +390,10 @@
                                     <label class="sl-chip" title="Ground line, plumb line through the hips, and the scale bar"><input type="checkbox" id="sl-l-guides" checked /> Guides</label>
                                     <label class="sl-chip" title="Live values at the current frame, not the stride averages"><input type="checkbox" id="sl-l-readout" checked /> Readout</label>
                                     <label class="sl-chip" title="Stance and swing for both feet across the clip"><input type="checkbox" id="sl-l-phase" checked /> Phase</label>
-                                    <label class="sl-chip" title="Dimension lines for overstride and centre-of-mass bounce"><input type="checkbox" id="sl-l-measures" checked /> Dimensions</label>
+                                    <label class="sl-chip" title="Dimension lines for overstride and center-of-mass bounce"><input type="checkbox" id="sl-l-measures" checked /> Dimensions</label>
                                     <label class="sl-chip"><input type="checkbox" id="sl-l-trails" /> Trails</label>
                                     <label class="sl-chip"><input type="checkbox" id="sl-l-events" checked /> Contacts</label>
-                                    <label class="sl-chip" title="Whole-body centre of mass, from a fourteen-segment inertial model"><input type="checkbox" id="sl-l-com" checked /> Centre of mass</label>
+                                    <label class="sl-chip" title="Whole-body center of mass, from a fourteen-segment inertial model"><input type="checkbox" id="sl-l-com" checked /> Center of mass</label>
                                 </div>
                             </div>
 
@@ -410,7 +410,7 @@
                     <!-- ============ RIGHT RAIL ============ -->
                     <aside class="sl-right" id="sl-right">
                         <div class="sl-rail-empty" id="sl-rail-empty">
-                            <p>Scores and key measurements appear here once a clip has been analysed.</p>
+                            <p>Scores and key measurements appear here once a clip has been analyzed.</p>
                         </div>
                         <div id="sl-rail-content" hidden>
                             <div class="sl-rail-block">

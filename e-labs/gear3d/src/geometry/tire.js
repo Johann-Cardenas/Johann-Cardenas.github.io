@@ -2,9 +2,9 @@
    Gear3D — procedural tire geometry
    ------------------------------------------------------------
    LOCAL FRAME (matches the asset-slot contract in ASSETS.md):
-     origin        wheel centre, on the rotation axis
+     origin        wheel center, on the rotation axis
      rotation axis local +X
-     units         millimetres; the scene applies one 1/1000 scale
+     units         millimeters; the scene applies one 1/1000 scale
 
    WHY THIS IS NOT A LATHE
    A surface of revolution gives a perfectly circular outline, and
@@ -16,7 +16,7 @@
    the key light on their edges, and they self-shadow.
 
    Tread textures still exist, but their job is now the fine
-   detail the geometry cannot afford — rubber grain, siping, mould
+   detail the geometry cannot afford — rubber grain, siping, mold
    flash — rather than the pattern itself.
 
    The meridian is a Catmull-Rom through hand-placed control
@@ -50,7 +50,7 @@ export const SIDEWALL_TEX = 1024;
  *
  * Geometry is instanced, so the cost is one upload per tire SIZE regardless
  * of how many wheels use it; what scales with wheel count is triangles
- * rasterised, which is why `pickQuality` steps down for large units.
+ * rasterized, which is why `pickQuality` steps down for large units.
  */
 export const QUALITY = Object.freeze({
     draft: { radialSegments: 112, profileDetail: 0.7 },
@@ -80,7 +80,7 @@ export function pickQuality(tireCount, override, minLevel) {
     // A render tier can raise the floor. Resolution and geometry have to move
     // together: a 4K drawing buffer does not hide a 112-segment silhouette,
     // it resolves the faceting more clearly than 1x ever did, so asking for
-    // UHD and getting draft tyres is worse than not asking.
+    // UHD and getting draft tires is worse than not asking.
     if (minLevel && QUALITY[minLevel]
         && QUALITY_ORDER.indexOf(minLevel) > QUALITY_ORDER.indexOf(level)) {
         level = minLevel;
@@ -114,11 +114,11 @@ export const GROUP_TREAD = 1;
 
 /**
  * @typedef {Object} MeridianPoint
- * @property {number} a  axial position, mm (0 = tire centreline)
+ * @property {number} a  axial position, mm (0 = tire centerline)
  * @property {number} r  base radius, mm
  * @property {number} v  across-tread parameter 0..1, or -1 outside the tread
  * @property {number} taper 0..1, how strongly tread relief applies here
- * @property {number} s  arc length along the meridian, normalised bead to bead
+ * @property {number} s  arc length along the meridian, normalized bead to bead
  */
 
 /**
@@ -151,7 +151,7 @@ export function tireMeridian(g, opts = {}) {
     const crownDrop = g.sectionWidth * 0.014;
     const shoulderR = g.sectionWidth * 0.17;
 
-    // Half profile, from the crown centreline outward to the bead seat.
+    // Half profile, from the crown centerline outward to the bead seat.
     // Axial rises to maximum section width then comes back in to the rim,
     // so this is a polyline, not a function of `a`.
     //
@@ -167,15 +167,15 @@ export function tireMeridian(g, opts = {}) {
         [0, rOuter],
         [halfTread * 0.60, rOuter - crownDrop * 0.36],
         [halfTread, rOuter - crownDrop],                        // tread edge
-        // The two neighbours of the maximum-width point sit at the SAME axial
+        // The two neighbors of the maximum-width point sit at the SAME axial
         // station, and that is what makes the section width exact.
         //
         // A Catmull-Rom tangent at a control point is proportional to the
-        // chord between its neighbours, so while the polygon's widest point
+        // chord between its neighbors, so while the polygon's widest point
         // was flanked by 0.930 and 0.988 of the half-width, the tangent there
         // still had a positive axial component: the curve was heading outboard
         // as it passed the widest control point and had to overshoot before
-        // turning back. It did, by 0.6-1.1 mm, on every tyre in the library,
+        // turning back. It did, by 0.6-1.1 mm, on every tire in the library,
         // and the true maximum landed 11 mm below where the profile says it is.
         // Equal axial stations make that tangent purely radial, so the widest
         // control point IS the widest point of the curve.
@@ -200,7 +200,7 @@ export function tireMeridian(g, opts = {}) {
     ];
 
     // Both tolerances are scaled off the section height rather than fixed, so
-    // a 27x7.75 nose tyre and a 1400x530 main gear tyre get the same SILHOUETTE
+    // a 27x7.75 nose tire and a 1400x530 main gear tire get the same SILHOUETTE
     // QUALITY rather than the same point count.
     const half = catmullRom(control, {
         tolerance: (sectionH * 0.0006) / detail,
@@ -221,13 +221,13 @@ export function tireMeridian(g, opts = {}) {
         return { v: a < 0 ? 0 : 1, taper: Math.max(0, 1 - t) };
     };
 
-    // Inner side: mirror of the half, walked from bead to centreline.
+    // Inner side: mirror of the half, walked from bead to centerline.
     for (let i = half.length - 1; i >= 0; i--) {
         const [a, r] = half[i];
         const c = classify(-a, r);
         pts.push({ a: -a, r, v: c.v, taper: c.taper, s: 0 });
     }
-    // Outer side: the half itself, skipping the duplicated centreline point.
+    // Outer side: the half itself, skipping the duplicated centerline point.
     for (let i = 1; i < half.length; i++) {
         const [a, r] = half[i];
         const c = classify(a, r);
@@ -235,7 +235,7 @@ export function tireMeridian(g, opts = {}) {
     }
 
     // ARC LENGTH, NOT ROW INDEX, is the texture coordinate across the meridian.
-    // It always was the right parameter — the maps are drawn in millimetres of
+    // It always was the right parameter — the maps are drawn in millimeters of
     // developed profile — but with an evenly-divided point budget the index was
     // a fair approximation of it. Adaptive sampling ends that: rows now bunch
     // where the curve bends, so an index-based v would compress a third of the
@@ -263,18 +263,18 @@ export function tireMeridian(g, opts = {}) {
  *    the sidewall is 1.2% of the section half-width while the one across the
  *    crown is 60% of it, a fifty-to-one ratio. That overshoot pushed the
  *    widest point of the carcass 0.6-1.1 mm OUTBOARD of the section width, on
- *    every tyre in the library. Section width is a published dimension that
+ *    every tire in the library. Section width is a published dimension that
  *    the dimension engine draws and the footprint export writes out, so a
- *    tyre quietly a millimetre too wide is not a cosmetic matter. Centripetal
- *    parameterisation is the standard cure and removes the overshoot exactly.
+ *    tire quietly a millimeter too wide is not a cosmetic matter. Centripetal
+ *    parameterization is the standard cure and removes the overshoot exactly.
  *
  * 2. SAMPLES FOLLOW CURVATURE, NOT SPAN COUNT. Dividing a fixed budget equally
  *    between spans gave the short, tightly curved shoulder the same four
  *    points as the long, nearly flat crown, and the polyline through them
  *    turned the shoulder into a few flat facets meeting at up to 30 degrees.
- *    Vertex normals are averaged from those facets, so the tyre carried a
+ *    Vertex normals are averaged from those facets, so the tire carried a
  *    terraced shading band around each sidewall — a stack of washers rather
- *    than one carcass, and the loudest artefact on a close render. Each span
+ *    than one carcass, and the loudest artifact on a close render. Each span
  *    is instead bisected until the sagitta (the deviation of the curve from
  *    its chord) falls below `tolerance`, which puts points exactly where the
  *    curve bends and nowhere else. `maxChord` then holds a floor under the
@@ -282,11 +282,11 @@ export function tireMeridian(g, opts = {}) {
  *    map in three steps.
  *
  * `maxTurn` is the third criterion and the one the shading actually cares
- * about: a sagitta tolerance in millimetres is a statement about SHAPE, and at
+ * about: a sagitta tolerance in millimeters is a statement about SHAPE, and at
  * the draft profile detail — a fifth of the row budget, chosen because a
  * 34-tire unit has to stay interactive — a tolerance loose enough to be cheap
  * still left 13-degree creases on the smallest tires in the library. Bounding
- * the angle directly bounds the artefact.
+ * the angle directly bounds the artifact.
  *
  * @param {[number, number][]} pts control points
  * @param {{tolerance?: number, maxChord?: number, maxTurn?: number, maxDepth?: number}} [opts]
@@ -386,7 +386,7 @@ function flattenSpan(out, q, t, u0, u1, p0, p1, tol, maxChord, maxTurn, depth) {
     // the near end, against the chord already emitted. The near end is the one
     // that matters at a SPAN JOINT: the curve is tangent-continuous there, so
     // the two chords meeting at a knot are only as collinear as they are
-    // short, and one long chord from a lightly-subdivided neighbour reopened
+    // short, and one long chord from a lightly-subdivided neighbor reopened
     // a 13-degree crease that every within-span test had already passed.
     const prev = out.length > 1 ? out[out.length - 2] : null;
     const smooth = turnCos(p0, pm, p1) >= maxTurn
@@ -429,7 +429,7 @@ function sagitta(p, a, b) {
  * Where the tread band sits in the meridian's texture coordinate.
  *
  * The detail maps below are drawn in ONE canvas spanning the whole developed
- * profile, bead to bead, and what belongs on the tread (siping, mould flash)
+ * profile, bead to bead, and what belongs on the tread (siping, mold flash)
  * is not what belongs on the sidewall (ribbing, lettering). Both used to be
  * placed at hard-coded fractions — 0.30/0.70 for the ribbing, 0.16/0.84 for
  * the lettering ring — which were fair guesses while v was the row index and
@@ -506,11 +506,11 @@ export function treadSpec(pattern, g, opts = {}) {
         // roughly constant physical pitch.
         //
         // The pitch is 170 mm rather than the 40-50 mm a real drive tire has,
-        // and that is a RESOLUTION limit, not a modelling choice: a groove
+        // and that is a RESOLUTION limit, not a modeling choice: a groove
         // taking a fifth of the pitch needs about three circumferential
         // samples inside it to survive, so a true pitch would want close to a
         // thousand segments. The true pitch is carried by the tread normal
-        // map instead — which is exactly the division of labour this file's
+        // map instead — which is exactly the division of labor this file's
         // header describes — and the geometry keeps the coarse relief that
         // has to break the silhouette.
         blocks: pattern === 'lug'
@@ -527,7 +527,7 @@ export function treadSpec(pattern, g, opts = {}) {
 }
 
 /**
- * Depth cut into the tread at a point, in millimetres.
+ * Depth cut into the tread at a point, in millimeters.
  *
  * @param {TreadSpec} s
  * @param {number} theta01 position around the circumference, 0..1
@@ -550,7 +550,7 @@ export function treadDepthAt(s, theta01, v) {
         // SHALLOWER than the circumferential grooves, at 60%. On a real drive
         // tire the lateral slots do not go to the belt; cut to full depth here
         // they scalloped the silhouette so hard that the tire's outline read as
-        // a gear rather than a circle, which is the opposite of what modelling
+        // a gear rather than a circle, which is the opposite of what modeling
         // the tread into the geometry is for.
         const phase = frac(theta01 * s.blocks + (v - 0.5) * s.skew);
         const half = s.blockGroove / 2;
@@ -568,8 +568,8 @@ export function treadDepthAt(s, theta01, v) {
 }
 
 /**
- * Groove cross-section: 1 at the centre, easing to 0 at the wall.
- * @param {number} x 0 at centre, 1 at the edge
+ * Groove cross-section: 1 at the center, easing to 0 at the wall.
+ * @param {number} x 0 at center, 1 at the edge
  * @returns {number}
  */
 function grooveProfile(x) {
@@ -672,7 +672,7 @@ export function buildTireGeometry(g, opts = {}) {
  * radius, so without this it either floats or sinks. Rather than scale the
  * whole tire — which would misreport its diameter — the vertices below the
  * loaded radius are pushed up onto the contact plane and the displacement is
- * blended out over the neighbouring arc. Overall diameter therefore stays
+ * blended out over the neighboring arc. Overall diameter therefore stays
  * exactly the published value everywhere except inside the contact patch,
  * which is the physically correct thing to show.
  *
@@ -702,9 +702,9 @@ export function applyFlatSpot(geo, g, softness = 0.55) {
    ============================================================ */
 
 /**
- * Tread detail maps — grain and mould texture, NOT the pattern (which is
+ * Tread detail maps — grain and mold texture, NOT the pattern (which is
  * now geometry). Deliberately subtle: doubling up a painted pattern on top
- * of a modelled one produces a moiré that looks like a rendering error.
+ * of a modeled one produces a moiré that looks like a rendering error.
  *
  * @param {TreadPattern} pattern
  * @param {import('../core/tires.js').TireGeometry} g
@@ -721,7 +721,7 @@ export function buildTreadMaps(pattern, g, opts = {}) {
     ctx.fillStyle = '#808080';
     ctx.fillRect(0, 0, size, size);
 
-    // Fine circumferential mould lines left by the tread mould. u is around the
+    // Fine circumferential mold lines left by the tread mold. u is around the
     // tire, so these run horizontally.
     ctx.strokeStyle = 'rgba(140,140,140,0.35)';
     ctx.lineWidth = 1;
@@ -740,7 +740,7 @@ export function buildTreadMaps(pattern, g, opts = {}) {
     // belongs here — and it is the ONE fine feature that can be painted on
     // without moire, because it is more than an order of magnitude finer than
     // the block pitch the geometry cuts. Repainting the block pattern itself
-    // would beat against the modelled one, which is the trap this file's
+    // would beat against the modeled one, which is the trap this file's
     // header warns about; nothing below draws a block edge.
     //
     // One texture tile spans `tileMm` of circumference — the same figure the
@@ -775,7 +775,7 @@ export function buildTreadMaps(pattern, g, opts = {}) {
         }
     }
 
-    // Mould flash: the thin raised bead left along the mould's parting line,
+    // Mold flash: the thin raised bead left along the mold's parting line,
     // one on each shoulder. Small, but it is the thing that stops the shoulder
     // edge reading as a machined chamfer.
     ctx.strokeStyle = 'rgba(178,178,178,0.55)';
@@ -796,7 +796,7 @@ export function buildTreadMaps(pattern, g, opts = {}) {
 }
 
 /**
- * Sidewall maps: concentric ribbing, a moulded lettering ring and rubber
+ * Sidewall maps: concentric ribbing, a molded lettering ring and rubber
  * grain. The lettering is deliberately abstract — legible as text at a
  * glance, never a specific manufacturer's mark, because this app renders
  * generic engineering configurations and should not appear to endorse or
@@ -834,7 +834,7 @@ export function buildSidewallMaps(g, opts = {}) {
         ctx.stroke();
     }
 
-    // Moulded lettering ring: raised glyph-like marks on a smooth band, placed
+    // Molded lettering ring: raised glyph-like marks on a smooth band, placed
     // a third of the way down each sidewall from the shoulder — where a tire's
     // size marking actually is, and, unlike a fixed 0.16/0.84, where it stays
     // when the tread is 70% of the developed profile instead of 40%.

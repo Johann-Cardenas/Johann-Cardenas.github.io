@@ -3,7 +3,7 @@
 
    Every normative band and every rule cites an entry here. Entries
    are either a real, checkable publication, or the explicitly
-   labelled placeholder below.
+   labeled placeholder below.
 
    READ THIS BEFORE ADDING A BAND.
 
@@ -120,7 +120,7 @@ export const REFERENCES = [
         year: 2009,
         title: 'Biomechanics and Motor Control of Human Movement (4th edition)',
         venue: 'John Wiley & Sons',
-        used: 'Segment lengths as fractions of standing height, which drive the pixel-to-metre scaling and every leg-length normalisation, and the filtering conventions behind the zero-phase Butterworth.'
+        used: 'Segment lengths as fractions of standing height, which drive the pixel-to-meter scaling and every leg-length normalization, and the filtering conventions behind the zero-phase Butterworth.'
     },
     {
         id: 'vanhooren-2024',

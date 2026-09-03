@@ -15,11 +15,11 @@ Three reference bodies, all from the subject matter:
 
 - **Aircraft characteristics manuals** (Boeing ACAP, Airbus AC) — landing gear
   footprint plates: hairline rules, ticked datums, dense tabular figures, no
-  colour beyond black and one register mark.
-- **Drafting film** — not paper white. A very slightly cool, slightly grey
+  color beyond black and one register mark.
+- **Drafting film** — not paper white. A very slightly cool, slightly gray
   ground, because a true white ground makes hairlines vibrate.
 - **Gauge faces** — a dark instrument field, restrained type, and exactly one
-  saturated colour, always meaning "this is the reading".
+  saturated color, always meaning "this is the reading".
 
 ---
 
@@ -34,14 +34,14 @@ Six values carry the identity. Everything else is derived.
 | `--g3-graphite` | `#5c6b7a` | `#9fb0be` | Secondary text, inactive rules. |
 | `--g3-rule` | `#ccd5dd` | `#2b3846` | Hairline separators. |
 | `--g3-datum` | `#18a9a8` | `#22d3d1` | Structure: active panels, focus, primary action. |
-| `--g3-signal` | `#c8452a` | `#e46a4a` | **The needle.** The live measurement and the current selection. Nothing decorative is ever this colour. |
+| `--g3-signal` | `#c8452a` | `#e46a4a` | **The needle.** The live measurement and the current selection. Nothing decorative is ever this color. |
 
 `--g3-datum` is the site teal, deliberately. Gear3D is the sixth app in E-Labs
 and should read as a sibling of Cross-Section Studio and LEAPS, not as a
 visitor. The instrument red is what is new, and it earns its place by carrying
 a single unambiguous meaning.
 
-**The signal-colour rule is the discipline that makes this work.** Because
+**The signal-color rule is the discipline that makes this work.** Because
 nothing decorative is ever instrument red, red always means *this one*. A
 selected axle, a modified-from-reference badge, a contact patch, a highlighted
 dimension. If red ever appears on a button that is merely available rather than
@@ -126,8 +126,8 @@ ORIGINATOR │ ············ SUBJECT ············ │ MET
 **The mark.** Originally a Font Awesome *dharmachakra* — a Buddhist
 religious symbol standing in for a wheel, which is both imprecise and not
 something to use as decoration. The first replacement drew a front-view axle,
-two tyres on a beam, which at 21 px read unmistakably as the letter **H**.
-What ships is a wheel seen face on: tyre ring and hub, two circles, drawn for
+two tires on a beam, which at 21 px read unmistakably as the letter **H**.
+What ships is a wheel seen face on: tire ring and hub, two circles, drawn for
 this app.
 
 ---
@@ -141,7 +141,7 @@ Honest answers, first pass:
    *Resolution:* keep the teal, because sibling consistency inside E-Labs is a
    real requirement that outranks novelty, but stop the teal from doing the
    expressive work. The teal is structural — it marks where things are. The
-   instrument red is the only colour that carries *meaning*, and it is the part
+   instrument red is the only color that carries *meaning*, and it is the part
    of the palette that is specific to this app.
 
 2. **Rounded corners, soft shadows, pill badges — the generic SaaS card look.**
@@ -174,7 +174,7 @@ terracotta; near-black + acid green; broadsheet hairline editorial layout.
   annotations that vanish on the page. Ink, halo and accent are chosen from the
   background's relative luminance (`figureInk()` in `main.js`). This was a real
   bug caught in review: the first export had a near-invisible scale bar.
-- **Label halos** are stroked in the figure background colour so a value stays
+- **Label halos** are stroked in the figure background color so a value stays
   readable where it crosses a black tire.
 - **Degenerate dimensions fade rather than draw.** Below 15° from edge-on a
   dimension is suppressed; between 15° and 28° it fades. A two-pixel leader

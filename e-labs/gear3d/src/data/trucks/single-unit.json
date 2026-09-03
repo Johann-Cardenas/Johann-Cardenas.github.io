@@ -6,7 +6,7 @@
     "Shared geometric bases used throughout this file:",
     "  tandem axle spacing 1311 mm  = AASHTOWare Pavement ME default, 51.6 in",
     "  tridem axle spacing 1250 mm  = AASHTOWare Pavement ME default, 49.2 in",
-    "  drive/trailer track  1829 mm = 72 in, the classic dual-wheel idealisation",
+    "  drive/trailer track  1829 mm = 72 in, the classic dual-wheel idealization",
     "  dual tire spacing     330 mm = 13 in (see data/SOURCES.md for the 12-13.5 in range)",
     "Axle loads are the US federal statutory limits where the configuration is",
     "load-limited; the basis field names the governing rule in each case."

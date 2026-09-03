@@ -2,7 +2,7 @@
 
 Client-side running-form and gait analysis. A short clip is decoded, pose-tracked
 and measured entirely in the browser: 25 landmarks, a 14-segment whole-body
-centre-of-mass model, and 40 biomechanical measurements, each with the confidence
+center-of-mass model, and 40 biomechanical measurements, each with the confidence
 interval that goes with it, plus a rule-based corrective plan. Nothing is
 uploaded, because there is no server to upload to.
 
@@ -54,11 +54,11 @@ src/engine/         PURE. No DOM, no fetch, no framework. This is the product.
   signal/filter.js    zero-phase Butterworth, Hampel, gap fill, derivatives
   signal/peaks.js     extrema, plateau onset/end, zero crossings, FFT
   signal/condition.js stage E, in the order that matters
-  calib/scale.js      view, direction of travel, per-frame pixels-to-metres
+  calib/scale.js      view, direction of travel, per-frame pixels-to-meters
   events/detect.js    six strike detectors, three toe-off detectors, a vote
   events/stage2.js    the learned model's inference path (no model ships)
-  metrics/            angle series, the catalogue, per-stride computation
-  metrics/com.js      14-segment centre of mass, Morin spring-mass stiffness
+  metrics/            angle series, the catalog, per-stride computation
+  metrics/com.js      14-segment center of mass, Morin spring-mass stiffness
   scoring/            normative bands, references, dimension scores
   recommend/          rules and exercises, as reviewable data
 
@@ -73,7 +73,7 @@ tools/              banner generator
 
 **`src/engine/` imports nothing from the DOM or the network.** That is the load-
 bearing constraint: it is what lets the whole thing be tested against signals
-whose answers are known, which is the only way to know the maths is right.
+whose answers are known, which is the only way to know the math is right.
 
 ---
 
@@ -87,7 +87,7 @@ Stages D–L are `runPipeline()` in `analyze.js`, and it is a pure function.
 
 ## The two demos
 
-`src/ui/demos.js` is the catalogue, and the picker in the top bar is built from
+`src/ui/demos.js` is the catalog, and the picker in the top bar is built from
 it rather than from markup.
 
 - **Synthetic runner** — generated from a physical model, so the true cadence,
@@ -100,7 +100,7 @@ it rather than from markup.
   `stated`.
 
 The suite reads the shipped MP4 back with the app's own demuxer and asserts the
-catalogue's declared geometry, rotation, frame rate and duration match it, so
+catalog's declared geometry, rotation, frame rate and duration match it, so
 replacing the file without updating the note fails the build. See D36.
 
 ## Things worth knowing before changing anything
@@ -125,7 +125,7 @@ replacing the file without updating the note fails the build. See D36.
 - **Frame-interval spread is a percentile range, never max minus min.** One
   skipped frame is not a variable frame rate. See D41.
 - **A score of 0 must mean out of range.** `scoreValue` divides by the reach
-  from the optimal centre to the acceptable edge *on the side the value falls*,
+  from the optimal center to the acceptable edge *on the side the value falls*,
   because 21 of the 24 bands are asymmetric. Using one half-width for both sides
   put the zero inside the acceptable range and let the app show "Near the
   typical range" next to 0/100. The suite sweeps every band and asserts
@@ -160,7 +160,7 @@ replacing the file without updating the note fails the build. See D36.
   argued with by somebody who does not read JavaScript.
 - **The evidence is thinner than the dashboard looks.** Van Hooren et al. (2024)
   found only four of these variables significantly associated with running
-  economy — centre-of-mass oscillation, vertical and leg stiffness, and cadence —
+  economy — center-of-mass oscillation, vertical and leg stiffness, and cadence —
   and technique in total explains 4-12% of the differences between people. Bands
   that overclaimed were corrected against it; do not reintroduce one.
 
@@ -169,7 +169,7 @@ replacing the file without updating the note fails the build. See D36.
 It is not a medical device, it does not predict injury, it is not lab-grade, it
 measures no forces, and it has not been validated against force plates or motion
 capture. `science.html` says all of that at length, publishes the only accuracy
-figures that were actually measured (against synthetic ground truth, labelled as
+figures that were actually measured (against synthetic ground truth, labeled as
 such), and carries a limitations section written to be one a biomechanist would
 not object to.
 

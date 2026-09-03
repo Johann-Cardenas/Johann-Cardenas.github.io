@@ -239,7 +239,7 @@
           "source": "AASHTOWare Pavement ME Design default quad axle spacing, 49.2 in = 1249.7 mm."
         }
       ],
-      "gvw": { "value": 58514, "unit": "kg", "basis": "129 000 lb — representative permitted gross weight for a turnpike double on US turnpikes that authorise them. This EXCEEDS the 80 000 lb federal limit and does not satisfy the Federal Bridge Formula; the configuration operates under state permits and grandfather provisions, which is why the unit is flagged federalBridgeFormula: permit." },
+      "gvw": { "value": 58514, "unit": "kg", "basis": "129 000 lb — representative permitted gross weight for a turnpike double on US turnpikes that authorize them. This EXCEEDS the 80 000 lb federal limit and does not satisfy the Federal Bridge Formula; the configuration operates under state permits and grandfather provisions, which is why the unit is flagged federalBridgeFormula: permit." },
       "notes": "Nine axles, 34 tires — the largest configuration in the library and the performance target for the renderer. Every tire is instanced, so this unit is the one to profile against the 60 fps goal.",
       "sources": [
         { "id": "fhwa-tmg", "title": "Traffic Monitoring Guide, Scheme F class 13", "publisher": "FHWA", "note": "Class definition (seven or more axles, multi-trailer)." },

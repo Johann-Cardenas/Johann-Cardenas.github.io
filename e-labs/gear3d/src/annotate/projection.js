@@ -1,7 +1,7 @@
 /* ============================================================
    Gear3D — engineering space -> screen space
    ------------------------------------------------------------
-   Pure maths over a plain 4x4 view-projection matrix (column-major,
+   Pure math over a plain 4x4 view-projection matrix (column-major,
    the same layout three.js uses). No three.js import, no DOM, so
    the projection and decluttering logic is testable under Node.
 
@@ -12,14 +12,14 @@
    and passes `vp.elements` in.
 
    IMPORTANT: dimensions are defined in the ENGINEERING frame in
-   millimetres. The transform to the render frame and the metre
+   millimeters. The transform to the render frame and the meter
    scale are folded in here, so a dimension definition never has to
    know that three.js exists.
    ============================================================ */
 
 'use strict';
 
-/** Millimetres to scene metres — must match geometry/assembly.js. */
+/** Millimeters to scene meters — must match geometry/assembly.js. */
 const MM_TO_SCENE = 0.001;
 
 /**
@@ -30,13 +30,13 @@ const MM_TO_SCENE = 0.001;
 /**
  * Project an engineering-frame point (mm) to pixel coordinates.
  *
- * @param {Vec3} p engineering millimetres
+ * @param {Vec3} p engineering millimeters
  * @param {ArrayLike<number>} vp column-major 4x4 view-projection matrix
  * @param {{width:number, height:number}} viewport pixels
  * @returns {ScreenPoint}
  */
 export function projectEng(p, vp, viewport) {
-    // engineering (x,y,z) -> render (y,z,x), then to metres
+    // engineering (x,y,z) -> render (y,z,x), then to meters
     const rx = p.y * MM_TO_SCENE;
     const ry = p.z * MM_TO_SCENE;
     const rz = p.x * MM_TO_SCENE;
@@ -108,13 +108,13 @@ export function foreshorteningDeg(a, b, vp, viewport) {
 }
 
 /**
- * Pixels per scene metre at a given point, measured along the screen X axis.
+ * Pixels per scene meter at a given point, measured along the screen X axis.
  * Used for the scale bar and as the reference for foreshortening.
  *
  * @param {ArrayLike<number>} vp
  * @param {{width:number, height:number}} viewport
  * @param {Vec3} nearPoint engineering mm, where the scale is sampled
- * @returns {number} pixels per scene metre
+ * @returns {number} pixels per scene meter
  */
 export function referenceScale(vp, viewport, nearPoint = { x: 0, y: 0, z: 0 }) {
     const step = 100; // mm probe
@@ -129,7 +129,7 @@ export function referenceScale(vp, viewport, nearPoint = { x: 0, y: 0, z: 0 }) {
 }
 
 /**
- * Pixels per millimetre at a point — what the scale bar needs.
+ * Pixels per millimeter at a point — what the scale bar needs.
  * @param {ArrayLike<number>} vp
  * @param {{width:number, height:number}} viewport
  * @param {Vec3} at
@@ -146,8 +146,8 @@ export function pixelsPerMm(vp, viewport, at = { x: 0, y: 0, z: 0 }) {
 /**
  * @typedef {Object} LabelBox
  * @property {string} id
- * @property {number} x      centre, pixels
- * @property {number} y      centre, pixels
+ * @property {number} x      center, pixels
+ * @property {number} y      center, pixels
  * @property {number} w
  * @property {number} h
  * @property {number} [priority] higher wins the contested position

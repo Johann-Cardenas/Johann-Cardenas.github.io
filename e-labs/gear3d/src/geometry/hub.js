@@ -2,17 +2,17 @@
    Gear3D — hub, brake drum and lug nuts
    ------------------------------------------------------------
    Local frame matches the tire and rim: origin at the wheel
-   centre, rotation axis +X, millimetres.
+   center, rotation axis +X, millimeters.
 
    Emitted as ONE merged geometry rather than a Group, so the hub
    can be instanced alongside the tire and rim. A class 13 unit
    has 34 wheels; a Group per wheel would be 34 separate draw
    calls for the smallest part in the frame.
 
-   This is not decoration. Without a hub the wheel disc's centre
+   This is not decoration. Without a hub the wheel disc's center
    bore is an open hole, and a viewer looking into an isolated
    wheel sees straight through it to the axle beam and the
-   differential behind — which reads as a modelling error even to
+   differential behind — which reads as a modeling error even to
    someone who could not say what is missing.
 
    THE HUB IS LAID OUT FROM THE WHEEL, NOT FROM ITSELF. Every
@@ -84,7 +84,7 @@ export function buildHubGeometry(g, opts = {}) {
     /** @type {THREE.BufferGeometry[]} */
     const parts = [];
 
-    // Centre boss — closes the wheel's bore. It runs from behind the disc out
+    // Center boss — closes the wheel's bore. It runs from behind the disc out
     // to the hub pad face, so there is no station at which the bore is open.
     const bossOuter = w.faceX;
     const bossInner = bossOuter - s * bossLen;
@@ -99,7 +99,7 @@ export function buildHubGeometry(g, opts = {}) {
     // size is a 220 mm ball sitting on the wheel: it read as a bowling ball
     // bolted to the disc and hid the studs and the hand holes behind it. A
     // hub cap is a shallow pressing, so the sphere is scaled down its own
-    // axis; the merge recomputes normals afterwards, so the non-uniform scale
+    // axis; the merge recomputes normals afterward, so the non-uniform scale
     // costs nothing.
     const capR = bossR * 0.94;
     const cap = new THREE.SphereGeometry(capR, seg, Math.max(6, seg >> 1), 0, Math.PI * 2, 0, Math.PI / 2);

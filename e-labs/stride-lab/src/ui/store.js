@@ -171,7 +171,7 @@ export async function exportBundle() {
         schemaVersion: SCHEMA_VERSION,
         exportedAt: new Date().toISOString(),
         profile,
-        analyses: analyses.map(a => ({ ...a, keypoints: serialiseKeypoints(a.keypoints) }))
+        analyses: analyses.map(a => ({ ...a, keypoints: serializeKeypoints(a.keypoints) }))
     };
     const text = JSON.stringify(payload);
     if (typeof CompressionStream === 'undefined') {
@@ -196,7 +196,7 @@ export async function importBundle(file) {
     if (data.profile) await saveProfile(data.profile);
     let n = 0;
     for (const a of data.analyses || []) {
-        await saveAnalysis({ ...a, keypoints: deserialiseKeypoints(a.keypoints) });
+        await saveAnalysis({ ...a, keypoints: deserializeKeypoints(a.keypoints) });
         n++;
     }
     return { imported: n };
@@ -213,7 +213,7 @@ export function migrate(data) {
     return d;
 }
 
-function serialiseKeypoints(k) {
+function serializeKeypoints(k) {
     if (!k) return null;
     return {
         names: k.names,
@@ -224,7 +224,7 @@ function serialiseKeypoints(k) {
     };
 }
 
-function deserialiseKeypoints(k) {
+function deserializeKeypoints(k) {
     if (!k) return null;
     return {
         names: k.names, n: k.n, width: k.width, height: k.height,

@@ -78,10 +78,10 @@ Three levels are used throughout the data files:
   limit.
 
 ### Yoder & Witczak, *Principles of Pavement Design*; Huang, *Pavement Analysis and Design*
-- **Used for:** the classic dual-wheel idealisation — dual tires at 13.5 in
-  centres with the dual sets 72 in (1829 mm) apart — which is the basis for the
+- **Used for:** the classic dual-wheel idealization — dual tires at 13.5 in
+  centers with the dual sets 72 in (1829 mm) apart — which is the basis for the
   drive/trailer track width throughout the library; and Huang's contact-area
-  idealisation.
+  idealization.
 - **Status:** the 0.5227 coefficient is verified. The 72 in track is standard
   in this literature and is used as the library's stated basis.
 
@@ -112,22 +112,22 @@ Three levels are used throughout the data files:
 
 - Steer axle track 2032 mm (80 in) on classes 5–13.
 - Drive/trailer track 1829 mm (72 in) — from the classic dual-wheel
-  idealisation above; it is the standard figure of the literature, but it is a
-  modelling convention, not a manufacturer specification.
+  idealization above; it is the standard figure of the literature, but it is a
+  modeling convention, not a manufacturer specification.
 - Dual tire spacing 330 mm (13 in). **Sources genuinely disagree here** and the
   disagreement is recorded rather than hidden:
   - AASHTOWare Pavement ME default: **12 in (304.8 mm)** — verified.
-  - Yoder & Witczak / Huang dual-wheel idealisation: **13.5 in (343 mm)**.
+  - Yoder & Witczak / Huang dual-wheel idealization: **13.5 in (343 mm)**.
   - Library default: **330 mm (13 in)**, mid-range and representative of
     current US class 8 practice.
   A user comparing Gear3D output against a default Pavement ME run should set
-  this to 305 mm; against the classic textbook idealisation, 343 mm.
+  this to 305 mm; against the classic textbook idealization, 343 mm.
 - Overall lengths, bus and vocational wheelbases.
 
 **Low confidence — representative only:**
 
 - Classes 1–3 (motorcycle, passenger car, pickup) in full. Their loads are
-  order-of-magnitude estimates from representative kerb masses. They exist so
+  order-of-magnitude estimates from representative curb masses. They exist so
   the FHWA classification is complete; they are not pavement-design inputs.
 - The class 13 turnpike double's overall layout, which is representative of
   permitted turnpike practice rather than a specific carrier's configuration.
@@ -208,10 +208,10 @@ ACAP editions used: 737 **D6-58325-7 Rev C** (Oct 2025), 757 **D6-58327 Rev H**
 
 ### 5.2 The outer-width trap
 
-The FAA field is **not** the centreline tread. Its own data dictionary defines
+The FAA field is **not** the centerline tread. Its own data dictionary defines
 `Main_Gear_Width_ft` as *"Distance between outer tires in the main landing
 gear."* Treating it as the track would push every main wheel outboard by half
-a dual spacing plus half a tire — for a 777 that is nearly a metre per side,
+a dual spacing plus half a tire — for a 777 that is nearly a meter per side,
 and the figure would look entirely reasonable while being wrong.
 
 So the track is **derived**, never assumed:
@@ -235,7 +235,7 @@ circularity. With the dual spacings recorded in the data files:
 | 767-400ER | 9302 mm | 9296 mm (30 ft 6 in) | +6 mm |
 | 777-300ER | 10 963 mm | 10 973 mm (36 ft 0 in) | −10 mm |
 
-All four agree to within about 13 mm, on quantities of 6 to 11 metres — which
+All four agree to within about 13 mm, on quantities of 6 to 11 meters — which
 is roughly what quoting a tread to the nearest inch can account for, and no
 more. `test/run.mjs` asserts both the derivation and this cross-check, at a
 **15 mm** tolerance.
@@ -244,7 +244,7 @@ more. `test/run.mjs` asserts both the derivation and this cross-check, at a
 
 The 767 row previously read **9322 mm, 26 mm** — twice any other residual, and
 the only one this rounding argument could not explain. It was recorded as
-"agreeing to within a few centimetres" and left alone.
+"agreeing to within a few centimeters" and left alone.
 
 It was not rounding. Its dual spacing was **1143 mm**, taken as a round 45 in
 because no consulted document stated it. FAARFIELD 2.1.1 stores the 767-400 ER
@@ -257,7 +257,7 @@ What actually moved is worth stating precisely, because it shows the
 derivation behaving as designed: the **outboard tire of each dual pair did not
 move at all**. The FAA outer width is the authoritative datum and is held, so a
 corrected dual spacing is absorbed *inside* it — the inboard tire moves 20 mm
-inboard and the strut centreline 10 mm, while the outer tire edge stays put.
+inboard and the strut centerline 10 mm, while the outer tire edge stays put.
 This is the same property 5.4 relies on when it says the outer width is
 preserved whatever dual spacing you enter.
 
@@ -266,7 +266,7 @@ Two things are worth taking from this beyond the number:
 - **A cross-check is only as good as its tolerance.** The test that existed to
   catch this allowed 40 mm, so a 26 mm error passed for four releases. A bound
   looser than the error it guards against is decoration. It is now 15 mm.
-- **The largest residual was visible the whole time and was rationalised.**
+- **The largest residual was visible the whole time and was rationalized.**
   The table above published the 26 mm figure in every release since v1.2; what
   was missing was treating an outlier as a defect rather than as noise.
 
@@ -302,9 +302,9 @@ with this reason recorded: their wing-plus-body layouts need the longitudinal
 and transverse offsets of the body gear relative to the wing gear, *"a single
 outer width closes a two-strut layout; it cannot close a four-bogie one."*
 
-That was correct, and it was a **data** problem rather than a modelling one.
+That was correct, and it was a **data** problem rather than a modeling one.
 The offsets are not in the FAA database, and they are not in FAARFIELD either
-— FAARFIELD analyses one gear at a time and stores the wing gear and the body
+— FAARFIELD analyzes one gear at a time and stores the wing gear and the body
 gear as separate entries (`B747-400` and `B747-400 Belly`), so it carries the
 bogie geometry but not the distance between the two.
 
@@ -341,7 +341,7 @@ manufacturer figures on every bogie dimension:
 | A380 wing | X ±674.37 mm, Y 1699.26 mm | 1350 mm dual, 1700 mm tandem |
 | A380 body | X ±764.54 / ±774.70 mm, Y 0 / 1699.26 / 3398.52 mm | 1530 / **1550** / 1530 mm dual, 1700 mm tandem |
 
-Two wholly independent sources agreeing to the millimetre, including the
+Two wholly independent sources agreeing to the millimeter, including the
 A380 body bogie's **20 mm wider middle axle** — which is why `dualSpacingByRow`
 exists rather than the spacing being averaged. FAARFIELD's per-strut
 `MgPercent` also reproduces the load split from the other direction: 0.2375 × 4
@@ -389,7 +389,7 @@ remains assumed on the two-strut aircraft; FAARFIELD models the main gear only,
 because the nose gear carries too little load to matter to thickness design.
 
 **Why a wrong value survived seven releases.** A tandem spread is symmetric
-about the bogie centre, so changing it moves both axle lines equally and leaves
+about the bogie center, so changing it moves both axle lines equally and leaves
 the wheelbase (a centroid), the track and the outer width completely untouched.
 Every derivation check in the suite passed with the wrong number in place. This
 is the argument for declaring assumptions in the data rather than trusting
@@ -416,7 +416,7 @@ A380, read directly during this build.
 - **The tire.** FAARFIELD carries a contact patch and an inflation pressure,
   not a Tire and Rim Association designation, and no other consulted source
   gives one for these aircraft. The tire is a stand-in chosen to fit the real
-  spacings. It sets how large the rendered wheel is and moves no wheel centre.
+  spacings. It sets how large the rendered wheel is and moves no wheel center.
 - **The wheelbase.** FAARFIELD models the main gear only. The nose gear's
   *type* is real — Order 5300.7 Table 3 tabulates it in its own column — but
   its distance forward is not.
@@ -431,11 +431,11 @@ null throughout and a test asserts it.
 aircraft behind them, or none whose geometry any consulted source publishes
 (`Q`'s representative, the HS-121 Trident, left service in 1985). They are
 drawn to one nominal scale — 49x19.0-22 tires, 1400 mm lateral pitch, 1450 mm
-longitudinal, strut centres 1800 mm outboard of the bogie half-width, wheelbase
+longitudinal, strut centers 1800 mm outboard of the bogie half-width, wheelbase
 20 000 mm — so that Figure 2's twelve cells stay comparable, which is the
 point of that figure. **Not one of those numbers describes an aircraft.**
 
-**Two idealisations, both declared in the data.** The C-17's real bogie has its
+**Two idealizations, both declared in the data.** The C-17's real bogie has its
 two rows offset laterally from each other by 38.1 mm, and one wheel in each row
 sits 292.1 mm out of line with the other two; both are squared up here and both
 are in the FAARFIELD coordinates if needed. Loads on all sixteen use the equal

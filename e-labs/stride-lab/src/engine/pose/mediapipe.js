@@ -99,7 +99,7 @@ export function createMediaPipeBackend() {
             const build = async (del) => PoseLandmarker.createFromOptions(vision, {
                 baseOptions: { modelAssetPath: MODEL_URLS[variant], delegate: del },
                 runningMode: 'VIDEO',
-                /* detect several and choose one in stage D — silently analysing
+                /* detect several and choose one in stage D — silently analyzing
                    the wrong person produces a plausible, entirely wrong report */
                 numPoses: 3,
                 minPoseDetectionConfidence: 0.5,
@@ -120,7 +120,7 @@ export function createMediaPipeBackend() {
         },
 
         async infer(image, timestampMs) {
-            if (!landmarker) throw new Error('backend not initialised');
+            if (!landmarker) throw new Error('backend not initialized');
             /* MediaPipe's VIDEO mode keeps internal tracking state keyed on the
                timestamp. Out-of-order or repeated timestamps corrupt it
                silently, so they are forced strictly increasing here rather than
@@ -162,7 +162,7 @@ export function createMediaPipeBackend() {
 
 /**
  * Score a detected pose: mostly how big it is, partly how central.
- * The runner being analysed is the one filling the frame near the middle,
+ * The runner being analyzed is the one filling the frame near the middle,
  * because that is what the capture guidance asks for.
  */
 export function scorePose(pose, backendId = 'mediapipe-blazepose') {
@@ -273,7 +273,7 @@ export function createTracker() {
             /* A frame on which to ASK. Choosing has to happen on one picture, so
                it should be the picture where the most candidates are visible at
                once — asking "which of these" while only one is on screen is not
-               a question anybody can answer. Ties break towards the middle of
+               a question anybody can answer. Ties break toward the middle of
                the clip, where a runner is most likely to be in shot and up to
                speed. */
             const mid = totalFrames / 2;
@@ -328,10 +328,10 @@ export function seriesFromTrack(track, frameTimesS, width, height, backendId) {
 }
 
 /**
- * Leg length in metres from the backend's own metric-space landmarks, used as
+ * Leg length in meters from the backend's own metric-space landmarks, used as
  * an INDEPENDENT check on the anthropometric scaling. Two estimates that
  * disagree by more than 20% mean one of them is wrong, and the honest response
- * is to downgrade every distance in the report rather than pick a favourite.
+ * is to downgrade every distance in the report rather than pick a favorite.
  */
 export function worldLegLength(pose) {
     if (!pose || !pose.worldXY) return null;

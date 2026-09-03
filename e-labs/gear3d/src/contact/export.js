@@ -54,15 +54,15 @@ function baseAssumptionLines(ctx) {
         `Contact model: ${ctx.model}`,
         '',
         'COORDINATE SYSTEM',
-        '  x  longitudinal, positive REARWARD, origin at the front-most axle centreline',
+        '  x  longitudinal, positive REARWARD, origin at the front-most axle centerline',
         '  y  transverse, positive to the RIGHT of the direction of travel, origin on the',
-        '     vehicle centreline',
+        '     vehicle centerline',
         '  z  vertical, positive UP, z = 0 at the pavement surface',
-        '  Right-handed. All lengths in millimetres, loads in kN, pressures in kPa.',
+        '  Right-handed. All lengths in millimeters, loads in kN, pressures in kPa.',
         '',
         'ASSUMPTIONS — READ BEFORE USE',
         '  1. Contact pressure is taken EQUAL TO INFLATION PRESSURE. This is the standard',
-        '     simplification of flexible-pavement analysis, and it is an idealisation.',
+        '     simplification of flexible-pavement analysis, and it is an idealization.',
         '  2. Pressure is assumed UNIFORM over each patch. Real tire-pavement contact',
         '     stress is markedly non-uniform: vertical stress peaks under the tread ribs',
         '     and falls at the shoulders, and significant transverse and longitudinal',
@@ -73,7 +73,7 @@ function baseAssumptionLines(ctx) {
         '     50 mm or so. Those require measured contact-stress distributions',
         '     (for example stress-in-motion measurements), not this file.',
         '  3. Patch dimensions follow the selected geometric model. Area is exact for',
-        '     the model; the shape is an idealisation of a real footprint.',
+        '     the model; the shape is an idealization of a real footprint.',
         '  4. Loads are static. No dynamic amplification, no load transfer, no',
         '     cornering or braking forces.',
         '  5. Tire dimensions are NOMINAL values from the size designation, not',
@@ -115,7 +115,7 @@ export function toCSV(patches, ctx) {
             r(p.equivalentRadius, 2),
             p.tire,
             p.config,
-            // Which patches are measured and which are modelled. Without this
+            // Which patches are measured and which are modeled. Without this
             // column a hand-entered footprint is indistinguishable from a
             // computed one in the format most people actually open, and the
             // reader has no way to know that a row's contact pressure is a
@@ -148,8 +148,8 @@ export function toJSON(patches, ctx) {
         model: ctx.model,
         units: { length: 'mm', load: 'kN', pressure: 'kPa', area: 'mm2' },
         coordinateSystem: {
-            x: 'longitudinal, positive rearward, origin at front-most axle centreline',
-            y: 'transverse, positive right of travel, origin on vehicle centreline',
+            x: 'longitudinal, positive rearward, origin at front-most axle centerline',
+            y: 'transverse, positive right of travel, origin on vehicle centerline',
             z: 'vertical, positive up, z = 0 at pavement surface',
             handedness: 'right'
         },
@@ -236,7 +236,7 @@ export function toAbaqus(patches, ctx) {
 }
 
 /**
- * Attach how many patches are measured rather than modelled, so every writer
+ * Attach how many patches are measured rather than modeled, so every writer
  * reports it the same way instead of each counting for itself.
  * @param {import('./patch.js').PatchRecord[]} patches
  * @param {object} ctx

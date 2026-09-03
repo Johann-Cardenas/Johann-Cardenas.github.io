@@ -31,7 +31,7 @@ import { filtfilt, hampel, fillGaps, derivative, missingFraction } from './filte
 /**
  * @typedef {Object} Conditioned
  * @property {Record<string, Track>} kp    keypoint tracks, plus the derived
- *                                         hipMid / shoulderMid / footCentre*
+ *                                         hipMid / shoulderMid / footCenter*
  * @property {Float64Array} t              seconds
  * @property {number} fps
  * @property {number} n
@@ -69,7 +69,7 @@ export function condition(series, opts) {
         for (let f = 0; f < n; f++) {
             const vis = series.vis[f * K + c];
             rv[f] = vis;
-            /* 1. Coordinate convention. MediaPipe hands back normalised image
+            /* 1. Coordinate convention. MediaPipe hands back normalized image
                coordinates with y increasing DOWNWARD. Convert once, here, to a
                right-handed frame with y increasing upward. Every angle in the
                report is mirrored if this is skipped, and it is mirrored
@@ -91,7 +91,7 @@ export function condition(series, opts) {
         /* 3. short-gap fill (long gaps stay NaN), 4. Hampel, 5. filtfilt.
            A single NaN poisons an IIR filter for the rest of the signal, so
            the long gaps are bridged with a hold ONLY to keep the filter fed,
-           and are masked straight back out afterwards. They must not survive
+           and are masked straight back out afterward. They must not survive
            as usable samples: a metric that lands in one has to report itself
            unavailable rather than read interpolated fiction. */
         const gapX = hampel(fillGaps(rx, MAX_GAP_FRAMES)).y;
@@ -132,24 +132,24 @@ export function condition(series, opts) {
        metric that needs them:
          pelvis      the hip-joint midpoint, proximal end of the trunk
          neck        the glenohumeral midpoint, distal end of the trunk
-         headCentre  the ear midpoint, which is where Winter puts the centre of
+         headCenter  the ear midpoint, which is where Winter puts the center of
                      mass of the head-and-neck segment
          thorax      mid-trunk, used for the trunk-versus-pelvis separation */
     kpOut.pelvis = kpOut.hipMid;
     kpOut.neck = kpOut.shoulderMid;
-    kpOut.headCentre = midpoint(kpOut.earL, kpOut.earR, n);
+    kpOut.headCenter = midpoint(kpOut.earL, kpOut.earR, n);
     kpOut.thorax = midpoint(kpOut.shoulderMid, kpOut.hipMid, n);
 
-    for (const name of ['hipMid', 'shoulderMid', 'footL', 'footR', 'pelvis', 'neck', 'headCentre', 'thorax']) {
+    for (const name of ['hipMid', 'shoulderMid', 'footL', 'footR', 'pelvis', 'neck', 'headCenter', 'thorax']) {
         missing[name] = missingFraction(kpOut[name].x);
     }
-    /* The ears are the only source for the head centre. If the backend loses
+    /* The ears are the only source for the head center. If the backend loses
        them — a hood, a cap, a very low resolution — fall back to the nose,
        which is worse but bounded, and record that it happened. */
-    if (!(missing.headCentre <= 0.5)) {
-        kpOut.headCentre = kpOut.nose;
-        missing.headCentre = missingFraction(kpOut.nose.x);
-        kpOut.headCentreFallback = true;
+    if (!(missing.headCenter <= 0.5)) {
+        kpOut.headCenter = kpOut.nose;
+        missing.headCenter = missingFraction(kpOut.nose.x);
+        kpOut.headCenterFallback = true;
     }
 
     return {
