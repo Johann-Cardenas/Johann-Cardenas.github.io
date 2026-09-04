@@ -27,7 +27,7 @@ import { quadLayout } from '../views/quadview.js';
 export const QUAD_GAP = 2;
 
 /**
- * Relative luminance of a hex colour, 0 (black) to 1 (white).
+ * Relative luminance of a hex color, 0 (black) to 1 (white).
  * @param {string} hex
  * @returns {number}
  */
@@ -48,8 +48,8 @@ function luminance(hex) {
    The viewport used to render at `min(devicePixelRatio, 2)`,
    which on an ordinary 1x desktop monitor means a pixel ratio of
    ONE. A viewport around 1000 x 660 CSS pixels was therefore
-   being rasterised at 0.7 megapixels, and it showed: faceted
-   tyre silhouettes, stair-stepped shadow edges, specular
+   being rasterized at 0.7 megapixels, and it showed: faceted
+   tire silhouettes, stair-stepped shadow edges, specular
    shimmer on the rim lips that MSAA cannot touch because it
    only antialiases geometry edges.
 
@@ -75,11 +75,11 @@ export const RENDER_TIERS = Object.freeze({
     },
     high: {
         label: 'High', targetPx: 2560, maxRatio: 3, minGeometry: 'standard', shadowMap: 3072,
-        note: 'QHD drawing buffer, and no tyre below 240 segments.'
+        note: 'QHD drawing buffer, and no tire below 240 segments.'
     },
     ultra: {
         label: 'Ultra — UHD', targetPx: 3840, maxRatio: 4, minGeometry: 'high', shadowMap: 4096,
-        note: 'A 4K drawing buffer downsampled into the viewport, every tyre at 352 segments, '
+        note: 'A 4K drawing buffer downsampled into the viewport, every tire at 352 segments, '
             + 'and a 4096 shadow map. Still frames only — interaction drops to a lighter ratio.'
     }
 });
@@ -101,7 +101,7 @@ const SETTLE_MS = 220;
 /** Background modes. */
 export const BACKGROUND_MODES = Object.freeze({
     white: { label: 'Publication white', color: '#ffffff', alpha: 1 },
-    color: { label: 'Custom colour', color: '#eef1f4', alpha: 1 },
+    color: { label: 'Custom color', color: '#eef1f4', alpha: 1 },
     transparent: { label: 'Transparent', color: '#000000', alpha: 0 }
 });
 
@@ -309,7 +309,7 @@ export class Viewport {
     }
 
     /**
-     * Match the shadow map to the buffer that will actually be rasterised,
+     * Match the shadow map to the buffer that will actually be rasterized,
      * not to the tier's label.
      *
      * A tier names an ASPIRATION — Ultra asks for 3840 pixels across — but on a
@@ -342,7 +342,7 @@ export class Viewport {
     }
 
     /**
-     * What is actually being rasterised, for the status strip. This app is a
+     * What is actually being rasterized, for the status strip. This app is a
      * measurement instrument; a reader who has asked for UHD should be able to
      * read back the number rather than take it on trust.
      *
@@ -446,7 +446,7 @@ export class Viewport {
 
     /**
      * Rebuild the ground grid for the current model extent.
-     * @param {THREE.Box3} [box] scene metres; defaults to the assembly bounds
+     * @param {THREE.Box3} [box] scene meters; defaults to the assembly bounds
      */
     rebuildGrid(box) {
         if (this._grid) {
@@ -459,7 +459,7 @@ export class Viewport {
 
         const b = box || this.assembly.bounds();
         const size = b.getSize(new THREE.Vector3());
-        // Grid colour follows the FIGURE background, not the UI theme, for
+        // Grid color follows the FIGURE background, not the UI theme, for
         // the same reason the annotations do.
         const dark = this.background === 'color'
             ? luminance(this.backgroundColor) < 0.45
@@ -482,11 +482,11 @@ export class Viewport {
             minorOpacity: cap(dark ? 0.20 : 0.15),
             majorOpacity: cap(dark ? 0.38 : 0.30)
         });
-        // Centre it under the model. The engineering origin is the front
+        // Center it under the model. The engineering origin is the front
         // axle, so a grid left at the world origin covers only the front of
-        // a long vehicle and its fade is centred on the wrong place.
-        const centre = b.getCenter(new THREE.Vector3());
-        object.position.set(centre.x, 0, centre.z);
+        // a long vehicle and its fade is centered on the wrong place.
+        const center = b.getCenter(new THREE.Vector3());
+        object.position.set(center.x, 0, center.z);
         this._grid = object;
         this.scene.add(object);
         this.invalidate();
@@ -499,7 +499,7 @@ export class Viewport {
     }
 
     /**
-     * Frame a box given in ENGINEERING millimetres.
+     * Frame a box given in ENGINEERING millimeters.
      * @param {{minX:number,maxX:number,minY:number,maxY:number,minZ:number,maxZ:number}} b
      */
     frameEngineering(b) {
@@ -564,8 +564,8 @@ export class Viewport {
      * Has the camera actually moved since the last frame?
      *
      * Position, orientation, target and zoom, each against an epsilon chosen
-     * in scene units: 1e-10 on a squared distance is 10 nanometres of scene,
-     * which at this app's 1/1000 scale is a hundredth of a micrometre. Well
+     * in scene units: 1e-10 on a squared distance is 10 nanometers of scene,
+     * which at this app's 1/1000 scale is a hundredth of a micrometer. Well
      * below anything that could change a pixel.
      *
      * @returns {boolean}

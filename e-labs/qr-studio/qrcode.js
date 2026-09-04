@@ -89,7 +89,7 @@
             * NUM_ERROR_CORRECTION_BLOCKS[eclIndex][ver];
     }
 
-    /** Centre coordinates of the alignment patterns for a version. */
+    /** Center coordinates of the alignment patterns for a version. */
     function getAlignmentPatternPositions(ver) {
         if (ver === 1) return [];
         var numAlign = Math.floor(ver / 7) + 2;
@@ -423,7 +423,7 @@
     function getPenaltyScore(st) {
         var size = st.size, result = 0, x, y;
 
-        // Rule 1 — runs of five or more same-coloured modules in a line.
+        // Rule 1 — runs of five or more same-colored modules in a line.
         // Rule 3 is folded in here: the finder-like 1:1:3:1:1 pattern.
         for (y = 0; y < size; y++) {
             var runColor = false, runX = 0, runHistory = [0, 0, 0, 0, 0, 0, 0];
@@ -458,7 +458,7 @@
             result += finderPenaltyTerminateAndCount(runColor2, runY, runHistory2, size) * PENALTY_N3;
         }
 
-        // Rule 2 — every 2x2 block of one colour.
+        // Rule 2 — every 2x2 block of one color.
         for (y = 0; y < size - 1; y++) {
             for (x = 0; x < size - 1; x++) {
                 var c = st.modules[y][x];
@@ -587,7 +587,7 @@
         drawFunctionPatterns(st);
         drawCodewords(st, addEccAndInterleave(st, dataCodewords));
 
-        // Pick the mask with the lowest penalty (or honour a forced one).
+        // Pick the mask with the lowest penalty (or honor a forced one).
         var mask = opts.mask;
         if (mask === undefined || mask === null || mask < 0) {
             var minPenalty = Infinity;

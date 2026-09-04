@@ -12,10 +12,10 @@
      --g3-graphite  secondary text and inactive rules
      --g3-rule      hairline separators
      --g3-datum     teal, ties Gear3D to the rest of E-Labs
-     --g3-signal    instrument red-orange, the needle colour.
+     --g3-signal    instrument red-orange, the needle color.
                     Used ONLY for the live measurement and the
                     current selection. Nothing decorative is ever
-                    this colour, so it always means "this one".
+                    this color, so it always means "this one".
 
    SIGNATURE ELEMENT: the datum tick. Every panel heading carries a
    hairline rule that terminates in a short perpendicular tick, the
@@ -95,7 +95,7 @@
 
    That is not a cosmetic slip. `.g3-progress` is absolutely
    positioned over `inset: 0` of the viewport with a translucent
-   backdrop and a blur, so leaving it displayed puts a grey haze
+   backdrop and a blur, so leaving it displayed puts a gray haze
    over the render AND swallows every pointer event: no orbit, no
    click-to-select, and a viewport that looks unfinished. The same
    bug also kept the modified badge, the aircraft assumption
@@ -524,7 +524,7 @@
 }
 .g3-badge-modified i { color: var(--g3-signal); }
 
-/* Assumed-value notice. Uses the warn colour rather than the signal red:
+/* Assumed-value notice. Uses the warn color rather than the signal red:
    signal red means "this is the live measurement", and an assumption is a
    caveat, not a reading. */
 .g3-badge-assumed {
@@ -765,7 +765,7 @@
    VISUAL REFINEMENT (v1.7)
    ------------------------------------------------------------
    A craft pass over the existing system. It introduces no new
-   colours and no new controls: every rule below reuses the tokens
+   colors and no new controls: every rule below reuses the tokens
    declared at the top of this file. Three ideas run through it.
 
    1. THE VIEWPORT IS A SHEET, NOT A HOLE.
@@ -784,14 +784,14 @@
       while the canvas fills the CONTENT box. Padding would
       silently offset every dimension line from the geometry it
       measures — the failure would look like a projection bug and
-      would be hunted for in the maths. Border and box-shadow do
+      would be hunted for in the math. Border and box-shadow do
       not have this problem, which is why the mat below is a
       shadow ring.
 
    2. CHROME DRAWN OVER THE FIGURE FOLLOWS THE FIGURE.
       The HUD, the axis badge and the scale bar sit on the white
       plate, not on the app surface, so they take the figure's
-      colours rather than the theme's. This is the same rule the
+      colors rather than the theme's. This is the same rule the
       label halo already follows. Without it, the dark theme puts
       near-black pills on white paper — high-contrast blocks that
       read as heavier than the drawing they annotate.
@@ -806,7 +806,7 @@
 /* ---- 1. The sheet ---------------------------------------- */
 
 .g3-viewport {
-    /* Colours for anything drawn ON the figure. Held here, on the
+    /* Colors for anything drawn ON the figure. Held here, on the
        element that owns the plate, so the HUD cannot drift from it. */
     --g3-fig-paper: #ffffff;
     --g3-fig-ink: #16202b;
@@ -867,7 +867,7 @@
     text-overflow: ellipsis;
     cursor: pointer;
     /* A select with no chevron reads as a text input the user cannot
-       type into. Neutral grey so one mark serves both themes. */
+       type into. Neutral gray so one mark serves both themes. */
     background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238b98a5' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right .45rem center;
@@ -995,7 +995,7 @@ body.Gear3D .g3-node-iso {
 body.Gear3D .g3-btn { color: var(--g3-ink) !important; background: var(--g3-paper) !important; }
 body.Gear3D .g3-btn:hover { color: var(--g3-datum) !important; }
 /* Measure toggle while engaged. Instrument red, because an armed measurement
-   IS the live reading — the one case where a button earns the signal colour. */
+   IS the live reading — the one case where a button earns the signal color. */
 body.Gear3D .g3-btn.is-active,
 body.Gear3D .g3-btn.is-active:hover {
     color: var(--g3-signal) !important;
@@ -1043,7 +1043,7 @@ body.Gear3D .g3-node-iso:hover { color: var(--g3-datum) !important; }
    drafting language the rest of this rail is drawn in - the square
    corners, the rule weight, the datum teal - and because the tick
    has to flip to ink on the dark theme, where teal is the light
-   colour.
+   color.
    ============================================================ */
 .g3-app input[type="checkbox"] {
     -webkit-appearance: none;
@@ -1065,8 +1065,8 @@ body.Gear3D .g3-node-iso:hover { color: var(--g3-datum) !important; }
     border-color: var(--g3-datum);
 }
 
-/* Centred by transform rather than by fixed offsets, so the tick stays
-   centred when the touch rules grow the box to 20px. */
+/* Centered by transform rather than by fixed offsets, so the tick stays
+   centered when the touch rules grow the box to 20px. */
 .g3-app input[type="checkbox"]:checked::after {
     content: "";
     position: absolute;
@@ -1192,7 +1192,7 @@ body.Gear3D .g3-node-iso:hover { color: var(--g3-datum) !important; }
     .g3-tree { max-height: 45vh; }
     .g3-props { max-height: none; }
 
-    /* The coordinate readout is a mouse-hover artefact and never
+    /* The coordinate readout is a mouse-hover artifact and never
        updates on touch, so it stops taking a row. */
     .g3-status { font-size: .68rem; }
     .g3-status #g3-status-coords { display: none; }
@@ -1330,7 +1330,7 @@ body.Gear3D .g3-node-iso:hover { color: var(--g3-datum) !important; }
     .g3-range::-webkit-slider-thumb {
         width: 22px;
         height: 22px;
-        /* (track 3 - thumb 22) / 2 centres the thumb on the track. */
+        /* (track 3 - thumb 22) / 2 centers the thumb on the track. */
         margin-top: -9.5px;
     }
     .g3-range::-moz-range-thumb { width: 20px; height: 20px; }
@@ -1472,7 +1472,7 @@ body.Gear3D .g3-node-iso:hover { color: var(--g3-datum) !important; }
 .g3-tb-flag--schematic { color: var(--g3-warn); border-color: var(--g3-warn); }
 
 /* ============================================================
-   GEAR CONFIGURATION CATALOGUE
+   GEAR CONFIGURATION CATALOG
    ------------------------------------------------------------
    Figure 2 and Table 3 as a sheet. The thumbnails are the point,
    so they take the top of each card at a fixed height: a grid of
@@ -1484,7 +1484,7 @@ body.Gear3D .g3-node-iso:hover { color: var(--g3-datum) !important; }
    The shared stylesheet puts the mobile title bar at 10001, the slide-out nav
    panel at 10002 and the theme / back-to-top buttons at 10000. At the app-local
    z-index this modal started with, all four punched straight through it — the
-   hamburger sat on top of the catalogue's own title on a phone, and the theme
+   hamburger sat on top of the catalog's own title on a phone, and the theme
    toggle floated over the card grid on every screen size. A modal has to be the
    topmost thing on the page or it is not modal. */
 .g3-modal {
@@ -1629,7 +1629,7 @@ body.g3-modal-open { overflow: hidden; }
 }
 /* Figure 2's own drawing: outlined ellipses, nothing filled. The body gear is
    the one thing that has to be told apart from the main gear, so it is the one
-   thing that gets a second colour. */
+   thing that gets a second color. */
 .g3-wp {
     width: 100%;
     height: 100%;

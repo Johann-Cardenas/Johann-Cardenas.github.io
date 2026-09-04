@@ -1,8 +1,8 @@
 /* ============================================================
    Gear3D — procedural studio environment (image-based lighting)
    ------------------------------------------------------------
-   Machined aluminium is defined almost entirely by what it
-   reflects. Lit by directional lights alone it reads as flat grey
+   Machined aluminum is defined almost entirely by what it
+   reflects. Lit by directional lights alone it reads as flat gray
    plastic, no matter how the roughness is tuned — there is simply
    nothing in the scene for it to mirror. Image-based lighting is
    what makes a rim look like metal.
@@ -11,7 +11,7 @@
    HDRI file. That keeps three promises the app already makes:
 
      - no asset dependency, so nothing can 404 into a broken render
-     - no third-party licence travelling inside the repository
+     - no third-party license traveling inside the repository
      - deterministic output, because the environment is a pure
        function of the lighting parameters
 

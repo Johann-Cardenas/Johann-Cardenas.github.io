@@ -330,10 +330,10 @@ export function describeGearCode(code) {
 }
 
 /**
- * Normalised wheel plan for a code, as coordinates.
+ * Normalized wheel plan for a code, as coordinates.
  *
  * Positions are in an abstract unit grid — transverse in wheel pitches,
- * longitudinal in axle pitches, origin at the centre of the gear. Deliberately
+ * longitudinal in axle pitches, origin at the center of the gear. Deliberately
  * scale-free: Figure 2 draws twelve configurations at one size so that the
  * PATTERN is what differs between cells, which is exactly what a thumbnail
  * wants too.
@@ -365,7 +365,7 @@ export function wheelPlan(code, opts = {}) {
     const scope = requested !== 'auto' ? requested
         : (c.special || c.body || c.main.multiple > 1) ? 'aircraft' : 'strut';
 
-    // One gear, as Figure 2 draws it: a single bogie, centred on itself.
+    // One gear, as Figure 2 draws it: a single bogie, centered on itself.
     if (scope === 'strut' && !c.special) {
         const across = GEAR_TYPES[c.main.type];
         for (let r = 0; r < c.main.tandem; r++) {
@@ -410,7 +410,7 @@ export function wheelPlan(code, opts = {}) {
 
         // The main multiple counts gears IN LINE on one side and is mirrored;
         // the body multiple is the total across the aircraft and is laid out
-        // about the centreline.
+        // about the centerline.
         //
         // "In line" means along the aircraft, not across it. Figure 18's B-52
         // and Figure 20's IL-76 both put their second strut BEHIND the first,
@@ -420,7 +420,7 @@ export function wheelPlan(code, opts = {}) {
         const inLinePitch = t.tandem + 1.8;
         const lanes = role === 'main'
             ? [-1, 1].map((s) => s * base)
-            : centredLanes(t.multiple, across + 1.6);
+            : centeredLanes(t.multiple, across + 1.6);
         const files = role === 'main'
             ? Array.from({ length: t.multiple }, (_, k) => (k - (t.multiple - 1) / 2) * inLinePitch)
             : [0];
@@ -437,8 +437,8 @@ export function wheelPlan(code, opts = {}) {
         }
     }
 
-    /** Body gears, distributed symmetrically about the centreline. */
-    function centredLanes(n, pitch) {
+    /** Body gears, distributed symmetrically about the centerline. */
+    function centeredLanes(n, pitch) {
         if (n === 1) return [0];
         return Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * pitch);
     }

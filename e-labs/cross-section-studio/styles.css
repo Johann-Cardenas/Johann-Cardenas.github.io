@@ -15,7 +15,7 @@
 /* `hidden` has to beat a class. The browser's `[hidden] { display: none }`
    lives in the UA sheet, so any author rule that sets a display wins over it —
    and both elements this app hides at runtime (the custom-resolution pair, the
-   background colour swatch) are `.xs-field { display: flex }`. Without this
+   background color swatch) are `.xs-field { display: flex }`. Without this
    they stayed on screen whatever `ui.expCustom.hidden` was set to. */
 .xs-app [hidden] { display: none !important; }
 
@@ -876,8 +876,8 @@
     border-color: var(--xs-primary);
 }
 
-/* Centred by transform rather than fixed offsets, so the tick stays
-   centred when the touch rules grow the box to 20px. */
+/* Centered by transform rather than fixed offsets, so the tick stays
+   centered when the touch rules grow the box to 20px. */
 .xs-app input[type="checkbox"]:checked::after {
     content: "";
     position: absolute;
@@ -1133,7 +1133,7 @@
     .xs-app input[type="range"].xs-range::-webkit-slider-thumb {
         width: 22px;
         height: 22px;
-        /* (track 5 - thumb 22) / 2 centres the thumb on the track. */
+        /* (track 5 - thumb 22) / 2 centers the thumb on the track. */
         margin-top: -8.5px;
     }
     .xs-app input[type="range"].xs-range::-moz-range-thumb { width: 20px; height: 20px; }
@@ -1146,7 +1146,7 @@
 
     /* Two stacked steppers inside one row: 24px each makes the pair 48,
        which is the figure that matters when the thumb is aiming at the
-       pair and correcting afterwards. */
+       pair and correcting afterward. */
     .xs-app .xs-layer-move button { min-width: 34px; min-height: 24px; }
 }
 

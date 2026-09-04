@@ -1,7 +1,7 @@
 /* ============================================================
    Stride Lab — proposing the analysis window.
 
-   The specification asks for the window that maximises landmark
+   The specification asks for the window that maximizes landmark
    confidence times subject size. That cannot be known before running
    pose estimation over the whole clip, which is the expensive thing a
    proposal exists to avoid. What IS already available is the scrubber

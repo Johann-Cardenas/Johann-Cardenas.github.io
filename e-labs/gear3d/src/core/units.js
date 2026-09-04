@@ -3,11 +3,11 @@
    ------------------------------------------------------------
    Canonical internal units, used by every stored value:
 
-     length    millimetre  (mm)
+     length    millimeter  (mm)
      mass      kilogram    (kg)
      force     kilonewton  (kN)
      pressure  kilopascal  (kPa)
-     area      square millimetre (mm^2)
+     area      square millimeter (mm^2)
 
    Display units are a view-layer concern. Conversion happens
    ONCE, at the display boundary, through `format*` below.
@@ -76,7 +76,7 @@ export function lengthFromMm(mm, to) {
     return mm * f;
 }
 
-/** @param {number} v @param {LengthUnit} from @returns {number} millimetres */
+/** @param {number} v @param {LengthUnit} from @returns {number} millimeters */
 export function lengthToMm(v, from) {
     const f = LENGTH_FROM_MM[from];
     if (f === undefined) throw new Error(`Unknown length unit: ${from}`);
@@ -100,7 +100,7 @@ export function pressureToKpa(v, from) { return v / PRESSURE_FROM_KPA[from]; }
 
 /** @param {number} mm2 @param {AreaUnit} to @returns {number} */
 export function areaFromMm2(mm2, to) { return mm2 * AREA_FROM_MM2[to]; }
-/** @param {number} v @param {AreaUnit} from @returns {number} square millimetres */
+/** @param {number} v @param {AreaUnit} from @returns {number} square millimeters */
 export function areaToMm2(v, from) { return v / AREA_FROM_MM2[from]; }
 
 /**
@@ -166,7 +166,7 @@ export function formatNumber(v, precision) {
  */
 
 /**
- * Format a canonical millimetre value for display.
+ * Format a canonical millimeter value for display.
  * @param {number} mm
  * @param {LengthUnit} to
  * @param {FormatOptions} [opts]

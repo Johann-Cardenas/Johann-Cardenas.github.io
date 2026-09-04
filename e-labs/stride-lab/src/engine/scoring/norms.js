@@ -103,7 +103,7 @@ export const NORMS = [
         optimal: [6.5, 10.5], acceptable: [5.0, 13.0],
         direction: 'target-range',
         source: 'folland-2017', strength: 'weak',
-        comment: 'Pelvis excursion, which approximates the centre of mass without being it. The centre-of-mass version below is the quantity the evidence is about, and it is the one to read.'
+        comment: 'Pelvis excursion, which approximates the center of mass without being it. The center-of-mass version below is the quantity the evidence is about, and it is the one to read.'
     },
     {
         metric: 'verticalRatio',
@@ -111,7 +111,7 @@ export const NORMS = [
         optimal: [5.5, 8.5], acceptable: [4.0, 11.0],
         direction: 'lower-better',
         source: 'indicative-unsourced', strength: 'consensus-only',
-        comment: 'Vertical oscillation normalised by step length. More informative than raw oscillation because it does not punish a long stride.'
+        comment: 'Vertical oscillation normalized by step length. More informative than raw oscillation because it does not punish a long stride.'
     },
 
     /* ---------------- Contact ---------------- */
@@ -178,7 +178,7 @@ export const NORMS = [
         optimal: [5.5, 9.0], acceptable: [4.0, 11.5],
         direction: 'lower-better',
         source: 'vanhooren-2024', strength: 'moderate',
-        comment: 'The DIRECTION is the best-evidenced finding available to this app: less vertical displacement of the centre of mass is associated with better running economy, moderate effect (r = 0.35), pooled across the observational literature. The band EDGES are not sourced. Note also the size of the effect the same review reports: technique variables together explain 4-12% of the differences in running economy between people.'
+        comment: 'The DIRECTION is the best-evidenced finding available to this app: less vertical displacement of the center of mass is associated with better running economy, moderate effect (r = 0.35), pooled across the observational literature. The band EDGES are not sourced. Note also the size of the effect the same review reports: technique variables together explain 4-12% of the differences in running economy between people.'
     },
     {
         metric: 'verticalStiffness',

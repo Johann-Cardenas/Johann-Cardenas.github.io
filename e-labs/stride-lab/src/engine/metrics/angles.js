@@ -43,7 +43,7 @@ export function kneeInteriorSeries(cond, side) {
 /**
  * Trunk lean, degrees, POSITIVE FORWARD.
  *
- * Definition: the trunk SEGMENT (hip centre to shoulder centre) relative to
+ * Definition: the trunk SEGMENT (hip center to shoulder center) relative to
  * vertical. This is not "whole-body lean from the ankle", which is a different
  * and considerably larger number; the UI states which one it shows.
  *
@@ -67,7 +67,7 @@ export function trunkLeanSeries(cond) {
 
 /**
  * Foot-strike angle, degrees. POSITIVE = toe up = rearfoot.
- * `signedAngle(horizontal, heel->toe)` with horizontal pointing forwards.
+ * `signedAngle(horizontal, heel->toe)` with horizontal pointing forward.
  */
 export function footAngleSeries(cond, side) {
     const { n, kp } = cond;
@@ -123,7 +123,7 @@ export function hipExtensionSeries(cond, side) {
  * strike, minus the neutral offset" without defining the offset. A shank
  * perpendicular to the foot LONG AXIS is not 90 degrees when the foot is
  * described by ankle->toe-tip rather than by a rearfoot marker cluster, so the
- * offset chosen here (NEUTRAL_ANKLE_DEG) is a modelling assumption, not a
+ * offset chosen here (NEUTRAL_ANKLE_DEG) is a modeling assumption, not a
  * measurement. The metric is capped at medium confidence for that reason and
  * the UI says so.
  */
@@ -221,7 +221,7 @@ export function fppaSeries(cond, side, medialSign) {
     return out;
 }
 
-/** Trunk lateral lean from vertical, degrees. POSITIVE = lean towards +x. */
+/** Trunk lateral lean from vertical, degrees. POSITIVE = lean toward +x. */
 export function lateralLeanSeries(cond) {
     const { n, kp } = cond;
     const out = new Float64Array(n);
@@ -238,7 +238,7 @@ export function lateralLeanSeries(cond) {
  * Deliberately not called pronation. Rearfoot eversion needs markers on the
  * shoe heel counter and the shank; a single rear-view camera without them
  * cannot resolve it. This is shipped as a low-confidence alignment proxy and
- * labelled as one everywhere it appears.
+ * labeled as one everywhere it appears.
  */
 export function rearfootProxySeries(cond, side) {
     const { n, kp } = cond;

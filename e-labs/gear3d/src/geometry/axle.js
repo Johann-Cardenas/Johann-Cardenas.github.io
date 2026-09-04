@@ -17,7 +17,7 @@
    simply stopped, the pinion was a cone with a disc on the end,
    and the differential was a sphere with that cone stuck into it
    — a snowman. A cut tube is the cheapest tell that a part was
-   not modelled but merely placed, and in a figure that is asking
+   not modeled but merely placed, and in a figure that is asking
    to be read as an engineering drawing it undoes the rest of the
    render. Each member below therefore terminates in something
    that says what it is: a trunnion, a flange, a saddle, a cap.
@@ -34,8 +34,8 @@ const DIFF_DIA_RATIO = 0.66;
 
 /**
  * @typedef {Object} AxleBeamOptions
- * @property {boolean} [differential=false] drive axles carry a centre housing
- * @property {number}  [innerLimit]         beam stops this far from the centreline (mm)
+ * @property {boolean} [differential=false] drive axles carry a center housing
+ * @property {number}  [innerLimit]         beam stops this far from the centerline (mm)
  * @property {number}  [radialSegments=20]
  */
 
@@ -94,9 +94,9 @@ function addParts(grp, parts, material, name, place) {
  * Build an axle beam spanning the track, in the RENDER frame.
  *
  * The beam runs along engineering y, which is render x. It sits at the
- * axle centre height, which is the tire's static loaded radius.
+ * axle center height, which is the tire's static loaded radius.
  *
- * @param {number} trackWidth mm, centre to centre of the wheel positions
+ * @param {number} trackWidth mm, center to center of the wheel positions
  * @param {import('../core/tires.js').TireGeometry} g tire geometry, for scale
  * @param {THREE.Material} material
  * @param {AxleBeamOptions} [opts]
@@ -223,7 +223,7 @@ export function buildGearStrut(spec, g, material, opts = {}) {
     const grp = new THREE.Group();
     grp.name = 'gear-strut';
 
-    // A widebody oleo is a substantial forging — roughly half a metre across
+    // A widebody oleo is a substantial forging — roughly half a meter across
     // on a 777. At 0.16 it rendered as a thin rod that read as a support pin
     // rather than the structural member carrying the aircraft.
     const legR = g.rimDiameter * 0.26;
@@ -277,7 +277,7 @@ export function buildGearStrut(spec, g, material, opts = {}) {
     grp.add(slider);
 
     // TORQUE LINK — the scissor between the fixed leg and the sliding piston.
-    // It is the single most recognisable feature of a landing gear, and it is
+    // It is the single most recognizable feature of a landing gear, and it is
     // also what tells a reader which part of the leg telescopes.
     const linkTop = sliderY + sliderLen * 0.55;
     const linkMid = sliderY + sliderLen * 0.05;

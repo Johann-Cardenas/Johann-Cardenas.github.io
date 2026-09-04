@@ -1,5 +1,5 @@
 /* ============================================================
-   Stride Lab — the demo catalogue.
+   Stride Lab — the demo catalog.
 
    Two demos, and they answer different questions.
 
@@ -18,7 +18,7 @@
    teaches nothing about the capture people actually have.
 
    Everything in `stated` below was SUPPLIED by the person filmed and is
-   not measurable from the video. Height sets the pixels-to-metres
+   not measurable from the video. Height sets the pixels-to-meters
    scale, so a wrong value would silently rescale every distance in the
    report; belt speed cannot be measured at all on a treadmill, because
    the runner does not move relative to the frame. They are recorded
@@ -69,7 +69,7 @@ export const DEMOS = [
                                    view classifier should be seen doing its job */
         },
 
-        /* The window analysed. Fixed rather than proposed, so the demo gives
+        /* The window analyzed. Fixed rather than proposed, so the demo gives
            the same answer twice — a demo that moves is not a demo.
 
            Twelve seconds, not the six the app proposes for a clip you bring

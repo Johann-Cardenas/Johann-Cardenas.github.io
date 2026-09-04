@@ -111,11 +111,11 @@ export function checkBridgeFormula(unit, opts = {}) {
 }
 
 /**
- * Minimum spread, in millimetres, at which a given group weight becomes legal.
+ * Minimum spread, in millimeters, at which a given group weight becomes legal.
  * Used by the UI to say "move this axle back by N mm to comply".
  * @param {number} weightLb
  * @param {number} n
- * @returns {number} millimetres (0 when already legal at zero spread)
+ * @returns {number} millimeters (0 when already legal at zero spread)
  */
 export function minimumSpreadMm(weightLb, n) {
     if (n < 2) return 0;

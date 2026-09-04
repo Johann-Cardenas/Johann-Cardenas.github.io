@@ -297,7 +297,7 @@
         if (r > 1e-9) for (s = 1; s <= count; s++) cand.push((s + 0.25) * Math.PI / r);
         if (z > 1e-9) {
             /* refine the exponential-decay scale e^{-mz} near m = 0;
-             * z is quantized to powers of two so that neighbouring depths
+             * z is quantized to powers of two so that neighboring depths
              * share quadrature nodes and hit the coefficient cache */
             var zq = Math.pow(2, Math.ceil(Math.log(z) / Math.LN2));
             var dm = 4 / zq; lim = 90 / zq;

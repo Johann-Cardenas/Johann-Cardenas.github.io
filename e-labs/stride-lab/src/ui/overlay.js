@@ -5,7 +5,7 @@
    numbers cannot substitute for. It gets the design attention and
    the rest of the page stays quiet.
 
-   The organising idea is that an analytical overlay SHOWS THE
+   The organizing idea is that an analytical overlay SHOWS THE
    MEASUREMENT rather than decorating the video and printing the
    number somewhere else. "Overstride 11% of standing height" is an
    abstraction; the same thing drawn as a dimension line between the
@@ -15,10 +15,10 @@
 
    Two rules constrain the drawing throughout.
 
-   Left and right are never distinguished by COLOUR ALONE. Left is
+   Left and right are never distinguished by COLOR ALONE. Left is
    solid with a filled marker, right is dashed with a hollow one, so
    the distinction survives a monochrome print and any form of
-   colour vision deficiency.
+   color vision deficiency.
 
    Nothing is asserted more confidently than it was measured. A
    landmark the pose model was unsure of is drawn hollow and dimmed,
@@ -32,7 +32,7 @@ const I = Object.fromEntries(CANONICAL.map((n, i) => [n, i]));
 /** Bones, tagged with the side that decides their line style. */
 export const BONES = [
     /* head: the ears carry it, the nose hangs off them. The ear midpoint is
-       where Winter puts the head-and-neck centre of mass, so it is the
+       where Winter puts the head-and-neck center of mass, so it is the
        structural landmark and the nose is the decoration, not the reverse. */
     ['earL', 'earR', 'C'],
     ['earL', 'shoulderL', 'L'], ['earR', 'shoulderR', 'R'],
@@ -72,7 +72,7 @@ const MONO = 'ui-monospace, "Cascadia Code", Consolas, Menlo, monospace';
 /**
  * @param {CanvasRenderingContext2D} ctx  already translated to the video box
  * @param {Object} o
- * @param {Float64Array} o.xy      normalised [kp][2], y DOWN
+ * @param {Float64Array} o.xy      normalized [kp][2], y DOWN
  * @param {Float64Array} o.vis
  * @param {number} o.w             video box width, CSS px
  * @param {number} o.h             video box height
@@ -84,7 +84,7 @@ const MONO = 'ui-monospace, "Cascadia Code", Consolas, Menlo, monospace';
  * @param {Object} [o.readout]     { rows, time, frame, stride }
  * @param {Object} [o.phase]       { L, R, lanes, playhead }
  * @param {Object} [o.measures]    { overstride, comBand, groundY }
- * @param {number} [o.metresPerPx]
+ * @param {number} [o.metersPerPx]
  * @param {string} [o.eventLabel]
  */
 export function drawOverlay(ctx, o) {
@@ -119,7 +119,7 @@ export function drawOverlay(ctx, o) {
     if (layers.angles && o.angles) drawAngles(g);
     if (layers.com && o.com) drawCoM(g);
     if (layers.events) drawContacts(g);
-    if (layers.guides && o.metresPerPx) drawScaleBar(g);
+    if (layers.guides && o.metersPerPx) drawScaleBar(g);
     if (layers.readout && o.readout) drawReadout(g);
     if (layers.phase && o.phase && o.phase.lanes) drawPhaseStrip(g);
 
@@ -132,7 +132,7 @@ export function drawOverlay(ctx, o) {
 
 /**
  * The reference geometry every measurement is taken against: the ground, the
- * plumb line through the hips, and the horizon through the hip centre.
+ * plumb line through the hips, and the horizon through the hip center.
  *
  * These are what make an overlay read as a measurement rather than a filter.
  * The plumb line in particular is what overstride is measured FROM, so drawing
@@ -193,9 +193,9 @@ function drawSkeleton(g) {
                 ctx.lineWidth = bone * 2.3;
                 ctx.setLineDash([]);
             } else {
-                ctx.strokeStyle = sideColour(theme, side);
+                ctx.strokeStyle = sideColor(theme, side);
                 ctx.lineWidth = bone;
-                /* right is dashed everywhere in this app, never colour alone */
+                /* right is dashed everywhere in this app, never color alone */
                 ctx.setLineDash(side === 'R' ? [bone * 2.4, bone * 1.7] : []);
                 /* a bone resting on an unsure landmark is drawn as unsure */
                 ctx.globalAlpha = (sure(ia) && sure(ib)) ? 1 : 0.42;
@@ -211,11 +211,11 @@ function drawSkeleton(g) {
         if (!seen(i) || name === 'nose' || name === 'earL' || name === 'earR') continue;
         const isFoot = /heel|toe|ankle|footOuter/.test(name);
         const r = (isFoot ? 0.40 : 0.32) * u;
-        const colour = name.endsWith('R') ? theme.right : name.endsWith('L') ? theme.left : theme.centre;
+        const color = name.endsWith('R') ? theme.right : name.endsWith('L') ? theme.left : theme.center;
         ctx.beginPath();
         ctx.arc(px(i), py(i), r, 0, Math.PI * 2);
         if (sure(i)) {
-            ctx.fillStyle = colour;
+            ctx.fillStyle = color;
             ctx.fill();
             ctx.lineWidth = 1.1;
             ctx.strokeStyle = CASING;
@@ -225,7 +225,7 @@ function drawSkeleton(g) {
             ctx.fillStyle = CASING;
             ctx.fill();
             ctx.lineWidth = 1.4;
-            ctx.strokeStyle = withAlpha(colour, 0.6);
+            ctx.strokeStyle = withAlpha(color, 0.6);
             ctx.stroke();
         }
     }
@@ -243,7 +243,7 @@ function drawSkeleton(g) {
         ctx.fillStyle = CASING;
         ctx.fill();
         ctx.lineWidth = Math.max(1.4, u * 0.16);
-        ctx.strokeStyle = theme.centre;
+        ctx.strokeStyle = theme.center;
         ctx.stroke();
         if (seen(I.nose)) {
             const dx = px(I.nose) - hx, dy = py(I.nose) - hy;
@@ -251,15 +251,15 @@ function drawSkeleton(g) {
             ctx.beginPath();
             ctx.moveTo(hx + dx / n * r * 0.3, hy + dy / n * r * 0.3);
             ctx.lineTo(hx + dx / n * r * 0.95, hy + dy / n * r * 0.95);
-            ctx.strokeStyle = theme.centre;
+            ctx.strokeStyle = theme.center;
             ctx.lineWidth = Math.max(1.2, u * 0.13);
             ctx.stroke();
         }
     }
 }
 
-const sideColour = (theme, side) =>
-    side === 'L' ? theme.left : side === 'R' ? theme.right : theme.centre;
+const sideColor = (theme, side) =>
+    side === 'L' ? theme.left : side === 'R' ? theme.right : theme.center;
 
 /* ============================================================
    Angles
@@ -287,12 +287,12 @@ function drawAngles(g) {
         while (sweep > Math.PI) sweep -= 2 * Math.PI;
         while (sweep < -Math.PI) sweep += 2 * Math.PI;
 
-        const colour = sideColour(theme, a.side || 'C');
+        const color = sideColor(theme, a.side || 'C');
 
         /* short rays, so the arc reads as an angle BETWEEN segments */
         ctx.save();
         ctx.setLineDash([u * 0.3, u * 0.3]);
-        ctx.strokeStyle = withAlpha(colour, 0.5);
+        ctx.strokeStyle = withAlpha(color, 0.5);
         ctx.lineWidth = 1;
         for (const t of [a1, a2]) {
             ctx.beginPath();
@@ -305,7 +305,7 @@ function drawAngles(g) {
         for (const pass of [0, 1]) {
             ctx.beginPath();
             ctx.arc(bx, by, r, a1, a1 + sweep, sweep < 0);
-            ctx.strokeStyle = pass ? colour : CASING;
+            ctx.strokeStyle = pass ? color : CASING;
             ctx.lineWidth = pass ? Math.max(1.5, u * 0.20) : Math.max(2.8, u * 0.38);
             ctx.setLineDash([]);
             ctx.stroke();
@@ -318,7 +318,7 @@ function drawAngles(g) {
             ax: bx + Math.cos(mid) * r,
             ay: by + Math.sin(mid) * r,
             text: a.text != null ? a.text : a.label,
-            colour
+            color
         });
     }
 
@@ -330,14 +330,14 @@ function drawAngles(g) {
     for (const l of labels) {
         ctx.save();
         ctx.setLineDash([]);
-        ctx.strokeStyle = withAlpha(l.colour, 0.7);
+        ctx.strokeStyle = withAlpha(l.color, 0.7);
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(l.ax, l.ay);
         ctx.lineTo(l.x, l.y);
         ctx.stroke();
         ctx.restore();
-        chip(ctx, l.x, l.y, l.text, { u, theme, accent: l.colour, centre: true });
+        chip(ctx, l.x, l.y, l.text, { u, theme, accent: l.color, center: true });
     }
 }
 
@@ -351,7 +351,7 @@ function declutter(items, minGap, h) {
 }
 
 /* ============================================================
-   Centre of mass, trails, contacts
+   Center of mass, trails, contacts
    ============================================================ */
 
 function drawCoM(g) {
@@ -393,7 +393,7 @@ function drawTrails(g) {
             if (!Number.isFinite(x)) continue;
             if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = trail.colour || sideColour(theme, trail.side);
+        ctx.strokeStyle = trail.color || sideColor(theme, trail.side);
         ctx.globalAlpha = 0.5;
         ctx.setLineDash(trail.side === 'R' ? [u * 0.5, u * 0.5] : []);
         ctx.lineWidth = Math.max(1.2, u * 0.17);
@@ -418,7 +418,7 @@ function drawContacts(g) {
             const y = Math.max(py(heel), py(toe)) + u * 1.0;
             ctx.save();
             ctx.setLineDash([]);
-            ctx.strokeStyle = sideColour(theme, side);
+            ctx.strokeStyle = sideColor(theme, side);
             ctx.lineWidth = Math.max(2, u * 0.26);
             ctx.beginPath();
             ctx.moveTo(x0, y - u * 0.55);
@@ -431,7 +431,7 @@ function drawContacts(g) {
     }
     if (o.eventLabel) {
         chip(ctx, g.w / 2, u * 3.4, o.eventLabel,
-            { u, theme, accent: theme.accent, centre: true, strong: true });
+            { u, theme, accent: theme.accent, center: true, strong: true });
     }
 }
 
@@ -445,7 +445,7 @@ function drawContacts(g) {
  * Overstride is the horizontal distance between the plumb line through the hips
  * and the ankle at the instant of contact. Written as a percentage it is an
  * abstraction; drawn as a dimension between the two, on the frame where it is
- * taken, it is a fact about the picture. Same for the centre-of-mass excursion,
+ * taken, it is a fact about the picture. Same for the center-of-mass excursion,
  * which is otherwise the least visible of the well-evidenced variables.
  */
 function drawMeasures(g) {
@@ -481,7 +481,7 @@ function dimensionH(ctx, x0, x1, y, text, { u, theme, accent }) {
         ctx.stroke();
     }
     ctx.restore();
-    chip(ctx, (x0 + x1) / 2, y - u * 2.0, text, { u, theme, accent, centre: true });
+    chip(ctx, (x0 + x1) / 2, y - u * 2.0, text, { u, theme, accent, center: true });
 }
 
 /** A vertical dimension, for excursions. */
@@ -505,10 +505,10 @@ function dimensionV(ctx, x, y0, y1, text, { u, theme, accent }) {
         ctx.stroke();
     }
     ctx.restore();
-    chip(ctx, x, (y0 + y1) / 2, text, { u, theme, accent, centre: true });
+    chip(ctx, x, (y0 + y1) / 2, text, { u, theme, accent, center: true });
 }
 
-function arrow(ctx, x, y, angle, u, colour) {
+function arrow(ctx, x, y, angle, u, color) {
     const s = u * 0.75;
     ctx.save();
     ctx.translate(x, y);
@@ -518,7 +518,7 @@ function arrow(ctx, x, y, angle, u, colour) {
     ctx.lineTo(s, -s * 0.42);
     ctx.lineTo(s, s * 0.42);
     ctx.closePath();
-    ctx.fillStyle = colour;
+    ctx.fillStyle = color;
     ctx.fill();
     ctx.restore();
 }
@@ -573,7 +573,7 @@ function drawReadout(g) {
 
     rows.forEach((row, i) => {
         const ry = y + pad * 0.6 + lh * (i + 0.5);
-        /* shape, not colour: left is a filled dot, right a hollow square */
+        /* shape, not color: left is a filled dot, right a hollow square */
         if (row.side) {
             const mx = x + pad * 0.85;
             ctx.beginPath();
@@ -631,7 +631,7 @@ function drawPhaseStrip(g) {
             const sx = x0 + inset + seg.from * (x1 - x0 - inset);
             const sw = Math.max(1.5, (seg.to - seg.from) * (x1 - x0 - inset));
             roundRectPath(ctx, sx, y, sw, laneH, laneH / 2);
-            ctx.fillStyle = withAlpha(sideColour(theme, side), 0.85);
+            ctx.fillStyle = withAlpha(sideColor(theme, side), 0.85);
             ctx.fill();
         }
         /* the label sits INSIDE the lane: a strip pinned to the frame edge has
@@ -661,7 +661,7 @@ function drawPhaseStrip(g) {
  */
 function drawScaleBar(g) {
     const { ctx, o, theme, u, w } = g;
-    const mpp = o.metresPerPx;
+    const mpp = o.metersPerPx;
     if (!(mpp > 0)) return;
     const target = w * 0.18 * mpp;
     const nice = [0.1, 0.2, 0.25, 0.5, 1, 2].reduce((a, b) =>
@@ -698,14 +698,14 @@ function drawScaleBar(g) {
    Small drawing helpers
    ============================================================ */
 
-function chip(ctx, x, y, text, { u, theme, accent, centre, strong }) {
+function chip(ctx, x, y, text, { u, theme, accent, center, strong }) {
     const fs = Math.max(9, u * (strong ? 1.06 : 0.96));
     ctx.save();
     ctx.font = `${strong ? 700 : 600} ${fs}px ${MONO}`;
     const tw = ctx.measureText(text).width;
     const padX = u * 0.6, padY = u * 0.4;
     const bw = tw + padX * 2, bh = fs + padY * 2;
-    const bx = centre ? x - bw / 2 : x;
+    const bx = center ? x - bw / 2 : x;
     const by = y - bh / 2;
     roundRectPath(ctx, bx, by, bw, bh, u * 0.4);
     ctx.fillStyle = PANEL;
@@ -760,10 +760,10 @@ function roundRectPath(ctx, x, y, w, h, r) {
     ctx.closePath();
 }
 
-/** Accept a hex or rgb colour and give it an alpha. */
-function withAlpha(colour, alpha) {
-    if (!colour) return `rgba(147,165,196,${alpha})`;
-    const c = String(colour).trim();
+/** Accept a hex or rgb color and give it an alpha. */
+function withAlpha(color, alpha) {
+    if (!color) return `rgba(147,165,196,${alpha})`;
+    const c = String(color).trim();
     if (c.startsWith('#')) {
         const hex = c.length === 4
             ? c.slice(1).split('').map(ch => ch + ch).join('')

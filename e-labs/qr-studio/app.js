@@ -1,7 +1,7 @@
 /*!
  * app.js — QR Studio UI controller.
  *
- * Owns the design state, the render loop, and every control. The QR maths
+ * Owns the design state, the render loop, and every control. The QR math
  * lives in qrcode.js and all drawing in render.js; this file never touches
  * a module matrix or a bezier directly.
  *
@@ -311,7 +311,7 @@
 
     /**
      * Physical-size advice. Module size is what actually limits a scan, so
-     * convert the chosen export width into printed millimetres per module and
+     * convert the chosen export width into printed millimeters per module and
      * give the rule-of-thumb read distance (roughly ten times symbol width).
      */
     function updatePrintHint() {
@@ -453,9 +453,9 @@
         });
     }
 
-    // ------------------------------------------------- colour input polish
+    // ------------------------------------------------- color input polish
 
-    // A sober, high-contrast set. Brand colours go in the hex field; these are
+    // A sober, high-contrast set. Brand colors go in the hex field; these are
     // for getting somewhere good in one click.
     var PALETTE = [
         '#0f172a', '#000000', '#334155', '#64748b',
@@ -474,8 +474,8 @@
     }
 
     /**
-     * Give every colour input a hex field beside it. Done here rather than in
-     * the markup so no colour control can be added later and quietly miss out —
+     * Give every color input a hex field beside it. Done here rather than in
+     * the markup so no color control can be added later and quietly miss out —
      * a picker alone cannot accept a brand hex someone pastes from a style guide.
      */
     function enhanceColorInputs() {
@@ -494,7 +494,7 @@
             hex.spellcheck = false;
             hex.maxLength = 7;
             hex.value = input.value;
-            hex.setAttribute('aria-label', 'Hex colour value');
+            hex.setAttribute('aria-label', 'Hex color value');
             wrap.appendChild(hex);
 
             input.addEventListener('input', function () { hex.value = input.value; hex.classList.remove('is-bad'); });
@@ -953,7 +953,7 @@
         $('qs-fg2-wrap').hidden = state.fgType === 'solid';
         $('qs-fg-swap').hidden = state.fgType === 'solid';
         $('qs-fg-angle-wrap').hidden = state.fgType !== 'linear';
-        $('qs-fg1-label').textContent = state.fgType === 'solid' ? 'Colour' : 'First colour';
+        $('qs-fg1-label').textContent = state.fgType === 'solid' ? 'Color' : 'First color';
         $('qs-bg').value = state.bg;
         $('qs-bg-transparent').checked = state.bgTransparent;
 
@@ -998,7 +998,7 @@
         updateLinkHint();
         updatePrintHint();
         updateTabDots();
-        // Mirror every colour picker into its hex field.
+        // Mirror every color picker into its hex field.
         $$('input[type="color"]').forEach(function (i) {
             var h = i.parentNode.querySelector('.qs-hexfield');
             if (h) { h.value = i.value; h.classList.remove('is-bad'); }
@@ -1068,7 +1068,7 @@
             $('qs-margin-val').textContent = state.margin;
         });
 
-        // colours
+        // colors
         $$('#qs-fg-type .qs-seg-btn').forEach(function (b) {
             b.addEventListener('click', function () {
                 state.fgType = b.dataset.fg;

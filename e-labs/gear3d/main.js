@@ -163,7 +163,7 @@ async function boot() {
     setupToolbar();
     setupUnitPanel();
     setupGearCodePanel();
-    setupCatalogue();
+    setupCatalog();
     setupRenderPanel();
     setupIsolationPanel();
     setupDimensionPanel();
@@ -274,7 +274,7 @@ function setupViewport() {
         if (app.measure.active) { updateMeasureHover(hit); return; }
         const el = $('g3-status-coords');
         if (hit.point) {
-            // render (x,y,z) metres -> engineering millimetres
+            // render (x,y,z) meters -> engineering millimeters
             const e = { x: hit.point.z * 1000, y: hit.point.x * 1000, z: hit.point.y * 1000 };
             el.textContent = `x ${e.x.toFixed(0)}  y ${e.y.toFixed(0)}  z ${e.z.toFixed(0)} mm`;
         } else {
@@ -701,7 +701,7 @@ function updateMeasureHover(hit) {
 /** Commit the hovered snap target as the next endpoint. */
 function placeMeasurePoint() {
     const hover = app.measure.hover;
-    if (!hover) { toast('Move onto a snap target — tire centre, edge, contact patch or axle centreline.', 'warn'); return; }
+    if (!hover) { toast('Move onto a snap target — tire center, edge, contact patch or axle centerline.', 'warn'); return; }
 
     if (!app.measure.first) {
         app.measure.first = hover.snap;
@@ -1095,8 +1095,8 @@ function setViewMode(mode) {
    Render quality
    ------------------------------------------------------------
    One control for two things that have to move together: how
-   many pixels the viewport rasterises into, and how many
-   segments a tyre carries. Raising either alone is a waste —
+   many pixels the viewport rasterizes into, and how many
+   segments a tire carries. Raising either alone is a waste —
    more pixels on a faceted silhouette resolves the facets, and
    more segments behind a 1x buffer are never seen.
    ============================================================ */
@@ -1136,7 +1136,7 @@ function setupRenderPanel() {
 }
 
 /**
- * What is actually being rasterised. Worth showing rather than promising:
+ * What is actually being rasterized. Worth showing rather than promising:
  * the ratio depends on the viewport's CSS width, the display's own pixel
  * ratio and what the GL context will allocate, so "Ultra" does not mean the
  * same number of pixels on two different machines — and a reader who asked
@@ -1216,7 +1216,7 @@ const CONVENTIONS = (() => {
  * exists to enumerate the convention.
  *
  * Where a code has both, the MEASURED aircraft wins. A drawing of a 747 is
- * strictly worse than the 747, and the catalogue thumbnails already give the
+ * strictly worse than the 747, and the catalog thumbnails already give the
  * one-scale comparison that a set of schematics would have provided.
  *
  * @param {string} domain 'truck' | 'aircraft' | 'generic'
@@ -1580,7 +1580,7 @@ function setupGearCodePanel() {
                 + (units.length
                     ? `<div class="g3-gc-count">In this library: ${units.map((u) => esc(u.model)).join(', ')}.</div>`
                     : '<div class="g3-gc-count">Nothing in this library carries it — a legal name '
-                      + 'the convention admits but no catalogued aircraft uses.</div>');
+                      + 'the convention admits but no cataloged aircraft uses.</div>');
         } catch (err) {
             out.className = 'g3-report is-bad';
             out.innerHTML = `<div class="g3-gc-bad"><i class="fas fa-times"></i> Not a valid gear name</div>`
@@ -1597,7 +1597,7 @@ function setupGearCodePanel() {
         const units = unitsForCode(pending);
         if (units.length) loadUnitById(units[0].id);
     });
-    $('g3-gearcode-browse').addEventListener('click', () => openCatalogue());
+    $('g3-gearcode-browse').addEventListener('click', () => openCatalog());
 }
 
 /**
@@ -1634,7 +1634,7 @@ function renderGearCode(u) {
     $('g3-gearname-wheels').textContent = c
         ? `${c.special ? 24 : gearWheelCount(c)} wheels, nose excluded`
         : '';
-    $('g3-gearname-prose').textContent = c ? `${describeGearCode(c)}.` : 'Unrecognised gear name.';
+    $('g3-gearname-prose').textContent = c ? `${describeGearCode(c)}.` : 'Unrecognized gear name.';
 
     /** @type {Array<[string, string, string]>} label, value, note */
     const parts = [];
@@ -1693,7 +1693,7 @@ function renderGearCode(u) {
 }
 
 /* ============================================================
-   6c. Gear configuration catalogue
+   6c. Gear configuration catalog
    ------------------------------------------------------------
    Figure 2 and Table 3 as a browsable sheet. Thumbnails come
    from the same wheelPlan() the rest of the app uses, so a
@@ -1726,15 +1726,15 @@ function wheelPlanSVG(code) {
         + ` preserveAspectRatio="xMidYMid meet" aria-hidden="true">${body}</svg>`;
 }
 
-function setupCatalogue() {
-    const modal = $('g3-catalogue-modal');
+function setupCatalog() {
+    const modal = $('g3-catalog-modal');
     if (!modal) return;
-    $('g3-catalogue').addEventListener('click', () => openCatalogue());
+    $('g3-catalog').addEventListener('click', () => openCatalog());
     for (const el of modal.querySelectorAll('[data-close]')) {
-        el.addEventListener('click', () => closeCatalogue());
+        el.addEventListener('click', () => closeCatalog());
     }
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !modal.hidden) { closeCatalogue(); e.stopPropagation(); }
+        if (e.key === 'Escape' && !modal.hidden) { closeCatalog(); e.stopPropagation(); }
     }, true);
 
     const search = /** @type {HTMLInputElement} */ ($('g3-cat-search'));
@@ -1754,11 +1754,11 @@ function setupCatalogue() {
     });
 }
 
-let _catalogueBuilt = false;
+let _catalogBuilt = false;
 
-function openCatalogue() {
-    if (!_catalogueBuilt) { buildCatalogue(); _catalogueBuilt = true; }
-    const modal = $('g3-catalogue-modal');
+function openCatalog() {
+    if (!_catalogBuilt) { buildCatalog(); _catalogBuilt = true; }
+    const modal = $('g3-catalog-modal');
     modal.hidden = false;
     document.body.classList.add('g3-modal-open');
     // Focus the filter, not the first card: the sheet is long and typing is
@@ -1766,18 +1766,18 @@ function openCatalogue() {
     /** @type {HTMLElement} */ ($('g3-cat-search')).focus();
 }
 
-function closeCatalogue() {
-    $('g3-catalogue-modal').hidden = true;
+function closeCatalog() {
+    $('g3-catalog-modal').hidden = true;
     document.body.classList.remove('g3-modal-open');
-    $('g3-catalogue')?.focus();
+    $('g3-catalog')?.focus();
 }
 
-function buildCatalogue() {
+function buildCatalog() {
     const generic = genericConfigurations(3);
     const known = [...new Set(FAA_TABLE_3.map((r) => r.code))];
 
-    $('g3-cat-generic').innerHTML = generic.map((c) => catalogueCard(c, 'generic')).join('');
-    $('g3-cat-known').innerHTML = known.map((c) => catalogueCard(c, 'known')).join('');
+    $('g3-cat-generic').innerHTML = generic.map((c) => catalogCard(c, 'generic')).join('');
+    $('g3-cat-known').innerHTML = known.map((c) => catalogCard(c, 'known')).join('');
     $('g3-cat-count').textContent = String(generic.length + known.length);
 
     for (const card of document.querySelectorAll('.g3-cat-card')) {
@@ -1785,7 +1785,7 @@ function buildCatalogue() {
             const id = card.getAttribute('data-unit');
             if (!id) return;
             loadUnitById(id);
-            closeCatalogue();
+            closeCatalog();
         });
         card.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); /** @type {HTMLElement} */(card).click(); }
@@ -1798,7 +1798,7 @@ function buildCatalogue() {
  * @param {'generic'|'known'} section
  * @returns {string}
  */
-function catalogueCard(code, section) {
+function catalogCard(code, section) {
     const units = unitsForCode(code);
     const best = units[0] || null;
     const rows = tableRowsFor(code);
@@ -1811,7 +1811,7 @@ function catalogueCard(code, section) {
         : 'is-absent';
     const badge = best
         ? (schematic ? 'Schematic' : 'Measured')
-        : 'Not modelled';
+        : 'Not modeled';
 
     // The "measured" line is the one a reader most needs: it names the actual
     // aircraft this card will load, which is not always the aircraft the Order
@@ -1946,9 +1946,9 @@ function overrideTargets() {
 }
 
 /**
- * Replace modelled patch dimensions with measured ones.
+ * Replace modeled patch dimensions with measured ones.
  *
- * This is the escape hatch from the app's own idealisation. Every patch it
+ * This is the escape hatch from the app's own idealization. Every patch it
  * computes assumes contact pressure equals inflation pressure and is uniform
  * — stated plainly in the export header and true enough for far-field
  * response. A researcher holding real footprint dimensions, from an
@@ -1986,7 +1986,7 @@ function applyPatchOverride() {
     toast(`Measured footprint applied to ${ids.length} tire${ids.length > 1 ? 's' : ''} (${label}).`);
 }
 
-/** Report how many patches are measured rather than modelled. */
+/** Report how many patches are measured rather than modeled. */
 function renderOverrideStatus() {
     const box = $('g3-ov-status');
     if (!box) return;
@@ -1999,7 +1999,7 @@ function renderOverrideStatus() {
     const hi = Math.max(...ov.map((p) => p.patch.pressure));
     box.hidden = false;
     box.innerHTML = '<i class="fas fa-ruler-combined"></i><span>'
-        + `<strong>${n} of ${app.patches.length} patches are measured</strong>, not modelled. `
+        + `<strong>${n} of ${app.patches.length} patches are measured</strong>, not modeled. `
         + 'Their contact pressure is implied by load over the measured area — '
         + (Math.abs(hi - lo) < 0.5
             ? `${formatPressure(lo, sys.pressure, { precision: 0 })}`
@@ -2142,7 +2142,7 @@ function setupMaterialPanel() {
     const sel = $('g3-mat-target');
     // Only the surfaces a user would actually reach for. The internal
     // per-tire rubber variants are driven by these same families.
-    const targets = ['rubberTread', 'rubberSidewall', 'aluminium', 'rimBarrel', 'hub', 'axleBeam', 'drum', 'strut'];
+    const targets = ['rubberTread', 'rubberSidewall', 'aluminum', 'rimBarrel', 'hub', 'axleBeam', 'drum', 'strut'];
     for (const key of targets) {
         const o = document.createElement('option');
         o.value = key;
@@ -2307,7 +2307,7 @@ function renderTree() {
         if (data.axleId && !shown.has(data.axleId)) el.classList.add('is-dim');
         const isSel = !!(data.axleId && data.axleId === app.selection.axleId && !data.groupOnly);
         if (isSel) el.classList.add('is-selected');
-        // The selection was communicated by colour alone; assistive tech had
+        // The selection was communicated by color alone; assistive tech had
         // no way to know which row is current.
         el.setAttribute('aria-selected', String(isSel));
         el.innerHTML = `<span>${esc(label)}</span><span class="g3-node-tag">${esc(tag)}</span>`;
@@ -2645,7 +2645,7 @@ async function exportGearMatrix() {
             app.store.view.isolation = { level: 'group', targetId: c.id, ghost: false };
             app.assembly.setWheelFilter(wheelPredicate(app.store.view.isolation));
 
-            // Centre each cell's content but keep the shared extent, so scale
+            // Center each cell's content but keep the shared extent, so scale
             // is identical across cells.
             const b = isolationBounds(app.store.view.isolation, app.layout);
             const cx = (b.minX + b.maxX) / 2, cy = (b.minY + b.maxY) / 2;
@@ -2708,13 +2708,13 @@ async function exportGeometry(kind) {
 
         const mb = r.blob.size / (1024 * 1024);
         const summary = `${r.meshCount} parts, ${Math.round(r.triangleCount / 1000)}k triangles, `
-            + `${mb >= 1 ? mb.toFixed(1) + ' MB' : Math.round(r.blob.size / 1024) + ' KB'}, in millimetres.`;
+            + `${mb >= 1 ? mb.toFixed(1) + ' MB' : Math.round(r.blob.size / 1024) + ' KB'}, in millimeters.`;
 
-        // OBJ has no instancing, so a full unit writes every tyre's geometry
+        // OBJ has no instancing, so a full unit writes every tire's geometry
         // in full and the file gets very large. Say so rather than let someone
         // discover it when their pre-processor stalls.
         if (kind === 'obj' && mb > 40) {
-            toast(`Exported ${summary} OBJ repeats every tyre's geometry in full — `
+            toast(`Exported ${summary} OBJ repeats every tire's geometry in full — `
                 + 'isolate an axle first, or use .glb, which shares one mesh between all of them.', 'warn');
         } else {
             toast(`Exported ${summary}`);
@@ -2890,7 +2890,7 @@ function setupKeyboard() {
         pendingV = false;
 
         if (e.key === 'v' || e.key === 'V') { pendingV = true; return; }
-        if (e.key === 'c' || e.key === 'C') { openCatalogue(); e.preventDefault(); return; }
+        if (e.key === 'c' || e.key === 'C') { openCatalog(); e.preventDefault(); return; }
         if (e.key === 'm' || e.key === 'M') { setMeasureMode(); e.preventDefault(); return; }
         if (e.key === 'a' || e.key === 'A') { $('g3-annot').click(); e.preventDefault(); return; }
         if (e.key === 'g' || e.key === 'G') { $('g3-grid').click(); e.preventDefault(); return; }

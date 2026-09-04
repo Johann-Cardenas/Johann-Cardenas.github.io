@@ -45,10 +45,10 @@ export const STAGES = [
  * @param {number} [opts.endS]
  * @param {(s:{stage:string, done:number, total:number, label:string}) => void} [opts.onProgress]
  * @param {(p:{index:number, landmarks:Float32Array, vis:Float32Array, people:number, width:number, height:number}) => void} [opts.onPreview]
- * @param {() => boolean} [opts.cancelled]
+ * @param {() => boolean} [opts.canceled]
  * @param {number} [opts.trackChoice]  a track id, when the user has picked one
  */
-export async function analyseFile(file, opts) {
+export async function analyzeFile(file, opts) {
     const progress = (stage, done = 0, total = 1) => {
         if (opts.onProgress) {
             const s = STAGES.find(x => x.id === stage);
@@ -87,7 +87,7 @@ export async function analyseFile(file, opts) {
         probe: info,
         startS: opts.startS,
         endS: opts.endS,
-        cancelled: opts.cancelled,
+        canceled: opts.canceled,
         onFrame: async (frame) => {
             const src = frame.image;
             const cw = src.displayWidth || src.width;
@@ -124,7 +124,7 @@ export async function analyseFile(file, opts) {
 
     await runner.dispose();
 
-    if (opts.cancelled && opts.cancelled()) return { cancelled: true };
+    if (opts.canceled && opts.canceled()) return { canceled: true };
     if (!times.length) {
         return { ok: false, code: 'no-frames', message: 'No frames could be read from this clip.' };
     }
@@ -139,7 +139,7 @@ export async function analyseFile(file, opts) {
         };
     }
     /* Ask, rather than guess or give up.
-       Silently analysing the wrong person produces a report that looks entirely
+       Silently analyzing the wrong person produces a report that looks entirely
        normal and describes somebody else, so a prompt is better than a guess.
        But throwing the analysis away and asking the user to start again would
        mean re-running pose estimation over every frame — the expensive part,
@@ -153,11 +153,11 @@ export async function analyseFile(file, opts) {
                 frameIndex: resolved.pickFrame,
                 timeS: times[resolved.pickFrame] != null ? times[resolved.pickFrame] : times[0]
             });
-            if (chosenId == null) return { cancelled: true };
+            if (chosenId == null) return { canceled: true };
         } else {
             return {
                 ok: false, code: 'multiple-people',
-                message: 'More than one person is in frame for most of the clip. Tap the runner you want analysed.',
+                message: 'More than one person is in frame for most of the clip. Tap the runner you want analyzed.',
                 candidates: resolved.candidates,
                 recoverable: true
             };
@@ -233,7 +233,7 @@ export async function analyseFile(file, opts) {
     if (result.ok && resolved.ambiguous) {
         result.warnings.push({
             code: 'multiple-people',
-            message: `More than one person was in frame for much of this clip. The runner you selected was analysed; the others were ignored.`
+            message: `More than one person was in frame for much of this clip. The runner you selected was analyzed; the others were ignored.`
         });
     }
     return result;
@@ -251,8 +251,8 @@ function estimateFps(times) {
  * A pose runner, in a worker when the browser allows it and on the main thread
  * when it does not. The fallback is not a nicety: module workers, dynamic
  * import inside a worker and WASM instantiation all fail on some real
- * configurations, and an app that cannot analyse anything there is worse than
- * one that analyses slowly.
+ * configurations, and an app that cannot analyze anything there is worse than
+ * one that analyzes slowly.
  */
 async function createRunner(opts) {
     const preferGpu = opts.preferGpu !== false;

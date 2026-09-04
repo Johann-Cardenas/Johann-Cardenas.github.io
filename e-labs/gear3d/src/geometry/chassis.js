@@ -10,7 +10,7 @@
 
    Gear3D has no sourced body dimensions. It knows axle positions,
    track widths and overall length — all cited — and nothing about
-   cab shape, trailer height or frame depth. Modelling a detailed
+   cab shape, trailer height or frame depth. Modeling a detailed
    truck body would therefore mean inventing dimensions, which is
    the one thing this app exists not to do.
 
@@ -102,7 +102,7 @@ export function profileFor(bodyType) {
 }
 
 /**
- * Build the chassis envelope in engineering millimetres.
+ * Build the chassis envelope in engineering millimeters.
  *
  * @param {import('../core/layout.js').Layout} layout
  * @param {object} unit
@@ -172,7 +172,7 @@ export function chassisEnvelope(layout, unit) {
     }
 
     if (profile.rails) {
-        // Frame rails at the US truck standard 34 in (864 mm) centres.
+        // Frame rails at the US truck standard 34 in (864 mm) centers.
         const railHalf = 864 / 2;
         const railW = 90;
         const railDepth = 260;

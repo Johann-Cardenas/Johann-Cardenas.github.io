@@ -1,6 +1,6 @@
 /* ============================================================
    Stride Lab — Stages F and G.
-   View identification, direction of travel, and the pixel-to-metre
+   View identification, direction of travel, and the pixel-to-meter
    scale that every length metric divides by.
    ============================================================ */
 
@@ -15,17 +15,17 @@ import { filtfilt, fillGaps } from '../signal/filter.js';
  * once, before conditioning.
  *
  * The primary cue is the FOOT ORIENTATION: the toe is in front of the heel, in
- * every frame, for every runner moving forwards. It is an anatomical invariant
+ * every frame, for every runner moving forward. It is an anatomical invariant
  * rather than a kinematic inference, it needs no assumption about the surface,
  * and it is available on every frame rather than only during one phase.
  *
  * Hip velocity is the obvious alternative and it is the one that fails. It is
  * zero on a treadmill by construction. Foot velocity fails too, and less
- * obviously: on a treadmill the planted foot travels backwards at belt speed
+ * obviously: on a treadmill the planted foot travels backward at belt speed
  * for two thirds of the cycle while the swing lasts about a tenth of a second,
  * so once the trajectories are low-pass filtered the sustained backward stance
  * velocity is LARGER in magnitude than the brief forward swing peak, and
- * "whichever way the foot moves fastest" points backwards. Hip velocity is
+ * "whichever way the foot moves fastest" points backward. Hip velocity is
  * still computed here, and used to cross-check.
  *
  * @param {import('../types.js').PoseSeries} series
@@ -77,7 +77,7 @@ export function travelDirection(series) {
 /**
  * Sagittal or frontal, from the projected shoulder width relative to torso
  * height. A true frontal view sits near WINTER.shoulderWidth / WINTER.torso
- * = 0.90; a sagittal view collapses the shoulders towards each other.
+ * = 0.90; a sagittal view collapses the shoulders toward each other.
  *
  * The band between the thresholds is reported "oblique" rather than guessed:
  * a 3/4 view breaks the planar assumption behind every angle in the report,
@@ -109,7 +109,7 @@ export function classifyView(cond) {
 
 /**
  * Rear or front view, for the frontal case. The runner moving away shrinks in
- * frame; moving towards, grows. Only the sign of the torso-height trend is
+ * frame; moving toward, grows. Only the sign of the torso-height trend is
  * used, which survives a lot of noise.
  */
 export function frontalFacing(cond) {
@@ -129,18 +129,18 @@ export function frontalFacing(cond) {
 }
 
 /**
- * Per-frame pixel-to-metre scale from segment-length anthropometry.
+ * Per-frame pixel-to-meter scale from segment-length anthropometry.
  *
  * Per-frame, not global, and that is the whole point. In overground video the
  * runner traverses the frame and their apparent size changes with perspective.
  * A single global scale makes vertical oscillation appear to grow or shrink as
- * the runner crosses the frame — an artefact indistinguishable, in the output,
+ * the runner crosses the frame — an artifact indistinguishable, in the output,
  * from a real change in technique. Rescaling from the runner's own segments at
  * every frame cancels that drift to first order, and it does so without an
  * uncalibrated single-camera homography that could not be trusted anyway.
  *
  * @param {import('../signal/condition.js').Conditioned} cond
- * @param {number} heightM standing height, metres
+ * @param {number} heightM standing height, meters
  * @param {{worldLegLengthM?: number}} [xcheck]
  */
 export function perFrameScale(cond, heightM, xcheck) {
@@ -191,7 +191,7 @@ export function perFrameScale(cond, heightM, xcheck) {
         void legPx;
     }
 
-    /* Analyse only the central band. Lens distortion and oblique viewing angle
+    /* Analyze only the central band. Lens distortion and oblique viewing angle
        are worst at the frame edges, and a stride that straddles the edge picks
        up both. */
     const lo = width * (0.5 - CENTRAL_BAND / 2);

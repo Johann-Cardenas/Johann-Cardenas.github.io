@@ -36,11 +36,11 @@ export const VIEW_META = Object.freeze({
 
 /**
  * @typedef {Object} ModeState
- * @property {THREE.Vector3} target scene metres
+ * @property {THREE.Vector3} target scene meters
  * @property {number} zoom          orthographic zoom
  * @property {number} azimuth       degrees, 3D only
  * @property {number} elevation     degrees, 3D only
- * @property {number} distance      metres, 3D perspective only
+ * @property {number} distance      meters, 3D perspective only
  * @property {'ortho'|'persp'} projection
  */
 
@@ -257,7 +257,7 @@ export class CameraRig {
 
     /**
      * Frame a bounding box in the current mode.
-     * @param {THREE.Box3} box scene metres
+     * @param {THREE.Box3} box scene meters
      * @param {number} [padding=1.14] multiplier on the fitted extent
      */
     fit(box, padding = 1.14) {
@@ -305,7 +305,7 @@ export class CameraRig {
     /**
      * Extent of the model across the screen for a given mode.
      * @param {ViewMode} mode
-     * @param {THREE.Vector3} size scene metres, three.js axes
+     * @param {THREE.Vector3} size scene meters, three.js axes
      * @returns {{horizontal: number, vertical: number}}
      */
     _extentsFor(mode, size) {
@@ -384,7 +384,7 @@ export class CameraRig {
 
     update() { this.controls.update(); }
 
-    /** Serialise every mode's camera state into a project file. */
+    /** Serialize every mode's camera state into a project file. */
     toJSON() {
         /** @type {any} */
         const out = { mode: this.mode, fov: this.fov, states: {} };

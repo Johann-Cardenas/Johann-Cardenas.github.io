@@ -27,8 +27,8 @@ export const DEFAULT_INFLATION_KPA = 827.371;
  * @property {string} tireId
  * @property {string} axleId
  * @property {string} positionId
- * @property {number} x        mm, patch centre, engineering longitudinal
- * @property {number} y        mm, patch centre, engineering transverse
+ * @property {number} x        mm, patch center, engineering longitudinal
+ * @property {number} y        mm, patch center, engineering transverse
  * @property {import('./models.js').Patch} patch
  * @property {number} inflationKpa
  * @property {number|null} loadKn
