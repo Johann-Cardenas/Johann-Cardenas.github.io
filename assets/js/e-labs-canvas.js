@@ -1097,6 +1097,8 @@
 
   function initCard(card) {
     var type = card.getAttribute('data-animation');
+    // These two miniatures now use the same Three.js scenes as the full labs.
+    if ((type === 'finite-elemented' || type === 'frontier') && window.LabScene) return;
     var engine = engines[type];
     if (!engine) return;
 

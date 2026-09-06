@@ -1,5 +1,12 @@
 # E-Labs card banners
 
+**Finite-Elemented and Frontier now use shared Three.js scenes for both live
+miniatures and poster fallbacks.** Their current regeneration instructions are
+in [the shared labs README](../../e-labs/shared/README.md). The
+`finite-elemented.mjs` generator and its descriptions below refer to the
+pre-rebuild application; use the browser renderer for the current posters.
+AirCrafter and Asphera continue to use the software generators documented here.
+
 Each generator writes one 1310×790 PNG into `images/e-labs/`, the picture the
 matching card on `E-Labs.html` shows before you hover it.
 
