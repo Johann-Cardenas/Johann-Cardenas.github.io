@@ -24,6 +24,7 @@
 import { deflateSync } from 'node:zlib';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { FONTS, CASED } from './fonts.mjs';
 
 /* ---------------- surface ---------------- */
 
@@ -198,75 +199,59 @@ export function surface(W, H, ss = 2) {
         });
     }
 
-    /* ---------------- 5x7 bitmap font ----------------
-       Extends the Stride Lab set with the symbols these three
-       apps actually print: Greek stress and strain names, the
-       multiplication sign, brackets and arrows. */
+    /* ---------------- type ----------------
+       The faces live in fonts.mjs, one per card, so that no two
+       banners in the grid speak in the same voice. A surface
+       starts on `terminal` and each generator switches to its
+       own with useFont(). Every measurement below asks the
+       active face for its cell, so switching a face re-flows
+       the layout instead of silently overlapping it. */
 
-    const FONT = {
-        'A': [0x0E, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11], 'B': [0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E],
-        'C': [0x0E, 0x11, 0x10, 0x10, 0x10, 0x11, 0x0E], 'D': [0x1E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x1E],
-        'E': [0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F], 'F': [0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10],
-        'G': [0x0E, 0x11, 0x10, 0x17, 0x11, 0x11, 0x0F], 'H': [0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11],
-        'I': [0x0E, 0x04, 0x04, 0x04, 0x04, 0x04, 0x0E], 'J': [0x07, 0x02, 0x02, 0x02, 0x02, 0x12, 0x0C],
-        'K': [0x11, 0x12, 0x14, 0x18, 0x14, 0x12, 0x11], 'L': [0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x1F],
-        'M': [0x11, 0x1B, 0x15, 0x15, 0x11, 0x11, 0x11], 'N': [0x11, 0x11, 0x19, 0x15, 0x13, 0x11, 0x11],
-        'O': [0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E], 'P': [0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10],
-        'Q': [0x0E, 0x11, 0x11, 0x11, 0x15, 0x12, 0x0D], 'R': [0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11],
-        'S': [0x0F, 0x10, 0x10, 0x0E, 0x01, 0x01, 0x1E], 'T': [0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04],
-        'U': [0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E], 'V': [0x11, 0x11, 0x11, 0x11, 0x11, 0x0A, 0x04],
-        'W': [0x11, 0x11, 0x11, 0x15, 0x15, 0x1B, 0x11], 'X': [0x11, 0x11, 0x0A, 0x04, 0x0A, 0x11, 0x11],
-        'Y': [0x11, 0x11, 0x0A, 0x04, 0x04, 0x04, 0x04], 'Z': [0x1F, 0x01, 0x02, 0x04, 0x08, 0x10, 0x1F],
-        '0': [0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E], '1': [0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E],
-        '2': [0x0E, 0x11, 0x01, 0x02, 0x04, 0x08, 0x1F], '3': [0x1F, 0x02, 0x04, 0x02, 0x01, 0x11, 0x0E],
-        '4': [0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02], '5': [0x1F, 0x10, 0x1E, 0x01, 0x01, 0x11, 0x0E],
-        '6': [0x06, 0x08, 0x10, 0x1E, 0x11, 0x11, 0x0E], '7': [0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08],
-        '8': [0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E], '9': [0x0E, 0x11, 0x11, 0x0F, 0x01, 0x02, 0x0C],
-        ' ': [0, 0, 0, 0, 0, 0, 0], '.': [0, 0, 0, 0, 0, 0x0C, 0x0C], ',': [0, 0, 0, 0, 0x0C, 0x04, 0x08],
-        '/': [0x01, 0x02, 0x02, 0x04, 0x08, 0x08, 0x10], ':': [0, 0x0C, 0x0C, 0, 0x0C, 0x0C, 0],
-        '-': [0, 0, 0, 0x1F, 0, 0, 0], '+': [0, 0x04, 0x04, 0x1F, 0x04, 0x04, 0], '·': [0, 0, 0, 0x04, 0, 0, 0],
-        '%': [0x18, 0x19, 0x02, 0x04, 0x08, 0x13, 0x03], '°': [0x0C, 0x12, 0x0C, 0, 0, 0, 0],
-        '(': [0x02, 0x04, 0x08, 0x08, 0x08, 0x04, 0x02], ')': [0x08, 0x04, 0x02, 0x02, 0x02, 0x04, 0x08],
-        '=': [0, 0, 0x1F, 0, 0x1F, 0, 0], '×': [0, 0, 0x11, 0x0A, 0x04, 0x0A, 0x11],
-        '→': [0, 0x04, 0x02, 0x1F, 0x02, 0x04, 0], '↓': [0x04, 0x04, 0x04, 0x15, 0x0E, 0x04, 0],
-        'σ': [0, 0x0F, 0x12, 0x11, 0x11, 0x11, 0x0E], 'ε': [0, 0x0E, 0x10, 0x0C, 0x10, 0x10, 0x0E],
-        'µ': [0, 0x11, 0x11, 0x11, 0x13, 0x1D, 0x10], 'α': [0, 0, 0x0D, 0x12, 0x12, 0x12, 0x0D],
-        'Δ': [0x04, 0x0A, 0x0A, 0x11, 0x11, 0x11, 0x1F], '−': [0, 0, 0, 0x1F, 0, 0, 0],
-        '_': [0, 0, 0, 0, 0, 0, 0x1F], '|': [0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04],
-        '#': [0x0A, 0x0A, 0x1F, 0x0A, 0x1F, 0x0A, 0x0A], '?': [0x0E, 0x11, 0x01, 0x02, 0x04, 0, 0x04],
-        '!': [0x04, 0x04, 0x04, 0x04, 0x04, 0, 0x04], '"': [0x0A, 0x0A, 0, 0, 0, 0, 0],
-        '≈': [0, 0, 0x0A, 0x15, 0, 0x0A, 0x15]
-    };
+    let FONT = FONTS.terminal;
 
-    /* Characters the font keeps in their own case; everything else is
-       upper-cased, because the set has no lowercase forms. */
-    const CASED = new Set(['σ', 'ε', 'µ', 'α', 'Δ', '·', '°', '×', '→', '↓', '−', '≈']);
+    function useFont(f) {
+        FONT = typeof f === 'string' ? FONTS[f] : f;
+        if (!FONT) throw new Error('no such face: ' + f);
+        return FONT;
+    }
+
+    const font = () => FONT;
+    const lineHeight = (scale) => FONT.h * scale;
+    const advance = (scale, spacing) => (FONT.w + (spacing == null ? FONT.spacing : spacing)) * scale;
 
     function glyphs(str) {
         return [...str].map(ch => (CASED.has(ch) ? ch : ch.toUpperCase()));
     }
 
-    function text(str, X, Y, scale, c, a = 1, spacing = 1) {
+    function text(str, X, Y, scale, c, a = 1, spacing) {
+        const sp = spacing == null ? FONT.spacing : spacing;
+        const { w, h, glyphs: G } = FONT;
         let cx = X;
         for (const ch of glyphs(str)) {
-            const g = FONT[ch] || FONT[' '];
-            for (let row = 0; row < 7; row++) {
-                for (let col = 0; col < 5; col++) {
-                    if (g[row] & (1 << (4 - col))) rect(cx + col * scale, Y + row * scale, scale, scale, c, a);
+            const g = G[ch] || G[' '];
+            for (let row = 0; row < h; row++) {
+                const bits = g[row];
+                if (!bits) continue;
+                for (let col = 0; col < w; col++) {
+                    if (bits & (1 << (w - 1 - col))) rect(cx + col * scale, Y + row * scale, scale, scale, c, a);
                 }
             }
-            cx += (5 + spacing) * scale;
+            cx += (w + sp) * scale;
         }
         return cx - X;
     }
 
-    const textWidth = (str, scale, spacing = 1) => [...str].length * (5 + spacing) * scale - spacing * scale;
+    function textWidth(str, scale, spacing) {
+        const sp = spacing == null ? FONT.spacing : spacing;
+        const n = [...str].length;
+        return n === 0 ? 0 : n * (FONT.w + sp) * scale - sp * scale;
+    }
 
-    function textRight(str, X, Y, scale, c, a = 1, spacing = 1) {
+    function textRight(str, X, Y, scale, c, a = 1, spacing) {
         return text(str, X - textWidth(str, scale, spacing), Y, scale, c, a, spacing);
     }
 
-    function textCenter(str, X, Y, scale, c, a = 1, spacing = 1) {
+    function textCenter(str, X, Y, scale, c, a = 1, spacing) {
         return text(str, X - textWidth(str, scale, spacing) / 2, Y, scale, c, a, spacing);
     }
 
@@ -301,7 +286,8 @@ export function surface(W, H, ss = 2) {
     return {
         W, H, ss,
         px, rect, roundRect, line, polyline, dashedLine, disc, ring, arc, polygon,
-        field, vgradient, glow, text, textWidth, textRight, textCenter, toRGBA, write
+        field, vgradient, glow, useFont, font, lineHeight, advance,
+        text, textWidth, textRight, textCenter, toRGBA, write
     };
 }
 
@@ -441,31 +427,84 @@ export function rdBuAt(t) {
 /* ---------------- shared layout helpers ---------------- */
 
 /**
- * The 2x2 chip block every banner carries under its wordmark, and the
- * one piece of the Stride Lab card that is worth repeating verbatim:
- * four numbers, large, with their unit set small beside them.
+ * The 2x2 stat block under every wordmark. The GRID is shared — that is
+ * the family resemblance, and the thing worth keeping from the Stride
+ * Lab card — but the chip itself is drawn differently per app, because a
+ * reader who has seen one card should still be able to tell the next one
+ * apart at 350 px:
+ *
+ *   rule     a hairline across the top            (the original)
+ *   bar      a drawn frame with a dimension tick  — Finite-Elemented
+ *   reticle  four corner marks, no frame          — AirCrafter
+ *   strata   the layer stack down the left edge   — Asphera
+ *
+ * Label, value and unit sizes are per-app too: each face has a different
+ * cell, so the same `scale` reads at a different size in each banner.
  */
 export function chips(s, entries, X, Y, opts = {}) {
     const cw = opts.w || 186, ch = opts.h || 92, gap = opts.gap || 16;
     const cols = opts.cols || 2;
+    const variant = opts.variant || 'rule';
+    const ls = opts.labelScale || 2, vs = opts.valueScale || 5, us = opts.unitScale || 3;
+    const inset = opts.inset != null ? opts.inset : 18;
+    const lh = s.lineHeight(ls), vh = s.lineHeight(vs);
+    const labelY = opts.labelY != null ? opts.labelY : 12;
+
     entries.forEach(([label, value, unit], i) => {
         const col = i % cols, row = (i / cols) | 0;
         const x = X + col * (cw + gap), y = Y + row * (ch + gap);
-        s.roundRect(x, y, cw, ch, 11, opts.bg, 0.9);
-        s.rect(x, y, cw, 2, opts.rule, 0.55);
-        s.text(label, x + 18, y + 18, 2, opts.label, 0.95);
-        const vw = s.text(value, x + 18, y + 44, 5, opts.value, 1);
-        if (unit) s.text(unit, x + 18 + vw + 8, y + 58, 3, opts.label, 0.9);
+        const vy = y + ch - 16 - vh;
+
+        if (variant === 'reticle') {
+            /* an instrument read-out: no frame, only the four marks that
+               tell you where the frame would be */
+            s.rect(x, y, cw, ch, opts.bg, 0.82);
+            const t = 13, wgt = 2.4;
+            [[x, y, 1, 1], [x + cw, y, -1, 1], [x, y + ch, 1, -1], [x + cw, y + ch, -1, -1]]
+                .forEach(([cx, cy, sx, sy]) => {
+                    s.rect(sx > 0 ? cx : cx - t, sy > 0 ? cy : cy - wgt, t, wgt, opts.rule, 0.95);
+                    s.rect(sx > 0 ? cx : cx - wgt, sy > 0 ? cy : cy - t, wgt, t, opts.rule, 0.95);
+                });
+        } else if (variant === 'strata') {
+            /* a core sample: the pavement stack, in the app's own
+               material colors, running down the binding edge */
+            s.roundRect(x, y, cw, ch, 4, opts.bg, 0.92);
+            const bands = opts.bands || [];
+            let by = y + 6;
+            const bh = (ch - 12) / Math.max(bands.length, 1);
+            bands.forEach((c) => { s.rect(x + 5, by, 7, bh - 2, c, 0.95); by += bh; });
+            s.rect(x, y + ch - 2, cw, 2, opts.rule, 0.7);
+        } else if (variant === 'bar') {
+            /* a dimensioned box off an engineering drawing: hairline
+               frame, heavy left edge, and a tick under the figure */
+            s.rect(x, y, cw, ch, opts.bg, 0.9);
+            s.rect(x, y, cw, 1, opts.frame || opts.rule, 0.5);
+            s.rect(x, y + ch - 1, cw, 1, opts.frame || opts.rule, 0.5);
+            s.rect(x + cw - 1, y, 1, ch, opts.frame || opts.rule, 0.5);
+            s.rect(x, y, 4, ch, opts.rule, 0.95);
+        } else {
+            s.roundRect(x, y, cw, ch, 11, opts.bg, 0.9);
+            s.rect(x, y, cw, 2, opts.rule, 0.55);
+        }
+
+        s.text(label, x + inset, y + labelY, ls, opts.label, 0.95);
+        const vw = s.text(value, x + inset, vy, vs, opts.value, 1);
+        if (unit) s.text(unit, x + inset + vw + 8, vy + vh - s.lineHeight(us), us, opts.label, 0.9);
+
+        if (variant === 'bar') s.rect(x + inset, y + ch - 9, vw, 1.6, opts.rule, 0.55);
+        if (variant === 'reticle') s.rect(x + inset, y + ch - 11, Math.min(vw, cw - inset * 2), 2.4, opts.rule, 0.6);
     });
     return Y + Math.ceil(entries.length / cols) * (ch + gap) - gap;
 }
 
 /** A pill badge, as in the app chrome: dot, then a short label. */
 export function badge(s, label, X, Y, opts) {
-    const w = s.textWidth(label, 3) + 46;
-    s.roundRect(X, Y, w, 42, 21, opts.bg, 0.94);
-    s.disc(X + 21, Y + 21, 5.5, opts.dot, 1);
-    s.text(label, X + 34, Y + 14, 3, opts.ink, 1);
+    const scale = opts.scale || 3;
+    const h = opts.h || 42;
+    const w = s.textWidth(label, scale) + 46;
+    s.roundRect(X, Y, w, h, h / 2, opts.bg, 0.94);
+    s.disc(X + h / 2, Y + h / 2, 5.5, opts.dot, 1);
+    s.text(label, X + h / 2 + 13, Y + (h - s.lineHeight(scale)) / 2, scale, opts.ink, 1);
     return w;
 }
 
@@ -476,16 +515,17 @@ export function badge(s, label, X, Y, opts) {
  * nothing that has to be read may sit above y = 180 there.
  */
 export function colorbar(s, X, Y, BW, BH, cmap, opts) {
+    const ts = opts.scale || 2, th = s.lineHeight(ts);
     s.field(X, Y, BW, BH, (u, v) => cmap(1 - v));
     s.rect(X - 1, Y - 1, BW + 2, 1, opts.frame, 0.6);
     s.rect(X - 1, Y + BH, BW + 2, 1, opts.frame, 0.6);
     s.rect(X - 1, Y - 1, 1, BH + 2, opts.frame, 0.6);
     s.rect(X + BW, Y - 1, 1, BH + 2, opts.frame, 0.6);
     if (opts.title) {
-        if (opts.titleBelow) s.text(opts.title, X - 2, Y + BH + 40, 2, opts.ink, 0.95);
-        else s.text(opts.title, X - 2, Y - 24, 2, opts.ink, 0.95);
+        if (opts.titleBelow) s.text(opts.title, X - 2, Y + BH + 56, ts, opts.ink, 0.95);
+        else s.text(opts.title, X - 2, Y - th - 10, ts, opts.ink, 0.95);
     }
-    if (opts.max != null) s.text(opts.max, X + BW + 10, Y - 3, 2, opts.ink, 0.9);
-    if (opts.mid != null) s.text(opts.mid, X + BW + 10, Y + BH / 2 - 7, 2, opts.ink2, 0.8);
-    if (opts.min != null) s.text(opts.min, X + BW + 10, Y + BH - 11, 2, opts.ink, 0.9);
+    if (opts.max != null) s.text(opts.max, X + BW + 10, Y - 3, ts, opts.ink, 0.9);
+    if (opts.mid != null) s.text(opts.mid, X + BW + 10, Y + BH / 2 - th / 2, ts, opts.ink2, 0.8);
+    if (opts.min != null) s.text(opts.min, X + BW + 10, Y + BH - th + 3, ts, opts.ink, 0.9);
 }

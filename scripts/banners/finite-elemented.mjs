@@ -25,6 +25,7 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { surface, rgb, viridis, chips, badge, colorbar } from './kit.mjs';
+import { validateFonts } from './fonts.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const OUT = join(here, '..', '..', 'images', 'e-labs', 'E-Labs_Finite-Elemented.png');
@@ -404,8 +405,14 @@ const study = check();
    3. The composition
    ============================================================ */
 
+validateFonts();
+
 const W = 1310, H = 790;
 const s = surface(W, H, 2);
+
+/* Drafting: wide and tall, square bowls, stencil digits. The widest
+   of the three faces, which is why the copy here is the tersest. */
+s.useFont('drafting');
 
 /* The app's own dark-theme variables, from its :root block. */
 const C = {
@@ -521,7 +528,7 @@ colorbar(s, HERO.x + HERO.w + 36, 196, 20, HERO.y + HERO.h - 202, viridis, {
     max: fmax.toPrecision(3), min: fmin.toPrecision(3)
 });
 
-s.text('CANTILEVER · Q4 QUADS · PLANE STRESS · VON MISES · DEFORMED ×' +
+s.text('CANTILEVER · Q4 · VON MISES · ×' +
     (dscale >= 10 ? Math.round(dscale) : dscale.toFixed(1)),
     HERO.x, HERO.y + HERO.h + 20, 2, C.ink3, 0.9);
 
@@ -559,37 +566,43 @@ for (const ser of series) {
     }
 }
 APP_STUDY.dofs.forEach(n => s.textCenter(String(n), px(n), CV.y + CV.h + 14, 2, C.ink3, 0.85));
-s.text('TIP DEFLECTION VS DEGREES OF FREEDOM', CV.x, CV.y + CV.h + 40, 2, C.ink3, 0.7);
+s.text('TIP DEFLECTION VS DEGREES OF FREEDOM', CV.x, CV.y + CV.h + 38, 2, C.ink3, 0.7);
 
 /* series key, in the panel's free top strip */
 s.line(CV.x, CV.y - 22, CV.x + 34, CV.y - 22, 3, C.tealHi, 1);
-s.text('Q4 QUADS', CV.x + 42, CV.y - 28, 2, C.ink2, 0.95);
-s.dashedLine(CV.x + 154, CV.y - 22, CV.x + 188, CV.y - 22, 3, C.indigo, 1, 8, 6);
-s.text('T3 TRIANGLES', CV.x + 196, CV.y - 28, 2, C.ink2, 0.95);
-s.dashedLine(CV.x + 354, CV.y - 22, CV.x + 388, CV.y - 22, 3, C.amber, 1, 8, 6);
-s.text('TIMOSHENKO ' + beam.toFixed(2), CV.x + 396, CV.y - 28, 2, C.amber, 0.95);
+s.text('Q4 QUADS', CV.x + 42, CV.y - 31, 2, C.ink2, 0.95);
+s.dashedLine(CV.x + 190, CV.y - 22, CV.x + 224, CV.y - 22, 3, C.indigo, 1, 8, 6);
+s.text('T3 TRIS', CV.x + 232, CV.y - 31, 2, C.ink2, 0.95);
+s.dashedLine(CV.x + 366, CV.y - 22, CV.x + 400, CV.y - 22, 3, C.amber, 1, 8, 6);
+s.text('BEAM ' + beam.toFixed(2), CV.x + 408, CV.y - 31, 2, C.amber, 0.95);
 
 /* ---- left column ------------------------------------------------ */
 
-s.text('FINITE-', PAD, 92, 7, C.ink, 1);
-s.text('ELEMENTED', PAD, 162, 7, C.tealHi, 1);
-s.rect(PAD, 238, 150, 3, C.tealHi, 0.9);
-s.text('AN FEA LEARNING PLATFORM', PAD, 264, 3, C.ink2, 0.95);
-s.text('TWELVE MODULES, FROM WEAK FORMS', PAD, 300, 2, C.ink3, 0.95);
-s.text('TO SOLVERS, ENDING IN A REAL PLANE', PAD, 324, 2, C.ink3, 0.95);
-s.text('STRESS SOLVER THAT RUNS AS YOU DRAG', PAD, 348, 2, C.ink3, 0.95);
+s.text('FINITE-', PAD, 92, 5, C.ink, 1);
+s.text('ELEMENTED', PAD, 150, 5, C.tealHi, 1);
+s.rect(PAD, 214, 150, 3, C.tealHi, 0.9);
+s.text('AN FEA PLATFORM', PAD, 238, 3, C.ink2, 0.95);
+s.text('TWELVE MODULES, FROM THE', PAD, 286, 2, C.ink3, 0.95);
+s.text('WEAK FORM TO A LIVE 2D', PAD, 310, 2, C.ink3, 0.95);
+s.text('PLANE-STRESS SOLVER', PAD, 334, 2, C.ink3, 0.95);
 
-badge(s, 'LIVE SOLVER', PAD, 386, { bg: [10, 40, 40], dot: rgb('#10b981'), ink: rgb('#10b981') });
+badge(s, 'LIVE SOLVER', PAD, 378, { bg: [10, 40, 40], dot: rgb('#10b981'), ink: rgb('#10b981'), h: 44 });
 
+/* Stat cards as dimensioned boxes off a drawing: hairline frame,
+   heavy binding edge, a tick ruled under every figure. */
 const d3Tip = femDeflection(hero);
 chips(s, [
     ['MODULES', '12', ''],
     ['ELEMENTS', String(mesh.elems.length), 'Q4'],
     ['DOF', String(hero.N), ''],
     ['VS BEAM', (100 * (d3Tip - beam) / beam).toFixed(1), '%']
-], PAD, 456, { bg: C.panel, rule: C.tealHi, label: C.ink3, value: C.ink });
+], PAD, 452, {
+    variant: 'bar', w: 186, h: 92, gap: 16, inset: 16,
+    labelScale: 2, valueScale: 4, unitScale: 3,
+    bg: C.panel, rule: C.tealHi, frame: C.edge, label: C.ink3, value: C.ink
+});
 
-s.text('MESHED, ASSEMBLED, CHOLESKY-FACTORED AND STRESS-RECOVERED IN THE BROWSER · NOT A PICTURE OF A SOLVER',
+s.text('MESHED, ASSEMBLED, CHOLESKY-FACTORED AND RECOVERED IN THE BROWSER',
     PAD, 700, 2, C.ink3, 0.8);
 
 console.log(`wrote ${s.write(OUT)} (${W}x${H})`);

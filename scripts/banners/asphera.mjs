@@ -30,6 +30,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { surface, rgb, mix, rdBuAt, chips, badge, colorbar } from './kit.mjs';
+import { validateFonts } from './fonts.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(here, '..', '..');
@@ -122,8 +123,14 @@ check();
    3. The composition
    ============================================================ */
 
+validateFonts();
+
 const W = 1310, H = 790;
 const s = surface(W, H, 2);
+
+/* Strata: wide and short, the weight in the horizontals. Letters
+   that lie down in layers, which is the only thing this app draws. */
+s.useFont('strata');
 
 /* The app's own dark-theme variables, from its :root block. */
 const C = {
@@ -147,7 +154,7 @@ const PAD = 64;
 /* ---- hero: the cross-section contour ---------------------------- */
 
 const DEPTH_MAX = 710;                     /* the app's own y-axis range */
-const CT = { x: 578, y: 92, w: 632, h: 340 };
+const CT = { x: 578, y: 92, w: 610, h: 328 };
 
 /* Bilinear sample of the shipped grid, at output resolution. */
 function sampleAt(xmm, dmm) {
@@ -189,21 +196,20 @@ for (let d = 0; d <= 700; d += 100) {
     s.rect(px, CT.y + CT.h + 1, 1, 6, C.edge, 0.8);
     s.textCenter(String(xv), px, CT.y + CT.h + 12, 2, C.ink3, 0.85);
 });
-s.textRight('DEPTH MM', CT.x - 12, CT.y - 26, 2, C.ink3, 0.8);
+s.textRight('DEPTH MM', CT.x - 32, CT.y - 26, 2, C.ink3, 0.8);
 s.text('X TRAFFIC DIRECTION, MM', CT.x, CT.y + CT.h + 34, 2, C.ink3, 0.8);
 
-colorbar(s, 1230, 200, 18, CT.y + CT.h - 214, cmap, {
+colorbar(s, 1214, 208, 18, CT.y + CT.h - 226, cmap, {
     frame: C.edge, ink: C.ink2, ink2: C.ink3, titleBelow: true,
     title: 'µε', max: zmax.toFixed(0), min: zmin.toFixed(0)
 });
 
-s.textRight(structure.name.toUpperCase() + ' · ' + structure.description.split(',')[1].trim().toUpperCase(),
-    CT.x + CT.w, CT.y + CT.h + 34, 2, C.ink2, 0.95);
+s.text(structure.name.toUpperCase(), CT.x, CT.y - 26, 2, C.ink2, 0.95);
 
 /* ---- strip: the critical depth profile --------------------------- */
 
-const PR = { x: 578, y: 544, w: 660, h: 108 };
-s.roundRect(506, 494, 1268 - 506, 202, 14, C.panel, 0.45);
+const PR = { x: 600, y: 544, w: 588, h: 100 };
+s.roundRect(530, 494, 1268 - 530, 202, 14, C.panel, 0.45);
 
 let vMin = Infinity, vMax = -Infinity;
 for (const v of e11.values) { vMin = Math.min(vMin, v); vMax = Math.max(vMax, v); }
@@ -245,33 +251,41 @@ s.disc(cx, cy, 4.2, C.amber, 1);
 
 s.textRight(vMax.toFixed(0), PR.x - 10, PR.y - 7, 2, C.ink3, 0.85);
 s.textRight(vMin.toFixed(0), PR.x - 10, PR.y + PR.h - 7, 2, C.ink3, 0.85);
-[0, 155, 460, 710].forEach(d => s.textCenter(String(d), pdx(d), PR.y + PR.h + 12, 2, C.ink3, 0.8));
-s.text('ε11 µε', PR.x, PR.y - 34, 2, C.ink2, 0.9);
-s.textRight('PEAK ' + e11.criticalValue.toFixed(1) + ' µε AT ' + e11.criticalDepth.toFixed(0) + ' MM, TIMESTEP ' + e11.timestep + ' OF ' + structure.timesteps.total, PR.x + PR.w, PR.y - 34, 2, C.amber, 0.9);
-s.text('DEPTH FROM SURFACE, MM · JUMPS ARE MATERIAL INTERFACES', PR.x, PR.y + PR.h + 30, 2, C.ink3, 0.75);
+[0, 155, 460, 710].forEach(d => s.textCenter(String(d), pdx(d), PR.y + PR.h + 10, 2, C.ink3, 0.85));
+s.text('ε11 µε', PR.x, PR.y - 32, 2, C.ink2, 0.9);
+s.textRight('PEAK ' + e11.criticalValue.toFixed(1) + ' µε AT ' + e11.criticalDepth.toFixed(0) + ' MM · TS ' + e11.timestep, PR.x + PR.w, PR.y - 32, 2, C.amber, 0.9);
+s.text('DEPTH MM · JUMPS ARE MATERIAL INTERFACES', PR.x, PR.y + PR.h + 30, 2, C.ink3, 0.75);
 
 /* ---- left column ------------------------------------------------ */
 
 let wx = PAD;
-wx += s.text('A', wx, 104, 8, C.ink, 1);
-wx += s.text('SPHER', wx, 104, 8, C.tealHi, 1);
-s.text('A', wx, 104, 8, C.ink, 1);
-s.rect(PAD, 186, 150, 3, C.tealHi, 0.9);
-s.text('3D RESPONSE VISUALIZER', PAD, 212, 3, C.ink2, 0.95);
-s.text('DYNAMIC FINITE ELEMENT RESULTS FOR', PAD, 248, 2, C.ink3, 0.95);
-s.text('FOUR FLEXIBLE PAVEMENT SECTIONS,', PAD, 272, 2, C.ink3, 0.95);
-s.text('READ, NOT RE-SOLVED, IN THE BROWSER', PAD, 296, 2, C.ink3, 0.95);
+wx += s.text('A', wx, 104, 7, C.ink, 1);
+wx += s.text('SPHER', wx, 104, 7, C.tealHi, 1);
+s.text('A', wx, 104, 7, C.ink, 1);
+s.rect(PAD, 172, 150, 3, C.tealHi, 0.9);
+s.text('PAVEMENT RESPONSE', PAD, 196, 3, C.ink2, 0.95);
+s.text('DYNAMIC FINITE ELEMENT', PAD, 240, 2, C.ink3, 0.95);
+s.text('RESULTS FOR FOUR FLEXIBLE', PAD, 262, 2, C.ink3, 0.95);
+s.text('SECTIONS, READ NOT SOLVED', PAD, 284, 2, C.ink3, 0.95);
 
-badge(s, 'ICT R27-252', PAD, 336, { bg: [10, 40, 40], dot: C.ok, ink: C.ok });
+badge(s, 'ICT R27-252', PAD, 322, { bg: [10, 40, 40], dot: C.ok, ink: C.ok, h: 44 });
 
+/* Stat cards as core samples: the structure's own material colors,
+   in its own order, running down the binding edge of every card. */
 chips(s, [
     ['FE NODES', (nodeCount / 1000).toFixed(0) + 'K', ''],
-    ['TIMESTEPS ' + structure.timesteps.start + '-' + structure.timesteps.end, String(structure.timesteps.total), ''],
+    ['TIMESTEPS', String(structure.timesteps.total), ''],
     ['PEAK ε11 µε', e11.criticalValue.toFixed(1), ''],
     ['PEAK ε22 µε', e22.criticalValue.toFixed(1), '']
-], PAD, 406, { bg: C.panel, rule: C.tealHi, label: C.ink3, value: C.ink, w: 206, gap: 14 });
+], PAD, 400, {
+    variant: 'strata', w: 220, h: 100, gap: 16, inset: 24, labelY: 14,
+    labelScale: 2, valueScale: 4,
+    /* lifted toward the panel so the two asphalt greys still read on it */
+    bands: structure.layers.map(l => mix(rgb(l.color), C.ink3, 0.3)),
+    bg: C.panel, rule: C.tealHi, label: C.ink3, value: C.ink
+});
 
-s.text('LAYER THICKNESSES, INTERFACES AND STRAINS READ STRAIGHT FROM THE FILES THE APP ITSELF LOADS',
-    PAD, 706, 2, C.ink3, 0.8);
+s.text('THICKNESSES, INTERFACES AND STRAINS READ FROM THE FILES THE APP LOADS',
+    PAD, 710, 2, C.ink3, 0.8);
 
 console.log(`wrote ${s.write(OUT)} (${W}x${H}) — ${structure.name}, ${FIELD} ${PLANE}, ts ${contours.timestep}`);

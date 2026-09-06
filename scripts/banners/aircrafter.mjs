@@ -29,6 +29,7 @@ import { inflateRawSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { surface, rgb, mix, ylOrRd, rdBuAt, chips, badge, colorbar } from './kit.mjs';
+import { validateFonts } from './fonts.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(here, '..', '..');
@@ -248,8 +249,14 @@ check();
    4. The composition
    ============================================================ */
 
+validateFonts();
+
 const W = 1310, H = 790;
 const s = surface(W, H, 2);
+
+/* Avionic: the narrowest and tallest of the three faces, crossbars
+   sitting low — a flight-deck read-out rather than a terminal. */
+s.useFont('avionic');
 
 /* The app's own dark-theme variables, from its :root block. */
 const C = {
@@ -385,7 +392,7 @@ const lenAt = proj(0.5, 1, 0), widAt = proj(1, 0.5, 0);
 s.textRight('CONTACT LENGTH ' + L.toFixed(0) + ' MM', Math.min(lenAt[0] + 200, 1176), lenAt[1] + 12, 2, C.ink3, 0.9);
 s.textRight('TIRE WIDTH ' + patchW.toFixed(0) + ' MM', widAt[0] - 14, widAt[1] + 10, 2, C.ink3, 0.9);
 
-colorbar(s, 1208, 196, 20, SURF.y + SURF.h - 214, ylOrRd, {
+colorbar(s, 1214, 196, 20, SURF.y + SURF.h - 214, ylOrRd, {
     frame: C.edge, ink: C.ink2, ink2: C.ink3,
     max: szMax.toFixed(2), min: '0'
 });
@@ -440,22 +447,28 @@ for (let j = 0; j < 130; j++) s.rect(LG.x + 116 + j, LG.y - 30, 1.1, 10, rdBuAt(
 
 /* ---- left column ------------------------------------------------ */
 
-s.text('AIR', PAD, 92, 8, C.ink, 1);
-s.text('CRAFTER', PAD, 172, 8, C.skyHi, 1);
-s.rect(PAD, 254, 150, 3, C.orange, 0.9);
-s.text('CONTACT STRESS ENGINE', PAD, 280, 3, C.ink2, 0.95);
-s.text('THREE-DIMENSIONAL TIRE-PAVEMENT', PAD, 316, 2, C.ink3, 0.95);
-s.text('CONTACT STRESS FOR THE WHOLE FAA', PAD, 340, 2, C.ink3, 0.95);
-s.text('FAARFIELD AIRCRAFT LIBRARY', PAD, 364, 2, C.ink3, 0.95);
+s.text('AIR', PAD, 88, 8, C.ink, 1);
+s.text('CRAFTER', PAD, 174, 8, C.skyHi, 1);
+s.rect(PAD, 264, 150, 3, C.orange, 0.9);
+s.text('CONTACT STRESS ENGINE', PAD, 288, 3, C.ink2, 0.95);
+s.text('THREE-DIMENSIONAL TIRE-PAVEMENT', PAD, 326, 2, C.ink3, 0.95);
+s.text('CONTACT STRESS FOR THE WHOLE FAA', PAD, 348, 2, C.ink3, 0.95);
+s.text('FAARFIELD AIRCRAFT LIBRARY', PAD, 370, 2, C.ink3, 0.95);
 
-badge(s, 'EQUILIBRIUM PASSED', PAD, 402, { bg: [10, 40, 40], dot: C.ok, ink: C.ok });
+badge(s, 'EQUILIBRIUM PASSED', PAD, 402, { bg: [10, 40, 40], dot: C.ok, ink: C.ok, h: 44 });
 
+/* Stat cards as instrument read-outs: no frame, only the four marks
+   where a frame would be, and a bar under the figure. */
 chips(s, [
     ['AIRCRAFT', '284', ''],
     ['CONTACT RIBS', String(bi.length), ''],
     ['WHEEL LOAD KN', (P / 1000).toFixed(1), ''],
     ['PEAK σ Z MPA', szMax.toFixed(2), '']
-], PAD, 472, { bg: C.panel, rule: C.skyHi, label: C.ink3, value: C.ink });
+], PAD, 464, {
+    variant: 'reticle', w: 186, h: 100, gap: 16, inset: 16, labelY: 14,
+    labelScale: 2, valueScale: 5,
+    bg: C.panel, rule: C.skyHi, label: C.ink3, value: C.ink
+});
 
 s.text('GEOMETRY READ FROM THE AIRCRAFT LIBRARY THE APP ITSELF LOADS · STRESSES SOLVED FROM IT, NOT SKETCHED',
     PAD, 706, 2, C.ink3, 0.8);
