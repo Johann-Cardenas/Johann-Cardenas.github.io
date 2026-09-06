@@ -85,7 +85,7 @@ projects/            Detailed project pages
 e-labs/              Interactive web apps (Gear3D, QR Studio, Stride Lab, LEAPS, Cross-Section Studio, Finite-Elemented, Frontier, AirCrafter, Asphera) + Python preprocessing
 images/              All media assets organized by section
 documents/           PDFs (resume, etc.)
-scripts/             Build / content-refresh utilities (fetch-github-data.mjs)
+scripts/             Build / content-refresh utilities (fetch-github-data.mjs, banners/)
 pdfjs/               Vendored PDF.js viewer — DO NOT EDIT
 ```
 
@@ -270,4 +270,5 @@ Rules that go with it, and the reasoning to preserve if you touch them:
 - **Asphera**: Loads structure/profiles/contours/pointcloud JSON per pavement section; Plotly charts. Preprocessing scripts (`preprocess_*.py`) convert FEM `.pkl.bz2` → JSON using `numpy`, `pandas`, `scipy`
 - **AirCrafter**: Parametric form → Plotly contour plots for contact stress
 - **Frontier**: Three.js WebGL rendering of large HPC point clouds
+- **E-Labs card banners** (`scripts/banners/`): the still image each app card shows before you hover it, 1310x790 PNG in `images/e-labs/`. Regenerate with `node scripts/banners/<app>.mjs` (finite-elemented, aircrafter, asphera; Stride Lab owns its own at `e-labs/stride-lab/tools/make-banner.mjs`). `kit.mjs` is a dependency-free supersampled rasterizer with a 5x7 bitmap font and a PNG encoder. **Each generator is coupled to its app and asserts before it draws**: Finite-Elemented re-runs a transcription of `FE.lab`’s Q4 solver and checks it against the app’s own convergence study; AirCrafter reads `aircraft.xlsx` through a minimal ZIP+XML reader and checks the full 7x10 stress matrices; Asphera opens `data/TK_P1/*.json` directly. A mismatch exits non-zero rather than writing a wrong picture. Layout rules: keep readable content 40 px inside the frame (the card crops between 1.60 and 1.87), and clear of `x >= 890, y <= 180`, where the card paints its status badge.
 - **GitHub Developer Dashboard** (bottom of `E-Labs.html`): Static, data-driven panel rendered by `assets/js/e-labs-github.js` from `data/github.json`. Regenerate by running `node scripts/fetch-github-data.mjs` (uses `GITHUB_TOKEN` env var or git credential manager). The script uses only synchronous endpoints — `/commits?since=<52w>` bucketed client-side for the heatmap, and `/contributors` for contributor totals — because GitHub's async `/stats/*` endpoints frequently return 202 for extended periods and leave the dashboard empty.

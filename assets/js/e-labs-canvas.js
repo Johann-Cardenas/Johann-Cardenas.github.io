@@ -1,285 +1,312 @@
 /**
  * E-Labs Canvas Animations
- * Four hover-gated Canvas 2D animation engines for app cards.
+ * Seven hover-gated Canvas 2D animation engines for the app cards.
  * Each engine exposes init(w,h)→state and draw(ctx,state,w,h,timestamp).
  */
 (function () {
   'use strict';
 
   /* ===========================================================
-     Utility: Jet-like stress colormap LUT (256 entries)
+     Utility: colour ramps
+
+     The engines below paint the same fields their apps
+     paint, so they need the same scales: viridis for the FEA
+     lab's von Mises, Plotly's YlOrRd for contact stress and
+     Plotly's RdBu (reversed) for pavement strain.
      =========================================================== */
-  function buildStressLUT() {
+  function ramp(stops) {
+    return function (t) {
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      var s = t * (stops.length - 1);
+      var i = Math.min(stops.length - 2, Math.floor(s));
+      var f = s - i, a = stops[i], b = stops[i + 1];
+      return [
+        a[0] + (b[0] - a[0]) * f,
+        a[1] + (b[1] - a[1]) * f,
+        a[2] + (b[2] - a[2]) * f
+      ];
+    };
+  }
+  function css(c) {
+    return 'rgb(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ')';
+  }
+
+  /* the five anchors Finite-Elemented's own cmap() uses */
+  var VIRIDIS = ramp([[68, 1, 84], [59, 82, 139], [33, 145, 140], [94, 201, 98], [253, 231, 37]]);
+
+  /* Plotly's YlOrRd, the scale AirCrafter asks for by name */
+  var YLORRD = ramp([
+    [128, 0, 38], [189, 0, 38], [227, 26, 28], [252, 78, 42], [253, 141, 60],
+    [254, 178, 76], [254, 217, 118], [255, 237, 160], [255, 255, 204]
+  ]);
+
+  /* Plotly's RdBu, on its own uneven stops, as Asphera reverses it */
+  function rdBu(t) {
     var stops = [
-      { pos: 0.00, r: 6,   g: 6,   b: 50  },
-      { pos: 0.12, r: 0,   g: 35,  b: 120 },
-      { pos: 0.28, r: 0,   g: 100, b: 140 },
-      { pos: 0.45, r: 0,   g: 120, b: 70  },
-      { pos: 0.55, r: 70,  g: 130, b: 0   },
-      { pos: 0.70, r: 160, g: 130, b: 0   },
-      { pos: 0.82, r: 160, g: 70,  b: 0   },
-      { pos: 1.00, r: 110, g: 0,   b: 0   }
+      [0.0, [5, 10, 172]], [0.35, [106, 137, 247]], [0.5, [190, 190, 190]],
+      [0.6, [220, 170, 132]], [0.7, [230, 145, 90]], [1.0, [178, 10, 28]]
     ];
-    var lut = new Array(256);
-    for (var i = 0; i < 256; i++) {
-      var t = i / 255;
-      var lo = stops[0], hi = stops[stops.length - 1];
-      for (var s = 0; s < stops.length - 1; s++) {
-        if (t >= stops[s].pos && t <= stops[s + 1].pos) {
-          lo = stops[s]; hi = stops[s + 1]; break;
-        }
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    for (var i = 0; i < stops.length - 1; i++) {
+      if (t >= stops[i][0] && t <= stops[i + 1][0]) {
+        var f = (t - stops[i][0]) / (stops[i + 1][0] - stops[i][0]);
+        var a = stops[i][1], b = stops[i + 1][1];
+        return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f];
       }
-      var f = hi.pos === lo.pos ? 0 : (t - lo.pos) / (hi.pos - lo.pos);
-      lut[i] = 'rgb(' +
-        Math.round(lo.r + (hi.r - lo.r) * f) + ',' +
-        Math.round(lo.g + (hi.g - lo.g) * f) + ',' +
-        Math.round(lo.b + (hi.b - lo.b) * f) + ')';
     }
-    return lut;
+    return stops[stops.length - 1][1];
   }
 
   /* ===========================================================
-     Engine 1 — Asphera: Deformable FEM mesh + stress colormap
+     Engine 1 — Asphera: a wheel crossing a layered section,
+     with the longitudinal strain field it drags along.
+
+     The app animates thirteen timesteps of a dynamic finite
+     element run as the load crosses the section, and this is
+     that loop: the true layer thicknesses of the Arterial
+     Section (40 / 115 / 305 mm over subgrade), the same
+     interfaces, the same reversed RdBu scale, and the tension
+     bulb sitting under the wheel where the app's does.
+
+     The field itself is a closed-form stand-in, not the shipped
+     five-megabyte result file. The card needs a legible shape at
+     200 px; the banner is where the real array is drawn.
      =========================================================== */
   var asphera = {
     init: function (w, h) {
-      var spacing = 16;
-      var cols = Math.ceil(w / spacing) + 2;
-      var rows = Math.ceil(h / spacing) + 2;
-      var nodes = [];
-      for (var r = 0; r < rows; r++) {
-        for (var c = 0; c < cols; c++) {
-          var ox = (r % 2) * (spacing * 0.5);
-          nodes.push({
-            bx: c * spacing + ox - spacing,
-            by: r * spacing - spacing,
-            x: 0, y: 0,
-            phase: Math.random() * 6.2832
-          });
-        }
-      }
-      var tris = [];
-      for (var r = 0; r < rows - 1; r++) {
-        for (var c = 0; c < cols - 1; c++) {
-          var i = r * cols + c;
-          tris.push(i, i + 1, i + cols);
-          tris.push(i + 1, i + cols + 1, i + cols);
-        }
-      }
-      return { nodes: nodes, tris: tris, cols: cols, lut: buildStressLUT() };
+      var off = document.createElement('canvas');
+      off.width = 76; off.height = 44;
+      return {
+        off: off,
+        octx: off.getContext('2d'),
+        img: off.getContext('2d').createImageData(76, 44),
+        /* Arterial Section, from data/TK_P1/structure.json */
+        /* interfaces at every material change, but a label only where
+           the band is thick enough on a 200 px card to carry one */
+        layers: [
+          { label: 'HMA', top: 0, bottom: 40 },
+          { label: '', top: 40, bottom: 155 },
+          { label: 'BASE', top: 155, bottom: 460 },
+          { label: 'SUBGRADE', top: 460, bottom: 710 }
+        ],
+        depthMax: 710,
+        steps: 13
+      };
     },
     draw: function (ctx, st, w, h, ts) {
       var t = ts * 0.001;
-      var nodes = st.nodes, tris = st.tris, lut = st.lut;
-
-      ctx.fillStyle = '#080c16';
+      ctx.fillStyle = '#0c1425';
       ctx.fillRect(0, 0, w, h);
 
-      // Deform
-      for (var i = 0; i < nodes.length; i++) {
-        var n = nodes[i];
-        n.x = n.bx + Math.sin(t * 0.7 + n.phase + n.bx * 0.018) * 2.8;
-        n.y = n.by + Math.cos(t * 0.55 + n.phase + n.by * 0.022) * 2.8;
+      var top = h * 0.24, bot = h * 0.86;
+      var phase = (t * 0.12) % 1;
+      var x0 = phase;                               /* wheel position, 0..1 across */
+
+      /* the field, computed small and scaled up */
+      var iw = st.off.width, ih = st.off.height, d = st.img.data;
+      for (var j = 0; j < ih; j++) {
+        var depth = (j + 0.5) / ih * st.depthMax;
+        for (var i = 0; i < iw; i++) {
+          var u = (i + 0.5) / iw;
+          var dx = (u - x0) * 2.2;
+          var bulb = 132 * Math.exp(-dx * dx * 3.1) * Math.exp(-Math.pow((depth - 300) / 230, 2));
+          var surf = -58 * Math.exp(-dx * dx * 34) * Math.exp(-Math.pow(depth / 46, 2));
+          var e = -9 + bulb + surf;
+          var c = rdBu(1 - (e + 52) / 170);
+          var k = (j * iw + i) * 4;
+          d[k] = c[0]; d[k + 1] = c[1]; d[k + 2] = c[2]; d[k + 3] = 255;
+        }
+      }
+      st.octx.putImageData(st.img, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(st.off, 0, top, w, bot - top);
+
+      /* layer interfaces, dashed as the app draws them */
+      ctx.strokeStyle = 'rgba(15,23,42,0.75)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 4]);
+      for (var L = 1; L < st.layers.length; L++) {
+        var y = top + (st.layers[L].top / st.depthMax) * (bot - top);
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+      ctx.setLineDash([]);
+
+      ctx.font = '600 8px ui-monospace, Menlo, Consolas, monospace';
+      ctx.fillStyle = 'rgba(15,23,42,0.9)';
+      ctx.textBaseline = 'top';
+      for (var L2 = 0; L2 < st.layers.length; L2++) {
+        var ly = top + (st.layers[L2].top / st.depthMax) * (bot - top);
+        if (st.layers[L2].label && ly + 12 < bot) ctx.fillText(st.layers[L2].label, 6, ly + 3);
       }
 
-      // Draw triangles
-      for (var i = 0; i < tris.length; i += 3) {
-        var a = nodes[tris[i]], b = nodes[tris[i + 1]], c = nodes[tris[i + 2]];
-        var cx = (a.x + b.x + c.x) / 3;
-        var cy = (a.y + b.y + c.y) / 3;
-
-        // Stress: sweeping diagonal wave + radial pulse
-        var stress = (Math.sin(t * 0.35 + cx * 0.012 - cy * 0.01) +
-                      Math.sin(t * 0.6 + Math.sqrt(cx * cx + cy * cy) * 0.008)) * 0.25 + 0.5;
-        var idx = Math.max(0, Math.min(255, (stress * 255) | 0));
-
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.lineTo(c.x, c.y);
-        ctx.closePath();
-        ctx.fillStyle = lut[idx];
-        ctx.globalAlpha = 0.75;
-        ctx.fill();
-        ctx.globalAlpha = 0.08;
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 0.4;
-        ctx.stroke();
+      /* the wheel, and the load it is putting down */
+      var wx = x0 * w;
+      if (wx > -30 && wx < w + 30) {
+        ctx.fillStyle = '#12161c';
+        ctx.fillRect(wx - 13, top - 17, 26, 15);
+        ctx.fillStyle = '#2a323d';
+        for (var g = -1; g <= 1; g++) ctx.fillRect(wx - 11 + g * 8, top - 16, 3, 13);
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.2;
+        var pulse = 3 + Math.sin(t * 4) * 1.2;
+        for (var a = -1; a <= 1; a++) {
+          ctx.beginPath();
+          ctx.moveTo(wx + a * 7, top - 21 - pulse);
+          ctx.lineTo(wx + a * 7, top - 19);
+          ctx.stroke();
+        }
       }
-      ctx.globalAlpha = 1;
 
-      // Subtle top highlight sweep
-      var sweepX = (Math.sin(t * 0.25) + 1) * 0.5 * w;
-      var grad = ctx.createRadialGradient(sweepX, h * 0.3, 0, sweepX, h * 0.3, w * 0.4);
-      grad.addColorStop(0, 'rgba(255,255,255,0.04)');
-      grad.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
+      /* frame, and the timestep readout the app's slider carries */
+      ctx.strokeStyle = 'rgba(84,106,132,0.7)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(0.5, top + 0.5, w - 1, bot - top - 1);
+
+      var step = 4 + Math.floor(phase * st.steps);
+      ctx.font = '700 9px ui-monospace, Menlo, Consolas, monospace';
+      ctx.fillStyle = '#2dd4d3';
+      ctx.fillText('ε11  STEP ' + step + ' / 16', 8, 8);
+      ctx.fillStyle = 'rgba(148,163,184,0.85)';
+      ctx.font = '600 8px ui-monospace, Menlo, Consolas, monospace';
+      ctx.fillText('ARTERIAL SECTION · 144K NODES', 8, h - 14);
+
+      /* the slider track, scrubbing itself */
+      ctx.fillStyle = 'rgba(84,106,132,0.5)';
+      ctx.fillRect(w - 78, h - 10, 62, 2);
+      ctx.fillStyle = '#2dd4d3';
+      ctx.fillRect(w - 78, h - 11, 62 * phase, 4);
     }
   };
 
   /* ===========================================================
-     Engine 2 — AirCrafter: Contact pressure hotspots + load paths
+     Engine 2 — AirCrafter: the vertical contact stress surface
+     of one tyre, rib by rib.
+
+     Seven ribs and six grooves of a B777-300 ER main gear tyre,
+     the widths and factors the app reads out of aircraft.xlsx,
+     run through the same generalized parabola computeStresses()
+     uses. The wheel load breathes as it would under a rolling
+     aircraft, and the ridges rise and fall with it.
      =========================================================== */
   var aircrafter = {
     init: function (w, h) {
-      var cx = w * 0.5, cy = h * 0.5;
-      var rx = w * 0.26, ry = h * 0.36;
-
-      // Hotspots
-      var hotspots = [];
-      for (var i = 0; i < 6; i++) {
-        var a = Math.random() * 6.2832;
-        var d = 0.15 + Math.random() * 0.5;
-        hotspots.push({
-          x: cx + Math.cos(a) * rx * d,
-          y: cy + Math.sin(a) * ry * d,
-          vx: (Math.random() - 0.5) * 0.35,
-          vy: (Math.random() - 0.5) * 0.35,
-          radius: 14 + Math.random() * 22,
-          phase: Math.random() * 6.2832,
-          intensity: 0.45 + Math.random() * 0.55
-        });
+      /* B777-300 ER, from e-labs/aircrafter/aircraft.xlsx */
+      var bi = [50, 35, 40, 90, 40, 35, 50];
+      var al = [0.24, 0.08, 0.08, 0.20, 0.08, 0.08, 0.24];
+      var sig = [1.80, 1.10, 1.10, 1.10, 1.10, 1.10, 1.80];
+      var bands = [], cursor = 0;
+      for (var i = 0; i < bi.length; i++) {
+        bands.push({ rib: i, y0: cursor, y1: cursor + bi[i] });
+        cursor += bi[i];
+        if (i < bi.length - 1) { bands.push({ rib: -1, y0: cursor, y1: cursor + 10 }); cursor += 10; }
       }
-
-      // Grid nodes for repulsion
-      var gs = 14;
-      var grid = [];
-      for (var y = 0; y < h + gs; y += gs) {
-        for (var x = 0; x < w + gs; x += gs) {
-          grid.push({ bx: x, by: y, x: x, y: y });
-        }
-      }
-
-      // Load-path Bezier curves
-      var paths = [];
-      for (var i = 0; i < 3; i++) {
-        var side = Math.random() > 0.5;
-        paths.push({
-          x0: side ? -10 : w * (0.2 + Math.random() * 0.6),
-          y0: side ? h * (0.1 + Math.random() * 0.3) : -10,
-          x1: cx + (Math.random() - 0.5) * rx * 0.8,
-          y1: cy * 0.45 + Math.random() * cy * 0.2,
-          x2: cx + (Math.random() - 0.5) * rx * 0.4,
-          y2: cy + Math.random() * cy * 0.3,
-          x3: w * (0.2 + Math.random() * 0.6),
-          y3: h + 10,
-          offset: Math.random()
-        });
-      }
-
-      return { cx: cx, cy: cy, rx: rx, ry: ry, hotspots: hotspots, grid: grid, gs: gs, paths: paths };
+      return {
+        bi: bi, al: al, sig: sig, bands: bands, patchW: cursor,
+        P: 266305.367727, TiP: 1.524, L: 608.9791076660156,
+        NU: 16
+      };
     },
+
+    /* the generalized parabola, one rib at a time */
+    ssz: function (st, i, xnorm, loadFac) {
+      var P = st.P * loadFac;
+      var denom = (st.L * st.bi[i] * st.sig[i] * st.TiP) / (st.al[i] * P) - 1.0;
+      var n = Math.abs(1.0 / (2.0 * denom));
+      var coeff = (st.al[i] * P) / (st.L * st.bi[i]);
+      return coeff * (1 + 1 / (2 * n)) * (1 - Math.pow(xnorm * xnorm, n));
+    },
+
     draw: function (ctx, st, w, h, ts) {
       var t = ts * 0.001;
-      ctx.fillStyle = '#18101e';
+      ctx.fillStyle = '#0c1425';
       ctx.fillRect(0, 0, w, h);
 
-      var cx = st.cx, cy = st.cy, rx = st.rx, ry = st.ry;
-      var hs = st.hotspots, grid = st.grid;
+      var loadFac = 1 + Math.sin(t * 1.35) * 0.16;
 
-      // Update hotspots
-      for (var i = 0; i < hs.length; i++) {
-        var h2 = hs[i];
-        h2.x += h2.vx; h2.y += h2.vy;
-        var dx = (h2.x - cx) / rx, dy = (h2.y - cy) / ry;
-        if (dx * dx + dy * dy > 0.65) { h2.vx -= dx * 0.04; h2.vy -= dy * 0.04; }
-        h2.vx *= 0.992; h2.vy *= 0.992;
+      /* peak, so the colour scale does not swim as the load breathes */
+      var zMax = 0;
+      for (var i = 0; i < st.bi.length; i++) {
+        var v = this.ssz(st, i, 0, 1.16);
+        if (v > zMax) zMax = v;
       }
 
-      // Contact zone ellipse + pressure rings
-      var breathe = 1 + Math.sin(t * 1.1) * 0.025;
-      for (var ring = 3; ring >= 0; ring--) {
-        var rs = 0.3 + ring * 0.22;
-        var ra = (Math.sin(t * 0.8 + ring * 0.6) + 1) * 0.08 + 0.04;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, rx * rs * breathe, ry * rs * breathe, 0, 0, 6.2832);
-        var rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry) * rs * breathe);
-        rg.addColorStop(0, 'rgba(255,80,30,' + (ra * 0.5) + ')');
-        rg.addColorStop(1, 'rgba(255,60,20,0)');
-        ctx.fillStyle = rg;
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255,100,50,' + (ra * 0.6) + ')';
-        ctx.lineWidth = 0.8;
-        ctx.stroke();
+      /* axonometric frame, fitted to the card */
+      var ax = [-0.36 * w, 0.30 * h], aw = [0.46 * w, 0.24 * h], zh = 0.35 * h;
+      var ox = w * 0.5 - (ax[0] + aw[0]) * 0.5;
+      var oy = h * 0.26;
+      function proj(u, v, z) {
+        return [ox + u * ax[0] + v * aw[0], oy + u * ax[1] + v * aw[1] - (z / zMax) * zh];
       }
-
-      // Grid node repulsion
-      for (var i = 0; i < grid.length; i++) {
-        var gn = grid[i];
-        var px = 0, py = 0;
-        for (var j = 0; j < hs.length; j++) {
-          var h2 = hs[j];
-          var gdx = gn.bx - h2.x, gdy = gn.by - h2.y;
-          var gd = Math.sqrt(gdx * gdx + gdy * gdy);
-          if (gd < h2.radius * 2.5 && gd > 0.5) {
-            var f = (1 - gd / (h2.radius * 2.5)) * 5;
-            px += (gdx / gd) * f; py += (gdy / gd) * f;
-          }
-        }
-        gn.x = gn.bx + px; gn.y = gn.by + py;
-
-        var inE = Math.pow((gn.bx - cx) / (rx * 1.1), 2) + Math.pow((gn.by - cy) / (ry * 1.1), 2);
-        var na = inE < 1 ? 0.35 : 0.1;
+      function poly(pts, fill) {
         ctx.beginPath();
-        ctx.arc(gn.x, gn.y, inE < 1 ? 1.3 : 0.8, 0, 6.2832);
-        ctx.fillStyle = inE < 1 ? 'rgba(255,140,60,' + na + ')' : 'rgba(120,80,60,' + na + ')';
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        for (var k = 1; k < pts.length; k++) ctx.lineTo(pts[k][0], pts[k][1]);
+        ctx.closePath();
+        ctx.fillStyle = fill;
         ctx.fill();
       }
 
-      // Hotspot glows
-      for (var i = 0; i < hs.length; i++) {
-        var h2 = hs[i];
-        var pulse = 1 + Math.sin(t * 2 + h2.phase) * 0.15;
-        var r = h2.radius * pulse;
-        var g = ctx.createRadialGradient(h2.x, h2.y, 0, h2.x, h2.y, r);
-        g.addColorStop(0, 'rgba(255,50,15,' + (h2.intensity * 0.55) + ')');
-        g.addColorStop(0.4, 'rgba(255,110,40,' + (h2.intensity * 0.25) + ')');
-        g.addColorStop(1, 'rgba(255,80,30,0)');
-        ctx.beginPath(); ctx.arc(h2.x, h2.y, r, 0, 6.2832);
-        ctx.fillStyle = g; ctx.fill();
-      }
+      /* the footprint the ribs stand on */
+      poly([proj(0, 0, 0), proj(1, 0, 0), proj(1, 1, 0), proj(0, 1, 0)], 'rgba(12,20,37,0.9)');
+      ctx.strokeStyle = 'rgba(84,106,132,0.55)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      var c0 = proj(0, 0, 0), c1 = proj(1, 0, 0), c2 = proj(1, 1, 0), c3 = proj(0, 1, 0);
+      ctx.moveTo(c0[0], c0[1]); ctx.lineTo(c1[0], c1[1]);
+      ctx.lineTo(c2[0], c2[1]); ctx.lineTo(c3[0], c3[1]); ctx.closePath();
+      ctx.stroke();
 
-      // Load-path Bezier curves + traveling pulse dots
-      for (var p = 0; p < st.paths.length; p++) {
-        var path = st.paths[p];
-        ctx.beginPath();
-        ctx.moveTo(path.x0, path.y0);
-        ctx.bezierCurveTo(path.x1, path.y1, path.x2, path.y2, path.x3, path.y3);
-        ctx.strokeStyle = 'rgba(255,160,80,0.12)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Pulse dot
-        var pt = ((t * 0.25 + path.offset) % 1);
-        var it2 = 1 - pt;
-        var px = it2*it2*it2*path.x0 + 3*it2*it2*pt*path.x1 + 3*it2*pt*pt*path.x2 + pt*pt*pt*path.x3;
-        var py = it2*it2*it2*path.y0 + 3*it2*it2*pt*path.y1 + 3*it2*pt*pt*path.y2 + pt*pt*pt*path.y3;
-
-        // Comet tail
-        for (var ti = 6; ti >= 1; ti--) {
-          var tt = Math.max(0, pt - ti * 0.018);
-          var ti2 = 1 - tt;
-          var tx = ti2*ti2*ti2*path.x0 + 3*ti2*ti2*tt*path.x1 + 3*ti2*tt*tt*path.x2 + tt*tt*tt*path.x3;
-          var ty = ti2*ti2*ti2*path.y0 + 3*ti2*ti2*tt*path.y1 + 3*ti2*tt*tt*path.y2 + tt*tt*tt*path.y3;
-          var fa = (1 - ti / 7) * 0.4;
-          ctx.beginPath(); ctx.arc(tx, ty, 2 * (1 - ti / 7), 0, 6.2832);
-          ctx.fillStyle = 'rgba(255,180,80,' + fa + ')'; ctx.fill();
+      /* back to front, so the ridges occlude correctly */
+      var quads = [];
+      for (var b = 0; b < st.bands.length; b++) {
+        var bd = st.bands[b];
+        var v0 = bd.y0 / st.patchW, v1 = bd.y1 / st.patchW;
+        for (var k2 = 0; k2 < st.NU; k2++) {
+          var u0 = k2 / st.NU, u1 = (k2 + 1) / st.NU;
+          quads.push({
+            bd: bd, u0: u0, u1: u1, v0: v0, v1: v1,
+            z0: bd.rib >= 0 ? this.ssz(st, bd.rib, -1 + 2 * u0, loadFac) : 0,
+            z1: bd.rib >= 0 ? this.ssz(st, bd.rib, -1 + 2 * u1, loadFac) : 0,
+            d: u0 + v0
+          });
         }
-        ctx.beginPath(); ctx.arc(px, py, 2.8, 0, 6.2832);
-        ctx.fillStyle = 'rgba(255,210,120,0.85)'; ctx.fill();
+      }
+      quads.sort(function (a, b2) { return a.d - b2.d; });
+
+      for (var q = 0; q < quads.length; q++) {
+        var Q = quads[q];
+        var zm = (Q.z0 + Q.z1) / 2;
+        var top = [proj(Q.u0, Q.v0, Q.z0), proj(Q.u1, Q.v0, Q.z1), proj(Q.u1, Q.v1, Q.z1), proj(Q.u0, Q.v1, Q.z0)];
+        if (Q.bd.rib < 0) { poly(top, 'rgba(12,20,37,0.55)'); continue; }
+        var c = YLORRD(zm / zMax);
+        poly([proj(Q.u0, Q.v1, Q.z0), proj(Q.u1, Q.v1, Q.z1), proj(Q.u1, Q.v1, 0), proj(Q.u0, Q.v1, 0)],
+          css([c[0] * 0.5, c[1] * 0.5, c[2] * 0.5]));
+        poly([proj(Q.u1, Q.v0, Q.z1), proj(Q.u1, Q.v1, Q.z1), proj(Q.u1, Q.v1, 0), proj(Q.u1, Q.v0, 0)],
+          css([c[0] * 0.66, c[1] * 0.66, c[2] * 0.66]));
+        poly(top, css(c));
       }
 
-      // Edge glow cascade
-      var edgePhase = (t * 0.4) % 6.2832;
-      for (var a = 0; a < 6.2832; a += 0.3) {
-        var glow = Math.max(0, Math.cos(a - edgePhase)) * 0.12;
-        if (glow < 0.01) continue;
-        var ex = cx + Math.cos(a) * rx * breathe;
-        var ey = cy + Math.sin(a) * ry * breathe;
-        ctx.beginPath(); ctx.arc(ex, ey, 4, 0, 6.2832);
-        ctx.fillStyle = 'rgba(255,120,40,' + glow + ')'; ctx.fill();
+      /* readouts, in the app's own units */
+      var peak = this.ssz(st, 0, 0, loadFac);
+      ctx.font = '700 9px ui-monospace, Menlo, Consolas, monospace';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText('B777-300 ER · 7 RIBS', 8, h - 32);
+      ctx.fillStyle = '#fdbb6d';
+      ctx.fillText('σz  ' + peak.toFixed(2) + ' MPa', 8, h - 20);
+      ctx.font = '600 8px ui-monospace, Menlo, Consolas, monospace';
+      ctx.fillStyle = 'rgba(148,163,184,0.85)';
+      ctx.fillText((266.3 * loadFac).toFixed(1) + ' kN · 1.524 MPa', 8, h - 10);
+
+      /* a compact key on the right */
+      var kh = Math.min(64, h * 0.4), ky = (h - kh) / 2;
+      for (var s2 = 0; s2 < kh; s2++) {
+        ctx.fillStyle = css(YLORRD(1 - s2 / kh));
+        ctx.fillRect(w - 16, ky + s2, 7, 1.2);
       }
+      ctx.strokeStyle = 'rgba(84,106,132,0.7)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(w - 16.5, ky - 0.5, 8, kh + 1);
     }
   };
 
@@ -430,127 +457,177 @@
   };
 
   /* ===========================================================
-     Engine 4 — Finite-Elemented: Particle network + element formation
+     Engine 4 — Finite-Elemented: the 2D Stress Lab, refining.
+
+     The card runs the lesson the whole platform is built around.
+     A cantilever is meshed at each of the five densities the
+     app's own convergence study uses, the von Mises field is
+     painted in viridis, and the tip deflection walks up towards
+     Timoshenko beam theory as the mesh gets finer — with the DOF
+     count and the two deflections read out underneath.
+
+     The deflections are the app's, to the digit: FE.lab's Q4
+     study for the cantilever in plane stress. The field is
+     closed-form beam theory rather than a solve, which is the
+     right trade at 200 px, and is also the very thing the app
+     compares its solver against.
      =========================================================== */
   var finiteElemented = {
     init: function (w, h) {
-      var count = Math.max(20, Math.min(55, Math.floor(w * h / 2200)));
-      var particles = [];
-      for (var i = 0; i < count; i++) {
-        particles.push({
-          x: Math.random() * w,
-          y: Math.random() * h,
-          vx: (Math.random() - 0.5) * 0.7,
-          vy: (Math.random() - 0.5) * 0.7,
-          size: 1.4 + Math.random() * 1.4,
-          trail: []
-        });
-      }
       return {
-        particles: particles,
-        att: { x: w * 0.5, y: h * 0.5, phase: Math.random() * 6.2832 },
-        connDist: 75,
-        triDist: 60
+        /* FE.lab.runStudy(), Q4 quads, cantilever, plane stress */
+        dof: [54, 170, 350, 594, 902],
+        tip: [2.3618, 2.5836, 2.6320, 2.6500, 2.6587],
+        beam: 2.6848,
+        L: 8, Hh: 2, P: 10, I: 2 * 2 * 2 / 12, A: 2,
+        hold: 1.7                                  /* seconds per density */
       };
     },
     draw: function (ctx, st, w, h, ts) {
       var t = ts * 0.001;
-      var p = st.particles, att = st.att;
-
       ctx.fillStyle = '#0b1220';
       ctx.fillRect(0, 0, w, h);
 
-      // Drifting attractor
-      att.x = w * 0.5 + Math.sin(t * 0.28 + att.phase) * w * 0.28;
-      att.y = h * 0.5 + Math.cos(t * 0.2 + att.phase * 1.3) * h * 0.22;
+      /* faint mesh backdrop, as on the app's own hero */
+      ctx.strokeStyle = 'rgba(51,65,85,0.4)';
+      ctx.lineWidth = 1;
+      for (var gx = 0; gx < w; gx += 24) { ctx.beginPath(); ctx.moveTo(gx + 0.5, 0); ctx.lineTo(gx + 0.5, h); ctx.stroke(); }
+      for (var gy = 0; gy < h; gy += 24) { ctx.beginPath(); ctx.moveTo(0, gy + 0.5); ctx.lineTo(w, gy + 0.5); ctx.stroke(); }
 
-      // Update particles
-      for (var i = 0; i < p.length; i++) {
-        var pi = p[i];
-        var dx = att.x - pi.x, dy = att.y - pi.y;
-        var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        pi.vx += (dx / dist) * 0.012;
-        pi.vy += (dy / dist) * 0.012;
-        pi.vx *= 0.994; pi.vy *= 0.994;
-        pi.x += pi.vx; pi.y += pi.vy;
+      var span = st.hold * st.dof.length;
+      var k = Math.floor((t % span) / st.hold);
+      var stage = Math.min(st.dof.length - 1, k);
+      var density = stage + 1;
+      var tip = st.tip[stage];
 
-        if (pi.x < -15) pi.x = w + 15;
-        if (pi.x > w + 15) pi.x = -15;
-        if (pi.y < -15) pi.y = h + 15;
-        if (pi.y > h + 15) pi.y = -15;
+      var ncx = 8 * density, ncy = 2 * density;
+      var band = { x: w * 0.06, y: h * 0.16, w: w * 0.78, h: h * 0.44 };
+      var sc = Math.min(band.w / st.L, band.h / (st.Hh * 1.9));
+      var ox = band.x, oy = band.y + band.h * 0.42;
 
-        pi.trail.push({ x: pi.x, y: pi.y });
-        if (pi.trail.length > 7) pi.trail.shift();
+      /* deflection shape, normalized so the tip lands on the
+         value the app reports for this mesh */
+      var drop = (tip / st.beam) * st.Hh * 0.62;
+      function wOf(x) {
+        var s = (3 * st.L * x * x - x * x * x) / (2 * st.L * st.L * st.L);
+        return s * drop;
+      }
+      function P2(x, y) {
+        return [ox + x * sc, oy + (st.Hh - y) * sc + wOf(x) * sc];
       }
 
-      // Connections
-      var cd2 = st.connDist * st.connDist;
-      for (var i = 0; i < p.length; i++) {
-        for (var j = i + 1; j < p.length; j++) {
-          var dx = p[i].x - p[j].x, dy = p[i].y - p[j].y;
-          var d2 = dx * dx + dy * dy;
-          if (d2 < cd2) {
-            var a = (1 - d2 / cd2) * 0.28;
-            ctx.beginPath();
-            ctx.moveTo(p[i].x, p[i].y);
-            ctx.lineTo(p[j].x, p[j].y);
-            ctx.strokeStyle = 'rgba(24,169,168,' + a + ')';
-            ctx.lineWidth = 0.6;
+      /* von Mises from beam theory: bending plus parabolic shear */
+      var vmMax = st.P * st.L * 1 / st.I;
+      function vm(x, y) {
+        var c = y - st.Hh / 2;
+        var sx = st.P * (st.L - x) * c / st.I;
+        var tau = (3 * st.P / (2 * st.A)) * (1 - c * c);
+        return Math.sqrt(sx * sx + 3 * tau * tau);
+      }
+
+      /* undeformed ghost */
+      ctx.strokeStyle = 'rgba(71,85,105,0.5)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(ox, oy, st.L * sc, st.Hh * sc);
+
+      /* elements */
+      var hx = st.L / ncx, hy = st.Hh / ncy;
+      for (var i = 0; i < ncx; i++) {
+        for (var j = 0; j < ncy; j++) {
+          var x0 = i * hx, x1 = x0 + hx, y0 = j * hy, y1 = y0 + hy;
+          var a = P2(x0, y0), b = P2(x1, y0), c2 = P2(x1, y1), d2 = P2(x0, y1);
+          ctx.beginPath();
+          ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
+          ctx.lineTo(c2[0], c2[1]); ctx.lineTo(d2[0], d2[1]);
+          ctx.closePath();
+          ctx.fillStyle = css(VIRIDIS(vm((x0 + x1) / 2, (y0 + y1) / 2) / vmMax));
+          ctx.fill();
+          if (density <= 3) {
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.lineWidth = 0.5;
             ctx.stroke();
           }
         }
       }
-
-      // Triangle formation
-      var td2 = st.triDist * st.triDist;
-      for (var i = 0; i < p.length; i++) {
-        for (var j = i + 1; j < p.length; j++) {
-          var dij = (p[i].x - p[j].x) * (p[i].x - p[j].x) + (p[i].y - p[j].y) * (p[i].y - p[j].y);
-          if (dij > td2) continue;
-          for (var k = j + 1; k < p.length; k++) {
-            var dik = (p[i].x - p[k].x) * (p[i].x - p[k].x) + (p[i].y - p[k].y) * (p[i].y - p[k].y);
-            if (dik > td2) continue;
-            var djk = (p[j].x - p[k].x) * (p[j].x - p[k].x) + (p[j].y - p[k].y) * (p[j].y - p[k].y);
-            if (djk > td2) continue;
-            var maxD = Math.max(dij, dik, djk);
-            ctx.beginPath();
-            ctx.moveTo(p[i].x, p[i].y);
-            ctx.lineTo(p[j].x, p[j].y);
-            ctx.lineTo(p[k].x, p[k].y);
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(99,102,241,' + ((1 - maxD / td2) * 0.07) + ')';
-            ctx.fill();
-          }
-        }
-      }
-
-      // Draw particles + trails
-      for (var i = 0; i < p.length; i++) {
-        var pi = p[i];
-        for (var ti = 0; ti < pi.trail.length; ti++) {
-          var tp = pi.trail[ti];
-          var f = ti / pi.trail.length;
+      if (density > 3) {
+        ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+        ctx.lineWidth = 0.4;
+        for (var i2 = 0; i2 <= ncx; i2++) {
           ctx.beginPath();
-          ctx.arc(tp.x, tp.y, pi.size * f * 0.5, 0, 6.2832);
-          ctx.fillStyle = 'rgba(24,169,168,' + (f * 0.2) + ')';
-          ctx.fill();
+          for (var j2 = 0; j2 <= ncy; j2++) {
+            var p = P2(i2 * hx, j2 * hy);
+            if (j2 === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+          }
+          ctx.stroke();
         }
+        for (var j3 = 0; j3 <= ncy; j3++) {
+          ctx.beginPath();
+          for (var i3 = 0; i3 <= ncx; i3++) {
+            var p2 = P2(i3 * hx, j3 * hy);
+            if (i3 === 0) ctx.moveTo(p2[0], p2[1]); else ctx.lineTo(p2[0], p2[1]);
+          }
+          ctx.stroke();
+        }
+      }
+
+      /* clamped edge and the tip load */
+      ctx.fillStyle = '#2dd4bf';
+      for (var s2 = 0; s2 <= ncy; s2++) {
+        var pf = P2(0, s2 * hy);
+        ctx.beginPath(); ctx.arc(pf[0], pf[1], 2.4, 0, 6.2832); ctx.fill();
+      }
+      ctx.strokeStyle = '#f59e0b';
+      ctx.fillStyle = '#f59e0b';
+      ctx.lineWidth = 1.6;
+      for (var s3 = 0; s3 <= ncy; s3 += Math.max(1, Math.round(ncy / 4))) {
+        var pt = P2(st.L, s3 * hy);
+        ctx.beginPath(); ctx.moveTo(pt[0], pt[1] - 16); ctx.lineTo(pt[0], pt[1] - 5); ctx.stroke();
         ctx.beginPath();
-        ctx.arc(pi.x, pi.y, pi.size, 0, 6.2832);
-        ctx.fillStyle = 'rgba(24,169,168,0.82)';
-        ctx.fill();
+        ctx.moveTo(pt[0], pt[1] - 1); ctx.lineTo(pt[0] - 3.2, pt[1] - 7); ctx.lineTo(pt[0] + 3.2, pt[1] - 7);
+        ctx.closePath(); ctx.fill();
+      }
+
+      /* the convergence readout: five ticks, the current one lit,
+         against the beam-theory line they are all reaching for */
+      var trackY = h - 26, x0t = 10, x1t = w - 10;
+      ctx.strokeStyle = 'rgba(51,65,85,0.9)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(x0t, trackY); ctx.lineTo(x1t, trackY); ctx.stroke();
+
+      var lo = 2.30, hi = 2.72;
+      var by = trackY - ((st.beam - lo) / (hi - lo)) * 18;
+      ctx.strokeStyle = '#f59e0b';
+      ctx.setLineDash([4, 3]);
+      ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(x0t, by); ctx.lineTo(x1t, by); ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.beginPath();
+      for (var m = 0; m < st.dof.length; m++) {
+        var mx = x0t + (m / (st.dof.length - 1)) * (x1t - x0t);
+        var my = trackY - ((st.tip[m] - lo) / (hi - lo)) * 18;
+        if (m === 0) ctx.moveTo(mx, my); else ctx.lineTo(mx, my);
+      }
+      ctx.strokeStyle = '#2dd4bf';
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+      for (var m2 = 0; m2 < st.dof.length; m2++) {
+        var mx2 = x0t + (m2 / (st.dof.length - 1)) * (x1t - x0t);
+        var my2 = trackY - ((st.tip[m2] - lo) / (hi - lo)) * 18;
         ctx.beginPath();
-        ctx.arc(pi.x, pi.y, pi.size * 2.5, 0, 6.2832);
-        ctx.fillStyle = 'rgba(99,102,241,0.06)';
+        ctx.arc(mx2, my2, m2 === stage ? 4 : 2.2, 0, 6.2832);
+        ctx.fillStyle = m2 === stage ? '#e8eef9' : '#2dd4bf';
         ctx.fill();
       }
 
-      // Attractor glow
-      var ag = ctx.createRadialGradient(att.x, att.y, 0, att.x, att.y, 30);
-      ag.addColorStop(0, 'rgba(99,102,241,0.06)');
-      ag.addColorStop(1, 'rgba(99,102,241,0)');
-      ctx.fillStyle = ag;
-      ctx.beginPath(); ctx.arc(att.x, att.y, 30, 0, 6.2832); ctx.fill();
+      ctx.font = '700 9px ui-monospace, Menlo, Consolas, monospace';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = '#2dd4bf';
+      ctx.fillText(st.dof[stage] + ' DOF', 10, 8);
+      ctx.fillStyle = '#e8eef9';
+      ctx.fillText(tip.toFixed(2), 10, h - 14);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillText('→ ' + st.beam.toFixed(2) + ' BEAM', 46, h - 14);
     }
   };
 
