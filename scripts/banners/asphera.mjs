@@ -29,7 +29,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { surface, rgb, mix, rdBuAt, chips, badge, colorbar } from './kit.mjs';
+import { surface, rgb, rdBuAt, colorbar } from './kit.mjs';
 import { validateFonts } from './fonts.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -120,7 +120,14 @@ function check() {
 check();
 
 /* ============================================================
-   3. The composition
+   3. The composition — a section, read by depth
+   ------------------------------------------------------------
+   Everything Asphera reports happens AT A DEPTH, so depth is
+   the axis the whole banner is built on. A core of the real
+   structure runs down the left at true scale, the section runs
+   full width beside it, and the peak strains are not collected
+   into a block of figures — each one is pinned to the depth it
+   was found at, with a leader into the field that produced it.
    ============================================================ */
 
 validateFonts();
@@ -138,7 +145,7 @@ const C = {
     ink: rgb('#f1f5f9'), ink2: rgb('#cbd5e1'), ink3: rgb('#94a3b8'),
     line: rgb('#3b4f6b'), edge: rgb('#546a84'),
     teal: rgb('#18a9a8'), tealHi: rgb('#2dd4d3'), amber: rgb('#f59e0b'),
-    ok: rgb('#10b981')
+    ok: rgb('#10b981'), dark: rgb('#0f172a')
 };
 
 /* Plotly's RdBu, reversed, which is how the app asks for it: high
@@ -146,17 +153,55 @@ const C = {
 const cmap = (t) => rdBuAt(1 - t);
 
 s.vgradient(0, 0, W, H, C.bg1, C.bg0);
-for (let x = 0; x < W; x += 46) s.rect(x, 0, 1, H, C.line, 0.14);
-for (let y = 0; y < H; y += 46) s.rect(0, y, W, 1, C.line, 0.14);
+for (let x = 0; x < W; x += 46) s.rect(x, 0, 1, H, C.line, 0.13);
+for (let y = 0; y < H; y += 46) s.rect(0, y, W, 1, C.line, 0.13);
 
 const PAD = 64;
-
-/* ---- hero: the cross-section contour ---------------------------- */
-
 const DEPTH_MAX = 710;                     /* the app's own y-axis range */
-const CT = { x: 578, y: 92, w: 610, h: 328 };
+const TOP = 238, BOT = 636;
+const dy = (d) => TOP + (Math.min(d, DEPTH_MAX) / DEPTH_MAX) * (BOT - TOP);
 
-/* Bilinear sample of the shipped grid, at output resolution. */
+/* ---- the name, and what it is ---------------------------------- */
+
+let wx = PAD;
+wx += s.text('A', wx, 74, 7, C.ink, 1);
+wx += s.text('SPHER', wx, 74, 7, C.tealHi, 1);
+s.text('A', wx, 74, 7, C.ink, 1);
+s.rect(PAD, 138, 150, 3, C.tealHi, 0.9);
+s.text('DYNAMIC FINITE ELEMENT PAVEMENT RESPONSE', PAD, 152, 2, C.ink2, 0.95);
+s.text('ICT R27-252 · ' + (nodeCount / 1000).toFixed(0) + 'K NODES · ' +
+    structure.timesteps.total + ' TIMESTEPS', PAD, 174, 2, C.ink3, 0.85);
+
+/* ---- a core of the structure, at true scale --------------------- */
+
+const CORE = { x: PAD, w: 78 };
+s.text('MM', CORE.x, TOP - 22, 2, C.ink3, 0.7);
+structure.layers.forEach((l) => {
+    const y0 = dy(l.depthTop), y1 = dy(l.depthBottom);
+    const col = rgb(l.color);
+    s.rect(CORE.x, y0, CORE.w, y1 - y0, col, 1);
+    s.rect(CORE.x, y0, CORE.w, 1, C.bg0, 0.8);
+    const lum = 0.299 * col[0] + 0.587 * col[1] + 0.114 * col[2];
+    const label = l.thickness.toFixed(0);
+    if (y1 - y0 > 18) {
+        s.textCenter(label, CORE.x + CORE.w / 2, (y0 + y1) / 2 - 7, 2, lum > 120 ? C.dark : C.ink2, 0.95);
+    }
+});
+/* the subgrade runs on past the section, so the core is broken
+   where the drawing stops, as a section mark would be */
+for (let bx = 0; bx < CORE.w; bx += 12) {
+    s.line(CORE.x + bx, BOT - 22, CORE.x + bx + 7, BOT - 30, 2, C.bg0, 0.85);
+    s.line(CORE.x + bx, BOT - 12, CORE.x + bx + 7, BOT - 20, 2, C.bg0, 0.85);
+}
+s.rect(CORE.x - 1, TOP - 1, CORE.w + 2, 1, C.edge, 0.8);
+s.rect(CORE.x - 1, BOT, CORE.w + 2, 1, C.edge, 0.8);
+s.rect(CORE.x - 1, TOP - 1, 1, BOT - TOP + 2, C.edge, 0.8);
+s.rect(CORE.x + CORE.w, TOP - 1, 1, BOT - TOP + 2, C.edge, 0.8);
+
+/* ---- the section ------------------------------------------------ */
+
+const CT = { x: 372, y: TOP, w: 740, h: BOT - TOP };
+
 function sampleAt(xmm, dmm) {
     const fx = (xmm - xs[0]) / (xs[xs.length - 1] - xs[0]) * (xs.length - 1);
     let fy = 0;
@@ -175,117 +220,69 @@ function sampleAt(xmm, dmm) {
 s.field(CT.x, CT.y, CT.w, CT.h, (u, v) =>
     cmap((sampleAt(xs[0] + u * (xs[xs.length - 1] - xs[0]), v * DEPTH_MAX) - zmin) / (zmax - zmin)));
 
-/* layer interfaces and their names, as the app annotates them */
-const dy = (d) => CT.y + (d / DEPTH_MAX) * CT.h;
 structure.layers.forEach((l, i) => {
-    if (i > 0) s.dashedLine(CT.x, dy(l.depthTop), CT.x + CT.w, dy(l.depthTop), 1.4, [15, 23, 42], 0.72, 9, 7);
-    const label = l.label.replace(/[₀-₉]/g, (m) => String(m.charCodeAt(0) - 0x2080));
-    if (dy(l.depthTop) + 24 < CT.y + CT.h) s.text(label, CT.x + 10, dy(l.depthTop) + 8, 2, [15, 23, 42], 0.85);
+    if (i > 0) s.dashedLine(CT.x, dy(l.depthTop), CT.x + CT.w, dy(l.depthTop), 1.4, C.dark, 0.72, 9, 7);
 });
-s.rect(CT.x - 1, CT.y - 1, CT.w + 2, 1, C.edge, 0.7);
-s.rect(CT.x - 1, CT.y + CT.h, CT.w + 2, 1, C.edge, 0.7);
-s.rect(CT.x - 1, CT.y - 1, 1, CT.h + 2, C.edge, 0.7);
-s.rect(CT.x + CT.w, CT.y - 1, 1, CT.h + 2, C.edge, 0.7);
+[['HMA', 0], ['BASE', 155], ['SUBGRADE', 460]].forEach(([name, d]) => {
+    s.text(name, CT.x + 12, dy(d) + 9, 2, C.dark, 0.85);
+});
+s.rect(CT.x - 1, CT.y - 1, CT.w + 2, 1, C.edge, 0.75);
+s.rect(CT.x - 1, CT.y + CT.h, CT.w + 2, 1, C.edge, 0.75);
+s.rect(CT.x - 1, CT.y - 1, 1, CT.h + 2, C.edge, 0.75);
+s.rect(CT.x + CT.w, CT.y - 1, 1, CT.h + 2, C.edge, 0.75);
 
-for (let d = 0; d <= 700; d += 100) {
-    s.rect(CT.x - 7, dy(d), 6, 1, C.edge, 0.8);
-    s.textRight(String(d), CT.x - 12, dy(d) - 7, 2, C.ink3, 0.85);
-}
 [-660, -330, 0, 330, 660].forEach(xv => {
     const px = CT.x + (xv - xs[0]) / (xs[xs.length - 1] - xs[0]) * CT.w;
     s.rect(px, CT.y + CT.h + 1, 1, 6, C.edge, 0.8);
     s.textCenter(String(xv), px, CT.y + CT.h + 12, 2, C.ink3, 0.85);
 });
-s.textRight('DEPTH MM', CT.x - 32, CT.y - 26, 2, C.ink3, 0.8);
-s.text('X TRAFFIC DIRECTION, MM', CT.x, CT.y + CT.h + 34, 2, C.ink3, 0.8);
+s.textRight(structure.name.toUpperCase() + ' · ε11 LONGITUDINAL µε · X MM', CT.x + CT.w, CT.y - 24, 2, C.ink2, 0.95);
 
-colorbar(s, 1214, 208, 18, CT.y + CT.h - 226, cmap, {
-    frame: C.edge, ink: C.ink2, ink2: C.ink3, titleBelow: true,
-    title: 'µε', max: zmax.toFixed(0), min: zmin.toFixed(0)
+colorbar(s, 1146, 248, 20, 372, cmap, {
+    frame: C.edge, ink: C.ink2, ink2: C.ink3,
+    max: zmax.toFixed(0), min: zmin.toFixed(0)
 });
 
-s.text(structure.name.toUpperCase(), CT.x, CT.y - 26, 2, C.ink2, 0.95);
+/* ---- the peaks, pinned to the depths they were found at --------- */
 
-/* ---- strip: the critical depth profile --------------------------- */
-
-const PR = { x: 600, y: 544, w: 588, h: 100 };
-s.roundRect(530, 494, 1268 - 530, 202, 14, C.panel, 0.45);
-
-let vMin = Infinity, vMax = -Infinity;
-for (const v of e11.values) { vMin = Math.min(vMin, v); vMax = Math.max(vMax, v); }
-const vPad = (vMax - vMin) * 0.12;
-const pdx = (d) => PR.x + (Math.min(d, DEPTH_MAX) / DEPTH_MAX) * PR.w;
-const pdy = (v) => PR.y + PR.h - (v - (vMin - vPad)) / ((vMax + vPad) - (vMin - vPad)) * PR.h;
-
-/* the same layer bands, in the app's own material colors */
-s.rect(PR.x, PR.y, PR.w, PR.h, C.bg0, 0.45);
-structure.layers.forEach((l) => {
-    if (l.depthTop >= DEPTH_MAX) return;
-    const x0 = pdx(l.depthTop), x1 = pdx(Math.min(l.depthBottom, DEPTH_MAX));
-    s.rect(x0, PR.y, x1 - x0, PR.h, rgb(l.color), 0.3);
-    if (x1 - x0 > 60) {
-        const label = l.label.replace(/[₀-₉]/g, (m) => String(m.charCodeAt(0) - 0x2080));
-        s.text(label.toUpperCase(), x0 + 8, PR.y + PR.h - 20, 2, C.ink3, 0.9);
-    }
-});
-s.dashedLine(PR.x, pdy(0), PR.x + PR.w, pdy(0), 1.3, C.edge, 0.7, 8, 7);
-
-/* the profile itself, broken where the material changes: the strain
-   really is discontinuous across an interface, and smoothing that
-   away would be the one thing this picture must not do */
-let seg = [];
-for (let i = 0; i < e11.depths.length; i++) {
-    if (i > 0 && e11.depths[i] === e11.depths[i - 1]) {
-        if (seg.length > 1) s.polyline(seg, 2.6, C.tealHi, 1);
-        seg = [];
-    }
-    seg.push([pdx(e11.depths[i]), pdy(e11.values[i])]);
+function callout(prof, name) {
+    const y = dy(prof.criticalDepth);
+    const right = 356;
+    s.line(right + 8, y, CT.x, y, 1.4, C.amber, 0.75);
+    s.rect(right + 8, y - 5, 2, 10, C.amber, 0.9);
+    s.textRight(name, right, y - 26, 2, C.amber, 0.95);
+    s.textRight(prof.criticalValue.toFixed(1), right, y - 8, 4, C.ink, 1);
+    /* the depth and the step are tagged AT the point, inside the field
+       that produced them, rather than collected into a caption */
+    s.disc(CT.x, y, 4.5, C.amber, 1);
+    s.disc(CT.x, y, 2, C.bg0, 1);
+    s.text(prof.criticalDepth.toFixed(0) + ' MM · STEP ' + prof.timestep, CT.x + 16, y - 24, 2, C.dark, 0.9);
 }
-if (seg.length > 1) s.polyline(seg, 2.6, C.tealHi, 1);
+callout(e11, 'PEAK ε11 µε');
+callout(e22, 'PEAK ε22 µε');
 
-/* the critical point the app reports */
-const cx = pdx(e11.criticalDepth), cy = pdy(e11.criticalValue);
-s.line(cx, cy - 9, cx, PR.y - 12, 1.4, C.amber, 0.7);
-s.ring(cx, cy, 9, 2, C.amber, 0.9);
-s.disc(cx, cy, 4.2, C.amber, 1);
+/* ---- the foot: what was searched, and where it came from -------- */
 
-s.textRight(vMax.toFixed(0), PR.x - 10, PR.y - 7, 2, C.ink3, 0.85);
-s.textRight(vMin.toFixed(0), PR.x - 10, PR.y + PR.h - 7, 2, C.ink3, 0.85);
-[0, 155, 460, 710].forEach(d => s.textCenter(String(d), pdx(d), PR.y + PR.h + 10, 2, C.ink3, 0.85));
-s.text('ε11 µε', PR.x, PR.y - 32, 2, C.ink2, 0.9);
-s.textRight('PEAK ' + e11.criticalValue.toFixed(1) + ' µε AT ' + e11.criticalDepth.toFixed(0) + ' MM · TS ' + e11.timestep, PR.x + PR.w, PR.y - 32, 2, C.amber, 0.9);
-s.text('DEPTH MM · JUMPS ARE MATERIAL INTERFACES', PR.x, PR.y + PR.h + 30, 2, C.ink3, 0.75);
+s.rect(PAD, 664, 1260 - PAD, 1, C.edge, 0.45);
 
-/* ---- left column ------------------------------------------------ */
+s.text('PEAK ε23 ' + e23.criticalValue.toFixed(1) + ' µε AT ' + e23.criticalDepth.toFixed(0) +
+    ' MM · EVERY STEP SEARCHED', PAD, 682, 2, C.ink3, 0.85);
+s.text('THICKNESSES, INTERFACES AND STRAINS READ FROM THE APP FILES',
+    PAD, 712, 2, C.ink3, 0.8);
 
-let wx = PAD;
-wx += s.text('A', wx, 104, 7, C.ink, 1);
-wx += s.text('SPHER', wx, 104, 7, C.tealHi, 1);
-s.text('A', wx, 104, 7, C.ink, 1);
-s.rect(PAD, 172, 150, 3, C.tealHi, 0.9);
-s.text('PAVEMENT RESPONSE', PAD, 196, 3, C.ink2, 0.95);
-s.text('DYNAMIC FINITE ELEMENT', PAD, 240, 2, C.ink3, 0.95);
-s.text('RESULTS FOR FOUR FLEXIBLE', PAD, 262, 2, C.ink3, 0.95);
-s.text('SECTIONS, READ NOT SOLVED', PAD, 284, 2, C.ink3, 0.95);
-
-badge(s, 'ICT R27-252', PAD, 322, { bg: [10, 40, 40], dot: C.ok, ink: C.ok, h: 44 });
-
-/* Stat cards as core samples: the structure's own material colors,
-   in its own order, running down the binding edge of every card. */
-chips(s, [
-    ['FE NODES', (nodeCount / 1000).toFixed(0) + 'K', ''],
-    ['TIMESTEPS', String(structure.timesteps.total), ''],
-    ['PEAK ε11 µε', e11.criticalValue.toFixed(1), ''],
-    ['PEAK ε22 µε', e22.criticalValue.toFixed(1), '']
-], PAD, 400, {
-    variant: 'strata', w: 220, h: 100, gap: 16, inset: 24, labelY: 14,
-    labelScale: 2, valueScale: 4,
-    /* lifted toward the panel so the two asphalt greys still read on it */
-    bands: structure.layers.map(l => mix(rgb(l.color), C.ink3, 0.3)),
-    bg: C.panel, rule: C.tealHi, label: C.ink3, value: C.ink
-});
-
-s.text('THICKNESSES, INTERFACES AND STRAINS READ FROM THE FILES THE APP LOADS',
-    PAD, 710, 2, C.ink3, 0.8);
+/* the analysis window, ticked out: thirteen steps, the drawn one lit */
+(function steps() {
+    const x0 = 1024, x1 = 1260, y = 684;
+    const n = structure.timesteps.total;
+    s.rect(x0, y, x1 - x0, 1, C.line, 0.9);
+    for (let i = 0; i < n; i++) {
+        const step = structure.timesteps.start + i;
+        const px = x0 + (i / (n - 1)) * (x1 - x0);
+        const on = step === contours.timestep;
+        s.rect(px, y - (on ? 11 : 5), on ? 2.6 : 1.4, on ? 13 : 7, on ? C.tealHi : C.edge, on ? 1 : 0.8);
+    }
+    s.text('STEP ' + structure.timesteps.start, x0, y + 10, 2, C.ink3, 0.7);
+    s.textRight(String(contours.timestep), x1, y + 10, 2, C.tealHi, 0.9);
+})();
 
 console.log(`wrote ${s.write(OUT)} (${W}x${H}) — ${structure.name}, ${FIELD} ${PLANE}, ts ${contours.timestep}`);

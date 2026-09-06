@@ -24,7 +24,7 @@
 
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { surface, rgb, viridis, chips, badge, colorbar } from './kit.mjs';
+import { surface, rgb, viridis } from './kit.mjs';
 import { validateFonts } from './fonts.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -402,7 +402,14 @@ function check() {
 const study = check();
 
 /* ============================================================
-   3. The composition
+   3. The composition — a drawing sheet
+   ------------------------------------------------------------
+   Not a card with a headline and four figures on it. Finite-
+   Elemented teaches the analysis a drawing office runs, so the
+   banner is laid out as a sheet from one: a ruled border, the
+   part dimensioned in the clear, a strip of the same part at
+   five mesh densities, numbered notes, and a title block in the
+   bottom right corner where a title block goes.
    ============================================================ */
 
 validateFonts();
@@ -424,35 +431,59 @@ const C = {
 };
 
 s.vgradient(0, 0, W, H, C.bg1, C.bg0);
-for (let x = 0; x < W; x += 46) s.rect(x, 0, 1, H, C.line, 0.16);
-for (let y = 0; y < H; y += 46) s.rect(0, y, W, 1, C.line, 0.16);
+for (let x = 0; x < W; x += 46) s.rect(x, 0, 1, H, C.line, 0.14);
+for (let y = 0; y < H; y += 46) s.rect(0, y, W, 1, C.line, 0.14);
 
-const PAD = 64, LEFT_W = 470;
-const RX = 512, RW = W - RX - 64;          /* right column */
+/* ---- the sheet ------------------------------------------------- */
 
-/* ---- hero: the cantilever, solved here, drawn deformed ---------- */
+const SH = { x0: 56, y0: 56, x1: 1254, y1: 734 };
+function frame(x0, y0, x1, y1, wgt, c, a) {
+    s.rect(x0, y0, x1 - x0, wgt, c, a);
+    s.rect(x0, y1 - wgt, x1 - x0, wgt, c, a);
+    s.rect(x0, y0, wgt, y1 - y0, c, a);
+    s.rect(x1 - wgt, y0, wgt, y1 - y0, c, a);
+}
+frame(SH.x0, SH.y0, SH.x1, SH.y1, 2, C.edge, 0.55);
+frame(SH.x0 + 10, SH.y0 + 10, SH.x1 - 10, SH.y1 - 10, 1, C.edge, 0.25);
+/* register marks, one per corner */
+[[SH.x0, SH.y0, 1, 1], [SH.x1, SH.y0, -1, 1], [SH.x0, SH.y1, 1, -1], [SH.x1, SH.y1, -1, -1]]
+    .forEach(([cx, cy, sx, sy]) => {
+        s.rect(sx > 0 ? cx : cx - 26, sy > 0 ? cy : cy - 3, 26, 3, C.tealHi, 0.8);
+        s.rect(sx > 0 ? cx : cx - 3, sy > 0 ? cy : cy - 26, 3, 26, C.tealHi, 0.8);
+    });
 
-const HERO = { x: RX, y: 96, w: 640, h: 230 };
+const PAD = 92;
+
+/* ---- sheet title ----------------------------------------------- */
+
+s.text('FINITE-', PAD, 92, 5, C.ink, 1);
+s.text('ELEMENTED', PAD, 148, 5, C.tealHi, 1);
+s.rect(PAD, 202, 150, 3, C.tealHi, 0.9);
+s.text('AN FEA PLATFORM', PAD, 224, 3, C.ink2, 0.95);
+s.text('TWELVE MODULES, ENDING', PAD, 268, 2, C.ink3, 0.9);
+s.text('IN A LIVE PLANE-STRESS', PAD, 290, 2, C.ink3, 0.9);
+s.text('SOLVER YOU CAN DRAG', PAD, 312, 2, C.ink3, 0.9);
+
+/* ---- the part, dimensioned in the clear ------------------------- */
+
+const HERO = { x: 496, y: 92, w: 660, h: 190 };
 const hero = solve({ preset: 'cant', elemType: 'q4', density: 3, loadFac: 1, form: 'pstress' });
 const { mesh, u, vm } = hero;
 
 let fmin = Infinity, fmax = -Infinity;
 for (const v of vm) { fmin = Math.min(fmin, v); fmax = Math.max(fmax, v); }
 
-/* Displacement autoscale, the same 7%-of-diagonal rule the app uses. */
 let umax = 0;
 for (let i = 0; i < mesh.coords.length; i++) umax = Math.max(umax, Math.hypot(u[2 * i], u[2 * i + 1]));
 const dscale = 0.07 * Math.hypot(mesh.ux, mesh.uy) / umax;
 
-/* Fit the union of the undeformed and deformed shapes, keeping room at
-   the top for the load arrows so nothing leaves the hero band. */
 let mx0 = Infinity, mx1 = -Infinity, my0 = Infinity, my1 = -Infinity;
 for (let i = 0; i < mesh.coords.length; i++) {
     const c = mesh.coords[i];
     for (const dx of [0, dscale * u[2 * i]]) { mx0 = Math.min(mx0, c[0] + dx); mx1 = Math.max(mx1, c[0] + dx); }
     for (const dy of [0, dscale * u[2 * i + 1]]) { my0 = Math.min(my0, c[1] + dy); my1 = Math.max(my1, c[1] + dy); }
 }
-const ARROW = 34;
+const ARROW = 30;
 const sc = Math.min(HERO.w / (mx1 - mx0), (HERO.h - ARROW) / (my1 - my0));
 const ox = HERO.x + (HERO.w - (mx1 - mx0) * sc) / 2 - mx0 * sc;
 const oy = HERO.y + ARROW + (HERO.h - ARROW - (my1 - my0) * sc) / 2 + my1 * sc;
@@ -462,20 +493,6 @@ const X = (i, def) => {
             oy - (c[1] + (def ? dscale * u[2 * i + 1] : 0)) * sc];
 };
 
-/* a soft teal wash behind the beam so it lifts off the grid */
-s.glow(HERO.x + HERO.w / 2, HERO.y + HERO.h / 2, HERO.w * 0.6, C.teal, 0.1, 2.4);
-
-/* undeformed ghost */
-mesh.elems.forEach(el => {
-    const p = el.n.map(nd => X(nd, false));
-    for (let k = 0; k < p.length; k++) {
-        const q = p[(k + 1) % p.length];
-        s.line(p[k][0], p[k][1], q[0], q[1], 1, C.edge, 0.3);
-    }
-});
-
-/* Contour fill on the deformed shape. Each element is split 8x8 and
-   filled from the bilinear field, which at this size reads smooth. */
 const SUB = 8;
 const bilin = (P, fx, fy) => {
     const a = [P[0][0] + (P[1][0] - P[0][0]) * fx, P[0][1] + (P[1][1] - P[0][1]) * fx];
@@ -486,123 +503,155 @@ const bval = (V, fx, fy) => {
     const a = V[0] + (V[1] - V[0]) * fx, b = V[3] + (V[2] - V[3]) * fx;
     return a + (b - a) * fy;
 };
-mesh.elems.forEach(el => {
-    const P = el.n.map(nd => X(nd, true));
-    const V = el.n.map(nd => vm[nd]);
-    for (let i = 0; i < SUB; i++) for (let j = 0; j < SUB; j++) {
-        const f0 = i / SUB, f1 = (i + 1) / SUB, g0 = j / SUB, g1 = (j + 1) / SUB;
-        const quad = [bilin(P, f0, g0), bilin(P, f1, g0), bilin(P, f1, g1), bilin(P, f0, g1)];
-        const c = viridis((bval(V, (f0 + f1) / 2, (g0 + g1) / 2) - fmin) / (fmax - fmin));
-        s.polygon(quad, c, 1);
-    }
-});
 
-/* deformed element edges */
-mesh.elems.forEach(el => {
-    const p = el.n.map(nd => X(nd, true));
-    for (let k = 0; k < p.length; k++) {
-        const q = p[(k + 1) % p.length];
-        s.line(p[k][0], p[k][1], q[0], q[1], 0.9, [0, 0, 0], 0.3);
+function drawMesh(m, uu, vv, X2, opts) {
+    let lo = Infinity, hi = -Infinity;
+    for (const v of vv) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+    if (opts.ghost) {
+        m.elems.forEach(el => {
+            const p = el.n.map(nd => X2(nd, false));
+            for (let k = 0; k < p.length; k++) {
+                const q = p[(k + 1) % p.length];
+                s.line(p[k][0], p[k][1], q[0], q[1], 1, C.edge, 0.28);
+            }
+        });
     }
-});
+    m.elems.forEach(el => {
+        const P = el.n.map(nd => X2(nd, true));
+        const V = el.n.map(nd => vv[nd]);
+        const n = opts.sub || SUB;
+        for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+            const f0 = i / n, f1 = (i + 1) / n, g0 = j / n, g1 = (j + 1) / n;
+            s.polygon([bilin(P, f0, g0), bilin(P, f1, g0), bilin(P, f1, g1), bilin(P, f0, g1)],
+                viridis((bval(V, (f0 + f1) / 2, (g0 + g1) / 2) - lo) / (hi - lo)), 1);
+        }
+    });
+    if (opts.edges) {
+        m.elems.forEach(el => {
+            const p = el.n.map(nd => X2(nd, true));
+            for (let k = 0; k < p.length; k++) {
+                const q = p[(k + 1) % p.length];
+                s.line(p[k][0], p[k][1], q[0], q[1], 0.9, [0, 0, 0], 0.3);
+            }
+        });
+    }
+}
 
-/* supports on the clamped edge, load arrows on the tip */
-const seen = new Set();
-mesh.fixed.forEach(d => {
-    const nd = d >> 1;
-    if (seen.has(nd)) return;
-    seen.add(nd);
-    const p = X(nd, false);
-    s.disc(p[0], p[1], 5, C.tealHi, 1);
-    s.disc(p[0], p[1], 2.2, C.bg0, 1);
-});
+s.glow(HERO.x + HERO.w / 2, HERO.y + HERO.h / 2, HERO.w * 0.58, C.teal, 0.09, 2.4);
+drawMesh(mesh, u, vm, X, { ghost: true, edges: true });
+
+/* the built-in end, hatched as a fixture is on a drawing */
+const clampTop = X(mesh.coords.findIndex(c => c[0] === 0 && c[1] === mesh.uy), false);
+const clampBot = X(0, false);
+s.rect(clampBot[0] - 12, clampTop[1], 6, clampBot[1] - clampTop[1], C.tealHi, 0.85);
+for (let hy = clampTop[1]; hy < clampBot[1]; hy += 9) {
+    s.line(clampBot[0] - 12, hy + 9, clampBot[0] - 24, hy, 1.4, C.tealHi, 0.6);
+}
 mesh.loads.forEach(l => {
-    const nd = l[0] >> 1;
-    const p = X(nd, true);
-    s.line(p[0], p[1] - ARROW, p[0], p[1] - 9, 2.6, C.amber, 1);
-    s.polygon([[p[0], p[1] - 1], [p[0] - 6.5, p[1] - 13], [p[0] + 6.5, p[1] - 13]], C.amber, 1);
+    const p = X(l[0] >> 1, true);
+    s.line(p[0], p[1] - ARROW, p[0], p[1] - 9, 2.4, C.amber, 1);
+    s.polygon([[p[0], p[1] - 1], [p[0] - 6, p[1] - 12], [p[0] + 6, p[1] - 12]], C.amber, 1);
 });
 
-colorbar(s, HERO.x + HERO.w + 36, 196, 20, HERO.y + HERO.h - 202, viridis, {
-    frame: C.edge, ink: C.ink2, ink2: C.ink3,
-    max: fmax.toPrecision(3), min: fmin.toPrecision(3)
-});
+/* dimension line, extension lines and arrowheads, as drawn */
+(function dimension() {
+    const a = X(0, false), b = X(mesh.coords.findIndex(c => c[0] === mesh.ux && c[1] === 0), false);
+    const dy = HERO.y + HERO.h + 22;
+    s.line(a[0], a[1] + 6, a[0], dy + 8, 1, C.edge, 0.7);
+    s.line(b[0], b[1] + 6, b[0], dy + 8, 1, C.edge, 0.7);
+    s.line(a[0], dy, b[0], dy, 1.4, C.ink3, 0.85);
+    s.polygon([[a[0], dy], [a[0] + 11, dy - 4], [a[0] + 11, dy + 4]], C.ink3, 0.85);
+    s.polygon([[b[0], dy], [b[0] - 11, dy - 4], [b[0] - 11, dy + 4]], C.ink3, 0.85);
+    const label = 'L = 8';
+    const lw = s.textWidth(label, 2);
+    s.rect((a[0] + b[0]) / 2 - lw / 2 - 8, dy - 9, lw + 16, 18, C.bg0, 0.92);
+    s.textCenter(label, (a[0] + b[0]) / 2, dy - 7, 2, C.ink2, 0.95);
+})();
 
-s.text('CANTILEVER · Q4 · VON MISES · ×' +
-    (dscale >= 10 ? Math.round(dscale) : dscale.toFixed(1)),
-    HERO.x, HERO.y + HERO.h + 20, 2, C.ink3, 0.9);
+/* the scale, laid flat under the part rather than stood beside it */
+(function scaleBar() {
+    const bx = HERO.x, by = HERO.y + HERO.h + 52, bw = 210, bh = 13;
+    s.field(bx, by, bw, bh, (u2) => viridis(u2));
+    frame(bx - 1, by - 1, bx + bw + 1, by + bh + 1, 1, C.edge, 0.6);
+    s.textRight(fmin.toPrecision(3), bx - 10, by, 2, C.ink3, 0.9);
+    s.text(fmax.toPrecision(3), bx + bw + 10, by, 2, C.ink3, 0.9);
+    s.text('VON MISES · DEFORMED ×' + (dscale >= 10 ? Math.round(dscale) : dscale.toFixed(1)),
+        bx + bw + 84, by, 2, C.ink3, 0.75);
+})();
 
-/* ---- convergence: the same problem, refined five times ---------- */
+/* ---- the same part, refined five times ------------------------- */
 
-const CV = { x: RX + 34, y: 428, w: 654, h: 182 };
+s.rect(PAD, 372, SH.x1 - 20 - PAD, 1, C.edge, 0.45);
+s.text('H-REFINEMENT · Q4 QUADS · TIP DEFLECTION APPROACHING ' + beamTheory().toFixed(2),
+    PAD, 380, 2, C.ink3, 0.85);
+
 const beam = beamTheory();
-const yLo = 1.4, yHi = 2.8;
-const px = (n) => CV.x + (Math.log10(n) - Math.log10(54)) / (Math.log10(902) - Math.log10(54)) * CV.w;
-const py = (v) => CV.y + CV.h - (v - yLo) / (yHi - yLo) * CV.h;
+const STRIP = { y: 428, h: 74, pitch: 226, w: 200 };
+for (let d = 1; d <= 5; d++) {
+    const fx = PAD + (d - 1) * STRIP.pitch;
+    const sol = solve({ preset: 'cant', elemType: 'q4', density: d, loadFac: 1, form: 'pstress' });
+    const tip = femDeflection(sol);
 
-s.roundRect(RX - 6, CV.y - 44, 1268 - (RX - 6), CV.h + 112, 14, C.panel, 0.45);
-for (let g = 0; g <= 7; g++) {
-    const v = yLo + (yHi - yLo) * g / 7;
-    s.rect(CV.x, py(v), CV.w, 1, C.line, 0.45);
-    if (g % 2 === 0) s.textRight(v.toFixed(1), CV.x - 10, py(v) - 7, 2, C.ink3, 0.85);
+    let fu = 0;
+    for (let i = 0; i < sol.mesh.coords.length; i++) fu = Math.max(fu, Math.hypot(sol.u[2 * i], sol.u[2 * i + 1]));
+    const ds = 0.07 * Math.hypot(sol.mesh.ux, sol.mesh.uy) / fu;
+    const fsc = Math.min(STRIP.w / 8.6, STRIP.h / 3.1);
+    const fox = fx + (STRIP.w - 8 * fsc) / 2;
+    const foy = STRIP.y + STRIP.h / 2 + mesh.uy * fsc / 2;
+    const FX = (i, def) => {
+        const c = sol.mesh.coords[i];
+        return [fox + (c[0] + (def ? ds * sol.u[2 * i] : 0)) * fsc,
+                foy - (c[1] + (def ? ds * sol.u[2 * i + 1] : 0)) * fsc];
+    };
+    drawMesh(sol.mesh, sol.u, sol.vm, FX, { sub: 3, edges: d <= 3 });
+
+    s.text(String(sol.N) + ' DOF', fx, STRIP.y - 22, 2, d === 3 ? C.tealHi : C.ink3, 0.95);
+    s.text(tip.toFixed(2), fx, STRIP.y + STRIP.h + 12, 3, C.ink, 1);
+    /* how much of the gap to beam theory this mesh has closed */
+    const closed = tip / beam;
+    s.rect(fx, STRIP.y + STRIP.h + 44, STRIP.w - 26, 3, C.line, 0.9);
+    s.rect(fx, STRIP.y + STRIP.h + 44, (STRIP.w - 26) * closed, 3, C.tealHi, 0.95);
 }
 
-/* Timoshenko reference, the line both element types are heading for */
-s.dashedLine(CV.x, py(beam), CV.x + CV.w, py(beam), 2, C.amber, 0.9, 12, 9);
+/* ---- notes, and the title block --------------------------------- */
 
-const series = [
-    { y: study.q4, color: C.tealHi, dash: false },
-    { y: study.t3, color: C.indigo, dash: true }
+s.rect(PAD, 572, 660 - PAD, 1, C.edge, 0.45);
+
+const NOTES = [
+    ['1', 'PLANE STRESS, Q4, 2×2 GAUSS'],
+    ['2', 'E = 1000, NU = 0.30, T = 1'],
+    ['3', 'P = 10 AT THE FREE END'],
+    ['4', 'BANDED CHOLESKY, IN BROWSER']
 ];
-for (const ser of series) {
-    const pts = APP_STUDY.dofs.map((n, i) => [px(n), py(ser.y[i])]);
-    for (let i = 1; i < pts.length; i++) {
-        if (ser.dash) s.dashedLine(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], 3, ser.color, 1, 10, 7);
-        else s.line(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], 3, ser.color, 1);
-    }
-    for (const p of pts) {
-        s.disc(p[0], p[1], 6, C.bg0, 1);
-        s.disc(p[0], p[1], 4.4, ser.color, 1);
-    }
-}
-APP_STUDY.dofs.forEach(n => s.textCenter(String(n), px(n), CV.y + CV.h + 14, 2, C.ink3, 0.85));
-s.text('TIP DEFLECTION VS DEGREES OF FREEDOM', CV.x, CV.y + CV.h + 38, 2, C.ink3, 0.7);
-
-/* series key, in the panel's free top strip */
-s.line(CV.x, CV.y - 22, CV.x + 34, CV.y - 22, 3, C.tealHi, 1);
-s.text('Q4 QUADS', CV.x + 42, CV.y - 31, 2, C.ink2, 0.95);
-s.dashedLine(CV.x + 190, CV.y - 22, CV.x + 224, CV.y - 22, 3, C.indigo, 1, 8, 6);
-s.text('T3 TRIS', CV.x + 232, CV.y - 31, 2, C.ink2, 0.95);
-s.dashedLine(CV.x + 366, CV.y - 22, CV.x + 400, CV.y - 22, 3, C.amber, 1, 8, 6);
-s.text('BEAM ' + beam.toFixed(2), CV.x + 408, CV.y - 31, 2, C.amber, 0.95);
-
-/* ---- left column ------------------------------------------------ */
-
-s.text('FINITE-', PAD, 92, 5, C.ink, 1);
-s.text('ELEMENTED', PAD, 150, 5, C.tealHi, 1);
-s.rect(PAD, 214, 150, 3, C.tealHi, 0.9);
-s.text('AN FEA PLATFORM', PAD, 238, 3, C.ink2, 0.95);
-s.text('TWELVE MODULES, FROM THE', PAD, 286, 2, C.ink3, 0.95);
-s.text('WEAK FORM TO A LIVE 2D', PAD, 310, 2, C.ink3, 0.95);
-s.text('PLANE-STRESS SOLVER', PAD, 334, 2, C.ink3, 0.95);
-
-badge(s, 'LIVE SOLVER', PAD, 378, { bg: [10, 40, 40], dot: rgb('#10b981'), ink: rgb('#10b981'), h: 44 });
-
-/* Stat cards as dimensioned boxes off a drawing: hairline frame,
-   heavy binding edge, a tick ruled under every figure. */
-const d3Tip = femDeflection(hero);
-chips(s, [
-    ['MODULES', '12', ''],
-    ['ELEMENTS', String(mesh.elems.length), 'Q4'],
-    ['DOF', String(hero.N), ''],
-    ['VS BEAM', (100 * (d3Tip - beam) / beam).toFixed(1), '%']
-], PAD, 452, {
-    variant: 'bar', w: 186, h: 92, gap: 16, inset: 16,
-    labelScale: 2, valueScale: 4, unitScale: 3,
-    bg: C.panel, rule: C.tealHi, frame: C.edge, label: C.ink3, value: C.ink
+s.text('NOTES', PAD, 590, 2, C.tealHi, 0.95);
+NOTES.forEach(([n, txt], i) => {
+    s.text(n, PAD, 622 + i * 24, 2, C.ink3, 0.7);
+    s.text(txt, PAD + 30, 622 + i * 24, 2, C.ink3, 0.9);
 });
 
-s.text('MESHED, ASSEMBLED, CHOLESKY-FACTORED AND RECOVERED IN THE BROWSER',
-    PAD, 700, 2, C.ink3, 0.8);
+(function titleBlock() {
+    /* Two columns of ruled rows, label left and figure right, the way a
+       drawing office writes a title block — not four cards in a grid. */
+    const x0 = 700, y0 = 562, x1 = SH.x1 - 20, y1 = 716;
+    const head = 40, rowH = (y1 - y0 - head) / 3, colW = (x1 - x0) / 2;
+    s.rect(x0, y0, x1 - x0, y1 - y0, C.panel, 0.55);
+    frame(x0, y0, x1, y1, 1.6, C.edge, 0.8);
+    s.rect(x0, y0 + head, x1 - x0, 1.2, C.edge, 0.8);
+    for (let r = 1; r < 3; r++) s.rect(x0, y0 + head + r * rowH, x1 - x0, 1, C.edge, 0.4);
+    s.rect(x0 + colW, y0 + head, 1, y1 - y0 - head, C.edge, 0.4);
+    s.text('FINITE-ELEMENTED', x0 + 14, y0 + 9, 3, C.ink, 1);
+
+    const d3Tip = femDeflection(hero);
+    const cells = [
+        ['ELEMENTS', String(mesh.elems.length)], ['TIP DEFL', d3Tip.toFixed(2)],
+        ['DOF', String(hero.N)], ['BEAM', beam.toFixed(2)],
+        ['PEAK σVM', fmax.toPrecision(3)], ['VS BEAM', (100 * (d3Tip - beam) / beam).toFixed(1) + '%']
+    ];
+    cells.forEach(([label, value], i) => {
+        const cx = x0 + (i % 2) * colW, cy = y0 + head + ((i / 2) | 0) * rowH;
+        s.text(label, cx + 14, cy + 11, 2, C.ink3, 0.9);
+        s.textRight(value, cx + colW - 14, cy + 6, 3, i === 5 ? C.tealHi : C.ink, 1);
+    });
+})();
 
 console.log(`wrote ${s.write(OUT)} (${W}x${H})`);

@@ -28,7 +28,7 @@ import { readFileSync } from 'node:fs';
 import { inflateRawSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { surface, rgb, mix, ylOrRd, rdBuAt, chips, badge, colorbar } from './kit.mjs';
+import { surface, rgb, mix, ylOrRd, colorbar } from './kit.mjs';
 import { validateFonts } from './fonts.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -246,7 +246,14 @@ function check() {
 check();
 
 /* ============================================================
-   4. The composition
+   4. The composition — a selector, a surface, an instrument band
+   ------------------------------------------------------------
+   AirCrafter is two gestures: you pick an aeroplane out of a
+   library of 284, and it presses a tyre into the pavement. So
+   the banner is the library down the left in the app's own
+   order, the tyre it computed filling the middle, and one
+   horizontal band of read-outs across the foot — the row of
+   instruments under a windscreen, not a grid of cards.
    ============================================================ */
 
 validateFonts();
@@ -274,45 +281,74 @@ const RIB_COLORS = [
 ];
 
 s.vgradient(0, 0, W, H, C.bg1, C.bg0);
-for (let x = 0; x < W; x += 46) s.rect(x, 0, 1, H, C.line, 0.14);
-for (let y = 0; y < H; y += 46) s.rect(0, y, W, 1, C.line, 0.14);
+for (let x = 0; x < W; x += 46) s.rect(x, 0, 1, H, C.line, 0.13);
+for (let y = 0; y < H; y += 46) s.rect(0, y, W, 1, C.line, 0.13);
 
-const PAD = 64, RX = 512;
+const PAD = 64;
 
 /* ---- rib and groove geometry across the patch ------------------- */
 
-const bands = [];             /* {kind, y0, y1, rib} in mm across the tyre */
+const bands = [];
 let cursor = 0;
 bi.forEach((w, i) => {
     bands.push({ kind: 'rib', rib: i, y0: cursor, y1: cursor + w });
     cursor += w;
     if (i < gi.length) { bands.push({ kind: 'groove', y0: cursor, y1: cursor + gi[i] }); cursor += gi[i]; }
 });
-const patchW = cursor;        /* 400 mm for this tyre */
+const patchW = cursor;
 const sszF = bi.map((_, i) => sszRib(i));
 const ssxF = bi.map((_, i) => ssxRib(i));
 let szMax = 0;
 for (let i = 0; i < bi.length; i++) for (let k = 0; k <= 200; k++) szMax = Math.max(szMax, sszF[i](-1 + 2 * k / 200));
 
-/* ---- hero: the vertical contact stress surface ------------------ */
+/* ---- the wordmark ----------------------------------------------- */
 
-const SURF = { x: RX, y: 74, w: 664, h: 322 };
+s.text('AIR', PAD, 72, 8, C.ink, 1);
+s.text('CRAFTER', PAD, 156, 8, C.skyHi, 1);
+s.rect(PAD, 246, 150, 3, C.orange, 0.9);
+s.text('TIRE-PAVEMENT CONTACT STRESS', PAD, 268, 2, C.ink2, 0.95);
 
-/* An axonometric frame: the contact length runs down-left, the tyre
-   width down-right, stress up. Chosen to read at the same angle as
-   the app's own Plotly surface. The basis is fixed and the whole
-   drawing is then scaled to fit its own bounding box, so a taller
-   stress field shrinks the plan rather than escaping the band. */
+/* ---- the library, in the app's own order ------------------------ */
+/* The app filters the sheet by manufacturer and keeps its order, so
+   this is the dropdown the aeroplane below was picked out of. */
+
+const make = row['Manufacturer'];
+const fleet = readSheet(XLSX)
+    .filter(r => r['Manufacturer'] === make && String(r['Deprecated']).toLowerCase() !== 'true')
+    .map(r => r['Airplane Name']);
+const at = fleet.indexOf(AIRCRAFT);
+const VISIBLE = 12;
+const from = Math.max(0, Math.min(fleet.length - VISIBLE, at - 6));
+const window_ = fleet.slice(from, from + VISIBLE);
+
+const LIB = { x: PAD, y: 308, lead: 22 };
+s.text(make.toUpperCase() + ' · ' + fleet.length + ' OF 284', LIB.x, LIB.y, 2, C.ink3, 0.8);
+s.rect(LIB.x, LIB.y + 24, 236, 1, C.line, 0.9);
+window_.forEach((name, i) => {
+    const y = LIB.y + 36 + i * LIB.lead;
+    const on = name === AIRCRAFT;
+    if (on) {
+        s.rect(LIB.x, y - 3, 236, 24, C.sky, 0.16);
+        s.rect(LIB.x, y - 3, 3, 24, C.skyHi, 1);
+    }
+    s.text(name, LIB.x + 12, y, 2, on ? C.ink : C.ink3, on ? 1 : 0.55);
+});
+s.text('284 AIRCRAFT · 10 MAKES', LIB.x, LIB.y + 42 + VISIBLE * LIB.lead, 2, C.ink3, 0.8);
+
+/* ---- the tyre it computed --------------------------------------- */
+
+const SURF = { x: 344, y: 80, w: 810, h: 430 };
+
 const AXL = [-236, 150];      /* one unit of normalized contact length */
 const AXW = [304, 118];       /* one unit of normalized tyre width     */
-const ZH = 158;               /* pixels at szMax                       */
+const ZH = 158;
 
 const raw = (u, v, z) => [
     u * AXL[0] + v * AXW[0],
     u * AXL[1] + v * AXW[1] - (z / szMax) * ZH
 ];
 
-const NU = 72;
+const NU = 76;
 const bandV = (b) => [b.y0 / patchW, b.y1 / patchW];
 
 let bx0 = Infinity, bx1 = -Infinity, by0 = Infinity, by1 = -Infinity;
@@ -334,10 +370,8 @@ const ox = SURF.x + (SURF.w - (bx1 - bx0) * k) / 2 - bx0 * k;
 const oy = SURF.y + (SURF.h - (by1 - by0) * k) / 2 - by0 * k;
 const proj = (u, v, z) => { const p = raw(u, v, z); return [ox + p[0] * k, oy + p[1] * k]; };
 
-s.glow(SURF.x + SURF.w / 2, SURF.y + SURF.h * 0.6, SURF.w * 0.56, C.orange, 0.09, 2.6);
+s.glow(SURF.x + SURF.w / 2, SURF.y + SURF.h * 0.6, SURF.w * 0.5, C.orange, 0.09, 2.6);
 
-/* Base plane: the footprint the ribs stand on, tinted with the rib
-   identity colors the app's own contact-patch drawing uses. */
 s.polygon([proj(0, 0, 0), proj(1, 0, 0), proj(1, 1, 0), proj(0, 1, 0)], C.bg0, 0.85);
 for (const b of bands) {
     const [v0, v1] = bandV(b);
@@ -349,8 +383,6 @@ s.line(...proj(0, 0, 0), ...proj(0, 1, 0), 1.3, C.edge, 0.5);
 s.line(...proj(1, 0, 0), ...proj(1, 1, 0), 1.6, C.edge, 0.9);
 s.line(...proj(0, 1, 0), ...proj(1, 1, 0), 1.6, C.edge, 0.9);
 
-/* The surface itself, painted back to front. Grooves stay on the
-   floor: no rubber there, so no contact stress. */
 const quads = [];
 for (const b of bands) {
     const [v0, v1] = bandV(b);
@@ -370,7 +402,6 @@ for (const q of quads) {
     const zm = (q.z0 + q.z1) / 2;
     const top = [proj(q.u0, q.v0, q.z0), proj(q.u1, q.v0, q.z1), proj(q.u1, q.v1, q.z1), proj(q.u0, q.v1, q.z0)];
     if (q.b.kind === 'groove') { s.polygon(top, C.bg0, 0.5); continue; }
-    /* the two lit side walls, darker, so the ridges read as solid */
     s.polygon([proj(q.u0, q.v1, q.z0), proj(q.u1, q.v1, q.z1), proj(q.u1, q.v1, 0), proj(q.u0, q.v1, 0)],
         mix(ylOrRd(zm / szMax), C.bg0, 0.5), 1);
     s.polygon([proj(q.u1, q.v0, q.z1), proj(q.u1, q.v1, q.z1), proj(q.u1, q.v1, 0), proj(q.u1, q.v0, 0)],
@@ -378,7 +409,6 @@ for (const q of quads) {
     s.polygon(top, ylOrRd(zm / szMax), 1);
 }
 
-/* one crest line per rib, so seven ridges read as seven */
 bi.forEach((_, i) => {
     const b = bands.find(bb => bb.kind === 'rib' && bb.rib === i);
     const vm = (b.y0 + b.y1) / 2 / patchW;
@@ -387,90 +417,58 @@ bi.forEach((_, i) => {
     s.polyline(pts, 1.2, [255, 255, 255], 0.22);
 });
 
-/* the two front edges get their dimension, outside the plan */
 const lenAt = proj(0.5, 1, 0), widAt = proj(1, 0.5, 0);
-s.textRight('CONTACT LENGTH ' + L.toFixed(0) + ' MM', Math.min(lenAt[0] + 200, 1176), lenAt[1] + 12, 2, C.ink3, 0.9);
-s.textRight('TIRE WIDTH ' + patchW.toFixed(0) + ' MM', widAt[0] - 14, widAt[1] + 10, 2, C.ink3, 0.9);
+s.text('L ' + L.toFixed(0) + ' MM', lenAt[0] + 18, lenAt[1] + 28, 2, C.ink3, 0.9);
+s.textRight('W ' + patchW.toFixed(0) + ' MM', widAt[0] - 18, widAt[1] + 28, 2, C.ink3, 0.9);
 
-colorbar(s, 1214, 196, 20, SURF.y + SURF.h - 214, ylOrRd, {
+colorbar(s, 1192, 208, 20, 250, ylOrRd, {
     frame: C.edge, ink: C.ink2, ink2: C.ink3,
     max: szMax.toFixed(2), min: '0'
 });
 
-s.text(AIRCRAFT.toUpperCase() + ' · ' + bi.length + ' RIBS · ' + wheelsPlotted + ' WHEELS ON ' + numGear + ' GEAR',
-    SURF.x, SURF.y + SURF.h + 14, 2, C.ink2, 0.95);
-s.text('σ Z · VERTICAL CONTACT STRESS, MPA, RIB BY RIB', SURF.x, SURF.y + SURF.h + 38, 2, C.ink3, 0.8);
+/* ---- the longitudinal trace, on its own line -------------------- */
 
-/* ---- strip: the longitudinal component, which changes sign ------ */
-
-const LG = { x: RX + 74, y: 512, w: 566, h: 120 };
-s.roundRect(RX - 6, 466, 1268 - (RX - 6), 226, 14, C.panel, 0.45);
-
+const TR = { x: 344, y: 530, w: 810, h: 84 };
 let sxMin = Infinity, sxMax = -Infinity;
 for (let i = 0; i < bi.length; i++) for (let j = 0; j <= 120; j++) {
     const v = ssxF[i](L * j / 120);
     sxMin = Math.min(sxMin, v); sxMax = Math.max(sxMax, v);
 }
-const spad = (sxMax - sxMin) * 0.14;
-const lx = (x) => LG.x + (x / L) * LG.w;
-const ly = (v) => LG.y + LG.h - (v - (sxMin - spad)) / ((sxMax + spad) - (sxMin - spad)) * LG.h;
+const spad = (sxMax - sxMin) * 0.10;
+const lx = (x) => TR.x + (x / L) * TR.w;
+const ly = (v) => TR.y + TR.h - (v - (sxMin - spad)) / ((sxMax + spad) - (sxMin - spad)) * TR.h;
 
-s.rect(LG.x, LG.y, LG.w, LG.h, C.bg0, 0.4);
-s.dashedLine(LG.x, ly(0), LG.x + LG.w, ly(0), 1.6, C.edge, 0.85, 10, 8);
-s.textRight('0', LG.x - 10, ly(0) - 7, 2, C.ink3, 0.85);
-s.textRight(sxMax.toFixed(2), LG.x - 10, LG.y - 7, 2, C.ink3, 0.85);
-s.textRight(sxMin.toFixed(2), LG.x - 10, LG.y + LG.h - 7, 2, C.ink3, 0.85);
-
-/* Only two curves are distinct — the model gives ribs 2..6 the same
-   stress factor — so the inner group is drawn once, thin, under the
-   two shoulder ribs. */
+s.rect(TR.x, TR.y, TR.w, TR.h, C.bg0, 0.42);
+s.rect(TR.x, TR.y, TR.w, 1, C.line, 0.7);
+s.rect(TR.x, TR.y + TR.h - 1, TR.w, 1, C.line, 0.7);
+s.dashedLine(TR.x, ly(0), TR.x + TR.w, ly(0), 1.4, C.edge, 0.8, 9, 8);
 for (const i of [1, 0]) {
     const pts = [];
-    for (let j = 0; j <= 160; j++) {
-        const x = L * j / 160;
-        pts.push([lx(x), ly(ssxF[i](x))]);
-    }
-    s.polyline(pts, i === 0 ? 3.2 : 2.2, RIB_COLORS[i], i === 0 ? 1 : 0.8);
+    for (let j = 0; j <= 180; j++) { const x = L * j / 180; pts.push([lx(x), ly(ssxF[i](x))]); }
+    s.polyline(pts, i === 0 ? 3 : 2, RIB_COLORS[i], i === 0 ? 1 : 0.8);
 }
-s.disc(LG.x + 12, LG.y + LG.h - 20, 5, RIB_COLORS[0], 1);
-s.text('SHOULDER 1,7', LG.x + 24, LG.y + LG.h - 27, 2, C.ink3, 0.9);
-s.disc(LG.x + 200, LG.y + LG.h - 20, 5, RIB_COLORS[1], 0.85);
-s.text('INNER 2-6', LG.x + 212, LG.y + LG.h - 27, 2, C.ink3, 0.9);
+s.text('σX LONGITUDINAL · SHOULDER AND INNER RIBS', TR.x + 12, TR.y - 24, 2, C.ink3, 0.85);
+s.textRight('+' + sxMax.toFixed(2) + ' TO ' + sxMin.toFixed(2) + ' MPA', TR.x + TR.w, TR.y - 24, 2, C.ink3, 0.85);
+s.textRight('SOLVED FROM THE APP LIBRARY, NOT SKETCHED', 1246, TR.y + TR.h + 12, 2, C.ink3, 0.7);
 
-[0, 0.25, 0.5, 0.75, 1].forEach(f => s.textCenter((L * f).toFixed(0), lx(L * f), LG.y + LG.h + 12, 2, C.ink3, 0.8));
-s.text('σ X · LONGITUDINAL, SIGN REVERSING ALONG THE PATCH', LG.x, LG.y + LG.h + 38, 2, C.ink3, 0.75);
-s.text('σ X MPA', LG.x, LG.y - 32, 2, C.ink2, 0.9);
-s.textRight('EQUILIBRIUM RESIDUAL ' + R.diff.toFixed(2) + '%', LG.x + LG.w, LG.y - 32, 2, C.ok, 0.95);
+/* ---- the instrument band ---------------------------------------- */
 
-/* a thin diverging key, the app's own RdBu, beside the strip label */
-for (let j = 0; j < 130; j++) s.rect(LG.x + 116 + j, LG.y - 30, 1.1, 10, rdBuAt(1 - j / 129), 0.9);
-
-/* ---- left column ------------------------------------------------ */
-
-s.text('AIR', PAD, 88, 8, C.ink, 1);
-s.text('CRAFTER', PAD, 174, 8, C.skyHi, 1);
-s.rect(PAD, 264, 150, 3, C.orange, 0.9);
-s.text('CONTACT STRESS ENGINE', PAD, 288, 3, C.ink2, 0.95);
-s.text('THREE-DIMENSIONAL TIRE-PAVEMENT', PAD, 326, 2, C.ink3, 0.95);
-s.text('CONTACT STRESS FOR THE WHOLE FAA', PAD, 348, 2, C.ink3, 0.95);
-s.text('FAARFIELD AIRCRAFT LIBRARY', PAD, 370, 2, C.ink3, 0.95);
-
-badge(s, 'EQUILIBRIUM PASSED', PAD, 402, { bg: [10, 40, 40], dot: C.ok, ink: C.ok, h: 44 });
-
-/* Stat cards as instrument read-outs: no frame, only the four marks
-   where a frame would be, and a bar under the figure. */
-chips(s, [
-    ['AIRCRAFT', '284', ''],
-    ['CONTACT RIBS', String(bi.length), ''],
-    ['WHEEL LOAD KN', (P / 1000).toFixed(1), ''],
-    ['PEAK σ Z MPA', szMax.toFixed(2), '']
-], PAD, 464, {
-    variant: 'reticle', w: 186, h: 100, gap: 16, inset: 16, labelY: 14,
-    labelScale: 2, valueScale: 5,
-    bg: C.panel, rule: C.skyHi, label: C.ink3, value: C.ink
+const BAND = { x: PAD, y: 656, w: 1246 - PAD, h: 76 };
+s.rect(BAND.x, BAND.y, BAND.w, 2, C.skyHi, 0.75);
+const CELLS = [
+    ['WHEEL LOAD KN', (P / 1000).toFixed(1), C.ink],
+    ['PRESSURE MPA', TiP.toFixed(3), C.ink],
+    ['PATCH MM', L.toFixed(0) + '×' + patchW.toFixed(0), C.ink],
+    ['CONTACT RIBS', String(bi.length), C.ink],
+    ['PEAK σZ MPA', szMax.toFixed(2), rgb('#fdbb6d')],
+    ['EQUILIBRIUM', R.diff.toFixed(2) + '%', C.ok]
+];
+const cw = BAND.w / CELLS.length;
+CELLS.forEach(([label, value, col], i) => {
+    const x = BAND.x + i * cw;
+    if (i > 0) s.rect(x, BAND.y + 10, 1, BAND.h - 16, C.line, 0.85);
+    s.text(label, x + 16, BAND.y + 16, 2, C.ink3, 0.85);
+    s.text(value, x + 16, BAND.y + 42, 4, col, 1);
 });
-
-s.text('GEOMETRY READ FROM THE AIRCRAFT LIBRARY THE APP ITSELF LOADS · STRESSES SOLVED FROM IT, NOT SKETCHED',
-    PAD, 706, 2, C.ink3, 0.8);
 
 console.log(`wrote ${s.write(OUT)} (${W}x${H}) — ${AIRCRAFT}, ${bi.length} ribs, ${numWheels} wheels/gear`);
