@@ -24,6 +24,7 @@ The repository's existing local Three.js build is reused. No React migration, CD
 node e-labs/shared/models.test.cjs
 node e-labs/shared/course-models.test.cjs
 node e-labs/shared/course.test.cjs <path-to-playwright-module>
+node e-labs/shared/progress.test.cjs <path-to-playwright-module>
 ```
 
 Browser checks currently launch the installed Windows Chrome executable. Adjust `executablePath` for another environment. Playwright is test tooling only; the applications do not require it. Tests cover all 41 lessons, step visibility, course navigation, quizzes, theme persistence, resume, mesh convergence, exports, job completion/timeout/insufficient memory/cancellation, rendering races, mobile layout, reduced motion, blocked storage, WebGL fallback, and both catalog miniatures. Screenshots are written to the system temporary directory. `browser.test.cjs` delegates to this suite by default and retains the `--shape-only` and `--posters` artifact modes.
@@ -48,4 +49,12 @@ See [the restoration map](../../docs/e-labs-course-restoration.md) for the origi
 
 See [the visualization framework review](../../docs/e-labs-visualization-review.md) for Model X Studio findings and priorities for the rest of E-Labs.
 
-The course overview opens on an unfragmented URL or `#overview`; lesson fragments remain directly shareable. Module cards expose outcomes, suggested preparation, lesson previews, experiments, and completion counts. Each module also includes a worked example and reflection in the Explain step. Typography uses the same self-hosted Inter Variable font as the website, with 16 px explanatory text and a 14 px minimum for secondary course labels.
+The course overview opens on an unfragmented URL or `#overview`; lesson fragments remain directly shareable. Module cards expose outcomes, suggested preparation, lesson previews, experiments, and completion counts. Each module also includes a worked example and reflection in the Explain step. Typography uses the same self-hosted Inter Variable font as the website, with 17 px explanatory text and a 14 px minimum for secondary course labels.
+
+## Reading and progress
+
+Both apps open on the overview when launched without a lesson fragment; unknown fragments also return to the overview. Valid lesson links remain shareable. The overview does not mark a lesson started. Opening a lesson records its visited steps and last step; only a correct knowledge-check answer marks it completed. Overview filters, module counts, the lesson progress strip, and sidebar status labels reflect these separate states.
+
+`elabs-activity-fea` / `elabs-activity-hpc` store per-lesson activity. Existing `elabs-v2-*` completion records and `elabs-course-*` resume records are retained. Storage failures keep the app usable and show a session-only notice. Progress is local to the browser, not synchronized between devices.
+
+The type scale uses relative units, 17 px body text, 16 px primary controls, and at least 14 px secondary text at standard size. The Larger text button increases relative text by 12.5% and persists across both apps. Charts retain readable labels with keyboard-accessible horizontal scrolling in narrow panels. Large-text and mobile layouts give content additional width instead of shrinking text.

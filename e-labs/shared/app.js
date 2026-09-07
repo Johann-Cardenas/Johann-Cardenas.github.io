@@ -60,7 +60,8 @@
     jobPhase = "idle",
     jobSnapshot = null;
   try {
-    completed = JSON.parse(localStorage.getItem("elabs-v2-" + kind) || "{}");
+    const saved = JSON.parse(localStorage.getItem("elabs-v2-" + kind) || "{}");
+    if (saved && typeof saved === "object" && !Array.isArray(saved)) completed = saved;
   } catch {}
   const $ = (id) => document.getElementById(id),
     esc = (s) =>
@@ -208,7 +209,7 @@
                 "elabs-v2-" + kind,
                 JSON.stringify(completed),
               );
-            } catch {}
+            } catch { window.LabGuide.storageAvailable = false; }
             nav();
           }
         }),
@@ -454,11 +455,11 @@
     { xLabel = "", yLabel = "", xMax, yMax, yMin = 0, log = false } = {},
   ) {
     const W = 440,
-      H = 182,
-      L = 48,
-      R = 12,
-      TOP = 12,
-      B = 32,
+      H = 230,
+      L = 68,
+      R = 24,
+      TOP = 28,
+      B = 48,
       iw = W - L - R,
       ih = H - TOP - B;
     const all = series.flatMap((s) => s.points),
@@ -476,7 +477,7 @@
     for (let i = 0; i <= 4; i++) {
       const value = lo + ((hi - lo) * i) / 4,
         Y = TOP + ih - (ih * i) / 4;
-      svg += `<line class="gridline" x1="${L}" x2="${W - R}" y1="${Y}" y2="${Y}"/><text x="${L - 7}" y="${Y + 3}" text-anchor="end">${log ? "10^" + Math.round(value) : format(value, value < 10 ? 1 : 0)}</text><text x="${L + (iw * i) / 4}" y="${H - 17}" text-anchor="middle">${format((xm * i) / 4, xm < 5 ? 1 : 0)}</text>`;
+      svg += `<line class="gridline" x1="${L}" x2="${W - R}" y1="${Y}" y2="${Y}"/><text x="${L - 7}" y="${Y + 3}" text-anchor="end">${log ? "10^" + Math.round(value) : format(value, value < 10 ? 1 : 0)}</text><text x="${L + (iw * i) / 4}" y="${H - 26}" text-anchor="middle">${format((xm * i) / 4, xm < 5 ? 1 : 0)}</text>`;
     }
     for (const s of series) {
       svg += `<path d="${s.points.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(2) + "," + y(p[1]).toFixed(2)).join(" ")}" fill="none" stroke="${s.color || "var(--accent)"}" stroke-width="2.4" ${s.dash ? 'stroke-dasharray="5 4"' : ""}/>`;
@@ -486,7 +487,7 @@
             (svg += `<circle cx="${x(p[0])}" cy="${y(p[1])}" r="3.2" fill="${s.color || "var(--accent)"}"/>`),
         );
     }
-    svg += `<text x="${W / 2}" y="${H - 1}" text-anchor="middle">${esc(xLabel)}</text><text x="${L}" y="9">${esc(yLabel)}</text></svg>`;
+    svg += `<text x="${W / 2}" y="${H - 5}" text-anchor="middle">${esc(xLabel)}</text><text x="${L}" y="16">${esc(yLabel)}</text></svg>`;
     if (series.some((s) => s.name))
       svg +=
         '<div class="chart-legend">' +
@@ -502,7 +503,7 @@
   function bars(items, { unit = "" } = {}) {
     const max = Math.max(...items.map((i) => i[1]), 1);
     $("chart").innerHTML =
-      `<svg class="chart" viewBox="0 0 440 ${items.length * 38 + 20}" role="img" aria-label="${esc($("chart-title").textContent)}">${items.map(([label, v, c], i) => `<text x="0" y="${i * 38 + 20}">${esc(label)}</text><rect x="115" y="${i * 38 + 8}" width="${(v / max) * 220}" height="17" rx="3" fill="${c || "var(--accent)"}"/><text x="345" y="${i * 38 + 20}">${format(v, v < 10 ? 2 : 0)} ${unit}</text>`).join("")}</svg>`;
+      `<svg class="chart" viewBox="0 0 440 ${items.length * 64 + 12}" role="img" aria-label="${esc($("chart-title").textContent)}">${items.map(([label, v, c], i) => `<text x="0" y="${i * 64 + 18}">${esc(label)}</text><rect x="0" y="${i * 64 + 30}" width="${(v / max) * 300}" height="17" rx="3" fill="${c || "var(--accent)"}"/><text x="315" y="${i * 64 + 44}">${format(v, v < 10 ? 2 : 0)} ${unit}</text>`).join("")}</svg>`;
   }
   let worker = null,
     requestID = 0;

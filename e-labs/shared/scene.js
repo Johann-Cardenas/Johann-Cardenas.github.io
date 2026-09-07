@@ -32,7 +32,8 @@
     cv.width = 512;
     cv.height = 80;
     const ctx = cv.getContext("2d");
-    ctx.font = "500 30px system-ui";
+    ctx.font = '600 36px "Inter Variable", system-ui';
+    if (ctx.measureText(text).width > 496) ctx.font = '600 30px "Inter Variable", system-ui';
     ctx.textAlign = "center";
     const dark = document.documentElement.dataset.theme === "dark";
     ctx.fillStyle = dark
