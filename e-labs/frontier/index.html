@@ -3,26 +3,34 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#20352f">
+  <meta name="theme-color" content="#ffffff">
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('theme-preference')==='dark'?'dark':'light';}catch{document.documentElement.dataset.theme='light';}</script>
   <title>Frontier · Interactive Learning Lab | E-Labs</title>
-  <meta name="description" content="Explore high-performance computing through 9 visual experiments: parallel scaling, job scheduling, CPU and GPU architectures, memory, roofline analysis, and energy.">
+  <meta name="description" content="Learn high-performance computing step by step through four courses and 19 visual lessons, from computer fundamentals to resource sizing, job workflows, parallelism, and GPU rendering.">
   <meta name="author" content="Johann Cardenas">
   <link rel="canonical" href="https://www.johanncardenas.com/e-labs/frontier/">
   <meta property="og:title" content="Frontier · Interactive Learning Lab">
-  <meta property="og:description" content="Explore high-performance computing through 9 visual experiments: parallel scaling, job scheduling, CPU and GPU architectures, memory, roofline analysis, and energy.">
+  <meta property="og:description" content="Learn high-performance computing step by step through four courses and 19 visual lessons, from computer fundamentals to resource sizing, job workflows, parallelism, and GPU rendering.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.johanncardenas.com/e-labs/frontier/">
   <meta property="og:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_Frontier.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="../shared/lab.css">
+  <link rel="stylesheet" href="../shared/site-palette.css">
+  <link rel="stylesheet" href="../shared/course.css">
+  <script src="../../assets/js/theme-toggle.js" defer></script>
   <script src="../../assets/js/three.min.js" defer></script>
   <script src="../shared/models.js" defer></script>
+  <script src="../shared/course-models.js" defer></script>
   <script src="../shared/scene.js" defer></script>
+  <script src="../shared/scene-concepts.js" defer></script>
   <script src="../shared/curriculum.js" defer></script>
+  <script src="../shared/courses.js" defer></script>
+  <script src="../shared/guide.js" defer></script>
   <script src="../shared/app.js" defer></script>
 </head>
 <body data-lab="hpc">
   <div id="app"></div>
-  <noscript><main style="padding:3rem;max-width:50rem;margin:auto"><h1>Frontier</h1><p>Explore high-performance computing through 9 visual experiments: parallel scaling, job scheduling, CPU and GPU architectures, memory, roofline analysis, and energy.</p><p>Enable JavaScript to use these interactive experiments. All numerical models execute in your browser.</p><a href="../../E-Labs.html">Return to E-Labs</a></main></noscript>
+  <noscript><main style="padding:3rem;max-width:50rem;margin:auto"><h1>Frontier</h1><p>Learn high-performance computing step by step through four courses and 19 visual lessons, from computer fundamentals to resource sizing, job workflows, parallelism, and GPU rendering.</p><p>Enable JavaScript to use these interactive experiments. All numerical models execute in your browser.</p><a href="../../E-Labs.html">Return to E-Labs</a></main></noscript>
 </body>
 </html>

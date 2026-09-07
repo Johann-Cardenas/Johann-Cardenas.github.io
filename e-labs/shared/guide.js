@@ -1,0 +1,815 @@
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id),
+    C = window.CourseModels;
+  const steps = ["Understand", "Experiment", "Explain", "Check"];
+  const G = (window.LabGuide = {
+    step: 0,
+    timer: null,
+    current: null,
+    init(api) {
+      this.api = api;
+      const dialog = document.createElement("dialog");
+      dialog.id = "course-library";
+      dialog.innerHTML =
+        '<div class="library-heading"><div><span class="eyebrow">Your learning path</span><h2>Four courses. One idea at a time.</h2></div><button id="close-library" aria-label="Close course library">×</button></div>';
+      dialog.querySelector("h2").id = "library-title";
+      dialog.setAttribute("aria-labelledby", "library-title");
+      dialog.append(document.querySelector(".journey"));
+      document.body.append(dialog);
+      const open = document.createElement("button");
+      open.id = "open-library";
+      open.textContent = "Courses";
+      document.querySelector(".top-links").prepend(open);
+      open.onclick = () => dialog.showModal();
+      $("close-library").onclick = () => dialog.close();
+      dialog.addEventListener("click", (e) => {
+        if (e.target === dialog) dialog.close();
+      });
+      const stepper = document.createElement("nav");
+      stepper.className = "stepper";
+      stepper.setAttribute("aria-label", "Lesson steps");
+      stepper.innerHTML = steps
+        .map(
+          (s, i) =>
+            `<button data-step="${i}"><span>${i + 1}</span>${s}</button>`,
+        )
+        .join("");
+      document.querySelector(".heading").after(stepper);
+      stepper
+        .querySelectorAll("button")
+        .forEach(
+          (b) => (b.onclick = () => this.setStep(+b.dataset.step, true)),
+        );
+      const panel = document.createElement("div");
+      panel.className = "lesson-panel";
+      panel.innerHTML =
+        '<section id="understand" class="step-panel"><span class="eyebrow">Start here</span><h2 id="intro-title">The idea</h2><p id="intro-copy" class="intro-copy"></p><dl id="key-terms"></dl><div class="learning-goal"><span class="eyebrow">Your experiment</span><p id="learning-goal"></p></div></section>';
+      const inspector = $("inspector"),
+        article = document.querySelector(".below article"),
+        evidence = document.querySelector(
+          '[aria-label="Quantitative evidence"]',
+        ),
+        check = document.querySelector(".challenge");
+      inspector.classList.add("step-panel");
+      const explain = document.createElement("section");
+      explain.id = "explain";
+      explain.className = "step-panel";
+      explain.append(article, evidence, document.querySelector(".details"));
+      check.id = "check";
+      check.classList.add("step-panel");
+      panel.append(inspector, explain, check);
+      document.querySelector(".experiment").append(panel);
+      const previous = document.createElement("button");
+      previous.id = "previous-step";
+      previous.textContent = "← Previous";
+      $("next").before(previous);
+      previous.onclick = () => this.setStep(Math.max(0, this.step - 1), true);
+      $("next").onclick = () => {
+        if (this.step < 3) this.setStep(this.step + 1, true);
+        else if (api.lesson.index < api.lessons.length - 1)
+          api.go(api.lessons[api.lesson.index + 1].id);
+        else dialog.showModal();
+      };
+      try {
+        const saved = JSON.parse(
+          localStorage.getItem("elabs-course-" + api.kind) || "null",
+        );
+        if (saved && (!location.hash || location.hash === "#" + saved.lesson)) {
+          const l = api.lessons.find((l) => l.id === saved.lesson);
+          if (l) {
+            api.lesson = l;
+            this.resume = saved;
+            history.replaceState(null, "", "#" + l.id);
+          }
+        }
+      } catch {}
+      const syncTheme = () => {
+        const b = document.querySelector(".theme-toggle");
+        if (b) {
+          document.querySelector(".top-links").append(b);
+          b.textContent =
+            document.documentElement.dataset.theme === "dark"
+              ? "☀ Light"
+              : "☾ Dark";
+        }
+      };
+      syncTheme();
+      document.addEventListener("DOMContentLoaded", syncTheme);
+      new MutationObserver(syncTheme).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"],
+      });
+      window.addEventListener("pagehide", () => this.cancel());
+    },
+    prepare(l) {
+      this.cancel();
+      this.visualKey = null;
+      this.current = l.id;
+      Object.assign(this.api.state, this.api.defaults, l.defaults);
+      this.step =
+        this.resume?.lesson === l.id
+          ? Math.min(3, Math.max(0, this.resume.step || 0))
+          : 0;
+      this.resume = null;
+    },
+    renderNavigation() {
+      if (!this.api) return;
+      const nav = $("modules");
+      const buttons = [...nav.querySelectorAll("[data-module]")];
+      for (const course of LabCourses[this.api.kind]) {
+        const d = document.createElement("details");
+        d.open = course.index === this.api.lesson.course;
+        const count = course.ids.filter((id) => this.api.completed[id]).length;
+        d.innerHTML = `<summary><span>0${course.index + 1} · ${course.title}</span><small>${count}/${course.ids.length}</small></summary>`;
+        for (const id of course.ids) {
+          const b = buttons.find((b) => b.dataset.module === id);
+          if (b) {
+            d.append(b);
+            b.addEventListener("click", () => {
+              $("course-library").close();
+              if (id === this.api.lesson.id) this.setStep(0);
+            });
+          }
+        }
+        nav.append(d);
+      }
+    },
+    onLesson() {
+      const l = this.api.lesson;
+      $("lesson-eyebrow").textContent =
+        `Course ${l.course + 1} · ${l.courseTitle}`;
+      $("intro-copy").textContent = l.intro;
+      $("learning-goal").textContent = l.takeaway;
+      const terms = l.terms || [];
+      $("key-terms").replaceChildren();
+      for (const [term, definition] of terms.slice(0, 2)) {
+        const dt = document.createElement("dt"),
+          dd = document.createElement("dd");
+        dt.textContent = term;
+        dd.textContent = definition;
+        $("key-terms").append(dt, dd);
+      }
+      this.setStep(this.step);
+      if (this.hasRendered) {
+        window.scrollTo({ top: 0, behavior: "auto" });
+        $("title").tabIndex = -1;
+        $("title").focus({ preventScroll: true });
+      }
+      this.hasRendered = true;
+    },
+    setStep(n, focus = false) {
+      this.step = n;
+      ["understand", "inspector", "explain", "check"].forEach(
+        (id, i) => ($(id).hidden = i !== n),
+      );
+      document.querySelectorAll("[data-step]").forEach((b, i) => {
+        b.classList.toggle("active", i === n);
+        if (i === n) b.setAttribute("aria-current", "step");
+        else b.removeAttribute("aria-current");
+      });
+      $("previous-step").disabled = n === 0;
+      $("next").textContent =
+        n < 3
+          ? `${steps[n + 1]} →`
+          : this.api.lesson.index === this.api.lessons.length - 1
+            ? "Review courses →"
+            : "Next lesson →";
+      document.querySelector(".lesson-bottom small").textContent =
+        `Step ${n + 1} of 4 · ${this.api.lesson.nav}`;
+      try {
+        localStorage.setItem(
+          "elabs-course-" + this.api.kind,
+          JSON.stringify({ lesson: this.api.lesson.id, step: n }),
+        );
+      } catch {}
+      if (focus) {
+        const p = $(["understand", "inspector", "explain", "check"][n]);
+        p.tabIndex = -1;
+        p.focus({ preventScroll: true });
+      }
+      this.api.scene.request();
+    },
+    controls(l, s, { range: r, select: q, check: k }) {
+      switch (l.id) {
+        case "fea-intro":
+          return r("density", "Mesh density", 1, 8, 1);
+        case "materials":
+          return (
+            r("E", "Young’s modulus", 10000, 210000, 10000, " MPa") +
+            r("load", "Axial force", 100, 5000, 100, " N")
+          );
+        case "axial-bar":
+        case "weak-form":
+          return (
+            r("segments", "Bar elements", 1, 12, 1) +
+            r("distributed", "Distributed load", 0, 30, 1, " N/mm")
+          );
+        case "element-library":
+          return q("family", "Element geometry", [
+            ["beam", "Beam · 1D"],
+            ["shell", "Shell · thin surface"],
+            ["tetra", "Tetrahedron · 3D"],
+            ["hex", "Hexahedron · 3D"],
+          ]);
+        case "quadrature":
+          return (
+            r("gaussPoints", "Gauss points", 1, 4, 1) +
+            r("degree", "Polynomial degree", 0, 6, 1)
+          );
+        case "hpc-intro":
+        case "hardware":
+        case "memory-models":
+          return (
+            r("nodes", "Compute nodes", 1, 8, 1) +
+            r("coresPerNode", "Cores per node", 2, 16, 2)
+          );
+        case "rightsizing":
+          return (
+            '<div class="task-card"><span id="task-count" class="eyebrow"></span><h3 id="task-name"></h3><p id="task-needs"></p></div>' +
+            q("resourceChoice", "Choose a machine", [
+              ["laptop", "Laptop"],
+              ["workstation", "Workstation"],
+              ["cluster", "Cluster"],
+            ]) +
+            '<div class="action-row"><button id="match-task" class="primary">Check choice</button><button id="next-task">Next task →</button></div><p id="task-feedback" role="status"></p><details><summary>Need a hint?</summary><p id="task-hint"></p></details>'
+          );
+        case "allocations":
+        case "workflow":
+        case "accounting":
+          return (
+            q("problem", "Problem size", [
+              [1, "Small · 8 GB"],
+              [2, "Medium · 48 GB"],
+              [3, "Large · 192 GB"],
+            ]) +
+            r("processors", "Allocated CPU cores", 1, 32, 1) +
+            r("memoryGB", "Requested RAM", 4, 256, 4, " GB") +
+            r("walltime", "Walltime limit", 1, 120, 1, " min") +
+            (l.id === "workflow"
+              ? '<button id="run-pipeline" class="primary">Submit simulated job</button>'
+              : "")
+          );
+        case "storage":
+          return (
+            r("dataGB", "Output size", 1, 100, 1, " GB") +
+            r("ioBandwidth", "Storage bandwidth", 0.1, 10, 0.1, " GB/s")
+          );
+        case "parallel-work":
+          return (
+            r("workUnits", "Work units", 8, 48, 4) +
+            r("processors", "Workers", 1, 8, 1) +
+            r("serialPercent", "Serial work", 0, 75, 5, "%")
+          );
+        case "strong-weak":
+          return (
+            r("processors", "Workers", 1, 64, 1) +
+            r("parallel", "Parallel fraction", 50, 99, 1, "%") +
+            k("weak", "Weak scaling: grow parallel work with workers")
+          );
+        case "render-race":
+        case "animation-batch":
+          return (
+            q("resolution", "Image resolution", [
+              [32, "32 × 32"],
+              [64, "64 × 64"],
+              [128, "128 × 128"],
+              [256, "256 × 256"],
+            ]) +
+            (l.id === "animation-batch"
+              ? r("frames", "Frame count", 1, 60, 1) +
+                r("fps", "Playback frame rate", 12, 60, 12, " fps")
+              : "") +
+            r("launch", "GPU launch / transfer per frame", 0, 1, 0.02, " s") +
+            '<button id="run-race" class="primary">Run rendering race</button>'
+          );
+      }
+    },
+    onControls() {
+      const id = this.api.lesson.id,
+        primary = {
+          foundations: ["preset", "load"],
+          mesh: ["preset", "density"],
+          elements: ["type", "density"],
+          assembly: ["density", "explode"],
+          stress: ["load", "field"],
+          abaqus: ["type", "density"],
+          convergence: ["type", "density"],
+          conditioning: ["density"],
+          integration: ["type", "density"],
+          workflow: ["problem", "processors", "memoryGB"],
+          allocations: ["problem", "processors", "memoryGB"],
+          accounting: ["problem", "processors"],
+          "render-race": ["resolution"],
+          "animation-batch": ["resolution", "frames"],
+        };
+      const controls = [...$("inspector").querySelectorAll(".control")],
+        keys =
+          primary[id] ||
+          controls
+            .slice(0, 3)
+            .map((c) => c.querySelector("[data-key]")?.dataset.key);
+      const extra = controls.filter(
+        (c) => !keys.includes(c.querySelector("[data-key]")?.dataset.key),
+      );
+      if (extra.length) {
+        const d = document.createElement("details");
+        d.className = "advanced-settings";
+        d.innerHTML = "<summary>More settings</summary>";
+        extra[0].before(d);
+        extra.forEach((c) => d.append(c));
+      }
+      const p = document.createElement("p");
+      p.className = "experiment-prompt";
+      p.textContent = this.api.lesson.takeaway;
+      document.querySelector(".inspector-head").after(p);
+      if ($("match-task"))
+        $("match-task").onclick = () => {
+          const m = C.matchTask(
+            this.api.state.task,
+            this.api.state.resourceChoice,
+          );
+          $("task-feedback").textContent =
+            (m.correct
+              ? "Good fit. "
+              : m.fits
+                ? "It fits, but reserves more hardware than needed. "
+                : "This configuration is too small. ") + m.task.why;
+        };
+      if ($("next-task"))
+        $("next-task").onclick = () => {
+          this.api.state.task = (this.api.state.task + 1) % C.tasks.length;
+          this.api.update();
+        };
+      if ($("run-pipeline")) $("run-pipeline").onclick = () => this.runJob();
+      if ($("run-race")) $("run-race").onclick = () => this.runRace();
+    },
+    update() {
+      const a = this.api,
+        s = a.state,
+        id = a.lesson.id,
+        scene = a.scene,
+        f = a.format;
+      const show = (title, caption, items) => {
+        a.evidence(title, caption, "Teaching model");
+        a.metrics(items);
+        $("stage-name").textContent = a.lesson.nav;
+        $("live-pill").textContent = "VISUAL MODEL";
+        $("legend").textContent = "";
+        $("scene-note").textContent = "Drag to explore";
+        $("result-status").textContent = "Ready to explore.";
+      };
+      if (["hpc-intro", "hardware", "memory-models"].includes(id)) {
+        scene.setHardware(s);
+        show(
+          "Inside the cluster",
+          "Each illustrated node has 64 GB of local RAM. A serial process cannot automatically pool it across nodes.",
+          [
+            ["Nodes", s.nodes],
+            ["Total cores", s.nodes * s.coresPerNode],
+            ["RAM per node", 64, "GB"],
+          ],
+        );
+        a.bars(
+          [
+            ["Per node", 64],
+            ["All nodes", s.nodes * 64],
+          ],
+          { unit: "GB" },
+        );
+        return true;
+      }
+      if (id === "rightsizing") {
+        const t = C.tasks[s.task],
+          r = C.resources[s.resourceChoice];
+        scene.setHardware({ resource: s.resourceChoice });
+        show(
+          "Capacity for this task",
+          "Illustrative configurations and workload requirements; cluster capacities are aggregate and require distributed software.",
+          [
+            ["CPU cores", r.cores],
+            ["RAM", r.ram, "GB"],
+            ["GPU memory", r.vram, "GB"],
+          ],
+        );
+        $("task-count").textContent = `Task ${s.task + 1} of ${C.tasks.length}`;
+        $("task-name").textContent = t.name;
+        $("task-needs").textContent =
+          `Needs ${t.cores} cores · ${t.ram} GB RAM · ${t.vram} GB GPU memory`;
+        $("task-hint").textContent = t.why;
+        $("task-feedback").textContent = "";
+        a.bars(
+          [
+            ["CPU fit", Math.min(100, (r.cores / t.cores) * 100)],
+            ["RAM fit", Math.min(100, (r.ram / t.ram) * 100)],
+            ["GPU fit", t.vram ? Math.min(100, (r.vram / t.vram) * 100) : 100],
+          ],
+          { unit: "%" },
+        );
+        return true;
+      }
+      if (["axial-bar", "weak-form"].includes(id)) {
+        const b = C.axialBar(s);
+        scene.setCurve(
+          b.points.map((p) => [p[0], p[1]]),
+          {
+            samples: b.u.map((u, i) => [(i * 120) / s.segments, u]),
+            caption: "LINEAR BAR · SHARED NODAL DISPLACEMENTS",
+          },
+        );
+        show(
+          "Exact field and finite-element interpolation",
+          "Uniform bar: E = 70,000 MPa, A = 144 mm², L = 120 mm; fixed left end, 1,000 N right-end force plus distributed axial load. Error is sampled between nodes.",
+          [
+            ["Elements", s.segments],
+            ["Tip displacement", f(b.tip, 5), "mm"],
+            ["Maximum error", f(b.error, 6), "mm"],
+          ],
+        );
+        a.chart(
+          [
+            {
+              points: b.points.map((p) => [p[0], p[2]]),
+              name: "Exact",
+              color: "#6366f1",
+            },
+            {
+              points: b.points.map((p) => [p[0], p[1]]),
+              name: "Finite elements",
+            },
+          ],
+          {
+            xLabel: "Position (mm)",
+            yLabel: "Displacement (mm)",
+            yMax: b.tip * 1.1,
+          },
+        );
+        return true;
+      }
+      if (id === "quadrature") {
+        const b = C.quadrature({ points: s.gaussPoints, degree: s.degree }),
+          points = Array.from({ length: 81 }, (_, i) => {
+            const x = -1 + i / 40;
+            return [x, x ** s.degree];
+          });
+        scene.setCurve(points, {
+          samples: b.x.map((x) => [x, x ** s.degree]),
+          caption: `GAUSS QUADRATURE · ${s.gaussPoints} WEIGHTED SAMPLES`,
+        });
+        show(
+          "Weighted samples versus exact integral",
+          "Integrating ξⁿ on [−1, 1]. The three-dimensional curve shows sample locations; weights are listed below.",
+          [
+            ["Estimate", f(b.estimate, 5)],
+            ["Exact", f(b.exact, 5)],
+            ["Absolute error", f(b.error, 5)],
+          ],
+        );
+        a.bars([
+          ["Estimate", b.estimate],
+          ["Exact", b.exact],
+        ]);
+        $("probe").textContent = b.x
+          .map((x, i) => `ξ ${f(x, 3)} · weight ${f(b.w[i], 3)}`)
+          .join(" | ");
+        return true;
+      }
+      if (id === "element-library") {
+        scene.setFamily(s.family);
+        show(
+          "Choose by geometry and physics",
+          "These are geometric teaching models. The structural solver elsewhere uses plane-stress T3 and Q4 elements only.",
+          [
+            ["Geometry", s.family],
+            [
+              "Dimension",
+              s.family === "beam"
+                ? "1D"
+                : s.family === "shell"
+                  ? "Surface"
+                  : "3D",
+            ],
+            ["Purpose", "Idealization"],
+          ],
+        );
+        $("chart").textContent =
+          "Beams model slender members; shells model thin surfaces; solids resolve volume behavior.";
+        return true;
+      }
+      if (["allocations", "workflow", "accounting"].includes(id)) {
+        const j = C.job(s);
+        if (id === "workflow") {
+          if (this.visualKey !== id) {
+            scene.setPipeline();
+            this.visualKey = id;
+          }
+        } else scene.setHardware({ nodes: 1, coresPerNode: s.processors });
+        show(
+          "Resource request and predicted use",
+          "One node; illustrative fixed-work runtime and queue model. One SU is one allocated core-hour. Actual centers use their own accounting and scheduling policies.",
+          [
+            ["Runtime", f(j.time, 1), "min"],
+            ["Required RAM", j.required, "GB"],
+            [
+              "Allocated cost",
+              j.fits ? f(j.serviceUnits, 2) : "Cannot run",
+              "SU",
+            ],
+          ],
+        );
+        a.bars(
+          [
+            ["Requested RAM", s.memoryGB],
+            ["Required RAM", j.required],
+          ],
+          { unit: "GB" },
+        );
+        $("result-status").textContent = !j.fits
+          ? "Insufficient RAM: the job cannot run."
+          : j.time > s.walltime
+            ? "Walltime is too short for the predicted runtime."
+            : "The request fits the modeled workload.";
+        if (id === "workflow" && this.timer)
+          $("result-status").textContent = "Simulation in progress…";
+        return true;
+      }
+      if (id === "storage") {
+        scene.setHardware({ nodes: 2 });
+        show(
+          "Sequential file transfer",
+          "Constant sustained bandwidth, decimal GB; excludes caching, metadata, and computation overlap.",
+          [
+            ["Data", s.dataGB, "GB"],
+            ["Bandwidth", s.ioBandwidth, "GB/s"],
+            ["Transfer time", f(s.dataGB / s.ioBandwidth, 1), "s"],
+          ],
+        );
+        a.bars([["Transfer", s.dataGB / s.ioBandwidth]], { unit: "s" });
+        return true;
+      }
+      if (id === "parallel-work") {
+        scene.setWorkQueue(s);
+        const serial = Math.round((s.workUnits * s.serialPercent) / 100),
+          time = serial + Math.ceil((s.workUnits - serial) / s.processors),
+          speed = s.workUnits / time;
+        show(
+          "Serial tasks, parallel batches",
+          "Each tile takes one time unit. Serial tasks run first; remaining tasks fill worker lanes in batches. No communication cost is included.",
+          [
+            ["Elapsed", time, "units"],
+            ["Speedup", f(speed), "×"],
+            ["Efficiency", f((100 * speed) / s.processors, 1), "%"],
+          ],
+        );
+        a.bars(
+          [
+            ["One worker", s.workUnits],
+            ["Allocation", time],
+          ],
+          { unit: "units" },
+        );
+        return true;
+      }
+      if (id === "strong-weak") {
+        const opts = {
+            processors: s.processors,
+            parallel: s.parallel / 100,
+            overhead: 0,
+            weak: s.weak,
+            work: 100,
+          },
+          v = LabModels.scaling(opts);
+        scene.setCluster({
+          processors: s.processors,
+          parallel: s.parallel / 100,
+        });
+        show(
+          "Workload size changes the comparison",
+          "Strong scaling fixes total work. Weak scaling keeps parallel work per worker fixed; this model retains a fixed serial component.",
+          [
+            ["Workers", s.processors],
+            ["Runtime", f(v.time, 2), "units"],
+            ["Scaling", s.weak ? "Weak" : "Strong"],
+          ],
+        );
+        a.chart(
+          [
+            {
+              points: Array.from({ length: 64 }, (_, i) => [
+                i + 1,
+                LabModels.scaling({ ...opts, processors: i + 1 }).time,
+              ]),
+            },
+          ],
+          { xLabel: "Workers", yLabel: "Runtime" },
+        );
+        return true;
+      }
+      if (["render-race", "animation-batch"].includes(id)) {
+        const v = C.renderCost({
+          ...s,
+          frames: id === "render-race" ? 1 : s.frames,
+        });
+        scene.setRace({
+          resolution: s.resolution,
+          frames: id === "render-race" ? 1 : s.frames,
+        });
+        show(
+          "Same image, different processing models",
+          "Synthetic rates: CPU 8,192 pixels/s; GPU 131,072 pixels/s plus per-frame launch/transfer. This is an illustrative model, not a measured hardware benchmark.",
+          [
+            ["CPU", f(v.cpu, 2), "s"],
+            ["GPU", f(v.gpu, 2), "s"],
+            [
+              id === "animation-batch" ? "Clip duration" : "Speedup",
+              id === "animation-batch"
+                ? f(s.frames / s.fps, 2)
+                : f(v.speedup, 2),
+              id === "animation-batch" ? "s" : "×",
+            ],
+          ],
+        );
+        a.bars(
+          [
+            ["CPU", v.cpu],
+            ["GPU", v.gpu],
+          ],
+          { unit: "s" },
+        );
+        return true;
+      }
+      return false;
+    },
+    exportResult() {
+      const s = this.api.state;
+      switch (this.api.lesson.id) {
+        case "axial-bar":
+        case "weak-form":
+          return C.axialBar(s);
+        case "quadrature":
+          return C.quadrature({ points: s.gaussPoints, degree: s.degree });
+        case "allocations":
+        case "workflow":
+        case "accounting":
+          return C.job(s);
+        case "rightsizing":
+          return C.matchTask(s.task, s.resourceChoice);
+        case "render-race":
+        case "animation-batch":
+          return C.renderCost({
+            ...s,
+            frames: this.api.lesson.id === "render-race" ? 1 : s.frames,
+          });
+        case "hardware":
+        case "hpc-intro":
+        case "memory-models":
+          return {
+            nodes: s.nodes,
+            totalCores: s.nodes * s.coresPerNode,
+            ramPerNodeGB: 64,
+          };
+        case "storage":
+          return { transferSeconds: s.dataGB / s.ioBandwidth };
+        case "element-library":
+          return {
+            family: s.family,
+            scope: "Geometric idealization, not a finite-element solution",
+          };
+        case "parallel-work": {
+          const serial = Math.round((s.workUnits * s.serialPercent) / 100);
+          return {
+            serial,
+            parallel: s.workUnits - serial,
+            time: serial + Math.ceil((s.workUnits - serial) / s.processors),
+          };
+        }
+        case "strong-weak":
+          return LabModels.scaling({
+            processors: s.processors,
+            parallel: s.parallel / 100,
+            overhead: 0,
+            weak: s.weak,
+            work: 100,
+          });
+      }
+    },
+    cancel() {
+      clearInterval(this.timer);
+      this.timer = null;
+      document
+        .querySelectorAll("#inspector [data-key]")
+        .forEach((e) => (e.disabled = false));
+    },
+    runJob() {
+      if (this.timer) {
+        this.cancel();
+        $("result-status").textContent = "Job cancelled.";
+        $("run-pipeline").textContent = "Submit simulated job";
+        return;
+      }
+      const a = this.api,
+        j = C.job(a.state);
+      let elapsed = 0;
+      const runtime = j.fits ? Math.min(j.time, j.walltime) : 0.4,
+        finish = 1 + j.queue + runtime + 1;
+      if (!a.scene.playing) $("play").click();
+      $("run-pipeline").textContent = "Cancel simulated job";
+      document
+        .querySelectorAll("#inspector [data-key]")
+        .forEach((e) => (e.disabled = true));
+      this.timer = setInterval(() => {
+        if (document.hidden || !a.scene.playing) return;
+        elapsed += Math.max(0.1, finish / 80);
+        const phase =
+          elapsed < 0.5
+            ? 0
+            : elapsed < 0.5 + j.queue
+              ? 1
+              : elapsed < 1 + j.queue
+                ? 2
+                : elapsed < 1 + j.queue + runtime
+                  ? 3
+                  : 4;
+        a.scene.pipelinePhase = phase;
+        a.scene.request();
+        const label = [
+          "Submitting",
+          "Queued",
+          "Allocating",
+          j.fits ? "Executing" : "Out of memory",
+          !j.fits || j.time > j.walltime
+            ? "Collecting diagnostics"
+            : "Collecting results",
+        ][phase];
+        a.metrics([
+          ["Job state", label],
+          ["Elapsed model time", a.format(elapsed, 1), "min"],
+          ["RAM use", a.format((j.required / j.memoryGB) * 100, 0), "%"],
+        ]);
+        $("result-status").textContent =
+          `${label} · accelerated illustrative playback`;
+        if (elapsed >= finish) {
+          this.cancel();
+          const outcome = !j.fits
+            ? "Out of memory"
+            : j.time > j.walltime
+              ? "Time limit reached"
+              : "Completed";
+          $("result-status").textContent =
+            outcome +
+            " · " +
+            (j.fits
+              ? a.format((j.processors * runtime) / 60, 2) +
+                " allocated core-hours."
+              : "Request enough RAM and resubmit.");
+          $("run-pipeline").textContent = "Submit simulated job";
+          a.metrics([
+            ["Job state", outcome],
+            ["Runtime", a.format(runtime, 1), "min"],
+            ["Core-hours", a.format((j.processors * runtime) / 60, 2)],
+          ]);
+        }
+      }, 100);
+    },
+    runRace() {
+      if (this.timer) {
+        this.cancel();
+        $("run-race").textContent = "Run rendering race";
+        $("result-status").textContent = "Rendering cancelled.";
+        return;
+      }
+      if (!this.api.scene.playing) document.getElementById("play").click();
+      const a = this.api,
+        s = a.state,
+        v = C.renderCost({
+          ...s,
+          frames: a.lesson.id === "render-race" ? 1 : s.frames,
+        }),
+        duration = Math.max(v.cpu, v.gpu),
+        rate = Math.max(1, duration / 8);
+      let elapsed = 0;
+      a.scene.raceProgress = { cpu: 0, gpu: 0 };
+      $("run-race").textContent = "Cancel rendering";
+      document
+        .querySelectorAll("#inspector [data-key]")
+        .forEach((e) => (e.disabled = true));
+      this.timer = setInterval(() => {
+        if (document.hidden || !a.scene.playing) return;
+        elapsed += 0.05 * rate;
+        a.scene.raceProgress = C.renderProgress(elapsed, {
+          ...s,
+          frames: a.lesson.id === "render-race" ? 1 : s.frames,
+        });
+        a.scene.request();
+        $("result-status").textContent =
+          `CPU ${Math.round(a.scene.raceProgress.cpu * 100)}% · GPU ${Math.round(a.scene.raceProgress.gpu * 100)}% · ${a.format(rate, 1)}× playback`;
+        if (elapsed >= duration) {
+          this.cancel();
+          $("run-race").textContent = "Run rendering race";
+          $("result-status").textContent =
+            "Both renders complete. Compare predicted times in Explain.";
+        }
+      }, 50);
+    },
+  });
+})();

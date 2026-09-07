@@ -27,14 +27,19 @@
   function box(w, h, d, c) {
     return new T.Mesh(new T.BoxGeometry(w, h, d), material(c));
   }
-  function label(text, x, y, z, size = 0.2, c = "#c8dbed") {
+  function label(text, x, y, z, size = 0.2, c) {
     const cv = document.createElement("canvas");
     cv.width = 512;
     cv.height = 80;
     const ctx = cv.getContext("2d");
     ctx.font = "500 30px system-ui";
     ctx.textAlign = "center";
-    ctx.fillStyle = c;
+    const dark = document.documentElement.dataset.theme === "dark";
+    ctx.fillStyle = dark
+      ? c || "#cbd5e1"
+      : c === "#ffc690"
+        ? "#b45309"
+        : "#334155";
     ctx.fillText(text, 256, 48);
     const texture = new T.CanvasTexture(cv),
       sprite = new T.Sprite(
@@ -42,10 +47,22 @@
           map: texture,
           transparent: true,
           depthTest: false,
+          toneMapped: false,
         }),
       );
+    texture.colorSpace = T.SRGBColorSpace;
     sprite.position.set(x, y, z);
     sprite.scale.set(size * 12.8, size * 2, 1);
+    sprite.userData.refreshLabel = (dark) => {
+      ctx.clearRect(0, 0, 512, 80);
+      ctx.fillStyle = dark
+        ? c || "#cbd5e1"
+        : c === "#ffc690"
+          ? "#b45309"
+          : "#334155";
+      ctx.fillText(text, 256, 48);
+      texture.needsUpdate = true;
+    };
     return sprite;
   }
   function dispose(group) {
@@ -118,9 +135,16 @@
       grid.material.transparent = true;
       grid.material.opacity = 0.65;
       this.scene.add(grid);
+      this.grid = grid;
       this.content = new T.Group();
       this.scene.add(this.content);
       this.pickables = [];
+      this.setTheme();
+      this.themeObserver = new MutationObserver(() => this.setTheme());
+      this.themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"],
+      });
       this.ray = new T.Raycaster();
       this.resize = new ResizeObserver(() => {
         const { width, height } = host.getBoundingClientRect();
@@ -215,6 +239,22 @@
         { passive: false },
       );
     }
+    setTheme() {
+      if (this.failed) return;
+      const dark = document.documentElement.dataset.theme === "dark",
+        bg = dark ? "#0f172a" : "#f8fafc";
+      this.scene.background.set(bg);
+      this.scene.fog.color.set(bg);
+      if (this.grid) {
+        const c = new T.Color(dark ? "#253650" : "#cbd5e1"),
+          a = this.grid.geometry.attributes.color;
+        for (let i = 0; i < a.count; i++) a.setXYZ(i, c.r, c.g, c.b);
+        a.needsUpdate = true;
+        this.grid.material.opacity = dark ? 0.5 : 0.65;
+      }
+      this.content?.traverse((o) => o.userData.refreshLabel?.(dark));
+      this.request();
+    }
     zoom(f) {
       this.userCamera = true;
       this.radius = Math.max(4, Math.min(18, this.radius * f));
@@ -294,11 +334,30 @@
         mode = "stress",
         frequency = 1,
         explode = 0,
+        showNodes = false,
       } = {},
     ) {
       if (this.failed) return;
       this.clear();
       this.kind = "fea";
+      if (showNodes) {
+        const positions = result.nodes.flatMap((p) => [
+          (p[0] - 60) * 0.05,
+          (p[1] - result.H / 2) * 0.05,
+          0.17,
+        ]);
+        const geometry = new T.BufferGeometry();
+        geometry.setAttribute(
+          "position",
+          new T.Float32BufferAttribute(positions, 3),
+        );
+        this.content.add(
+          new T.Points(
+            geometry,
+            new T.PointsMaterial({ color: "#6366f1", size: 0.075 }),
+          ),
+        );
+      }
       const r = result,
         scale = 0.05,
         positions = [],
@@ -912,6 +971,7 @@
       if (this.failed) return;
       cancelAnimationFrame(this.raf);
       this.resize.disconnect();
+      this.themeObserver?.disconnect();
       this.observer.disconnect();
       document.removeEventListener("visibilitychange", this.visibility);
       this.motion.removeEventListener("change", this.motionHandler);
@@ -921,4 +981,5 @@
     }
   }
   window.LabScene = LabScene;
+  window.LabVisuals = { box, label, material, color };
 })();

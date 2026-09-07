@@ -6,13 +6,13 @@ for (const [slug, name, kind, description] of [
     "finite-elemented",
     "Finite-Elemented",
     "fea",
-    "Explore finite element analysis through 14 visual experiments: real plane-stress solutions, meshing, shape functions, convergence, vibration, and heat conduction.",
+    "Learn finite element analysis step by step through four courses and 22 visual lessons, from forces and nodes to numerical integration, real solutions, and verification.",
   ],
   [
     "frontier",
     "Frontier",
     "hpc",
-    "Explore high-performance computing through 9 visual experiments: parallel scaling, job scheduling, CPU and GPU architectures, memory, roofline analysis, and energy.",
+    "Learn high-performance computing step by step through four courses and 19 visual lessons, from computer fundamentals to resource sizing, job workflows, parallelism, and GPU rendering.",
   ],
 ]) {
   writeFileSync(
@@ -22,7 +22,8 @@ for (const [slug, name, kind, description] of [
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#20352f">
+  <meta name="theme-color" content="#ffffff">
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('theme-preference')==='dark'?'dark':'light';}catch{document.documentElement.dataset.theme='light';}</script>
   <title>${name} · Interactive Learning Lab | E-Labs</title>
   <meta name="description" content="${description}">
   <meta name="author" content="Johann Cardenas">
@@ -34,10 +35,17 @@ for (const [slug, name, kind, description] of [
   <meta property="og:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_${name}.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="../shared/lab.css">
+  <link rel="stylesheet" href="../shared/site-palette.css">
+  <link rel="stylesheet" href="../shared/course.css">
+  <script src="../../assets/js/theme-toggle.js" defer></script>
   <script src="../../assets/js/three.min.js" defer></script>
   <script src="../shared/models.js" defer></script>
+  <script src="../shared/course-models.js" defer></script>
   <script src="../shared/scene.js" defer></script>
+  <script src="../shared/scene-concepts.js" defer></script>
   <script src="../shared/curriculum.js" defer></script>
+  <script src="../shared/courses.js" defer></script>
+  <script src="../shared/guide.js" defer></script>
   <script src="../shared/app.js" defer></script>
 </head>
 <body data-lab="${kind}">
@@ -49,6 +57,24 @@ for (const [slug, name, kind, description] of [
   );
 }
 const catalogURL = new URL("E-Labs.html", root);
+// Derive the labs' palette from the website rather than maintaining another palette.
+const mainCSS = readFileSync(new URL("assets/css/main.css", root), "utf8");
+const light = mainCSS.match(
+  /:root, \[data-theme="light"\] \{([\s\S]*?)\n\}/,
+)[1];
+const dark = mainCSS.match(/^\[data-theme="dark"\] \{([\s\S]*?)^\}/m)[1];
+const tokens = (block) =>
+  Array.from(
+    block.matchAll(
+      /--(?:bg-page|bg-box|bg-box-alt|bg-input|bg-code|text-primary|text-secondary|text-muted|border-light|border-medium|accent-primary|accent-primary-hover):[^;]+;/g,
+    ),
+  )
+    .map((m) => m[0])
+    .join("\n  ");
+writeFileSync(
+  new URL("e-labs/shared/site-palette.css", root),
+  `/* Generated from assets/css/main.css by scripts/build-learning-labs.mjs. */\n:root { --accent-primary: #18a9a8; --accent-primary-hover: #14908f; --accent-secondary: #6366f1; }\n:root, [data-theme="light"] {\n  ${tokens(light)}\n}\n[data-theme="dark"] {\n  ${tokens(dark)}\n}\n`,
+);
 let catalog = readFileSync(catalogURL, "utf8");
 if (!catalog.includes("e-labs-lab-previews.js"))
   catalog = catalog.replace(
@@ -77,5 +103,29 @@ catalog = catalog
     "images/e-labs/E-Labs_Frontier.webp",
     "images/e-labs/E-Labs_Frontier.png",
   )
-  .replace('width="1200" height="628"', 'width="1310" height="790"');
+  .replace(
+    /(src="images\/e-labs\/E-Labs_Frontier.png"[^>]*?)width="1200" height="628"/,
+    '$1width="1310" height="790"',
+  );
+catalog = catalog
+  .replace(
+    "fourteen visual experiments spanning weak forms, meshing, isoparametric mapping,",
+    "four guided courses and 22 lessons spanning forces, weak forms, meshing, integration,",
+  )
+  .replace(
+    '<span class="tag">14 Visual Labs</span>',
+    '<span class="tag">4 Guided Courses</span>',
+  )
+  .replace(
+    "A hands-on, user-friendly High Performance Computing intuition engine.",
+    "Learn high-performance computing one idea at a time across four guided courses.",
+  )
+  .replace(
+    "Build understanding of processing power,  parallel computing concepts,",
+    "Explore 19 lessons in computer fundamentals, resource sizing, parallel work,",
+  )
+  .replace(
+    "job scheduling, and distributed systems through interactive simulations.",
+    "job workflows, and CPU/GPU rendering through interactive 3D experiments.",
+  );
 writeFileSync(catalogURL, catalog);

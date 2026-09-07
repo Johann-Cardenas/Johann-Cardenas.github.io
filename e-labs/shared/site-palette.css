@@ -1,0 +1,28 @@
+/* Generated from assets/css/main.css by scripts/build-learning-labs.mjs. */
+:root { --accent-primary: #18a9a8; --accent-primary-hover: #14908f; --accent-secondary: #6366f1; }
+:root, [data-theme="light"] {
+  --bg-page: #ffffff;
+  --bg-box: #ffffff;
+  --bg-box-alt: #f8fafc;
+  --bg-input: #ffffff;
+  --bg-code: #f1f5f9;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #6b7280;
+  --border-light: #e2e8f0;
+  --border-medium: #cbd5e1;
+}
+[data-theme="dark"] {
+  --bg-page: #111827;
+  --bg-box: #1e293b;
+  --bg-box-alt: #0f172a;
+  --bg-input: #1e293b;
+  --bg-code: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-light: #334155;
+  --border-medium: #475569;
+  --accent-primary: #22d3d1;
+  --accent-primary-hover: #18a9a8;
+}

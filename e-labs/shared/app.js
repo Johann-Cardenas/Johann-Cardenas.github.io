@@ -123,7 +123,9 @@
           version: 2,
           lesson: lesson.id,
           parameters: state,
-          result: fea ? result : M.scaling(hpcOptions()),
+          result:
+            window.LabGuide?.exportResult() ??
+            (fea ? result : M.scaling(hpcOptions())),
           assumptions: lesson.body,
         },
         null,
@@ -158,8 +160,10 @@
     $("progress-label").textContent =
       `${count} of ${lessons.length} predictions understood`;
     $("progress-bar").style.width = (count / lessons.length) * 100 + "%";
+    window.LabGuide?.renderNavigation();
   }
   function renderLesson() {
+    solveGeneration++;
     clearTimeout(solveTimer);
     clearInterval(jobTimer);
     jobTimer = 0;
@@ -167,6 +171,7 @@
     jobElapsed = 0;
     jobSnapshot = null;
     scene.jobPhase = "idle";
+    window.LabGuide?.prepare(lesson);
     nav();
     $("mobile-module").value = lesson.id;
     $("lesson-eyebrow").textContent =
@@ -220,6 +225,7 @@
       : '<p>This is an educational computing model, not a benchmark or a replica of the ORNL Frontier system. Workers, lane counts, queue delays, bandwidths, and power values are explicit illustrative assumptions. No jobs are submitted to external machines. Scaling assumes a fixed serial component and a log₂(P) communication term; weak scaling grows only the parallel workload with worker count.</p><p>Further reading: <a href="https://hpc-wiki.info/hpc/Scaling" target="_blank" rel="noopener">HPC Wiki: scaling</a>, <a href="https://crd.lbl.gov/divisions/amcr/computer-science-amcr/par/research/roofline/" target="_blank" rel="noopener">Berkeley Lab: Roofline performance model</a>, and <a href="https://slurm.schedmd.com/sbatch.html" target="_blank" rel="noopener">Slurm batch job documentation</a>.</p>';
     renderControls();
     update();
+    window.LabGuide?.onLesson();
   }
   const range = (key, label, min, max, step, unit = "", tip = "") =>
     `<div class="control"><label for="c-${key}">${label}<output id="o-${key}" for="c-${key}">${state[key]}${unit}</output></label><input id="c-${key}" data-key="${key}" data-unit="${unit}" type="range" min="${min}" max="${max}" step="${step}" value="${state[key]}"><div class="range-ends"><span>${min}${unit}</span><span>${max}${unit}</span></div>${tip ? `<small>${tip}</small>` : ""}</div>`;
@@ -230,7 +236,13 @@
   function renderControls() {
     let html = "";
     const id = lesson.id;
-    if (fea) {
+    const guided = window.LabGuide?.controls(lesson, state, {
+      range,
+      select,
+      check,
+    });
+    if (guided !== undefined) html = guided;
+    else if (fea) {
       if (id === "shape")
         html =
           select("node", "Basis function", [
@@ -395,7 +407,9 @@
       ),
     );
     $("reset").onclick = () => {
-      state = { ...defaults };
+      state = { ...defaults, ...lesson.defaults };
+      window.LabGuide?.cancel();
+      if (window.LabGuide) window.LabGuide.visualKey = null;
       convergence = null;
       clearInterval(jobTimer);
       jobTimer = 0;
@@ -414,6 +428,7 @@
           download("finite-elemented.inp", abaqus(result), "text/plain");
       };
     if ($("submit-job")) $("submit-job").onclick = submitJob;
+    window.LabGuide?.onControls();
   }
   function metrics(items) {
     $("metrics").innerHTML = items
@@ -464,11 +479,11 @@
       svg += `<line class="gridline" x1="${L}" x2="${W - R}" y1="${Y}" y2="${Y}"/><text x="${L - 7}" y="${Y + 3}" text-anchor="end">${log ? "10^" + Math.round(value) : format(value, value < 10 ? 1 : 0)}</text><text x="${L + (iw * i) / 4}" y="${H - 17}" text-anchor="middle">${format((xm * i) / 4, xm < 5 ? 1 : 0)}</text>`;
     }
     for (const s of series) {
-      svg += `<path d="${s.points.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(2) + "," + y(p[1]).toFixed(2)).join(" ")}" fill="none" stroke="${s.color || "#167565"}" stroke-width="2.4" ${s.dash ? 'stroke-dasharray="5 4"' : ""}/>`;
+      svg += `<path d="${s.points.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(2) + "," + y(p[1]).toFixed(2)).join(" ")}" fill="none" stroke="${s.color || "var(--accent)"}" stroke-width="2.4" ${s.dash ? 'stroke-dasharray="5 4"' : ""}/>`;
       if (s.dots)
         s.points.forEach(
           (p) =>
-            (svg += `<circle cx="${x(p[0])}" cy="${y(p[1])}" r="3.2" fill="${s.color || "#167565"}"/>`),
+            (svg += `<circle cx="${x(p[0])}" cy="${y(p[1])}" r="3.2" fill="${s.color || "var(--accent)"}"/>`),
         );
     }
     svg += `<text x="${W / 2}" y="${H - 1}" text-anchor="middle">${esc(xLabel)}</text><text x="${L}" y="9">${esc(yLabel)}</text></svg>`;
@@ -478,7 +493,7 @@
         series
           .map(
             (s) =>
-              `<span><i style="background:${s.color || "#167565"}"></i>${esc(s.name || "")}</span>`,
+              `<span><i style="background:${s.color || "var(--accent)"}"></i>${esc(s.name || "")}</span>`,
           )
           .join("") +
         "</div>";
@@ -487,7 +502,7 @@
   function bars(items, { unit = "" } = {}) {
     const max = Math.max(...items.map((i) => i[1]), 1);
     $("chart").innerHTML =
-      `<svg class="chart" viewBox="0 0 440 ${items.length * 38 + 20}" role="img" aria-label="${esc($("chart-title").textContent)}">${items.map(([label, v, c], i) => `<text x="0" y="${i * 38 + 20}">${esc(label)}</text><rect x="115" y="${i * 38 + 8}" width="${(v / max) * 220}" height="17" rx="3" fill="${c || "#167565"}"/><text x="345" y="${i * 38 + 20}">${format(v, v < 10 ? 2 : 0)} ${unit}</text>`).join("")}</svg>`;
+      `<svg class="chart" viewBox="0 0 440 ${items.length * 38 + 20}" role="img" aria-label="${esc($("chart-title").textContent)}">${items.map(([label, v, c], i) => `<text x="0" y="${i * 38 + 20}">${esc(label)}</text><rect x="115" y="${i * 38 + 8}" width="${(v / max) * 220}" height="17" rx="3" fill="${c || "var(--accent)"}"/><text x="345" y="${i * 38 + 20}">${format(v, v < 10 ? 2 : 0)} ${unit}</text>`).join("")}</svg>`;
   }
   let worker = null,
     requestID = 0;
@@ -587,12 +602,17 @@
         return;
       }
     }
-    if (["shape", "mapping", "refinement", "heat"].includes(lesson.id)) return;
+    if (
+      lesson.id !== id ||
+      ["shape", "mapping", "refinement", "heat"].includes(lesson.id)
+    )
+      return;
     $("result-status").textContent = result.converged
       ? `Solved · ${result.dofs} free DOFs · ${result.iterations} iterations`
       : "Solver did not reach tolerance. Treat results as unconverged.";
     scene.setFE(result, {
       gain: state.gain,
+      showNodes: id === "fea-intro",
       field: state.field,
       ghost: state.ghost,
       mesh: state.mesh,
@@ -641,7 +661,23 @@
       yLabel: "MPa",
       xMax: 120,
     });
-    if (id === "assembly") {
+    if (id === "fea-intro") {
+      metrics([
+        ["Nodes", result.nodes.length],
+        ["Free DOFs", result.dofs],
+        ["Elements", result.elements.length],
+      ]);
+      evidence(
+        "Nodes, elements, and unknowns",
+        "Each node carries two displacement components. Prescribed components on the fixed edge are removed from the system of free unknowns.",
+        "ACTUAL MESH",
+      );
+      bars([
+        ["Nodes", result.nodes.length],
+        ["Free DOFs", result.dofs],
+        ["Elements", result.elements.length],
+      ]);
+    } else if (id === "assembly") {
       evidence(
         "How connectivity creates sparsity",
         `Actual reduced stiffness matrix: ${result.dofs} × ${result.dofs}, shown in 32 × 32 bins. Darker cells contain more nonzero coefficients. ${result.nonzeros.toLocaleString()} entries are stored. Changing the mesh changes this pattern.`,
@@ -653,11 +689,11 @@
         result.pattern
           .map(
             (v) =>
-              `<span style="background:${v ? `rgba(22,117,101,${0.25 + (0.75 * v) / peak})` : "#edf2ed"}"></span>`,
+              `<span style="background:${v ? `rgba(24,169,168,${0.25 + (0.75 * v) / peak})` : "var(--bg-box-alt)"}"></span>`,
           )
           .join("") +
         '</div><div class="matrix-key">Rows / columns are free displacement DOFs</div>';
-    } else if (id === "solvers") {
+    } else if (id === "solvers" || id === "conditioning") {
       evidence(
         "Residual history",
         "Jacobi-preconditioned conjugate gradient. Values are recorded during this actual solve. A non-monotone residual is not necessarily a failure.",
@@ -717,7 +753,7 @@
         freq.map((v, i) => [
           "Mode " + (i + 1),
           v,
-          i === state.mode - 1 ? "#d87942" : "#167565",
+          i === state.mode - 1 ? "#d87942" : "var(--accent)",
         ]),
         { unit: "Hz" },
       );
@@ -754,7 +790,7 @@
         N.map((v, i) => [
           "N" + (i + 1),
           v,
-          i === state.node ? "#d87942" : "#167565",
+          i === state.node ? "#d87942" : "var(--accent)",
         ]),
       );
     } else if (id === "mapping") {
@@ -1023,6 +1059,7 @@
     };
   }
   function update() {
+    if (window.LabGuide?.update()) return;
     if (fea) updateFE();
     else updateHPC();
   }
@@ -1315,7 +1352,7 @@
       );
       const tasks = [
         { name: "R", start: 0, end: 4, y: 0, h: 2, c: "#899b91" },
-        { name: "A", start: 4, end: 10, y: 0, h: 4, c: "#167565" },
+        { name: "A", start: 4, end: 10, y: 0, h: 4, c: "var(--accent)" },
         {
           name: "B",
           start: back ? 0 : 10,
@@ -1435,5 +1472,39 @@
     scene.dispose();
   });
   window.addEventListener("pageshow", () => scene.request());
+  window.LabApp = {
+    kind,
+    fea,
+    name,
+    lessons,
+    scene,
+    defaults,
+    get lesson() {
+      return lesson;
+    },
+    set lesson(value) {
+      lesson = value;
+    },
+    get state() {
+      return state;
+    },
+    get result() {
+      return result;
+    },
+    get completed() {
+      return completed;
+    },
+    go,
+    renderControls,
+    update,
+    metrics,
+    evidence,
+    chart,
+    bars,
+    legend,
+    download,
+    format,
+  };
+  window.LabGuide?.init(window.LabApp);
   renderLesson();
 })();

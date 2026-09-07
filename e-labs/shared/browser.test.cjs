@@ -1,3 +1,11 @@
+/* The guided regression suite is the default; retain scene-only artifact modes. */
+if (
+  !process.argv.includes("--posters") &&
+  !process.argv.includes("--shape-only")
+) {
+  require("./course.test.cjs");
+  return;
+}
 /* Usage: node browser.test.cjs <path-to-playwright> [artifact-directory] */
 const { chromium } = require(process.argv[2]);
 const http = require("node:http"),
@@ -119,205 +127,6 @@ const server = http.createServer((req, res) => {
       );
       return;
     }
-    await visit("finite-elemented");
-    await page.locator("#play").click();
-    assert.ok(
-      await page
-        .locator("#stage")
-        .evaluate((e) => e.clientHeight >= 300 && e.clientHeight <= 650),
-      "3D viewport has a stable bounded height",
-    );
-    await page.screenshot({
-      path: path.join(artifacts, "finite-elemented-desktop.png"),
-      fullPage: true,
-    });
-    assert.ok(
-      await page.evaluate(
-        () =>
-          document.querySelector(".stage-caption").getBoundingClientRect()
-            .bottom <
-          document.querySelector(".stage-toolbar").getBoundingClientRect().top,
-      ),
-      "Legend stays inside viewport",
-    );
-    const feIds = await page
-      .locator("[data-module]")
-      .evaluateAll((es) => es.map((e) => e.dataset.module));
-    for (const id of feIds) {
-      await page.locator(`[data-module="${id}"]`).click();
-      await page.waitForFunction(
-        () =>
-          document.getElementById("result-status").textContent &&
-          !document
-            .getElementById("result-status")
-            .textContent.includes("Assembling"),
-      );
-      assert.ok(
-        (await page.locator("#metrics").innerText()).length > 10,
-        id + " metrics",
-      );
-      assert.equal(await page.locator("#answers button").count(), 3);
-      console.log("FE lesson:", id);
-    }
-    await page.locator('[data-module="stress"]').click();
-    await set("load", 2000);
-    assert.match(await page.locator("#result-status").innerText(), /Solved/);
-    await set("type", "T3");
-    await set("preset", "bracket");
-    await set("density", 8);
-    assert.match(await page.locator("#result-status").innerText(), /Solved/);
-    await page.screenshot({
-      path: path.join(artifacts, "finite-elemented-bracket.png"),
-      fullPage: true,
-    });
-    await page.locator("#element-select").selectOption("5");
-    assert.match(await page.locator("#probe").innerText(), /von Mises/);
-    await page.locator('[data-module="convergence"]').click();
-    await page.locator("#run-study").click();
-    await page.waitForFunction(
-      () =>
-        document.getElementById("chart-tag").textContent === "6 ACTUAL SOLVES",
-      {},
-      { timeout: 30000 },
-    );
-    assert.match(
-      await page.locator("#chart-caption").innerText(),
-      /All algebraic solves/,
-    );
-    await page.locator('[data-module="mapping"]').click();
-    await set("warp", 1.6);
-    assert.match(await page.locator("#metrics").innerText(), /Invalid/);
-    await page.locator('[data-module="shape"]').click();
-    await set("node", 2);
-    await set("xi", 0.5);
-    await page.screenshot({
-      path: path.join(artifacts, "finite-elemented-shape.png"),
-      fullPage: true,
-    });
-    await page.locator('[data-module="stress"]').click();
-    await page.locator('[data-answer="1"]').click();
-    assert.match(await page.locator("#feedback").innerText(), /Try again/);
-    await page.locator('[data-answer="0"]').click();
-    assert.match(await page.locator("#feedback").innerText(), /Correct/);
-    await page.locator('[data-module="abaqus"]').click();
-    const downloadPromise = page.waitForEvent("download");
-    await page.locator("#export-deck").click();
-    const download = await downloadPromise;
-    assert.equal(download.suggestedFilename(), "finite-elemented.inp");
-    const deck = fs.readFileSync(await download.path(), "utf8");
-    assert.match(deck, /\*Element, type=CPS3/);
-    assert.match(deck, /\*End Step/);
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.locator("#mobile-module").selectOption("stress");
-    await page.waitForTimeout(250);
-    assert.ok(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-      "FE mobile overflow",
-    );
-    await page.screenshot({
-      path: path.join(artifacts, "finite-elemented-mobile.png"),
-      fullPage: true,
-    });
-    await page.setViewportSize({ width: 1440, height: 1000 });
-    await visit("frontier");
-    await page.locator("#play").click();
-    await page.screenshot({
-      path: path.join(artifacts, "frontier-desktop.png"),
-      fullPage: true,
-    });
-    const hpcIds = await page
-      .locator("[data-module]")
-      .evaluateAll((es) => es.map((e) => e.dataset.module));
-    for (const id of hpcIds) {
-      await page.locator(`[data-module="${id}"]`).click();
-      assert.ok((await page.locator("#metrics").innerText()).length > 10);
-      console.log("HPC lesson:", id);
-    }
-    await page.locator('[data-module="scaling"]').click();
-    await set("processors", 1);
-    assert.match(await page.locator("#metrics").innerText(), /1.00/);
-    await set("processors", 64);
-    await set("parallel", 0);
-    await set("overhead", 0);
-    assert.match(await page.locator("#metrics").innerText(), /1.00/);
-    await page.locator('[data-module="rightsizing"]').click();
-    await set("workload", "large");
-    await set("resource", "laptop");
-    assert.match(await page.locator("#metrics").innerText(), /Does not fit/);
-    await page.locator('[data-module="workflow"]').click();
-    await set("walltime", 1);
-    await page.locator("#submit-job").click();
-    await page.waitForFunction(
-      () =>
-        document
-          .getElementById("result-status")
-          .textContent.includes("Time limit"),
-      {},
-      { timeout: 20000 },
-    );
-    await page.locator('[data-module="architecture"]').click();
-    await page.screenshot({
-      path: path.join(artifacts, "frontier-architecture.png"),
-      fullPage: true,
-    });
-    await page.locator('[data-module="roofline"]').click();
-    await set("intensity", 0.5);
-    assert.match(await page.locator("#metrics").innerText(), /Memory/);
-    await set("intensity", 64);
-    assert.match(await page.locator("#metrics").innerText(), /Compute/);
-    await page.locator('[data-module="scheduling"]').click();
-    await set("policy", "fifo");
-    assert.match(await page.locator("#metrics").innerText(), /13/);
-    await set("policy", "backfill");
-    assert.match(await page.locator("#metrics").innerText(), /10/);
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.locator("#mobile-module").selectOption("scaling");
-    assert.ok(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-      "HPC mobile overflow",
-    );
-    await page.screenshot({
-      path: path.join(artifacts, "frontier-mobile.png"),
-      fullPage: true,
-    });
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await visit("frontier");
-    assert.equal(await page.locator("#play").innerText(), "Play motion");
-    await page.setViewportSize({ width: 1440, height: 1000 });
-    await page.goto(url + "/E-Labs.html");
-    await page
-      .locator('[data-animation="finite-elemented"]')
-      .scrollIntoViewIfNeeded();
-    await page.waitForSelector(
-      '[data-animation="finite-elemented"].lab-preview-ready',
-    );
-    await page.waitForSelector('[data-animation="frontier"].lab-preview-ready');
-    await page.locator('[data-animation="finite-elemented"]').screenshot({
-      path: path.join(artifacts, "finite-elemented-miniature.png"),
-    });
-    await page
-      .locator('[data-animation="frontier"]')
-      .screenshot({ path: path.join(artifacts, "frontier-miniature.png") });
-    const fallback = await browser.newPage();
-    await fallback.addInitScript(() => {
-      const original = HTMLCanvasElement.prototype.getContext;
-      HTMLCanvasElement.prototype.getContext = function (type, ...args) {
-        return /webgl/i.test(type) ? null : original.call(this, type, ...args);
-      };
-    });
-    await fallback.goto(url + "/e-labs/finite-elemented/index.html");
-    await fallback.waitForSelector(".webgl-fallback");
-    await fallback.waitForFunction(() =>
-      document.getElementById("result-status").textContent.startsWith("Solved"),
-    );
-    assert.ok(
-      (await fallback.locator("#metrics").innerText()).includes("1.183"),
-    );
-    await fallback.close();
     if (process.argv.includes("--posters"))
       for (const [tool, title] of [
         ["finite-elemented", "Finite-Elemented"],
@@ -349,9 +158,7 @@ const server = http.createServer((req, res) => {
         });
       }
     assert.deepEqual(errors, [], "browser errors");
-    console.log(
-      "PASS: all 23 lessons, actual solver interactions, convergence, exports, quiz feedback, HPC edge cases, job timeout, mobile overflow, reduced motion, WebGL fallback, both miniature views.",
-    );
+    console.log("PASS: scene artifacts generated without browser errors.");
     console.log("Screenshots:", artifacts);
   } finally {
     await browser.close();

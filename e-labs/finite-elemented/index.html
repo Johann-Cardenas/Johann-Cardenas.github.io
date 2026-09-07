@@ -3,26 +3,34 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#20352f">
+  <meta name="theme-color" content="#ffffff">
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('theme-preference')==='dark'?'dark':'light';}catch{document.documentElement.dataset.theme='light';}</script>
   <title>Finite-Elemented · Interactive Learning Lab | E-Labs</title>
-  <meta name="description" content="Explore finite element analysis through 14 visual experiments: real plane-stress solutions, meshing, shape functions, convergence, vibration, and heat conduction.">
+  <meta name="description" content="Learn finite element analysis step by step through four courses and 22 visual lessons, from forces and nodes to numerical integration, real solutions, and verification.">
   <meta name="author" content="Johann Cardenas">
   <link rel="canonical" href="https://www.johanncardenas.com/e-labs/finite-elemented/">
   <meta property="og:title" content="Finite-Elemented · Interactive Learning Lab">
-  <meta property="og:description" content="Explore finite element analysis through 14 visual experiments: real plane-stress solutions, meshing, shape functions, convergence, vibration, and heat conduction.">
+  <meta property="og:description" content="Learn finite element analysis step by step through four courses and 22 visual lessons, from forces and nodes to numerical integration, real solutions, and verification.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.johanncardenas.com/e-labs/finite-elemented/">
   <meta property="og:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_Finite-Elemented.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="../shared/lab.css">
+  <link rel="stylesheet" href="../shared/site-palette.css">
+  <link rel="stylesheet" href="../shared/course.css">
+  <script src="../../assets/js/theme-toggle.js" defer></script>
   <script src="../../assets/js/three.min.js" defer></script>
   <script src="../shared/models.js" defer></script>
+  <script src="../shared/course-models.js" defer></script>
   <script src="../shared/scene.js" defer></script>
+  <script src="../shared/scene-concepts.js" defer></script>
   <script src="../shared/curriculum.js" defer></script>
+  <script src="../shared/courses.js" defer></script>
+  <script src="../shared/guide.js" defer></script>
   <script src="../shared/app.js" defer></script>
 </head>
 <body data-lab="fea">
   <div id="app"></div>
-  <noscript><main style="padding:3rem;max-width:50rem;margin:auto"><h1>Finite-Elemented</h1><p>Explore finite element analysis through 14 visual experiments: real plane-stress solutions, meshing, shape functions, convergence, vibration, and heat conduction.</p><p>Enable JavaScript to use these interactive experiments. All numerical models execute in your browser.</p><a href="../../E-Labs.html">Return to E-Labs</a></main></noscript>
+  <noscript><main style="padding:3rem;max-width:50rem;margin:auto"><h1>Finite-Elemented</h1><p>Learn finite element analysis step by step through four courses and 22 visual lessons, from forces and nodes to numerical integration, real solutions, and verification.</p><p>Enable JavaScript to use these interactive experiments. All numerical models execute in your browser.</p><a href="../../E-Labs.html">Return to E-Labs</a></main></noscript>
 </body>
 </html>

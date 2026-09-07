@@ -42,9 +42,14 @@
           caption.className = "lab-preview-caption";
           caption.innerHTML =
             card.dataset.animation === "finite-elemented"
-              ? "<span>Real mesh. Real mechanics.</span><span>14 visual labs</span>"
-              : "<span>Explore the compute fabric</span><span>9 visual labs</span>";
+              ? "<span>Explore finite elements</span><span>4 guided courses</span>"
+              : "<span>Explore computing</span><span>4 guided courses</span>";
           bg.appendChild(caption);
+          caption.style.color = "var(--text-primary)";
+          caption.style.background = "var(--bg-box)";
+          caption.style.padding = "7px 9px";
+          caption.style.borderRadius = "6px";
+          caption.lastElementChild.style.color = "var(--text-secondary)";
           card.classList.add("lab-preview-ready");
           function motion() {
             scene.setPlaying(

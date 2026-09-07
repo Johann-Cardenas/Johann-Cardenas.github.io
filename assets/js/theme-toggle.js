@@ -25,7 +25,8 @@
      */
     function getPreferredTheme() {
         // Check localStorage first
-        const stored = localStorage.getItem(STORAGE_KEY);
+        let stored;
+        try { stored = localStorage.getItem(STORAGE_KEY); } catch { /* Theme switching still works without storage. */ }
         if (stored === THEME_LIGHT || stored === THEME_DARK) {
             return stored;
         }
@@ -83,7 +84,7 @@
         }
 
         // Store preference
-        localStorage.setItem(STORAGE_KEY, theme);
+        try { localStorage.setItem(STORAGE_KEY, theme); } catch { /* Keep the selected theme for this page. */ }
     }
 
     /**
