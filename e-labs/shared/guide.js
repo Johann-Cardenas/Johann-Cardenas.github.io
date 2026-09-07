@@ -9,23 +9,27 @@
     current: null,
     init(api) {
       this.api = api;
-      const dialog = document.createElement("dialog");
-      dialog.id = "course-library";
-      dialog.innerHTML =
-        '<div class="library-heading"><div><span class="eyebrow">Your learning path</span><h2>Four courses. One idea at a time.</h2></div><button id="close-library" aria-label="Close course library">×</button></div>';
-      dialog.querySelector("h2").id = "library-title";
-      dialog.setAttribute("aria-labelledby", "library-title");
-      dialog.append(document.querySelector(".journey"));
-      document.body.append(dialog);
+      this.initialOverview = !location.hash || location.hash === "#overview";
+      const journey = document.querySelector(".journey");
+      journey.classList.add("course-sidebar");
+      const home = document.createElement("button");
+      home.className = "overview-link";
+      home.textContent = "← Course overview";
+      home.onclick = () => { location.hash = "overview"; };
+      journey.prepend(home);
       const open = document.createElement("button");
       open.id = "open-library";
-      open.textContent = "Courses";
+      open.textContent = "Course overview";
+      open.onclick = home.onclick;
       document.querySelector(".top-links").prepend(open);
-      open.onclick = () => dialog.showModal();
-      $("close-library").onclick = () => dialog.close();
-      dialog.addEventListener("click", (e) => {
-        if (e.target === dialog) dialog.close();
-      });
+      const overview = document.createElement("main");
+      overview.id = "course-overview";
+      overview.hidden = true;
+      overview.innerHTML = `<header class="overview-heading"><span class="eyebrow">Interactive learning path</span><h1 tabindex="-1">${api.kind === "fea" ? "Finite-Elemented" : "Frontier"}</h1><p>Build your understanding, one experiment at a time. Explore any module or follow the sequence below.</p><button id="resume-course" class="primary"></button><p id="overview-progress" role="status"></p></header><div class="course-search"><label for="lesson-search">Find a lesson or concept</label><input id="lesson-search" type="search" placeholder="Search titles, concepts, and experiments…"><p id="search-status" role="status"></p></div><div id="course-grid"></div>`;
+      document.querySelector(".workspace").before(overview);
+      $("resume-course").onclick = () => { this.resume = { lesson: api.lesson.id, step: this.step }; location.hash = api.lesson.id; };
+      $("lesson-search").oninput = () => this.renderOverview();
+      window.addEventListener("hashchange", () => this.showOverview(!location.hash || location.hash === "#overview", true));
       const stepper = document.createElement("nav");
       stepper.className = "stepper";
       stepper.setAttribute("aria-label", "Lesson steps");
@@ -56,10 +60,15 @@
       explain.id = "explain";
       explain.className = "step-panel";
       explain.append(article, evidence, document.querySelector(".details"));
+      const example = document.createElement("details");
+      example.className = "worked-example";
+      example.innerHTML = '<summary>Worked example & reflection</summary><p id="example-copy"></p>';
+      explain.append(example);
       check.id = "check";
       check.classList.add("step-panel");
       panel.append(inspector, explain, check);
       document.querySelector(".experiment").append(panel);
+      document.querySelector(".lesson-bottom").prepend($("save"));
       const previous = document.createElement("button");
       previous.id = "previous-step";
       previous.textContent = "← Previous";
@@ -69,18 +78,18 @@
         if (this.step < 3) this.setStep(this.step + 1, true);
         else if (api.lesson.index < api.lessons.length - 1)
           api.go(api.lessons[api.lesson.index + 1].id);
-        else dialog.showModal();
+        else location.hash = "overview";
       };
       try {
         const saved = JSON.parse(
           localStorage.getItem("elabs-course-" + api.kind) || "null",
         );
-        if (saved && (!location.hash || location.hash === "#" + saved.lesson)) {
+        if (saved && (!location.hash || location.hash === "#overview" || location.hash === "#" + saved.lesson)) {
           const l = api.lessons.find((l) => l.id === saved.lesson);
           if (l) {
             api.lesson = l;
             this.resume = saved;
-            history.replaceState(null, "", "#" + l.id);
+            if (!this.initialOverview) history.replaceState(null, "", "#" + l.id);
           }
         }
       } catch {}
@@ -101,6 +110,46 @@
         attributeFilter: ["data-theme"],
       });
       window.addEventListener("pagehide", () => this.cancel());
+    },
+    showOverview(show, focus = false) {
+      this.overviewVisible = show;
+      $("course-overview").hidden = !show;
+      document.querySelector(".workspace").hidden = show;
+      if (show) this.renderOverview();
+      else this.api.scene.request();
+      if (focus) {
+        const heading = show ? $("course-overview").querySelector("h1") : $("title");
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+        window.scrollTo(0, 0);
+      }
+    },
+    renderOverview() {
+      const a = this.api, query = $("lesson-search").value.trim().toLowerCase();
+      const count = a.lessons.filter(l => a.completed[l.id]).length;
+      $("resume-course").textContent = `${count || this.resume ? "Continue" : "Open lesson"}: ${a.lesson.nav} →`;
+      $("overview-progress").textContent = `${count} of ${a.lessons.length} knowledge checks completed · Progress saves on this browser`;
+      const grid = $("course-grid");
+      grid.replaceChildren();
+      let matches = 0;
+      for (const course of LabCourses[a.kind]) {
+        const lessons = a.lessons.filter(l => course.ids.includes(l.id) && (!query || [l.nav, l.intro, l.takeaway, ...l.terms.flat()].join(" ").toLowerCase().includes(query)));
+        if (!lessons.length) continue;
+        matches += lessons.length;
+        const card = document.createElement("section");
+        card.className = "course-card";
+        const completed = course.ids.filter(id => a.completed[id]).length;
+        card.innerHTML = `<span class="eyebrow">Module 0${course.index + 1} · ${course.ids.length} lessons</span><h2>${course.title}</h2><p>${course.outcome}</p><p class="module-prerequisite">${course.index ? "Suggested preparation: " + LabCourses[a.kind][course.index - 1].title : "Start here · No prior experience required"}</p><progress value="${completed}" max="${course.ids.length}" aria-label="${course.title} completion"></progress><small>${completed}/${course.ids.length} checks completed</small>`;
+        for (const l of lessons) {
+          const link = document.createElement("a");
+          link.className = "lesson-link";
+          link.href = "#" + l.id;
+          link.innerHTML = `<span class="lesson-state">${a.completed[l.id] ? "✓ Completed" : String(l.index + 1).padStart(2, "0") + " · Explore"}</span><strong>${l.nav} <span aria-hidden="true">↗</span></strong><span>${l.intro}</span><small>Try it: ${l.takeaway}</small>`;
+          card.append(link);
+        }
+        grid.append(card);
+      }
+      $("search-status").textContent = query ? `${matches} matching lessons${matches ? "" : ". Try a broader concept or clear the search."}` : `${a.lessons.length} lessons across four modules · Select any lesson to begin`;
     },
     prepare(l) {
       this.cancel();
@@ -127,7 +176,7 @@
           if (b) {
             d.append(b);
             b.addEventListener("click", () => {
-              $("course-library").close();
+              this.showOverview(false);
               if (id === this.api.lesson.id) this.setStep(0);
             });
           }
@@ -140,6 +189,18 @@
       $("lesson-eyebrow").textContent =
         `Course ${l.course + 1} · ${l.courseTitle}`;
       $("intro-copy").textContent = l.intro;
+      const examples = this.api.kind === "fea" ? [
+        "For a uniform bar with E = 70,000 N/mm², A = 144 mm², L = 120 mm, and end force P = 1,000 N, u(L) = PL/(EA) ≈ 0.01190 mm. Set distributed load to zero in the bar lesson to compare. Reflect: why does doubling E halve displacement?",
+        "The integral of ξ⁴ from −1 to 1 is 2/5 = 0.4. Two-point Gauss quadrature gives 2/9 ≈ 0.2222; three points recover 0.4. Reflect: why can an accurately solved system still have integration error?",
+        "For Ku = f, the residual r = f − Ku measures how well the discrete equations are solved. Tightening tolerance on a fixed mesh does not improve its approximation space. Reflect: if displacement still changes under mesh refinement, should you improve the mesh or keep tightening solver tolerance?",
+        "A 1,000 N axial force requires a summed axial support reaction of −1,000 N when no other axial loads act. Balance is necessary but cannot prove local stress accuracy. Reflect: why can a displacement stabilize while peak stress near an idealized corner keeps increasing?"
+      ] : [
+        "Four nodes with eight cores and 64 GB each provide 32 cores and 256 GB in aggregate. A serial process cannot automatically pool that memory. Reflect: would another identical node make a serial 100 GB job fit?",
+        "Eight cores for 30 minutes cost 4 allocated core-hours. Sixteen cores for 20 minutes cost about 5.33 core-hours. The second run finishes sooner but costs more under this illustrative accounting rule. Reflect: how would a deadline change your choice?",
+        "With 10% serial work, Amdahl’s model gives S(8) = 1/(0.1 + 0.9/8) ≈ 4.71 and efficiency ≈ 58.8%. The theoretical speedup ceiling is 10 before communication overhead. Reflect: near that ceiling, should you add workers or reduce serial work?",
+        "At the lab’s synthetic rates, a 128 × 128 image takes 2 s on the CPU and 0.125 s on the GPU before overhead. Adding 0.2 s launch/transfer gives 0.325 s and about 6.15× speedup. Reflect: what happens when the image shrinks but overhead stays fixed?"
+      ];
+      $("example-copy").textContent = examples[l.course];
       $("learning-goal").textContent = l.takeaway;
       const terms = l.terms || [];
       $("key-terms").replaceChildren();
@@ -151,7 +212,9 @@
         $("key-terms").append(dt, dd);
       }
       this.setStep(this.step);
-      if (this.hasRendered) {
+      this.showOverview(this.initialOverview || location.hash === "#overview");
+      this.initialOverview = false;
+      if (this.hasRendered && !this.overviewVisible) {
         window.scrollTo({ top: 0, behavior: "auto" });
         $("title").tabIndex = -1;
         $("title").focus({ preventScroll: true });

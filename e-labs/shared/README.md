@@ -10,7 +10,7 @@ Serve the repository root with a static HTTP server and open `/e-labs/finite-ele
 - `solver-worker.js`: numerical solves and six-mesh convergence studies outside the UI thread.
 - `scene.js`: shared Three.js geometry, result fields, inspection, orbit/zoom, camera transitions, lifecycle, and reduced motion.
 - `curriculum.js` / `courses.js`: 22 finite-element and 19 computing lessons in four courses per app, with concise introductions, lesson-specific vocabulary, experiments, and knowledge checks.
-- `guide.js` / `course.css`: Understand → Experiment → Explain → Check progression, a course library, optional advanced controls, and automatic resume. Completed predictions from the previous version remain available.
+- `guide.js` / `course.css`: Understand → Experiment → Explain → Check progression, a searchable starting dashboard, persistent desktop module navigation, mobile overview access, optional advanced controls, and saved lesson resume. Completed predictions from the previous version remain available.
 - `course-models.js` / `scene-concepts.js`: one-dimensional bar assembly, quadrature, resource matching, job accounting, hardware layouts, serial/parallel task queues, and CPU/GPU image and frame-sequence models.
 - `app.js` / `lab.css`: numerical integration, charts, accessible controls, exports, and local progress.
 - `site-palette.css`: generated from the website’s light and dark CSS tokens. The labs use the same `theme-preference` setting and theme button as the site; scene backgrounds and labels follow it too.
@@ -47,3 +47,5 @@ The restored rightsizing deck contains 12 explicit workload configurations. Lapt
 See [the restoration map](../../docs/e-labs-course-restoration.md) for the original concepts and their current course locations.
 
 See [the visualization framework review](../../docs/e-labs-visualization-review.md) for Model X Studio findings and priorities for the rest of E-Labs.
+
+The course overview opens on an unfragmented URL or `#overview`; lesson fragments remain directly shareable. Module cards expose outcomes, suggested preparation, lesson previews, experiments, and completion counts. Each module also includes a worked example and reflection in the Explain step. Typography uses the same self-hosted Inter Variable font as the website, with 16 px explanatory text and a 14 px minimum for secondary course labels.

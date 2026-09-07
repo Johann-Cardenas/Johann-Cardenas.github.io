@@ -591,6 +591,20 @@
       ["Energy", "Power accumulated over running time."],
     ],
   };
+  const outcomes = {
+    fea: [
+      "Identify loads, constraints, and unknowns; relate material stiffness to displacement, then solve a simple axial bar.",
+      "Connect the weak form to interpolation, mesh design, coordinate mapping, and quadrature. Explain what each approximation changes.",
+      "Trace element contributions into the global system and distinguish solver residual, mesh error, and formulation limits.",
+      "Interpret stresses and verification evidence, connect the workflow to a commercial solver, and distinguish static, modal, and thermal models."
+    ],
+    hpc: [
+      "Distinguish nodes, CPU cores, accelerators, and memory spaces. Decide which resources a program can actually use.",
+      "Match a workload to a machine, submit a simulated job, diagnose resource failures, and compare runtime with allocated cost.",
+      "Separate serial work from parallel work, compare strong and weak scaling, and explain communication and scheduling bottlenecks.",
+      "Compare CPU and GPU work, account for launch and transfer overhead, and connect arithmetic intensity, throughput, and energy."
+    ]
+  };
   window.LabCourses = {};
   for (const kind of ["fea", "hpc"]) {
     const map = new Map(
@@ -603,6 +617,7 @@
       title,
       ids,
       index: i,
+      outcome: outcomes[kind][i],
     }));
     LabCurriculum[kind] = definitions[kind].flatMap(([title, ids], course) =>
       ids.map((id) => {

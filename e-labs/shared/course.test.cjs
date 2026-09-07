@@ -62,6 +62,15 @@ const server = http.createServer((req, res) => {
       ["frontier", "hpc", 19],
     ]) {
       await visit(tool);
+      assert(await page.locator("#course-overview").isVisible());
+      assert.equal(await page.locator(".course-card").count(), 4);
+      assert.equal(await page.locator(".lesson-link").count(), count);
+      await page.locator("#lesson-search").fill("no-such-concept");
+      assert.equal(await page.locator(".lesson-link").count(), 0);
+      await page.locator("#lesson-search").fill("");
+      await page.locator(".lesson-link").first().click();
+      await page.locator("#understand").waitFor({ state: "visible" });
+      assert(await page.locator("#understand").isVisible());
       assert.equal(await page.evaluate(() => LabApp.lessons.length), count);
       const ids = await page.evaluate(() => LabApp.lessons.map((l) => l.id));
       for (const id of ids) {
@@ -114,8 +123,10 @@ const server = http.createServer((req, res) => {
         console.log("PASS", kind, id);
       }
       await page.locator("#open-library").click();
+      await page.locator("#course-overview").waitFor({ state: "visible" });
       assert.equal(await page.locator("#modules>details").count(), 4);
-      await page.locator("#close-library").click();
+      assert(await page.locator("#course-overview").isVisible());
+      await page.locator("#resume-course").click();
       await visit(tool, ids[0]);
       await page.screenshot({
         path: path.join(out, kind + "-light.png"),
@@ -196,6 +207,9 @@ const server = http.createServer((req, res) => {
     await page.waitForFunction(
       () => window.LabApp && LabApp.lesson.id === "shape",
     );
+    assert(await page.locator("#course-overview").isVisible());
+    await page.locator("#resume-course").click();
+    await page.locator("#inspector").waitFor({ state: "visible" });
     assert(await page.locator("#inspector").isVisible());
     await page.setViewportSize({ width: 390, height: 844 });
     for (const tool of ["finite-elemented", "frontier"]) {
@@ -242,14 +256,13 @@ const server = http.createServer((req, res) => {
       /\*Element, type=CPS3/,
     );
     await visit("finite-elemented", "axial-bar");
-    await page.locator("#open-library").click();
     const saved = page.waitForEvent("download");
     await page.locator("#save").click();
     const json = JSON.parse(
       fs.readFileSync(await (await saved).path(), "utf8"),
     );
     assert(json.result.u.length === 5);
-    await page.locator("#close-library").click();
+
     await visit("frontier", "workflow");
     await page.locator('[data-step="1"]').click();
     await set("walltime", 1);
