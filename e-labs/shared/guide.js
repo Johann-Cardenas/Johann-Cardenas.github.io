@@ -10,6 +10,14 @@
     init(api) {
       this.api = api;
       $("stage").after(document.querySelector(".stage-caption"));
+      this.reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+      this.reduceMotion.addEventListener("change", () => { if (this.reduceMotion.matches) this.panelAnimation?.cancel(); });
+      const playback = document.createElement("div");
+      playback.className = "playback-controls";
+      playback.innerHTML = '<label for="playback-speed">Playback speed</label><select id="playback-speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select><span id="motion-status" role="status"></span>';
+      document.querySelector(".stage-toolbar").append(playback);
+      $("playback-speed").onchange = e => api.scene.setPlaybackRate(+e.target.value);
+      api.scene.setPlaybackRate(1);
       document.querySelector(".skip").onclick = e => {
         e.preventDefault();
         const target = this.overviewVisible ? $("course-overview") : $("main");
@@ -61,6 +69,21 @@
       home.textContent = "← Course overview";
       home.onclick = () => { location.hash = "overview"; };
       journey.prepend(home);
+      const drawer = document.createElement("dialog");
+      drawer.id = "lesson-drawer";
+      drawer.setAttribute("aria-labelledby", "drawer-title");
+      drawer.innerHTML = '<div class="drawer-heading"><h2 id="drawer-title">Course lessons</h2><button id="close-lessons" aria-label="Close lesson navigator">Close</button></div>';
+      document.body.append(drawer);
+      $("close-lessons").onclick = () => drawer.close();
+      drawer.addEventListener("click", e => { if (e.target === drawer) drawer.close(); });
+      drawer.addEventListener("close", () => $("open-lessons")?.setAttribute("aria-expanded", "false"));
+      const narrow = matchMedia("(max-width: 760px)");
+      const moveNavigation = () => {
+        if (narrow.matches) drawer.append(journey);
+        else { drawer.close(); document.querySelector(".workspace").prepend(journey); }
+      };
+      narrow.addEventListener("change", moveNavigation);
+      moveNavigation();
       const open = document.createElement("button");
       open.id = "open-library";
       open.textContent = "Course overview";
@@ -93,8 +116,15 @@
       const progress = document.createElement("section");
       progress.className = "learning-progress";
       progress.setAttribute("aria-label", "Learning progress");
-      progress.innerHTML = '<a href="#overview">← Overview</a><strong id="lesson-state"></strong><span id="step-progress"></span><progress id="lesson-course-progress" max="' + api.lessons.length + '" value="0" aria-label="Completed lesson checks"></progress><span id="lesson-course-count"></span>';
+      progress.innerHTML = '<a href="#overview">← Overview</a><button id="open-lessons" aria-haspopup="dialog" aria-controls="lesson-drawer" aria-expanded="false">Lessons</button><strong id="lesson-state"></strong><span id="step-progress"></span><progress id="lesson-course-progress" max="' + api.lessons.length + '" value="0" aria-label="Completed lesson checks"></progress><span id="lesson-course-count"></span>';
       document.querySelector(".heading").before(progress);
+      $("open-lessons").onclick = () => {
+        drawer.showModal();
+        $("open-lessons").setAttribute("aria-expanded", "true");
+        const current = drawer.querySelector("[aria-current]");
+        current?.scrollIntoView({ block: "center" });
+        current?.focus({ preventScroll: true });
+      };
       const stepper = document.createElement("nav");
       stepper.className = "stepper";
       stepper.setAttribute("aria-label", "Lesson steps");
@@ -202,7 +232,11 @@
       window.addEventListener("pagehide", () => this.cancel());
     },
     showOverview(show, focus = false) {
+      const wasOverview = this.overviewVisible;
+      if (wasOverview && !show) this.overviewScroll = window.scrollY;
       this.overviewVisible = show;
+      if (show) $("lesson-drawer")?.close();
+      this.api.scene.setSuspended(show);
       $("course-overview").hidden = !show;
       document.querySelector(".workspace").hidden = show;
       document.querySelector(".skip").href = show ? "#course-overview" : "#main";
@@ -214,7 +248,7 @@
         const heading = show ? $("course-overview").querySelector("h1") : $("title");
         heading.tabIndex = -1;
         heading.focus({ preventScroll: true });
-        window.scrollTo(0, 0);
+        window.scrollTo(0, show ? this.overviewScroll || 0 : 0);
       }
     },
     renderOverview() {
@@ -352,6 +386,7 @@
           if (b) {
             d.append(b);
             b.addEventListener("click", () => {
+              $("lesson-drawer").close();
               this.showOverview(false);
               if (id === this.api.lesson.id) this.setStep(this.step);
             });
@@ -399,6 +434,7 @@
       this.hasRendered = true;
     },
     setStep(n, focus = false) {
+      const changed = this.step !== n;
       this.step = n;
       document.querySelector(".workspace").dataset.lessonStep = n;
       ["understand", "inspector", "explain", "check"].forEach(
@@ -418,6 +454,11 @@
         p.tabIndex = -1;
         p.focus({ preventScroll: true });
         p.scrollIntoView({ block: "start", behavior: "auto" });
+        this.panelAnimation?.cancel();
+        if (changed && !this.reduceMotion.matches) this.panelAnimation = p.animate(
+          [{ opacity: 0.35, transform: "translateY(6px)" }, { opacity: 1, transform: "translateY(0)" }],
+          { duration: 180, easing: "ease-out" },
+        );
       }
       this.api.scene.request();
     },
@@ -949,8 +990,8 @@
         .querySelectorAll("#inspector [data-key]")
         .forEach((e) => (e.disabled = true));
       this.timer = setInterval(() => {
-        if (document.hidden || !a.scene.playing) return;
-        elapsed += Math.max(0.1, finish / 80);
+        if (document.hidden || a.scene.suspended || !a.scene.playing) return;
+        elapsed += Math.max(0.1, finish / 80) * a.scene.playbackRate;
         const phase =
           elapsed < 0.5
             ? 0
@@ -1025,15 +1066,15 @@
         .querySelectorAll("#inspector [data-key]")
         .forEach((e) => (e.disabled = true));
       this.timer = setInterval(() => {
-        if (document.hidden || !a.scene.playing) return;
-        elapsed += 0.05 * rate;
+        if (document.hidden || a.scene.suspended || !a.scene.playing) return;
+        elapsed += 0.05 * rate * a.scene.playbackRate;
         a.scene.raceProgress = C.renderProgress(elapsed, {
           ...s,
           frames: a.lesson.id === "render-race" ? 1 : s.frames,
         });
         a.scene.request();
         $("result-status").textContent =
-          `CPU ${Math.round(a.scene.raceProgress.cpu * 100)}% · GPU ${Math.round(a.scene.raceProgress.gpu * 100)}% · ${a.format(rate, 1)}× playback`;
+          `CPU ${Math.round(a.scene.raceProgress.cpu * 100)}% · GPU ${Math.round(a.scene.raceProgress.gpu * 100)}% · ${a.format(rate * a.scene.playbackRate, 1)}× playback`;
         if (elapsed >= duration) {
           this.cancel();
           $("run-race").textContent = "Run rendering race";

@@ -87,6 +87,8 @@
       this.mini = mini;
       this.onPick = onPick;
       this.time = 0;
+      this.playbackRate = 1;
+      this.suspended = false;
       this.visible = true;
       this.playing = !matchMedia("(prefers-reduced-motion: reduce)").matches;
       this.theta = 0.34;
@@ -174,7 +176,11 @@
       document.addEventListener("visibilitychange", this.visibility);
       this.motion = matchMedia("(prefers-reduced-motion: reduce)");
       this.motionHandler = () => {
-        if (this.motion.matches) this.setPlaying(false);
+        if (this.motion.matches) {
+          if (this.cameraTween) [this.theta, this.phi, this.radius] = this.cameraTween.to;
+          this.cameraTween = null;
+          this.setPlaying(false);
+        }
       };
       this.motion.addEventListener("change", this.motionHandler);
       if (!mini) this.bind();
@@ -185,6 +191,7 @@
       let down = null;
       cv.addEventListener("pointerdown", (e) => {
         if (e.button !== 0) return;
+        this.cameraTween = null;
         down = {
           x: e.clientX,
           y: e.clientY,
@@ -257,12 +264,14 @@
       this.request();
     }
     zoom(f) {
+      this.cameraTween = null;
       this.userCamera = true;
       this.radius = Math.max(4, Math.min(18, this.radius * f));
       this.request();
     }
     view(name) {
       const from = [this.theta, this.phi, this.radius];
+      this.cameraTween = null;
       if (name === "front") {
         this.theta = 0;
         this.phi = Math.PI / 2;
@@ -278,29 +287,52 @@
           10.6 / this.camera.aspect,
         );
       }
-      if (!this.motion?.matches)
+      if (!this.motion?.matches) {
         this.cameraTween = {
           from,
           to: [this.theta, this.phi, this.radius],
           start: performance.now(),
         };
+        [this.theta, this.phi, this.radius] = from;
+      }
       this.request();
     }
     setPlaying(v) {
       this.playing = v;
       this.last = 0;
+      this.onPlaybackChange?.();
       this.request();
     }
+    setPlaybackRate(rate) {
+      if (![0.5, 1, 2].includes(rate)) return;
+      this.playbackRate = rate;
+      this.last = 0;
+      this.onPlaybackChange?.();
+    }
+    setSuspended(value) {
+      if (value === this.suspended) return;
+      this.suspended = value;
+      this.last = 0;
+      if (value) {
+        if (this.cameraTween) this.cameraTween.from = [this.theta, this.phi, this.radius];
+        cancelAnimationFrame(this.raf);
+        this.raf = 0;
+      } else {
+        if (this.cameraTween) this.cameraTween.start = performance.now();
+        this.request();
+      }
+      this.onPlaybackChange?.();
+    }
     request() {
-      if (this.failed || this.raf || !this.visible || document.hidden) return;
+      if (this.failed || this.raf || this.suspended || !this.visible || document.hidden) return;
       this.raf = requestAnimationFrame((t) => this.frame(t));
     }
     frame(t) {
       this.raf = 0;
-      if (!this.visible || document.hidden) return;
+      if (this.suspended || !this.visible || document.hidden) return;
       const dt = this.last ? Math.min(0.05, (t - this.last) / 1000) : 0;
       this.last = t;
-      if (this.playing) this.time += dt;
+      if (this.playing) this.time += dt * this.playbackRate;
       if (this.cameraTween) {
         const a = this.cameraTween,
           k = Math.min(1, (t - a.start) / 450),

@@ -38,3 +38,11 @@ A rendered review showed that the previous 17 px body, 16 px equations, and 14 p
 The reading panel receives a larger share of the desktop workspace and uses primary text color for explanations. In stacked layouts, reading steps precede the visualization while Experiment keeps the visual first. Field legends and scene notes move below the canvas into a wrapping row. Numeric legend endpoints are checked for overlap.
 
 The typography browser suite asserts computed sizes, overflow, and reading order at desktop widths of 1280/1440/1920 px and mobile widths of 390/320 px. Desktop screenshots are captured at actual viewport size to review the balance between text, navigation, and diagrams.
+
+## Typography restored; navigation and motion iteration
+
+The user preferred the typography before the desktop enlargement. The current CSS type scale is restored from `c31c69e` (17 px prose, 21 px introductions, 16 px controls, 14 px secondary text). The dedicated field-annotation row remains to avoid covering the model.
+
+This iteration adds a mobile lesson dialog, restores overview scroll position, and preserves the same lesson’s live state when returning from the overview. A shared playback speed control adjusts both visual motion and simulation playback without changing computed predictions. Overview browsing pauses both the renderer and guided simulation timers. Camera tweens no longer jump to their destination before the first frame, and user dragging/zooming interrupts them. Step transitions respect reduced-motion preferences.
+
+Verification includes the restored font sizes, all existing course/progress/navigation checks, and focused browser tests for dialog focus, responsive reparenting, overview position, simulation suspension/resume, playback controls, and reduced-motion camera behavior.

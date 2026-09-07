@@ -2,7 +2,7 @@
 import { writeFileSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 const root = new URL("../", import.meta.url);
-// Changed reading assets receive new URLs on repeat visits.
+// Changed interactive assets receive new URLs on repeat visits.
 const asset = (name) => {
   const hash = createHash("sha256").update(readFileSync(new URL(`e-labs/shared/${name}`, root))).digest("hex").slice(0, 12);
   return `../shared/${name}?v=${hash}`;
@@ -47,7 +47,7 @@ for (const [slug, name, kind, description] of [
   <script src="../../assets/js/three.min.js" defer></script>
   <script src="../shared/models.js" defer></script>
   <script src="../shared/course-models.js" defer></script>
-  <script src="../shared/scene.js" defer></script>
+  <script src="${asset("scene.js")}" defer></script>
   <script src="../shared/scene-concepts.js" defer></script>
   <script src="../shared/curriculum.js" defer></script>
   <script src="../shared/courses.js" defer></script>

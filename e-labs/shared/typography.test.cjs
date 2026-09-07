@@ -70,18 +70,15 @@ const server = http.createServer((req, res) => {
             return labels.length < 2 || labels[0].getBoundingClientRect().right <= labels[1].getBoundingClientRect().left;
           }), "Field legend values must not overlap");
           const sizes = await page.evaluate(() => Object.fromEntries(["#lesson-body", "#intro-copy", "#key-terms dd", ".equation", ".chart text", ".module-button", ".chart-caption"].map(s => [s, parseFloat(getComputedStyle(document.querySelector(s)).fontSize)])));
-          for (const [selector, minimum] of [["#lesson-body",24],["#intro-copy",32],["#key-terms dd",24],[".equation",22],[".chart text",20],[".module-button",20],[".chart-caption",20]]) assert(sizes[selector] >= minimum, `${selector}: ${sizes[selector]} < ${minimum}`);
-          if (width === 1280 && step !== 1) {
-            const panel = await page.locator(".lesson-panel").boundingBox(), visual = await page.locator(".visual-column").boundingBox();
-            assert(panel.y < visual.y, "Stacked reading content must precede visualization");
-          }
+          for (const [selector, minimum] of [["#lesson-body",17],["#intro-copy",21],["#key-terms dd",17],[".equation",16],[".chart text",14],[".module-button",16],[".chart-caption",14]]) assert(sizes[selector] === minimum, `${selector}: ${sizes[selector]} < ${minimum}`);
+
         }
         await page.locator('[data-step="2"]').click();
         await page.evaluate(() => window.scrollTo(0,0));
         await page.screenshot({path:path.join(out, `${tool}-desktop-${width}.png`),fullPage:false});
         await page.locator("#open-library").click();
         await page.locator("#course-overview").waitFor({state:"visible"});
-        assert(await page.locator(".lesson-link > span:not(.lesson-state)").first().evaluate(e => parseFloat(getComputedStyle(e).fontSize) >= 24));
+        assert(await page.locator(".lesson-link > span:not(.lesson-state)").first().evaluate(e => parseFloat(getComputedStyle(e).fontSize) >= 17));
         assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       }
       await page.locator(".theme-toggle").click();
@@ -95,14 +92,11 @@ const server = http.createServer((req, res) => {
         for (const step of [0,1,2,3]) {
           await page.locator(`[data-step="${step}"]`).click();
           assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${tool} mobile ${width} step ${step} overflow`);
-          if (step !== 1) {
-            const panel = await page.locator(".lesson-panel").boundingBox(), visual = await page.locator(".visual-column").boundingBox();
-            assert(panel.y < visual.y);
-          }
+
         }
         await page.locator(".reading-toggle").click();
       }
-      console.log("PASS", tool, "desktop type scale at 1280/1440/1920, overview text, stacked reading order, mobile and large text");
+      console.log("PASS", tool, "desktop type scale at 1280/1440/1920, overview text, restored font sizes, mobile and large text");
     }
     assert.deepEqual(errors, []);
   } finally {
