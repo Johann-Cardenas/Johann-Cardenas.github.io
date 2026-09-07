@@ -1,6 +1,12 @@
 // Rebuild the small static entry points. All experiments live in e-labs/shared.
 import { writeFileSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 const root = new URL("../", import.meta.url);
+// Changed reading assets receive new URLs on repeat visits.
+const asset = (name) => {
+  const hash = createHash("sha256").update(readFileSync(new URL(`e-labs/shared/${name}`, root))).digest("hex").slice(0, 12);
+  return `../shared/${name}?v=${hash}`;
+};
 for (const [slug, name, kind, description] of [
   [
     "finite-elemented",
@@ -34,9 +40,9 @@ for (const [slug, name, kind, description] of [
   <meta property="og:url" content="https://www.johanncardenas.com/e-labs/${slug}/">
   <meta property="og:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_${name}.png">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="stylesheet" href="../shared/lab.css">
+  <link rel="stylesheet" href="${asset("lab.css")}">
   <link rel="stylesheet" href="../shared/site-palette.css">
-  <link rel="stylesheet" href="../shared/course.css">
+  <link rel="stylesheet" href="${asset("course.css")}">
   <script src="../../assets/js/theme-toggle.js" defer></script>
   <script src="../../assets/js/three.min.js" defer></script>
   <script src="../shared/models.js" defer></script>
@@ -45,8 +51,8 @@ for (const [slug, name, kind, description] of [
   <script src="../shared/scene-concepts.js" defer></script>
   <script src="../shared/curriculum.js" defer></script>
   <script src="../shared/courses.js" defer></script>
-  <script src="../shared/guide.js" defer></script>
-  <script src="../shared/app.js" defer></script>
+  <script src="${asset("guide.js")}" defer></script>
+  <script src="${asset("app.js")}" defer></script>
 </head>
 <body data-lab="${kind}">
   <div id="app"></div>

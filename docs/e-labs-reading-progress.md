@@ -30,3 +30,11 @@ This iteration addresses the long overview, the disabled Previous button at less
 - Incorrect answers point back to the current experiment prompt, with a direct Revisit the experiment action. Passing a check reveals lesson, module, or full-path completion and an unfinished lesson to continue with.
 - Moving past an unanswered check is labeled Continue without completing; browsing remains unrestricted and completion counts stay accurate.
 - `navigation.test.cjs` verifies module selection, combined-filter recovery, previous-lesson transitions, retries, module milestones, mobile overflow, and content focus. Existing progress and course suites remain the regression checks.
+
+## Desktop typography revision
+
+A rendered review showed that the previous 17 px body, 16 px equations, and 14 px chart captions still looked undersized on desktop. The revised default is 24 px body text, 32 px introductory copy, 22 px equations, and 20 px captions, chart labels, and primary lesson controls. Larger text remains optional; the larger baseline does not depend on enabling it. Mobile retains 19 px body text and 16 px supporting text.
+
+The reading panel receives a larger share of the desktop workspace and uses primary text color for explanations. In stacked layouts, reading steps precede the visualization while Experiment keeps the visual first. Field legends and scene notes move below the canvas into a wrapping row. Numeric legend endpoints are checked for overlap.
+
+The typography browser suite asserts computed sizes, overflow, and reading order at desktop widths of 1280/1440/1920 px and mobile widths of 390/320 px. Desktop screenshots are captured at actual viewport size to review the balance between text, navigation, and diagrams.

@@ -9,6 +9,7 @@
     current: null,
     init(api) {
       this.api = api;
+      $("stage").after(document.querySelector(".stage-caption"));
       document.querySelector(".skip").onclick = e => {
         e.preventDefault();
         const target = this.overviewVisible ? $("course-overview") : $("main");
@@ -282,7 +283,7 @@
       const a = this.api, id = a.lesson.id, visited = this.activity[id]?.visited || 0;
       const count = a.lessons.filter(l => a.completed[l.id]).length;
       $("lesson-state").textContent = this.statusLabel(id);
-      $("step-progress").textContent = `${[0, 1, 2, 3].filter(i => visited & (1 << i)).length}/4 steps visited · Complete the check to finish`;
+      $("step-progress").textContent = `${[0, 1, 2, 3].filter(i => visited & (1 << i)).length}/4 steps visited`;
       if (a.completed[id]) $("step-progress").textContent = "Check passed · Revisit any step";
       $("lesson-course-progress").value = count;
       $("lesson-course-count").textContent = `${count}/${a.lessons.length} lessons complete`;
@@ -399,6 +400,7 @@
     },
     setStep(n, focus = false) {
       this.step = n;
+      document.querySelector(".workspace").dataset.lessonStep = n;
       ["understand", "inspector", "explain", "check"].forEach(
         (id, i) => ($(id).hidden = i !== n),
       );

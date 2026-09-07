@@ -456,10 +456,10 @@
   ) {
     const W = 440,
       H = 230,
-      L = 68,
-      R = 24,
-      TOP = 28,
-      B = 48,
+      L = 84,
+      R = 36,
+      TOP = 34,
+      B = 58,
       iw = W - L - R,
       ih = H - TOP - B;
     const all = series.flatMap((s) => s.points),
@@ -477,7 +477,7 @@
     for (let i = 0; i <= 4; i++) {
       const value = lo + ((hi - lo) * i) / 4,
         Y = TOP + ih - (ih * i) / 4;
-      svg += `<line class="gridline" x1="${L}" x2="${W - R}" y1="${Y}" y2="${Y}"/><text x="${L - 7}" y="${Y + 3}" text-anchor="end">${log ? "10^" + Math.round(value) : format(value, value < 10 ? 1 : 0)}</text><text x="${L + (iw * i) / 4}" y="${H - 26}" text-anchor="middle">${format((xm * i) / 4, xm < 5 ? 1 : 0)}</text>`;
+      svg += `<line class="gridline" x1="${L}" x2="${W - R}" y1="${Y}" y2="${Y}"/><text x="${L - 7}" y="${Y + 3}" text-anchor="end">${log ? "10^" + Math.round(value) : format(value, value < 10 ? 1 : 0)}</text><text x="${L + (iw * i) / 4}" y="${H - 32}" text-anchor="middle">${format((xm * i) / 4, xm < 5 ? 1 : 0)}</text>`;
     }
     for (const s of series) {
       svg += `<path d="${s.points.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(2) + "," + y(p[1]).toFixed(2)).join(" ")}" fill="none" stroke="${s.color || "var(--accent)"}" stroke-width="2.4" ${s.dash ? 'stroke-dasharray="5 4"' : ""}/>`;
@@ -487,7 +487,7 @@
             (svg += `<circle cx="${x(p[0])}" cy="${y(p[1])}" r="3.2" fill="${s.color || "var(--accent)"}"/>`),
         );
     }
-    svg += `<text x="${W / 2}" y="${H - 5}" text-anchor="middle">${esc(xLabel)}</text><text x="${L}" y="16">${esc(yLabel)}</text></svg>`;
+    svg += `<text x="${W / 2}" y="${H - 5}" text-anchor="middle">${esc(xLabel)}</text><text x="${L}" y="21">${esc(yLabel)}</text></svg>`;
     if (series.some((s) => s.name))
       svg +=
         '<div class="chart-legend">' +
