@@ -201,7 +201,7 @@
             (correct ? "Correct. " : "Try again. ") +
             (correct
               ? lesson.feedback
-              : "Change a parameter and look for evidence in the result.");
+              : "Test your prediction: " + lesson.takeaway);
           if (correct) {
             completed[lesson.id] = true;
             try {

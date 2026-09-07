@@ -25,6 +25,7 @@ node e-labs/shared/models.test.cjs
 node e-labs/shared/course-models.test.cjs
 node e-labs/shared/course.test.cjs <path-to-playwright-module>
 node e-labs/shared/progress.test.cjs <path-to-playwright-module>
+node e-labs/shared/navigation.test.cjs <path-to-playwright-module>
 ```
 
 Browser checks currently launch the installed Windows Chrome executable. Adjust `executablePath` for another environment. Playwright is test tooling only; the applications do not require it. Tests cover all 41 lessons, step visibility, course navigation, quizzes, theme persistence, resume, mesh convergence, exports, job completion/timeout/insufficient memory/cancellation, rendering races, mobile layout, reduced motion, blocked storage, WebGL fallback, and both catalog miniatures. Screenshots are written to the system temporary directory. `browser.test.cjs` delegates to this suite by default and retains the `--shape-only` and `--posters` artifact modes.
@@ -58,3 +59,5 @@ Both apps open on the overview when launched without a lesson fragment; unknown 
 `elabs-activity-fea` / `elabs-activity-hpc` store per-lesson activity. Existing `elabs-v2-*` completion records and `elabs-course-*` resume records are retained. Storage failures keep the app usable and show a session-only notice. Progress is local to the browser, not synchronized between devices.
 
 The type scale uses relative units, 17 px body text, 16 px primary controls, and at least 14 px secondary text at standard size. The Larger text button increases relative text by 12.5% and persists across both apps. Charts retain readable labels with keyboard-accessible horizontal scrolling in narrow panels. Large-text and mobile layouts give content additional width instead of shrinking text.
+
+The overview module chooser filters the lesson cards without starting a lesson. Module selection combines with text and progress filters; Show all lessons clears all three. Search also matches module titles. The Check step offers the lesson’s own experiment prompt after an incorrect answer, a direct return to Experiment, and completion guidance with the next unfinished lesson. Continuing without passing a check keeps the lesson in progress. Previous crosses a lesson boundary only from Understand and opens the preceding lesson’s Check step. Explicit step changes scroll the selected content into view.

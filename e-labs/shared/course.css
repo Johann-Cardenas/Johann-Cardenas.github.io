@@ -919,3 +919,18 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 99px; }
 #key-terms dt { overflow-wrap: anywhere; }
 
 .card .chart-scroll-hint { font-size: var(--text-small); color: var(--accent-text); margin: 0 0 12px; }
+
+/* Module selection and lesson recovery. */
+#course-picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 0 0 28px; }
+#course-picker button { display: grid; align-content: start; gap: 8px; background: var(--panel); border: 1px solid var(--line); color: var(--ink); border-radius: 10px; padding: 16px; text-align: left; font-size: 1rem; line-height: 1.5; }
+#course-picker button span { font-size: var(--text-small); color: var(--muted); }
+#course-picker button[aria-pressed="true"] { border-color: var(--accent-text); background: var(--soft); box-shadow: inset 0 3px var(--accent); }
+#clear-course-filters, #revisit-experiment, #review-module { color: var(--ink); background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 1rem; }
+#revisit-experiment { margin-top: 20px; }
+#check-milestone { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin-top: 24px; }
+#check-milestone h3 { font-size: 1.25rem; margin: 0 0 12px; }
+#check-milestone p { font-size: var(--text-body); }
+#module-next { display: block; color: var(--accent-text); margin: 16px 0; overflow-wrap: anywhere; }
+.step-panel { scroll-margin-top: 24px; }
+@media (max-width: 1000px) { #course-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); } #course-picker button:first-child { grid-column: 1 / -1; } }
+@media (max-width: 760px) { .step-panel { scroll-margin-top: 12rem; } .lesson-bottom #next { max-width: 100%; white-space: normal; } }

@@ -52,6 +52,7 @@
         api.scene.request();
       };
       document.querySelector(".top-links").append(reading);
+      this.selectedCourse = null;
       const journey = document.querySelector(".journey");
       journey.classList.add("course-sidebar");
       const home = document.createElement("button");
@@ -67,11 +68,26 @@
       const overview = document.createElement("main");
       overview.id = "course-overview";
       overview.hidden = true;
-      overview.innerHTML = `<header class="overview-heading"><span class="eyebrow">Interactive learning path</span><h1 tabindex="-1">${api.kind === "fea" ? "Finite-Elemented" : "Frontier"}</h1><p>Build your understanding, one experiment at a time. Explore any module or follow the sequence below.</p><div class="overview-actions"><button id="resume-course" class="primary"></button><a id="next-unfinished"></a></div><div id="overview-stats" class="overview-stats"></div><progress id="overall-progress" value="0" max="${api.lessons.length}" aria-label="Completed lesson checks"></progress><p id="overview-progress" role="status"></p></header><div class="course-search"><label for="lesson-search">Find a lesson or concept</label><input id="lesson-search" type="search" placeholder="Search titles, concepts, and experiments…"><div class="progress-filter"><label for="progress-filter">Show lessons</label><select id="progress-filter"><option value="all">All lessons</option><option value="not-started">Not started</option><option value="in-progress">In progress</option><option value="completed">Completed</option></select></div><p id="search-status" role="status"></p></div><div id="course-grid"></div>`;
+      overview.innerHTML = `<header class="overview-heading"><span class="eyebrow">Interactive learning path</span><h1 tabindex="-1">${api.kind === "fea" ? "Finite-Elemented" : "Frontier"}</h1><p>Build your understanding, one experiment at a time. Explore any module or follow the sequence below.</p><div class="overview-actions"><button id="resume-course" class="primary"></button><a id="next-unfinished"></a></div><div id="overview-stats" class="overview-stats"></div><progress id="overall-progress" value="0" max="${api.lessons.length}" aria-label="Completed lesson checks"></progress><p id="overview-progress" role="status"></p></header><nav id="course-picker" aria-label="Choose a module"></nav><div class="course-search"><label for="lesson-search">Find a lesson or concept</label><input id="lesson-search" type="search" placeholder="Search titles, concepts, and experiments…"><div class="progress-filter"><label for="progress-filter">Show lessons</label><select id="progress-filter"><option value="all">All lessons</option><option value="not-started">Not started</option><option value="in-progress">In progress</option><option value="completed">Completed</option></select></div><p id="search-status" role="status"></p><button id="clear-course-filters" hidden>Show all lessons</button></div><div id="course-grid"></div>`;
       document.querySelector(".workspace").before(overview);
       $("resume-course").onclick = () => { this.resume = { lesson: api.lesson.id, step: this.step }; location.hash = api.lesson.id; };
       $("lesson-search").oninput = () => this.renderOverview();
       $("progress-filter").onchange = () => this.renderOverview();
+      $("clear-course-filters").onclick = () => {
+        this.selectedCourse = null;
+        $("lesson-search").value = "";
+        $("progress-filter").value = "all";
+        this.renderOverview();
+        $("lesson-search").focus();
+      };
+      const picker = $("course-picker");
+      for (const course of [{ index: null, title: "All modules" }, ...LabCourses[api.kind]]) {
+        const button = document.createElement("button");
+        button.dataset.course = course.index === null ? "all" : course.index;
+        button.innerHTML = `<strong>${course.index === null ? "" : "0" + (course.index + 1) + " · "}${course.title}</strong><span></span>`;
+        button.onclick = () => { this.selectedCourse = course.index; this.renderOverview(); };
+        picker.append(button);
+      }
       window.addEventListener("hashchange", () => this.showOverview(!api.lessons.some(l => "#" + l.id === location.hash), true));
       const progress = document.createElement("section");
       progress.className = "learning-progress";
@@ -114,6 +130,21 @@
       explain.append(example);
       check.id = "check";
       check.classList.add("step-panel");
+      const review = document.createElement("button");
+      review.id = "revisit-experiment";
+      review.textContent = "Revisit the experiment";
+      review.onclick = () => this.setStep(1, true);
+      const milestone = document.createElement("section");
+      milestone.id = "check-milestone";
+      milestone.setAttribute("aria-label", "Module progress");
+      milestone.innerHTML = '<h3 id="milestone-title"></h3><p id="milestone-copy"></p><a id="module-next"></a><button id="review-module">Review this module</button>';
+      check.append(review, milestone);
+      milestone.querySelector("#review-module").onclick = () => {
+        this.selectedCourse = api.lesson.course;
+        $("lesson-search").value = "";
+        $("progress-filter").value = "all";
+        location.hash = "overview";
+      };
       panel.append(inspector, explain, check);
       document.querySelector(".experiment").append(panel);
       document.querySelector(".lesson-bottom").prepend($("save"));
@@ -121,7 +152,14 @@
       previous.id = "previous-step";
       previous.textContent = "← Previous";
       $("next").before(previous);
-      previous.onclick = () => this.setStep(Math.max(0, this.step - 1), true);
+      previous.onclick = () => {
+        if (this.step > 0) this.setStep(this.step - 1, true);
+        else if (api.lesson.index > 0) {
+          const prior = api.lessons[api.lesson.index - 1];
+          this.resume = { lesson: prior.id, step: 3 };
+          api.go(prior.id);
+        }
+      };
       $("next").onclick = () => {
         if (this.step < 3) this.setStep(this.step + 1, true);
         else if (api.lesson.index < api.lessons.length - 1)
@@ -190,11 +228,20 @@
       $("next-unfinished").hidden = !next || next.id === a.lesson.id;
       if (next) { $("next-unfinished").href = "#" + next.id; $("next-unfinished").textContent = "Next unfinished: " + next.nav + " →"; }
       const filter = $("progress-filter").value;
+      const filtering = query || filter !== "all" || this.selectedCourse !== null;
+      $("clear-course-filters").hidden = !filtering;
+      document.querySelectorAll("[data-course]").forEach(button => {
+        const index = button.dataset.course === "all" ? null : +button.dataset.course;
+        button.setAttribute("aria-pressed", String(index === this.selectedCourse));
+        const ids = index === null ? a.lessons.map(l => l.id) : LabCourses[a.kind][index].ids;
+        button.querySelector("span").textContent = `${ids.filter(id => a.completed[id]).length}/${ids.length} completed`;
+      });
       const grid = $("course-grid");
       grid.replaceChildren();
       let matches = 0;
       for (const course of LabCourses[a.kind]) {
-        const lessons = a.lessons.filter(l => course.ids.includes(l.id) && (filter === "all" || this.status(l.id) === filter) && (!query || [l.nav, l.intro, l.takeaway, ...l.terms.flat()].join(" ").toLowerCase().includes(query)));
+        if (this.selectedCourse !== null && this.selectedCourse !== course.index) continue;
+        const lessons = a.lessons.filter(l => course.ids.includes(l.id) && (filter === "all" || this.status(l.id) === filter) && (!query || [course.title, l.nav, l.intro, l.takeaway, ...l.terms.flat()].join(" ").toLowerCase().includes(query)));
         if (!lessons.length) continue;
         matches += lessons.length;
         const card = document.createElement("section");
@@ -212,7 +259,7 @@
         }
         grid.append(card);
       }
-      $("search-status").textContent = (query || filter !== "all") ? `${matches} matching lessons${matches ? "" : ". Try another progress filter or clear the search."}` : `${a.lessons.length} lessons across four modules · Select any lesson to begin`;
+      $("search-status").textContent = filtering ? `${matches} matching lessons${matches ? "" : ". Try another progress filter or clear the search."}` : `${a.lessons.length} lessons across four modules · Select any lesson to begin`;
     },
     status(id) {
       return this.api.completed[id] ? "completed" : this.activity[id] ? "in-progress" : "not-started";
@@ -253,6 +300,31 @@
         label.textContent = this.statusLabel(b.dataset.module);
       });
       $("progress-label").textContent = `${count} of ${a.lessons.length} lessons complete`;
+      this.renderMilestone();
+      this.renderStepActions();
+    },
+    renderMilestone() {
+      if (!$("check-milestone")) return;
+      const a = this.api, course = LabCourses[a.kind][a.lesson.course];
+      const completed = course.ids.filter(id => a.completed[id]).length;
+      const done = completed === course.ids.length;
+      $("check-milestone").hidden = !a.completed[a.lesson.id];
+      $("milestone-title").textContent = done ? "Module complete" : "Lesson complete";
+      $("milestone-copy").textContent = `${course.title}: ${completed} of ${course.ids.length} checks passed. ${done ? "You can revisit the lessons or continue your learning path." : "Continue with another lesson in this module."}`;
+      const next = (done ? a.lessons : a.lessons.filter(l => course.ids.includes(l.id))).find(l => !a.completed[l.id]);
+      $("module-next").hidden = !next;
+      if (next) { $("module-next").href = "#" + next.id; $("module-next").textContent = "Continue: " + next.nav + " →"; }
+      if (a.lessons.every(l => a.completed[l.id])) {
+        $("milestone-title").textContent = "Learning path complete";
+        $("milestone-copy").textContent = "You have passed every lesson check. Revisit an experiment with different settings and explain how the result changes.";
+      }
+    },
+    renderStepActions() {
+      $("previous-step").disabled = this.step === 0 && this.api.lesson.index === 0;
+      $("previous-step").textContent = this.step === 0 && this.api.lesson.index > 0 ? "← Previous lesson" : "← Previous step";
+      $("next").textContent = this.step < 3 ? `${steps[this.step + 1]} →`
+        : this.api.lesson.index === this.api.lessons.length - 1 ? "Review courses →"
+        : this.api.completed[this.api.lesson.id] ? "Next lesson →" : "Continue without completing →";
     },
     prepare(l) {
       this.cancel();
@@ -335,13 +407,7 @@
         if (i === n) b.setAttribute("aria-current", "step");
         else b.removeAttribute("aria-current");
       });
-      $("previous-step").disabled = n === 0;
-      $("next").textContent =
-        n < 3
-          ? `${steps[n + 1]} →`
-          : this.api.lesson.index === this.api.lessons.length - 1
-            ? "Review courses →"
-            : "Next lesson →";
+      this.renderStepActions();
       document.querySelector(".lesson-bottom small").textContent =
         `Step ${n + 1} of 4 · ${this.api.lesson.nav}`;
       this.recordActivity();
@@ -349,6 +415,7 @@
         const p = $(["understand", "inspector", "explain", "check"][n]);
         p.tabIndex = -1;
         p.focus({ preventScroll: true });
+        p.scrollIntoView({ block: "start", behavior: "auto" });
       }
       this.api.scene.request();
     },
