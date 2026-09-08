@@ -273,9 +273,11 @@
       const from = [this.theta, this.phi, this.radius];
       this.cameraTween = null;
       if (name === "front") {
+        this.userCamera = true;
         this.theta = 0;
         this.phi = Math.PI / 2;
       } else if (name === "top") {
+        this.userCamera = true;
         this.theta = 0;
         this.phi = 0.05;
       } else {

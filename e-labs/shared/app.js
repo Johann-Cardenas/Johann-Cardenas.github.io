@@ -175,6 +175,13 @@
     jobSnapshot = null;
     scene.jobPhase = "idle";
     window.LabGuide?.prepare(lesson);
+    if (fea) {
+      scene.view("front");
+      // Start the lesson in Front immediately, without an introductory orbit.
+      scene.cameraTween = null;
+      scene.theta = 0;
+      scene.phi = Math.PI / 2;
+    }
     nav();
     $("mobile-module").value = lesson.id;
     $("lesson-eyebrow").textContent =
@@ -420,7 +427,7 @@
       jobElapsed = 0;
       jobSnapshot = null;
       scene.jobPhase = "idle";
-      scene.view("iso");
+      scene.view(fea ? "front" : "iso");
       renderControls();
       update();
     };
