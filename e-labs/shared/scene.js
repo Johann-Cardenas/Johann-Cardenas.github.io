@@ -594,7 +594,7 @@
                 (Math.cosh(beta * x) -
                   Math.cos(beta * x) -
                   c * (Math.sinh(beta * x) - Math.sin(beta * x))) *
-                Math.sin(this.time * 2.2)) /
+                Math.sin(this.feModalPhase ?? this.time * 2.2)) /
               2;
             dx = 0;
           }
@@ -625,8 +625,13 @@
         ca.needsUpdate = true;
         this.request();
       };
+      let previousFactor, previousPhase;
       this.animate = (t) => {
-        const factor = this.playing ? 0.65 + 0.35 * Math.sin(t * 1.6) : 1;
+        const factor = this.feDisplayFactor ?? (this.playing ? 0.65 + 0.35 * Math.sin(t * 1.6) : 1);
+        const phase = mode === "modal" ? (this.feModalPhase ?? this.time * 2.2) : 0;
+        if (factor === previousFactor && phase === previousPhase) return;
+        previousFactor = factor;
+        previousPhase = phase;
         update(geometry.attributes.position, refs, factor);
         update(eg.attributes.position, edgeRefs, factor);
         if (mode !== "modal") {

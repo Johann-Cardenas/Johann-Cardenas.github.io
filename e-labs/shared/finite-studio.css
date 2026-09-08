@@ -1,0 +1,16 @@
+.finite-controls { padding: 1rem 1.25rem; border-bottom: 1px solid var(--line, #64748b); }
+.finite-controls[hidden], .finite-details[hidden], #finite-inspection[hidden] { display: none; }
+#finite-choices { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+#finite-choices label { display: grid; gap: .5rem; flex: 1 1 190px; min-width: 0; }
+.finite-controls select, .finite-details select { width: 100%; min-height: 44px; font: inherit; }
+.finite-playback { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
+.finite-playback button { min-height: 44px; font: inherit; }
+.finite-playback label { display: grid; gap: .5rem; flex: 1 1 180px; }
+.finite-playback input { width: 100%; accent-color: var(--accent, #0891b2); }
+#finite-position-value { min-width: 3.5ch; font-variant-numeric: tabular-nums; }
+.finite-details { padding: 1rem 1.25rem; line-height: 1.6; border-top: 1px solid var(--line, #64748b); }
+.finite-details p { margin: 0 0 1rem; }
+#finite-inspection { display: grid; gap: .5rem; }
+#finite-values { font-variant-numeric: tabular-nums; }
+#finite-status { margin: 1rem 0 0; }
+@media (max-width:600px) { .finite-playback button { width:100%; } }

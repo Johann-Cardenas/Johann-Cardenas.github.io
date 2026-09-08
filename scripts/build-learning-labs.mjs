@@ -50,6 +50,7 @@ for (const [slug, name, kind, description] of [
   <script src="../shared/course-models.js" defer></script>
   <script src="${asset("scene.js")}" defer></script>
   <script src="../shared/scene-concepts.js" defer></script>
+${kind === "fea" ? `<link rel="stylesheet" href="${asset("finite-studio.css")}"><script src="${asset("finite-studio.js")}" defer></script>` : ""}
 ${kind === "hpc" ? `<link rel="stylesheet" href="${asset("frontier.css")}"><script src="${asset("frontier-models.js")}" defer></script><script src="${asset("frontier-scenes.js")}" defer></script>` : ""}
   <script src="../shared/curriculum.js" defer></script>
   <script src="../shared/courses.js" defer></script>
