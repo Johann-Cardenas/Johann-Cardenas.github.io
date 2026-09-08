@@ -363,6 +363,7 @@
     },
     prepare(l) {
       this.cancel();
+      window.FrontierUI?.hide();
       this.visualKey = null;
       this.current = l.id;
       Object.assign(this.api.state, this.api.defaults, l.defaults);
@@ -883,6 +884,8 @@
           frames: id === "render-race" ? 1 : s.frames,
         });
         scene.setRace({
+          visual: s.visual || "plasma",
+          launch: s.launch,
           resolution: s.resolution,
           frames: id === "render-race" ? 1 : s.frames,
         });
@@ -968,6 +971,7 @@
     cancel() {
       clearInterval(this.timer);
       this.timer = null;
+      window.FrontierUI?.sync();
       document
         .querySelectorAll("#inspector [data-key]")
         .forEach((e) => (e.disabled = false));
@@ -1044,6 +1048,7 @@
       }, 100);
     },
     runRace() {
+      if (this.api.scene.raceLoading) return;
       if (this.timer) {
         this.cancel();
         $("run-race").textContent = "Run rendering race";
@@ -1061,6 +1066,7 @@
         rate = Math.max(1, duration / 8);
       let elapsed = 0;
       a.scene.raceProgress = { cpu: 0, gpu: 0 };
+      a.scene.raceElapsed = 0;
       $("run-race").textContent = "Cancel rendering";
       document
         .querySelectorAll("#inspector [data-key]")
@@ -1068,11 +1074,13 @@
       this.timer = setInterval(() => {
         if (document.hidden || a.scene.suspended || !a.scene.playing) return;
         elapsed += 0.05 * rate * a.scene.playbackRate;
+        a.scene.raceElapsed = elapsed;
         a.scene.raceProgress = C.renderProgress(elapsed, {
           ...s,
           frames: a.lesson.id === "render-race" ? 1 : s.frames,
         });
         a.scene.request();
+        window.FrontierUI?.sync();
         $("result-status").textContent =
           `CPU ${Math.round(a.scene.raceProgress.cpu * 100)}% · GPU ${Math.round(a.scene.raceProgress.gpu * 100)}% · ${a.format(rate * a.scene.playbackRate, 1)}× playback`;
         if (elapsed >= duration) {

@@ -1,0 +1,17 @@
+.render-studio { padding: 1.25rem; border: 1px solid var(--line, #64748b); border-radius: 14px; margin-top: 1rem; }
+.render-studio[hidden] { display: none; }
+.render-actions { display: flex; align-items: end; flex-wrap: wrap; gap: 1rem; }
+.render-actions label { display: grid; gap: .5rem; flex: 1 1 220px; font-weight: 600; }
+.render-actions select, .render-actions button { min-height: 46px; font: inherit; }
+.render-actions select { width: 100%; }
+.render-timings { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1.25rem; }
+.render-timings > div { display: grid; gap: .5rem; min-width: 0; }
+.render-timings progress { width: 100%; accent-color: var(--accent, #0891b2); height: 12px; }
+.render-timings output { font-variant-numeric: tabular-nums; }
+.render-explanation { line-height: 1.6; margin-bottom: 0; }
+@media (max-width: 600px) { .render-timings { grid-template-columns: 1fr; } .render-actions button { width: 100%; } }
+
+.render-actions { padding: 1rem 1.25rem; border-bottom: 1px solid var(--line, #64748b); }
+.render-actions[hidden] { display: none; }
+.render-studio #render-message { margin: 0 0 1rem; }
+.render-studio .render-explanation { margin-top: 1rem; }

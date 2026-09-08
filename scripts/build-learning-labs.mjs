@@ -4,7 +4,8 @@ import { createHash } from "node:crypto";
 const root = new URL("../", import.meta.url);
 // Changed interactive assets receive new URLs on repeat visits.
 const asset = (name) => {
-  const hash = createHash("sha256").update(readFileSync(new URL(`e-labs/shared/${name}`, root))).digest("hex").slice(0, 12);
+  const names = name.startsWith("frontier-") && name.endsWith(".js") ? ["frontier-models.js", "frontier-scenes.js", "frontier-render-worker.js"] : [name];
+  const hash = createHash("sha256").update(names.map(n => readFileSync(new URL(`e-labs/shared/${n}`, root))).join("\n")).digest("hex").slice(0, 12);
   return `../shared/${name}?v=${hash}`;
 };
 for (const [slug, name, kind, description] of [
@@ -49,6 +50,7 @@ for (const [slug, name, kind, description] of [
   <script src="../shared/course-models.js" defer></script>
   <script src="${asset("scene.js")}" defer></script>
   <script src="../shared/scene-concepts.js" defer></script>
+${kind === "hpc" ? `<link rel="stylesheet" href="${asset("frontier.css")}"><script src="${asset("frontier-models.js")}" defer></script><script src="${asset("frontier-scenes.js")}" defer></script>` : ""}
   <script src="../shared/curriculum.js" defer></script>
   <script src="../shared/courses.js" defer></script>
   <script src="${asset("guide.js")}" defer></script>
