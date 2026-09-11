@@ -138,7 +138,9 @@
                         </div>
                         <div class="g3-tb-cell g3-tb-cell--wide">
                             <span class="g3-tb-label">Units</span>
-                            <span class="g3-tb-value">mm · kN · kPa</span>
+                            <!-- Written by syncUnitSystemUi(). The initial text is the SI
+                                 default, so the cell is never blank before the first paint. -->
+                            <span class="g3-tb-value" id="g3-tb-units">mm · kN · kPa</span>
                         </div>
                         <div class="g3-tb-cell g3-tb-cell--rev">
                             <span class="g3-tb-label">Rev</span>
@@ -185,8 +187,8 @@
                         <input type="file" id="g3-file-input" accept=".gear3d,.json,application/json" hidden>
                         <span class="g3-spacer"></span>
                         <div class="g3-unitsys" role="group" aria-label="Display units">
-                            <button class="g3-uswitch is-active" data-units="SI" title="Millimeters, kilonewtons, kilopascals">SI</button>
-                            <button class="g3-uswitch" data-units="US" title="Inches, kips, psi">US</button>
+                            <button class="g3-uswitch is-active" data-units="SI" aria-pressed="true" title="Millimeters, kilonewtons, kilopascals, square millimeters. Every dimension, load and pressure in the interface, including the figure.">SI</button>
+                            <button class="g3-uswitch" data-units="US" aria-pressed="false" title="Inches, kips, psi, square inches. Readings are rounded to three figures, which is all an inch reading of a metric citation is worth, and is enough to bring back the number the source itself printed: 4572 mm reads 180 in, 44.5 kN reads 10 kip. Data exports stay in millimeters and say so.">English</button>
                         </div>
                         <button id="g3-reset" class="g3-btn g3-btn--danger" title="Revert to the cited reference configuration"><i class="fas fa-rotate-left"></i> Revert</button>
                         <button id="g3-export" class="g3-btn g3-btn--primary" title="Export figure"><i class="fas fa-camera"></i> Export</button>

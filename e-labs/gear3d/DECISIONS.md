@@ -6,6 +6,69 @@ why, so a later maintainer can overturn it on the merits rather than guessing.
 
 ---
 
+## D34. English is rounded to three significant figures, and the figure is not (v1.12)
+
+**Decision.** `src/core/readable.js` wraps the five `format*` functions of
+`units.js`. In SI they are `units.js`: same string, same grouping, same
+honoring of `precision`. In English they round to three significant figures,
+with a floor of one whole inch on lengths. The interface imports the wrappers;
+the annotation engine keeps importing `units.js`, so a figure's dimension
+labels stay the reader's own precision setting, and every data export stays
+canonical.
+
+**Why.** Every stored value is millimeters, kilograms, kilonewtons,
+kilopascals. SI can therefore show the cited number and English cannot: a
+dimension recorded in metric has no exact inch. Printing two decimals of one
+anyway made a 1854 mm track read **72.99 in**, which claims a hundredth of an
+inch the data does not have and is also harder to read than 73.
+
+**Why three.** Because three is what recovers the SOURCE's own magnitude
+wherever the citation was itself converted from English — which in this
+library is most of it. 4572 mm comes back as 180 in (15 ft), 2591 mm as 102 in
+(the 23 CFR 658.15 width limit), 1372 mm as 54 in, 279 mm as 11 in, 1054 mm as
+41.5 in, 44.5 kN as 10 kip, 13 608 kg as 30 000 lb. Swept over every length,
+load and weight the shipped library cites, nothing round in English is lost
+and the worst distortion is 0.4%. Both halves of that are re-measured in
+test/run.mjs §15, so a library that grows a dimension this rule would mangle
+fails there rather than in somebody's report.
+
+Where the citation really is metric the reading stays honest rather than tidy:
+a 300 mm tire section reads 11.8 in, not the data book's nominal 12.
+Recovering the 12 would mean trusting the designation, and a designation is
+not a dimension — the 9.00 in a 9.00R20 is a series number, and that tire's
+section is 10.2 in.
+
+**Why the floor.** Length is the only family here that reaches four digits. A
+75-ft double is 1124 in, and three figures alone would show it as 1120.
+
+**What else it forced.** Five readouts turned out never to have been reached
+by the unit switch at all, and were printing millimeters whatever the toolbar
+said: the hover coordinates, the contact-patch tooltip, both structure-tree
+tags and three lines of the wide-base report. The title block's Units cell was
+fixed text reading `mm · kN · kPa`. And the switch never re-lit itself, so a
+session restored in English came back with every panel in inches and SI still
+showing.
+
+So the switch became `setUnitSystem()`, whose refresh list is now the
+contract: every function that formats through `UNIT_SYSTEMS` is on it or is
+exempt with a stated reason, and §15 asserts that. Two members of the list
+exist only because of it. `renderTree` joined when its tags stopped being
+hardcoded — and its tags are deliberately NOT rounded to the reader's
+dimension precision, because a tag sits directly above the properties panel
+showing the same axle's track in an editable field, and a tag reading 79 in
+over a field reading 78.5 has no explanation on screen. (A panel differing
+from the FIGURE does: there is a Precision control.) And
+`renderWideBaseReport` was split out of `applyWideBaseSwap` because that panel
+is a RECORD of one swap rather than a view of the document: it must not be
+recomputed, but it does have to be re-printable, and writing it straight into
+the DOM at click time made it neither.
+
+**One trap worth naming.** `plainLength` exists because `formatNumber` groups
+thousands with U+202F, which is not a valid value for an
+`<input type="number">` and silently blanks the field.
+
+---
+
 ## D33. The wheel is laid out from one table of stations, and the tire is placed against the rim (v1.11)
 
 **Decision.** `rim.js` exports `wheelStations()`, and it is the only place that

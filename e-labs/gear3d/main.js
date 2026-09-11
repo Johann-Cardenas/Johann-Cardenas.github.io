@@ -21,10 +21,13 @@ import { resolveLayout, swapToWideBase } from './src/core/layout.js';
 import { validateUnit, tireCount } from './src/core/schema.js';
 import { Store } from './src/core/store.js';
 import { checkBridgeFormula } from './src/core/bridge.js';
+import { UNIT_SYSTEMS, lengthFromMm, lengthToMm, canonical } from './src/core/units.js';
+/* The interface rounds English; the annotation engine does not. See
+   readable.js — a figure's dimension labels are the reader's own precision
+   setting, and the engine formats them from units.js directly. */
 import {
-    UNIT_SYSTEMS, formatLength, formatForce, formatMass, formatArea,
-    formatPressure, lengthFromMm, lengthToMm, canonical
-} from './src/core/units.js';
+    formatLength, formatForce, formatMass, formatArea, formatPressure, plainLength
+} from './src/core/readable.js';
 import { DEFAULT_SEED } from './src/core/prng.js';
 import {
     parseGearCode, describeGearCode, gearWheelCount, wheelPlan, tableRowsFor,
@@ -274,9 +277,14 @@ function setupViewport() {
         if (app.measure.active) { updateMeasureHover(hit); return; }
         const el = $('g3-status-coords');
         if (hit.point) {
-            // render (x,y,z) meters -> engineering millimeters
+            // render (x,y,z) meters -> engineering millimeters, and then into
+            // whatever the toolbar is showing. Of everything the unit switch
+            // used to miss, this was the worst: a readout that tracks the
+            // cursor reads as measured, so the label on it is believed.
             const e = { x: hit.point.z * 1000, y: hit.point.x * 1000, z: hit.point.y * 1000 };
-            el.textContent = `x ${e.x.toFixed(0)}  y ${e.y.toFixed(0)}  z ${e.z.toFixed(0)} mm`;
+            const sys = UNIT_SYSTEMS[app.store.view.unitSystem];
+            const c = (mm) => plainLength(mm, sys.length);
+            el.textContent = `x ${c(e.x)}  y ${c(e.y)}  z ${c(e.z)} ${sys.length}`;
         } else {
             // Empty, not an em dash. A readout showing a lone dash reads as a
             // broken field; an empty one collapses itself and its separator
@@ -476,6 +484,9 @@ function drawOverlay(info) {
  * @param {any} o
  */
 function drawPatches(svg, o) {
+    // o.unitSystem rather than the store: this is the overlay's own pass, and
+    // every other label drawn in it is formatted from that same field.
+    const sys = UNIT_SYSTEMS[o.unitSystem] || UNIT_SYSTEMS.SI;
     const g = document.createElementNS(SVG_NS, 'g');
     g.setAttribute('class', 'g3-patches');
     const pred = wheelPredicate(app.store.view.isolation);
@@ -494,8 +505,10 @@ function drawPatches(svg, o) {
         poly.setAttribute('stroke', cssVar('--g3-signal'));
         poly.setAttribute('stroke-width', '1');
         const t = document.createElementNS(SVG_NS, 'title');
-        t.textContent = `${rec.tireId}: ${rec.patch.length.toFixed(0)} × ${rec.patch.width.toFixed(0)} mm, `
-            + `${rec.patch.area.toFixed(0)} mm², ${rec.patch.pressure.toFixed(0)} kPa`;
+        t.textContent = `${rec.tireId}: ${formatLength(rec.patch.length, sys.length, { unit: false })}`
+            + ` × ${formatLength(rec.patch.width, sys.length)}, `
+            + `${formatArea(rec.patch.area, sys.area)}, `
+            + `${formatPressure(rec.patch.pressure, sys.pressure)}`;
         poly.appendChild(t);
         g.appendChild(poly);
     }
@@ -954,24 +967,69 @@ function setupMeasure() {
    7. Panels
    ============================================================ */
 
+/**
+ * Everything in the chrome that NAMES the display system.
+ *
+ * Two places, and the second is why this is a function rather than three
+ * lines inside a click handler: the title block's Units cell. A drafting
+ * sheet states what its numbers mean, and this one stated `mm · kN · kPa`
+ * whatever the toolbar said.
+ */
+function syncUnitSystemUi() {
+    const key = app.store.view.unitSystem;
+    const sys = UNIT_SYSTEMS[key] || UNIT_SYSTEMS.SI;
+    for (const x of document.querySelectorAll('.g3-uswitch')) {
+        const on = x.getAttribute('data-units') === key;
+        x.classList.toggle('is-active', on);
+        x.setAttribute('aria-pressed', String(on));
+    }
+    const cell = $('g3-tb-units');
+    if (cell) cell.textContent = `${sys.length} · ${sys.force} · ${sys.pressure}`;
+}
+
+/**
+ * Switch the display system, and refresh everything that reads it.
+ *
+ * The list below is the contract and test/run.mjs section 15 holds it:
+ * every function in this file that formats through UNIT_SYSTEMS has to be
+ * re-run here, or a panel goes on showing the system the reader has just
+ * left. `renderTree` had no business being on it until its two tags stopped
+ * being hardcoded, and `renderWideBaseReport` exists only so the one panel
+ * that is a RECORD rather than a view can be re-printed without being
+ * recomputed.
+ *
+ * @param {string} next 'SI' | 'US'
+ */
+function setUnitSystem(next) {
+    if (!UNIT_SYSTEMS[next] || next === app.store.view.unitSystem) return;
+    app.store.view.unitSystem = next;
+    syncUnitSystemUi();
+    syncInflationField();
+    syncOverrideUnits();
+    renderProperties();
+    renderUnitMeta();
+    renderPatchSummary();
+    renderOverrideStatus();
+    renderCustomList();
+    renderTree();
+    renderWideBaseReport();
+    app.viewport.invalidate();
+    // Remembered the way every other view setting is, through the session
+    // autosave. Without this the switch was the one control in the app that
+    // a reload silently undid.
+    scheduleAutosave();
+}
+
 function setupToolbar() {
     for (const b of document.querySelectorAll('.g3-vtab')) {
         b.addEventListener('click', () => setViewMode(b.getAttribute('data-view')));
     }
     for (const b of document.querySelectorAll('.g3-uswitch')) {
-        b.addEventListener('click', () => {
-            app.store.view.unitSystem = b.getAttribute('data-units');
-            for (const x of document.querySelectorAll('.g3-uswitch')) x.classList.toggle('is-active', x === b);
-            syncInflationField();
-            renderProperties();
-            renderUnitMeta();
-            renderPatchSummary();
-            renderOverrideStatus();
-            syncOverrideUnits();
-            renderCustomList();
-            app.viewport.invalidate();
-        });
+        b.addEventListener('click', () => setUnitSystem(b.getAttribute('data-units')));
     }
+    // Once at boot, so the title block states the system from the first
+    // frame rather than from the first click.
+    syncUnitSystemUi();
 
     // Master annotation switch and grid, both in the toolbar rather than
     // buried in a panel: they are the two controls a user reaches for most
@@ -2345,13 +2403,26 @@ function renderTree() {
         ? app.layout.groups
         : app.layout.axles.map((a) => ({ id: a.id, type: 'single', axles: [a.id] }));
 
+    // The tags are dimensions like any other. They were the last thing in
+    // the app still printing millimeters at a reader working in inches,
+    // which is the whole reason renderTree is on setUnitSystem's list.
+    //
+    // Rounded like every other panel, and NOT to the reader's dimension
+    // precision. A tag here sits directly above the properties panel showing
+    // the same axle's track in an editable field, and those two must agree:
+    // a tag reading 79 in over a field reading 78.5 has no explanation. The
+    // figure can differ, and does at precision 0, but the figure has a
+    // Precision control on screen that says why.
+    const sys = UNIT_SYSTEMS[app.store.view.unitSystem];
+    const L = (mm) => formatLength(mm, sys.length);
+
     for (const g of groups) {
-        node(`${g.id} — ${g.type}`, 1, g.spacing ? `${g.spacing} mm` : '',
+        node(`${g.id} — ${g.type}`, 1, g.spacing ? L(g.spacing) : '',
             { level: 'group', targetId: g.id, groupOnly: true });
         for (const aid of g.axles) {
             const a = app.layout.axles.find((x) => x.id === aid);
             if (!a) continue;
-            node(`${a.id} · ${a.role}`, 2, `${a.tireConfig} ${a.trackWidth} mm`,
+            node(`${a.id} · ${a.role}`, 2, `${a.tireConfig} ${L(a.trackWidth)}`,
                 { level: 'axle', targetId: a.id, axleId: a.id });
             const positions = [...new Set(app.layout.wheels.filter((w) => w.axleId === a.id).map((w) => w.positionId))];
             for (const p of positions) {
@@ -2419,7 +2490,10 @@ function renderProperties() {
     }
     const src = app.store.doc.unit.axles?.find((x) => x.id === a.id);
     const sys = UNIT_SYSTEMS[app.store.view.unitSystem];
-    const L = (mm) => lengthFromMm(mm, sys.length).toFixed(sys.length === 'in' ? 2 : 0);
+    // These strings go into <input type="number">, so they are ungrouped and
+    // rounded the way the readouts are: a track that reads 72.99 in claims a
+    // hundredth of an inch that the 1854 mm behind it does not have.
+    const L = (mm) => plainLength(mm, sys.length);
 
     box.innerHTML = `
         <h4>${esc(a.id)} — ${esc(a.role)}</h4>
@@ -2510,25 +2584,53 @@ function applyWideBaseSwap(designation) {
     rebuild();
 
     const after = app.patches.filter((p) => p.axleId === axleId);
-    const areaBefore = before.reduce((s, p) => s + p.patch.area, 0);
-    const areaAfter = after.reduce((s, p) => s + p.patch.area, 0);
-    const r = result.report;
+    // Kept rather than printed on the spot, so the display system can change
+    // under it. Everything here is a canonical number describing one swap;
+    // re-running the swap to re-read it would be a different swap.
+    app.lastWideBase = {
+        axleId,
+        report: result.report,
+        areaBefore: before.reduce((s, p) => s + p.patch.area, 0),
+        areaAfter: after.reduce((s, p) => s + p.patch.area, 0)
+    };
+    renderWideBaseReport();
+}
+
+/**
+ * Print the last wide-base swap, in whatever system is showing.
+ *
+ * The one panel in the app that is a RECORD rather than a view: it says what
+ * one swap changed. It used to be written straight into the DOM at click
+ * time, so it could not be re-printed either, and a reader who swapped in
+ * English and then went back to SI was left with a box of inches under a
+ * page of millimeters. Three of its numbers were raw millimeters in the
+ * bargain, beside three that were already converted, inside one paragraph —
+ * and a half-converted report is worse than an unconverted one, because
+ * nothing on the line says which of the two it is.
+ */
+function renderWideBaseReport() {
+    const box = $('g3-wbt-report');
+    if (!box || !app.lastWideBase) return;
+    const { axleId, report: r, areaBefore, areaAfter } = app.lastWideBase;
     const sys = UNIT_SYSTEMS[app.store.view.unitSystem];
     const cls = (v) => (v > 0 ? 'g3-delta-up' : 'g3-delta-down');
 
-    const box = $('g3-wbt-report');
     box.hidden = false;
+    // The three track numbers sit in one sentence, so they are rounded
+    // alike: no `precision: 0` on the endpoints, which was already the
+    // default in SI and in English stopped them rounding outward past their
+    // own difference (72 in -> 79 in, +6.46 in).
     box.innerHTML =
         `<div><strong>${esc(axleId)}</strong>: ${esc(r.from)} → ${esc(r.to)}</div>`
-        + `<div>Track ${formatLength(r.trackWidthBefore, sys.length, { precision: 0 })} → `
-        + `<strong>${formatLength(r.trackWidthAfter, sys.length, { precision: 0 })}</strong> `
-        + `(<span class="${cls(r.trackWidthChange)}">${r.trackWidthChange > 0 ? '+' : ''}${r.trackWidthChange.toFixed(0)} mm</span>)</div>`
+        + `<div>Track ${formatLength(r.trackWidthBefore, sys.length)} → `
+        + `<strong>${formatLength(r.trackWidthAfter, sys.length)}</strong> `
+        + `(<span class="${cls(r.trackWidthChange)}">${r.trackWidthChange > 0 ? '+' : ''}${formatLength(r.trackWidthChange, sys.length)}</span>)</div>`
         + `<div>Tires ${r.tiresBefore} → <strong>${r.tiresAfter}</strong></div>`
-        + `<div>Section width ${r.sectionWidthBefore} → <strong>${r.sectionWidthAfter} mm</strong> `
+        + `<div>Section width ${formatLength(r.sectionWidthBefore, sys.length, { unit: false })} → <strong>${formatLength(r.sectionWidthAfter, sys.length)}</strong> `
         + `(<span class="${cls(r.sectionWidthChange)}">${r.sectionWidthChangePct.toFixed(1)}%</span>)</div>`
         + `<div>Contact area ${formatArea(areaBefore, sys.area, { precision: 0 })} → `
         + `<strong>${formatArea(areaAfter, sys.area, { precision: 0 })}</strong></div>`
-        + `<div>Load centroid shift <strong>${Math.abs(r.loadCentroidShift).toFixed(1)} mm</strong> `
+        + `<div>Load centroid shift <strong>${formatLength(Math.abs(r.loadCentroidShift), sys.length, { precision: 1 })}</strong> `
         + `${r.loadCentroidShift >= 0 ? 'outboard' : 'inboard'}</div>`
         + `<div style="margin-top:.35rem;color:var(--g3-muted)">${esc(r.note)}</div>`;
 }
@@ -2840,6 +2942,10 @@ function applyProject(p) {
     app.viewport.setBackground(app.store.view.background, app.store.view.backgroundColor);
 
     syncUnitSelectors();
+    // The toolbar is not driven by state, so a session or a project restored
+    // in English came back with every panel in inches and the switch still
+    // lit on SI.
+    syncUnitSystemUi();
     syncLightingFields();
     syncCameraFields();
     syncInflationField();

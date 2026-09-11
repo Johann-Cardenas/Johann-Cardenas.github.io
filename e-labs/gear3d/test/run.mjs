@@ -28,8 +28,13 @@ import {
 import {
     MM_PER_IN, MM_PER_FT, KG_PER_LB, lengthFromMm, lengthToMm, forceFromKn, forceToKn,
     pressureFromKpa, pressureToKpa, massFromKg, canonical, formatLength, formatNumber, massToForceKn,
-    GROUP_SEPARATOR, UNIT_SPACE
+    GROUP_SEPARATOR, UNIT_SPACE, UNIT_SYSTEMS, areaFromMm2
 } from '../src/core/units.js';
+import {
+    readable, readableDecimals, plainLength, ENGLISH_UNITS, LENGTH_FLOOR,
+    formatLength as showLength, formatForce as showForce,
+    formatMass as showMass, formatPressure as showPressure
+} from '../src/core/readable.js';
 import { Rng, rng } from '../src/core/prng.js';
 import { parseTire, tireGeometry, setNominalTable, checkTire, resolveTire } from '../src/core/tires.js';
 import { validateUnit, validateLibrary, tireCount, tiresOnAxle, SCHEMA_VERSION } from '../src/core/schema.js';
@@ -2204,6 +2209,233 @@ test('chrome drawn on the figure clears AA against the figure, not the theme', (
         const c = contrast(fig[ink], fig['--g3-fig-paper']);
         assert(c >= 4.5,
             `${ink} (${fig[ink]}) on the figure is ${c.toFixed(2)}:1, needs 4.5`);
+    }
+});
+
+/* ============================================================
+   15. The unit switch
+   ------------------------------------------------------------
+   Two things this covers, and they fail differently.
+
+   COVERAGE. The switch converts the figure, the dimension
+   engine, the scale bar and the panels — and used to hardcode
+   millimeters in five readouts it did not reach: the hover
+   coordinates, the contact-patch tooltip, both structure-tree
+   tags and three lines of the wide-base report. It also never
+   re-lit itself, so a restored session came back in inches with
+   SI showing. Nothing threw and nothing rendered wrong: the only
+   way to find one was to press the switch and read every panel.
+   A half-switched app is worse than an unswitched one, because
+   nothing on the line says which system that number is in.
+
+   ROUNDING. English is an approximation of a metric citation
+   however many decimals it carries, so it is rounded to three
+   significant figures — and three is a measured choice, not a
+   taste. See src/core/readable.js.
+
+   main.js and index.html are data as far as this is concerned.
+   ============================================================ */
+
+group('15. The unit switch');
+
+/* Normalized: the sources are CRLF on Windows and every pattern below
+   is written against newlines. */
+const CRLF = new RegExp(String.fromCharCode(13) + String.fromCharCode(10), 'g');
+const MAIN = readText(join(ROOT, 'main.js')).replace(CRLF, String.fromCharCode(10));
+const HTML = readText(join(ROOT, 'index.html')).replace(CRLF, String.fromCharCode(10));
+
+/* main.js is flat: every top-level function starts at column 0 and ends at
+   one, which is what makes it splittable here. */
+const MAIN_FUNCTIONS = new Map();
+for (const m of MAIN.matchAll(/^(?:async )?function ([A-Za-z0-9_]+)\s*\([^)]*\)\s*\{\n([\s\S]*?)\n\}/gm)) {
+    MAIN_FUNCTIONS.set(m[1], m[2]);
+}
+const mainFn = (name) => {
+    const body = MAIN_FUNCTIONS.get(name);
+    assert(body !== undefined, `main.js has no top-level function ${name}()`);
+    return body;
+};
+
+test('the English reading recovers the magnitude its source was cited in', () => {
+    /* Every row is a value this library stores in metric that the SOURCE
+       states in English: FHWA and manufacturer dimensions converted from
+       feet and inches, tire data-book sections and diameters, axle loads
+       converted from kips, gross weights from pounds. Three significant
+       figures brings every one of them back. */
+    const plain = (x) => x.replace(new RegExp(UNIT_SPACE, 'g'), ' ');
+    for (const [mm, want] of [
+        [1829, '72 in'], [2032, '80 in'], [2134, '84 in'], [1372, '54 in'],
+        [2591, '102 in'], [4115, '162 in'],          // 102 in / 13 ft 6 in limits
+        [4572, '180 in'], [7620, '300 in'], [12190, '480 in'],
+        [16760, '660 in'], [22860, '900 in'],        // 15/25/40/55/75 ft
+        [279, '11 in'], [1054, '41.5 in'],           // 11R22.5
+        [1097, '43.2 in'], [1085, '42.7 in']         // 11R24.5, 12R22.5
+    ]) assertEqual(plain(showLength(mm, 'in')), want, `${mm} mm`);
+
+    for (const [kN, want] of [[44.5, '10 kip'], [89, '20 kip'], [75.6, '17 kip'],
+        [53.4, '12 kip'], [62.3, '14 kip']]) assertEqual(plain(showForce(kN, 'kip')), want, `${kN} kN`);
+
+    for (const [kg, want] of [[13608, '30 000 lb'], [36287, '80 000 lb']]) {
+        assertEqual(plain(showMass(kg, 'lb')), want, `${kg} kg`);
+    }
+    for (const [kPa, want] of [[1379, '200 psi'], [207, '30 psi']]) {
+        assertEqual(plain(showPressure(kPa, 'psi')), want, `${kPa} kPa`);
+    }
+});
+
+test('a value cited in metric is read honestly, not snapped to a round inch', () => {
+    // 300 mm is the cited section width of a 12R22.5 whose data book calls
+    // it a nominal 12.0 in tire. The metric number here is 300 and not
+    // 304.8, so the English reading is 11.8. Recovering the 12 would mean
+    // trusting the designation, and the 9.00 in a 9.00R20 is a series
+    // number: that tire's section is 10.2 in.
+    const plain = (x) => x.replace(new RegExp(UNIT_SPACE, 'g'), ' ');
+    assertEqual(plain(showLength(300, 'in')), '11.8 in');
+    assertEqual(plain(showLength(259, 'in')), '10.2 in');
+    assertEqual(plain(showMass(18000, 'lb')), '39 700 lb');
+    // ...and no digit the rounding did not earn: a track is 73 in.
+    assertEqual(plain(showLength(1854, 'in')), '73 in');
+});
+
+test('lengths keep a whole-inch floor, because only lengths reach four digits', () => {
+    // A 75-ft double is 1124 in. Three significant figures alone would show
+    // it as 1120, losing four inches of a dimension the source states.
+    assertEqual(readable(1124.016, LENGTH_FLOOR.in), 1124);
+    assertEqual(readable(1124.016), 1120);
+    assertEqual(readableDecimals(readable(41.496, 1)), 1);
+    assertEqual(readableDecimals(readable(72.99, 1)), 0);
+});
+
+test('SI is left exactly as it was cited', () => {
+    // The wrappers must be invisible in SI: same string, same grouping,
+    // same honoring of precision as units.js itself.
+    for (const mm of [259, 279, 1054, 1854, 12190, 28550]) {
+        for (const precision of [0, 1, 2]) {
+            assertEqual(showLength(mm, 'mm', { precision }), formatLength(mm, 'mm', { precision }),
+                `${mm} mm at precision ${precision}`);
+        }
+    }
+    assert(!ENGLISH_UNITS.has('mm') && ENGLISH_UNITS.has('in'), 'the English set must be the English set');
+});
+
+test('a value bound for a number input carries no thousands separator', () => {
+    // formatNumber groups with U+202F, which is not a valid value for
+    // <input type="number"> and would silently blank the field.
+    for (const [mm, to] of [[28550, 'in'], [28550, 'mm'], [1854, 'in']]) {
+        const v = plainLength(mm, to);
+        assert(/^-?[\d.]+$/.test(v), `plainLength(${mm}, ${to}) = ${JSON.stringify(v)}`);
+        assert(Number.isFinite(Number(v)));
+    }
+});
+
+test('rounding costs no more than 0.5% anywhere in the shipped library', () => {
+    const lengths = new Set(), forces = new Set(), masses = new Set();
+    for (const f of readJson(join(DATA, 'trucks', 'index.json')).files) {
+        for (const u of readJson(join(DATA, 'trucks', f)).units) {
+            for (const k of ['overallLength', 'wheelbase']) if (u[k]) lengths.add(u[k]);
+            if (u.gvw && u.gvw.unit === 'kg') masses.add(u.gvw.value);
+            for (const a of u.axles || []) {
+                for (const k of ['x', 'trackWidth', 'dualSpacing']) if (a[k]) lengths.add(a[k]);
+                if (a.load && a.load.unit === 'kN') forces.add(a.load.value);
+            }
+            for (const g of u.groups || []) if (g.spacing) lengths.add(g.spacing);
+        }
+    }
+    for (const t of Object.values(readJson(join(DATA, 'tires.json')).nominal)) {
+        if (t.sectionWidth) lengths.add(t.sectionWidth);
+        if (t.overallDiameter) lengths.add(t.overallDiameter);
+    }
+    assert(lengths.size > 50, `only ${lengths.size} lengths found; the library did not load`);
+
+    const sweep = (vals, to, floor, what) => {
+        let worst = 0, at = null;
+        for (const v of vals) {
+            const truth = to(v);
+            if (!(truth > 0)) continue;
+            const err = Math.abs(readable(truth, floor) - truth) / truth;
+            if (err > worst) { worst = err; at = v; }
+        }
+        assert(worst < 0.005, `${what}: ${(worst * 100).toFixed(2)}% at ${at}`);
+    };
+    sweep(lengths, (mm) => lengthFromMm(mm, 'in'), LENGTH_FLOOR.in, 'lengths in inches');
+    sweep(forces, (kN) => forceFromKn(kN, 'kip'), undefined, 'axle loads in kips');
+    sweep(masses, (kg) => massFromKg(kg, 'lb'), undefined, 'weights in pounds');
+});
+
+test('no unit label is written against an interpolated value', () => {
+    /* A unit symbol immediately after a `${...}` is a label pinned to a
+       number, and that number came from the store in canonical units.
+       Anything this matches shows millimeters to a reader who may be in
+       inches. The one exception is the FAA's own Table 1, which prints
+       both. */
+    const ALLOWED = ['${p.psi} psi / ${p.mpa} MPa (Table 1).'];
+    const RE = /\}\s?(mm²|mm2|mm|kPa|MPa|kN|psi|kip|lbf|in²|in2|kg|lb)\b/;
+    const offenders = [];
+    MAIN.split('\n').forEach((line, i) => {
+        const t = line.trim();
+        if (t.startsWith('*') || t.startsWith('//') || t.startsWith('/*')) return;
+        if (!RE.test(line) || ALLOWED.some((a) => line.includes(a))) return;
+        offenders.push(`${i + 1}: ${t}`);
+    });
+    assertEqual(offenders.length, 0, `hardcoded unit label(s):\n${offenders.join('\n')}`);
+});
+
+test('every function that formats through UNIT_SYSTEMS is refreshed by the switch', () => {
+    /* Exempt, each for a reason about WHEN it runs rather than what it
+       formats. Re-running any of these from the switch would be wrong. */
+    const EXEMPT = {
+        setUnitSystem: 'is the switch',
+        setupViewport: 'formats the hover readout, redrawn on the next pointer move',
+        drawPatches: 'part of the overlay, redrawn by app.viewport.invalidate()',
+        placeMeasurePoint: 'a toast, written once when a dimension is committed',
+        setupContactPanel: 'reads a typed inflation pressure at change time',
+        applyPatchOverride: 'reads typed footprint dimensions at click time'
+        // applyWideBaseSwap is deliberately absent: its report is a record of
+        // one swap and must not be recomputed, so the printing was split into
+        // renderWideBaseReport(), which IS on the list.
+    };
+    const refreshed = new Set([...mainFn('setUnitSystem').matchAll(/([A-Za-z0-9_]+)\(/g)].map((m) => m[1]));
+    const missing = [];
+    for (const [name, body] of MAIN_FUNCTIONS) {
+        if (!/UNIT_SYSTEMS\[/.test(body)) continue;
+        if (EXEMPT[name] || refreshed.has(name)) continue;
+        missing.push(name);
+    }
+    assertEqual(missing.length, 0, `not re-run when the display system changes: ${missing.join(', ')}`);
+    for (const name of Object.keys(EXEMPT)) {
+        assert(/UNIT_SYSTEMS\[/.test(mainFn(name)), `${name} is exempt but no longer reads UNIT_SYSTEMS`);
+    }
+});
+
+test('a restored session re-lights the switch, and the choice is remembered', () => {
+    // The toolbar is chrome, not state: nothing redraws it.
+    assert(/syncUnitSystemUi\(\)/.test(mainFn('applyProject')), 'applyProject must re-light the switch');
+    assert(/syncUnitSystemUi\(\)/.test(mainFn('setupToolbar')), 'and it must be lit at boot');
+    assert(/scheduleAutosave\(\)/.test(mainFn('setUnitSystem')), 'the choice rides the session autosave');
+});
+
+test('the title block states the display system, and the toolbar offers what exists', () => {
+    assert(/id="g3-tb-units"/.test(HTML), 'index.html must carry the Units cell id');
+    assert(/\$\('g3-tb-units'\)/.test(mainFn('syncUnitSystemUi')), 'and main.js must write it');
+    const offered = [...HTML.matchAll(/data-units="([^"]+)"/g)].map((m) => m[1]);
+    assertEqual(offered.slice().sort().join(','), Object.keys(UNIT_SYSTEMS).slice().sort().join(','));
+    assertEqual(new Set(offered).size, offered.length, 'one button per system');
+});
+
+test('the inflation field offers the same physical band in both systems', () => {
+    // A spinner stepping by 5 in a field showing psi is unusable, so the
+    // field carries its own limits per system. The two have to describe the
+    // same pressures, or an English reader is locked out of a case their SI
+    // classmate can set.
+    const body = mainFn('syncInflationField');
+    const bands = [...body.matchAll(/el\.min = '(\d+)'; el\.max = '(\d+)';/g)].map((m) => [+m[1], +m[2]]);
+    assertEqual(bands.length, 2, 'expected one band per unit system');
+    assert(body.indexOf("'psi'") < body.indexOf("'kPa'"), 'the psi branch is no longer first');
+    const KPA_PER_PSI = pressureToKpa(1, 'psi');
+    const [[psiLo, psiHi], [kpaLo, kpaHi]] = bands;
+    for (const [a, b, what] of [[psiLo * KPA_PER_PSI, kpaLo, 'floor'], [psiHi * KPA_PER_PSI, kpaHi, 'ceiling']]) {
+        const off = Math.abs(a - b) / b;
+        assert(off < 0.05, `inflation ${what} differs by ${(off * 100).toFixed(1)}% between systems`);
     }
 });
 
