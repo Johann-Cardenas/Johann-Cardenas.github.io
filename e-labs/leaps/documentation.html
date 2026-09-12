@@ -107,7 +107,7 @@
                     <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to LEAPS workbench</a>
                     <div class="header-badges">
                         <span class="header-badge"><i class="fas fa-microchip"></i> LEAF-JS Engine</span>
-                        <span class="header-badge"><i class="fas fa-code-branch"></i> v2.1</span>
+                        <span class="header-badge"><i class="fas fa-code-branch"></i> v2.2</span>
                     </div>
                 </div>
 
@@ -304,9 +304,14 @@
                                 <li><strong>Evaluation points</strong>: double-click the section to drop a point; it snaps to interfaces and wheel axes. Drag to move, select and press <code>Delete</code> to remove.</li>
                                 <li><strong>Results</strong>: key responses appear in the right rail. The bottom dock opens on the <strong>results table</strong>: one column per evaluation point, one row per quantity, in the order a layered-elastic program prints them, position, the six stress components, the six strains, the three displacements, then the principal stresses and principal strains. The quantity and unit columns stay frozen while you scroll sideways, and the six groups fold. The other dock tabs hold depth profiles, surface responses, the per-layer summary and the performance estimates.</li>
                             </ul>
+                            <h3>Two views of one model</h3>
+                            <p>The <strong>Section</strong> view is the cut itself: the x-z plane at the section line, drawn to scale with a ruler along the bottom for x, the depth rail at the left for z, and a gnomon in the corner carrying all three axes. The third one is the reason the gnomon is there: y runs into the page, the drawing is one cut along it, and the gnomon prints which cut. Contour lines carry their own values in a gap broken in the line, the way a contour map engraves them, so a bulb can be read without walking back to the color bar.</p>
+                            <p>The <strong>3D</strong> view is the same model in the box it sits in, cut open at the section line. The far half is solid and carries the contour on the exposed face; the near half is drawn as the glass it was cut out of, so the wheels standing on it stay where they are. It answers the question a flat cut cannot: <em>where is the section, and what else is up there?</em> A dual tandem has four wheels and a plane through two of them; a line load at the default azimuth runs along y and crosses the section at a single point, which in the flat view is a knife edge and in this one is a line on the ground. Drag to orbit, scroll to zoom, shift-drag to pan.</p>
+                            <p>Two things about that camera are deliberate. It is <strong>orthographic</strong>, so nothing foreshortens and a length is a length wherever in the box it sits: the figure can be measured. And the orbit is held within one quadrant, because past about 80 degrees the cut face is edge on, the contour disappears, and the reader is looking along the plane whose values they came to read.</p>
                             <h3>Editing on the section</h3>
                             <p>The section drawing is an input, not an illustration. Three gestures edit the structure directly, and each one changes the same state the panel does, so the two are never out of step:</p>
                             <ul>
+                                <li>All three gestures are for the <strong>Section</strong> view. In 3D the canvas is a camera: a screen position out there is a whole line of world positions, and guessing one would move a layer nobody meant to touch.</li>
                                 <li><strong>Drag an interface line</strong> to set the thickness of the layer above it. The thickness is drawn beside the cursor while you drag, and it lands on a round number: the step follows the zoom, so the same gesture is coarse on a whole section and fine on a close-up, and it never produces a thickness nobody would type.</li>
                                 <li><strong>Click an interface chip</strong> to cycle bonded, partial, free. The chip prints the state it is in and sits clear of the colorbar.</li>
                                 <li><strong>Click a layer</strong> to select it; the panel row highlights with it, which is how a thick section stays navigable.</li>
@@ -328,6 +333,7 @@
                                     <tr><td>Drag an interface line</td><td>Set the thickness of the layer above it</td></tr>
                                     <tr><td>Click an interface chip</td><td>Cycle bonded, partial, free</td></tr>
                                     <tr><td>Click a layer</td><td>Select it here and in the structure panel</td></tr>
+                                    <tr><td>Drag in the 3D view</td><td>Orbit the camera (shift-drag pans)</td></tr>
                                 </table>
                             </div>
                             <h3>Exports</h3>

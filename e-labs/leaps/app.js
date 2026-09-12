@@ -353,6 +353,35 @@
         if (a >= 1e6 || a < 1e-3) return x.toExponential(2);
         return String(parseFloat(x.toPrecision(n)));
     }
+    /* =====================================================================
+     * AXONOMETRIC PROJECTION
+     * ---------------------------------------------------------------------
+     * World axes: x across the section, y along the direction of travel,
+     * z DOWN. The camera yaws by az about the vertical and pitches by el,
+     * and the projection is orthographic: a drawing somebody measures must
+     * not foreshorten, so parallel stays parallel and a length is a length
+     * wherever in the box it sits.
+     *
+     * Two properties are load-bearing rather than incidental, and both are
+     * pinned by the test suite. The map is AFFINE, which is what lets the
+     * contour image be poured onto the cut plane with one ctx.transform
+     * instead of being resampled pixel by pixel. And the z axis projects
+     * to a VERTICAL screen direction at every camera angle, which is what
+     * keeps depth reading down the page: a drop line from a point to the
+     * surface is plumb, and a layer is a band rather than a wedge.
+     * ================================================================== */
+    function axonometric(az, el, scale) {
+        var a = az * Math.PI / 180, e = el * Math.PI / 180;
+        var ca = Math.cos(a), sa = Math.sin(a), ce = Math.cos(e), se = Math.sin(e);
+        var k = scale == null ? 1 : scale;
+        return {
+            ca: ca, sa: sa, ce: ce, se: se,
+            ex: [ca * k, -sa * se * k],
+            ey: [-sa * k, -ca * se * k],
+            ez: [0, ce * k]
+        };
+    }
+
     function mulberry32(seed) {
         var t0 = seed >>> 0;
         return function () {
@@ -516,12 +545,16 @@
             settings: {
                 units: 'SI', tol: '1e-6', res: '61x43', autorun: true,
                 showBasin: true, showContour: true, field: 'szz', profField: 'szz',
-                alpha: 0.85, strainAbs: false, solveFor: 'A'
+                alpha: 0.85, strainAbs: false, solveFor: 'A', view3d: false
             }
         };
 
         var results = { key: null, user: null, profiles: null, basin: null, grid: null, stats: null, meta: null };
         var view = { scale: 0.5, ox: 0, oy: 0 };
+        /* The perspective camera. Orthographic, not perspective, because a
+         * drawing a reader measures must not foreshorten: parallel is
+         * parallel and a length is a length wherever it sits in the box. */
+        var view3 = { az: 34, el: 26, scale: 1, ox: 0, oy: 0, fitted: false };
         var selPoint = null, selLayer = null;
         var history = [], future = [];
         var gearParams = { F: 20000, p: 0.7, Sd: 350, St: 350, L: 300, theta: 90 };
@@ -1898,7 +1931,24 @@
         function s2wx(px) { return (px - view.ox) / view.scale; }
         function s2wy(py) { return (py - view.oy) / view.scale; }
 
+        function zoomView(k) {
+            if (state.settings.view3d) {
+                /* zoom about the middle of the canvas, so the thing being
+                   looked at stays where it is being looked at */
+                var cx = vpW / 2, cy = (vpH - X_RULER_H) / 2;
+                view3.ox = cx + (view3.ox - cx) * k;
+                view3.oy = cy + (view3.oy - cy) * k;
+                view3.scale *= k;
+            } else view.scale *= k;
+            drawViewport();
+        }
+        function syncViewMode() {
+            $$('#lp-viewmode .lp-seg-btn').forEach(function (b) {
+                b.classList.toggle('is-active', (b.dataset.view === '3d') === !!state.settings.view3d);
+            });
+        }
         function fitView() {
+            if (state.settings.view3d) { fit3(); drawViewport(); return; }
             var box = worldBox();
             var headroom = 0.22 * box.zMax;
             var wW = box.xR - box.xL, wH = box.zMax + headroom;
@@ -1922,9 +1972,70 @@
         /* --- the three load idealizations, drawn as three different things.
          * A student should be able to tell which model is running without
          * reading a control: a tire, an arrow, or a bar of arrows. */
+        /* A dimension line, drawn the way a drawing draws one: two extension
+         * ticks, a line with arrowheads between them, and the number in a
+         * gap in the middle. It is what ties 'a = 95.4 mm' in the caption to
+         * the width on the page, which is the whole reason a figure beats a
+         * table for geometry. */
+        function dimLine(x1, x2, y, label, col) {
+            var w = Math.abs(x2 - x1);
+            if (w < 30) return;
+            ctx.save();
+            ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x1, y - 5); ctx.lineTo(x1, y + 5);
+            ctx.moveTo(x2, y - 5); ctx.lineTo(x2, y + 5);
+            ctx.moveTo(x1, y); ctx.lineTo(x2, y);
+            ctx.stroke();
+            [[x1, 1], [x2, -1]].forEach(function (e) {
+                ctx.beginPath();
+                ctx.moveTo(e[0], y); ctx.lineTo(e[0] + 5 * e[1], y - 2.6);
+                ctx.lineTo(e[0] + 5 * e[1], y + 2.6); ctx.closePath(); ctx.fill();
+            });
+            ctx.font = '10px ' + monoFont();
+            var tw = ctx.measureText(label).width;
+            var mid = (x1 + x2) / 2;
+            ctx.fillStyle = rgba('--lp-bg1', 0.92);
+            ctx.fillRect(mid - tw / 2 - 3, y - 7, tw + 6, 14);
+            ctx.fillStyle = col;
+            ctx.textAlign = 'center';
+            ctx.fillText(label, mid, y + 3.5);
+            ctx.textAlign = 'left';
+            ctx.restore();
+        }
+
+        /* The circled cross of an axis that runs into the page: a line load
+         * at the default azimuth is PERPENDICULAR to the section, so it
+         * crosses this plane at one point, and without the mark that reads
+         * as a point load rather than as a line seen end on. */
+        function intoPage(x, y, r, col) {
+            ctx.save();
+            ctx.strokeStyle = col; ctx.lineWidth = 1.4;
+            ctx.beginPath(); ctx.arc(x, y, r, 0, 6.3); ctx.stroke();
+            var d = r * 0.68;
+            ctx.beginPath();
+            ctx.moveTo(x - d, y - d); ctx.lineTo(x + d, y + d);
+            ctx.moveTo(x + d, y - d); ctx.lineTo(x - d, y + d);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function chipNote(x, y, text, col) {
+            ctx.save();
+            ctx.font = '9px ' + monoFont();
+            var tw = ctx.measureText(text).width;
+            ctx.fillStyle = rgba('--lp-bg1', 0.92);
+            ctx.strokeStyle = col; ctx.lineWidth = 1;
+            roundRect(ctx, x, y - 8, tw + 10, 15, 4); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = col;
+            ctx.fillText(text, x + 5, y + 3);
+            ctx.restore();
+        }
+
         function drawLoadSection(G, danger, y0) {
             var cx = G.cx, contactHalf = G.contactHalf;
             var kind = state.loadKind;
+            var annotate = !!G.annotate;
 
             /* ground contact shadow, same for all three */
             ctx.fillStyle = 'rgba(0,0,0,0.28)';
@@ -1933,21 +2044,51 @@
             ctx.fill();
 
             if (kind === 'point') {
-                var h = 54;
-                ctx.strokeStyle = danger; ctx.fillStyle = danger; ctx.lineWidth = 2.2;
-                ctx.beginPath(); ctx.moveTo(cx, y0 - h); ctx.lineTo(cx, y0 - 3); ctx.stroke();
+                var h = 58;
+                /* One force, all of it at one place. The shaft is drawn
+                 * heavier than the other two idealizations carry because
+                 * that is the point of it: the same total load with no
+                 * area at all under it. */
+                ctx.strokeStyle = danger; ctx.fillStyle = danger; ctx.lineWidth = 2.6;
+                ctx.beginPath(); ctx.moveTo(cx, y0 - h); ctx.lineTo(cx, y0 - 4); ctx.stroke();
                 ctx.beginPath();
-                ctx.moveTo(cx, y0); ctx.lineTo(cx - 5, y0 - 9); ctx.lineTo(cx + 5, y0 - 9);
+                ctx.moveTo(cx, y0); ctx.lineTo(cx - 5.5, y0 - 10); ctx.lineTo(cx + 5.5, y0 - 10);
                 ctx.closePath(); ctx.fill();
-                ctx.beginPath(); ctx.arc(cx, y0, 2.6, 0, 6.3); ctx.fill();
+                /* the singularity, drawn as one: no finite response lives
+                 * at the load itself, and the table prints nothing there */
+                ctx.save();
+                ctx.strokeStyle = danger; ctx.lineWidth = 1; ctx.globalAlpha = 0.75;
+                ctx.setLineDash([2, 2.5]);
+                ctx.beginPath(); ctx.arc(cx, y0, 7, 0, 6.3); ctx.stroke();
+                ctx.beginPath(); ctx.arc(cx, y0, 12, 0, 6.3); ctx.stroke();
+                ctx.restore();
+                ctx.fillStyle = danger;
+                ctx.beginPath(); ctx.arc(cx, y0, 2.8, 0, 6.3); ctx.fill();
+                if (annotate) chipNote(cx + 15, y0 + 1, 'singular', danger);
                 return { top: y0 - h };
             }
 
             if (kind === 'line') {
-                /* the segment as it crosses the section plane */
+                /* The segment crosses this plane at whatever its azimuth
+                 * projects onto x, and at the default 90 degrees that is a
+                 * POINT: the line runs along y, into the page. Drawing that
+                 * case as a three-pixel knife edge and saying nothing is how
+                 * a line load comes to be read as a point load. */
                 var th = gearParams.theta * Math.PI / 180;
-                var halfW = Math.max(Math.abs(0.5 * gearParams.L * Math.cos(th)) * view.scale, 3);
-                var hh = 44;
+                var projW = Math.abs(gearParams.L * Math.cos(th));
+                var halfW = projW * 0.5 * view.scale;
+                var endOn = halfW < 6;
+                var hh = 48;
+                if (endOn) {
+                    ctx.strokeStyle = danger; ctx.fillStyle = danger; ctx.lineWidth = 2.2;
+                    ctx.beginPath(); ctx.moveTo(cx, y0 - hh); ctx.lineTo(cx, y0 - 11); ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(cx, y0 - 1); ctx.lineTo(cx - 5, y0 - 11); ctx.lineTo(cx + 5, y0 - 11);
+                    ctx.closePath(); ctx.fill();
+                    intoPage(cx, y0 - 20, 7, danger);
+                    if (annotate) chipNote(cx + 15, y0 - 20, 'line \u2225 y, seen end on', cssVar('--lp-ink2'));
+                    return { top: y0 - hh };
+                }
                 ctx.strokeStyle = danger; ctx.fillStyle = danger; ctx.lineWidth = 1.2;
                 var nA = clamp(Math.round(halfW / 6), 2, 12);
                 for (var k = 0; k < nA; k++) {
@@ -1964,20 +2105,48 @@
                 /* the knife edge itself */
                 ctx.fillStyle = danger;
                 roundRect(ctx, cx - halfW, y0 - 2.5, 2 * halfW, 5, 2); ctx.fill();
+                if (annotate) {
+                    dimLine(cx - halfW, cx + halfW,
+                        y0 + 20, 'L cos\u03B8 ' + sig(toDisp('len', projW), 3) + ' ' + unit('len'),
+                        cssVar('--lp-ink2'));
+                }
                 return { top: y0 - hh };
             }
 
-            /* circular imprint: a tire with its contact patch */
+            /* ---- circular imprint: a tire, and the pressure it applies ----
+             * Two things are being drawn and they are not the same thing.
+             * The TIRE is scenery: it says which way is up and what the load
+             * came off. The BLOCK of pressure between it and the surface is
+             * the model, and it is drawn the way a statics figure draws a
+             * uniformly distributed load, with a capped band of equal
+             * arrows, because 'uniform' is the assumption every layered-
+             * elastic program makes and the one worth showing rather than
+             * implying. */
+            /* A cut in the x-z plane runs ACROSS the tread, so what is seen
+             * is the tire's section width against its height, and a real one
+             * is far taller than it is wide. The old cap at 54px drew a
+             * plank as soon as the view was zoomed in at all. Only the
+             * bottom of the wheel is drawn, so this is still a stylization,
+             * but the proportion is now the tire's rather than the cap's. */
             var tireHalf = Math.max(contactHalf, 10);
-            var tireH = clamp(tireHalf * 1.35, 22, 54);
-            var gap = clamp(tireH * 0.34, 9, 16);
-            var tireBot = y0 - gap, ty = tireBot - tireH;
+            var tireH = clamp(tireHalf * 1.7, 26, 96);
+            var blockH = clamp(tireHalf * 0.55, 11, 19);
+            var tireBot = y0 - blockH, ty = tireBot - tireH;
 
-            ctx.strokeStyle = danger; ctx.fillStyle = danger; ctx.lineWidth = 1;
-            var nB = clamp(Math.round(contactHalf / 7), 2, 9);
+            /* the pressure band */
+            ctx.fillStyle = rgba('--lp-danger', 0.14);
+            ctx.fillRect(cx - contactHalf, tireBot, 2 * contactHalf, blockH);
+            ctx.strokeStyle = danger; ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(cx - contactHalf, tireBot + 0.5);
+            ctx.lineTo(cx + contactHalf, tireBot + 0.5);
+            ctx.stroke();
+            ctx.lineWidth = 1;
+            var nB = clamp(Math.round(contactHalf / 6), 2, 11);
             for (var q = 0; q < nB; q++) {
                 var bx = cx - contactHalf + 2 * contactHalf * (q + 0.5) / nB;
-                ctx.beginPath(); ctx.moveTo(bx, tireBot + 1); ctx.lineTo(bx, y0 - 4); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(bx, tireBot + 2); ctx.lineTo(bx, y0 - 4); ctx.stroke();
+                ctx.fillStyle = danger;
                 ctx.beginPath();
                 ctx.moveTo(bx, y0 - 1); ctx.lineTo(bx - 2.3, y0 - 5); ctx.lineTo(bx + 2.3, y0 - 5);
                 ctx.closePath(); ctx.fill();
@@ -1985,24 +2154,51 @@
             ctx.fillStyle = danger;
             roundRect(ctx, cx - contactHalf, y0 - 2, 2 * contactHalf, 4, 1.5); ctx.fill();
 
-            var rad = Math.min(tireHalf * 0.45, 11);
+            /* the tire: tread band, sidewalls, rim */
+            var rad = Math.min(tireHalf * 0.42, 11);
             var grad = ctx.createLinearGradient(cx - tireHalf, 0, cx + tireHalf, 0);
-            grad.addColorStop(0, '#111418'); grad.addColorStop(0.5, '#474d57'); grad.addColorStop(1, '#111418');
+            grad.addColorStop(0, '#0e1116');
+            grad.addColorStop(0.22, '#2c323b');
+            grad.addColorStop(0.5, '#4b525d');
+            grad.addColorStop(0.78, '#2c323b');
+            grad.addColorStop(1, '#0e1116');
             roundRect(ctx, cx - tireHalf, ty, 2 * tireHalf, tireH, rad);
             ctx.fillStyle = grad; ctx.fill();
             ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 1; ctx.stroke();
 
             ctx.save();
             roundRect(ctx, cx - tireHalf, ty, 2 * tireHalf, tireH, rad); ctx.clip();
-            ctx.strokeStyle = 'rgba(0,0,0,0.32)'; ctx.lineWidth = 1.4;
-            var grooves = clamp(Math.round(tireHalf / 5), 3, 10);
+            /* Circumferential grooves, which on a cut across the tread are
+             * the notches in it. No rim: this cut is through the bottom of
+             * the wheel and the rim is above it. */
+            ctx.strokeStyle = 'rgba(0,0,0,0.42)';
+            ctx.lineWidth = Math.max(1.4, tireHalf * 0.055);
+            var grooves = clamp(Math.round(tireHalf / 7), 3, 7);
             for (var gi = 1; gi < grooves; gi++) {
                 var gx = cx - tireHalf + 2 * tireHalf * gi / grooves;
-                ctx.beginPath(); ctx.moveTo(gx, ty + 1.5); ctx.lineTo(gx, ty + tireH - 1.5); ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(gx, ty + tireH * 0.72); ctx.lineTo(gx, ty + tireH + 1);
+                ctx.stroke();
             }
-            ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1.4;
-            ctx.beginPath(); ctx.moveTo(cx - tireHalf + rad, ty + 2.5); ctx.lineTo(cx + tireHalf - rad, ty + 2.5); ctx.stroke();
+            /* the shoulders, where a tire's section turns the corner */
+            var shG = ctx.createLinearGradient(0, ty + tireH * 0.55, 0, ty + tireH);
+            shG.addColorStop(0, 'rgba(0,0,0,0)');
+            shG.addColorStop(1, 'rgba(0,0,0,0.3)');
+            ctx.fillStyle = shG;
+            ctx.fillRect(cx - tireHalf, ty + tireH * 0.55, 2 * tireHalf, tireH * 0.45);
+            ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(cx - tireHalf + rad, ty + 2.5); ctx.lineTo(cx + tireHalf - rad, ty + 2.5);
+            ctx.stroke();
             ctx.restore();
+
+            /* the contact width, dimensioned once so the number in the
+               caption has a length on the page to belong to */
+            if (annotate) {
+                dimLine(cx - contactHalf, cx + contactHalf, y0 + 20,
+                    '2a ' + sig(toDisp('len', 2 * loadA(state.loads[G.wi])), 3) + ' ' + unit('len'),
+                    cssVar('--lp-ink2'));
+            }
             return { top: ty, mid: ty + tireH / 2 };
         }
 
@@ -2011,10 +2207,542 @@
          * a student changes half a dozen times in one sitting, and walking
          * to a side panel for it every time is the friction that stops them
          * trying the other two. */
+        /* The number on the line.
+         *
+         * An unlabeled iso-line says only that something is constant along
+         * it; with the colorbar beside the figure a reader can decode one
+         * line by eye, and not a nest of nine. Engraved contour maps put the
+         * value IN the line, in a gap broken for it, and that is what this
+         * does. Placement is deliberately boring: candidates are the segment
+         * midpoints that are on screen and inside the pavement, the one
+         * nearest a target rail is taken, and anything within 30px of a
+         * label already placed is dropped, so the labels walk down the
+         * figure instead of piling up where the gradient is steepest. */
+        function drawIsoLabels() {
+            if (!contour || !contour.levels) return;
+            var f = contour.field;
+            var railX = vpW * 0.62, placed = [];
+            ctx.save();
+            ctx.font = '9px ' + monoFont();
+            ctx.textAlign = 'center';
+            contour.levels.forEach(function (lv) {
+                if (!lv.segs.length) return;
+                var best = null, bestD = Infinity;
+                for (var i = 0; i < lv.segs.length; i += 2) {
+                    var sg = lv.segs[i];
+                    var mx = w2sx((sg[0][0] + sg[1][0]) / 2);
+                    var my = w2sy((sg[0][1] + sg[1][1]) / 2);
+                    if (mx < 40 || mx > vpW - 110 || my < 30 || my > vpH - X_RULER_H - 12) continue;
+                    var d = Math.abs(mx - railX);
+                    if (d < bestD) { bestD = d; best = [mx, my]; }
+                }
+                if (!best) return;
+                var txt = sig(toDisp(f.q, lv.v), 2);
+                var tw = ctx.measureText(txt).width;
+                /* reject on the LABELS overlapping, not on a fixed box: a
+                   fixed one at 46 by 30 threw away six of the eight lines */
+                for (var k = 0; k < placed.length; k++) {
+                    if (Math.abs(placed[k][0] - best[0]) < (placed[k][2] + tw) / 2 + 10 &&
+                        Math.abs(placed[k][1] - best[1]) < 15) return;
+                }
+                placed.push([best[0], best[1], tw]);
+                ctx.fillStyle = rgba('--lp-bg1', 0.88);
+                ctx.fillRect(best[0] - tw / 2 - 3, best[1] - 6, tw + 6, 12);
+                ctx.fillStyle = cssVar('--lp-ink2');
+                ctx.fillText(txt, best[0], best[1] + 3.5);
+            });
+            ctx.restore();
+            ctx.textAlign = 'left';
+        }
+
         function itfLabel(slip) {
             if (slip <= 0) return 'bonded';
             if (slip >= 1) return 'free';
             return 'slip ' + sig(slip, 2);
+        }
+
+        /* ============================ AXES ============================
+         * A section with no scale on it is a picture rather than a drawing.
+         * The depth rail has always carried z and x carried nothing, so a
+         * distance across the section could not be read at all; and the
+         * THIRD axis carried nothing anywhere, which is the one thing a
+         * reader of a two-dimensional cut through a three-dimensional gear
+         * has to be told: which way y points, and where along it this cut
+         * was taken. The gnomon says it the way a drafting sheet does, with
+         * the axis that runs into the page drawn as a circled cross.
+         * ============================================================== */
+        var X_RULER_H = 21;
+
+        /* The plan inset floats over the bottom right of the same canvas, so
+         * the ruler stops where it starts rather than running underneath it.
+         * Measured rather than assumed: the panel collapses. */
+        function rulerRight() {
+            var panel = $('lp-plan-panel');
+            if (!panel || panel.classList.contains('is-collapsed')) return vpW;
+            var pr = panel.getBoundingClientRect(), cr = cv.getBoundingClientRect();
+            if (!pr.width) return vpW;
+            return clamp(pr.left - cr.left - 8, 120, vpW);
+        }
+
+        function drawXRuler() {
+            var right = rulerRight();
+            var yB = vpH - X_RULER_H;
+            ctx.fillStyle = rgba('--lp-bg1', 0.88);
+            ctx.fillRect(0, yB, right, X_RULER_H);
+            ctx.strokeStyle = cssVar('--lp-line');
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, yB + 0.5); ctx.lineTo(right, yB + 0.5); ctx.stroke();
+
+            var span = s2wx(right) - s2wx(0);
+            var step = niceStep(span / 7);
+            var xs = Math.ceil(s2wx(4) / step) * step;
+            var unitW = ctx.measureText('x').width;
+            ctx.font = '10px ' + monoFont();
+            var lblRight = right - 34;
+            for (var x = xs; w2sx(x) < lblRight; x += step) {
+                var sx = w2sx(x);
+                if (sx < 16) continue;
+                var zero = Math.abs(x) < step * 1e-6;
+                ctx.strokeStyle = zero ? cssVar('--lp-ink2') : cssVar('--lp-line');
+                ctx.beginPath();
+                ctx.moveTo(sx, yB + 1); ctx.lineTo(sx, yB + (zero ? 8 : 5)); ctx.stroke();
+                ctx.fillStyle = zero ? cssVar('--lp-ink2') : cssVar('--lp-ink3');
+                ctx.textAlign = 'center';
+                ctx.fillText(sig(toDisp('len', x), 4), sx, yB + 17);
+            }
+            ctx.fillStyle = cssVar('--lp-ink3');
+            ctx.textAlign = 'right';
+            ctx.fillText('x ' + unit('len'), right - 6, yB + 17);
+            ctx.textAlign = 'left';
+            void unitW;
+        }
+
+        /* x right, z down, y into the page. The third one is the reason this
+         * exists: every number in the results table is in these axes, the
+         * section is one cut through them, and until the cut is labeled with
+         * its own y the reader cannot place it. */
+        function drawGnomon() {
+            var w = 132, h = 74, pad = 10;
+            var ox = pad, oy = vpH - X_RULER_H - h - pad;
+            if (oy < 40) return;
+            ctx.fillStyle = rgba('--lp-bg1', 0.9);
+            ctx.strokeStyle = cssVar('--lp-line');
+            ctx.lineWidth = 1;
+            roundRect(ctx, ox, oy, w, h, 7); ctx.fill(); ctx.stroke();
+
+            var gx = ox + 26, gy = oy + 22, len = 30;
+            var ink2 = cssVar('--lp-ink2'), ink3 = cssVar('--lp-ink3');
+            ctx.lineWidth = 1.6;
+            ctx.font = '700 11px ' + monoFont();
+
+            /* x, to the right */
+            ctx.strokeStyle = ink2; ctx.fillStyle = ink2;
+            ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + len, gy); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(gx + len + 4, gy); ctx.lineTo(gx + len - 2, gy - 3.2);
+            ctx.lineTo(gx + len - 2, gy + 3.2); ctx.closePath(); ctx.fill();
+            ctx.fillText('x', gx + len + 8, gy + 4);
+
+            /* z, downward, which is where it points in every layered-elastic
+             * program and the opposite of what a plot library assumes */
+            ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx, gy + len); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(gx, gy + len + 4); ctx.lineTo(gx - 3.2, gy + len - 2);
+            ctx.lineTo(gx + 3.2, gy + len - 2); ctx.closePath(); ctx.fill();
+            /* beside the middle of its own arrow, not under the tip: the
+               caption line lives under the tip */
+            ctx.fillText('z', gx - 13, gy + len * 0.72);
+
+            /* y, into the page: the drafting circle and cross */
+            ctx.strokeStyle = cssVar('--lp-accent');
+            ctx.fillStyle = cssVar('--lp-accent');
+            ctx.lineWidth = 1.3;
+            ctx.beginPath(); ctx.arc(gx, gy, 5, 0, 6.3); ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(gx - 3.5, gy - 3.5); ctx.lineTo(gx + 3.5, gy + 3.5);
+            ctx.moveTo(gx + 3.5, gy - 3.5); ctx.lineTo(gx - 3.5, gy + 3.5);
+            ctx.stroke();
+            ctx.fillText('y', gx - 14, gy - 8);
+
+            ctx.font = '10px ' + monoFont();
+            ctx.fillStyle = ink3;
+            ctx.fillText('cut at y ' + sig(toDisp('len', state.ySec), 4), ox + 9, oy + h - 9);
+        }
+
+        /* ========================= THE 3-D VIEW =========================
+         * The section answers what happens under one cut. It cannot answer
+         * where the cut IS, which is the question a dual tandem raises the
+         * moment it is built: four wheels, one plane through them, and a
+         * flat drawing that shows two of them and says nothing about the
+         * other two. The plan inset was the first answer and it is a second
+         * flat picture the reader has to fuse with the first.
+         *
+         * So: one orthographic box. The far half of the structure is solid
+         * and carries the contour on the cut face; the near half is the
+         * glass it was cut out of, so the wheels standing on it are still
+         * where they are. Orthographic rather than perspective because a
+         * drawing that gets measured must not foreshorten.
+         * ============================================================== */
+        function sceneBox() {
+            var box = worldBox();
+            var yc = 0, n = state.loads.length;
+            if (n) {
+                var sy = 0;
+                state.loads.forEach(function (w) { sy += w.y; });
+                yc = sy / n;
+            }
+            var yHalf = (box.xR - box.xL) * 0.5;
+            return {
+                xL: box.xL, xR: box.xR, zMax: box.zMax, df: box.df,
+                y0: Math.min(yc - yHalf, state.ySec - 60),
+                y1: Math.max(yc + yHalf, state.ySec + 60)
+            };
+        }
+        /* The projection is affine, which is the whole reason the contour
+         * image can be poured onto the cut face with one ctx.transform
+         * rather than resampled pixel by pixel. */
+        function basis3(scale) {
+            return axonometric(view3.az, view3.el, scale == null ? view3.scale : scale);
+        }
+        function P3(B, x, y, z, noOff) {
+            var ox = noOff ? 0 : view3.ox, oy = noOff ? 0 : view3.oy;
+            return [ox + x * B.ex[0] + y * B.ey[0] + z * B.ez[0],
+                    oy + x * B.ex[1] + y * B.ey[1] + z * B.ez[1]];
+        }
+        function fit3() {
+            var sb = sceneBox(), U = basis3(1);
+            var xs = [], ys = [];
+            [sb.xL, sb.xR].forEach(function (x) {
+                [sb.y0, sb.y1].forEach(function (y) {
+                    [0, sb.zMax].forEach(function (z) {
+                        var p = P3(U, x, y, z, true);
+                        xs.push(p[0]); ys.push(p[1]);
+                    });
+                });
+            });
+            var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
+            var y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+            var availW = vpW - 96, availH = vpH - X_RULER_H - 86;
+            var sc = Math.min(availW / Math.max(x1 - x0, 1e-6), availH / Math.max(y1 - y0, 1e-6));
+            view3.scale = sc;
+            view3.ox = vpW / 2 - sc * (x0 + x1) / 2;
+            view3.oy = (vpH - X_RULER_H) / 2 + 6 - sc * (y0 + y1) / 2;
+            view3.fitted = true;
+        }
+        function poly3(B, pts, fill, stroke, lw) {
+            ctx.beginPath();
+            pts.forEach(function (q, i) {
+                var p = P3(B, q[0], q[1], q[2]);
+                if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]);
+            });
+            ctx.closePath();
+            if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+            if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1; ctx.stroke(); }
+        }
+        function line3(B, a, b, col, lw, dash) {
+            var p = P3(B, a[0], a[1], a[2]), q = P3(B, b[0], b[1], b[2]);
+            ctx.save();
+            if (dash) ctx.setLineDash(dash);
+            ctx.strokeStyle = col; ctx.lineWidth = lw || 1;
+            ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
+            ctx.restore();
+        }
+        /* A circle on the ground is an ellipse on the page, and it is the
+         * image of the unit circle under the same affine map, so it is drawn
+         * by handing the map to the context rather than by solving for axes
+         * and rotation. */
+        function ellipse3(B, cxw, cyw, r, fill, stroke, lw) {
+            var c = P3(B, cxw, cyw, 0);
+            ctx.save();
+            ctx.transform(r * B.ex[0], r * B.ex[1], r * B.ey[0], r * B.ey[1], c[0], c[1]);
+            ctx.beginPath(); ctx.arc(0, 0, 1, 0, 6.3);
+            ctx.restore();
+            if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+            if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1; ctx.stroke(); }
+        }
+
+        /* The orientation widget, in the corner rather than in the scene.
+         * Put on the box it lands on whichever face happens to be behind it
+         * and reads as part of the structure, which it is not: it is the
+         * reader's compass, and a compass belongs at the edge of the map.
+         * It turns with the camera, which is the whole of its job. */
+        function drawTriad3(B, nearIsLow) {
+            var w = 108, h = 92, pad = 10;
+            var ox = pad, oy = vpH - h - pad;
+            ctx.save();
+            ctx.fillStyle = rgba('--lp-bg1', 0.86);
+            ctx.strokeStyle = cssVar('--lp-line');
+            ctx.lineWidth = 1;
+            roundRect(ctx, ox, oy, w, h, 7); ctx.fill(); ctx.stroke();
+
+            var cx = ox + w / 2, cy = oy + h / 2 - 4, r = 30;
+            var unitS = Math.sqrt(B.ex[0] * B.ex[0] + B.ex[1] * B.ex[1]) || 1;
+            var dirs = [
+                [B.ex[0] / unitS, B.ex[1] / unitS, 'x'],
+                [B.ey[0] / unitS * (nearIsLow ? 1 : 1), B.ey[1] / unitS, 'y'],
+                [B.ez[0] / unitS, B.ez[1] / unitS, 'z']
+            ];
+            ctx.font = '700 11px ' + monoFont();
+            dirs.forEach(function (d) {
+                var tx = cx + d[0] * r, ty = cy + d[1] * r;
+                var col = d[2] === 'z' ? cssVar('--lp-accent') : cssVar('--lp-ink2');
+                ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 1.6;
+                ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tx, ty); ctx.stroke();
+                var m = Math.sqrt(d[0] * d[0] + d[1] * d[1]) || 1;
+                var ux = d[0] / m, uy = d[1] / m;
+                ctx.beginPath();
+                ctx.moveTo(tx + ux * 5, ty + uy * 5);
+                ctx.lineTo(tx - uy * 3.2, ty + ux * 3.2);
+                ctx.lineTo(tx + uy * 3.2, ty - ux * 3.2);
+                ctx.closePath(); ctx.fill();
+                ctx.textAlign = 'center';
+                ctx.fillText(d[2], tx + ux * 11, ty + uy * 11 + 4);
+                ctx.textAlign = 'left';
+            });
+            ctx.fillStyle = cssVar('--lp-ink3');
+            ctx.font = '9px ' + monoFont();
+            ctx.textAlign = 'center';
+            ctx.fillText(Math.round(((view3.az % 360) + 360) % 360) + '° / ' +
+                Math.round(view3.el) + '°', cx, oy + h - 7);
+            ctx.textAlign = 'left';
+            ctx.restore();
+        }
+
+        function drawScene3D() {
+            var sb = sceneBox();
+            if (!view3.fitted) fit3();
+            var B = basis3();
+            var ink2 = cssVar('--lp-ink2'), ink3 = cssVar('--lp-ink3');
+            var lineC = cssVar('--lp-line'), accent = cssVar('--lp-accent');
+            var danger = cssVar('--lp-danger');
+            var n = state.layers.length;
+
+            /* Which faces the camera can see. The cut keeps the half the
+             * camera is NOT on, so the exposed plane always faces the
+             * reader however far the scene is spun. */
+            var nearIsLow = B.ca >= 0;
+            var ySec = clamp(state.ySec, sb.y0, sb.y1);
+            var solidA = nearIsLow ? ySec : sb.y0;
+            var solidB = nearIsLow ? sb.y1 : ySec;
+            var ghostA = nearIsLow ? sb.y0 : ySec;
+            var ghostB = nearIsLow ? ySec : sb.y1;
+            var sideX = B.sa >= 0 ? sb.xL : sb.xR;
+
+            /* ---- the surface of the solid half ---- */
+            var top = state.layers[0];
+            poly3(B, [[sb.xL, solidA, 0], [sb.xR, solidA, 0], [sb.xR, solidB, 0], [sb.xL, solidB, 0]],
+                top.color, null);
+            ctx.save();
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = texture(top);
+            poly3(B, [[sb.xL, solidA, 0], [sb.xR, solidA, 0], [sb.xR, solidB, 0], [sb.xL, solidB, 0]],
+                texture(top), null);
+            ctx.restore();
+
+            /* ---- the ground grid: this is where x and y get their scale ---- */
+            var gstep = niceStep((sb.xR - sb.xL) / 8);
+            ctx.save();
+            ctx.globalAlpha = 0.5;
+            var gx, gy;
+            for (gx = Math.ceil(sb.xL / gstep) * gstep; gx <= sb.xR; gx += gstep) {
+                line3(B, [gx, solidA, 0], [gx, solidB, 0], Math.abs(gx) < 1e-6 ? ink3 : lineC, 1);
+            }
+            for (gy = Math.ceil(solidA / gstep) * gstep; gy <= solidB; gy += gstep) {
+                line3(B, [sb.xL, gy, 0], [sb.xR, gy, 0], Math.abs(gy) < 1e-6 ? ink3 : lineC, 1);
+            }
+            ctx.restore();
+
+            /* ---- loads standing on the solid half ---- */
+            function drawLoad3(w, wi, alpha) {
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                var c = P3(B, w.x, w.y, 0);
+                if (state.loadKind === 'circle') {
+                    var a = loadA(w);
+                    ellipse3(B, w.x, w.y, a, rgba('--lp-danger', 0.55), danger, 1.4);
+                    ellipse3(B, w.x, w.y, a * 0.5, rgba('--lp-danger', 0.35), null, 0);
+                } else if (state.loadKind === 'line') {
+                    var th = gearParams.theta * Math.PI / 180, hl = 0.5 * gearParams.L;
+                    line3(B, [w.x - hl * Math.cos(th), w.y - hl * Math.sin(th), 0],
+                             [w.x + hl * Math.cos(th), w.y + hl * Math.sin(th), 0], danger, 3.5);
+                } else {
+                    ctx.fillStyle = danger;
+                    ctx.beginPath(); ctx.arc(c[0], c[1], 3.4, 0, 6.3); ctx.fill();
+                }
+                /* the force itself, which is the one thing that is not in
+                   the plane of the ground */
+                var tipZ = -Math.max(26, 0.09 * sb.zMax * view3.scale) / Math.max(view3.scale, 1e-6);
+                var tip = P3(B, w.x, w.y, tipZ);
+                ctx.strokeStyle = danger; ctx.fillStyle = danger; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(tip[0], tip[1]); ctx.lineTo(c[0], c[1] - 7); ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(c[0], c[1]); ctx.lineTo(c[0] - 4.5, c[1] - 9);
+                ctx.lineTo(c[0] + 4.5, c[1] - 9); ctx.closePath(); ctx.fill();
+                ctx.font = '700 10px ' + monoFont();
+                var tag = 'L' + (wi + 1), tw = ctx.measureText(tag).width;
+                ctx.fillStyle = 'rgba(15,24,41,0.9)';
+                roundRect(ctx, tip[0] - tw / 2 - 5, tip[1] - 17, tw + 10, 15, 4); ctx.fill();
+                ctx.fillStyle = '#e8eef9'; ctx.textAlign = 'center';
+                ctx.fillText(tag, tip[0], tip[1] - 6);
+                ctx.textAlign = 'left';
+                ctx.restore();
+            }
+            state.loads.forEach(function (w, wi) {
+                var inSolid = nearIsLow ? w.y >= ySec : w.y <= ySec;
+                if (inSolid) drawLoad3(w, wi, 1);
+            });
+
+            /* ---- the side face, layer by layer ---- */
+            var z = 0, i;
+            for (i = 0; i < n; i++) {
+                var L = state.layers[i];
+                var zT = z, zB = i < n - 1 ? z + L.h : sb.zMax;
+                z = zB;
+                var quad = [[sideX, solidA, zT], [sideX, solidB, zT], [sideX, solidB, zB], [sideX, solidA, zB]];
+                poly3(B, quad, L.color, null);
+                ctx.save();
+                ctx.globalAlpha = 0.42;
+                poly3(B, quad, texture(L), null);
+                ctx.restore();
+                /* the side is in shade: one flat wash, so the two faces of
+                   the same layer are not the same value and the corner of
+                   the box reads as a corner */
+                poly3(B, quad, 'rgba(0,0,0,0.22)', rgba('--lp-ink', 0.25), 1);
+            }
+
+            /* ---- the cut face: layers, contour, interfaces ---- */
+            z = 0;
+            for (i = 0; i < n; i++) {
+                var L2 = state.layers[i];
+                var zT2 = z, zB2 = i < n - 1 ? z + L2.h : sb.zMax;
+                z = zB2;
+                var face = [[sb.xL, ySec, zT2], [sb.xR, ySec, zT2], [sb.xR, ySec, zB2], [sb.xL, ySec, zB2]];
+                poly3(B, face, L2.color, null);
+                ctx.save();
+                ctx.globalAlpha = 0.55;
+                poly3(B, face, texture(L2), null);
+                ctx.restore();
+            }
+
+            if (contour && state.settings.showContour && results.grid) {
+                var g = results.grid;
+                var dx = (g.xs[g.nx - 1] - g.xs[0]) / (g.nx - 1);
+                var dz = (g.zs[g.nz - 1] - g.zs[0]) / (g.nz - 1);
+                var O = P3(B, g.xs[0], ySec, g.zs[0]);
+                ctx.save();
+                ctx.globalAlpha = state.settings.alpha;
+                ctx.imageSmoothingEnabled = true;
+                ctx.transform(dx * B.ex[0], dx * B.ex[1], dz * B.ez[0], dz * B.ez[1], O[0], O[1]);
+                ctx.drawImage(contour.canvas, 0, 0);
+                ctx.restore();
+                ctx.save();
+                ctx.globalAlpha = Math.min(0.45, state.settings.alpha);
+                ctx.strokeStyle = rgba('--lp-ink', 0.5);
+                ctx.lineWidth = 0.75;
+                ctx.beginPath();
+                contour.levels.forEach(function (lv) {
+                    lv.segs.forEach(function (sg) {
+                        var p = P3(B, sg[0][0], ySec, sg[0][1]);
+                        var q = P3(B, sg[1][0], ySec, sg[1][1]);
+                        ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]);
+                    });
+                });
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            /* interfaces on the cut face, and the outline of the face */
+            interfaceZs().forEach(function (zi) {
+                line3(B, [sb.xL, ySec, zi], [sb.xR, ySec, zi], rgba('--lp-ink', 0.5), 1.1);
+                line3(B, [sideX, solidA, zi], [sideX, solidB, zi], rgba('--lp-ink', 0.35), 1);
+            });
+            poly3(B, [[sb.xL, ySec, 0], [sb.xR, ySec, 0], [sb.xR, ySec, sb.zMax], [sb.xL, ySec, sb.zMax]],
+                null, accent, 1.6);
+
+            /* the deflected surface, on the plane it was computed in */
+            if (state.settings.showBasin && results.basin && results.basin.length) {
+                var wMax = 0;
+                results.basin.forEach(function (p) {
+                    if (p && isFinite(p.disp.uz)) wMax = Math.max(wMax, Math.abs(p.disp.uz));
+                });
+                if (wMax > 1e-9) {
+                    var exg = 0.11 * sb.zMax / wMax;
+                    ctx.strokeStyle = accent; ctx.lineWidth = 1.6;
+                    ctx.beginPath();
+                    var started = false;
+                    results.basin.forEach(function (p) {
+                        if (!p || !isFinite(p.disp.uz)) return;
+                        var q = P3(B, p.x, ySec, p.disp.uz * exg);
+                        if (!started) { ctx.moveTo(q[0], q[1]); started = true; }
+                        else ctx.lineTo(q[0], q[1]);
+                    });
+                    ctx.stroke();
+                }
+            }
+
+            /* evaluation points, wherever they are in the box */
+            state.points.forEach(function (p, pi) {
+                var q = P3(B, p.x, p.y, p.z), g0 = P3(B, p.x, p.y, 0);
+                var col = ptColor(pi);
+                ctx.save();
+                ctx.setLineDash([2, 3]);
+                ctx.strokeStyle = col; ctx.globalAlpha = 0.5; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(g0[0], g0[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
+                ctx.restore();
+                ctx.fillStyle = col;
+                ctx.beginPath(); ctx.arc(q[0], q[1], selPoint === p.id ? 4.5 : 3.2, 0, 6.3); ctx.fill();
+                ctx.strokeStyle = col; ctx.lineWidth = 1.2;
+                ctx.beginPath(); ctx.arc(q[0], q[1], 6.5, 0, 6.3); ctx.stroke();
+                ctx.font = '700 10px ' + monoFont();
+                ctx.fillText('P' + (pi + 1), q[0] + 9, q[1] - 6);
+            });
+
+            /* ---- the half that was cut away, drawn as the glass it is ---- */
+            var ghost = [[sb.xL, ghostA, 0], [sb.xR, ghostA, 0], [sb.xR, ghostB, 0], [sb.xL, ghostB, 0]];
+            poly3(B, ghost, rgba('--lp-bg1', 0.14), null);
+            ctx.save();
+            ctx.setLineDash([5, 4]);
+            ctx.globalAlpha = 0.75;
+            poly3(B, ghost, null, ink3, 1.2);
+            ctx.globalAlpha = 0.5;
+            for (gx = Math.ceil(sb.xL / gstep) * gstep; gx <= sb.xR; gx += gstep) {
+                line3(B, [gx, ghostA, 0], [gx, ghostB, 0], lineC, 1);
+            }
+            for (gy = Math.ceil(ghostA / gstep) * gstep; gy <= ghostB; gy += gstep) {
+                line3(B, [sb.xL, gy, 0], [sb.xR, gy, 0], lineC, 1);
+            }
+            ctx.restore();
+            state.loads.forEach(function (w, wi) {
+                var inSolid = nearIsLow ? w.y >= ySec : w.y <= ySec;
+                if (!inSolid) drawLoad3(w, wi, 0.82);
+            });
+
+            /* ---- the cut, named, under the face it names ---- */
+            var badge = 'section y ' + sig(toDisp('len', state.ySec), 4) + ' ' + unit('len');
+            var bp = P3(B, (sb.xL + sb.xR) / 2, ySec, sb.zMax);
+            ctx.font = '600 11px ' + monoFont();
+            var bw = ctx.measureText(badge).width;
+            var bx = clamp(bp[0] - bw / 2, 10, vpW - bw - 16);
+            var by = clamp(bp[1] + 20, 24, vpH - 34);
+            ctx.fillStyle = rgba('--lp-accent', 0.92);
+            roundRect(ctx, bx - 7, by - 12, bw + 14, 18, 5); ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.fillText(badge, bx, by + 1);
+
+            /* ---- the scale, and the two gestures ---- */
+            var sl = gstep * view3.scale;
+            var sx0 = 132, sy0 = vpH - 16;
+            ctx.strokeStyle = ink2; ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(sx0, sy0 - 4); ctx.lineTo(sx0, sy0); ctx.lineTo(sx0 + sl, sy0);
+            ctx.lineTo(sx0 + sl, sy0 - 4); ctx.stroke();
+            ctx.fillStyle = ink3; ctx.font = '10px ' + monoFont();
+            ctx.fillText(sig(toDisp('len', gstep), 3) + ' ' + unit('len'), sx0 + sl + 6, sy0 + 3.5);
+            ctx.fillText('drag to orbit · scroll to zoom · shift-drag to pan', sx0, sy0 - 15);
+
+            drawTriad3(B, nearIsLow);
+            void ink2;
         }
 
         function drawViewport() {
@@ -2023,6 +2751,12 @@
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             ctx.clearRect(0, 0, vpW, vpH);
             itfChips = [];
+            if (state.settings.view3d) {
+                drawScene3D();
+                drawPlan();
+                drawColorbar();
+                return;
+            }
             var ink2 = cssVar('--lp-ink2'), ink3 = cssVar('--lp-ink3');
             var lineC = cssVar('--lp-line'), accent = cssVar('--lp-accent');
 
@@ -2062,7 +2796,9 @@
                 ctx.imageSmoothingEnabled = true;
                 ctx.drawImage(contour.canvas, ix0, iz0, ix1 - ix0, iz1 - iz0);
                 ctx.globalAlpha = Math.min(0.5, state.settings.alpha);
-                ctx.strokeStyle = 'rgba(10,14,22,0.55)';
+                /* The iso-lines were a hardcoded near-black, which is a line
+                   nobody can see on the dark theme. */
+                ctx.strokeStyle = rgba('--lp-ink', 0.5);
                 ctx.lineWidth = 0.75;
                 ctx.beginPath();
                 contour.levels.forEach(function (lv) {
@@ -2073,6 +2809,7 @@
                 });
                 ctx.stroke();
                 ctx.globalAlpha = 1;
+                drawIsoLabels();
             }
 
             /* the selected layer, outlined */
@@ -2194,6 +2931,17 @@
                     alpha: clamp(1 - (dy / fadeScale) * 0.62, 0.3, 1)
                 };
             });
+            /* Exactly one load is dimensioned. Six wheels each carrying the
+             * same dimension line is six times the ink for one number, so
+             * the annotation goes on the load nearest the section plane,
+             * and nearest the origin where two tie. */
+            var best = null;
+            geoms.forEach(function (G) {
+                if (!best || G.dy < best.dy - 1e-9 ||
+                    (Math.abs(G.dy - best.dy) < 1e-9 && Math.abs(G.cx) < Math.abs(best.cx))) best = G;
+            });
+            if (best) best.annotate = true;
+
             geoms.slice().sort(function (a, b) { return b.dy - a.dy; }).forEach(function (G) {
                 ctx.save();
                 ctx.globalAlpha = G.alpha;
@@ -2228,9 +2976,10 @@
                     (state.loads.length > 1 ? 's' : '') + ' · ';
                 if (allSame) {
                     cap += sig(toDisp('force', w0.F), 4) + ' ' + unit('force');
+                    /* The contact width is dimensioned on the drawing now,
+                       so the caption does not print it twice. */
                     if (state.loadKind === 'circle') {
-                        cap += ' · ' + sig(toDisp('stress', w0.p), 4) + ' ' + unit('stress') +
-                            ' · a ' + sig(toDisp('len', loadA(w0)), 3) + ' ' + unit('len');
+                        cap += ' · ' + sig(toDisp('stress', w0.p), 4) + ' ' + unit('stress');
                     } else if (state.loadKind === 'line') {
                         cap += ' · ' + sig(toDisp('perlen', w0.F / gearParams.L), 4) + ' ' + unit('perlen') +
                             ' over ' + sig(toDisp('len', gearParams.L), 3) + ' ' + unit('len');
@@ -2251,6 +3000,12 @@
             ctx.font = '10px ' + monoFont();
             ctx.lineWidth = 1;
             var railX = xL - 6;
+            /* Left-aligned from wherever there is room, because right-
+               aligning it to the rail puts it off the canvas whenever the
+               section is panned or fitted tight to the left edge. */
+            ctx.fillStyle = ink3;
+            var zlbl = 'z ' + unit('len');
+            ctx.fillText(zlbl, Math.max(2, railX - 8 - ctx.measureText(zlbl).width), w2sy(0) - 14);
             z = 0;
             for (i = 0; i < n; i++) {
                 var yTick = w2sy(z);
@@ -2291,6 +3046,10 @@
             ctx.fillStyle = ink3;
             ctx.font = '14px ' + uiFont();
             ctx.fillText('z → ∞', xL + 10, w2sy(box.zMax) - 10);
+
+            /* the frame, over everything: a scale is no use half covered */
+            drawXRuler();
+            drawGnomon();
 
             drawPlan();
             drawColorbar();
@@ -2386,6 +3145,14 @@
                 g.fillText(sig(toDisp('len', gy), 3), padL - 3, Y);
             }
             g.strokeStyle = lineC; g.lineWidth = 1; g.strokeRect(padL, padT, plotW, plotH);
+            /* The plan is the OTHER two axes, and without their names it is
+             * a second picture of the same wheels rather than the view that
+             * tells you what y is. */
+            g.fillStyle = ink3; g.font = '700 8px ' + mono;
+            g.textAlign = 'right'; g.textBaseline = 'bottom';
+            g.fillText('x', padL + plotW - 3, padT + plotH - 2);
+            g.textAlign = 'left'; g.textBaseline = 'top';
+            g.fillText('y', padL + 3, padT + 2);
             g.textBaseline = 'alphabetic';
 
             /* footprints + connectors (clipped) */
@@ -2593,6 +3360,17 @@
             on(cv, 'pointerdown', function (e) {
                 var mx = e.offsetX, my = e.offsetY;
 
+                /* 0. in the 3-D view the canvas is a camera. Nothing here is
+                 * editable by dragging, because a screen position out there
+                 * is an infinite number of world positions and guessing one
+                 * would move a layer the reader did not mean to touch. */
+                if (state.settings.view3d) {
+                    drag = { type: 'orbit', sx: mx, sy: my, az: view3.az, el: view3.el,
+                             ox: view3.ox, oy: view3.oy, pan: e.shiftKey, moved: false };
+                    cv.style.cursor = 'grabbing';
+                    return;
+                }
+
                 /* 1. an evaluation point */
                 var hit = null;
                 state.points.forEach(function (p) {
@@ -2658,6 +3436,7 @@
             });
             on(win, 'pointerup', function () {
                 if (!drag) { dragNote = null; return; }
+                if (drag.type === 'orbit') { drag = null; cv.style.cursor = 'grab'; return; }
                 if (drag.type === 'point' && drag.moved) mutate(function () { /* committed in place */ });
                 else if (drag.type === 'itf' && drag.moved) { dragNote = null; mutate(function () { }); }
                 else if (drag.type === 'chip') cycleInterface(drag.i);
@@ -2671,6 +3450,7 @@
                 drag = null;
             });
             on(cv, 'dblclick', function (e) {
+                if (state.settings.view3d) return;
                 var p = { id: nid(), x: dragSnap('len', s2wx(e.offsetX)), y: state.ySec,
                     z: Math.max(0, dragSnap('len', s2wy(e.offsetY))) };
                 snapPoint(p);
@@ -2679,6 +3459,7 @@
             });
             on(cv, 'wheel', function (e) {
                 e.preventDefault();
+                if (state.settings.view3d) { zoomView(e.deltaY < 0 ? 1.1 : 1 / 1.1); return; }
                 var r = cv.getBoundingClientRect();
                 var mx = e.clientX - r.left, my = e.clientY - r.top;
                 var wx = s2wx(mx), wy = s2wy(my);
@@ -2689,6 +3470,37 @@
                 drawViewport();
             }, { passive: false });
             on(cv, 'pointermove', function (e) {
+                if (state.settings.view3d) {
+                    if (drag && drag.type === 'orbit') {
+                        drag.moved = true;
+                        var ddx = e.offsetX - drag.sx, ddy = e.offsetY - drag.sy;
+                        if (drag.pan) {
+                            view3.ox = drag.ox + ddx;
+                            view3.oy = drag.oy + ddy;
+                        } else {
+                            /* The azimuth is held in one quadrant on purpose. The
+                             * cut face is the figure; swing past 80 degrees and it
+                             * is edge on, the contour disappears, and the reader is
+                             * looking ALONG the plane whose values they came to
+                             * read. Elevation is free between the horizon and
+                             * nearly overhead, which is the axis that actually pays
+                             * for itself. */
+                            view3.az = clamp(drag.az + ddx * 0.45, 12, 78);
+                            /* elevation stops short of straight down and of
+                               the horizon: at either the box collapses to a
+                               line and there is nothing left to read */
+                            view3.el = clamp(drag.el - ddy * 0.32, 12, 72);
+                        }
+                        drawViewport();
+                    } else cv.style.cursor = 'grab';
+                    var c3 = $('lp-coords');
+                    if (c3) {
+                        c3.textContent = 'orbit ' + Math.round(((view3.az % 360) + 360) % 360) +
+                            '°  ·  elevation ' + Math.round(view3.el) +
+                            '°  ·  shift-drag to pan';
+                    }
+                    return;
+                }
                 if (!drag) {
                     cv.style.cursor = hitChip(e.offsetX, e.offsetY) >= 0 ? 'pointer'
                         : (hitInterface(e.offsetY) >= 0 ? 'ns-resize' : 'crosshair');
@@ -2730,8 +3542,19 @@
             });
 
             $('lp-fit').addEventListener('click', fitView);
-            $('lp-zin').addEventListener('click', function () { view.scale *= 1.2; drawViewport(); });
-            $('lp-zout').addEventListener('click', function () { view.scale /= 1.2; drawViewport(); });
+            $('lp-zin').addEventListener('click', function () { zoomView(1.2); });
+            $('lp-zout').addEventListener('click', function () { zoomView(1 / 1.2); });
+            $$('#lp-viewmode .lp-seg-btn').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    var want3 = b.dataset.view === '3d';
+                    if (state.settings.view3d === want3) return;
+                    state.settings.view3d = want3;
+                    view3.fitted = false;
+                    syncViewMode();
+                    drawViewport();
+                    saveLocal();
+                });
+            });
             $('lp-show-basin').addEventListener('change', function (e) {
                 state.settings.showBasin = e.target.checked; drawViewport(); saveLocal();
             });
@@ -3707,6 +4530,7 @@
             $('lp-strain-abs').checked = state.settings.strainAbs;
             $('lp-show-basin').checked = state.settings.showBasin;
             $('lp-show-contour').checked = state.settings.showContour;
+            syncViewMode();
             $('lp-alpha').value = state.settings.alpha;
             drawViewport();
         }
@@ -3795,6 +4619,7 @@
         SYM: SYM,
         EQ: EQ,
         symHtml: symHtml,
-        symText: symText
+        symText: symText,
+        axonometric: axonometric
     };
 });
