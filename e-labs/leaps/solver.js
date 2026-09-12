@@ -13,12 +13,19 @@
  *   - Surface (z = 0) responses use asymptotic subtraction with
  *     closed-form Weber-Schafheitlin tails (AGM elliptic integrals):
  *     near machine-precision at the pavement surface
+ *   - THREE load idealizations, sharing one quadrature:
+ *       circle — uniform pressure p over radius a   (the LEA standard)
+ *       point  — a concentrated force P             (Boussinesq)
+ *       line   — force per unit length over a segment of length L
  *   - Multi-wheel superposition with full tensor rotation
  *
- * Conventions:
- *   Units      : mm, N, MPa (N/mm^2). Pressures in MPa inside engine.
- *   Axes       : z positive DOWN from surface; x,y in plan.
- *   Stresses   : tension positive. uz positive downward.
+ * Conventions (WinJULEA-compatible):
+ *   Units      : mm, N, MPa (= N/mm^2). Moduli and pressures in MPa.
+ *   Axes       : z positive DOWN from the surface; x,y in plan.
+ *   Stresses   : TENSION POSITIVE. uz positive downward.
+ *   Strains    : extension positive; shear strains are ENGINEERING (gamma).
+ *   Interfaces : a WinJULEA "slip" value, 0 = fully bonded,
+ *                1 = frictionless, in between = Goodman shear spring.
  *
  * UMD: usable from <script>, importScripts() in a worker, and Node.
  * ===================================================================== */
@@ -30,7 +37,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
     'use strict';
 
-    var VERSION = '1.0.0';
+    var VERSION = '2.0.0';
 
     /* ------------------------------------------------------------------
      * Bessel functions J0, J1 (rational approximations, ~1e-8 rel.)
@@ -92,7 +99,7 @@
         return { K: K, E: K * (1 - sum) };
     }
 
-    /* 8-point Gauss-Legendre on [-1, 1] */
+    /* 8-point Gauss-Legendre on [-1, 1] — the Hankel quadrature */
     var GX = [-0.9602898564975363, -0.7966664774136267, -0.5255324099163290,
         -0.1834346424956498, 0.1834346424956498, 0.5255324099163290,
         0.7966664774136267, 0.9602898564975363];
@@ -100,19 +107,80 @@
         0.3626837833783620, 0.3626837833783620, 0.3137066458778873,
         0.2223810344533745, 0.1012285362903763];
 
+    /* 4-point Gauss-Legendre on [-1, 1] — the line-load quadrature.
+     * A line load is integrated in PHYSICAL space, not transform space, so
+     * its panels are graded toward the closest point rather than placed on
+     * Bessel zeros; four points per graded panel is ample. */
+    var LX = [-0.8611363115940526, -0.3399810435848563,
+        0.3399810435848563, 0.8611363115940526];
+    var LW = [0.3478548451374538, 0.6521451548625461,
+        0.6521451548625461, 0.3478548451374538];
+
+    /* ------------------------------------------------------------------
+     * Interfaces
+     * ------------------------------------------------------------------
+     * WinJULEA describes an interface by a dimensionless SLIP value:
+     *   0 = fully bonded (no relative horizontal movement)
+     *   1 = frictionless (no shear transferred)
+     * Those two are exact, and are what essentially every published
+     * analysis uses. Between them the physical model is Goodman's shear
+     * spring,
+     *
+     *      tau = k * (u_r,lower - u_r,upper)
+     *
+     * with k a stiffness in MPa/mm. Turning a dimensionless slip into one
+     * necessarily introduces a length: the literature (BISAR's shear-spring
+     * compliance, Uzan's alpha) scales it on the loaded radius, which is
+     * why a dimensionless friction parameter is documented as depending on
+     * the diameter of the load circle. LEAPS uses
+     *
+     *      k(s) = (G_lower / a_ref) * (1 - s) / s
+     *
+     * where a_ref is the reference contact radius carried on the job. The
+     * endpoints are exact (s -> 0 gives k -> infinity, s = 1 gives k = 0);
+     * an intermediate value is a defensible partial bond but is NOT
+     * guaranteed to reproduce another program's intermediate value digit
+     * for digit, because each program normalizes its own way. Enter `k`
+     * directly when the number matters.
+     * ------------------------------------------------------------------ */
+    function slipToK(slip, Glower, aRef) {
+        if (!(slip > 0)) return Infinity;            /* bonded */
+        if (slip >= 1) return 0;                     /* frictionless */
+        return (Glower / Math.max(aRef, 1e-6)) * (1 - slip) / slip;
+    }
+    function kToSlip(k, Glower, aRef) {
+        if (!isFinite(k)) return 0;
+        if (!(k > 0)) return 1;
+        var t = k * Math.max(aRef, 1e-6) / Glower;   /* = (1-s)/s */
+        return 1 / (1 + t);
+    }
+
     /* ------------------------------------------------------------------
      * Layered system: geometry + per-m boundary system with caching
      * ------------------------------------------------------------------ */
-    function LayerSystem(layers, interfaces) {
+    function LayerSystem(layers, interfaces, aRef) {
         var n = layers.length;
         this.n = n;
+        this.aRef = aRef > 0 ? aRef : 150;
         this.layers = layers.map(function (L) {
             return { h: L.h, E: L.E, nu: L.nu, G: L.E / (2 * (1 + L.nu)) };
         });
         this.interfaces = [];
         for (var i = 0; i < n - 1; i++) {
-            var f = (interfaces && interfaces[i]) || { bond: 'bonded' };
-            this.interfaces.push({ bond: f.bond || 'bonded', k: (f.k != null ? f.k : 1) });
+            var f = (interfaces && interfaces[i]) || {};
+            var Gl = this.layers[i + 1].G;
+            var bond, k;
+            if (f.bond === 'spring' && f.k != null && isFinite(f.k)) {
+                bond = 'spring'; k = f.k;
+            } else if (f.bond) {
+                bond = f.bond === 'frictionless' ? 'unbonded' : f.bond;
+                k = (f.k != null ? f.k : 1);
+            } else {
+                var s = Math.max(0, Math.min(1, f.slip != null ? f.slip : 0));
+                bond = s <= 0 ? 'bonded' : (s >= 1 ? 'unbonded' : 'spring');
+                k = slipToK(s, Gl, this.aRef);
+            }
+            this.interfaces.push({ bond: bond, k: k });
         }
         this.zTop = new Float64Array(n);
         this.zBot = new Float64Array(n);
@@ -126,7 +194,6 @@
         this.N = 4 * n - 2;
         this._M = new Float64Array(this.N * this.N);
         this._rhs = new Float64Array(this.N);
-        this._piv = new Int32Array(this.N);
         this.cache = new Map();
         this.stats = { solves: 0, cacheHits: 0, kernelEvals: 0 };
     }
@@ -182,14 +249,26 @@
                 this._addRow(r0 + 2, up, z, m, 1, 1);
                 this._addRow(r0 + 3, lo, z, m, 1, 1);
             } else if (itf.bond === 'spring') {
-                var k = Math.max(itf.k, 1e-9);
+                var k = Math.max(itf.k, 0);
                 this._addRow(r0, up, z, m, 0, 1); this._addRow(r0, lo, z, m, 0, -1);
                 this._addRow(r0 + 1, up, z, m, 1, 1); this._addRow(r0 + 1, lo, z, m, 1, -1);
                 this._addRow(r0 + 2, up, z, m, 2, 1 / Gu); this._addRow(r0 + 2, lo, z, m, 2, -1 / Gl);
-                /* tau = k * (ur_lower - ur_upper);  ur = Q/(2Gm) */
-                this._addRow(r0 + 3, up, z, m, 1, 1);
-                this._addRow(r0 + 3, lo, z, m, 3, -k / (2 * Gl * m));
-                this._addRow(r0 + 3, up, z, m, 3, k / (2 * Gu * m));
+                /* tau = k * (ur_lower - ur_upper);  ur = Q/(2Gm).
+                 * Written in whichever normalization keeps the row O(1). A
+                 * stiff spring — the limit a student reaches by dragging the
+                 * stiffness up toward "bonded" — would otherwise put entries
+                 * of size k beside entries of size 1 and lose the shear
+                 * equation to rounding. */
+                var cU = 1 / (2 * Gu * m), cL = 1 / (2 * Gl * m);
+                if (k * cU > 1) {
+                    this._addRow(r0 + 3, up, z, m, 1, 1 / k);
+                    this._addRow(r0 + 3, up, z, m, 3, cU);
+                    this._addRow(r0 + 3, lo, z, m, 3, -cL);
+                } else {
+                    this._addRow(r0 + 3, up, z, m, 1, 1);
+                    this._addRow(r0 + 3, up, z, m, 3, k * cU);
+                    this._addRow(r0 + 3, lo, z, m, 3, -k * cL);
+                }
             } else { /* bonded */
                 this._addRow(r0, up, z, m, 0, 1); this._addRow(r0, lo, z, m, 0, -1);
                 this._addRow(r0 + 1, up, z, m, 1, 1); this._addRow(r0 + 1, lo, z, m, 1, -1);
@@ -256,6 +335,47 @@
         this.stats.kernelEvals++;
     };
 
+    /* The SAME kernels for a half-space made entirely of layer 1. Its
+     * coefficients are constants — A = 2nu, C = 1, B = D = 0 — so this is
+     * closed form, and at z = 0 it collapses to exactly the m -> infinity
+     * limits the circular load already subtracts.
+     *
+     * It is the reference a POINT load is integrated against. A point load
+     * transforms to P*m/(2*pi), which grows with m: at the surface the raw
+     * integral does not converge at all, and just under it converges far too
+     * slowly to draw with. The difference from this half-space decays like
+     * e^(-2*m*h1) at the surface and like e^(-m*z) below it, and the
+     * reference itself is Boussinesq's closed form, added back exactly. */
+    function halfKernels(m, z, nu, out) {
+        var mz = m * z, e = Math.exp(-mz);
+        out[0] = (1 + mz) * e;                 /* Sz */
+        out[1] = mz * e;                       /* St */
+        out[2] = (1 - mz) * e;                 /* P  */
+        out[3] = (1 - 2 * nu - mz) * e;        /* Q  */
+        out[4] = 2 * nu * e;                   /* Tk */
+        out[5] = (2 * nu - 2 - mz) * e;        /* W  */
+    }
+
+    /* Boussinesq's concentrated force on a homogeneous half-space.
+     * Tension positive, uz positive downward, ur positive outward.
+     * Timoshenko & Goodier art. 138 / Poulos & Davis Table 2.1, negated
+     * into this engine's sign convention. */
+    function boussinesq(P, E, nu, r, z, out) {
+        var R2 = r * r + z * z, R = Math.sqrt(R2);
+        if (R < 1e-12) { out.singular = true; return out; }
+        var R3 = R2 * R, R5 = R3 * R2, c = P / (2 * Math.PI);
+        var Rz = R * (R + z);
+        out.sz = -3 * c * z * z * z / R5;
+        out.sr = -c * (3 * r * r * z / R5 - (1 - 2 * nu) / Rz);
+        out.st = c * (1 - 2 * nu) * (z / R3 - 1 / Rz);
+        out.trz = -3 * c * r * z * z / R5;
+        var d = P * (1 + nu) / (2 * Math.PI * E * R);
+        out.uz = d * (2 * (1 - nu) + z * z / R2);
+        out.ur = d * (r * z / R2 - (1 - 2 * nu) * r / (R + z));
+        out.singular = false;
+        return out;
+    }
+
     /* Layer index containing depth z. side: +1 → below interface wins. */
     function layerIndexAt(sys, z, side) {
         for (var i = 0; i < sys.n - 1; i++) {
@@ -267,76 +387,150 @@
 
     /* ------------------------------------------------------------------
      * Wynn epsilon acceleration of a partial-sum sequence (scalar)
+     *
+     * The table is n(n-1)/2 divisions and was n allocations of a fresh
+     * Float64Array per call, called six times per convergence check,
+     * seventeen times per point, for every point of a contour grid: a few
+     * million short-lived typed arrays for a figure. It is the same
+     * arithmetic run over three module-level buffers that rotate. They are
+     * module-level and therefore NOT reentrant, which is safe only because
+     * the single caller consumes each result before asking for the next —
+     * the same rule lea/lea.ts records for its own reused buffers.
      * ------------------------------------------------------------------ */
-    function wynnEps(s) {
-        var n = s.length;
+    var WYNN_MAX = 32;
+    var _wA = new Float64Array(WYNN_MAX + 2);
+    var _wB = new Float64Array(WYNN_MAX + 2);
+    var _wC = new Float64Array(WYNN_MAX + 2);
+    function wynnEps(s, n) {
+        if (n == null) n = s.length;
         if (n < 3) return s[n - 1];
-        var prev = new Float64Array(n + 1);              /* eps_{-1} = 0  */
-        var cur = Float64Array.from(s);                  /* eps_0 = sums  */
+        var prev = _wA, cur = _wB, next = _wC, i, t;
+        for (i = 0; i <= n; i++) prev[i] = 0;            /* eps_{-1} = 0  */
+        for (i = 0; i < n; i++) cur[i] = s[i];           /* eps_0 = sums  */
         var best = s[n - 1];
         for (var k = 1; k < n; k++) {
-            var next = new Float64Array(n - k);
-            for (var i = 0; i < n - k; i++) {
+            var m = n - k;
+            for (i = 0; i < m; i++) {
                 var d = cur[i + 1] - cur[i];
                 next[i] = prev[i + 1] + (Math.abs(d) > 1e-290 ? 1 / d : 1e290);
             }
-            prev = cur; cur = next;
-            if ((k & 1) === 0 && cur.length > 0) best = cur[cur.length - 1];
+            t = prev; prev = cur; cur = next; next = t;
+            if ((k & 1) === 0 && m > 0) best = cur[m - 1];
         }
         return isFinite(best) ? best : s[n - 1];
     }
 
     /* ------------------------------------------------------------------
-     * Panel breakpoints: union of approximate Bessel-zero sequences
-     * of J1(m a) and J0/J1(m r)
+     * Panel breakpoints: union of approximate Bessel-zero sequences of
+     * J1(m a) and J0/J1(m r). A point load has no `a`, so that family is
+     * simply absent and the grid is set by the field radius and depth.
      * ------------------------------------------------------------------ */
-    function makeBreakpoints(a, r, z, count) {
+    function makeBreakpoints(a, r, zDecay, count) {
         var cand = [];
         var s, lim;
-        for (s = 1; s <= count; s++) cand.push((s + 0.25) * Math.PI / a);
+        if (a > 1e-9) for (s = 1; s <= count; s++) cand.push((s + 0.25) * Math.PI / a);
         if (r > 1e-9) for (s = 1; s <= count; s++) cand.push((s + 0.25) * Math.PI / r);
-        if (z > 1e-9) {
-            /* refine the exponential-decay scale e^{-mz} near m = 0;
-             * z is quantized to powers of two so that neighboring depths
-             * share quadrature nodes and hit the coefficient cache */
-            var zq = Math.pow(2, Math.ceil(Math.log(z) / Math.LN2));
-            var dm = 4 / zq; lim = 90 / zq;
+        if (zDecay > 1e-9) {
+            /* refine the exponential-decay scale near m = 0. zDecay is the
+             * LONGEST length in the problem, not the evaluation depth — see
+             * the note at the call site — and is quantized to powers of two
+             * so that neighboring points share quadrature nodes and hit the
+             * coefficient cache. */
+            var zq = Math.pow(2, Math.ceil(Math.log(zDecay) / Math.LN2));
+            var dm = 4 / zq; lim = 60 / zq;
             for (s = 1; s * dm <= lim; s++) cand.push(s * dm);
         }
+        /* a point load on the surface directly under itself: no length in
+         * the problem but the decay scale of the layered correction, which
+         * is the first interface. The caller passes z = 0, r = 0 only for a
+         * singular point, so this is a floor rather than a real case. */
+        if (!cand.length) for (s = 1; s <= count; s++) cand.push(s * 0.05);
         cand.sort(function (x, y) { return x - y; });
         var bp = [0], last = 0;
         for (var i = 0; i < cand.length && bp.length < count + 1; i++) {
             if (cand[i] - last > 1e-9 * cand[i] + 1e-12) { bp.push(cand[i]); last = cand[i]; }
         }
+
+        /* The first panel is graded geometrically toward m = 0.
+         *
+         * Every family above is EVENLY spaced, because the things they
+         * resolve are periodic or exponential. Neither describes the
+         * kernels themselves near m = 0, where the layered coefficients
+         * turn over on whatever scale the modulus contrast sets: for a
+         * 150 mm layer at E1/E2 = 43, the radial-stress integrand swings
+         * from +0.03 to -0.20 between m = 1e-4 and 1e-3, an order of
+         * magnitude inside the first panel, which ran to 0.008. Eight
+         * Gauss points across that returned a radial stress 1e-4 of the
+         * contact pressure light, everywhere in the section at once, and
+         * converged there at every tolerance from 1e-6 to 1e-12 — the
+         * quadrature was not failing to converge, it was converging on
+         * the wrong number.
+         *
+         * Six levels at a ratio of four reach 4096 times below the first
+         * breakpoint, and a smooth function over a 4:1 range is nothing to
+         * eight-point Gauss. Seven extra panels per point; the linear
+         * solves they add hit the cache like any other. */
+        if (bp.length > 1) {
+            var first = bp[1], grade = [];
+            for (var g = 6; g >= 1; g--) grade.push(first / Math.pow(4, g));
+            bp = [0].concat(grade, bp.slice(1));
+        }
         return bp;
     }
 
     /* ------------------------------------------------------------------
-     * Integrate all six responses for one load / one point.
-     * Returns [sz, sr, st, trz, uz, ur] already scaled by (-p*a).
+     * Integrate all six responses for ONE elementary source at ONE point.
+     *
+     * `src` is either
+     *    { kind:'circle', p, a }   uniform pressure p over radius a, or
+     *    { kind:'point',  P }      a concentrated force P.
+     * A line load is a weighted set of point sources, expanded by the
+     * caller — which is what lets every sub-source share one m-grid (`bp`)
+     * and therefore one set of cached 4N-2 solves.
+     *
+     * Returns [sz, sr, st, trz, uz, ur] in engine units.
      * ------------------------------------------------------------------ */
     var NC = 6;
-    function pointResponse(sys, p, a, r, z, li, opt) {
-        var tol = opt.tol, maxPanels = opt.maxPanels;
+    var _K = new Float64Array(6), _H = new Float64Array(6);
+    var _hist = new Float64Array(28 * 6), _seq = new Float64Array(28);
+    var _bous = { sz: 0, sr: 0, st: 0, trz: 0, uz: 0, ur: 0, singular: false };
+
+    function pointResponse(sys, src, r, z, li, opt, bp, mConv) {
+        var tol = opt.tol;
+        var isPoint = src.kind === 'point';
+        var L1 = sys.layers[0], nu1 = L1.nu, G1 = L1.G, E1 = L1.E;
         var surface = z <= 1e-9;
-        var L1 = sys.layers[0], nu1, G1;
-        var asy = null;
-        if (surface) {
-            li = 0; z = 0;
-            nu1 = L1.nu; G1 = L1.G;
-            /* m→inf limits of kernels at z=0 (halfspace of layer 1)  */
-            asy = { Sz: 1, St: 0, P: 1, Q: 1 - 2 * nu1, Tk: 2 * nu1, W: -(2 - 2 * nu1) };
+        var asy = null, fl = 1;
+
+        if (isPoint) {
+            /* Singular AT the load, exactly as the idealization says it is.
+             * Reporting a number here would be inventing one. */
+            if (Math.sqrt(r * r + z * z) < 1e-9) {
+                return {
+                    sz: NaN, sr: NaN, st: NaN, trz: NaN, uz: NaN, ur: NaN,
+                    panels: 0, converged: true, singular: true
+                };
+            }
+        } else {
+            fl = src.p * src.a;
+            if (surface) {
+                li = 0; z = 0;
+                /* m→inf limits of the kernels at z = 0, which is exactly
+                 * halfKernels(m, 0, nu1) */
+                asy = { Sz: 1, St: 0, P: 1, Q: 1 - 2 * nu1, Tk: 2 * nu1, W: -(2 - 2 * nu1) };
+            }
         }
 
-        var bp = makeBreakpoints(a, r, z, maxPanels);
         var S = new Float64Array(NC);
-        var hist = [];                       /* ring of partial-sum snapshots */
+        var nHist = 0;                       /* rolling partial-sum snapshots */
         var HISTMAX = 28;
         var est = new Float64Array(NC), estPrev = new Float64Array(NC);
+        var sMax = new Float64Array(NC);     /* largest partial sum seen, per component */
         var haveEst = false, converged = false;
-        var K = new Float64Array(6);
+        var K = _K, H = _H;
         var tiny = 0;                        /* consecutive negligible panels */
         var kUsed = 0;
+        var Gli = sys.layers[li].G;
 
         for (var kp = 0; kp < bp.length - 1 && !converged; kp++) {
             var m0 = bp[kp], m1 = bp[kp + 1];
@@ -347,30 +541,41 @@
                 var w = hw * GW[g];
                 var X = sys.coeffs(m);
                 sys.kernels(m, X, z, li, K);
-                var Sz = K[0], St = K[1], P = K[2], Q = K[3], Tk = K[4], W = K[5];
-                if (asy) { Sz -= asy.Sz; St -= asy.St; P -= asy.P; Q -= asy.Q; Tk -= asy.Tk; W -= asy.W; }
-                var G = sys.layers[li].G;
-                var J1a = besselJ1(m * a);
+                var Sz = K[0], St = K[1], Pk = K[2], Q = K[3], Tk = K[4], W = K[5];
+                var uzK, urK;
+                if (isPoint) {
+                    halfKernels(m, z, nu1, H);
+                    uzK = W / (2 * Gli * m) - H[5] / (2 * G1 * m);
+                    urK = Q / (2 * Gli * m) - H[3] / (2 * G1 * m);
+                    Sz -= H[0]; St -= H[1]; Pk -= H[2]; Q -= H[3]; Tk -= H[4];
+                } else {
+                    if (asy) { Sz -= asy.Sz; St -= asy.St; Pk -= asy.P; Q -= asy.Q; Tk -= asy.Tk; W -= asy.W; }
+                    uzK = W / (2 * Gli * m);
+                    urK = Q / (2 * Gli * m);
+                }
+                var lt = isPoint ? (src.P * m / (2 * Math.PI)) : (fl * besselJ1(m * src.a));
                 var J0r, J1r, j1r;
                 if (r > 1e-9) {
                     J0r = besselJ0(m * r); J1r = besselJ1(m * r); j1r = J1r / (m * r);
                 } else { J0r = 1; J1r = 0; j1r = 0.5; }
-                var c = w * J1a;
+                var c = w * lt;
                 pc[0] += c * J0r * Sz;
-                pc[1] += c * (J0r * P - j1r * Q);
+                pc[1] += c * (J0r * Pk - j1r * Q);
                 pc[2] += c * (J0r * Tk + j1r * Q);
                 pc[3] += c * J1r * St;
-                pc[4] += c * J0r * W / (2 * G * m);
-                pc[5] += c * J1r * Q / (2 * G * m);
+                pc[4] += c * J0r * uzK;
+                pc[5] += c * J1r * urK;
             }
-            var mag = 0, smag = 0;
-            for (var q = 0; q < NC; q++) {
+            var mag = 0, smag = 0, q;
+            for (q = 0; q < NC; q++) {
                 S[q] += pc[q];
+                if (Math.abs(S[q]) > sMax[q]) sMax[q] = Math.abs(S[q]);
                 mag = Math.max(mag, Math.abs(pc[q]));
                 smag = Math.max(smag, Math.abs(S[q]));
             }
-            hist.push(Float64Array.from(S));
-            if (hist.length > HISTMAX) hist.shift();
+            if (nHist === HISTMAX) { _hist.copyWithin(0, NC); nHist--; }
+            for (q = 0; q < NC; q++) _hist[nHist * NC + q] = S[q];
+            nHist++;
             kUsed = kp + 1;
 
             /* Fast exit: exponentially dead tail */
@@ -378,15 +583,40 @@
                 if (++tiny >= 2 && kp >= 3) break;
             } else tiny = 0;
 
-            /* Accelerated convergence check every other panel */
-            if (kp >= 7 && (kp & 1) === 1) {
+            /* Accelerated convergence check every other panel — but never
+             * before the mesh has left the band where the layered
+             * exponentials live. Wynn's epsilon is a TAIL accelerator: fed
+             * the smooth, nearly linear run of partial sums that the fine
+             * low-m panels produce, two successive estimates agree to well
+             * inside the tolerance and it declares a limit the series has
+             * not reached. Measured: the radial stress just above a
+             * two-layer interface stopped at 0.916323 against a true
+             * 0.916410, converged and stable at every tolerance from 1e-6
+             * to 1e-12. mConv is where the slowest exponential in the
+             * problem is dead (e^-25), so past it the only thing left IS
+             * the oscillatory tail the accelerator is for. */
+            if (kp >= 7 && (kp & 1) === 1 && m0 > mConv) {
                 var scS = 0, scU = 0;
                 for (q = 0; q < 4; q++) scS = Math.max(scS, Math.abs(S[q]));
                 for (q = 4; q < 6; q++) scU = Math.max(scU, Math.abs(S[q]));
                 var ok = true;
                 for (q = 0; q < NC; q++) {
-                    var seq = hist.map(function (v) { return v[q]; });
-                    est[q] = wynnEps(seq);
+                    for (var hh = 0; hh < nHist; hh++) _seq[hh] = _hist[hh * NC + q];
+                    est[q] = wynnEps(_seq, nHist);
+                    /* Wynn's epsilon divides by the differences of the
+                     * partial sums, so a sequence that has ALREADY converged
+                     * to the double it is going to reach divides by rounding
+                     * noise and returns something enormous — finite, so the
+                     * isFinite guard inside wynnEps passes it straight
+                     * through. The limit of a convergent panel sum cannot
+                     * stand orders of magnitude above every partial sum that
+                     * produced it, so anything that does is the table having
+                     * failed, and the plain sum is the better answer. This
+                     * is reachable: a point load far from the wheel, where
+                     * the layered correction is fifteen orders below the
+                     * closed form that is added back to it, returned 1e294
+                     * newtons of vertical stress. */
+                    if (!isFinite(est[q]) || Math.abs(est[q]) > 100 * sMax[q] + 1e-290) est[q] = S[q];
                     var sc = (q < 4 ? scS : scU) + 1e-300;
                     if (haveEst && Math.abs(est[q] - estPrev[q]) > tol * sc) ok = false;
                 }
@@ -401,15 +631,20 @@
         /* If not accelerated (fast exponential exit), plain sum is best */
         if (!converged && tiny >= 2) R = S;
 
-        var f = -p * a;
         var out = {
-            sz: f * R[0], sr: f * R[1], st: f * R[2],
-            trz: f * R[3], uz: f * R[4], ur: f * R[5],
-            panels: kUsed, converged: converged || tiny >= 2
+            sz: -R[0], sr: -R[1], st: -R[2],
+            trz: -R[3], uz: -R[4], ur: -R[5],
+            panels: kUsed, converged: converged || tiny >= 2, singular: false
         };
 
-        if (asy) {
+        if (isPoint) {
+            /* add the reference half-space solution back in closed form */
+            var b = boussinesq(src.P, E1, nu1, r, z, _bous);
+            out.sz += b.sz; out.sr += b.sr; out.st += b.st;
+            out.trz += b.trz; out.uz += b.uz; out.ur += b.ur;
+        } else if (asy) {
             /* Add closed-form Weber–Schafheitlin tails */
+            var a = src.a;
             var chi = r < a ? 1 : (r > a ? 0 : 0.5);
             var cJ0 = chi / a;                                    /* ∫J1(ma)J0(mr) dm      */
             var cj1r = r <= a ? 1 / (2 * a) : a / (2 * r * r);    /* ∫J1 J1/(mr) dm        */
@@ -421,17 +656,75 @@
                 var ke = ellipKE(a / r);
                 cuz = (2 / Math.PI) * (r / a) * (ke.E - (1 - (a * a) / (r * r)) * ke.K);
             }
-            out.sz += f * asy.Sz * cJ0;
-            out.sr += f * (asy.P * cJ0 - asy.Q * cj1r);
-            out.st += f * (asy.Tk * cJ0 + asy.Q * cj1r);
-            out.uz += f * asy.W / (2 * G1) * cuz;
-            out.ur += f * asy.Q / (2 * G1) * cur;
+            out.sz += -fl * asy.Sz * cJ0;
+            out.sr += -fl * (asy.P * cJ0 - asy.Q * cj1r);
+            out.st += -fl * (asy.Tk * cJ0 + asy.Q * cj1r);
+            out.uz += -fl * asy.W / (2 * G1) * cuz;
+            out.ur += -fl * asy.Q / (2 * G1) * cur;
         }
         return out;
     }
 
     /* ------------------------------------------------------------------
-     * Derived quantities from a Cartesian stress tensor + material
+     * A line load, expanded into weighted point sources.
+     *
+     * Panels are graded geometrically toward the foot of the perpendicular
+     * from the evaluation point, so the near field is resolved where the
+     * kernel actually varies and the far field collapses to a single panel.
+     * A point ON the line at the surface is logarithmically singular — that
+     * is the idealization, not a defect — and `solve` flags it rather than
+     * printing the finite number a quadrature would happen to return.
+     * ------------------------------------------------------------------ */
+    function lineSources(ld, px, py, z, out) {
+        out.length = 0;
+        var half = 0.5 * ld.L;
+        var th = (ld.theta || 0) * Math.PI / 180;
+        var ex = Math.cos(th), ey = Math.sin(th);
+        var dx = px - ld.x, dy = py - ld.y;
+        var sStar = dx * ex + dy * ey;                 /* foot of perpendicular */
+        var perp = Math.abs(dx * ey - dy * ex);
+        var sClamp = Math.max(-half, Math.min(half, sStar));
+        var along = sStar - sClamp;
+        var rMin = Math.sqrt(perp * perp + along * along + z * z);
+
+        var breaks;
+        if (rMin >= ld.L) breaks = [-half, half];
+        else {
+            var h0 = Math.max(rMin, ld.L / 64);
+            var set = [-half, half];
+            if (sStar > -half && sStar < half) set.push(sStar);
+            var off = 0, h = h0;
+            for (var lv = 0; lv < 6; lv++) {
+                off += h;
+                var l = sStar - off, rr = sStar + off;
+                if (l > -half) set.push(l);
+                if (rr < half) set.push(rr);
+                h *= 2;
+                if (l <= -half && rr >= half) break;
+            }
+            set.sort(function (u, v) { return u - v; });
+            breaks = [set[0]];
+            for (var i = 1; i < set.length; i++) {
+                if (set[i] - breaks[breaks.length - 1] > 1e-9 * ld.L) breaks.push(set[i]);
+            }
+        }
+
+        var q = ld.P / ld.L;                           /* force per unit length */
+        for (var b = 0; b + 1 < breaks.length; b++) {
+            var s0 = breaks[b], s1 = breaks[b + 1];
+            var hw = 0.5 * (s1 - s0), mid = 0.5 * (s1 + s0);
+            for (var g = 0; g < 4; g++) {
+                var s = mid + hw * LX[g];
+                out.push({ x: ld.x + ex * s, y: ld.y + ey * s, P: q * hw * LW[g] });
+            }
+        }
+        return rMin;
+    }
+
+    /* ------------------------------------------------------------------
+     * Derived quantities from a Cartesian stress tensor + material.
+     * Shear strains are ENGINEERING (gamma = tau/G), the convention every
+     * layered-elastic program prints.
      * ------------------------------------------------------------------ */
     function derive(sig, E, nu) {
         var G = E / (2 * (1 + nu));
@@ -465,13 +758,16 @@
             if (s1 < s2) { t = s1; s1 = s2; s2 = t; }
         }
         var vm = Math.sqrt(3 * J2);
-        /* principal strains (same directions) */
+        /* principal strains. The material is isotropic, so they share the
+         * principal directions of the stress tensor and follow from Hooke
+         * directly — no second eigenvalue problem. */
         var e1 = (s1 - nu * (s2 + s3)) / E;
+        var e2 = (s2 - nu * (s1 + s3)) / E;
         var e3 = (s3 - nu * (s1 + s2)) / E;
         return {
             eps: eps,
             principal: { s1: s1, s2: s2, s3: s3 },
-            epsPrincipal: { e1: e1, e3: e3 },
+            epsPrincipal: { e1: e1, e2: e2, e3: e3 },
             vm: vm,
             tauMax: 0.5 * (s1 - s3),
             tauOct: Math.sqrt(2 * J2 / 3),
@@ -481,25 +777,68 @@
     }
 
     /* ------------------------------------------------------------------
+     * Load normalization. The app may describe a wheel by any two of
+     * (total force, pressure, radius); the engine wants the pair it
+     * integrates with. Every load carries its TOTAL FORCE whatever its
+     * kind, which is what lets the three idealizations be swapped at
+     * constant load — the comparison the tool exists to make.
+     * ------------------------------------------------------------------ */
+    function normalizeLoad(ld) {
+        var kind = ld.kind || 'circle';
+        var out = { kind: kind, x: ld.x || 0, y: ld.y || 0 };
+        var P = ld.P;
+        if (P == null && ld.p > 0 && ld.a > 0) P = Math.PI * ld.a * ld.a * ld.p;
+        P = Math.max(P || 0, 0);
+        if (kind === 'circle') {
+            var a = ld.a, p = ld.p;
+            if (!(a > 0)) a = Math.sqrt(P / (Math.PI * Math.max(p, 1e-12)));
+            if (!(p > 0)) p = P / (Math.PI * a * a);
+            out.a = a; out.p = p; out.P = Math.PI * a * a * p;
+        } else if (kind === 'point') {
+            out.P = P;
+        } else {
+            out.P = P;
+            out.L = ld.L > 0 ? ld.L : 1;
+            out.theta = ld.theta || 0;
+        }
+        return out;
+    }
+
+    /* Reference contact radius used to turn a dimensionless slip value into
+     * a shear-spring stiffness. The mean of the circular contacts if there
+     * are any; otherwise whatever the job names, and failing that 150 mm. */
+    function referenceRadius(job, loads) {
+        if (job.options && job.options.aRef > 0) return job.options.aRef;
+        var s = 0, n = 0;
+        for (var i = 0; i < loads.length; i++) {
+            if (loads[i].kind === 'circle') { s += loads[i].a; n++; }
+        }
+        return n ? s / n : 150;
+    }
+
+    /* ------------------------------------------------------------------
      * Main entry: solve a batch of evaluation points
      * job = { layers, interfaces, loads, points, options }
      *   layers    : [{h(mm), E(MPa), nu}]        (last h ignored → ∞)
-     *   interfaces: [{bond:'bonded'|'unbonded'|'spring', k(MPa/mm)}]
-     *   loads     : [{x, y, p(MPa), a(mm)}]
+     *   interfaces: [{slip}] or [{bond, k(MPa/mm)}]
+     *   loads     : [{kind, x, y, ...}]          see normalizeLoad
      *   points    : [{x, y, z, side}]  side:+1 evaluates below interface
      * ------------------------------------------------------------------ */
     function solve(job, onProgress) {
         var t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
-        var layers = job.layers, loads = job.loads, pts = job.points;
+        var layers = job.layers, pts = job.points;
         if (!layers || layers.length < 1) throw new Error('At least one layer required');
-        if (!loads || !loads.length) throw new Error('At least one load required');
-        var sys = new LayerSystem(layers, job.interfaces);
+        if (!job.loads || !job.loads.length) throw new Error('At least one load required');
+        var loads = job.loads.map(normalizeLoad);
+        var aRef = referenceRadius(job, loads);
+        var sys = new LayerSystem(layers, job.interfaces, aRef);
         var opt = {
             tol: (job.options && job.options.tol) || 1e-6,
             maxPanels: (job.options && job.options.maxPanels) || 220
         };
         var results = new Array(pts.length);
         var panelsTot = 0, panelsN = 0;
+        var subs = [];
 
         for (var ip = 0; ip < pts.length; ip++) {
             var pt = pts[ip];
@@ -507,25 +846,87 @@
             var li = (pt.li != null) ? pt.li : layerIndexAt(sys, z, pt.side === 1 ? 1 : -1);
             var sig = { xx: 0, yy: 0, zz: 0, xy: 0, xz: 0, yz: 0 };
             var disp = { ux: 0, uy: 0, uz: 0 };
-            var okAll = true;
+            var okAll = true, singular = false;
+
             for (var il = 0; il < loads.length; il++) {
                 var ld = loads[il];
-                var dx = pt.x - ld.x, dy = pt.y - ld.y;
-                var r = Math.sqrt(dx * dx + dy * dy);
-                var res = pointResponse(sys, ld.p, ld.a, r, z, li, opt);
-                if (!res.converged) okAll = false;
-                panelsTot += res.panels; panelsN++;
-                var cth, sth;
-                if (r > 1e-9) { cth = dx / r; sth = dy / r; } else { cth = 1; sth = 0; }
-                sig.xx += res.sr * cth * cth + res.st * sth * sth;
-                sig.yy += res.sr * sth * sth + res.st * cth * cth;
-                sig.xy += (res.sr - res.st) * cth * sth;
-                sig.zz += res.sz;
-                sig.xz += res.trz * cth;
-                sig.yz += res.trz * sth;
-                disp.ux += res.ur * cth;
-                disp.uy += res.ur * sth;
-                disp.uz += res.uz;
+                var aBp, rMin = Infinity;
+                if (ld.kind === 'line') {
+                    rMin = lineSources(ld, pt.x, pt.y, z, subs);
+                    aBp = 0;
+                    if (rMin < 1e-6 * ld.L) { singular = true; continue; }
+                } else {
+                    subs.length = 0;
+                    subs.push({ x: ld.x, y: ld.y, P: ld.P });
+                    aBp = ld.kind === 'circle' ? ld.a : 0;
+                }
+
+                /* One m-grid for the whole load. Every sub-source then hits
+                 * the SAME cached 4N-2 solves, which is what makes a line
+                 * load cost a fraction more than a point one rather than a
+                 * multiple of it — the linear solve is the expensive part,
+                 * and it depends on m and the materials, never on r. */
+                var rMax = 0, j;
+                for (j = 0; j < subs.length; j++) {
+                    var ddx = pt.x - subs[j].x, ddy = pt.y - subs[j].y;
+                    var rj = Math.sqrt(ddx * ddx + ddy * ddy);
+                    subs[j].r = rj;
+                    subs[j].cth = rj > 1e-9 ? ddx / rj : 1;
+                    subs[j].sth = rj > 1e-9 ? ddy / rj : 0;
+                    if (rj > rMax) rMax = rj;
+                }
+                /* The mesh near m = 0 must resolve the SLOWEST-decaying
+                 * exponential in the integrand, and that is not e^(-m*z).
+                 * A response at depth z carries the reflections off every
+                 * interface, which decay like e^(-2*m*lambda_n) in the
+                 * total bound depth — always a shorter scale in m than the
+                 * direct term, so always the one that sets the mesh. It is
+                 * worst at the SURFACE, where the asymptotic subtraction
+                 * leaves nothing BUT those reflections and z contributes no
+                 * refinement at all: the first panel then ran from 0 to the
+                 * first zero of J1(ma), 0.026 for a 150 mm radius, across a
+                 * kernel whose whole variation happens below 0.004. Eight
+                 * Gauss points cannot see that, and the surface deflection
+                 * of a layered section came out 0.2% high on two layers and
+                 * 0.8% high on three — converged, stable under every
+                 * tolerance, and wrong. Nothing in the suite caught it
+                 * because the reflections vanish identically in the two
+                 * cases it checked against closed forms, a half-space and a
+                 * stack of identical layers.
+                 *
+                 * Independent check, and the one that found it: a direct
+                 * fine-mesh Simpson integration of this engine's own
+                 * kernels, and lea/lea.ts, agree with each other and with
+                 * this to 5e-5 of the contact pressure. */
+                var zDecay = Math.max(z, 2 * sys.depthFinite);
+                var bp = makeBreakpoints(aBp, rMax, zDecay, opt.maxPanels);
+                var mConv = zDecay > 1e-9 ? 25 / zDecay : 0;
+
+                for (j = 0; j < subs.length; j++) {
+                    var sc = subs[j];
+                    var src = ld.kind === 'circle'
+                        ? { kind: 'circle', p: ld.p, a: ld.a }
+                        : { kind: 'point', P: sc.P };
+                    var res = pointResponse(sys, src, sc.r, z, li, opt, bp, mConv);
+                    if (res.singular) { singular = true; continue; }
+                    if (!res.converged) okAll = false;
+                    panelsTot += res.panels; panelsN++;
+                    var cth = sc.cth, sth = sc.sth;
+                    sig.xx += res.sr * cth * cth + res.st * sth * sth;
+                    sig.yy += res.sr * sth * sth + res.st * cth * cth;
+                    sig.xy += (res.sr - res.st) * cth * sth;
+                    sig.zz += res.sz;
+                    sig.xz += res.trz * cth;
+                    sig.yz += res.trz * sth;
+                    disp.ux += res.ur * cth;
+                    disp.uy += res.ur * sth;
+                    disp.uz += res.uz;
+                }
+            }
+
+            if (singular) {
+                sig = { xx: NaN, yy: NaN, zz: NaN, xy: NaN, xz: NaN, yz: NaN };
+                disp = { ux: NaN, uy: NaN, uz: NaN };
             }
             var L = sys.layers[li];
             var d = derive(sig, L.E, L.nu);
@@ -535,7 +936,7 @@
                 eps: d.eps, principal: d.principal, epsPrincipal: d.epsPrincipal,
                 vm: d.vm, tauMax: d.tauMax, tauOct: d.tauOct,
                 meanStress: d.meanStress, bulkStress: d.bulkStress,
-                converged: okAll,
+                converged: okAll, singular: singular,
                 tag: pt.tag
             };
             if (onProgress && (ip % 25 === 24 || ip === pts.length - 1)) {
@@ -546,6 +947,11 @@
         var t1 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
         return {
             points: results,
+            aRef: aRef,
+            slip: sys.interfaces.map(function (f, i) {
+                return f.bond === 'bonded' ? 0 : (f.bond === 'unbonded' ? 1
+                    : kToSlip(f.k, sys.layers[i + 1].G, aRef));
+            }),
             stats: {
                 ms: t1 - t0,
                 nPoints: pts.length,
@@ -559,14 +965,16 @@
     }
 
     /* ------------------------------------------------------------------
-     * Self test: Boussinesq halfspace closed forms (engine trust check)
+     * Self test: closed forms the engine must reproduce exactly. Runs at
+     * startup, so a browser that mis-JITs something says so in the status
+     * bar instead of quietly drawing the wrong pavement.
      * ------------------------------------------------------------------ */
     function selfTest() {
         var p = 0.7, a = 150, E = 100, nu = 0.35;
         var job = {
             layers: [{ h: 0, E: E, nu: nu }],
             interfaces: [],
-            loads: [{ x: 0, y: 0, p: p, a: a }],
+            loads: [{ kind: 'circle', x: 0, y: 0, p: p, a: a }],
             points: [
                 { x: 0, y: 0, z: 0 },
                 { x: 0, y: 0, z: 150 },
@@ -589,6 +997,17 @@
         var wr = p * a * (1 - nu) / G * (2 / Math.PI) * (300 / a) *
             (ke.E - (1 - a * a / (300 * 300)) * ke.K);
         chk('w(2a,0)', out.points[2].disp.uz, wr, 1e-6);
+
+        /* the point load must reproduce Boussinesq on a true half-space */
+        var P = Math.PI * a * a * p;
+        var pj = solve({
+            layers: [{ h: 0, E: E, nu: nu }], interfaces: [],
+            loads: [{ kind: 'point', x: 0, y: 0, P: P }],
+            points: [{ x: 200, y: 0, z: 300 }]
+        });
+        var r = 200, zz = 300, R2 = r * r + zz * zz, RR = Math.sqrt(R2);
+        chk('point sz', pj.points[0].sig.zz,
+            -3 * P / (2 * Math.PI) * zz * zz * zz / (R2 * R2 * RR), 1e-8);
         return { pass: errs.length === 0, errors: errs };
     }
 
@@ -599,6 +1018,13 @@
         besselJ0: besselJ0,
         besselJ1: besselJ1,
         ellipKE: ellipKE,
-        _internals: { LayerSystem: LayerSystem, pointResponse: pointResponse, wynnEps: wynnEps }
+        slipToK: slipToK,
+        kToSlip: kToSlip,
+        normalizeLoad: normalizeLoad,
+        _internals: {
+            LayerSystem: LayerSystem, pointResponse: pointResponse, wynnEps: wynnEps,
+            boussinesq: boussinesq, halfKernels: halfKernels, lineSources: lineSources,
+            makeBreakpoints: makeBreakpoints, derive: derive
+        }
     };
 });

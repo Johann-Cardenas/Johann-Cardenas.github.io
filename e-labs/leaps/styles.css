@@ -3,7 +3,8 @@
  * Workspace stylesheet. Dark-first; light theme via [data-theme="light"].
  * ===================================================================== */
 
-.LeapsApp {
+.LeapsApp,
+.lp-app {
     --lp-bg0: #0a111f;      /* viewport void            */
     --lp-bg1: #0f1829;      /* panels                   */
     --lp-bg2: #16223a;      /* cards, inputs            */
@@ -26,9 +27,11 @@
     --lp-shadow: 0 10px 30px rgba(2, 6, 16, 0.55);
     --lp-radius: 10px;
     --lp-mono: ui-monospace, "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
+    --lp-font: "Source Sans Pro", Helvetica, Arial, sans-serif;
 }
 
-[data-theme="light"] .LeapsApp {
+[data-theme="light"] .LeapsApp,
+[data-theme="light"] .lp-app {
     --lp-bg0: #e8ecf3;
     --lp-bg1: #ffffff;
     --lp-bg2: #f2f5fa;
@@ -48,35 +51,36 @@
 }
 
 /* ---------- App frame ---------- */
-.lp-app { max-width: 1660px; margin: 0 auto; padding: 2em 1.25em 3em; }
+.lp-page { max-width: 1660px; margin: 0 auto; padding: 2em 1.25em 3em; }
 
-.lp-app .app-header { margin-bottom: 1.4em; }
-.lp-app .header-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1em; }
-.lp-app .back-btn { font-size: 0.9em; color: var(--lp-ink2); border-bottom: none; }
-.lp-app .back-btn:hover { color: var(--lp-accent); }
-.lp-app .header-badges { display: flex; gap: 0.5em; }
-.lp-app .header-badge {
+.lp-page .app-header { margin-bottom: 1.4em; }
+.lp-page .header-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1em; }
+.lp-page .back-btn { font-size: 0.9em; color: var(--lp-ink2); border-bottom: none; }
+.lp-page .back-btn:hover { color: var(--lp-accent); }
+.lp-page .header-badges { display: flex; gap: 0.5em; }
+.lp-page .header-badge {
     font-size: 0.72em; letter-spacing: 0.08em; text-transform: uppercase;
     padding: 0.35em 0.9em; border-radius: 999px;
     border: 1px solid var(--lp-line); color: var(--lp-ink2); background: var(--lp-bg1);
 }
-.lp-app .header-badge-link { transition: color 0.15s, border-color 0.15s; border-bottom: 1px solid var(--lp-line); }
-.lp-app .header-badge-link:hover { color: var(--lp-accent); border-color: var(--lp-accent); }
-.lp-app .header-content h1 {
+.lp-page .header-badge-link { transition: color 0.15s, border-color 0.15s; border-bottom: 1px solid var(--lp-line); }
+.lp-page .header-badge-link:hover { color: var(--lp-accent); border-color: var(--lp-accent); }
+.lp-page .header-content h1 {
     display: flex; align-items: center; gap: 0.4em;
     font-size: 2.1em; margin: 0 0 0.25em; letter-spacing: 0.01em;
 }
-.lp-app .header-content h1 .highlight { color: var(--lp-accent); }
+.lp-page .header-content h1 .highlight { color: var(--lp-accent); }
 .lp-icon {
     display: inline-flex; align-items: center; justify-content: center;
     width: 1.5em; height: 1.5em; border-radius: 0.3em; font-size: 0.72em;
     background: linear-gradient(135deg, var(--lp-accent-deep), var(--lp-indigo));
     color: #fff;
 }
-.lp-app .header-content p { color: var(--lp-ink2); max-width: 64em; margin: 0; }
+.lp-page .header-content p { color: var(--lp-ink2); max-width: 64em; margin: 0; }
 
 /* ---------- Workspace grid ---------- */
-.lp-workspace {
+.lp-app {
+    position: relative;          /* the first-run unit gate covers this box */
     border: 1px solid var(--lp-line);
     border-radius: 14px;
     background: var(--lp-bg1);
@@ -329,7 +333,7 @@
 .lp-gear-params .lp-field { margin: 0; }
 
 /* ---------- Wheels table ---------- */
-.lp-wheels-editor { margin-top: 0.1em; }
+.lp-loads-editor { margin-top: 0.1em; }
 .lp-app table.lp-wtable { width: 100%; border-collapse: collapse; }
 .lp-app .lp-wtable th {
     font-size: 0.62em; letter-spacing: 0.04em; text-transform: uppercase;
@@ -727,7 +731,7 @@
 }
 
 @media (max-width: 640px) {
-    .lp-app { padding: 1em 0.5em 2em; }
+    .lp-page { padding: 1em 0.5em 2em; }
     .lp-project-name { width: 9em; }
     .lp-plan-panel { display: none; }
     .lp-dtab { padding: 0.75em 0.6em; font-size: 0.72em; }
@@ -739,7 +743,7 @@
  * holds its height, and sticks so Run, the unit switch and undo stay
  * reachable while the panels below are being read.
  *
- * .lp-workspace is overflow:hidden for its rounded corners, which makes
+ * .lp-app is overflow:hidden for its rounded corners, which makes
  * it a scroll container and would anchor the sticky bar to a box that
  * never scrolls - i.e. no stickiness at all. overflow:clip clips the
  * same corners without creating that scrollport. A browser too old for
@@ -747,7 +751,7 @@
  * that does not stick.
  */
 @media (max-width: 1080px) {
-    .lp-workspace { overflow: clip; }
+    .lp-app { overflow: clip; }
     .lp-topbar {
         position: sticky;
         top: 0;
@@ -792,7 +796,7 @@
         min-height: 72vh;
         min-height: 72dvh;
     }
-    .lp-app .header-content p { display: none; }
+    .lp-page .header-content p { display: none; }
 }
 
 /* ---------- Touch target sizing ----------
@@ -962,8 +966,273 @@
     background: linear-gradient(135deg, var(--lp-accent-deep), var(--lp-indigo));
     color: #fff !important; box-shadow: none;
 }
+/* new v2.0 buttons — the segmented controls, the unit gate and the
+   results-table group toggles. Without these, main.css paints all three
+   segments of the load-model switch the same teal and the selected one
+   stops reading as selected. */
+.LeapsApp .lp-seg-btn,
+[data-theme="dark"] .LeapsApp .lp-seg-btn {
+    background: transparent; color: var(--lp-ink3) !important; box-shadow: none;
+}
+.LeapsApp .lp-seg-btn:hover,
+[data-theme="dark"] .LeapsApp .lp-seg-btn:hover {
+    background: var(--lp-bg3); color: var(--lp-ink) !important;
+}
+.LeapsApp .lp-seg-btn.is-active,
+.LeapsApp .lp-seg-btn.is-active:hover,
+[data-theme="dark"] .LeapsApp .lp-seg-btn.is-active,
+[data-theme="dark"] .LeapsApp .lp-seg-btn.is-active:hover {
+    background: var(--lp-accent-deep); color: #fff !important;
+}
+.LeapsApp .lp-unitgate-btn,
+[data-theme="dark"] .LeapsApp .lp-unitgate-btn {
+    background: var(--lp-bg2); color: var(--lp-ink) !important; box-shadow: none;
+}
+.LeapsApp .lp-unitgate-btn:hover,
+[data-theme="dark"] .LeapsApp .lp-unitgate-btn:hover {
+    background: var(--lp-bg3); color: var(--lp-ink) !important;
+}
+.LeapsApp .lp-rt-toggle,
+[data-theme="dark"] .LeapsApp .lp-rt-toggle {
+    background: none; color: var(--lp-ink2) !important; box-shadow: none;
+}
+.LeapsApp .lp-rt-toggle:hover,
+[data-theme="dark"] .LeapsApp .lp-rt-toggle:hover { color: var(--lp-accent) !important; }
+.LeapsApp .lp-btn.lp-btn-primary,
+[data-theme="dark"] .LeapsApp .lp-btn.lp-btn-primary {
+    background: linear-gradient(135deg, var(--lp-accent-deep), var(--lp-indigo));
+    color: #fff !important;
+}
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-    .lp-run, .lp-tool, .lp-btn, .lp-tab, .lp-dtab, .lp-progress-fill { transition: none; }
+    .lp-run, .lp-tool, .lp-btn, .lp-tab, .lp-dtab, .lp-seg-btn,
+    .lp-unitgate-btn, .lp-progress-fill { transition: none; }
+    .lp-i--spin { animation: none; }
+}
+
+/* =====================================================================
+ * v2 additions — the unit gate, the load-model switch, the interface
+ * slip control, and the transposed results table.
+ * ===================================================================== */
+
+/* ---------- First-run unit gate ----------
+ * A full-cover sheet rather than a dialog: there is nothing useful to do
+ * behind it, and a modal that can be dismissed by clicking away is a
+ * modal that gets dismissed by accident. */
+.lp-unitgate {
+    position: absolute; inset: 0; z-index: 60;
+    display: flex; align-items: center; justify-content: center;
+    padding: 1.5em;
+    background: color-mix(in srgb, var(--lp-bg0) 82%, transparent);
+    backdrop-filter: blur(7px);
+}
+.lp-unitgate[hidden] { display: none; }
+.lp-unitgate-card {
+    max-width: 40em; text-align: center;
+    background: var(--lp-bg1); border: 1px solid var(--lp-line);
+    border-radius: 16px; box-shadow: var(--lp-shadow);
+    padding: 2em 2.2em 2.1em;
+}
+.lp-unitgate-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 2.6em; height: 2.6em; border-radius: 0.6em; font-size: 1.1em;
+    background: linear-gradient(135deg, var(--lp-accent-deep), var(--lp-indigo));
+    color: #fff; margin-bottom: 0.6em;
+}
+.lp-unitgate-card h3 { margin: 0 0 0.4em; font-size: 1.2em; color: var(--lp-ink); }
+.lp-unitgate-card > p { margin: 0 auto 1.4em; font-size: 0.84em; color: var(--lp-ink2); max-width: 34em; line-height: 1.6; }
+.lp-unitgate-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8em; }
+.lp-unitgate-btn {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 0.15em;
+    text-align: left; cursor: pointer; box-shadow: none;
+    border: 1px solid var(--lp-line); border-radius: 12px;
+    background: var(--lp-bg2); color: var(--lp-ink);
+    padding: 1em 1.1em; height: auto; line-height: 1.35;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.lp-unitgate-btn:hover { border-color: var(--lp-accent); background: var(--lp-bg3); }
+.lp-unitgate-btn:active { transform: translateY(1px); }
+.lp-unitgate-btn strong { font-size: 1.05em; letter-spacing: 0.02em; }
+.lp-unitgate-btn span { font-family: var(--lp-mono); font-size: 0.82em; color: var(--lp-accent); }
+.lp-unitgate-btn em { font-style: normal; font-size: 0.72em; color: var(--lp-ink3); margin-top: 0.3em; }
+
+/* ---------- Segmented control ----------
+ * The load model is one choice out of three, and the three are mutually
+ * exclusive, so it is a segmented control rather than a select: all
+ * three stay visible, which is the point — a student should see that the
+ * other two idealizations exist without opening anything. */
+.lp-seg {
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+    gap: 2px; padding: 2px;
+    background: var(--lp-bg2); border: 1px solid var(--lp-line); border-radius: 9px;
+}
+.lp-seg-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.4em;
+    border: none; box-shadow: none; cursor: pointer; height: auto; line-height: 1.2;
+    border-radius: 7px; background: transparent; color: var(--lp-ink3);
+    font-size: 0.76em; font-weight: 700; letter-spacing: 0.02em;
+    padding: 0.55em 0.4em;
+    transition: background 0.15s, color 0.15s;
+}
+.lp-seg-btn:hover { color: var(--lp-ink); background: var(--lp-bg3); }
+.lp-seg-btn.is-active { background: var(--lp-accent-deep); color: #fff; }
+.lp-seg-btn.is-active:hover { background: var(--lp-accent-deep); filter: brightness(1.1); }
+.lp-seg-btn i { font-size: 0.95em; }
+.lp-seg-kind .lp-seg-btn { flex-direction: column; gap: 0.25em; padding: 0.6em 0.3em; }
+.lp-seg-kind .lp-seg-btn i { font-size: 1.15em; }
+.lp-seg-sm { flex: 1; }
+.lp-seg-sm .lp-seg-btn { font-size: 0.7em; padding: 0.4em 0.25em; }
+
+.lp-kind-blurb {
+    font-size: 0.72em; color: var(--lp-ink3); line-height: 1.55;
+    margin: 0.5em 0 0.2em;
+}
+
+/* ---------- Interface slip ---------- */
+.lp-itf-sub {
+    display: flex; align-items: center; gap: 0.6em;
+    margin: 0 0 0.5em 6.5em;
+}
+.lp-itf-sub .lp-field { margin: 0; flex: none; width: 7em; }
+.lp-itf-k { font-family: var(--lp-mono); font-size: 0.68em; color: var(--lp-ink3); }
+
+/* ---------- Buttons and notices ---------- */
+.lp-btn-primary {
+    background: linear-gradient(135deg, var(--lp-accent-deep), var(--lp-indigo));
+    border-color: transparent; color: #fff;
+}
+.lp-btn-primary:hover { filter: brightness(1.12); color: #fff; border-color: transparent; }
+.lp-check-row { display: flex; margin: 0.5em 0 0.2em; }
+.lp-app input[type="number"].is-ro { opacity: 0.85; }
+.lp-app .lp-wtable tr.is-sel .lp-wtag { color: var(--lp-ink); }
+
+.lp-warn {
+    display: flex; align-items: flex-start; gap: 0.5em;
+    font-size: 0.74em; line-height: 1.55; color: var(--lp-ink2);
+    border: 1px solid color-mix(in srgb, var(--lp-warn) 45%, var(--lp-line));
+    background: color-mix(in srgb, var(--lp-warn) 10%, transparent);
+    border-radius: 8px; padding: 0.6em 0.8em; margin: 0.8em 0 0;
+}
+.lp-warn i { color: var(--lp-warn); margin-top: 0.15em; }
+
+/* =====================================================================
+ * The transposed results table.
+ *
+ * Points across, quantities down — the shape a layered-elastic program
+ * prints, and the shape a comparison is read in. Two things make it
+ * navigable once there are twenty-four rows and a dozen columns: the
+ * quantity and unit columns are STICKY, so a column scrolled four
+ * screens right is still labeled, and the six groups FOLD, so a reader
+ * after the displacements is not scrolling past eighteen rows of tensor
+ * components to reach three.
+ * ===================================================================== */
+.lp-rt-wrap {
+    overflow: auto; max-height: 62vh;
+    border: 1px solid var(--lp-line); border-radius: 8px;
+}
+.lp-app table.lp-rt {
+    border-collapse: separate; border-spacing: 0; margin: 0;
+    font-size: 0.72em; width: auto; min-width: 100%;
+}
+.lp-app .lp-rt th, .lp-app .lp-rt td {
+    padding: 0.4em 0.75em; white-space: nowrap;
+    border-bottom: 1px solid var(--lp-line-soft);
+    color: var(--lp-ink2);
+}
+/* the two label columns */
+.lp-app .lp-rt .lp-rt-q, .lp-app .lp-rt .lp-rt-corner {
+    position: sticky; left: 0; z-index: 2;
+    box-sizing: border-box; width: 8em; min-width: 8em; max-width: 8em;
+    background: var(--lp-bg2); text-align: left;
+    font-family: var(--lp-mono); font-weight: 700; color: var(--lp-ink);
+    border-right: 1px solid var(--lp-line-soft);
+}
+.lp-app .lp-rt .lp-rt-unit, .lp-app .lp-rt .lp-rt-unit-h {
+    position: sticky; left: 8em; z-index: 2;
+    box-sizing: border-box; width: 4.5em; min-width: 4.5em; max-width: 4.5em;
+    background: var(--lp-bg2); text-align: left;
+    font-size: 0.88em; color: var(--lp-ink3);
+    border-right: 1px solid var(--lp-line);
+}
+.lp-app .lp-rt thead th {
+    position: sticky; top: 0; z-index: 3;
+    background: var(--lp-bg2); color: var(--lp-ink3);
+    font-size: 0.92em; letter-spacing: 0.04em; text-align: right;
+    border-bottom: 1px solid var(--lp-line);
+}
+.lp-app .lp-rt thead .lp-rt-corner, .lp-app .lp-rt thead .lp-rt-unit-h {
+    z-index: 4; font-family: inherit; letter-spacing: 0.06em;
+    text-transform: uppercase; font-size: 0.84em;
+}
+.lp-rt-pt { min-width: 6.5em; }
+.lp-rt-ptname {
+    display: block; font-family: var(--lp-mono); font-weight: 700;
+    color: var(--lp-accent); font-size: 1.02em;
+}
+.lp-rt-ptlayer {
+    display: block; font-size: 0.8em; font-weight: 400; color: var(--lp-ink3);
+    max-width: 100%; margin-left: auto; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+}
+.lp-rt-pt.is-singular .lp-rt-ptname { color: var(--lp-warn); }
+
+/* group folding */
+.lp-rt-grouphead th {
+    background: color-mix(in srgb, var(--lp-bg1) 65%, var(--lp-bg3));
+    padding: 0; text-align: left; border-bottom: 1px solid var(--lp-line);
+}
+.lp-rt-grouphead .lp-rt-toggle { position: sticky; left: 0; z-index: 2; }
+.lp-rt-toggle {
+    display: inline-flex; align-items: center; gap: 0.5em; width: auto;
+    border: none; background: none; box-shadow: none; cursor: pointer;
+    color: var(--lp-ink2); text-align: left; height: auto; line-height: 1.2;
+    font-size: 0.92em; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 0.55em 0.75em;
+}
+.lp-rt-toggle:hover { color: var(--lp-accent); }
+.lp-rt-toggle > i:first-child { transition: transform 0.18s; width: 0.8em; }
+.lp-rt-group.is-open .lp-rt-toggle > i:first-child { transform: rotate(90deg); }
+.lp-rt-count {
+    font-size: 0.85em; font-weight: 400; letter-spacing: 0;
+    color: var(--lp-ink3); font-family: var(--lp-mono);
+    border: 1px solid var(--lp-line); border-radius: 999px;
+    padding: 0 0.5em; line-height: 1.5;
+}
+.lp-rt-group .lp-rt-row { display: none; }
+.lp-rt-group.is-open .lp-rt-row { display: table-row; }
+
+/* values */
+.lp-rt-v {
+    text-align: right; font-family: var(--lp-mono);
+    font-variant-numeric: tabular-nums; color: var(--lp-ink);
+}
+.lp-rt-v.is-neg { color: color-mix(in srgb, var(--lp-cat2) 70%, var(--lp-ink)); }
+.lp-app .lp-rt .is-col { background: var(--lp-bg3); color: var(--lp-ink); }
+.lp-app .lp-rt tbody tr:hover .lp-rt-v { background: color-mix(in srgb, var(--lp-bg3) 55%, transparent); }
+
+@media (max-width: 900px) {
+    .lp-unitgate-choices { grid-template-columns: 1fr; }
+    .lp-rt-wrap { max-height: 52vh; }
+}
+
+
+/* ---------- Load model in the toolbar ---------- */
+.lp-topbar-kind { gap: 0.45em; }
+.lp-topbar-label {
+    font-size: 0.66em; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--lp-ink3);
+}
+.lp-topbar-kind .lp-seg-kind { min-width: 15em; }
+.lp-topbar-kind .lp-seg-kind .lp-seg-btn {
+    flex-direction: row; gap: 0.4em; padding: 0.42em 0.6em; font-size: 0.74em;
+}
+.lp-topbar-kind .lp-seg-kind .lp-seg-btn i { font-size: 1em; }
+.lp-kind-blurb strong { color: var(--lp-ink2); }
+.lp-kind-blurb em { font-style: normal; color: var(--lp-ink2); }
+
+@media (max-width: 1080px) {
+    .lp-topbar-label { display: none; }
+    .lp-topbar-kind .lp-seg-kind { min-width: 0; }
+    .lp-topbar-kind .lp-seg-kind .lp-seg-btn span { display: none; }
 }

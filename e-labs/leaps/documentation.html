@@ -107,7 +107,7 @@
                     <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to LEAPS workbench</a>
                     <div class="header-badges">
                         <span class="header-badge"><i class="fas fa-microchip"></i> LEAF-JS Engine</span>
-                        <span class="header-badge"><i class="fas fa-code-branch"></i> v1.1</span>
+                        <span class="header-badge"><i class="fas fa-code-branch"></i> v2.0</span>
                     </div>
                 </div>
 
@@ -136,12 +136,12 @@
 
                         <section class="lp-doc-sec" id="overview">
                             <h2><i class="fas fa-circle-info"></i> 1 · Overview</h2>
-                            <p>LEAPS computes the stress, strain and displacement fields inside a pavement idealized as a stack of homogeneous, isotropic, linear-elastic layers resting on a semi-infinite elastic halfspace. Each layer is defined by a thickness <code>h</code>, an elastic modulus <code>E</code> and a Poisson's ratio <code>ν</code>; the bottom layer is infinitely deep. Surface loads are uniform circular contact pressures (tires). This is the classical <em>layered elastic analysis</em> (LEA) idealization used throughout mechanistic-empirical pavement design.</p>
+                            <p>LEAPS computes the stress, strain and displacement fields inside a pavement idealized as a stack of homogeneous, isotropic, linear-elastic layers resting on a semi-infinite elastic halfspace. Each layer is defined by a thickness <code>h</code>, an elastic modulus <code>E</code> and a Poisson's ratio <code>ν</code>; the bottom layer is infinitely deep. Surface loads are applied as a <strong>uniform circular contact pressure</strong> (a tire — the classical <em>layered elastic analysis</em> idealization used throughout mechanistic-empirical pavement design), as a <strong>concentrated point force</strong> (Boussinesq), or as a <strong>line load</strong> spread along a straight segment. All three carry the same total force, so the switch changes only how that force is spread.</p>
                             <p>The tool is meant for intuition, teaching and rapid mechanistic checks — not as a replacement for a validated design package. Its core assumptions are:</p>
                             <ul>
                                 <li>Each layer is homogeneous, isotropic and linearly elastic (no stress dependence, no visco-elasticity, no temperature gradient).</li>
                                 <li>Layers extend infinitely in the horizontal plane; the lowest layer is a halfspace.</li>
-                                <li>Loads are static, vertical and applied as uniform pressure over circular contact areas.</li>
+                                <li>Loads are static and vertical, applied over a circular contact area, at a point, or along a line.</li>
                                 <li>Full continuity, frictionless slip or a linear shear-spring is enforced at each interface.</li>
                             </ul>
                         </section>
@@ -175,7 +175,7 @@
 
                         <section class="lp-doc-sec" id="interfaces">
                             <h2><i class="fas fa-grip-lines"></i> 4 · Interfaces</h2>
-                            <p>Between adjacent layers, vertical stress and vertical displacement are always continuous. The shear behavior is one of three models:</p>
+                            <p>Between adjacent layers, vertical stress and vertical displacement are always continuous. The shear behavior is set by a dimensionless <strong>slip</strong> value — the same input WinJULEA takes — where <code>0</code> is fully bonded and <code>1</code> is frictionless. Both endpoints are exact. Anything between is Goodman's shear spring:</p>
                             <div class="lp-doc-table-wrap">
                                 <table class="lp-doc-table">
                                     <tr><th>Interface</th><th>Shear condition</th><th>Typical use</th></tr>
@@ -185,12 +185,26 @@
                                 </table>
                             </div>
                             <p>The spring stiffness <code>k</code> spans the two limits continuously: <code>k → ∞</code> recovers the fully-bonded solution, <code>k → 0</code> recovers the frictionless one. Both limits are checked in the validation suite (§9).</p>
+                            <p>Turning a dimensionless slip into a stiffness necessarily introduces a length. The literature — BISAR's shear-spring compliance, Uzan's friction parameter — scales it on the loaded radius, which is why a dimensionless friction parameter is documented as depending on the diameter of the load circle. LEAPS uses</p>
+                            <span class="lp-eq">k(s) = (G<sub>lower</sub> / a<sub>ref</sub>) · (1 − s) / s</span>
+                            <p>with <code>a<sub>ref</sub></code> the reference contact radius, and prints the resulting stiffness beside the control. An intermediate value is a defensible partial bond, but it is <em>not</em> guaranteed to reproduce another program's intermediate value digit for digit, because each program normalizes its own way. Enter <code>k</code> directly when the number matters.</p>
                         </section>
 
                         <section class="lp-doc-sec" id="loads">
                             <h2><i class="fas fa-truck"></i> 5 · Loads & gears</h2>
-                            <p>Each wheel applies a uniform pressure <code>p</code> over a circular contact patch. The contact radius follows from the wheel load <code>F</code> and pressure:</p>
+                            <p>The <strong>load model</strong> selector in the toolbar chooses how each load is applied. Every model carries the same total force <code>F</code>, so switching between them is a direct experiment in Saint-Venant's principle: near the contact the three answers differ by a factor of two or more, and by a couple of contact radii down they agree to a fraction of a per cent.</p>
+                            <div class="lp-doc-table-wrap">
+                                <table class="lp-doc-table">
+                                    <tr><th>Model</th><th>What is applied</th><th>Where it is singular</th></tr>
+                                    <tr><td>Circular imprint</td><td>Uniform pressure <code>p</code> over radius <code>a</code>. The LEA standard, and the only model to use when comparing against another layered-elastic program.</td><td>Nowhere — finite everywhere.</td></tr>
+                                    <tr><td>Point load</td><td>A concentrated force <code>F</code> (Boussinesq).</td><td>At the load itself.</td></tr>
+                                    <tr><td>Line load</td><td>Force per unit length <code>q = F/L</code> along a segment of length <code>L</code> and azimuth θ.</td><td>Anywhere on the segment, at the surface.</td></tr>
+                                </table>
+                            </div>
+                            <p>A singular point is reported as such rather than given the finite number a quadrature happens to return there. That the concentrated idealizations have no answer at the load is not a defect in the solver — it is the reason design methods spread a wheel over a contact area in the first place.</p>
+                            <p>For the circular model the contact radius follows from the wheel load <code>F</code> and pressure:</p>
                             <span class="lp-eq">a = √( F / (π · p) )</span>
+                            <p>and either may be typed: editing the radius re-derives the pressure at constant load, which is how a contact area is usually known in the field.</p>
                             <p>Multiple wheels are superposed: LEAPS solves each wheel independently in its own axisymmetric frame, then rotates every stress/strain tensor into the global frame before summation, so shear coupling between offset wheels is captured exactly. The <em>Gear generator</em> builds standard layouts, all parameterized by wheel load, pressure, dual spacing <code>Sd</code> (transverse gap between paired tires) and tandem spacing <code>St</code> (longitudinal gap between axles):</p>
                             <div class="lp-doc-table-wrap">
                                 <table class="lp-doc-table">
@@ -211,16 +225,18 @@
                                 <li><strong>Stresses are tension-positive.</strong> Compression under a wheel is therefore negative.</li>
                                 <li><strong>z is measured downward</strong> from the surface; <strong>deflection w is positive downward.</strong></li>
                                 <li>The section is a vertical cut in the x–z plane at the plan y-coordinate set by the draggable section line.</li>
-                                <li>Internally everything is <code>mm · N · MPa</code>; the UI converts to the SI or US display system you select.</li>
+                                <li>Shear strains are <strong>engineering</strong> strains, γ = τ/G.</li>
+                                <li>Internally everything is <code>mm · N · MPa</code> — and SI display is that same system, so every SI conversion factor is exactly one. The English system is the column set WinJULEA prints: inches, pounds and psi, with a modulus in psi rather than ksi and a displacement in inches rather than mils, so a result reads straight across from the other program.</li>
+                                <li>LEAPS asks which system you want <strong>once, before anything is typed</strong>. Every number in the workspace is in it, and an analysis read in the wrong system is not wrong by a factor anyone notices in a plot. The choice is remembered and stays changeable from the toolbar.</li>
                             </ul>
                             <div class="lp-doc-table-wrap">
                                 <table class="lp-doc-table">
                                     <tr><th>Quantity</th><th>SI display</th><th>US display</th></tr>
                                     <tr><td>Length / thickness</td><td>mm</td><td>in</td></tr>
-                                    <tr><td>Stress / pressure</td><td>kPa</td><td>psi</td></tr>
-                                    <tr><td>Modulus</td><td>MPa</td><td>ksi</td></tr>
-                                    <tr><td>Wheel load</td><td>kN</td><td>lbf</td></tr>
-                                    <tr><td>Deflection</td><td>mm</td><td>mil</td></tr>
+                                    <tr><td>Stress / pressure</td><td>MPa</td><td>psi</td></tr>
+                                    <tr><td>Modulus</td><td>MPa</td><td>psi</td></tr>
+                                    <tr><td>Wheel load</td><td>N</td><td>lb</td></tr>
+                                    <tr><td>Deflection</td><td>mm</td><td>in</td></tr>
                                     <tr><td>Strain</td><td>µε</td><td>µε</td></tr>
                                     <tr><td>Interface stiffness</td><td>MPa/mm</td><td>psi/in</td></tr>
                                 </table>
@@ -251,7 +267,7 @@
 
                         <section class="lp-doc-sec" id="validation">
                             <h2><i class="fas fa-vial"></i> 9 · Validation suite</h2>
-                            <p>LEAF-JS ships with a 69-check regression suite (run under Node during development; a subset runs in your browser at every startup and drives the status-bar badge). The checks cover:</p>
+                            <p>LEAF-JS ships with a 112-check regression suite (run under Node during development; a subset runs in your browser at every startup and drives the status-bar badge). The checks cover:</p>
                             <div class="lp-doc-table-wrap">
                                 <table class="lp-doc-table">
                                     <tr><th>Category</th><th>What is verified</th></tr>
@@ -262,8 +278,12 @@
                                     <tr><td>Superposition symmetry</td><td>Symmetric multi-wheel gears yield symmetric response fields.</td></tr>
                                     <tr><td>Burmister two-layer</td><td>Surface deflection factor F₂ matches Burmister's tabulated two-layer solution.</td></tr>
                                     <tr><td>Extreme contrast</td><td>A 1000:1 modulus contrast with a 3 mm interlayer solves stably without overflow.</td></tr>
+                                    <tr><td>Load idealizations</td><td>A point load is the limit of a shrinking circle at constant total force; a line load of vanishing length is a point load; all three carry the applied load through any horizontal plane; a rotated line load gives a rotated field.</td></tr>
+                                    <tr><td>Slip values</td><td>Slip 0 reproduces the bonded solution exactly and slip 1 the frictionless one; deflection rises monotonically between them.</td></tr>
+                                    <tr><td>Principal values</td><td>σ₁ ≥ σ₂ ≥ σ₃ everywhere, the eigenvalues carry the tensor's own invariants, and the principal strains are Hooke's law on the principal stresses.</td></tr>
                                 </table>
                             </div>
+                            <p>Two quadrature defects were found by cross-checking the engine against an independent implementation, and both were <em>converged</em> and wrong — stable at every tolerance, so no amount of tightening would have shown them. The panel mesh near <code>m = 0</code> now resolves the interface reflections rather than the evaluation depth, and the first panel is graded geometrically toward zero. A surface deflection that came out 0.8&nbsp;% high on a three-layer section now agrees with the reference to 4e−5. The lesson is recorded here because it generalizes: <strong>a single solver cannot check its own quadrature.</strong></p>
                             <p>The startup self-check compares the engine against the Boussinesq closed forms; a green badge means those passed on your machine, in your browser, this session.</p>
                         </section>
 
@@ -272,10 +292,11 @@
                             <h3>Workflow</h3>
                             <ul>
                                 <li><strong>Structure</strong> — pick a material per layer and edit thickness, modulus and Poisson's ratio inline. The <i class="fas fa-ellipsis-h"></i> menu renames, reorders, duplicates or deletes a layer; drag the <i class="fas fa-grip-vertical"></i> handle to restack. The bottom layer is always the infinite subgrade.</li>
-                                <li><strong>Interfaces</strong> — set the bond below each layer; enter <code>k</code> for shear springs.</li>
-                                <li><strong>Loads</strong> — build a standard gear, then fine-tune any wheel's position and load in the wheel table.</li>
+                                <li><strong>Interfaces</strong> — set the slip below each layer: bonded, frictionless, or a partial value whose shear stiffness is printed beside it.</li>
+                                <li><strong>Load model</strong> — circular imprint, point or line, in the toolbar. The total load does not change when you switch.</li>
+                                <li><strong>Loads</strong> — build a standard gear, then fine-tune any load's position and magnitude in the load table.</li>
                                 <li><strong>Evaluation points</strong> — double-click the section to drop a point; it snaps to interfaces and wheel axes. Drag to move, select and press <code>Delete</code> to remove.</li>
-                                <li><strong>Results</strong> — key responses appear in the right rail; the bottom dock holds depth profiles, surface responses, the per-layer response table, the point table and the performance estimates.</li>
+                                <li><strong>Results</strong> — key responses appear in the right rail. The bottom dock opens on the <strong>results table</strong>: one column per evaluation point, one row per quantity, in the order a layered-elastic program prints them — position, the six stress components, the six strains, the three displacements, then the principal stresses and principal strains. The quantity and unit columns stay frozen while you scroll sideways, and the six groups fold. The other dock tabs hold depth profiles, surface responses, the per-layer summary and the performance estimates.</li>
                             </ul>
                             <h3>Plan view</h3>
                             <p>The plan inset shows the gear from above with contact footprints, axle and tandem connectors, detected spacings and a grid. Drag the dashed line to move the analysis section along the y-axis; every response updates for the new cut.</p>
@@ -292,7 +313,7 @@
                                 </table>
                             </div>
                             <h3>Exports</h3>
-                            <p>The right rail exports the evaluation points and the contour grid to CSV, the whole project to a <code>.leaps.json</code> file (re-openable), the section to PNG, and a printable report (opens in a new tab — use Print → Save as PDF). Work autosaves to your browser between sessions.</p>
+                            <p><strong>Export full analysis</strong> writes one file carrying the whole run: the structure, every interface and its slip value, every load with its derived radius or line intensity, the solver settings, and every response at every evaluation point — in the units on screen, with the sign convention named in the header. Values are rounded to six significant figures, because the solver agrees with an independent implementation to about five and the digits past that belong to the double rather than to the pavement. The project <code>.leaps.json</code> keeps full precision and re-opens the run exactly; the contour field exports to CSV and the section to PNG. Work autosaves to your browser between sessions.</p>
                         </section>
 
                         <section class="lp-doc-sec" id="references">
