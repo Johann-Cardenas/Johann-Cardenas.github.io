@@ -20,6 +20,7 @@
  *   opts.plotly      the Plotly namespace   (default: window.Plotly)
  *   opts.makeWorker  a Worker factory       (default: new Worker('worker.js'))
  *   opts.katex       the KaTeX namespace    (default: window.katex)
+ *   opts.docsHref    where the manual lives  (default: 'documentation.html')
  * ===================================================================== */
 (function (root, factory) {
     'use strict';
@@ -417,6 +418,13 @@
         }
         function plotly() { return opts.plotly || win.Plotly; }
         function katex() { return opts.katex || win.katex; }
+        /* The manual sits next door on the standalone page and somewhere
+         * else entirely when the app is mounted inside another site, so the
+         * one link to it is injected rather than patched at port time, the
+         * same as Plotly and the Worker. It opens in a new tab on both
+         * hosts: the workspace holds a section somebody is in the middle of
+         * typing, and reading the manual should not be a way to lose it. */
+        function docsHref() { return opts.docsHref || 'documentation.html'; }
 
         /* An equation, or its plain twin. See the EQ table: KaTeX is a
          * deferred script on both hosts, and `throwOnError: false` renders
@@ -1670,7 +1678,7 @@
 
             hostEl.appendChild(el('p', 'lp-hint',
                 'Asphalt Institute transfer functions, E in psi. Scope and calibration: ' +
-                '<a href="documentation.html">documentation</a>.'));
+                '<a href="' + docsHref() + '" target="_blank" rel="noopener noreferrer">documentation</a>.'));
 
             renderPerfChart();
         }
