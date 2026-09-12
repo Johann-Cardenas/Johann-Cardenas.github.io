@@ -225,7 +225,7 @@ console.log('== 10. Load idealizations: point, line, circle ==');
         nPass++; console.log(`  PASS near field differs: point ${nearP.toFixed(4)} vs circle ${near.toFixed(4)} MPa`);
     } else { nFail++; console.log(`  FAIL near field too similar: ${nearP} vs ${near}`); }
 
-    /* a point load is singular at its own centre, and says so */
+    /* a point load is singular at its own center, and says so */
     const sing = LEAPS.solve({
         layers, interfaces: itf, loads: [{ kind: 'point', x: 0, y: 0, P }],
         points: [{ x: 0, y: 0, z: 0 }]

@@ -1,11 +1,11 @@
 /* =====================================================================
- * LEAPS — Linear Elastic Analysis of Pavement Structures
+ * LEAPS: Linear Elastic Analysis of Pavement Structures
  * Application shell: model panels, CAD-style section viewport,
  * results studio, exports. The numerical engine lives in solver.js
  * and runs inside a Web Worker (worker.js).
  *
  * Internal units: mm, N, MPa (= N/mm^2). The UI converts per selected
- * unit system, and the system is chosen ONCE on first run — a pavement
+ * unit system, and the system is chosen ONCE on first run: a pavement
  * analysis in the wrong units is not wrong by a factor you would notice
  * in a plot, so the choice is made before anything is typed.
  *
@@ -15,10 +15,11 @@
  * except the theme attribute and the window-level listeners, all of which
  * the disposer removes.
  *
- * Two things are injected rather than assumed, which is what lets the
+ * Three things are injected rather than assumed, which is what lets the
  * same file serve a standalone page and a bundled island:
- *   opts.plotly      — the Plotly namespace   (default: window.Plotly)
- *   opts.makeWorker  — a Worker factory       (default: new Worker('worker.js'))
+ *   opts.plotly      the Plotly namespace   (default: window.Plotly)
+ *   opts.makeWorker  a Worker factory       (default: new Worker('worker.js'))
+ *   opts.katex       the KaTeX namespace    (default: window.katex)
  * ===================================================================== */
 (function (root, factory) {
     'use strict';
@@ -28,26 +29,116 @@
 })(typeof self !== 'undefined' ? self : this, function () {
     'use strict';
 
+    /* =====================================================================
+     * NOTATION
+     * ---------------------------------------------------------------------
+     * Every symbol the app prints, in one table, because a symbol that is
+     * spelled two ways is read as two quantities. A pavement engineer reads
+     * sigma-sub-z, not the three characters "s z z", and a table of
+     * twenty-four rows is where that matters most: the row labels ARE the
+     * notation, and flat text turns tau-sub-xz into something that looks
+     * like a variable named txz.
+     *
+     * Three renderings, one source:
+     *   symHtml  markup, for the DOM and for Plotly, which understands
+     *            <sub> and <sup> in every title and annotation it draws
+     *   symText  flat, for a <select> option (which cannot carry markup)
+     *            and for a CSV column, which must open in a spreadsheet
+     *   drawSym  canvas, which has no typesetter at all and needs the
+     *            baseline arithmetic done by hand
+     * ===================================================================== */
+    var SYM = {
+        x: { b: 'x' }, y: { b: 'y' }, z: { b: 'z' }, w: { b: 'w' },
+        a: { b: 'a' }, p: { b: 'p' }, q: { b: 'q' }, F: { b: 'F' }, A: { b: 'A' },
+        E: { b: 'E' }, nu: { b: 'ν' }, h: { b: 'h' }, k: { b: 'k' }, s: { b: 's' },
+        G: { b: 'G' },
+
+        sxx: { b: 'σ', sub: 'x' }, syy: { b: 'σ', sub: 'y' }, szz: { b: 'σ', sub: 'z' },
+        sxz: { b: 'τ', sub: 'xz' }, syz: { b: 'τ', sub: 'yz' }, sxy: { b: 'τ', sub: 'xy' },
+        exx: { b: 'ε', sub: 'x' }, eyy: { b: 'ε', sub: 'y' }, ezz: { b: 'ε', sub: 'z' },
+        gxz: { b: 'γ', sub: 'xz' }, gyz: { b: 'γ', sub: 'yz' }, gxy: { b: 'γ', sub: 'xy' },
+        ux: { b: 'u', sub: 'x' }, uy: { b: 'u', sub: 'y' }, uz: { b: 'u', sub: 'z' },
+        s1: { b: 'σ', sub: '1' }, s2: { b: 'σ', sub: '2' }, s3: { b: 'σ', sub: '3' },
+        e1: { b: 'ε', sub: '1' }, e2: { b: 'ε', sub: '2' }, e3: { b: 'ε', sub: '3' },
+
+        vm: { b: 'σ', sub: 'vm' }, tmax: { b: 'τ', sub: 'max' },
+        et: { b: 'ε', sub: 't' }, ev: { b: 'ε', sub: 'v' }, st: { b: 'σ', sub: 't' },
+        tau: { b: 'τ' }, Nf: { b: 'N', sub: 'f' }, Nr: { b: 'N', sub: 'r' }
+    };
+    function symOf(id) { return SYM[id] || { b: String(id) }; }
+    function symHtml(id) {
+        var s = symOf(id);
+        return s.b + (s.sub ? '<sub>' + s.sub + '</sub>' : '') + (s.sup ? '<sup>' + s.sup + '</sup>' : '');
+    }
+    function symText(id) {
+        var s = symOf(id);
+        return s.b + (s.sub || '') + (s.sup ? '^' + s.sup : '');
+    }
+
+    /* =====================================================================
+     * EQUATIONS
+     * ---------------------------------------------------------------------
+     * The few real formulas the app shows go through KaTeX. It is already
+     * on both hosts (the course site loads it on every page; the E-Lab page
+     * pulls the same build from the same CDN), it is a deferred script, and
+     * it can fail: `throwOnError: false` does NOT throw, it renders the
+     * source in red and returns normally, so success is checked by looking
+     * for `.katex-error` rather than by catching. Every entry carries a
+     * plain-text twin that stands in until the library lands and stays
+     * forever if it never does, because an equation a student cannot read
+     * is worse than an ugly one.
+     *
+     * Backslashes are doubled here because this is a JavaScript string
+     * literal: `\frac` written once is a form feed and the equation
+     * silently loses its numerator. The port's test asserts every run of
+     * backslashes inside an EQ entry is even, which is the only thing that
+     * catches it.
+     * ===================================================================== */
+    var EQ = {
+        area: {
+            tex: 'A = \\pi a^{2} = \\dfrac{F}{p}',
+            plain: 'A = pi a^2 = F / p'
+        },
+        radius: {
+            tex: 'a = \\sqrt{\\dfrac{F}{\\pi p}}',
+            plain: 'a = sqrt(F / (pi p))'
+        },
+        spring: {
+            tex: 'k(s) = \\dfrac{G_{\\text{lower}}}{a}\\cdot\\dfrac{1-s}{s}',
+            plain: 'k(s) = (G_lower / a) (1 - s) / s'
+        },
+        fatigue: {
+            tex: 'N_f = 0.0796\\,\\varepsilon_t^{-3.291}\\,E^{-0.854}',
+            plain: 'Nf = 0.0796 eps_t^-3.291 E^-0.854'
+        },
+        rutting: {
+            tex: 'N_r = 1.365\\times10^{-9}\\,\\varepsilon_v^{-4.477}',
+            plain: 'Nr = 1.365e-9 eps_v^-4.477'
+        }
+    };
+
     /* =================== unit systems =================== */
     /* Engine units are mm, N, MPa. `k` multiplies engine -> display.
-     * US is WinJULEA's own column set: inches, pounds, psi — including a
-     * modulus in psi rather than ksi, and a displacement in inches rather
+     * US is WinJULEA's own column set: inches, pounds, psi, including a
+     * modulus in psi rather than ksi and a displacement in inches rather
      * than mils, so a result can be read straight across from the other
      * program without a mental conversion. */
     var UNITS = {
         SI: {
-            name: 'SI', label: 'SI — mm · N · MPa',
+            name: 'SI', label: 'SI (mm, N, MPa)',
             len: { k: 1, u: 'mm' }, stress: { k: 1, u: 'MPa' }, modulus: { k: 1, u: 'MPa' },
             force: { k: 1, u: 'N' }, defl: { k: 1, u: 'mm' }, strain: { k: 1e6, u: 'µε' },
-            kitf: { k: 1, u: 'MPa/mm' }, perlen: { k: 1, u: 'N/mm' }
+            kitf: { k: 1, u: 'MPa/mm' }, perlen: { k: 1, u: 'N/mm' },
+            area: { k: 1, u: 'mm²' }
         },
         US: {
-            name: 'US', label: 'English — in · lb · psi',
+            name: 'US', label: 'English (in, lb, psi)',
             len: { k: 1 / 25.4, u: 'in' }, stress: { k: 145.0377377, u: 'psi' },
             modulus: { k: 145.0377377, u: 'psi' },
             force: { k: 0.2248089431, u: 'lb' }, defl: { k: 1 / 25.4, u: 'in' },
             strain: { k: 1e6, u: 'µε' },
-            kitf: { k: 3683.958538, u: 'psi/in' }, perlen: { k: 5.710147155, u: 'lb/in' }
+            kitf: { k: 3683.958538, u: 'psi/in' }, perlen: { k: 5.710147155, u: 'lb/in' },
+            area: { k: 1 / 645.16, u: 'in²' }
         }
     };
 
@@ -55,11 +146,11 @@
     /* Typical values compiled from FAA AC 150/5320-6, AASHTO MEPDG,
      * Huang (2004). E in MPa, editable everywhere. */
     var MATERIALS = [
-        { id: 'ac-dense', name: 'HMA — dense graded', group: 'Asphalt', E: 3000, range: [1500, 6000], nu: 0.35, color: '#33363d', tex: 'asphalt' },
+        { id: 'ac-dense', name: 'Dense-graded HMA', group: 'Asphalt', E: 3000, range: [1500, 6000], nu: 0.35, color: '#33363d', tex: 'asphalt' },
         { id: 'ac-sma', name: 'SMA surface', group: 'Asphalt', E: 3800, range: [2000, 6500], nu: 0.35, color: '#282b31', tex: 'asphalt' },
         { id: 'ac-p401', name: 'FAA P-401 HMA', group: 'Asphalt', E: 1379, range: [1000, 3500], nu: 0.35, color: '#3a3d44', tex: 'asphalt' },
         { id: 'atb', name: 'Asphalt-treated base', group: 'Asphalt', E: 1800, range: [800, 3000], nu: 0.35, color: '#46484e', tex: 'asphalt' },
-        { id: 'pcc', name: 'PCC — paving concrete', group: 'Concrete', E: 27600, range: [20700, 41400], nu: 0.15, color: '#b9bdc4', tex: 'concrete' },
+        { id: 'pcc', name: 'PCC paving concrete', group: 'Concrete', E: 27600, range: [20700, 41400], nu: 0.15, color: '#b9bdc4', tex: 'concrete' },
         { id: 'lcb', name: 'Lean concrete base', group: 'Concrete', E: 10000, range: [6900, 17000], nu: 0.18, color: '#a6abb3', tex: 'concrete' },
         { id: 'ctb', name: 'Cement-treated base (P-304)', group: 'Stabilized', E: 3450, range: [1700, 6900], nu: 0.20, color: '#8f948d', tex: 'stabilized' },
         { id: 'lime', name: 'Lime-stabilized soil', group: 'Stabilized', E: 250, range: [100, 500], nu: 0.30, color: '#a99e84', tex: 'stabilized' },
@@ -74,12 +165,12 @@
     ];
 
     /* =================== templates =================== */
-    /* Loads are given as total force in N and contact pressure in MPa —
-     * the pair WinJULEA takes, and the pair that survives a change of
-     * load idealization unchanged. */
+    /* Loads are given as total force in N and contact pressure in MPa, the
+     * pair WinJULEA takes and the pair that survives a change of load
+     * idealization unchanged. */
     var TEMPLATES = [
         {
-            id: 'aashto-flex', name: 'Highway flexible — AASHTO',
+            id: 'aashto-flex', name: 'Highway flexible (AASHTO)',
             layers: [
                 { mat: 'ac-dense', h: 100 }, { mat: 'base', h: 200 },
                 { mat: 'subbase', h: 300 }, { mat: 'sg-silt', h: 0 }
@@ -87,7 +178,7 @@
             gear: 'dual', params: { F: 20000, p: 0.7, Sd: 350, St: 350, L: 300, theta: 90 }
         },
         {
-            id: 'faa-flex', name: 'Airfield flexible — FAA (B737 duals)',
+            id: 'faa-flex', name: 'Airfield flexible (FAA B737 duals)',
             layers: [
                 { mat: 'ac-p401', h: 127 }, { mat: 'p209', h: 305 },
                 { mat: 'p154', h: 305 }, { mat: 'sg-silt', h: 0, E: 83 }
@@ -95,7 +186,7 @@
             gear: 'dual', params: { F: 185000, p: 1.413, Sd: 864, St: 350, L: 300, theta: 90 }
         },
         {
-            id: 'rigid', name: 'Rigid — PCC on CTB (unbonded)',
+            id: 'rigid', name: 'Rigid PCC on unbonded CTB',
             layers: [
                 { mat: 'pcc', h: 300 }, { mat: 'ctb', h: 150 }, { mat: 'sg-silt', h: 0, E: 80 }
             ],
@@ -103,7 +194,7 @@
             gear: 'dual', params: { F: 20000, p: 0.7, Sd: 350, St: 350, L: 300, theta: 90 }
         },
         {
-            id: 'composite', name: 'Composite — AC over PCC',
+            id: 'composite', name: 'Composite AC over PCC',
             layers: [
                 { mat: 'ac-dense', h: 100 }, { mat: 'pcc', h: 250 },
                 { mat: 'base', h: 150 }, { mat: 'sg-sand', h: 0 }
@@ -111,7 +202,7 @@
             gear: 'dual', params: { F: 20000, p: 0.7, Sd: 350, St: 350, L: 300, theta: 90 }
         },
         {
-            id: 'perpetual', name: 'Perpetual — deep asphalt',
+            id: 'perpetual', name: 'Perpetual deep asphalt',
             layers: [
                 { mat: 'ac-sma', h: 50 }, { mat: 'ac-dense', h: 150 },
                 { mat: 'atb', h: 100 }, { mat: 'base', h: 150 }, { mat: 'sg-silt', h: 0 }
@@ -119,12 +210,12 @@
             gear: 'dual', params: { F: 22000, p: 0.75, Sd: 350, St: 350, L: 300, theta: 90 }
         },
         {
-            id: 'halfspace', name: 'Halfspace — Boussinesq check',
+            id: 'halfspace', name: 'Halfspace (Boussinesq check)',
             layers: [{ mat: 'sg-sand', h: 0, E: 100, nu: 0.35 }],
             gear: 'single', params: { F: 49480, p: 0.7, Sd: 350, St: 350, L: 300, theta: 90 }
         },
         {
-            id: 'saintvenant', name: 'Saint-Venant — one load, three idealizations',
+            id: 'saintvenant', name: 'Saint-Venant comparison',
             layers: [{ mat: 'base', h: 300, E: 300 }, { mat: 'sg-silt', h: 0, E: 60 }],
             gear: 'single', params: { F: 20000, p: 0.7, Sd: 350, St: 350, L: 400, theta: 90 },
             points: 'axis'
@@ -134,25 +225,19 @@
     /* =================== load idealizations =================== */
     /* The switch a student actually reasons with. All three carry the same
      * TOTAL force, so changing the model changes only how that force is
-     * spread — which is the whole comparison. */
+     * spread, which is the whole comparison. */
     var LOAD_KINDS = [
         {
-            id: 'circle', name: 'Circular imprint', short: 'Circle',
-            icon: 'fa-circle-dot',
-            blurb: 'Uniform pressure over a circular contact area — the idealization every layered-elastic ' +
-                'program uses, WinJULEA included. Radius follows from load and contact pressure.'
+            id: 'circle', name: 'Circular imprint', short: 'Circle', icon: 'fa-circle-dot',
+            blurb: 'Uniform pressure over a circular contact area. The standard idealization, and the one to use against another layered-elastic program.'
         },
         {
-            id: 'point', name: 'Point load', short: 'Point',
-            icon: 'fa-location-dot',
-            blurb: 'A concentrated force (Boussinesq). Exact below about two contact radii and singular at ' +
-                'the load itself — which is why design methods spread the load over an area.'
+            id: 'point', name: 'Point load', short: 'Point', icon: 'fa-location-dot',
+            blurb: 'A concentrated force (Boussinesq). Singular at the load itself, and accurate below about two contact radii.'
         },
         {
-            id: 'line', name: 'Line load', short: 'Line',
-            icon: 'fa-grip-lines',
-            blurb: 'Force spread along a straight segment — a knife edge, a roller drum, a wall footing. ' +
-                'Singular on the line at the surface, finite everywhere else.'
+            id: 'line', name: 'Line load', short: 'Line', icon: 'fa-grip-lines',
+            blurb: 'Force spread along a straight segment: a knife edge, a roller drum, a wall footing. Singular on the line at the surface.'
         }
     ];
     function kindById(id) {
@@ -162,32 +247,29 @@
 
     /* =================== response fields =================== */
     var FIELDS = [
-        { id: 'szz', label: 'σz — vertical stress', q: 'stress', div: true, get: function (p) { return p.sig.zz; } },
-        { id: 'sxx', label: 'σx — horizontal stress', q: 'stress', div: true, get: function (p) { return p.sig.xx; } },
-        { id: 'syy', label: 'σy — transverse stress', q: 'stress', div: true, get: function (p) { return p.sig.yy; } },
-        { id: 'sxz', label: 'τxz — shear stress', q: 'stress', div: true, get: function (p) { return p.sig.xz; } },
-        { id: 's1', label: 'σ1 — major principal', q: 'stress', div: true, get: function (p) { return p.principal.s1; } },
-        { id: 's3', label: 'σ3 — minor principal', q: 'stress', div: true, get: function (p) { return p.principal.s3; } },
-        { id: 'vm', label: 'von Mises stress', q: 'stress', div: false, get: function (p) { return p.vm; } },
-        { id: 'tmax', label: 'τmax — max shear', q: 'stress', div: false, get: function (p) { return p.tauMax; } },
-        { id: 'exx', label: 'εx — horizontal strain', q: 'strain', div: true, get: function (p) { return p.eps.xx; } },
-        { id: 'ezz', label: 'εz — vertical strain', q: 'strain', div: true, get: function (p) { return p.eps.zz; } },
-        { id: 'uz', label: 'w — deflection', q: 'defl', div: false, get: function (p) { return p.disp.uz; } }
+        { id: 'szz', sym: 'szz', name: 'vertical stress', q: 'stress', div: true, get: function (p) { return p.sig.zz; } },
+        { id: 'sxx', sym: 'sxx', name: 'horizontal stress', q: 'stress', div: true, get: function (p) { return p.sig.xx; } },
+        { id: 'syy', sym: 'syy', name: 'transverse stress', q: 'stress', div: true, get: function (p) { return p.sig.yy; } },
+        { id: 'sxz', sym: 'sxz', name: 'shear stress', q: 'stress', div: true, get: function (p) { return p.sig.xz; } },
+        { id: 's1', sym: 's1', name: 'major principal', q: 'stress', div: true, get: function (p) { return p.principal.s1; } },
+        { id: 's3', sym: 's3', name: 'minor principal', q: 'stress', div: true, get: function (p) { return p.principal.s3; } },
+        { id: 'vm', sym: 'vm', name: 'von Mises', q: 'stress', div: false, get: function (p) { return p.vm; } },
+        { id: 'tmax', sym: 'tmax', name: 'maximum shear', q: 'stress', div: false, get: function (p) { return p.tauMax; } },
+        { id: 'exx', sym: 'exx', name: 'horizontal strain', q: 'strain', div: true, get: function (p) { return p.eps.xx; } },
+        { id: 'ezz', sym: 'ezz', name: 'vertical strain', q: 'strain', div: true, get: function (p) { return p.eps.zz; } },
+        { id: 'uz', sym: 'w', name: 'deflection', q: 'defl', div: false, get: function (p) { return p.disp.uz; } }
     ];
     function fieldById(id) {
         for (var i = 0; i < FIELDS.length; i++) if (FIELDS[i].id === id) return FIELDS[i];
         return FIELDS[0];
     }
+    function fieldText(f) { return symText(f.sym) + ' ' + f.name; }
 
     /* =================== the results table =================== *
-     * One row per quantity, one COLUMN per evaluation point — the shape a
+     * One row per quantity, one COLUMN per evaluation point: the shape a
      * layered-elastic program prints, and the shape a comparison is read
-     * in: two programs' P3 sit side by side rather than two screens apart.
-     * The order is WinJULEA's own, so a row here is the same row there.
-     *
-     * `q` names the unit family, so the whole table follows the unit
-     * switch with no per-row special casing; `raw` is the value straight
-     * out of the engine, in engine units, for the export. */
+     * in, with two programs' P3 side by side rather than two screens apart.
+     * The order is WinJULEA's own, so a row here is the same row there. */
     var RESULT_GROUPS = [
         { id: 'loc', name: 'Location', icon: 'fa-location-crosshairs' },
         { id: 'sig', name: 'Stresses', icon: 'fa-weight-hanging' },
@@ -197,35 +279,35 @@
         { id: 'peps', name: 'Principal strains', icon: 'fa-ruler-combined' }
     ];
     var RESULT_ROWS = [
-        { g: 'loc', key: 'x', label: 'x', q: 'len', get: function (p) { return p.x; } },
-        { g: 'loc', key: 'y', label: 'y', q: 'len', get: function (p) { return p.y; } },
-        { g: 'loc', key: 'z', label: 'z', q: 'len', get: function (p) { return p.z; } },
+        { g: 'loc', key: 'x', sym: 'x', q: 'len', get: function (p) { return p.x; } },
+        { g: 'loc', key: 'y', sym: 'y', q: 'len', get: function (p) { return p.y; } },
+        { g: 'loc', key: 'z', sym: 'z', q: 'len', get: function (p) { return p.z; } },
 
-        { g: 'sig', key: 'sxx', label: 'σx', q: 'stress', get: function (p) { return p.sig.xx; } },
-        { g: 'sig', key: 'syy', label: 'σy', q: 'stress', get: function (p) { return p.sig.yy; } },
-        { g: 'sig', key: 'szz', label: 'σz', q: 'stress', get: function (p) { return p.sig.zz; } },
-        { g: 'sig', key: 'sxz', label: 'τxz', q: 'stress', get: function (p) { return p.sig.xz; } },
-        { g: 'sig', key: 'syz', label: 'τyz', q: 'stress', get: function (p) { return p.sig.yz; } },
-        { g: 'sig', key: 'sxy', label: 'τxy', q: 'stress', get: function (p) { return p.sig.xy; } },
+        { g: 'sig', key: 'sxx', sym: 'sxx', q: 'stress', get: function (p) { return p.sig.xx; } },
+        { g: 'sig', key: 'syy', sym: 'syy', q: 'stress', get: function (p) { return p.sig.yy; } },
+        { g: 'sig', key: 'szz', sym: 'szz', q: 'stress', get: function (p) { return p.sig.zz; } },
+        { g: 'sig', key: 'sxz', sym: 'sxz', q: 'stress', get: function (p) { return p.sig.xz; } },
+        { g: 'sig', key: 'syz', sym: 'syz', q: 'stress', get: function (p) { return p.sig.yz; } },
+        { g: 'sig', key: 'sxy', sym: 'sxy', q: 'stress', get: function (p) { return p.sig.xy; } },
 
-        { g: 'eps', key: 'exx', label: 'εx', q: 'strain', get: function (p) { return p.eps.xx; } },
-        { g: 'eps', key: 'eyy', label: 'εy', q: 'strain', get: function (p) { return p.eps.yy; } },
-        { g: 'eps', key: 'ezz', label: 'εz', q: 'strain', get: function (p) { return p.eps.zz; } },
-        { g: 'eps', key: 'gxz', label: 'γxz', q: 'strain', get: function (p) { return p.eps.xz; } },
-        { g: 'eps', key: 'gyz', label: 'γyz', q: 'strain', get: function (p) { return p.eps.yz; } },
-        { g: 'eps', key: 'gxy', label: 'γxy', q: 'strain', get: function (p) { return p.eps.xy; } },
+        { g: 'eps', key: 'exx', sym: 'exx', q: 'strain', get: function (p) { return p.eps.xx; } },
+        { g: 'eps', key: 'eyy', sym: 'eyy', q: 'strain', get: function (p) { return p.eps.yy; } },
+        { g: 'eps', key: 'ezz', sym: 'ezz', q: 'strain', get: function (p) { return p.eps.zz; } },
+        { g: 'eps', key: 'gxz', sym: 'gxz', q: 'strain', get: function (p) { return p.eps.xz; } },
+        { g: 'eps', key: 'gyz', sym: 'gyz', q: 'strain', get: function (p) { return p.eps.yz; } },
+        { g: 'eps', key: 'gxy', sym: 'gxy', q: 'strain', get: function (p) { return p.eps.xy; } },
 
-        { g: 'disp', key: 'ux', label: 'ux', q: 'defl', get: function (p) { return p.disp.ux; } },
-        { g: 'disp', key: 'uy', label: 'uy', q: 'defl', get: function (p) { return p.disp.uy; } },
-        { g: 'disp', key: 'uz', label: 'uz', q: 'defl', get: function (p) { return p.disp.uz; } },
+        { g: 'disp', key: 'ux', sym: 'ux', q: 'defl', get: function (p) { return p.disp.ux; } },
+        { g: 'disp', key: 'uy', sym: 'uy', q: 'defl', get: function (p) { return p.disp.uy; } },
+        { g: 'disp', key: 'uz', sym: 'uz', q: 'defl', get: function (p) { return p.disp.uz; } },
 
-        { g: 'psig', key: 's1', label: 'σ1', q: 'stress', get: function (p) { return p.principal.s1; } },
-        { g: 'psig', key: 's2', label: 'σ2', q: 'stress', get: function (p) { return p.principal.s2; } },
-        { g: 'psig', key: 's3', label: 'σ3', q: 'stress', get: function (p) { return p.principal.s3; } },
+        { g: 'psig', key: 's1', sym: 's1', q: 'stress', get: function (p) { return p.principal.s1; } },
+        { g: 'psig', key: 's2', sym: 's2', q: 'stress', get: function (p) { return p.principal.s2; } },
+        { g: 'psig', key: 's3', sym: 's3', q: 'stress', get: function (p) { return p.principal.s3; } },
 
-        { g: 'peps', key: 'e1', label: 'ε1', q: 'strain', get: function (p) { return p.epsPrincipal.e1; } },
-        { g: 'peps', key: 'e2', label: 'ε2', q: 'strain', get: function (p) { return p.epsPrincipal.e2; } },
-        { g: 'peps', key: 'e3', label: 'ε3', q: 'strain', get: function (p) { return p.epsPrincipal.e3; } }
+        { g: 'peps', key: 'e1', sym: 'e1', q: 'strain', get: function (p) { return p.epsPrincipal.e1; } },
+        { g: 'peps', key: 'e2', sym: 'e2', q: 'strain', get: function (p) { return p.epsPrincipal.e2; } },
+        { g: 'peps', key: 'e3', sym: 'e3', q: 'strain', get: function (p) { return p.epsPrincipal.e3; } }
     ];
 
     /* =================== colormaps =================== */
@@ -258,9 +340,13 @@
         d.cancel = function () { clearTimeout(t); };
         return d;
     }
+    /* The blank. Not an em dash: the app prints none anywhere a reader can
+     * see one, and a column of long dashes in a numeric table reads as data
+     * rather than as absence. */
+    var BLANK = '-';
     function sig(x, n) {
         n = n || 4;
-        if (x == null || !isFinite(x)) return '—';
+        if (x == null || !isFinite(x)) return BLANK;
         if (x === 0) return '0';
         var a = Math.abs(x);
         if (a >= 1e6 || a < 1e-3) return x.toExponential(2);
@@ -307,19 +393,20 @@
          * Canvas ignores an unparseable fillStyle or strokeStyle and keeps
          * the last one, so a missing token there is a wrong color. But
          * CanvasGradient.addColorStop THROWS, and that kills the whole
-         * draw — which is what a stylesheet arriving after the first frame
+         * draw, which is what a stylesheet arriving after the first frame
          * did: one blank viewport and an exception, from a variable that
          * was going to resolve a hundred milliseconds later. */
         function cssVar(name, fallback) {
             var v = win.getComputedStyle(host).getPropertyValue(name).trim();
             return v || fallback || 'transparent';
         }
-        function fillRGBA(name, alpha) {
+        function rgba(name, alpha) {
             var h = cssVar(name);
             if (!/^#[0-9a-f]{6}$/i.test(h)) return 'rgba(13,148,136,' + alpha + ')';
             var r = parseInt(h.slice(1, 3), 16), g = parseInt(h.slice(3, 5), 16), b = parseInt(h.slice(5, 7), 16);
             return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
         }
+        var fillRGBA = rgba;
         function download(filename, text, mime) {
             var blob = new Blob([text], { type: mime || 'text/plain' });
             var a = doc.createElement('a');
@@ -329,6 +416,26 @@
             setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
         }
         function plotly() { return opts.plotly || win.Plotly; }
+        function katex() { return opts.katex || win.katex; }
+
+        /* An equation, or its plain twin. See the EQ table: KaTeX is a
+         * deferred script on both hosts, and `throwOnError: false` renders
+         * the source in red instead of throwing, so a successful render is
+         * one with no `.katex-error` in it. */
+        function eq(id, display) {
+            var e = EQ[id];
+            if (!e) return '';
+            var K = katex();
+            if (K && typeof K.renderToString === 'function') {
+                try {
+                    var h = K.renderToString(e.tex, { throwOnError: false, displayMode: !!display });
+                    if (h.indexOf('katex-error') < 0) {
+                        return '<span class="lp-eq' + (display ? ' is-block' : '') + '">' + h + '</span>';
+                    }
+                } catch (err) { /* fall through to the plain twin */ }
+            }
+            return '<span class="lp-eq is-plain' + (display ? ' is-block' : '') + '">' + e.plain + '</span>';
+        }
 
         /* The UI typeface, read from the stylesheet rather than named here.
          * Plotly and the 2-D canvas both want a font STRING, so neither can
@@ -338,7 +445,22 @@
         function uiFont() { return cssVar('--lp-font') || 'Source Sans Pro, sans-serif'; }
         function monoFont() { return cssVar('--lp-mono') || 'ui-monospace, monospace'; }
 
-        /* teardown register — every listener and observer lands here */
+        /* A symbol on the canvas, which has no typesetter. Returns the width
+         * drawn, so a caller can lay text out after it. */
+        function drawSym(c, id, x, y, size) {
+            var s = symOf(id), w = 0;
+            c.font = '600 ' + size + 'px ' + uiFont();
+            c.fillText(s.b, x, y);
+            w = c.measureText(s.b).width;
+            if (s.sub) {
+                c.font = Math.max(8, Math.round(size * 0.72)) + 'px ' + uiFont();
+                c.fillText(s.sub, x + w + 0.5, y + Math.round(size * 0.22));
+                w += c.measureText(s.sub).width + 0.5;
+            }
+            return w;
+        }
+
+        /* teardown register: every listener and observer lands here */
         var teardown = [];
         function on(target, type, fn, o) {
             target.addEventListener(type, fn, o);
@@ -380,25 +502,78 @@
             ySec: 0,
             loadKind: 'circle',
             layers: [],           /* {id, mat, name, h, E, nu, color, tex} */
-            interfaces: [],       /* {slip} — 0 bonded, 1 frictionless, else spring */
-            loads: [],            /* {id, x, y, F(N), p(MPa), L(mm), theta(deg)} */
+            interfaces: [],       /* {slip} 0 bonded, 1 frictionless, else spring */
+            loads: [],            /* {id, x, y, F(N), p(MPa)} */
             points: [],           /* {id, x, y, z} */
             settings: {
                 units: 'SI', tol: '1e-6', res: '61x43', autorun: true,
-                showBasin: true, showContour: true, field: 'szz', alpha: 0.85,
-                strainAbs: false
+                showBasin: true, showContour: true, field: 'szz', profField: 'szz',
+                alpha: 0.85, strainAbs: false, solveFor: 'A'
             }
         };
 
         var results = { key: null, user: null, profiles: null, basin: null, grid: null, stats: null, meta: null };
         var view = { scale: 0.5, ox: 0, oy: 0 };
-        var selPoint = null;
+        var selPoint = null, selLayer = null;
         var history = [], future = [];
         var gearParams = { F: 20000, p: 0.7, Sd: 350, St: 350, L: 300, theta: 90 };
+        var gearDirty = false;
         var openGroups = { loc: true, sig: true, eps: true, disp: true, psig: true, peps: true };
 
-        /* contact radius (mm) implied by a load's force and pressure */
-        function loadA(w) { return Math.sqrt(w.F / (Math.PI * Math.max(w.p, 1e-9))); }
+        /* =====================================================================
+         * THE LOAD TRIPLE
+         * ---------------------------------------------------------------------
+         * Load per wheel F, contact pressure p and contact area A are one
+         * relation, F = p A, with A = pi a^2. Any TWO of them fix the third,
+         * and which one a student has in hand depends entirely on where the
+         * number came from: an axle rating gives F, a tire placard gives p,
+         * and a footprint traced on paper gives A.
+         *
+         * So the app stores F and p (the pair the solver and WinJULEA both
+         * take) and `solveFor` names which of the three is the DERIVED one.
+         * Editing a value never edits the field you are solving for; it
+         * rewrites whichever of the stored pair keeps the other two inputs
+         * exactly as typed. That is the whole rule, and it is why there is
+         * no fourth stored number to fall out of step.
+         * ===================================================================== */
+        function areaOf(w) { return w.F / Math.max(w.p, 1e-12); }
+        function radiusOf(w) { return Math.sqrt(areaOf(w) / Math.PI); }
+        var loadA = radiusOf;                     /* the solver wants a radius */
+
+        /* Apply one edit to one load, honoring `solveFor`. `what` is
+         * 'F' | 'p' | 'A', in ENGINE units. */
+        function setLoadValue(w, what, v) {
+            var solve = state.settings.solveFor;
+            if (!(v > 0)) return;
+            if (what === solve) return;           /* the derived one is read-only */
+            var A = areaOf(w);
+            if (solve === 'A') {
+                if (what === 'F') w.F = v; else w.p = v;
+            } else if (solve === 'F') {
+                if (what === 'p') { w.p = v; w.F = v * A; }
+                else { w.F = w.p * v; }            /* what === 'A' */
+            } else {                               /* solve === 'p' */
+                if (what === 'F') { w.F = v; w.p = v / A; }
+                else { w.p = w.F / v; }            /* what === 'A' */
+            }
+        }
+        /* The same rule for the gear generator, which seeds every load. */
+        function setGearValue(what, v) {
+            var solve = state.settings.solveFor;
+            if (!(v > 0) || what === solve) return;
+            var A = gearParams.F / Math.max(gearParams.p, 1e-12);
+            if (solve === 'A') {
+                if (what === 'F') gearParams.F = v; else gearParams.p = v;
+            } else if (solve === 'F') {
+                if (what === 'p') { gearParams.p = v; gearParams.F = v * A; }
+                else { gearParams.F = gearParams.p * v; }
+            } else {
+                if (what === 'F') { gearParams.F = v; gearParams.p = v / A; }
+                else { gearParams.p = gearParams.F / v; }
+            }
+        }
+        function gearArea() { return gearParams.F / Math.max(gearParams.p, 1e-12); }
+
         function layerFromMat(matId, over) {
             var m = matById(matId);
             var L = {
@@ -413,10 +588,17 @@
             for (var i = 0; i < state.layers.length - 1; i++) d += state.layers[i].h;
             return d;
         }
+        /* Depth of every interface, top down. One answer to where a layer
+         * boundary is, shared by the drawing, the hit test and the solver. */
+        function interfaceZs() {
+            var out = [], z = 0;
+            for (var i = 0; i < state.layers.length - 1; i++) { z += state.layers[i].h; out.push(z); }
+            return out;
+        }
         /* The length that sets the drawing scale. A circular load has a
          * radius; a point load has none at all, and a line load has a
-         * length across the section only if it is not parallel to it — so
-         * the fallback is a tenth of the finite depth, never zero. */
+         * length across the section only if it is not parallel to it, so
+         * the fallback is a floor rather than zero. */
         function maxA() {
             var a = 0;
             state.loads.forEach(function (w) { a = Math.max(a, loadA(w)); });
@@ -437,9 +619,17 @@
             return { xL: -xHalf, xR: xHalf, zMax: zMax, df: df };
         }
 
+        /* The color that ties an evaluation point to its column in the
+         * results table and its marker in the section. Blue first, because
+         * the loads are red and the accents orange. */
+        function ptColor(i) {
+            var pal = [cssVar('--lp-cat2'), cssVar('--lp-cat3'), cssVar('--lp-cat4'), cssVar('--lp-cat1')];
+            return pal[i % pal.length];
+        }
+
         function serialize() {
             return {
-                app: 'LEAPS', version: '2.0', name: state.name, ySec: state.ySec,
+                app: 'LEAPS', version: '2.1', name: state.name, ySec: state.ySec,
                 loadKind: state.loadKind,
                 layers: state.layers, interfaces: state.interfaces,
                 loads: state.loads, points: state.points, settings: state.settings,
@@ -465,6 +655,7 @@
             state.layers.forEach(function (L) { L.id = nid(); });
             state.loads.forEach(function (w) { w.id = nid(); });
             state.points.forEach(function (p) { p.id = nid(); });
+            selLayer = null; gearDirty = false;
         }
         /* v1 wrote {bond, k}; v2 writes {slip}. Both round-trip. */
         function migrateInterface(f) {
@@ -518,16 +709,91 @@
             renderPanels();
             invalidateResults(o && o.keepResults);
             drawViewport();
+            renderChecks();
             scheduleRun();
         }
         function syncStructures() {
             var n = state.layers.length;
             while (state.interfaces.length < n - 1) state.interfaces.push({ slip: 0 });
             state.interfaces.length = Math.max(0, n - 1);
+            if (selLayer != null && !state.layers.some(function (L) { return L.id === selLayer; })) selLayer = null;
         }
         function invalidateResults(keep) {
             if (keep) return;
             results = { key: null, user: null, profiles: null, basin: null, grid: null, stats: null, meta: null };
+        }
+
+        /* =====================================================================
+         * PREFLIGHT
+         * ---------------------------------------------------------------------
+         * A layered-elastic solve will happily return numbers for a section
+         * nobody meant to type. A zero-thickness layer, a Poisson ratio of
+         * 0.5, a contact pressure left blank while the load was edited: each
+         * produces a field that looks like a pavement and is not one, and
+         * none of them announces itself in a contour plot.
+         *
+         * So Run asks first. Every check is a one-line claim about the model
+         * with a tick or a cross beside it, and a failing one stops the run
+         * and opens the list rather than reporting an error afterwards.
+         * ===================================================================== */
+        function checks() {
+            var out = [];
+            function ok(pass, label, detail) { out.push({ pass: !!pass, label: label, detail: detail || '' }); }
+            var n = state.layers.length;
+
+            ok(n >= 1, 'At least one layer', n ? '' : 'the section is empty');
+
+            var badH = [], badE = [], badNu = [];
+            state.layers.forEach(function (L, i) {
+                if (i < n - 1 && !(L.h > 0)) badH.push(i + 1);
+                if (!(L.E > 0)) badE.push(i + 1);
+                if (!(L.nu > 0 && L.nu < 0.5)) badNu.push(i + 1);
+            });
+            ok(!badH.length, 'Every layer has a thickness',
+                badH.length ? 'layer ' + badH.join(', ') : '');
+            ok(!badE.length, 'Every modulus is positive',
+                badE.length ? 'layer ' + badE.join(', ') : '');
+            ok(!badNu.length, 'Every Poisson ratio is between 0 and 0.5',
+                badNu.length ? 'layer ' + badNu.join(', ') : '');
+
+            var badSlip = [];
+            state.interfaces.forEach(function (f, i) {
+                var s = f.slip;
+                if (!(s >= 0 && s <= 1)) badSlip.push((i + 1) + '·' + (i + 2));
+            });
+            ok(!badSlip.length, 'Every interface has a slip value',
+                badSlip.length ? 'interface ' + badSlip.join(', ') : '');
+
+            ok(state.loads.length > 0, 'At least one load',
+                state.loads.length ? '' : 'nothing is loading the section');
+
+            var badF = [], badP = [];
+            state.loads.forEach(function (w, i) {
+                if (!(w.F > 0)) badF.push(i + 1);
+                if (!(w.p > 0)) badP.push(i + 1);
+            });
+            ok(!badF.length && state.loads.length > 0, 'Every load carries a force',
+                badF.length ? 'load ' + badF.join(', ') : '');
+            if (state.loadKind === 'circle') {
+                ok(!badP.length && state.loads.length > 0, 'Every contact pressure and area is set',
+                    badP.length ? 'load ' + badP.join(', ') : '');
+            }
+            if (state.loadKind === 'line') {
+                ok(gearParams.L > 0, 'The line load has a length',
+                    gearParams.L > 0 ? '' : 'length must be greater than zero');
+            }
+
+            ok(!gearDirty, 'The gear matches its parameters',
+                gearDirty ? 'press Build to apply the edited gear' : '');
+
+            ok(state.points.length > 0, 'At least one evaluation point',
+                state.points.length ? '' : 'the results table has no columns without one');
+
+            return out;
+        }
+        function checksPass(list) {
+            for (var i = 0; i < list.length; i++) if (!list[i].pass) return false;
+            return true;
         }
 
         /* =================== templates & gears =================== */
@@ -561,6 +827,8 @@
             for (var k in gearParams) if (tpl.params[k] != null) gearParams[k] = tpl.params[k];
             state.loads = gearLayout(tpl.gear, gearParams);
             state.points = [];
+            selLayer = null;
+            gearDirty = false;
             if (tpl.points === 'axis') criticalPoints();
         }
 
@@ -604,7 +872,7 @@
             var m = e.data || {};
             if (m.type === 'ready') {
                 workerReady = true;
-                setEngineBadge(m.selfTest.pass, 'LEAF-JS v' + m.version + ' · self-check ' + (m.selfTest.pass ? '✓ (Boussinesq closed forms)' : '✗ ' + m.selfTest.errors[0]));
+                setEngineBadge(m.selfTest.pass, 'LEAF-JS v' + m.version + ' · self-check ' + (m.selfTest.pass ? '✓ Boussinesq' : '✗ ' + m.selfTest.errors[0]));
                 scheduleRun();
                 return;
             }
@@ -700,14 +968,14 @@
             state.loads.forEach(function (w, i) { add(w.x, w.y, 'Load ' + (i + 1)); });
             for (var i = 0; i + 1 < state.loads.length && i < 4; i++) {
                 var a = state.loads[i], b = state.loads[i + 1];
-                add((a.x + b.x) / 2, (a.y + b.y) / 2, 'Between ' + (i + 1) + '–' + (i + 2));
+                add((a.x + b.x) / 2, (a.y + b.y) / 2, 'Between ' + (i + 1) + ' and ' + (i + 2));
             }
             return st.slice(0, 8);
         }
         /* A point load is singular at its own center and a line load along
          * its own line, so the automatic station set is nudged off it. The
          * offset is a fraction of the contact radius the same total force
-         * would have had — small enough to still be "under the wheel". */
+         * would have had, small enough to still be "under the wheel". */
         function stationOffset() {
             if (state.loadKind === 'circle') return 0;
             var a = state.loads.length ? loadA(state.loads[0]) : 100;
@@ -716,8 +984,7 @@
 
         function buildMainJob() {
             var pts = [], n = state.layers.length;
-            var zb = [], z = 0;
-            for (var i = 0; i < n - 1; i++) { z += state.layers[i].h; zb.push(z); }
+            var zb = interfaceZs();
             var stations = keyStations();
             var off = stationOffset();
 
@@ -775,9 +1042,9 @@
         function buildGridJob(box) {
             var rr = state.settings.res.split('x');
             var nx = parseInt(rr[0], 10), nz = parseInt(rr[1], 10);
-            /* A line load costs several times a circular one per point —
-             * it is a quadrature inside a quadrature — so the contour grid
-             * is trimmed rather than left to take five seconds. */
+            /* A line load costs several times a circular one per point: it
+             * is a quadrature inside a quadrature, so the contour grid is
+             * trimmed rather than left to take five seconds. */
             if (state.loadKind === 'line') { nx = Math.round(nx * 0.7); nz = Math.round(nz * 0.7); }
             var xs = [], zs = [], pts = [];
             for (var i = 0; i < nx; i++) xs.push(box.xL + (box.xR - box.xL) * i / (nx - 1));
@@ -793,7 +1060,17 @@
             };
         }
 
-        var scheduleRun = debounce(function () { if (state.settings.autorun) run(); }, 350);
+        var scheduleRun = debounce(function () {
+            if (state.settings.autorun && checksPass(checks())) run();
+        }, 350);
+
+        /* The Run button. Auto-run stays quiet when a check fails; pressing
+         * Run says why rather than doing nothing. */
+        function runPressed() {
+            var list = checks();
+            if (!checksPass(list)) { openChecks(true); return; }
+            run();
+        }
 
         function run() {
             if (!state.loads.length || !state.layers.length) return;
@@ -877,24 +1154,38 @@
             return out;
         }
 
+        /* The flash cards. They carry the numbers a design decision is made
+         * on, so they get a surface of their own: a tinted card on a plain
+         * panel, and the governing one keyed in the brand color. Everything
+         * else in the rail is white on white on purpose, so that these five
+         * are the only thing with a fill. */
         function renderCards() {
             var hostEl = $('lp-cards');
             hostEl.innerHTML = '';
             var ex = keyExtremes();
-            if (!ex) { hostEl.appendChild(el('p', 'lp-hint', 'Run the analysis to see key responses.')); return; }
-            function card(label, value, unitStr, sub, accent) {
-                var c = el('div', 'lp-card' + (accent ? ' is-accent' : ''));
-                c.appendChild(el('div', 'lp-card-label', label));
+            if (!ex) { hostEl.appendChild(el('p', 'lp-hint', 'Run to see key responses.')); return; }
+            function card(symId, name, value, unitStr, sub, lead) {
+                var c = el('div', 'lp-card' + (lead ? ' is-lead' : ''));
+                c.appendChild(el('div', 'lp-card-label',
+                    '<span class="lp-card-sym">' + symHtml(symId) + '</span>' + name));
                 c.appendChild(el('div', 'lp-card-value', value + '<small>' + unitStr + '</small>'));
                 if (sub) c.appendChild(el('div', 'lp-card-sub', sub));
                 hostEl.appendChild(c);
             }
-            function at(p) { return '@ x=' + sig(toDisp('len', p.x), 3) + ' ' + unit('len') + ', z=' + sig(toDisp('len', p.z), 3) + ' ' + unit('len'); }
-            if (ex.w0) card('Max surface deflection', sig(toDisp('defl', ex.w0.v)), unit('defl'), at(ex.w0.p), true);
-            if (ex.et) card('Tensile strain — bottom of ' + state.layers[0].name, sig(toDisp('strain', ex.et.v)), 'µε', at(ex.et.p) + ' · fatigue cracking driver');
-            if (ex.ev) card('Compressive strain — top of subgrade', sig(toDisp('strain', -ex.ev.v)), 'µε', at(ex.ev.p) + ' · rutting driver');
-            if (ex.sigt) card('Tensile stress — bottom of ' + state.layers[ex.sigt.layer].name, sig(toDisp('stress', ex.sigt.v)), unit('stress'), at(ex.sigt.p));
-            if (ex.tau) card('Peak interface shear', sig(toDisp('stress', ex.tau.v)), unit('stress'), 'bottom of ' + state.layers[ex.tau.layer].name + ' ' + at(ex.tau.p));
+            function at(p) {
+                return symHtml('x') + ' ' + sig(toDisp('len', p.x), 3) + ', ' +
+                    symHtml('z') + ' ' + sig(toDisp('len', p.z), 3) + ' ' + unit('len');
+            }
+            if (ex.w0) card('w', 'surface deflection', sig(toDisp('defl', ex.w0.v)), unit('defl'), at(ex.w0.p), true);
+            if (ex.et) card('et', 'tensile strain, base of ' + state.layers[0].name,
+                sig(toDisp('strain', ex.et.v)), 'µε', at(ex.et.p) + ' · fatigue');
+            if (ex.ev) card('ev', 'compressive strain, top of subgrade',
+                sig(toDisp('strain', -ex.ev.v)), 'µε', at(ex.ev.p) + ' · rutting');
+            if (ex.sigt) card('st', 'tensile stress, base of ' + state.layers[ex.sigt.layer].name,
+                sig(toDisp('stress', ex.sigt.v)), unit('stress'), at(ex.sigt.p));
+            if (ex.tau) card('tau', 'peak interface shear',
+                sig(toDisp('stress', ex.tau.v)), unit('stress'),
+                'base of ' + state.layers[ex.tau.layer].name);
         }
 
         function renderLayerTable() {
@@ -922,15 +1213,18 @@
             });
             var wrap = el('div', 'lp-table-wrap');
             var tb = el('table', 'lp-table');
-            tb.innerHTML = '<thead><tr><th>Layer</th><th>εt bottom (µε)</th><th>σt bottom (' + unit('stress') + ')</th><th>εv top (µε)</th></tr></thead>';
+            tb.innerHTML = '<thead><tr><th>Layer</th>' +
+                '<th>' + symHtml('et') + ' base (µε)</th>' +
+                '<th>' + symHtml('st') + ' base (' + unit('stress') + ')</th>' +
+                '<th>' + symHtml('ev') + ' top (µε)</th></tr></thead>';
             var body = el('tbody');
             state.layers.forEach(function (L, i) {
                 var r = rows[i];
                 var tr = el('tr');
-                tr.innerHTML = '<td>' + L.name + '</td>' +
-                    '<td>' + (r.et != null ? sig(toDisp('strain', r.et)) : '—') + '</td>' +
-                    '<td>' + (r.st != null ? sig(toDisp('stress', r.st)) : '—') + '</td>' +
-                    '<td>' + (r.ev != null ? sig(toDisp('strain', r.ev)) : '—') + '</td>';
+                tr.innerHTML = '<td><span class="lp-swatch" style="background:' + L.color + '"></span>' + L.name + '</td>' +
+                    '<td>' + (r.et != null ? sig(toDisp('strain', r.et)) : BLANK) + '</td>' +
+                    '<td>' + (r.st != null ? sig(toDisp('stress', r.st)) : BLANK) + '</td>' +
+                    '<td>' + (r.ev != null ? sig(toDisp('strain', r.ev)) : BLANK) + '</td>';
                 body.appendChild(tr);
             });
             tb.appendChild(body);
@@ -939,16 +1233,17 @@
         }
 
         /* =================== the transposed results table =================
-         * Points across, quantities down. Two things make it navigable at
-         * twenty-four rows: the quantity column is sticky, so a column
-         * scrolled four screens right is still labeled; and the six groups
-         * fold, so a reader after deflections is not scrolling past
-         * eighteen rows of tensor components to reach three.
+         * Points across, quantities down. Three things make it navigable at
+         * twenty-four rows: the quantity and unit columns are frozen, so a
+         * column scrolled four screens right is still labeled; the six
+         * groups fold; and every cell carries a bar scaled to the largest
+         * magnitude IN ITS OWN ROW, which is what turns a field of digits
+         * into a shape you can read across. The bar is per row and never
+         * per table, because a stress and a strain share no scale.
          *
-         * Strains print as microstrain by default, because that is the
-         * number a pavement engineer reads and compares; the toggle prints
-         * them dimensionless in the E-notation a layered-elastic program
-         * uses, for reading straight across from one.                     */
+         * Strains print as microstrain by default, the number a pavement
+         * engineer compares; the toggle prints them dimensionless in the
+         * E-notation a layered-elastic program uses. */
         function rowValue(row, p) {
             var v = row.get(p);
             if (!isFinite(v)) return null;
@@ -956,11 +1251,25 @@
             return toDisp(row.q, v);
         }
         function rowUnit(row) {
-            if (row.q === 'strain') return state.settings.strainAbs ? '—' : 'µε';
+            if (row.q === 'strain') return state.settings.strainAbs ? BLANK : 'µε';
             return unit(row.q);
         }
-        function fmtCell(row, v) {
-            if (v == null) return '—';
+        /* A response that is zero BY SYMMETRY comes back as roundoff, not as
+         * zero: on a wheel axis the engine returns a shear of 2e-18 where the
+         * answer is exactly 0, and a table printing 2.19e-18 invites a reader
+         * to believe there is a shear there. Anything twelve orders below the
+         * largest value in its own row is that row's zero. Twelve, not six:
+         * the two solvers agree to five significant figures, so a number that
+         * small is not a small response, it is the double's last bits. The
+         * project file keeps the raw value, so nothing is lost, only unprinted. */
+        function rowFloor(v, mx) {
+            if (v == null) return v;
+            return (mx > 0 && Math.abs(v) < 1e-12 * mx) ? 0 : v;
+        }
+        function fmtCell(row, v, mx) {
+            if (v == null) return BLANK;
+            v = rowFloor(v, mx);
+            if (v === 0) return '0';
             if (row.q === 'strain' && state.settings.strainAbs) return v.toExponential(4);
             return sig(v, 5);
         }
@@ -971,9 +1280,9 @@
             var data = results.user || [];
             var hint = $('lp-table-hint');
             hint.innerHTML = data.length
-                ? 'Responses at your <strong>' + data.length + '</strong> evaluation point' + (data.length > 1 ? 's' : '') +
-                  ' — one column each, in WinJULEA row order. Tension positive, z downward, u<sub>z</sub> positive down.'
-                : 'No evaluation points yet — add one below, use <em>Critical set</em>, or double-click the section.';
+                ? '<strong>' + data.length + '</strong> point' + (data.length > 1 ? 's' : '') +
+                  ' · tension positive · ' + symHtml('z') + ' downward'
+                : 'No evaluation points yet. Add one, use <em>Critical set</em>, or double-click the section.';
             if (!data.length) return;
 
             var wrap = el('div', 'lp-rt-wrap');
@@ -985,13 +1294,16 @@
             hr.appendChild(el('th', 'lp-rt-unit-h', 'Unit'));
             data.forEach(function (p, i) {
                 var th = el('th', 'lp-rt-pt' + (p.singular ? ' is-singular' : ''));
-                th.innerHTML = '<span class="lp-rt-ptname">P' + (i + 1) + '</span>' +
-                    '<span class="lp-rt-ptlayer">' + (state.layers[p.li] ? state.layers[p.li].name : '—') + '</span>';
+                th.innerHTML = '<span class="lp-rt-ptname">' +
+                    '<span class="lp-rt-dot" style="background:' + ptColor(i) + '"></span>P' + (i + 1) + '</span>' +
+                    '<span class="lp-rt-ptlayer">' + (state.layers[p.li] ? state.layers[p.li].name : BLANK) + '</span>';
                 th.dataset.col = String(i);
                 hr.appendChild(th);
             });
             thead.appendChild(hr);
             tb.appendChild(thead);
+
+            var posTint = rgba('--lp-cat1', 0.18), negTint = rgba('--lp-cat2', 0.18);
 
             RESULT_GROUPS.forEach(function (grp) {
                 var rows = RESULT_ROWS.filter(function (r) { return r.g === grp.id; });
@@ -1013,12 +1325,28 @@
 
                 rows.forEach(function (r) {
                     var tr = el('tr', 'lp-rt-row');
-                    tr.appendChild(el('th', 'lp-rt-q', r.label));
+                    tr.appendChild(el('th', 'lp-rt-q', symHtml(r.sym)));
                     tr.appendChild(el('td', 'lp-rt-unit', rowUnit(r)));
-                    data.forEach(function (p, i) {
-                        var v = rowValue(r, p);
-                        var td = el('td', 'lp-rt-v' + (v != null && v < 0 ? ' is-neg' : ''), fmtCell(r, v));
+
+                    /* one pass for the row scale, one to draw it */
+                    var vals = data.map(function (p) { return rowValue(r, p); });
+                    var mx = 0, peak = -1;
+                    if (grp.id !== 'loc') {
+                        vals.forEach(function (v, i) {
+                            if (v == null) return;
+                            if (Math.abs(v) > mx) { mx = Math.abs(v); peak = i; }
+                        });
+                    }
+                    vals.forEach(function (v, i) {
+                        var neg = v != null && v < 0;
+                        var td = el('td', 'lp-rt-v' + (neg ? ' is-neg' : '') + (i === peak ? ' is-peak' : ''),
+                            fmtCell(r, v, mx));
                         td.dataset.col = String(i);
+                        if (mx > 0 && v != null) {
+                            var pct = Math.round(100 * Math.abs(v) / mx);
+                            td.style.backgroundImage = 'linear-gradient(to left, ' +
+                                (neg ? negTint : posTint) + ' 0 ' + pct + '%, transparent ' + pct + '%)';
+                        }
                         tr.appendChild(td);
                     });
                     body.appendChild(tr);
@@ -1045,9 +1373,9 @@
 
             if (data.some(function (p) { return p.singular; })) {
                 hostEl.appendChild(el('p', 'lp-warn',
-                    '<i class="fas fa-triangle-exclamation"></i> A point marked <strong>singular</strong> sits on ' +
-                    'a point or line load, where the idealization has no finite answer. Move it off the load, or ' +
-                    'switch to a circular imprint, which is finite everywhere.'));
+                    '<i class="fas fa-triangle-exclamation"></i> A point marked <strong>singular</strong> sits on a ' +
+                    'point or line load, where the idealization has no finite answer. Move it off the load, or use a ' +
+                    'circular imprint.'));
             }
         }
 
@@ -1056,7 +1384,7 @@
             return [cssVar('--lp-cat1'), cssVar('--lp-cat2'), cssVar('--lp-cat3'), cssVar('--lp-cat4')];
         }
         /* one high-contrast, theme-aware tooltip style shared by every plot so the
-         * hovered readout is always a solid, legible panel — never Plotly's default
+         * hovered readout is always a solid, legible panel, never Plotly's default
          * trace-tinted box with auto black/white text */
         function hoverStyle() {
             return {
@@ -1067,7 +1395,9 @@
             };
         }
         /* refined axis: subdued ticks, a slightly stronger titled label, a readable
-         * zero line, and (optionally) a dotted crosshair spike while hovering */
+         * zero line, and (optionally) a dotted crosshair spike while hovering.
+         * Plotly renders <sub> and <sup> in every title it draws, so an axis can
+         * carry the same typeset symbol the table does. */
         function chartAxis(titleText, spikes) {
             var ax = {
                 title: { text: titleText, font: { size: 11.5, color: cssVar('--lp-ink2'), family: uiFont() }, standoff: 10 },
@@ -1132,14 +1462,13 @@
                 };
             });
         }
+        function profField() { return fieldById(state.settings.profField || 'szz'); }
         /* keep the two field-linked chart-card captions in sync with the selector */
         function syncProfileTitles() {
-            var sel = $('lp-prof-field');
-            var f = fieldById(sel ? (sel.value || 'szz') : 'szz');
-            var short = f.label.split(' — ')[0];
+            var f = profField();
             var tp = $('lp-title-profile'), ts = $('lp-title-surface');
-            if (tp) tp.textContent = 'Depth profile · ' + f.label;
-            if (ts) ts.textContent = 'Surface response · ' + short;
+            if (tp) tp.innerHTML = 'Depth profile · ' + symHtml(f.sym) + ' ' + f.name;
+            if (ts) ts.innerHTML = 'Surface response · ' + symHtml(f.sym);
         }
         /* briefly highlight the two field-linked cards so it is obvious which
          * charts just refreshed when the Field selector changes */
@@ -1164,7 +1493,7 @@
             if (!hostEl || !P) return;
             syncProfileTitles();
             if (!results.profiles) { P.purge(hostEl); return; }
-            var f = fieldById($('lp-prof-field').value || 'szz');
+            var f = profField();
             var colors = chartColors();
             var traces = [];
             results.profiles.stations.forEach(function (s, si) {
@@ -1175,10 +1504,10 @@
                     y: data.map(function (p) { return toDisp('len', p.z); }),
                     name: s.label, mode: 'lines',
                     line: { color: colors[si % colors.length], width: 2.1 },
-                    hovertemplate: '<b>' + s.label + '</b><br>%{x:.4g} ' + unit(f.q) + ' @ z = %{y:.4g} ' + unit('len') + '<extra></extra>'
+                    hovertemplate: '<b>' + s.label + '</b><br>%{x:.4g} ' + unit(f.q) + ' at z = %{y:.4g} ' + unit('len') + '<extra></extra>'
                 });
             });
-            var lay = chartLayout(f.label + ' (' + unit(f.q) + ')', 'depth z (' + unit('len') + ')');
+            var lay = chartLayout(symHtml(f.sym) + '  (' + unit(f.q) + ')', 'depth z (' + unit('len') + ')');
             lay.shapes = layerBandShapes('paper', 'y');
             P.react(hostEl, traces, lay, { displayModeBar: false, responsive: true });
         }
@@ -1188,18 +1517,18 @@
             if (!hostEl || !P) return;
             syncProfileTitles();
             if (!results.basin || !results.basin.length) { P.purge(hostEl); return; }
-            var f = fieldById($('lp-prof-field').value || 'szz');
+            var f = profField();
             var colors = chartColors();
             var pts = results.basin.filter(function (p) { return p && isFinite(f.get(p)); });
             var xs = pts.map(function (p) { return toDisp('len', p.x); });
             var ys = pts.map(function (p) { return toDisp(f.q, f.get(p)); });
-            var lay = chartLayout('offset x (' + unit('len') + ')', f.label.split(' — ')[0] + ' (' + unit(f.q) + ')',
+            var lay = chartLayout('offset x (' + unit('len') + ')', symHtml(f.sym) + '  (' + unit(f.q) + ')',
                 { noReverseY: true, showlegend: false });
             lay.shapes = loadRefLines();
             P.react(hostEl, [{
                 x: xs, y: ys, mode: 'lines',
                 line: { color: colors[2], width: 2.1 },
-                hovertemplate: '%{y:.4g} ' + unit(f.q) + ' @ x=%{x:.4g} ' + unit('len') + '<extra></extra>'
+                hovertemplate: '%{y:.4g} ' + unit(f.q) + ' at x = %{x:.4g} ' + unit('len') + '<extra></extra>'
             }], lay, { displayModeBar: false, responsive: true });
         }
         function renderBasinChart() {
@@ -1210,13 +1539,13 @@
             var pts = results.basin.filter(function (p) { return p && isFinite(p.disp.uz); });
             var xs = pts.map(function (p) { return toDisp('len', p.x); });
             var ws = pts.map(function (p) { return toDisp('defl', p.disp.uz); });
-            var lay = chartLayout('offset x (' + unit('len') + ')', 'deflection w (' + unit('defl') + ')', { showlegend: false });
+            var lay = chartLayout('offset x (' + unit('len') + ')', 'w  (' + unit('defl') + ')', { showlegend: false });
             lay.shapes = loadRefLines();
             P.react(hostEl, [{
                 x: xs, y: ws, mode: 'lines', fill: 'tozeroy',
                 line: { color: cssVar('--lp-accent-deep'), width: 2.1 },
-                fillcolor: fillRGBA('--lp-accent-deep', 0.16),
-                hovertemplate: 'w = %{y:.4g} ' + unit('defl') + ' @ x=%{x:.4g} ' + unit('len') + '<extra></extra>'
+                fillcolor: rgba('--lp-accent-deep', 0.16),
+                hovertemplate: 'w = %{y:.4g} ' + unit('defl') + ' at x = %{x:.4g} ' + unit('len') + '<extra></extra>'
             }], lay, { displayModeBar: false, responsive: true });
         }
         var SM_FIELDS = ['szz', 'sxx', 'vm', 'exx', 'ezz', 'uz'];
@@ -1228,24 +1557,23 @@
             var data = (results.profiles.data[0] || []).slice();
             data.sort(function (a, b) { return a.z - b.z || a.li - b.li; });
             if (!data.length) { P.purge(hostEl); return; }
-            var zbs = [], zacc = 0;
-            for (var i = 0; i < state.layers.length - 1; i++) { zacc += state.layers[i].h; zbs.push(zacc); }
+            var zbs = interfaceZs();
             var soft = cssVar('--lp-line-soft'), lineC = cssVar('--lp-line'), ink2 = cssVar('--lp-ink2'), ink3 = cssVar('--lp-ink3');
             var cols = chartColors();
             var ys = data.map(function (p) { return toDisp('len', p.z); });
             var traces = [], annotations = [], shapes = [];
-            function sfx(k) { return k === 0 ? '' : String(k + 1); }   /* Plotly: first axis is x/y, then x2/y2… */
+            function sfx(k) { return k === 0 ? '' : String(k + 1); }   /* Plotly: first axis is x/y, then x2/y2 */
             SM_FIELDS.forEach(function (fid, k) {
                 var f = fieldById(fid), sx = 'x' + sfx(k), sy = 'y' + sfx(k);
                 traces.push({
                     x: data.map(function (p) { return toDisp(f.q, f.get(p)); }), y: ys,
                     xaxis: sx, yaxis: sy, mode: 'lines',
                     line: { color: cols[k % cols.length], width: 1.7 },
-                    hovertemplate: '<b>' + f.label.split(' — ')[0] + '</b><br>%{x:.4g} ' + unit(f.q) + ' @ z = %{y:.4g} ' + unit('len') + '<extra></extra>',
+                    hovertemplate: '<b>' + symHtml(f.sym) + '</b><br>%{x:.4g} ' + unit(f.q) + ' at z = %{y:.4g} ' + unit('len') + '<extra></extra>',
                     showlegend: false
                 });
                 annotations.push({
-                    text: '<b>' + f.label.split(' — ')[0] + '</b> (' + unit(f.q) + ')',
+                    text: '<b>' + symHtml(f.sym) + '</b> (' + unit(f.q) + ')',
                     xref: sx + ' domain', yref: sy + ' domain',
                     x: 0, y: 1.16, xanchor: 'left', yanchor: 'top', showarrow: false,
                     font: { size: 10, color: ink2 }
@@ -1285,8 +1613,8 @@
             return String(s).replace(/[0-9+\-]/g, function (c) { return map[c]; });
         }
         function fmtLife(n) {
-            if (n == null || !isFinite(n) || n <= 0) return '—';
-            if (n >= 1e18) return '≈ ∞';
+            if (n == null || !isFinite(n) || n <= 0) return BLANK;
+            if (n >= 1e18) return '∞';
             var e = Math.floor(Math.log10(n)), m = n / Math.pow(10, e);
             if (e < 3) return String(Math.round(n));
             return (Math.round(m * 100) / 100) + ' × 10' + supDigits(e);
@@ -1296,7 +1624,7 @@
             if (!hostEl) return;
             var ex = keyExtremes();
             hostEl.innerHTML = '';
-            if (!ex) { hostEl.appendChild(el('p', 'lp-hint', 'Run the analysis to see mechanistic-empirical distress estimates.')); return; }
+            if (!ex) { hostEl.appendChild(el('p', 'lp-hint', 'Run to see distress estimates.')); return; }
 
             var L0 = state.layers[0];
             var acBound = L0 && L0.tex === 'asphalt';
@@ -1323,14 +1651,14 @@
                     '<div class="lp-perf-sub">' + sub + '</div></div>';
                 cards.appendChild(c);
             }
-            pcard('Fatigue life N<sub>f</sub>', fmtLife(Nf),
-                acBound ? (epsT != null ? 'ε<sub>t</sub> = ' + sig(epsT * 1e6, 4) + ' µε · E = ' + sig(toDisp('modulus', L0.E), 4) + ' ' + unit('modulus') : 'no tensile strain found')
+            pcard('Fatigue life ' + symHtml('Nf'), fmtLife(Nf),
+                acBound ? (epsT != null ? eq('fatigue') : 'no tensile strain found')
                     : 'surface layer is not asphalt-bound',
                 govName === 'Fatigue cracking', 'fa-network-wired');
-            pcard('Subgrade rutting life N<sub>r</sub>', fmtLife(Nr),
-                epsV != null ? 'ε<sub>v</sub> = ' + sig(epsV * 1e6, 4) + ' µε at top of subgrade' : '—',
+            pcard('Subgrade rutting life ' + symHtml('Nr'), fmtLife(Nr),
+                epsV != null ? eq('rutting') : BLANK,
                 govName === 'Subgrade rutting', 'fa-arrows-down-to-line');
-            pcard('Governing life', fmtLife(gov), govName ? govName + ' controls' : '—', false, 'fa-flag-checkered');
+            pcard('Governing life', fmtLife(gov), govName ? govName : BLANK, false, 'fa-flag-checkered');
             wrap.appendChild(cards);
 
             var chartCard = el('div', 'lp-perf-chart');
@@ -1341,9 +1669,8 @@
             hostEl.appendChild(wrap);
 
             hostEl.appendChild(el('p', 'lp-hint',
-                'Asphalt Institute transfer functions — fatigue N<sub>f</sub> = 0.0796·ε<sub>t</sub><sup>−3.291</sup>·E<sup>−0.854</sup> (E in psi) and subgrade rutting ' +
-                'N<sub>r</sub> = 1.365×10<sup>−9</sup>·ε<sub>v</sub><sup>−4.477</sup>. Allowable load repetitions for conventional flexible pavements; ' +
-                'see the <a href="documentation.html">documentation</a> for scope, calibration and other transfer functions.'));
+                'Asphalt Institute transfer functions, E in psi. Scope and calibration: ' +
+                '<a href="documentation.html">documentation</a>.'));
 
             renderPerfChart();
         }
@@ -1373,7 +1700,7 @@
                 font: { color: cssVar('--lp-ink2'), size: 11, family: uiFont() },
                 margin: { l: 150, r: 20, t: 8, b: 44 }, height: 260,
                 xaxis: {
-                    title: { text: 'tensile strain at layer bottom (µε)', font: { size: 11.5, color: cssVar('--lp-ink2') }, standoff: 10 },
+                    title: { text: symHtml('et') + ' at layer base (µε)', font: { size: 11.5, color: cssVar('--lp-ink2') }, standoff: 10 },
                     tickfont: { size: 10, color: cssVar('--lp-ink3') },
                     gridcolor: cssVar('--lp-line-soft'), zerolinecolor: cssVar('--lp-line'), zerolinewidth: 1.4
                 },
@@ -1489,6 +1816,10 @@
         /* =================== viewport =================== */
         var cv = null, ctx = null, vpW = 0, vpH = 0, dpr = 1;
         var texCache = {};
+        /* Hit targets the DRAWING computes and the pointer handler reads, so
+         * the two can never disagree about where a control is. */
+        var itfChips = [];
+        var dragNote = null;
 
         function texture(mat) {
             var key = mat.tex + '|' + mat.color;
@@ -1587,7 +1918,7 @@
             var cx = G.cx, contactHalf = G.contactHalf;
             var kind = state.loadKind;
 
-            /* ground contact shadow — same for all three */
+            /* ground contact shadow, same for all three */
             ctx.fillStyle = 'rgba(0,0,0,0.28)';
             ctx.beginPath();
             ctx.ellipse(cx, y0 + 2.5, Math.max(contactHalf, 4) * 1.3 + 3, 3, 0, 0, 6.3);
@@ -1628,7 +1959,7 @@
                 return { top: y0 - hh };
             }
 
-            /* circular imprint — a tire with its contact patch */
+            /* circular imprint: a tire with its contact patch */
             var tireHalf = Math.max(contactHalf, 10);
             var tireH = clamp(tireHalf * 1.35, 22, 54);
             var gap = clamp(tireH * 0.34, 9, 16);
@@ -1667,11 +1998,23 @@
             return { top: ty, mid: ty + tireH / 2 };
         }
 
+        /* The interface state, written on the interface. Three words, a
+         * click apart: the condition below a layer is a modeling decision
+         * a student changes half a dozen times in one sitting, and walking
+         * to a side panel for it every time is the friction that stops them
+         * trying the other two. */
+        function itfLabel(slip) {
+            if (slip <= 0) return 'bonded';
+            if (slip >= 1) return 'free';
+            return 'slip ' + sig(slip, 2);
+        }
+
         function drawViewport() {
             if (!ctx) return;
             var box = worldBox();
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             ctx.clearRect(0, 0, vpW, vpH);
+            itfChips = [];
             var ink2 = cssVar('--lp-ink2'), ink3 = cssVar('--lp-ink3');
             var lineC = cssVar('--lp-line'), accent = cssVar('--lp-accent');
 
@@ -1679,9 +2022,9 @@
             var n = state.layers.length;
 
             /* layers */
-            var z = 0;
-            for (var i = 0; i < n; i++) {
-                var L = state.layers[i];
+            var z = 0, i, L;
+            for (i = 0; i < n; i++) {
+                L = state.layers[i];
                 var zTop = z;
                 var zBot = i < n - 1 ? z + L.h : box.zMax;
                 z = zBot;
@@ -1724,7 +2067,22 @@
                 ctx.globalAlpha = 1;
             }
 
-            /* interfaces + labels */
+            /* the selected layer, outlined */
+            if (selLayer != null) {
+                z = 0;
+                for (i = 0; i < n; i++) {
+                    L = state.layers[i];
+                    var sT = z, sB = i < n - 1 ? z + L.h : box.zMax;
+                    z = sB;
+                    if (L.id !== selLayer) continue;
+                    ctx.save();
+                    ctx.strokeStyle = accent; ctx.lineWidth = 2;
+                    ctx.strokeRect(xL + 1, w2sy(sT) + 1, xR - xL - 2, w2sy(sB) - w2sy(sT) - 2);
+                    ctx.restore();
+                }
+            }
+
+            /* interfaces, their labels and their state chips */
             z = 0;
             ctx.font = '600 12px ' + uiFont();
             for (i = 0; i < n; i++) {
@@ -1742,15 +2100,37 @@
                     else ctx.setLineDash([]);
                     ctx.beginPath(); ctx.moveTo(xL, yT2); ctx.lineTo(xR, yT2); ctx.stroke();
                     ctx.setLineDash([]);
+
+                    /* the clickable state chip, right-aligned inside the box */
+                    var txt = itfLabel(itf.slip);
+                    ctx.font = '600 10px ' + uiFont();
+                    var cw = ctx.measureText(txt).width + 16;
+                    /* 96px of clearance on the right: the colorbar is
+                     * drawn over this same canvas, at the right edge, and a
+                     * chip tucked under it is a control nobody can press. */
+                    var chipRight = Math.min(xR - 12, vpW - 96);
+                    var chip = { x: chipRight - cw, y: yT2 - 9, w: cw, h: 18, i: i - 1 };
+                    if (chip.y > 4 && chip.y < vpH - 22) {
+                        itfChips.push(chip);
+                        ctx.fillStyle = itf.slip > 0 ? rgba('--lp-warn', 0.9) : rgba('--lp-bg1', 0.92);
+                        roundRect(ctx, chip.x, chip.y, chip.w, chip.h, 9); ctx.fill();
+                        ctx.strokeStyle = itf.slip > 0 ? cssVar('--lp-warn') : lineC;
+                        ctx.lineWidth = 1; ctx.stroke();
+                        ctx.fillStyle = itf.slip > 0 ? '#fff' : ink2;
+                        ctx.textAlign = 'center';
+                        ctx.fillText(txt, chip.x + chip.w / 2, chip.y + 12.5);
+                        ctx.textAlign = 'left';
+                    }
+                    ctx.font = '600 12px ' + uiFont();
                 }
                 /* label */
                 if (yB2 - yT2 > 17) {
                     var midY = (yT2 + Math.min(yB2, vpH)) / 2;
-                    ctx.fillStyle = 'rgba(0,0,0,0.35)';
                     var lbl = L2.name;
                     var meta = (i < n - 1 ? sig(toDisp('len', L2.h), 3) + ' ' + unit('len') + ' · ' : '∞ · ') +
-                        'E=' + sig(toDisp('modulus', L2.E), 3) + ' ' + unit('modulus') + ' · ν=' + L2.nu;
+                        'E ' + sig(toDisp('modulus', L2.E), 3) + ' ' + unit('modulus') + ' · ν ' + L2.nu;
                     var tw = Math.max(ctx.measureText(lbl).width, ctx.measureText(meta).width);
+                    ctx.fillStyle = 'rgba(0,0,0,0.35)';
                     ctx.fillRect(xL + 8, midY - 15, tw + 14, 32);
                     ctx.fillStyle = '#f2f5fa';
                     ctx.fillText(lbl, xL + 15, midY - 2);
@@ -1813,8 +2193,8 @@
                 minTop = Math.min(minTop, geo.top);
                 /* Index tag. A tire has a body to sit in the middle of; an
                  * arrow and a knife edge do not, so theirs goes BESIDE the
-                 * stem rather than above it — above is where the shared load
-                 * caption goes, and the two collided. */
+                 * stem rather than above it, which is where the shared load
+                 * caption goes and where the two collided. */
                 ctx.font = '700 10px ' + monoFont();
                 var tag = 'L' + (G.wi + 1);
                 var tw = ctx.measureText(tag).width;
@@ -1842,17 +2222,17 @@
                     cap += sig(toDisp('force', w0.F), 4) + ' ' + unit('force');
                     if (state.loadKind === 'circle') {
                         cap += ' · ' + sig(toDisp('stress', w0.p), 4) + ' ' + unit('stress') +
-                            ' · a=' + sig(toDisp('len', loadA(w0)), 3) + ' ' + unit('len');
+                            ' · a ' + sig(toDisp('len', loadA(w0)), 3) + ' ' + unit('len');
                     } else if (state.loadKind === 'line') {
                         cap += ' · ' + sig(toDisp('perlen', w0.F / gearParams.L), 4) + ' ' + unit('perlen') +
                             ' over ' + sig(toDisp('len', gearParams.L), 3) + ' ' + unit('len');
                     }
                 } else cap += 'mixed loads';
-                var cw = ctx.measureText(cap).width;
+                var cw2 = ctx.measureText(cap).width;
                 ctx.fillStyle = 'rgba(15,24,41,0.82)';
-                roundRect(ctx, capX - cw / 2 - 8, capY - 13, cw + 16, 18, 6); ctx.fill();
+                roundRect(ctx, capX - cw2 / 2 - 8, capY - 13, cw2 + 16, 18, 6); ctx.fill();
                 ctx.strokeStyle = 'rgba(224,82,82,0.45)'; ctx.lineWidth = 1; ctx.stroke();
-                ctx.fillStyle = ink2; ctx.textAlign = 'center';
+                ctx.fillStyle = '#e8eef9'; ctx.textAlign = 'center';
                 ctx.fillText(cap, capX, capY);
                 ctx.textAlign = 'left';
             }
@@ -1873,23 +2253,31 @@
             }
             ctx.textAlign = 'left';
 
-            /* evaluation points */
+            /* evaluation points, colored to match their column in the table */
             state.points.forEach(function (p, pi) {
                 var sx = w2sx(p.x), sy = w2sy(p.z);
+                var col = ptColor(pi);
                 var isSel = selPoint === p.id;
-                ctx.strokeStyle = isSel ? accent : cssVar('--lp-cat3');
+                ctx.fillStyle = col;
+                ctx.beginPath(); ctx.arc(sx, sy, isSel ? 4 : 3, 0, 6.3); ctx.fill();
+                ctx.strokeStyle = col;
                 ctx.lineWidth = isSel ? 2 : 1.4;
-                ctx.beginPath(); ctx.arc(sx, sy, 5, 0, 6.3); ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(sx - 8, sy); ctx.lineTo(sx - 3, sy);
-                ctx.moveTo(sx + 3, sy); ctx.lineTo(sx + 8, sy);
-                ctx.moveTo(sx, sy - 8); ctx.lineTo(sx, sy - 3);
-                ctx.moveTo(sx, sy + 3); ctx.lineTo(sx, sy + 8);
-                ctx.stroke();
-                ctx.fillStyle = ink2;
-                ctx.font = '10px ' + monoFont();
-                ctx.fillText('P' + (pi + 1), sx + 9, sy - 7);
+                ctx.beginPath(); ctx.arc(sx, sy, isSel ? 8 : 6.5, 0, 6.3); ctx.stroke();
+                ctx.fillStyle = col;
+                ctx.font = '700 10px ' + monoFont();
+                ctx.fillText('P' + (pi + 1), sx + 10, sy - 7);
             });
+
+            /* the live readout of whatever is being dragged */
+            if (dragNote) {
+                ctx.font = '600 11px ' + monoFont();
+                var nw = ctx.measureText(dragNote.text).width;
+                ctx.fillStyle = cssVar('--lp-accent');
+                roundRect(ctx, dragNote.x - nw / 2 - 8, dragNote.y - 10, nw + 16, 20, 6); ctx.fill();
+                ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+                ctx.fillText(dragNote.text, dragNote.x, dragNote.y + 4);
+                ctx.textAlign = 'left';
+            }
 
             /* infinity marker */
             ctx.fillStyle = ink3;
@@ -2037,10 +2425,10 @@
                     g.beginPath(); g.arc(cX, cY, 5.6, 0, 6.3); g.stroke();
                 }
             });
-            /* evaluation points */
-            g.fillStyle = cssVar('--lp-cat3');
-            state.points.forEach(function (p) {
-                g.beginPath(); g.arc(px(p.x), py(p.y), 2.2, 0, 6.3); g.fill();
+            /* evaluation points, in their own colors */
+            state.points.forEach(function (p, pi) {
+                g.fillStyle = ptColor(pi);
+                g.beginPath(); g.arc(px(p.x), py(p.y), 2.6, 0, 6.3); g.fill();
             });
             g.restore();
 
@@ -2053,7 +2441,7 @@
                 g.font = '8px ' + mono; var tw = g.measureText(txt).width;
                 g.fillStyle = 'rgba(15,24,41,0.82)';
                 roundRect(g, padL + 4, padT + plotH - 16, tw + 10, 13, 3); g.fill();
-                g.fillStyle = ink2; g.textAlign = 'left'; g.textBaseline = 'middle';
+                g.fillStyle = '#e8eef9'; g.textAlign = 'left'; g.textBaseline = 'middle';
                 g.fillText(txt, padL + 9, padT + plotH - 9);
                 g.textBaseline = 'alphabetic';
             }
@@ -2066,11 +2454,15 @@
             g.fillStyle = accent;
             g.beginPath(); g.arc(padL + plotW - 4, syl, 3.5, 0, 6.3); g.fill();
             g.font = '700 8px ' + mono; g.textAlign = 'right';
-            g.fillText('SECTION y=' + sig(toDisp('len', state.ySec), 3), padL + plotW - 10, syl - 4);
+            g.fillText('SECTION y ' + sig(toDisp('len', state.ySec), 3), padL + plotW - 10, syl - 4);
             g.textAlign = 'left';
+            void ink2;
         }
 
-        /* ---------- colorbar ---------- */
+        /* ---------- colorbar ----------
+         * The scale for the contoured field. It carries the SYMBOL, drawn
+         * rather than spelled, because "szz" beside a stress bulb is the
+         * one label on the figure a reader has to decode. */
         function drawColorbar() {
             var cb = $('lp-colorbar');
             if (!cb) return;
@@ -2078,7 +2470,7 @@
             g.clearRect(0, 0, cb.width, cb.height);
             if (!contour || !state.settings.showContour) return;
             var f = contour.field;
-            var x0 = 8, w = 13, y0 = 24, h = cb.height - 46;
+            var x0 = 10, w = 14, y0 = 30, h = cb.height - 56;
             for (var i = 0; i < h; i++) {
                 var t = 1 - i / (h - 1);
                 var li = Math.round(t * 255) * 3;
@@ -2086,25 +2478,83 @@
                 g.fillRect(x0, y0 + i, w, 1.5);
             }
             g.strokeStyle = cssVar('--lp-line');
+            g.lineWidth = 1;
             g.strokeRect(x0 - 0.5, y0 - 0.5, w + 1, h + 1);
+
+            g.fillStyle = cssVar('--lp-ink');
+            drawSym(g, f.sym, x0, 16, 13);
+
             g.fillStyle = cssVar('--lp-ink2');
             g.font = '9px ' + monoFont();
-            g.fillText(f.id, x0, 12);
-            g.fillText(sig(toDisp(f.q, contour.vmax), 3), x0 + w + 4, y0 + 8);
-            g.fillText(sig(toDisp(f.q, (contour.vmax + contour.vmin) / 2), 3), x0 + w + 4, y0 + h / 2 + 3);
-            g.fillText(sig(toDisp(f.q, contour.vmin), 3), x0 + w + 4, y0 + h - 2);
-            g.fillText(unit(f.q), x0, y0 + h + 14);
+            var mid = (contour.vmax + contour.vmin) / 2;
+            [[contour.vmax, y0 + 8], [mid, y0 + h / 2 + 3], [contour.vmin, y0 + h - 2]].forEach(function (t2) {
+                g.fillText(sig(toDisp(f.q, t2[0]), 3), x0 + w + 5, t2[1]);
+                g.beginPath();
+                g.moveTo(x0 + w, t2[1] - 3); g.lineTo(x0 + w + 3, t2[1] - 3);
+                g.strokeStyle = cssVar('--lp-line'); g.stroke();
+            });
+            g.fillStyle = cssVar('--lp-ink3');
+            g.fillText(unit(f.q), x0, y0 + h + 15);
         }
 
         /* =================== viewport interaction =================== */
+        /* A dragged number lands on a ROUND one. A fitted section puts ten
+           millimeters or more under every pixel, so an unsnapped drag of an
+           interface reads 972.23 mm, and a thickness nobody would type is a
+           thickness nobody can check. The step is the 1/2/5 rung just below
+           what one pixel is worth, taken in the units on screen: always
+           finer than the hand, never coarser than the drawing, and it
+           follows the zoom, so the same drag is coarse on a whole section
+           and fine on a close-up. */
+        function dragSnap(q, v) {
+            var perPx = toDisp(q, 1 / view.scale);
+            if (!(perPx > 0) || !isFinite(perPx)) return v;
+            var e = Math.pow(10, Math.floor(Math.log(perPx) / Math.LN10));
+            var m = perPx / e;
+            var step = (m >= 5 ? 5 : m >= 2 ? 2 : 1) * e;
+            return fromDisp(q, Math.round(toDisp(q, v) / step) * step);
+        }
         function snapPoint(p) {
-            var zb = [], z = 0;
-            for (var i = 0; i < state.layers.length - 1; i++) { z += state.layers[i].h; zb.push(z); }
+            var zb = interfaceZs();
             var tolPix = 7 / view.scale;
-            for (i = 0; i < zb.length; i++) {
+            for (var i = 0; i < zb.length; i++) {
                 if (Math.abs(p.z - zb[i]) < tolPix) { p.z = zb[i]; return; }
             }
             if (Math.abs(p.z) < tolPix) p.z = 0;
+        }
+        function hitInterface(my) {
+            var zb = interfaceZs();
+            for (var i = 0; i < zb.length; i++) {
+                if (Math.abs(w2sy(zb[i]) - my) < 6) return i;
+            }
+            return -1;
+        }
+        function hitChip(mx, my) {
+            for (var i = 0; i < itfChips.length; i++) {
+                var c = itfChips[i];
+                if (mx >= c.x && mx <= c.x + c.w && my >= c.y && my <= c.y + c.h) return c.i;
+            }
+            return -1;
+        }
+        function hitLayer(my) {
+            var zw = s2wy(my);
+            if (zw < 0) return -1;
+            var z = 0;
+            for (var i = 0; i < state.layers.length - 1; i++) {
+                z += state.layers[i].h;
+                if (zw < z) return i;
+            }
+            return state.layers.length - 1;
+        }
+        /* The three interface conditions, one click apart. */
+        function cycleInterface(i) {
+            var f = state.interfaces[i];
+            if (!f) return;
+            mutate(function () {
+                var s = f.slip || 0;
+                f.slip = s <= 0 ? 0.5 : (s < 1 ? 1 : 0);
+                delete f.bond; delete f.k;
+            });
         }
 
         function setupViewport() {
@@ -2127,13 +2577,15 @@
 
             var drag = null;
             /* Pointer events, not mouse events. A touch drag never produces a
-               mousemove — the browser scrolls the page instead — so on a phone or
-               tablet the section could not be panned and an analysis point could
-               not be moved. PointerEvent covers mouse, touch and pen from one
-               path, and #lp-cv sets touch-action:none so the gesture is delivered
-               here rather than taken by the scroller. */
+               mousemove (the browser scrolls the page instead), so on a phone
+               or tablet the section could not be panned and an analysis point
+               could not be moved. PointerEvent covers mouse, touch and pen
+               from one path, and #lp-cv sets touch-action:none so the gesture
+               is delivered here rather than taken by the scroller. */
             on(cv, 'pointerdown', function (e) {
                 var mx = e.offsetX, my = e.offsetY;
+
+                /* 1. an evaluation point */
                 var hit = null;
                 state.points.forEach(function (p) {
                     var dx = w2sx(p.x) - mx, dy = w2sy(p.z) - my;
@@ -2142,10 +2594,29 @@
                 if (hit) {
                     selPoint = hit.id;
                     drag = { type: 'point', p: hit, moved: false };
-                } else {
-                    selPoint = null;
-                    drag = { type: 'pan', sx: mx, sy: my, ox: view.ox, oy: view.oy };
+                    drawViewport();
+                    return;
                 }
+
+                /* 2. an interface state chip */
+                var ci = hitChip(mx, my);
+                if (ci >= 0) { drag = { type: 'chip', i: ci, moved: false }; return; }
+
+                /* 3. an interface line: drag it to set the thickness above */
+                var ii = hitInterface(my);
+                if (ii >= 0) {
+                    var zTop = 0;
+                    for (var q = 0; q < ii; q++) zTop += state.layers[q].h;
+                    drag = { type: 'itf', i: ii, zTop: zTop, moved: false };
+                    return;
+                }
+
+                /* 4. otherwise pan, and remember what a click would select */
+                selPoint = null;
+                drag = {
+                    type: 'pan', sx: mx, sy: my, ox: view.ox, oy: view.oy,
+                    layer: hitLayer(my), moved: false
+                };
                 drawViewport();
             });
             on(win, 'pointermove', function (e) {
@@ -2153,24 +2624,47 @@
                 var r = cv.getBoundingClientRect();
                 var mx = e.clientX - r.left, my = e.clientY - r.top;
                 if (drag.type === 'pan') {
+                    if (Math.abs(mx - drag.sx) + Math.abs(my - drag.sy) > 3) drag.moved = true;
                     view.ox = drag.ox + (mx - drag.sx);
                     view.oy = drag.oy + (my - drag.sy);
                     drawViewport();
                 } else if (drag.type === 'point') {
                     drag.moved = true;
-                    drag.p.x = s2wx(mx);
-                    drag.p.z = Math.max(0, s2wy(my));
+                    drag.p.x = dragSnap('len', s2wx(mx));
+                    drag.p.z = Math.max(0, dragSnap('len', s2wy(my)));
                     snapPoint(drag.p);
                     renderPointsList();
+                    drawViewport();
+                } else if (drag.type === 'itf') {
+                    drag.moved = true;
+                    var L = state.layers[drag.i];
+                    L.h = clamp(dragSnap('len', s2wy(my) - drag.zTop), 5, 5000);
+                    dragNote = {
+                        x: (w2sx(worldBox().xL) + w2sx(worldBox().xR)) / 2,
+                        y: w2sy(drag.zTop + L.h) - 18,
+                        text: L.name + '  ' + sig(toDisp('len', L.h), 4) + ' ' + unit('len')
+                    };
+                    renderLayers();
                     drawViewport();
                 }
             });
             on(win, 'pointerup', function () {
-                if (drag && drag.type === 'point' && drag.moved) mutate(function () { /* committed in place */ });
+                if (!drag) { dragNote = null; return; }
+                if (drag.type === 'point' && drag.moved) mutate(function () { /* committed in place */ });
+                else if (drag.type === 'itf' && drag.moved) { dragNote = null; mutate(function () { }); }
+                else if (drag.type === 'chip') cycleInterface(drag.i);
+                else if (drag.type === 'pan' && !drag.moved && drag.layer >= 0) {
+                    var L = state.layers[drag.layer];
+                    selLayer = (selLayer === L.id) ? null : L.id;
+                    renderLayers();
+                    drawViewport();
+                }
+                dragNote = null;
                 drag = null;
             });
             on(cv, 'dblclick', function (e) {
-                var p = { id: nid(), x: s2wx(e.offsetX), y: state.ySec, z: Math.max(0, s2wy(e.offsetY)) };
+                var p = { id: nid(), x: dragSnap('len', s2wx(e.offsetX)), y: state.ySec,
+                    z: Math.max(0, dragSnap('len', s2wy(e.offsetY))) };
                 snapPoint(p);
                 mutate(function (st) { st.points.push(p); });
                 selPoint = p.id;
@@ -2187,11 +2681,15 @@
                 drawViewport();
             }, { passive: false });
             on(cv, 'pointermove', function (e) {
+                if (!drag) {
+                    cv.style.cursor = hitChip(e.offsetX, e.offsetY) >= 0 ? 'pointer'
+                        : (hitInterface(e.offsetY) >= 0 ? 'ns-resize' : 'crosshair');
+                }
                 var x = s2wx(e.offsetX), z = s2wy(e.offsetY);
                 var out = 'x ' + sig(toDisp('len', x), 5) + '  z ' + sig(toDisp('len', z), 5) + ' ' + unit('len');
                 var v = sampleContour(x, z);
                 if (v != null && contour) {
-                    out += '   ' + contour.field.id + ' ' + sig(toDisp(contour.field.q, v), 4) + ' ' + unit(contour.field.q);
+                    out += '   ' + symText(contour.field.sym) + ' ' + sig(toDisp(contour.field.q, v), 4) + ' ' + unit(contour.field.q);
                 }
                 var c = $('lp-coords');
                 if (c) c.textContent = out;
@@ -2235,22 +2733,21 @@
             $('lp-alpha').addEventListener('input', function (e) {
                 state.settings.alpha = parseFloat(e.target.value); drawViewport();
             });
-            $('lp-field').addEventListener('change', function (e) {
-                state.settings.field = e.target.value;
-                buildContour(); drawViewport(); saveLocal();
-            });
         }
 
         /* =================== panels =================== */
-        function numField(labelText, value, step, onchange, titleText) {
-            var f = el('label', 'lp-field');
-            f.appendChild(el('span', null, labelText));
+        /* `labelHtml` is markup, so a field can be labeled with the symbol
+         * it edits rather than with a transliteration of it. */
+        function numField(labelHtml, value, step, onchange, titleText, readOnly) {
+            var f = el('label', 'lp-field' + (readOnly ? ' is-derived' : ''));
+            f.appendChild(el('span', null, labelHtml));
             var inp = doc.createElement('input');
             inp.type = 'number';
             inp.step = step || 'any';
             inp.value = value;
             if (titleText) inp.title = titleText;
-            inp.addEventListener('change', function () {
+            if (readOnly) { inp.readOnly = true; inp.tabIndex = -1; }
+            else inp.addEventListener('change', function () {
                 var v = parseFloat(inp.value);
                 if (isFinite(v)) onchange(v);
             });
@@ -2265,6 +2762,7 @@
             renderGearParams();
             renderLoads();
             renderPointsList();
+            renderChecks();
             $('lp-project-name').value = state.name;
             $('lp-layer-count').textContent = state.layers.length;
             $('lp-load-count').textContent = state.loads.length;
@@ -2317,6 +2815,12 @@
             });
             return z;
         }
+
+        /* The structure panel. Delete is IN the row rather than behind the
+         * overflow menu: adding and removing layers is the commonest edit in
+         * the tool, and a destructive action one click deep with an undo one
+         * key away is the right trade for that. Rename, reorder and
+         * duplicate stay in the menu, where they are wanted once. */
         function renderLayers() {
             var hostEl = $('lp-layers');
             hostEl.innerHTML = '';
@@ -2324,21 +2828,37 @@
             state.layers.forEach(function (L, i) {
                 var isLast = i === n - 1;
                 if (i > 0) hostEl.appendChild(layerInsertZone(i));
-                var card = el('div', 'lp-layer' + (isLast ? ' is-subgrade' : ''));
+                var card = el('div', 'lp-layer' + (isLast ? ' is-subgrade' : '') +
+                    (L.id === selLayer ? ' is-sel' : ''));
+                card.addEventListener('click', function (e) {
+                    if (e.target.closest('button, select, input')) return;
+                    selLayer = (selLayer === L.id) ? null : L.id;
+                    renderLayers();
+                    drawViewport();
+                });
 
                 var head = el('div', 'lp-layer-head');
                 var grip = el('span', 'lp-layer-grip',
-                    isLast ? '<i class="fas fa-anchor" title="Subgrade — fixed at the bottom"></i>'
+                    isLast ? '<i class="fas fa-anchor" title="Subgrade, fixed at the bottom"></i>'
                         : '<i class="fas fa-grip-vertical"></i>');
                 head.appendChild(grip);
                 var chip = el('span', 'lp-layer-chip');
                 chip.style.background = L.color;
                 head.appendChild(chip);
-                head.appendChild(el('span', 'lp-layer-idx', String(i + 1)));
                 head.appendChild(materialSelect(L));
+
+                var del = el('button', 'lp-layer-del', '<i class="fas fa-trash"></i>');
+                del.title = isLast ? 'The subgrade cannot be removed' : 'Delete this layer';
+                del.disabled = isLast || n <= 1;
+                del.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    mutate(function (st) { st.layers.splice(i, 1); });
+                });
+                head.appendChild(del);
+
                 var more = el('button', 'lp-layer-more' + (expandedLayer === L.id ? ' is-open' : ''),
                     '<i class="fas fa-ellipsis-h"></i>');
-                more.title = 'Rename, reorder, delete';
+                more.title = 'Rename, reorder, duplicate';
                 more.addEventListener('click', function (e) {
                     e.stopPropagation();
                     expandedLayer = expandedLayer === L.id ? null : L.id;
@@ -2352,14 +2872,17 @@
                 if (isLast) {
                     quick.appendChild(el('span', 'lp-inf-tag', '<i class="fas fa-infinity"></i> halfspace'));
                 } else {
-                    quick.appendChild(numField('h (' + unit('len') + ')', sig(toDisp('len', L.h), 5), 'any', function (v) {
-                        mutate(function () { L.h = Math.max(1, fromDisp('len', v)); });
-                    }, 'Layer thickness'));
+                    quick.appendChild(numField(symHtml('h') + ' <em>' + unit('len') + '</em>',
+                        sig(toDisp('len', L.h), 5), 'any', function (v) {
+                            mutate(function () { L.h = Math.max(1, fromDisp('len', v)); });
+                        }, 'Layer thickness. Drag the interface in the section to set it by eye.'));
                 }
-                quick.appendChild(numField('E (' + unit('modulus') + ')', sig(toDisp('modulus', L.E), 5), 'any', function (v) {
-                    mutate(function () { L.E = Math.max(0.1, fromDisp('modulus', v)); });
-                }, 'Elastic modulus · typical ' + sig(toDisp('modulus', m0.range[0]), 3) + '–' + sig(toDisp('modulus', m0.range[1]), 3) + ' ' + unit('modulus') + ' (FAA/AASHTO/Huang)'));
-                quick.appendChild(numField('ν', L.nu, '0.01', function (v) {
+                quick.appendChild(numField(symHtml('E') + ' <em>' + unit('modulus') + '</em>',
+                    sig(toDisp('modulus', L.E), 5), 'any', function (v) {
+                        mutate(function () { L.E = Math.max(0.1, fromDisp('modulus', v)); });
+                    }, 'Elastic modulus. Typical ' + sig(toDisp('modulus', m0.range[0]), 3) + ' to ' +
+                    sig(toDisp('modulus', m0.range[1]), 3) + ' ' + unit('modulus')));
+                quick.appendChild(numField(symHtml('nu'), L.nu, '0.01', function (v) {
                     mutate(function () { L.nu = clamp(v, 0.05, 0.499); });
                 }, "Poisson's ratio"));
                 card.appendChild(quick);
@@ -2367,7 +2890,7 @@
                 if (expandedLayer === L.id) {
                     var body = el('div', 'lp-layer-body');
                     var nameF = el('label', 'lp-field');
-                    nameF.appendChild(el('span', null, 'Layer name'));
+                    nameF.appendChild(el('span', null, 'Name'));
                     var ninp = doc.createElement('input');
                     ninp.type = 'text'; ninp.className = 'lp-input'; ninp.value = L.name;
                     ninp.addEventListener('change', function () { mutate(function () { L.name = ninp.value || L.name; }); });
@@ -2394,9 +2917,6 @@
                             st.layers.splice(i + 1, 0, c);
                         });
                     }, isLast);
-                    act('fa-trash', 'Delete layer', function () {
-                        mutate(function (st) { st.layers.splice(i, 1); });
-                    }, n <= 1 || isLast);
                     body.appendChild(acts);
                     card.appendChild(body);
                 }
@@ -2430,15 +2950,15 @@
             });
         }
 
-        /* Interfaces are a WinJULEA slip value. The two ends of the slider
-         * are the two conditions anyone actually analyzes, so they are
-         * buttons; the middle is a number, and the shear stiffness it
-         * implies is printed beside it rather than hidden. */
+        /* Interfaces on a WinJULEA slip value. The two ends of the range are
+         * the two conditions anyone actually analyses, so they are buttons;
+         * the middle is a slider, and the shear stiffness it implies is
+         * printed beside it rather than hidden. */
         function renderInterfaces() {
             var hostEl = $('lp-interfaces');
             hostEl.innerHTML = '';
             if (state.layers.length < 2) {
-                hostEl.appendChild(el('p', 'lp-hint', 'Add a second layer to define interface bonding.'));
+                hostEl.appendChild(el('p', 'lp-hint', 'Add a second layer to set interface bonding.'));
                 return;
             }
             state.interfaces.forEach(function (itf, i) {
@@ -2449,9 +2969,9 @@
                 row.appendChild(lab);
 
                 var seg = el('div', 'lp-seg lp-seg-sm');
-                [['Bonded', 0, 'Fully bonded — WinJULEA slip 0'],
-                 ['Partial', 0.5, 'Goodman shear spring between the two limits'],
-                 ['Free', 1, 'Frictionless — WinJULEA slip 1']].forEach(function (o) {
+                [['Bonded', 0, 'Fully bonded. WinJULEA slip 0.'],
+                 ['Partial', 0.5, 'Goodman shear spring between the two limits.'],
+                 ['Free', 1, 'Frictionless. WinJULEA slip 1.']].forEach(function (o) {
                     var active = o[1] === 0 ? slip <= 0 : (o[1] === 1 ? slip >= 1 : (slip > 0 && slip < 1));
                     var b = el('button', 'lp-seg-btn' + (active ? ' is-active' : ''), o[0]);
                     b.title = o[2];
@@ -2465,21 +2985,28 @@
 
                 if (slip > 0 && slip < 1) {
                     var sub = el('div', 'lp-itf-sub');
-                    sub.appendChild(numField('slip s', sig(slip, 3), '0.01', function (v) {
-                        mutate(function () { itf.slip = clamp(v, 0.001, 0.999); });
-                    }, 'Dimensionless slip: 0 fully bonded, 1 frictionless.'));
+                    var sl = doc.createElement('input');
+                    sl.type = 'range'; sl.min = '0.02'; sl.max = '0.98'; sl.step = '0.02';
+                    sl.value = String(slip);
+                    sl.className = 'lp-itf-range';
+                    sl.title = 'Slip 0 is bonded, 1 is frictionless';
+                    sl.addEventListener('input', function () {
+                        itf.slip = parseFloat(sl.value);
+                        renderInterfaces(); drawViewport();
+                    });
+                    sl.addEventListener('change', function () { mutate(function () { }); });
+                    sub.appendChild(sl);
                     var G = state.layers[i + 1].E / (2 * (1 + state.layers[i + 1].nu));
                     var aRef = state.loads.length ? loadA(state.loads[0]) : 150;
                     var k = (G / aRef) * (1 - slip) / slip;
-                    sub.appendChild(el('span', 'lp-itf-k',
-                        'k ≈ ' + sig(toDisp('kitf', k), 3) + ' ' + unit('kitf')));
+                    var read = el('span', 'lp-itf-k',
+                        symHtml('s') + ' ' + sig(slip, 2) + ' · ' + symHtml('k') + ' ' +
+                        sig(toDisp('kitf', k), 3) + ' ' + unit('kitf'));
+                    read.title = EQ.spring.plain;
+                    sub.appendChild(read);
                     hostEl.appendChild(sub);
                 }
             });
-            hostEl.appendChild(el('p', 'lp-hint',
-                'Slip 0 and 1 are exact and are what WinJULEA and BISAR mean by bonded and frictionless. ' +
-                'A partial value is Goodman\'s shear spring, k = (G<sub>lower</sub>/a)·(1−s)/s — defensible, ' +
-                'but normalized differently by every program, so do not expect another one to agree digit for digit.'));
         }
 
         /* ---- the load-model switch ----------------------------------------
@@ -2489,8 +3016,7 @@
          * scroll container: measured on a 900 px viewport with the structure
          * and interface panels open, the Loads section began 40 px below the
          * fold, so the one control the tool is built around was the one
-         * control you had to go looking for. The panel keeps the note that
-         * says what the current model means. */
+         * control you had to go looking for. */
         function renderLoadKind() {
             var hostEl = $('lp-kind');
             hostEl.innerHTML = '';
@@ -2498,7 +3024,7 @@
             LOAD_KINDS.forEach(function (k) {
                 var b = el('button', 'lp-seg-btn' + (state.loadKind === k.id ? ' is-active' : ''),
                     '<i class="fas ' + k.icon + '"></i><span>' + k.short + '</span>');
-                b.title = k.name + ' — ' + k.blurb;
+                b.title = k.name + '. ' + k.blurb;
                 b.setAttribute('aria-pressed', state.loadKind === k.id ? 'true' : 'false');
                 b.addEventListener('click', function () {
                     if (state.loadKind === k.id) return;
@@ -2512,57 +3038,114 @@
             var note = $('lp-kind-note');
             if (note) {
                 var k0 = kindById(state.loadKind);
-                note.innerHTML = '';
-                note.appendChild(el('p', 'lp-kind-blurb',
-                    '<strong>' + k0.name + '.</strong> ' + k0.blurb +
-                    ' <em>Switch it in the toolbar — the total load does not change.</em>'));
+                note.innerHTML = '<strong>' + k0.name + '.</strong> ' + k0.blurb;
             }
         }
 
+        /* The gear generator, and the load triple.
+         *
+         * Load, pressure and area are one equation. The "solve for" switch
+         * names which of the three the app computes, and that one turns into
+         * a read-only readout while the other two stay editable: there is no
+         * mode where a student can type three numbers that do not satisfy
+         * F = p A and have to be told so afterwards. */
+        function markGearDirty() {
+            if (gearDirty) return;
+            gearDirty = true;
+            var b = $('lp-gear-apply');
+            if (b) b.classList.add('is-dirty');
+            renderChecks();
+        }
+        function clearGearDirty() {
+            gearDirty = false;
+            var b = $('lp-gear-apply');
+            if (b) b.classList.remove('is-dirty');
+            renderChecks();
+        }
         function renderGearParams() {
             var hostEl = $('lp-gear-params');
             hostEl.innerHTML = '';
-            hostEl.appendChild(numField('Load per wheel (' + unit('force') + ')', sig(toDisp('force', gearParams.F), 5), 'any', function (v) {
-                gearParams.F = Math.max(1, fromDisp('force', v));
-            }, 'Total force carried by each load in the gear'));
-            hostEl.appendChild(numField('Contact pressure (' + unit('stress') + ')', sig(toDisp('stress', gearParams.p), 4), 'any', function (v) {
-                gearParams.p = Math.max(1e-4, fromDisp('stress', v));
-            }, 'Uniform pressure over the circular imprint; sets the radius a = √(F/πp)'));
-            hostEl.appendChild(numField('Dual spacing (' + unit('len') + ')', sig(toDisp('len', gearParams.Sd), 4), 'any', function (v) {
-                gearParams.Sd = fromDisp('len', v);
-            }));
-            hostEl.appendChild(numField('Tandem spacing (' + unit('len') + ')', sig(toDisp('len', gearParams.St), 4), 'any', function (v) {
-                gearParams.St = fromDisp('len', v);
-            }));
+            var solve = state.settings.solveFor;
+
+            var seg = el('div', 'lp-seg lp-seg-solve');
+            seg.title = 'Two of load, pressure and area fix the third. Pick the one to compute.';
+            [['F', symHtml('F')], ['p', symHtml('p')], ['A', symHtml('A')]].forEach(function (o) {
+                var b = el('button', 'lp-seg-btn' + (solve === o[0] ? ' is-active' : ''), o[1]);
+                b.title = 'Solve for ' + (o[0] === 'F' ? 'load' : o[0] === 'p' ? 'pressure' : 'area');
+                b.addEventListener('click', function () {
+                    state.settings.solveFor = o[0];
+                    renderGearParams(); renderLoads(); saveLocal();
+                });
+                seg.appendChild(b);
+            });
+            var solveRow = el('div', 'lp-solve-row');
+            solveRow.appendChild(el('span', 'lp-solve-label', 'Solve for'));
+            solveRow.appendChild(seg);
+            hostEl.appendChild(solveRow);
+
+            var A = gearArea();
+            hostEl.appendChild(numField(symHtml('F') + ' <em>' + unit('force') + '</em>',
+                sig(toDisp('force', gearParams.F), 5), 'any', function (v) {
+                    setGearValue('F', fromDisp('force', v)); markGearDirty(); renderGearParams();
+                }, 'Total force carried by each load in the gear', solve === 'F'));
+            hostEl.appendChild(numField(symHtml('p') + ' <em>' + unit('stress') + '</em>',
+                sig(toDisp('stress', gearParams.p), 4), 'any', function (v) {
+                    setGearValue('p', fromDisp('stress', v)); markGearDirty(); renderGearParams();
+                }, 'Uniform contact pressure', solve === 'p'));
+            hostEl.appendChild(numField(symHtml('A') + ' <em>' + unit('area') + '</em>',
+                sig(toDisp('area', A), 5), 'any', function (v) {
+                    setGearValue('A', fromDisp('area', v)); markGearDirty(); renderGearParams();
+                }, 'Contact area', solve === 'A'));
+            hostEl.appendChild(numField(symHtml('a') + ' <em>' + unit('len') + '</em>',
+                sig(toDisp('len', Math.sqrt(A / Math.PI)), 4), 'any', function (v) {
+                    var a = Math.max(1e-3, fromDisp('len', v));
+                    setGearValue('A', Math.PI * a * a); markGearDirty(); renderGearParams();
+                }, 'Contact radius of the equivalent circle', solve === 'A'));
+
+            hostEl.appendChild(numField('Sd <em>' + unit('len') + '</em>',
+                sig(toDisp('len', gearParams.Sd), 4), 'any', function (v) {
+                    gearParams.Sd = fromDisp('len', v); markGearDirty();
+                }, 'Dual spacing'));
+            hostEl.appendChild(numField('St <em>' + unit('len') + '</em>',
+                sig(toDisp('len', gearParams.St), 4), 'any', function (v) {
+                    gearParams.St = fromDisp('len', v); markGearDirty();
+                }, 'Tandem spacing'));
+
             if (state.loadKind === 'line') {
-                hostEl.appendChild(numField('Line length (' + unit('len') + ')', sig(toDisp('len', gearParams.L), 4), 'any', function (v) {
-                    mutate(function () { gearParams.L = Math.max(1, fromDisp('len', v)); });
-                }, 'Length of the loaded segment. The force is spread uniformly along it.'));
-                hostEl.appendChild(numField('Line azimuth (°)', sig(gearParams.theta, 4), '5', function (v) {
-                    mutate(function () { gearParams.theta = v; });
-                }, '0° runs along x (across the section); 90° runs along y (into the page)'));
+                hostEl.appendChild(numField('L <em>' + unit('len') + '</em>',
+                    sig(toDisp('len', gearParams.L), 4), 'any', function (v) {
+                        mutate(function () { gearParams.L = Math.max(1, fromDisp('len', v)); });
+                    }, 'Length of the loaded segment'));
+                hostEl.appendChild(numField('θ <em>deg</em>',
+                    sig(gearParams.theta, 4), '5', function (v) {
+                        mutate(function () { gearParams.theta = v; });
+                    }, '0 runs along x, across the section; 90 runs along y, into the page'));
             }
         }
 
-        /* The load table. Columns follow the load model: a circular imprint
-         * needs its pressure and shows its radius, a point load needs
-         * neither, and a line load carries the force per unit length that
-         * the shared length implies. */
+        /* The load table. Columns follow the load model and the solve-for
+         * switch: the derived quantity is shown but not editable, so the
+         * three numbers in a row always satisfy F = p A. */
         function renderLoads() {
             var hostEl = $('lp-loads');
             hostEl.innerHTML = '';
             if (!state.loads.length) {
-                hostEl.appendChild(el('p', 'lp-hint', 'No loads yet — Build a gear above, or Add one.'));
+                hostEl.appendChild(el('p', 'lp-hint', 'No loads. Build a gear above, or Add one.'));
                 return;
             }
             var ul = unit('len'), uf = unit('force'), us = unit('stress');
-            var kind = state.loadKind;
+            var kind = state.loadKind, solve = state.settings.solveFor;
             var tbl = el('table', 'lp-wtable');
             var head = '<thead><tr><th class="lp-wtag-h">#</th>' +
-                '<th>x<em>' + ul + '</em></th><th>y<em>' + ul + '</em></th>' +
-                '<th>F<em>' + uf + '</em></th>';
-            if (kind === 'circle') head += '<th>p<em>' + us + '</em></th><th>a<em>' + ul + '</em></th>';
-            else if (kind === 'line') head += '<th>q<em>' + unit('perlen') + '</em></th>';
+                '<th>' + symHtml('x') + '<em>' + ul + '</em></th>' +
+                '<th>' + symHtml('y') + '<em>' + ul + '</em></th>' +
+                '<th>' + symHtml('F') + '<em>' + uf + '</em></th>';
+            if (kind === 'circle') {
+                head += '<th>' + symHtml('p') + '<em>' + us + '</em></th>' +
+                    '<th>' + symHtml('a') + '<em>' + ul + '</em></th>';
+            } else if (kind === 'line') {
+                head += '<th>' + symHtml('q') + '<em>' + unit('perlen') + '</em></th>';
+            }
             head += '<th></th></tr></thead>';
             tbl.innerHTML = head;
             var body = el('tbody');
@@ -2576,9 +3159,9 @@
                     var inp = doc.createElement('input');
                     inp.type = 'number'; inp.step = 'any';
                     inp.value = sig(val, decimals);
-                    if (ro) { inp.readOnly = true; inp.className = 'is-ro'; }
+                    if (ro) { inp.readOnly = true; inp.className = 'is-ro'; inp.tabIndex = -1; }
                     if (title) inp.title = title;
-                    inp.addEventListener('change', function () {
+                    if (!ro) inp.addEventListener('change', function () {
                         var v = parseFloat(inp.value);
                         if (isFinite(v)) mutate(function () { setv(v); });
                     });
@@ -2587,20 +3170,21 @@
                 }
                 cell(toDisp('len', w.x), 6, function (v) { w.x = fromDisp('len', v); });
                 cell(toDisp('len', w.y), 6, function (v) { w.y = fromDisp('len', v); });
-                cell(toDisp('force', w.F), 5, function (v) { w.F = Math.max(0.01, fromDisp('force', v)); });
+                cell(toDisp('force', w.F), 5, function (v) {
+                    setLoadValue(w, 'F', fromDisp('force', v));
+                }, solve === 'F', solve === 'F' ? 'Computed from pressure and area' : '');
                 if (kind === 'circle') {
-                    cell(toDisp('stress', w.p), 4, function (v) { w.p = Math.max(1e-4, fromDisp('stress', v)); });
-                    /* radius is editable too: typing one re-derives the
-                     * pressure at constant load, which is how a contact
-                     * area is usually known in the field */
+                    cell(toDisp('stress', w.p), 4, function (v) {
+                        setLoadValue(w, 'p', fromDisp('stress', v));
+                    }, solve === 'p', solve === 'p' ? 'Computed from load and area' : '');
                     cell(toDisp('len', loadA(w)), 4, function (v) {
                         var a = Math.max(1e-3, fromDisp('len', v));
-                        w.p = w.F / (Math.PI * a * a);
-                    }, false, 'Contact radius. Editing it re-derives the pressure at constant load.');
+                        setLoadValue(w, 'A', Math.PI * a * a);
+                    }, solve === 'A', solve === 'A' ? 'Computed from load and pressure' : 'Contact radius');
                 } else if (kind === 'line') {
                     cell(toDisp('perlen', w.F / gearParams.L), 4, function (v) {
                         w.F = Math.max(0.01, fromDisp('perlen', v) * gearParams.L);
-                    }, false, 'Force per unit length along the segment');
+                    }, false, 'Force per unit length');
                 }
                 var tdDel = el('td');
                 var db = el('button', 'lp-tool lp-wdel', '<i class="fas fa-times"></i>');
@@ -2617,35 +3201,30 @@
             state.loads.forEach(function (w) { total += w.F; });
             var foot = el('div', 'lp-wfoot');
             foot.innerHTML = '<i class="fas fa-weight-hanging"></i> total ' +
-                sig(toDisp('force', total), 5) + ' ' + unit('force') +
-                (kind === 'circle'
-                    ? ' · contact radii ' + state.loads.map(function (w) { return sig(toDisp('len', loadA(w)), 3); }).join(' · ') + ' ' + ul
-                    : (kind === 'line'
-                        ? ' · segments ' + sig(toDisp('len', gearParams.L), 3) + ' ' + ul + ' at ' + sig(gearParams.theta, 3) + '°'
-                        : ' · concentrated'));
+                sig(toDisp('force', total), 5) + ' ' + unit('force');
             hostEl.appendChild(foot);
         }
 
-        /* Evaluation points get a real editor, not just a delete list: they
-         * are the rows of the results table and the thing a student is asked
-         * to report. */
         function renderPointsList() {
             var hostEl = $('lp-points');
             hostEl.innerHTML = '';
             if (!state.points.length) {
-                hostEl.appendChild(el('p', 'lp-hint',
-                    'No evaluation points. <em>Critical set</em> drops one at the surface and one on each side of every interface, under the first load.'));
+                hostEl.appendChild(el('p', 'lp-hint', 'No evaluation points.'));
                 return;
             }
             var ul = unit('len');
             var tbl = el('table', 'lp-wtable');
             tbl.innerHTML = '<thead><tr><th class="lp-wtag-h">#</th>' +
-                '<th>x<em>' + ul + '</em></th><th>y<em>' + ul + '</em></th><th>z<em>' + ul + '</em></th>' +
+                '<th>' + symHtml('x') + '<em>' + ul + '</em></th>' +
+                '<th>' + symHtml('y') + '<em>' + ul + '</em></th>' +
+                '<th>' + symHtml('z') + '<em>' + ul + '</em></th>' +
                 '<th></th></tr></thead>';
             var body = el('tbody');
             state.points.forEach(function (p, i) {
                 var tr = el('tr', selPoint === p.id ? 'is-sel' : '');
-                tr.appendChild(el('td', 'lp-wtag', 'P' + (i + 1)));
+                var tag = el('td', 'lp-wtag');
+                tag.innerHTML = '<span class="lp-rt-dot" style="background:' + ptColor(i) + '"></span>P' + (i + 1);
+                tr.appendChild(tag);
                 function cell(val, setv) {
                     var td = el('td');
                     var inp = doc.createElement('input');
@@ -2684,21 +3263,104 @@
             }
         }
 
+        /* =================== the preflight popover =================== */
+        function renderChecks() {
+            var badge = $('lp-checks-btn'), list = $('lp-checks-list');
+            if (!badge || !list) return;
+            var c = checks(), bad = c.filter(function (k) { return !k.pass; }).length;
+            badge.className = 'lp-checks-btn' + (bad ? ' is-bad' : ' is-ok');
+            badge.innerHTML = (bad ? '<i class="fas fa-triangle-exclamation"></i>' : '<i class="fas fa-check-circle"></i>') +
+                '<span>' + (c.length - bad) + '/' + c.length + '</span>';
+            badge.title = bad ? bad + ' item(s) need review before the results mean anything'
+                : 'Every input checks out';
+            list.innerHTML = '';
+            c.forEach(function (k) {
+                var row = el('div', 'lp-pf-row' + (k.pass ? ' is-ok' : ' is-bad'));
+                row.innerHTML = (k.pass ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times"></i>') +
+                    '<span class="lp-pf-label">' + k.label + '</span>' +
+                    (k.detail ? '<span class="lp-pf-detail">' + k.detail + '</span>' : '');
+                list.appendChild(row);
+            });
+        }
+        function openChecks(force) {
+            var pop = $('lp-checks-pop');
+            if (!pop) return;
+            renderChecks();
+            pop.hidden = force ? false : !pop.hidden;
+        }
+        function closeChecks() {
+            var pop = $('lp-checks-pop');
+            if (pop) pop.hidden = true;
+        }
+
+        /* =====================================================================
+         * THE FIELD PICKER
+         * ---------------------------------------------------------------------
+         * A <select> cannot carry markup, so an <option> can only ever spell
+         * a symbol out: "szz", "txz", "exx". That is the one place in the app
+         * where the notation had nowhere to go, and it is the control a
+         * student uses most. A button with a menu can carry the typeset
+         * symbol, so this is a button with a menu.
+         * ===================================================================== */
+        var openMenu = null;
+        function fieldPicker(hostEl, get, set) {
+            if (!hostEl) return;
+            hostEl.innerHTML = '';
+            var cur = fieldById(get());
+            var btn = el('button', 'lp-fp-btn',
+                '<span class="lp-fp-sym">' + symHtml(cur.sym) + '</span>' +
+                '<span class="lp-fp-name">' + cur.name + '</span>' +
+                '<i class="fas fa-chevron-down"></i>');
+            btn.title = 'Contoured response field';
+            var menu = el('div', 'lp-fp-menu');
+            menu.hidden = true;
+            FIELDS.forEach(function (f) {
+                var o = el('button', 'lp-fp-opt' + (f.id === cur.id ? ' is-active' : ''),
+                    '<span class="lp-fp-sym">' + symHtml(f.sym) + '</span>' +
+                    '<span class="lp-fp-name">' + f.name + '</span>');
+                o.addEventListener('click', function () {
+                    menu.hidden = true; openMenu = null;
+                    set(f.id);
+                });
+                menu.appendChild(o);
+            });
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (openMenu && openMenu !== menu) openMenu.hidden = true;
+                menu.hidden = !menu.hidden;
+                openMenu = menu.hidden ? null : menu;
+            });
+            hostEl.appendChild(btn);
+            hostEl.appendChild(menu);
+        }
+        function renderFieldPickers() {
+            fieldPicker($('lp-field'), function () { return state.settings.field; }, function (id) {
+                state.settings.field = id;
+                renderFieldPickers();
+                buildContour(); drawViewport(); saveLocal();
+            });
+            fieldPicker($('lp-prof-field'), function () { return state.settings.profField; }, function (id) {
+                state.settings.profField = id;
+                renderFieldPickers();
+                renderProfileChart(); renderSurfaceChart(); flashLinkedCards(); saveLocal();
+            });
+        }
+
         /* =================== exports =================== */
         function csvEscape(s) { return /[",\n]/.test(String(s)) ? '"' + String(s).replace(/"/g, '""') + '"' : String(s); }
         function safeName() { return (state.name || 'leaps').replace(/[^\w\-]+/g, '_').slice(0, 60); }
 
         /* ONE export that is the whole analysis: what was modeled, how it
          * was loaded, what the solver was told, and every number it
-         * produced — in the units on screen, with the conventions named.
-         * A results file nobody can reconstruct the run from is a table of
+         * produced, in the units on screen with the conventions named. A
+         * results file nobody can reconstruct the run from is a table of
          * numbers, not a record. */
         function exportAnalysis() {
             var u = U(), rows = [];
             function push() { rows.push(Array.prototype.slice.call(arguments).map(csvEscape).join(',')); }
             function blank() { rows.push(''); }
 
-            push('LEAPS — Linear Elastic Analysis of Pavement Structures');
+            push('LEAPS, Linear Elastic Analysis of Pavement Structures');
             push('Project', state.name);
             push('Generated', new Date().toISOString());
             push('Engine', 'LEAF-JS v' + (solverFallback ? solverFallback.version : '2.0.0'));
@@ -2706,6 +3368,12 @@
             push('Sign convention', 'tension positive; z measured downward from the surface; uz positive downward');
             push('Strain reported as', state.settings.strainAbs ? 'dimensionless' : 'microstrain (1e-6)');
             push('Values rounded to', '6 significant figures');
+            blank();
+
+            push('[PREFLIGHT]');
+            checks().forEach(function (k) {
+                push(k.pass ? 'OK' : 'REVIEW', k.label, k.detail);
+            });
             blank();
 
             push('[STRUCTURE]');
@@ -2732,13 +3400,19 @@
 
             push('[LOADS]');
             push('Load model', kindById(state.loadKind).name);
+            push('Solved for', state.settings.solveFor === 'F' ? 'load' : state.settings.solveFor === 'p' ? 'pressure' : 'area');
             var lh = ['#', 'x (' + u.len.u + ')', 'y (' + u.len.u + ')', 'Total load (' + u.force.u + ')'];
-            if (state.loadKind === 'circle') lh.push('Pressure (' + u.stress.u + ')', 'Radius (' + u.len.u + ')');
+            if (state.loadKind === 'circle') {
+                lh.push('Pressure (' + u.stress.u + ')', 'Area (' + u.area.u + ')', 'Radius (' + u.len.u + ')');
+            }
             if (state.loadKind === 'line') lh.push('q (' + u.perlen.u + ')', 'Length (' + u.len.u + ')', 'Azimuth (deg)');
             push.apply(null, lh);
             state.loads.forEach(function (w, i) {
                 var r = [i + 1, sig(toDisp('len', w.x), 6), sig(toDisp('len', w.y), 6), sig(toDisp('force', w.F), 6)];
-                if (state.loadKind === 'circle') r.push(sig(toDisp('stress', w.p), 6), sig(toDisp('len', loadA(w)), 6));
+                if (state.loadKind === 'circle') {
+                    r.push(sig(toDisp('stress', w.p), 6), sig(toDisp('area', areaOf(w)), 6),
+                        sig(toDisp('len', loadA(w)), 6));
+                }
                 if (state.loadKind === 'line') r.push(sig(toDisp('perlen', w.F / gearParams.L), 6),
                     sig(toDisp('len', gearParams.L), 6), sig(gearParams.theta, 5));
                 push.apply(null, r);
@@ -2764,19 +3438,26 @@
                 var hdr = ['Quantity', 'Unit'];
                 data.forEach(function (p, i) { hdr.push('P' + (i + 1)); });
                 push.apply(null, hdr);
-                var layerRow = ['layer', '—'];
-                data.forEach(function (p) { layerRow.push(state.layers[p.li] ? state.layers[p.li].name : '—'); });
+                var layerRow = ['layer', BLANK];
+                data.forEach(function (p) { layerRow.push(state.layers[p.li] ? state.layers[p.li].name : BLANK); });
                 push.apply(null, layerRow);
                 RESULT_ROWS.forEach(function (r) {
-                    var line = [r.label, rowUnit(r)];
+                    var line = [symText(r.sym), rowUnit(r)];
+                    /* the same row zero the table prints, so the file and the
+                       screen never disagree about whether a shear is there */
+                    var rmx = 0;
+                    if (r.g !== 'loc') data.forEach(function (p) {
+                        var q = rowValue(r, p);
+                        if (q != null && Math.abs(q) > rmx) rmx = Math.abs(q);
+                    });
                     data.forEach(function (p) {
-                        var v = rowValue(r, p);
+                        var v = rowFloor(rowValue(r, p), rmx);
                         /* Six significant figures, not seventeen. The solver
                          * agrees with an independent one to about five, so
-                         * the digits past that are the double's, not the
-                         * pavement's, and a column of them is unreadable.
+                         * the digits past that are the double's rather than
+                         * the pavement's, and a column of them is unreadable.
                          * The project JSON keeps everything, for reloading. */
-                        line.push(v == null ? (p.singular ? 'singular' : '—') : sig(v, 6));
+                        line.push(v == null ? (p.singular ? 'singular' : BLANK) : sig(v, 6));
                     });
                     push.apply(null, line);
                 });
@@ -2787,9 +3468,9 @@
             var ex = keyExtremes();
             if (ex) {
                 if (ex.w0) push('Max surface deflection', sig(toDisp('defl', ex.w0.v), 6), u.defl.u);
-                if (ex.et) push('Max tensile strain, bottom of ' + state.layers[0].name, sig(toDisp('strain', ex.et.v), 6), 'microstrain');
+                if (ex.et) push('Max tensile strain, base of ' + state.layers[0].name, sig(toDisp('strain', ex.et.v), 6), 'microstrain');
                 if (ex.ev) push('Max compressive strain, top of subgrade', sig(toDisp('strain', -ex.ev.v), 6), 'microstrain');
-                if (ex.sigt) push('Max tensile stress, bottom of ' + state.layers[ex.sigt.layer].name, sig(toDisp('stress', ex.sigt.v), 6), u.stress.u);
+                if (ex.sigt) push('Max tensile stress, base of ' + state.layers[ex.sigt.layer].name, sig(toDisp('stress', ex.sigt.v), 6), u.stress.u);
                 if (ex.tau) push('Peak interface shear', sig(toDisp('stress', ex.tau.v), 6), u.stress.u);
             } else push('(not solved yet)');
 
@@ -2800,7 +3481,7 @@
             var g = results.grid;
             if (!g) { win.alert('Run the analysis first.'); return; }
             var f = fieldById(state.settings.field);
-            var rows = ['x_' + unit('len') + ',z_' + unit('len') + ',' + f.id + '_' + unit(f.q)];
+            var rows = ['x_' + unit('len') + ',z_' + unit('len') + ',' + symText(f.sym) + '_' + unit(f.q)];
             g.pts.forEach(function (p) {
                 rows.push(toDisp('len', p.x) + ',' + toDisp('len', p.z) + ',' + toDisp(f.q, f.get(p)));
             });
@@ -2828,6 +3509,7 @@
                 var tpl = TEMPLATES.filter(function (t) { return t.id === tsel.value; })[0];
                 if (tpl) {
                     mutate(function () { applyTemplate(tpl); });
+                    clearGearDirty();
                     fitView();
                 }
                 tsel.selectedIndex = 0;
@@ -2838,13 +3520,16 @@
             });
             $('lp-undo').addEventListener('click', undo);
             $('lp-redo').addEventListener('click', redo);
-            $('lp-run').addEventListener('click', run);
+            $('lp-run').addEventListener('click', runPressed);
+            $('lp-checks-btn').addEventListener('click', function (e) { e.stopPropagation(); openChecks(false); });
+            on(doc, 'pointerdown', function (e) {
+                if (openMenu && !e.target.closest('.lp-fieldpick')) { openMenu.hidden = true; openMenu = null; }
+                if (!e.target.closest('.lp-checks')) closeChecks();
+            });
             $('lp-autorun').addEventListener('change', function (e) {
                 state.settings.autorun = e.target.checked; saveLocal();
             });
-            $('lp-units').addEventListener('change', function (e) {
-                setUnits(e.target.value);
-            });
+            $('lp-units').addEventListener('change', function (e) { setUnits(e.target.value); });
             $('lp-tol').addEventListener('change', function (e) {
                 state.settings.tol = e.target.value; scheduleRun(); saveLocal();
             });
@@ -2883,8 +3568,10 @@
             $('lp-gear-apply').addEventListener('click', function () {
                 var type = $('lp-gear').value;
                 mutate(function (st) { st.loads = gearLayout(type, gearParams); });
+                clearGearDirty();
                 fitView();
             });
+            $('lp-gear').addEventListener('change', markGearDirty);
             $('lp-add-load').addEventListener('click', function () {
                 mutate(function (st) {
                     var x = st.loads.length ? Math.max.apply(null, st.loads.map(function (w) { return w.x; })) + gearParams.Sd : 0;
@@ -2904,15 +3591,7 @@
                 mutate(function (st) { st.points = []; });
             });
 
-            var fsel = $('lp-field'), psel = $('lp-prof-field');
-            FIELDS.forEach(function (f) {
-                var o1 = el('option', null, f.label); o1.value = f.id;
-                var o2 = el('option', null, f.label); o2.value = f.id;
-                fsel.appendChild(o1); psel.appendChild(o2);
-            });
-            fsel.value = state.settings.field;
-            psel.value = 'szz';
-            psel.addEventListener('change', function () { renderProfileChart(); renderSurfaceChart(); flashLinkedCards(); });
+            renderFieldPickers();
 
             var dtabs = $$('.lp-dtab');
             dtabs.forEach(function (t) {
@@ -2948,11 +3627,12 @@
             on(win, 'keydown', function (e) {
                 if (!host.contains(doc.activeElement) && doc.activeElement !== doc.body) return;
                 var tag = (e.target.tagName || '').toLowerCase();
+                if (e.key === 'Escape') { closeChecks(); if (openMenu) { openMenu.hidden = true; openMenu = null; } }
                 if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
                 else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); }
                 else if (e.key === 'f' || e.key === 'F') fitView();
-                else if (e.key === 'r' || e.key === 'R') run();
+                else if (e.key === 'r' || e.key === 'R') runPressed();
                 else if (e.key === 'Delete' && selPoint != null) {
                     mutate(function (st) {
                         st.points = st.points.filter(function (p) { return p.id !== selPoint; });
@@ -2980,6 +3660,7 @@
             renderCards();
             renderLayerTable();
             renderPointsTable();
+            renderFieldPickers();
             renderCharts();
             renderPerformance();
             drawViewport();
@@ -2987,10 +3668,9 @@
         }
 
         /* The unit system is asked for ONCE, before anything is typed. Every
-         * number in the app is in it — moduli, thicknesses, pressures,
-         * results — and a pavement analysis read in the wrong system is
-         * wrong by a factor nobody notices in a plot. It is still on the
-         * toolbar afterwards. */
+         * number in the app is in it, and a pavement analysis read in the
+         * wrong system is wrong by a factor nobody notices in a plot. It is
+         * still on the toolbar afterwards. */
         function unitGate() {
             var saved = null;
             try { saved = win.localStorage.getItem('leaps-units'); } catch (e) { /* private mode */ }
@@ -3011,6 +3691,7 @@
             renderCards();
             renderLayerTable();
             renderPointsTable();
+            renderFieldPickers();
             $('lp-units').value = state.settings.units;
             $('lp-tol').value = state.settings.tol;
             $('lp-res').value = state.settings.res;
@@ -3019,7 +3700,6 @@
             $('lp-show-basin').checked = state.settings.showBasin;
             $('lp-show-contour').checked = state.settings.showContour;
             $('lp-alpha').value = state.settings.alpha;
-            $('lp-field').value = state.settings.field;
             drawViewport();
         }
 
@@ -3049,7 +3729,7 @@
          *    window. Turning a tablet from portrait to landscape would
          *    otherwise leave the deflection basin, the small-multiples grid
          *    and the performance chart drawn to the old width until a dock
-         *    tab was touched. The canvas viewport is never affected — it has
+         *    tab was touched. The canvas viewport is never affected: it has
          *    its own ResizeObserver.
          *
          * 2. The control sections ship open, which is right beside a
@@ -3103,6 +3783,10 @@
         LOAD_KINDS: LOAD_KINDS,
         RESULT_ROWS: RESULT_ROWS,
         RESULT_GROUPS: RESULT_GROUPS,
-        FIELDS: FIELDS
+        FIELDS: FIELDS,
+        SYM: SYM,
+        EQ: EQ,
+        symHtml: symHtml,
+        symText: symText
     };
 });

@@ -1,5 +1,5 @@
 /* =====================================================================
- * LEAPS — Linear Elastic Analysis of Pavement Structures
+ * LEAPS: Linear Elastic Analysis of Pavement Structures
  * Workspace stylesheet. Dark-first; light theme via [data-theme="light"].
  * ===================================================================== */
 
@@ -28,6 +28,11 @@
     --lp-radius: 10px;
     --lp-mono: ui-monospace, "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
     --lp-font: "Source Sans Pro", Helvetica, Arial, sans-serif;
+
+    /* the key-response cards, and only them */
+    --lp-key-bg: #13233c;
+    --lp-key-bg-lead: #143140;
+    --lp-key-line: #27405e;
 }
 
 [data-theme="light"] .LeapsApp,
@@ -48,6 +53,10 @@
     --lp-cat3: #b45309;
     --lp-cat4: #be185d;
     --lp-shadow: 0 10px 26px rgba(23, 37, 60, 0.12);
+
+    --lp-key-bg: #eef6f5;
+    --lp-key-bg-lead: #e3f2f0;
+    --lp-key-line: #c9e2de;
 }
 
 /* ---------- App frame ---------- */
@@ -329,7 +338,7 @@
 
 /* ---------- Gear generator ---------- */
 .lp-gear-row { display: flex; gap: 0.5em; margin: 0.2em 0 0.4em; }
-.lp-gear-params { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35em 0.6em; margin-bottom: 0.2em; }
+.lp-gear-params { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35em 0.6em; margin-bottom: 0.2em; align-items: end; }
 .lp-gear-params .lp-field { margin: 0; }
 
 /* ---------- Wheels table ---------- */
@@ -388,7 +397,14 @@
     border: 1px solid var(--lp-line); border-radius: 10px;
     padding: 0.3em 0.5em; backdrop-filter: blur(6px);
 }
-.lp-vp-field input[type="range"] { width: 84px; accent-color: var(--lp-accent); }
+/* `background: transparent` is not cosmetic: this input lives inside whatever
+   page hosts the app, and a host stylesheet carrying `input { background: #fff }`
+   paints the track a white pill on a dark theme. The app must not take form
+   styling from its host, and this is the one control with no class of its own. */
+.lp-vp-field input[type="range"] {
+    width: 84px; accent-color: var(--lp-accent); background: transparent;
+}
+.lp-vp-field { align-items: stretch; }
 
 #lp-colorbar { position: absolute; right: 12px; top: 64px; z-index: 4; pointer-events: none; }
 
@@ -438,18 +454,6 @@
 .lp-export-grid .lp-btn { width: 100%; margin: 0; }
 
 /* ---------- Result cards ---------- */
-.lp-card {
-    border: 1px solid var(--lp-line); border-radius: var(--lp-radius);
-    background: var(--lp-bg2); padding: 0.7em 0.85em; margin: 0 0 0.55em;
-}
-.lp-card-label { font-size: 0.68em; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lp-ink3); }
-.lp-card-value {
-    font-family: var(--lp-mono); font-size: 1.35em; font-weight: 700;
-    color: var(--lp-ink); margin: 0.15em 0; font-variant-numeric: tabular-nums;
-}
-.lp-card-value small { font-size: 0.55em; font-weight: 400; color: var(--lp-ink2); margin-left: 0.3em; }
-.lp-card-sub { font-family: var(--lp-mono); font-size: 0.68em; color: var(--lp-ink3); }
-.lp-card.is-accent { border-left: 3px solid var(--lp-accent); }
 
 /* ---------- Tables ---------- */
 .lp-table-wrap { overflow: auto; max-height: 58vh; border: 1px solid var(--lp-line); border-radius: 8px; }
@@ -966,7 +970,7 @@
     background: linear-gradient(135deg, var(--lp-accent-deep), var(--lp-indigo));
     color: #fff !important; box-shadow: none;
 }
-/* new v2.0 buttons — the segmented controls, the unit gate and the
+/* new v2.0 buttons: the segmented controls, the unit gate and the
    results-table group toggles. Without these, main.css paints all three
    segments of the load-model switch the same teal and the selected one
    stops reading as selected. */
@@ -1012,7 +1016,7 @@
 }
 
 /* =====================================================================
- * v2 additions — the unit gate, the load-model switch, the interface
+ * v2 additions: the unit gate, the load-model switch, the interface
  * slip control, and the transposed results table.
  * ===================================================================== */
 
@@ -1060,7 +1064,7 @@
 /* ---------- Segmented control ----------
  * The load model is one choice out of three, and the three are mutually
  * exclusive, so it is a segmented control rather than a select: all
- * three stay visible, which is the point — a student should see that the
+ * three stay visible, which is the point, and a student should see that the
  * other two idealizations exist without opening anything. */
 .lp-seg {
     display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
@@ -1119,7 +1123,7 @@
 /* =====================================================================
  * The transposed results table.
  *
- * Points across, quantities down — the shape a layered-elastic program
+ * Points across, quantities down, the shape a layered-elastic program
  * prints, and the shape a comparison is read in. Two things make it
  * navigable once there are twenty-four rows and a dozen columns: the
  * quantity and unit columns are STICKY, so a column scrolled four
@@ -1235,4 +1239,221 @@
     .lp-topbar-label { display: none; }
     .lp-topbar-kind .lp-seg-kind { min-width: 0; }
     .lp-topbar-kind .lp-seg-kind .lp-seg-btn span { display: none; }
+}
+
+
+/* =====================================================================
+ * v2.1: notation, the preflight list, the load triple, direct editing
+ * on the section, and a results table you can read as a shape.
+ * ===================================================================== */
+
+/* ---------- Typeset symbols ----------
+ * Real subscripts, everywhere a quantity is named. A subscript set at
+ * the same size as its base is not a subscript, and at much less than
+ * 0.72 it stops being legible on a 12px label, so the ratio is fixed
+ * here rather than left to the browser's default 0.83em. */
+.lp-app sub, .lp-app sup {
+    font-size: 0.72em;
+    line-height: 0;
+    font-weight: inherit;
+}
+.lp-app sub { vertical-align: -0.22em; }
+.lp-app sup { vertical-align: 0.42em; }
+
+/* KaTeX inherits the panel's color and sits on the text baseline. The
+   plain twin is what shows before the library lands, and forever if it
+   never does. */
+.lp-eq { color: inherit; font-size: 0.95em; }
+.lp-eq .katex { font-size: 1.02em; }
+.lp-eq.is-plain { font-family: var(--lp-mono); font-size: 0.9em; }
+.lp-eq.is-block { display: block; margin: 0.35em 0; }
+
+/* ---------- Key response cards ----------
+ * These carry the numbers a design decision is made on, so they get a
+ * surface of their own. Everything else in the rail is panel-colored;
+ * a filled card in a rail of unfilled ones is the whole signal, and it
+ * costs no extra ink. */
+.lp-card {
+    border: 1px solid var(--lp-key-line);
+    border-left: 3px solid var(--lp-key-line);
+    border-radius: var(--lp-radius);
+    background: var(--lp-key-bg);
+    padding: 0.6em 0.8em;
+    margin: 0 0 0.5em;
+}
+.lp-card.is-lead {
+    border-color: var(--lp-accent);
+    border-left-color: var(--lp-accent);
+    background: var(--lp-key-bg-lead);
+}
+.lp-card-label {
+    display: flex; align-items: baseline; gap: 0.45em;
+    font-size: 0.7em; color: var(--lp-ink2); line-height: 1.35;
+}
+.lp-card-sym {
+    font-size: 1.35em; font-weight: 700; color: var(--lp-accent-deep);
+    font-family: var(--lp-font);
+}
+.lp-card.is-lead .lp-card-sym { color: var(--lp-accent); }
+.lp-card-value {
+    font-family: var(--lp-mono); font-size: 1.4em; font-weight: 700;
+    color: var(--lp-ink); margin: 0.1em 0 0; font-variant-numeric: tabular-nums;
+}
+.lp-card-value small { font-size: 0.52em; font-weight: 400; color: var(--lp-ink2); margin-left: 0.35em; }
+.lp-card-sub { font-family: var(--lp-mono); font-size: 0.64em; color: var(--lp-ink3); margin-top: 0.15em; }
+
+/* ---------- Preflight ---------- */
+.lp-checks { position: relative; }
+.lp-checks-btn {
+    display: inline-flex; align-items: center; gap: 0.35em;
+    border: 1px solid var(--lp-line); border-radius: 8px;
+    background: var(--lp-bg2); cursor: pointer; box-shadow: none;
+    font-size: 0.76em; font-weight: 700; padding: 0.42em 0.6em;
+    height: auto; line-height: 1.2; font-family: var(--lp-mono);
+}
+.lp-checks-btn.is-ok { color: var(--lp-ok); border-color: color-mix(in srgb, var(--lp-ok) 40%, var(--lp-line)); }
+.lp-checks-btn.is-bad { color: var(--lp-warn); border-color: color-mix(in srgb, var(--lp-warn) 55%, var(--lp-line)); }
+.lp-checks-pop {
+    position: absolute; top: calc(100% + 8px); right: 0; z-index: 40;
+    width: 22em; max-width: 80vw;
+    background: var(--lp-bg1); border: 1px solid var(--lp-line);
+    border-radius: 12px; box-shadow: var(--lp-shadow); padding: 0.5em;
+}
+.lp-checks-pop[hidden] { display: none; }
+.lp-checks-head {
+    font-size: 0.66em; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--lp-ink3); padding: 0.3em 0.5em 0.5em;
+}
+/* .lp-pf-row, not .lp-check: .lp-check is already the class on every
+   checkbox label in the toolbar, and styling one as a grid turned the Auto
+   switch into a two-column layout. */
+.lp-pf-row {
+    display: grid; grid-template-columns: 1.2em 1fr; gap: 0.15em 0.5em;
+    align-items: start; padding: 0.32em 0.5em; font-size: 0.78em;
+    color: var(--lp-ink2); line-height: 1.4;
+}
+.lp-pf-row.is-ok > i { color: var(--lp-ok); }
+.lp-pf-row.is-bad > i { color: var(--lp-warn); }
+.lp-pf-row.is-bad .lp-pf-label { color: var(--lp-ink); font-weight: 600; }
+.lp-pf-detail {
+    grid-column: 2; font-size: 0.86em; color: var(--lp-warn);
+    font-family: var(--lp-mono);
+}
+
+/* ---------- The load triple ---------- */
+.lp-solve-row {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; gap: 0.5em; margin-bottom: 0.15em;
+}
+.lp-solve-label {
+    font-size: 0.64em; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--lp-ink3); flex: none;
+}
+.lp-seg-solve { flex: 1; }
+.lp-seg-solve .lp-seg-btn { font-size: 0.86em; padding: 0.3em 0.2em; }
+/* The derived one of the three. It is shown, not hidden, because the
+   number is the answer; it just cannot be typed into. */
+.lp-field.is-derived input {
+    background: var(--lp-bg0);
+    color: var(--lp-ink2);
+    border-style: dashed;
+    cursor: default;
+}
+.lp-field.is-derived > span::after {
+    content: "=";
+    margin-left: 0.35em;
+    color: var(--lp-accent);
+    font-weight: 700;
+}
+.lp-field em, .lp-app .lp-wtable th em {
+    font-style: normal; font-weight: 400; opacity: 0.65;
+}
+
+/* The Build button, lit once the gear parameters no longer match the
+   loads on the section. A control that has to be pressed for an edit to
+   take effect must say so, or the edit is simply lost. */
+.lp-btn.is-dirty,
+.LeapsApp .lp-btn.is-dirty,
+[data-theme="dark"] .LeapsApp .lp-btn.is-dirty {
+    background: var(--lp-accent); color: #fff !important;
+    border-color: var(--lp-accent);
+    animation: lpPulse 1.6s ease-in-out infinite;
+}
+@keyframes lpPulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--lp-accent) 55%, transparent); }
+    50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--lp-accent) 0%, transparent); }
+}
+
+/* ---------- Structure rows ---------- */
+.lp-layer.is-sel {
+    border-color: var(--lp-accent);
+    box-shadow: inset 3px 0 0 var(--lp-accent);
+}
+.lp-layer-del {
+    border: none; background: none; box-shadow: none; cursor: pointer;
+    color: var(--lp-ink3); font-size: 0.8em; padding: 0.25em 0.35em;
+    line-height: 1; border-radius: 6px;
+}
+.lp-layer-del:hover:not(:disabled) { color: var(--lp-danger); background: var(--lp-bg3); }
+.lp-layer-del:disabled { opacity: 0.25; cursor: default; }
+.lp-layer-head { gap: 0.35em; }
+.lp-layer-mat { flex: 1 1 auto; min-width: 0; }
+.lp-swatch {
+    display: inline-block; width: 9px; height: 9px; border-radius: 2px;
+    margin-right: 0.5em; vertical-align: baseline;
+}
+
+/* ---------- Interfaces ---------- */
+.lp-itf-range {
+    flex: 1; accent-color: var(--lp-accent); min-width: 5em;
+}
+.lp-itf-sub { margin-left: 5.5em; }
+
+/* ---------- The field picker ---------- */
+.lp-fieldpick { position: relative; }
+.lp-fp-btn, .lp-fp-opt {
+    display: flex; align-items: center; gap: 0.45em;
+    width: 100%; border: none; box-shadow: none; cursor: pointer;
+    background: transparent; color: var(--lp-ink);
+    font-size: 0.82em; line-height: 1.2; height: auto;
+    padding: 0.42em 0.6em; border-radius: 8px; text-align: left;
+}
+.lp-fp-btn {
+    border: 1px solid var(--lp-line); background: var(--lp-bg2);
+    min-width: 13em;
+}
+.lp-fp-btn:hover { border-color: var(--lp-accent); }
+.lp-fp-btn > i:last-child { margin-left: auto; font-size: 0.8em; color: var(--lp-ink3); }
+.lp-fp-sym { font-size: 1.15em; font-weight: 700; color: var(--lp-accent-deep); min-width: 2.2em; }
+.lp-fp-name { color: var(--lp-ink2); }
+.lp-fp-menu {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 30;
+    min-width: 100%; padding: 0.25em;
+    background: var(--lp-bg1); border: 1px solid var(--lp-line);
+    border-radius: 10px; box-shadow: var(--lp-shadow);
+}
+.lp-fp-menu[hidden] { display: none; }
+.lp-fp-opt:hover { background: var(--lp-bg3); }
+.lp-fp-opt.is-active { background: var(--lp-bg3); }
+.lp-fp-opt.is-active .lp-fp-name { color: var(--lp-ink); }
+
+/* ---------- Results table: bars and point colors ---------- */
+.lp-rt-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    margin-right: 0.4em; vertical-align: middle;
+}
+.lp-app .lp-rt .lp-rt-v {
+    background-repeat: no-repeat;
+    background-position: right center;
+}
+.lp-app .lp-rt .lp-rt-v.is-peak {
+    font-weight: 700; color: var(--lp-ink);
+    box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--lp-accent) 70%, transparent);
+}
+.lp-app .lp-wtable tr.is-sel td input { border-color: var(--lp-accent); }
+
+/* ---------- Status bar ---------- */
+.lp-conv {
+    font-family: var(--lp-mono); font-size: 0.92em;
+    color: var(--lp-ink3); cursor: help;
 }

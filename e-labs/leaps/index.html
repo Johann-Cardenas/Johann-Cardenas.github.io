@@ -17,7 +17,7 @@
     <!-- Social Sharing: Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="LEAPS | Layered Elastic Analysis of Pavement Structures">
-    <meta property="og:description" content="Browser-based mechanistic pavement analysis — multilayer elastic theory with point, line and circular loads, bonded to frictionless interfaces, stress bulbs and depth profiles. Runs entirely client-side.">
+    <meta property="og:description" content="Browser-based mechanistic pavement analysis: multilayer elastic theory with point, line and circular loads, bonded to frictionless interfaces, stress bulbs and depth profiles. Runs entirely client-side.">
     <meta property="og:image" content="https://www.johanncardenas.com/images/e-labs/E-Labs_LEAPS.webp">
     <meta property="og:url" content="https://www.johanncardenas.com/e-labs/leaps/index.html">
 
@@ -31,6 +31,8 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="canonical" href="https://www.johanncardenas.com/e-labs/leaps/">
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js" crossorigin="anonymous" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js" defer></script>
 </head>
 <body class="LeapsApp is-preload">
@@ -96,7 +98,7 @@
                             <span class="lp-icon"><i class="fas fa-road"></i></span>
                             <span>LEA<span class="highlight">PS</span></span>
                         </h1>
-                        <p>Linear Elastic Analysis of Pavement Structures — multilayer elastic theory, point, line and circular loads, interface bonding, and live stress bulbs.</p>
+                        <p>Multilayer elastic theory with point, line and circular loads, interfaces from bonded to frictionless, and live stress bulbs.</p>
                     </div>
                 </div>
 
@@ -110,17 +112,15 @@
                         <div class="lp-unitgate-card">
                             <div class="lp-unitgate-icon"><i class="fas fa-ruler-combined"></i></div>
                             <h3>Which units will you work in?</h3>
-                            <p>Every input and every result is reported in the system you pick. You can change it later from the toolbar, and the choice is remembered on this browser.</p>
+                            <p>Every input and every result is reported in the system you pick. You can change it later from the toolbar.</p>
                             <div class="lp-unitgate-choices">
                                 <button class="lp-unitgate-btn" data-units="SI">
                                     <strong>SI</strong>
                                     <span>mm · N · MPa</span>
-                                    <em>lengths in millimeters, forces in newtons, stresses and moduli in megapascals</em>
                                 </button>
                                 <button class="lp-unitgate-btn" data-units="US">
                                     <strong>English</strong>
                                     <span>in · lb · psi</span>
-                                    <em>the column set WinJULEA prints: inches, pounds, pounds per square inch</em>
                                 </button>
                             </div>
                         </div>
@@ -136,7 +136,7 @@
                             <button id="lp-redo" class="lp-tool" title="Redo (Ctrl+Y)" disabled><i class="fas fa-redo"></i></button>
                             <span class="lp-sep"></span>
                             <select id="lp-template" class="lp-select" title="Load a template structure">
-                                <option value="" disabled selected>Templates…</option>
+                                <option value="" disabled selected>Templates</option>
                             </select>
                             <span class="lp-sep"></span>
                             <button id="lp-open" class="lp-tool" title="Open project (.leaps.json)"><i class="fas fa-folder-open"></i></button>
@@ -151,13 +151,23 @@
                         <div class="lp-topbar-spacer"></div>
                         <div class="lp-topbar-group">
                             <div class="lp-progress" id="lp-progress" hidden><div class="lp-progress-fill" id="lp-progress-fill"></div></div>
-                            <select id="lp-units" class="lp-select" title="Unit system — every input and result follows it">
-                                <option value="SI" selected>SI — mm · N · MPa</option>
-                                <option value="US">English — in · lb · psi</option>
+                            <select id="lp-units" class="lp-select" title="Unit system. Every input and result follows it.">
+                                <option value="SI" selected>SI (mm, N, MPa)</option>
+                                <option value="US">English (in, lb, psi)</option>
                             </select>
                             <label class="lp-check" title="Recompute automatically after every edit">
                                 <input type="checkbox" id="lp-autorun" checked /> Auto
                             </label>
+                            <!-- Preflight. Run asks before it solves, and a failing
+                                 check opens this list rather than reporting an
+                                 error after the contour is already on screen. -->
+                            <div class="lp-checks">
+                                <button id="lp-checks-btn" class="lp-checks-btn is-ok" type="button"></button>
+                                <div class="lp-checks-pop" id="lp-checks-pop" hidden>
+                                    <div class="lp-checks-head">Before you run</div>
+                                    <div id="lp-checks-list"></div>
+                                </div>
+                            </div>
                             <button id="lp-run" class="lp-run"><i class="fas fa-play"></i> Run</button>
                         </div>
                     </div>
@@ -169,7 +179,6 @@
                             <details class="lp-section" open>
                                 <summary><i class="fas fa-layer-group"></i> Structure <span class="lp-count" id="lp-layer-count"></span></summary>
                                 <div class="lp-section-body">
-                                    <p class="lp-hint">Edit material, thickness and modulus inline. Click the <i class="fas fa-plus"></i> between two layers to insert one there. Use <i class="fas fa-ellipsis-h"></i> to rename, set Poisson's ratio, reorder or delete. Drag <i class="fas fa-grip-vertical"></i> to restack.</p>
                                     <div id="lp-layers"></div>
                                     <button id="lp-add-layer" class="lp-btn lp-btn-block"><i class="fas fa-plus"></i> Add layer</button>
                                 </div>
@@ -181,8 +190,7 @@
                             <details class="lp-section" open>
                                 <summary><i class="fas fa-truck"></i> Loads <span class="lp-count" id="lp-load-count"></span></summary>
                                 <div class="lp-section-body">
-                                    <div class="lp-subhead"><i class="fas fa-shapes"></i> Load model</div>
-                                    <div id="lp-kind-note"></div>
+                                    <p class="lp-kind-blurb" id="lp-kind-note"></p>
                                     <div class="lp-subhead"><i class="fas fa-bolt"></i> Gear generator</div>
                                     <div class="lp-gear-row">
                                         <select id="lp-gear" class="lp-select lp-grow">
@@ -192,10 +200,9 @@
                                             <option value="tridem">Tridem axle</option>
                                             <option value="dual-tridem">Dual tridem</option>
                                         </select>
-                                        <button id="lp-gear-apply" class="lp-btn" title="Replace all loads with this layout"><i class="fas fa-arrow-rotate-right"></i> Build</button>
+                                        <button id="lp-gear-apply" class="lp-btn" title="Replace every load with this layout"><i class="fas fa-arrow-rotate-right"></i> Build</button>
                                     </div>
                                     <div class="lp-gear-params" id="lp-gear-params"></div>
-                                    <p class="lp-hint">Build overwrites the load list with this layout. Fine-tune individual loads below.</p>
                                     <div class="lp-subhead lp-subhead-row"><span><i class="fas fa-circle-dot"></i> Loads</span><button id="lp-add-load" class="lp-linkbtn" title="Add a load"><i class="fas fa-plus"></i> Add</button></div>
                                     <div id="lp-loads" class="lp-loads-editor"></div>
                                 </div>
@@ -203,12 +210,11 @@
                             <details class="lp-section">
                                 <summary><i class="fas fa-crosshairs"></i> Evaluation points <span class="lp-count" id="lp-point-count"></span></summary>
                                 <div class="lp-section-body">
-                                    <p class="lp-hint">These are the columns of the results table. Type them here, double-click the section to drop one, or drag one to move it — points snap to interfaces.</p>
                                     <div id="lp-points"></div>
                                     <div class="lp-row">
-                                        <button id="lp-pts-add" class="lp-btn"><i class="fas fa-plus"></i> Add</button>
+                                        <button id="lp-pts-add" class="lp-btn" title="Add a point at the first load"><i class="fas fa-plus"></i> Add</button>
                                         <button id="lp-pts-critical" class="lp-btn lp-grow" title="Surface plus every interface, under the first load">Critical set</button>
-                                        <button id="lp-pts-clear" class="lp-btn">Clear</button>
+                                        <button id="lp-pts-clear" class="lp-btn" title="Remove every point">Clear</button>
                                     </div>
                                 </div>
                             </details>
@@ -217,22 +223,21 @@
                                 <div class="lp-section-body">
                                     <label class="lp-field"><span>Tolerance</span>
                                         <select id="lp-tol" class="lp-select">
-                                            <option value="1e-5">1e-5 · fast</option>
-                                            <option value="1e-6" selected>1e-6 · standard</option>
-                                            <option value="1e-7">1e-7 · high</option>
+                                            <option value="1e-5">1e-5 fast</option>
+                                            <option value="1e-6" selected>1e-6 standard</option>
+                                            <option value="1e-7">1e-7 high</option>
                                         </select>
                                     </label>
-                                    <label class="lp-field"><span>Contour resolution</span>
+                                    <label class="lp-field"><span>Contour grid</span>
                                         <select id="lp-res" class="lp-select">
-                                            <option value="41x31">Draft · 41×31</option>
-                                            <option value="61x43" selected>Standard · 61×43</option>
-                                            <option value="91x61">Fine · 91×61</option>
+                                            <option value="41x31">Draft 41×31</option>
+                                            <option value="61x43" selected>Standard 61×43</option>
+                                            <option value="91x61">Fine 91×61</option>
                                         </select>
                                     </label>
                                     <label class="lp-check lp-check-row" title="Print strains dimensionless, in E-notation, the way a layered-elastic program does">
-                                        <input type="checkbox" id="lp-strain-abs" /> Strains dimensionless (not µε)
+                                        <input type="checkbox" id="lp-strain-abs" /> Strains dimensionless
                                     </label>
-                                    <p class="lp-hint">Stresses are tension-positive; z is measured downward from the surface; deflection is positive downward. Shear strains are engineering strains, γ = τ/G.</p>
                                 </div>
                             </details>
                         </aside>
@@ -245,22 +250,22 @@
                                 <button id="lp-zin" class="lp-tool" title="Zoom in"><i class="fas fa-search-plus"></i></button>
                                 <button id="lp-zout" class="lp-tool" title="Zoom out"><i class="fas fa-search-minus"></i></button>
                                 <span class="lp-sep"></span>
-                                <label class="lp-check lp-check-tool" title="Overlay the deflected surface (exaggerated)">
+                                <label class="lp-check lp-check-tool" title="Overlay the deflected surface, exaggerated">
                                     <input type="checkbox" id="lp-show-basin" checked /> <i class="fas fa-water"></i>
                                 </label>
-                                <label class="lp-check lp-check-tool" title="Show contour overlay">
+                                <label class="lp-check lp-check-tool" title="Show the contour overlay">
                                     <input type="checkbox" id="lp-show-contour" checked /> <i class="fas fa-braille"></i>
                                 </label>
                             </div>
                             <div class="lp-vp-field">
-                                <select id="lp-field" class="lp-select" title="Contoured response field"></select>
+                                <div class="lp-fieldpick" id="lp-field"></div>
                                 <input id="lp-alpha" type="range" min="0.15" max="1" step="0.05" value="0.85" title="Contour opacity" />
                             </div>
-                            <canvas id="lp-colorbar" width="72" height="260"></canvas>
+                            <canvas id="lp-colorbar" width="82" height="280"></canvas>
                             <div class="lp-plan-panel" id="lp-plan-panel">
                                 <div class="lp-plan-head">
-                                    <span><i class="fas fa-map"></i> Plan view <em>— top-down</em></span>
-                                    <button id="lp-plan-toggle" class="lp-plan-btn" title="Collapse / expand"><i class="fas fa-chevron-down"></i></button>
+                                    <span><i class="fas fa-map"></i> Plan view</span>
+                                    <button id="lp-plan-toggle" class="lp-plan-btn" title="Collapse or expand"><i class="fas fa-chevron-down"></i></button>
                                 </div>
                                 <canvas id="lp-plan" title="Drag the dashed line to move the analysis section"></canvas>
                             </div>
@@ -276,12 +281,11 @@
                                 </div>
                                 <div class="lp-right-block">
                                     <h4 class="lp-h4"><i class="fas fa-download"></i> Export</h4>
-                                    <button class="lp-btn lp-btn-block lp-btn-primary" id="lp-exp-analysis"><i class="fas fa-file-csv"></i> Export full analysis</button>
-                                    <p class="lp-hint">One file: the structure, the interfaces, every load, the solver settings, and every response at every evaluation point — in the units on screen.</p>
+                                    <button class="lp-btn lp-btn-block lp-btn-primary" id="lp-exp-analysis" title="One file: the structure, the interfaces, every load, the solver settings and every response at every evaluation point, in the units on screen."><i class="fas fa-file-csv"></i> Export full analysis</button>
                                     <div class="lp-export-grid">
-                                        <button class="lp-btn" id="lp-exp-json"><i class="fas fa-code"></i> Project JSON</button>
-                                        <button class="lp-btn" id="lp-exp-grid"><i class="fas fa-border-all"></i> Field grid CSV</button>
-                                        <button class="lp-btn" id="lp-exp-png"><i class="fas fa-image"></i> Section PNG</button>
+                                        <button class="lp-btn" id="lp-exp-json" title="Reloadable project file"><i class="fas fa-code"></i> Project</button>
+                                        <button class="lp-btn" id="lp-exp-grid" title="The contoured field on its grid"><i class="fas fa-border-all"></i> Field grid</button>
+                                        <button class="lp-btn" id="lp-exp-png" title="The section as drawn"><i class="fas fa-image"></i> Section PNG</button>
                                     </div>
                                 </div>
                             </div>
@@ -296,21 +300,20 @@
                             <button class="lp-dtab" data-dtab="layers" role="tab"><i class="fas fa-table-cells"></i> Layer responses</button>
                             <button class="lp-dtab" data-dtab="performance" role="tab"><i class="fas fa-gauge-high"></i> Performance</button>
                             <div class="lp-dock-spacer"></div>
-                            <button class="lp-dock-collapse" id="lp-dock-collapse" title="Collapse / expand dock"><i class="fas fa-chevron-down"></i></button>
+                            <button class="lp-dock-collapse" id="lp-dock-collapse" title="Collapse or expand the dock"><i class="fas fa-chevron-down"></i></button>
                         </div>
                         <div class="lp-dock-body" id="lp-dock-body">
 
                             <div class="lp-dpane is-active" data-dpane="points">
-                                <p class="lp-hint" id="lp-table-hint">Responses at your evaluation points.</p>
+                                <p class="lp-hint" id="lp-table-hint"></p>
                                 <div id="lp-pts-table"></div>
                             </div>
 
                             <div class="lp-dpane" data-dpane="profiles">
                                 <div class="lp-prof-controls">
-                                    <label class="lp-field lp-field-inline lp-field-linked"><span><i class="fas fa-link"></i> Field — drives the linked charts</span>
-                                        <select id="lp-prof-field" class="lp-select"></select>
+                                    <label class="lp-field lp-field-inline lp-field-linked"><span><i class="fas fa-link"></i> Field</span>
+                                        <div class="lp-fieldpick" id="lp-prof-field"></div>
                                     </label>
-                                    <p class="lp-hint lp-grow">The <strong>Field</strong> selector re-plots the two <span class="lp-tag-linked">Field</span> charts — the depth profile (sampled under the busiest load stations) and the surface response along the section line. The <span class="lp-tag-fixed">Fixed</span> deflection basin and six-field grid are constant references.</p>
                                 </div>
                                 <div class="lp-prof-grid">
                                     <div class="lp-chart-card is-linked">
@@ -322,7 +325,7 @@
                                     </div>
                                     <div class="lp-chart-card is-linked">
                                         <div class="lp-chart-head">
-                                            <div class="lp-chart-title" id="lp-title-surface">Surface response along section</div>
+                                            <div class="lp-chart-title" id="lp-title-surface">Surface response</div>
                                             <span class="lp-chart-flag is-linked" title="Re-plots when you change the Field selector"><i class="fas fa-link"></i> Field</span>
                                         </div>
                                         <div id="lp-chart-surface" class="lp-chart"></div>
@@ -330,22 +333,22 @@
                                     <div class="lp-chart-card">
                                         <div class="lp-chart-head">
                                             <div class="lp-chart-title">Surface deflection basin</div>
-                                            <span class="lp-chart-flag" title="Always shows vertical surface deflection, independent of the Field selector"><i class="fas fa-thumbtack"></i> Fixed · w</span>
+                                            <span class="lp-chart-flag" title="Always vertical surface deflection, independent of the Field selector"><i class="fas fa-thumbtack"></i> Fixed</span>
                                         </div>
                                         <div id="lp-chart-basin" class="lp-chart"></div>
                                     </div>
                                 </div>
                                 <div class="lp-chart-card lp-chart-card-wide">
                                     <div class="lp-chart-head">
-                                        <div class="lp-chart-title">Depth profiles by field <span class="lp-chart-sub">— principal responses vs. depth</span></div>
-                                        <span class="lp-chart-flag" title="A constant six-field reference grid, independent of the Field selector"><i class="fas fa-thumbtack"></i> Fixed · 6 fields</span>
+                                        <div class="lp-chart-title">Depth profiles by field</div>
+                                        <span class="lp-chart-flag" title="A constant six-field reference grid, independent of the Field selector"><i class="fas fa-thumbtack"></i> Fixed</span>
                                     </div>
                                     <div id="lp-smallmults" class="lp-smallmults"></div>
                                 </div>
                             </div>
 
                             <div class="lp-dpane" data-dpane="layers">
-                                <p class="lp-hint">Critical responses summarized per layer — maxima across all evaluated load stations. Stresses are tension-positive.</p>
+                                <p class="lp-hint">Maxima across every evaluated load station. Tension positive.</p>
                                 <div id="lp-layer-table"></div>
                             </div>
 
@@ -358,29 +361,30 @@
 
                     <!-- Status bar -->
                     <div class="lp-statusbar">
-                        <span id="lp-engine" class="lp-status-badge" title="Engine self-check runs at startup against Boussinesq closed-form solutions">
-                            <i class="fas fa-circle-notch fa-spin"></i> LEAF-JS starting…
+                        <span id="lp-engine" class="lp-status-badge" title="The engine self-checks against Boussinesq closed forms at startup">
+                            <i class="fas fa-circle-notch fa-spin"></i> LEAF-JS starting
                         </span>
                         <span id="lp-stats" class="lp-status-item"></span>
                         <span class="lp-status-spacer"></span>
+                        <span class="lp-status-item lp-conv" title="Stresses are tension positive, z is measured downward from the surface, deflection is positive downward, and shear strains are engineering strains.">tension + · z down</span>
                         <span id="lp-coords" class="lp-status-item lp-mono"></span>
                     </div>
                 </div>
 <!-- LEAPS:APP:END -->
 
-                <!-- About / theory strip (condensed — full detail in documentation.html) -->
+                <!-- About strip. The full detail lives in documentation.html. -->
                 <div class="lp-about">
                     <div class="lp-about-col">
                         <h3><i class="fas fa-square-root-alt"></i> The engine</h3>
-                        <p>Multilayer elastic theory (Burmister) solved in Hankel-transform space — overflow-proof boundary conditions and near-exact surface responses.</p>
+                        <p>Burmister multilayer elastic theory solved in Hankel-transform space, with overflow-proof boundary conditions and near-exact surface responses.</p>
                     </div>
                     <div class="lp-about-col">
                         <h3><i class="fas fa-shapes"></i> Three idealizations</h3>
-                        <p>The same total load as a concentrated force, spread along a line, or spread over a circular imprint — switched in one control, so Saint-Venant is something you watch rather than read about.</p>
+                        <p>The same total load as a concentrated force, spread along a line, or spread over a circular imprint, switched in one control, so Saint-Venant is something you watch rather than read about.</p>
                     </div>
                     <div class="lp-about-col">
                         <h3><i class="fas fa-drafting-compass"></i> Conventions</h3>
-                        <p>Tension-positive stresses, z downward, deflection positive down, engineering shear strains, interfaces on a WinJULEA slip value. SI or English display; mm·N·MPa internally.</p>
+                        <p>Tension-positive stresses, z downward, deflection positive down, engineering shear strains, interfaces on a WinJULEA slip value. SI or English display, mm·N·MPa internally.</p>
                     </div>
                     <div class="lp-about-cta">
                         <a href="documentation.html" class="lp-doc-link"><i class="fas fa-book-open"></i> Open full documentation</a>
