@@ -107,7 +107,7 @@
                     <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to LEAPS workbench</a>
                     <div class="header-badges">
                         <span class="header-badge"><i class="fas fa-microchip"></i> LEAF-JS Engine</span>
-                        <span class="header-badge"><i class="fas fa-code-branch"></i> v2.2</span>
+                        <span class="header-badge"><i class="fas fa-code-branch"></i> v2.3</span>
                     </div>
                 </div>
 
@@ -318,6 +318,11 @@
                             </ul>
                             <h3>Before you run</h3>
                             <p>Two things guard a run. The <strong>Build</strong> button lights when anything the gear is built from has been edited, because those values seed the loads rather than driving them and nothing moves until it is pressed. And the badge beside <strong>Run</strong> is a preflight checklist: a tick for every input that is complete, a cross for anything that needs review, and the count of the two. Pressing Run with a failing check opens the list instead of solving. A layered-elastic solver will return plausible numbers for a section nobody meant to type, and a wrong answer that looks right is worse than no answer.</p>
+                            <h3>The design study</h3>
+                            <p>Every other panel answers one question: <em>what does this section do?</em> A design asks the other one. How thick does the asphalt have to be. How much does bonding buy. What happens when the subgrade is soft. Answering that a section at a time means editing a number, pressing Run, writing the answer down, and doing it eight more times, which is enough friction that nobody does it eight times.</p>
+                            <p>So the <strong>Design study</strong> tab sweeps one quantity across a range: any layer's thickness or modulus, any interface's slip, the wheel load, or the contact pressure. Every step is a full layered-elastic solve of a section that differs from the one on screen in exactly that quantity, read at the same critical points and through the same transfer functions the panels use, so a point on the curve and the panel beside it agree by construction rather than by coincidence.</p>
+                            <p>Two things make it a design tool rather than a plotting one. The current design is marked on the curve, so the study always says where you are standing. And for a life, a <strong>target</strong> draws a line and the crossing is solved for and printed in words: <em>1 × 10<sup>6</sup> repetitions at Dense-graded HMA thickness = 98.8 mm</em>. The crossing is interpolated in log N between the two steps that straddle it, which is the space a transfer function is a straight line in.</p>
+                            <p>A load or pressure sweep holds the other of the two and lets the contact area follow, which is what happens on a truck: inflation pressure is a property of the tire and the load is a property of the trip. The subgrade's thickness is deliberately not on the list, because it is a half-space and its thickness is ignored: a sweep of it would draw a flat line and teach the wrong thing. Every step of the study exports to CSV with all five critical responses and the governing mechanism.</p>
                             <h3>Plan view</h3>
                             <p>The plan inset shows the gear from above with contact footprints, axle and tandem connectors, detected spacings and a grid. Drag the dashed line to move the analysis section along the y-axis; every response updates for the new cut.</p>
                             <h3>Keyboard & interaction</h3>
@@ -334,10 +339,11 @@
                                     <tr><td>Click an interface chip</td><td>Cycle bonded, partial, free</td></tr>
                                     <tr><td>Click a layer</td><td>Select it here and in the structure panel</td></tr>
                                     <tr><td>Drag in the 3D view</td><td>Orbit the camera (shift-drag pans)</td></tr>
+                                    <tr><td>Drag the cut plane in 3D</td><td>Move the section line through the gear</td></tr>
                                 </table>
                             </div>
                             <h3>Exports</h3>
-                            <p><strong>Export full analysis</strong> writes one file carrying the whole run: the structure, every interface and its slip value, every load with its derived radius or line intensity, the solver settings, and every response at every evaluation point, in the units on screen, with the sign convention named in the header. Values are rounded to six significant figures, because the solver agrees with an independent implementation to about five and the digits past that belong to the double rather than to the pavement. The project <code>.leaps.json</code> keeps full precision and re-opens the run exactly; the contour field exports to CSV and the section to PNG. Work autosaves to your browser between sessions.</p>
+                            <p><strong>Export full analysis</strong> writes one file carrying the whole run: the structure, every interface and its slip value, every load with its derived radius or line intensity, the solver settings, and every response at every evaluation point, in the units on screen, with the sign convention named in the header. Values are rounded to six significant figures, because the solver agrees with an independent implementation to about five and the digits past that belong to the double rather than to the pavement. The project <code>.leaps.json</code> keeps full precision and re-opens the run exactly; the contour field exports to CSV, the design study exports to CSV, and the section to PNG. Work autosaves to your browser between sessions.</p>
                         </section>
 
                         <section class="lp-doc-sec" id="references">

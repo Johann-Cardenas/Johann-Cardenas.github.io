@@ -64,7 +64,7 @@
 
         vm: { b: 'σ', sub: 'vm' }, tmax: { b: 'τ', sub: 'max' },
         et: { b: 'ε', sub: 't' }, ev: { b: 'ε', sub: 'v' }, st: { b: 'σ', sub: 't' },
-        tau: { b: 'τ' }, Nf: { b: 'N', sub: 'f' }, Nr: { b: 'N', sub: 'r' }
+        tau: { b: 'τ' }, N: { b: 'N' }, Nf: { b: 'N', sub: 'f' }, Nr: { b: 'N', sub: 'r' }
     };
     function symOf(id) { return SYM[id] || { b: String(id) }; }
     function symHtml(id) {
@@ -382,6 +382,52 @@
         };
     }
 
+    /* =====================================================================
+     * DISTRESS TRANSFER FUNCTIONS  (Asphalt Institute, MS-1)
+     * ---------------------------------------------------------------------
+     * Strain is dimensionless here and the modulus is in MPa; the psi
+     * conversion the fatigue equation was calibrated in happens inside, so
+     * a caller cannot forget it. They were written inline in the panel that
+     * printed them, which was fine while one card printed them and wrong
+     * the moment a design study had to plot the same quantity: two copies
+     * of a calibration constant is one copy too many.
+     * ================================================================== */
+    function fatigueLife(epsT, E_MPa) {
+        if (!(epsT > 0) || !(E_MPa > 0)) return null;
+        var Epsi = E_MPa * 145.0377377;
+        return 0.0796 * Math.pow(epsT, -3.291) * Math.pow(Epsi, -0.854);
+    }
+    function ruttingLife(epsV) {
+        if (!(epsV > 0)) return null;
+        return 1.365e-9 * Math.pow(epsV, -4.477);
+    }
+    /* The design life is the SMALLER of the two, because a pavement fails
+     * by whichever mechanism gets there first, and which one that is is the
+     * answer a design study is looking for. */
+    function governingLife(Nf, Nr) {
+        if (Nf == null) return Nr == null ? null : { N: Nr, by: 'Subgrade rutting' };
+        if (Nr == null) return { N: Nf, by: 'Fatigue cracking' };
+        return Nf <= Nr ? { N: Nf, by: 'Fatigue cracking' } : { N: Nr, by: 'Subgrade rutting' };
+    }
+
+    /* What a design study can plot. Magnitudes, because a study is read
+     * for size and a sign that flips halfway up a log axis is noise; the
+     * sign is in the results table, where it is the reading. */
+    var STUDY_RESP = [
+        { id: 'et', sym: 'et', name: 'Tensile strain, base of layer 1', q: 'strain', log: false,
+          get: function (r) { return r.ex.et ? Math.abs(r.ex.et.v) : null; } },
+        { id: 'ev', sym: 'ev', name: 'Compressive strain, top of subgrade', q: 'strain', log: false,
+          get: function (r) { return r.ex.ev ? Math.abs(r.ex.ev.v) : null; } },
+        { id: 'w0', sym: 'w', name: 'Maximum surface deflection', q: 'defl', log: false,
+          get: function (r) { return r.ex.w0 ? Math.abs(r.ex.w0.v) : null; } },
+        { id: 'Nf', sym: 'Nf', name: 'Fatigue life', q: null, log: true,
+          get: function (r) { return r.Nf; } },
+        { id: 'Nr', sym: 'Nr', name: 'Subgrade rutting life', q: null, log: true,
+          get: function (r) { return r.Nr; } },
+        { id: 'Ng', sym: 'N', name: 'Governing life', q: null, log: true,
+          get: function (r) { return r.Ng ? r.Ng.N : null; } }
+    ];
+
     function mulberry32(seed) {
         var t0 = seed >>> 0;
         return function () {
@@ -507,7 +553,7 @@
         /* Every plot the dock can hold. Kept in one place so the resize
            paths cannot drift apart as panes are added. */
         var ALL_PLOT_IDS = ['lp-chart-profile', 'lp-chart-surface', 'lp-chart-basin',
-            'lp-smallmults', 'lp-chart-perf'];
+            'lp-smallmults', 'lp-chart-perf', 'lp-chart-study'];
 
         function resizePlots(ids) {
             var P = plotly();
@@ -762,6 +808,14 @@
         function invalidateResults(keep) {
             if (keep) return;
             results = { key: null, user: null, profiles: null, basin: null, grid: null, stats: null, meta: null };
+            /* A design study is a set of sections around THIS one, so it
+               stops being about anything the moment this one changes. It is
+               dropped rather than redrawn stale: a curve that still looks
+               current and is not is worse than an empty panel. */
+            if (study.rows) {
+                study.rows = null; study.ran = null;
+                if ($('lp-study-note')) renderStudy();
+            }
         }
 
         /* =====================================================================
@@ -949,6 +1003,16 @@
         }
         function cancelJobs() {
             jobGen++;
+            /* A sweep is a dozen jobs with one completion counter, and
+               terminating the worker throws their callbacks away: without
+               this the counter never reaches zero and the button stays
+               disabled for the rest of the session. */
+            if (study.running) {
+                study.running = false;
+                var sb = $('lp-study-run');
+                if (sb) sb.disabled = false;
+                studyNote('Study canceled: the model changed under it.');
+            }
             if (jobsInFlight > 0 && worker) {
                 worker.terminate();
                 jobsInFlight = 0; jobCallbacks = {};
@@ -1023,12 +1087,16 @@
             return Math.max(0.25 * a, 10);
         }
 
-        function buildMainJob() {
-            var pts = [], n = state.layers.length;
-            var zb = interfaceZs();
-            var stations = keyStations();
-            var off = stationOffset();
-
+        /* Surface, and both sides of every interface, under every load
+         * station. These are the points the key responses are read from, so
+         * the design study asks for exactly the same ones under a section
+         * that is not on screen: the interface depths come from the layers
+         * passed in, never from state, because a thickness sweep moves
+         * them. */
+        function keyPoints(layers) {
+            var pts = [], zb = [], z = 0, i;
+            for (i = 0; i < layers.length - 1; i++) { z += layers[i].h; zb.push(z); }
+            var stations = keyStations(), off = stationOffset();
             stations.forEach(function (s, si) {
                 var sx = s.x + off;
                 pts.push({ x: sx, y: s.y, z: 0, li: 0, tag: { t: 'kp', si: si, pos: 'surf' } });
@@ -1037,6 +1105,15 @@
                     pts.push({ x: sx, y: s.y, z: zi, li: ii + 1, tag: { t: 'kp', si: si, pos: 'top', layer: ii + 1 } });
                 });
             });
+            return pts;
+        }
+
+        function buildMainJob() {
+            var pts = keyPoints(solverLayers());
+            var n = state.layers.length;
+            var zb = interfaceZs();
+            var stations = keyStations();
+            var off = stationOffset();
 
             state.points.forEach(function (p, i) {
                 pts.push({ x: p.x, y: p.y, z: p.z, tag: { t: 'up', i: i } });
@@ -1163,9 +1240,17 @@
         /* =================== key responses =================== */
         function keyExtremes() {
             if (!results.key) return null;
-            var n = state.layers.length;
+            return extremesFrom(results.key, state.layers, results.basin);
+        }
+        /* The same reduction, over whatever set of key points it is given.
+         * The design study runs it on a section that is not the one on
+         * screen, so it cannot read `state` or `results`: a sweep whose
+         * critical-response rule drifted from the panel's would be a second
+         * model wearing the same labels. */
+        function extremesFrom(keyPts, layers, basin) {
+            var n = layers.length;
             var out = { w0: null, et: null, ev: null, sigt: null, tau: null };
-            results.key.forEach(function (p) {
+            (keyPts || []).forEach(function (p) {
                 var t = p.tag;
                 if (!isFinite(p.disp.uz)) return;
                 if (t.pos === 'surf') {
@@ -1178,7 +1263,7 @@
                     if (t.layer === 0 && n > 1) {
                         if (!out.et || eT > out.et.v) out.et = { v: eT, p: p };
                     }
-                    if (state.layers[t.layer].E >= 8000) {
+                    if (layers[t.layer].E >= 8000) {
                         if (!out.sigt || sT > out.sigt.v) out.sigt = { v: sT, p: p, layer: t.layer };
                     }
                     if (!out.tau || tau > out.tau.v) out.tau = { v: tau, p: p, layer: t.layer };
@@ -1187,8 +1272,8 @@
                     if (!out.ev || p.eps.zz < out.ev.v) out.ev = { v: p.eps.zz, p: p };
                 }
             });
-            if (results.basin) {
-                results.basin.forEach(function (p) {
+            if (basin) {
+                basin.forEach(function (p) {
                     if (p && isFinite(p.disp.uz) && (!out.w0 || p.disp.uz > out.w0.v)) out.w0 = { v: p.disp.uz, p: p };
                 });
             }
@@ -1669,18 +1754,12 @@
 
             var L0 = state.layers[0];
             var acBound = L0 && L0.tex === 'asphalt';
-            var Nf = null, epsT = null;
-            if (acBound && ex.et) {
-                epsT = Math.abs(ex.et.v);
-                var Epsi = L0.E * 145.0377377;
-                if (epsT > 0) Nf = 0.0796 * Math.pow(epsT, -3.291) * Math.pow(Epsi, -0.854);
-            }
-            var Nr = null, epsV = null;
-            if (ex.ev) { epsV = Math.abs(ex.ev.v); if (epsV > 0) Nr = 1.365e-9 * Math.pow(epsV, -4.477); }
-            var gov = null, govName = '';
-            if (Nf != null && Nr != null) { if (Nf <= Nr) { gov = Nf; govName = 'Fatigue cracking'; } else { gov = Nr; govName = 'Subgrade rutting'; } }
-            else if (Nf != null) { gov = Nf; govName = 'Fatigue cracking'; }
-            else if (Nr != null) { gov = Nr; govName = 'Subgrade rutting'; }
+            var epsT = acBound && ex.et ? Math.abs(ex.et.v) : null;
+            var epsV = ex.ev ? Math.abs(ex.ev.v) : null;
+            var Nf = epsT == null ? null : fatigueLife(epsT, L0.E);
+            var Nr = epsV == null ? null : ruttingLife(epsV);
+            var g = governingLife(Nf, Nr);
+            var gov = g ? g.N : null, govName = g ? g.by : '';
 
             var wrap = el('div', 'lp-perf-grid');
             var cards = el('div', 'lp-perf-cards');
@@ -1716,6 +1795,7 @@
             renderPerfChart();
         }
         var perfRetry = null;
+        var studyRetry = null;
         function renderPerfChart() {
             var P = plotly();
             if (!P) { clearTimeout(perfRetry); perfRetry = setTimeout(renderPerfChart, 500); return; }
@@ -1757,6 +1837,411 @@
 
         /* =================== contour build =================== */
         var contour = null; /* {canvas, vmin, vmax, lut, field, levels: [{v, segs}]} */
+
+        /* ========================== DESIGN STUDY ==========================
+         * Every other panel answers "what does THIS section do". The
+         * question a homework asks is the other one: how thick does layer 1
+         * have to be, how much does bonding buy, what happens when the
+         * subgrade is soft. Answering that by hand means editing a number,
+         * pressing Run, writing the answer down, and doing it eight more
+         * times, which is enough friction that nobody does it eight times.
+         *
+         * So: one variable, a range, and the critical responses across it,
+         * solved with the SAME key-point rule and the SAME transfer
+         * functions the panels use. Two details make it a design tool
+         * rather than a plotting one. The current design is marked on the
+         * curve, so the study always says where you are. And for a life,
+         * a target draws a line and the crossing is interpolated, which is
+         * the number the design was after: the thickness that buys the
+         * repetitions.
+         * ================================================================ */
+        var study = {
+            varId: null, from: null, to: null, steps: 13,
+            resp: 'Ng', target: 1e6, rows: null, running: false, ran: null
+        };
+
+        /* Every quantity worth sweeping, built from the section on screen.
+         * The subgrade's thickness is not among them: it is a half-space
+         * and its thickness is ignored, so a sweep of it would draw a flat
+         * line and teach the wrong thing. */
+        function studyVars() {
+            var out = [], n = state.layers.length, i;
+            for (i = 0; i < n - 1; i++) {
+                out.push({ id: 'h' + i, kind: 'h', i: i, q: 'len',
+                    name: state.layers[i].name + ' · thickness' });
+            }
+            for (i = 0; i < n; i++) {
+                out.push({ id: 'E' + i, kind: 'E', i: i, q: 'modulus',
+                    name: state.layers[i].name + ' · modulus' });
+            }
+            for (i = 0; i < state.interfaces.length; i++) {
+                out.push({ id: 's' + i, kind: 'slip', i: i, q: null,
+                    name: 'Interface ' + (i + 1) + '·' + (i + 2) + ' · slip' });
+            }
+            if (state.loads.length) {
+                out.push({ id: 'F', kind: 'F', q: 'force', name: 'Wheel load' });
+                if (state.loadKind === 'circle') {
+                    out.push({ id: 'p', kind: 'p', q: 'stress', name: 'Contact pressure' });
+                }
+            }
+            return out;
+        }
+        function studyVarById(id) {
+            var all = studyVars();
+            for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
+            return all[0] || null;
+        }
+        function studyCurrent(v) {
+            if (!v) return 0;
+            if (v.kind === 'h') return state.layers[v.i].h;
+            if (v.kind === 'E') return state.layers[v.i].E;
+            if (v.kind === 'slip') return state.interfaces[v.i] ? (state.interfaces[v.i].slip || 0) : 0;
+            if (v.kind === 'F') return state.loads.length ? state.loads[0].F : 0;
+            if (v.kind === 'p') return state.loads.length ? state.loads[0].p : 0;
+            return 0;
+        }
+        function studyDisp(v, x) { return v && v.q ? toDisp(v.q, x) : x; }
+        function studySI(v, x) { return v && v.q ? fromDisp(v.q, x) : x; }
+        function studyUnit(v) { return v && v.q ? unit(v.q) : ''; }
+
+        /* A range around where you are: half to double for anything with a
+         * scale, and the whole of it for a slip, which has ends. */
+        function studyDefaults(v) {
+            if (!v) return { from: 0, to: 1 };
+            var cur = studyDisp(v, studyCurrent(v));
+            if (v.kind === 'slip') return { from: 0, to: 1 };
+            if (!(cur > 0)) return { from: 0, to: 1 };
+            return { from: sig(cur * 0.5, 3) * 1, to: sig(cur * 1.5, 3) * 1 };
+        }
+
+        /* One step of the sweep, as a solver job. Nothing here reads the
+         * layers on screen: a thickness sweep moves the interfaces, so the
+         * evaluation points have to be built from the section being asked
+         * about rather than the one being displayed. */
+        /* A surface scan across the loaded width, which is where the
+         * deflection maximum lives: the panel finds it from the 121-point
+         * basin it draws, and the study has to look in the same places or
+         * the same quantity reads two ways on two panels. Restricted to the
+         * gear rather than the whole box, because outside it the surface is
+         * monotonic and the extra points buy nothing. */
+        function studySurfaceScan() {
+            if (!state.loads.length) return [];
+            var xs = state.loads.map(function (w) { return w.x; });
+            var a = 0;
+            state.loads.forEach(function (w) { a = Math.max(a, loadA(w)); });
+            a = Math.max(a, 60);
+            var x0 = Math.min.apply(null, xs) - 2.5 * a;
+            var x1 = Math.max.apply(null, xs) + 2.5 * a;
+            var N = 41, out = [];
+            for (var i = 0; i < N; i++) {
+                out.push({
+                    x: x0 + (x1 - x0) * i / (N - 1), y: state.ySec, z: 0, li: 0,
+                    tag: { t: 'bs', i: i }
+                });
+            }
+            return out;
+        }
+
+        function studyJob(v, value) {
+            var layers = solverLayers(), itf = solverInterfaces(), loads;
+            if (v.kind === 'h') layers[v.i].h = Math.max(value, 1);
+            else if (v.kind === 'E') layers[v.i].E = Math.max(value, 1);
+            else if (v.kind === 'slip') itf[v.i] = { slip: clamp(value, 0, 1) };
+            var kind = state.loadKind;
+            loads = state.loads.map(function (w) {
+                var F = w.F, p = w.p;
+                /* F and p are one equation with the area; the sweep holds
+                 * the other one and lets the contact area follow, which is
+                 * what happens on a truck: inflation pressure is a property
+                 * of the tire and the load is a property of the trip. */
+                if (v.kind === 'F') {
+                    var F0 = state.loads[0].F || 1;
+                    F = w.F * (value / F0);
+                } else if (v.kind === 'p') p = Math.max(value, 1e-6);
+                if (kind === 'circle') {
+                    return { kind: 'circle', x: w.x, y: w.y, p: p,
+                        a: Math.sqrt(F / Math.max(p, 1e-12) / Math.PI) };
+                }
+                if (kind === 'point') return { kind: 'point', x: w.x, y: w.y, P: F };
+                return { kind: 'line', x: w.x, y: w.y, P: F, L: gearParams.L, theta: gearParams.theta };
+            });
+            return {
+                job: {
+                    layers: layers, interfaces: itf, loads: loads,
+                    points: keyPoints(layers).concat(studySurfaceScan()),
+                    options: solverOptions()
+                },
+                layers: layers
+            };
+        }
+
+        function studyNote(html) {
+            var el2 = $('lp-study-note');
+            if (el2) el2.innerHTML = html;
+        }
+
+        function runStudy() {
+            if (study.running) return;
+            var v = studyVarById($('lp-study-var').value);
+            if (!v) return;
+            var from = studySI(v, parseFloat($('lp-study-from').value));
+            var to = studySI(v, parseFloat($('lp-study-to').value));
+            var steps = clamp(Math.round(parseFloat($('lp-study-steps').value) || 13), 3, 41);
+            if (!isFinite(from) || !isFinite(to) || from === to) {
+                studyNote('Give the range two different ends.');
+                return;
+            }
+            $('lp-study-steps').value = String(steps);
+            var gen = jobGen, pending = steps, rows = new Array(steps), done = 0;
+            var acBound = state.layers[0] && state.layers[0].tex === 'asphalt';
+            study.running = true;
+            study.rows = null;
+            study.ran = {
+                varId: v.id, name: v.name, q: v.q, unit: studyUnit(v),
+                current: studyCurrent(v), acBound: acBound
+            };
+            $('lp-study-run').disabled = true;
+            studyNote('Solving 0 of ' + steps + '…');
+
+            for (var k = 0; k < steps; k++) {
+                (function (k) {
+                    var value = from + (to - from) * k / (steps - 1);
+                    var built = studyJob(v, value);
+                    postJob('study', built.job, function (err, res) {
+                        if (gen !== jobGen || disposed) return;
+                        pending--; done++;
+                        if (!err && res) {
+                            var kp = [], bs = [];
+                            res.points.forEach(function (p) {
+                                (p.tag && p.tag.t === 'bs' ? bs : kp).push(p);
+                            });
+                            var ex = extremesFrom(kp, built.layers, bs);
+                            var epsT = acBound && ex.et ? Math.abs(ex.et.v) : null;
+                            var epsV = ex.ev ? Math.abs(ex.ev.v) : null;
+                            var Nf = epsT == null ? null : fatigueLife(epsT, built.layers[0].E);
+                            var Nr = epsV == null ? null : ruttingLife(epsV);
+                            rows[k] = { value: value, ex: ex, Nf: Nf, Nr: Nr, Ng: governingLife(Nf, Nr) };
+                        }
+                        studyNote('Solving ' + done + ' of ' + steps + '…');
+                        if (pending <= 0) {
+                            study.running = false;
+                            study.rows = rows.filter(function (r) { return !!r; });
+                            $('lp-study-run').disabled = false;
+                            renderStudy();
+                        }
+                    });
+                })(k);
+            }
+        }
+
+        function studySeries(respId) {
+            var r = null;
+            for (var i = 0; i < STUDY_RESP.length; i++) if (STUDY_RESP[i].id === respId) r = STUDY_RESP[i];
+            return r || STUDY_RESP[0];
+        }
+
+        /* Where the curve crosses the target, in the units on screen.
+         * Interpolated in log N, which is the space a life is smooth in and
+         * the space the transfer functions are straight lines in. */
+        function studyCrossing(rows, resp, target) {
+            if (!resp.log || !(target > 0)) return null;
+            for (var i = 1; i < rows.length; i++) {
+                var a = resp.get(rows[i - 1]), b = resp.get(rows[i]);
+                if (!(a > 0) || !(b > 0)) continue;
+                if ((a - target) * (b - target) > 0) continue;
+                if (a === b) return rows[i].value;
+                var t = (Math.log10(target) - Math.log10(a)) / (Math.log10(b) - Math.log10(a));
+                return rows[i - 1].value + t * (rows[i].value - rows[i - 1].value);
+            }
+            return null;
+        }
+
+        function renderStudyControls(keepRange) {
+            var sel = $('lp-study-var');
+            if (!sel) return;
+            var vars = studyVars();
+            var runBtn = $('lp-study-run');
+            if (!vars.length) {
+                /* The panels are built before the unit gate is answered, so
+                   there is a moment with no section to sweep at all. */
+                sel.innerHTML = '';
+                if (runBtn) runBtn.disabled = true;
+                return;
+            }
+            if (runBtn && !study.running) runBtn.disabled = false;
+            var want = study.varId || (vars[0] && vars[0].id);
+            sel.innerHTML = '';
+            vars.forEach(function (v) {
+                var o = doc.createElement('option');
+                o.value = v.id; o.textContent = v.name;
+                sel.appendChild(o);
+            });
+            if (!vars.some(function (v) { return v.id === want; })) want = vars[0] && vars[0].id;
+            sel.value = want || '';
+            study.varId = sel.value;
+
+            var v = studyVarById(study.varId);
+            var unitSpan = $('lp-study-unit');
+            if (unitSpan) unitSpan.textContent = studyUnit(v);
+            /* Also when the boxes are empty: the panel is built before the
+               unit gate is answered, so the first fill has nothing to fill
+               from and the range would stay blank until the variable was
+               changed by hand. */
+            /* Also when the boxes are empty: the panel is built before the
+               unit gate is answered, so the first fill has nothing to fill
+               from, and the range would stay blank until the variable was
+               changed by hand. */
+            if (!keepRange || !$('lp-study-from').value || !$('lp-study-to').value) {
+                var d = studyDefaults(v);
+                $('lp-study-from').value = String(d.from);
+                $('lp-study-to').value = String(d.to);
+            }
+            var rsel = $('lp-study-resp');
+            if (rsel && !rsel.options.length) {
+                STUDY_RESP.forEach(function (r) {
+                    var o = doc.createElement('option');
+                    o.value = r.id;
+                    o.textContent = symText(r.sym) + '  ·  ' + r.name;
+                    rsel.appendChild(o);
+                });
+                rsel.value = study.resp;
+            }
+            var resp = studySeries(study.resp);
+            var tw = $('lp-study-target-wrap');
+            if (tw) tw.hidden = !resp.log;
+        }
+
+        function renderStudy() {
+            renderStudyControls(true);
+            if (study.running) return;
+            if (!study.rows || !study.rows.length) {
+                studyNote('Pick a quantity, give it a range, and press <strong>Run study</strong>. ' +
+                    'Every step is solved with the same critical-response rule the panels use.');
+                var P0 = plotly(), h0 = $('lp-chart-study');
+                if (P0 && h0) { try { P0.purge(h0); } catch (e) { /* never drawn */ } }
+                return;
+            }
+            renderStudyChart();
+        }
+
+        function renderStudyChart() {
+            var P = plotly(), hostEl = $('lp-chart-study');
+            if (!hostEl) return;
+            if (!P) { clearTimeout(studyRetry); studyRetry = setTimeout(renderStudyChart, 500); return; }
+            var ran = study.ran, rows = study.rows;
+            if (!ran || !rows || !rows.length) return;
+            var resp = studySeries(study.resp);
+            var vq = function (x) { return ran.q ? toDisp(ran.q, x) : x; };
+            var xs = rows.map(function (r) { return vq(r.value); });
+            var ys = rows.map(function (r) {
+                var y = resp.get(r);
+                if (y == null) return null;
+                return resp.q ? toDisp(resp.q, y) : y;
+            });
+            var xUnit = ran.unit ? ' (' + ran.unit + ')' : '';
+            var yUnit = resp.q ? ' (' + unit(resp.q) + ')' : '';
+            var lay = chartLayout(ran.name + xUnit,
+                symText(resp.sym) + yUnit, { showlegend: false, noReverseY: true });
+            if (resp.log) {
+                lay.yaxis.type = 'log';
+                /* Under one decade Plotly labels the minor ticks with bare
+                   mantissas, so a column of repetitions reads 4, 6, 8, 1M,
+                   2, 3. Every tick prints its own magnitude instead. */
+                lay.yaxis.tickformat = '~s';
+            }
+
+            var shapes = [], anns = [];
+            var xCur = vq(ran.current);
+            shapes.push({
+                type: 'line', xref: 'x', yref: 'paper', x0: xCur, x1: xCur, y0: 0, y1: 1,
+                line: { color: cssVar('--lp-accent'), width: 1.4, dash: 'dot' }
+            });
+            anns.push({
+                x: xCur, y: 1, xref: 'x', yref: 'paper', yanchor: 'bottom',
+                text: 'this design', showarrow: false,
+                font: { size: 10, color: cssVar('--lp-accent') }
+            });
+
+            var solved = null;
+            if (resp.log && study.target > 0) {
+                var ty = study.target;
+                shapes.push({
+                    type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: ty, y1: ty,
+                    line: { color: cssVar('--lp-ink3'), width: 1.2, dash: 'dash' }
+                });
+                solved = studyCrossing(rows, resp, ty);
+            }
+            var traces = [{
+                x: xs, y: ys, mode: 'lines+markers',
+                line: { color: cssVar('--lp-cat1'), width: 2.2, shape: 'spline', smoothing: 0.6 },
+                marker: { size: 6, color: cssVar('--lp-cat1') },
+                connectgaps: false,
+                hovertemplate: '%{x:.4g}' + xUnit + '  →  %{y:.4g}' + yUnit + '<extra></extra>'
+            }];
+            if (solved != null) {
+                traces.push({
+                    x: [vq(solved)], y: [study.target], mode: 'markers',
+                    marker: { size: 11, color: cssVar('--lp-ok'), symbol: 'diamond',
+                        line: { color: cssVar('--lp-bg1'), width: 1.5 } },
+                    hovertemplate: 'target at %{x:.4g}' + xUnit + '<extra></extra>'
+                });
+            }
+            lay.shapes = shapes;
+            lay.annotations = anns;
+            P.react(hostEl, traces, lay, { displayModeBar: false, responsive: true });
+
+            /* The reading, in words, because the number the study was run
+               for is the crossing and not the curve. */
+            var here = resp.get(rows.reduce(function (best, r) {
+                return best == null || Math.abs(r.value - ran.current) < Math.abs(best.value - ran.current) ? r : best;
+            }, null));
+            var uSuffix = ran.unit ? ' ' + ran.unit : '';
+            var txt = '<strong>' + rows.length + '</strong> sections solved. ';
+            if (here != null) {
+                txt += 'At ' + sig(vq(ran.current), 4) + uSuffix + ', ' +
+                    symText(resp.sym) + ' is ' +
+                    (resp.log ? fmtLife(here) : sig(resp.q ? toDisp(resp.q, here) : here, 4) +
+                        (resp.q ? ' ' + unit(resp.q) : '')) + '. ';
+            }
+            if (resp.log) {
+                txt += solved != null
+                    ? '<strong>' + fmtLife(study.target) + '</strong> repetitions at ' +
+                      ran.name + ' = <strong>' + sig(vq(solved), 4) + uSuffix +
+                      '</strong>, interpolated between the two steps that straddle it.'
+                    : 'The target is not crossed inside this range.';
+            }
+            if (!ran.acBound && (resp.id === 'Nf' || resp.id === 'Ng')) {
+                txt += ' The surface layer is not asphalt-bound, so there is no fatigue life to plot.';
+            }
+            studyNote(txt);
+        }
+
+        function exportStudyCsv() {
+            if (!study.rows || !study.rows.length) return;
+            var ran = study.ran;
+            var lines = [];
+            lines.push('# LEAPS design study');
+            lines.push('# ' + ran.name + ', ' + study.rows.length + ' steps, units ' + state.settings.units);
+            function csv(v) {
+                var t = String(v == null ? '' : v);
+                return /[",\n]/.test(t) ? '"' + t.split('"').join('""') + '"' : t;
+            }
+            function row(cells) { return cells.map(csv).join(','); }
+            lines.push(row([ran.name + ' (' + (ran.unit || 'dimensionless') + ')',
+                'et (' + unit('strain') + ')', 'ev (' + unit('strain') + ')',
+                'w (' + unit('defl') + ')', 'Nf', 'Nr', 'N governing', 'governed by']));
+            study.rows.forEach(function (r) {
+                var et = r.ex.et ? Math.abs(r.ex.et.v) : null;
+                var ev = r.ex.ev ? Math.abs(r.ex.ev.v) : null;
+                var w0 = r.ex.w0 ? Math.abs(r.ex.w0.v) : null;
+                function f(x, q) { return x == null ? '' : sig(q ? toDisp(q, x) : x, 6); }
+                lines.push(row([
+                    f(r.value, ran.q), f(et, 'strain'), f(ev, 'strain'), f(w0, 'defl'),
+                    f(r.Nf), f(r.Nr), r.Ng ? sig(r.Ng.N, 6) : '', r.Ng ? r.Ng.by : ''
+                ]));
+            });
+            download((state.name || 'leaps') + '-study.csv', lines.join('\n'), 'text/csv');
+        }
 
         function buildContour() {
             contour = null;
@@ -1946,6 +2431,13 @@
             $$('#lp-viewmode .lp-seg-btn').forEach(function (b) {
                 b.classList.toggle('is-active', (b.dataset.view === '3d') === !!state.settings.view3d);
             });
+            /* The plan inset is a second picture of exactly what the 3-D
+             * view already shows, drawn over the top of it, and the one
+             * thing it was needed for -- moving the section line -- is a
+             * drag on the cut plane out there. It comes back untouched,
+             * collapsed or not, when the Section view does. */
+            var pp = $('lp-plan-panel');
+            if (pp) pp.classList.toggle('is-away', !!state.settings.view3d);
         }
         function fitView() {
             if (state.settings.view3d) { fit3(); drawViewport(); return; }
@@ -2509,6 +3001,36 @@
             ctx.restore();
         }
 
+        /* Where the cut plane's top edge is on screen, and how far the
+         * pointer is from it. The edge is the handle: dragging the section
+         * through the gear is the one edit this view can offer honestly,
+         * because y is the only coordinate a point on that line is free in.
+         * Everything else would need a depth the screen does not carry. */
+        function cutEdge3() {
+            var sb = sceneBox(), B = basis3();
+            var ySec = clamp(state.ySec, sb.y0, sb.y1);
+            return { a: P3(B, sb.xL, ySec, 0), b: P3(B, sb.xR, ySec, 0), B: B, sb: sb };
+        }
+        function hitCut3(mx, my) {
+            var e = cutEdge3();
+            var ax = e.a[0], ay = e.a[1], bx = e.b[0], by = e.b[1];
+            var vx = bx - ax, vy = by - ay;
+            var len2 = vx * vx + vy * vy;
+            if (len2 < 1) return false;
+            var t = clamp(((mx - ax) * vx + (my - ay) * vy) / len2, 0, 1);
+            var px = ax + t * vx, py = ay + t * vy;
+            return Math.hypot(mx - px, my - py) < 9;
+        }
+        /* A screen displacement, read back as a displacement in y. The
+         * projection is affine, so this is the least-squares inverse of one
+         * basis vector and not an approximation. */
+        function screenToY3(dx, dy) {
+            var B = basis3();
+            var ey = B.ey, len2 = ey[0] * ey[0] + ey[1] * ey[1];
+            if (len2 < 1e-12) return 0;
+            return (dx * ey[0] + dy * ey[1]) / len2;
+        }
+
         function drawScene3D() {
             var sb = sceneBox();
             if (!view3.fitted) fit3();
@@ -2739,7 +3261,8 @@
             ctx.lineTo(sx0 + sl, sy0 - 4); ctx.stroke();
             ctx.fillStyle = ink3; ctx.font = '10px ' + monoFont();
             ctx.fillText(sig(toDisp('len', gstep), 3) + ' ' + unit('len'), sx0 + sl + 6, sy0 + 3.5);
-            ctx.fillText('drag to orbit · scroll to zoom · shift-drag to pan', sx0, sy0 - 15);
+            ctx.fillText('drag to orbit · scroll to zoom · drag the cut plane to move the section',
+                sx0, sy0 - 15);
 
             drawTriad3(B, nearIsLow);
             void ink2;
@@ -3365,6 +3888,11 @@
                  * is an infinite number of world positions and guessing one
                  * would move a layer the reader did not mean to touch. */
                 if (state.settings.view3d) {
+                    if (!e.shiftKey && hitCut3(mx, my)) {
+                        drag = { type: 'ysec', sx: mx, sy: my, y0: state.ySec, moved: false };
+                        cv.style.cursor = 'grabbing';
+                        return;
+                    }
                     drag = { type: 'orbit', sx: mx, sy: my, az: view3.az, el: view3.el,
                              ox: view3.ox, oy: view3.oy, pan: e.shiftKey, moved: false };
                     cv.style.cursor = 'grabbing';
@@ -3437,6 +3965,13 @@
             on(win, 'pointerup', function () {
                 if (!drag) { dragNote = null; return; }
                 if (drag.type === 'orbit') { drag = null; cv.style.cursor = 'grab'; return; }
+                if (drag.type === 'ysec') {
+                    var moved = drag.moved;
+                    drag = null;
+                    cv.style.cursor = 'grab';
+                    if (moved) mutate(function () { /* ySec already set */ });
+                    return;
+                }
                 if (drag.type === 'point' && drag.moved) mutate(function () { /* committed in place */ });
                 else if (drag.type === 'itf' && drag.moved) { dragNote = null; mutate(function () { }); }
                 else if (drag.type === 'chip') cycleInterface(drag.i);
@@ -3471,6 +4006,18 @@
             }, { passive: false });
             on(cv, 'pointermove', function (e) {
                 if (state.settings.view3d) {
+                    if (drag && drag.type === 'ysec') {
+                        drag.moved = true;
+                        var sb3 = sceneBox();
+                        var yNew = drag.y0 + screenToY3(e.offsetX - drag.sx, e.offsetY - drag.sy);
+                        state.ySec = clamp(dragSnap('len', yNew), sb3.y0, sb3.y1);
+                        drawViewport();
+                        var cy = $('lp-coords');
+                        if (cy) {
+                            cy.textContent = 'section y ' + sig(toDisp('len', state.ySec), 5) + ' ' + unit('len');
+                        }
+                        return;
+                    }
                     if (drag && drag.type === 'orbit') {
                         drag.moved = true;
                         var ddx = e.offsetX - drag.sx, ddy = e.offsetY - drag.sy;
@@ -3492,7 +4039,7 @@
                             view3.el = clamp(drag.el - ddy * 0.32, 12, 72);
                         }
                         drawViewport();
-                    } else cv.style.cursor = 'grab';
+                    } else cv.style.cursor = hitCut3(e.offsetX, e.offsetY) ? 'move' : 'grab';
                     var c3 = $('lp-coords');
                     if (c3) {
                         c3.textContent = 'orbit ' + Math.round(((view3.az % 360) + 360) % 360) +
@@ -4423,6 +4970,8 @@
             });
 
             renderFieldPickers();
+            renderStudyControls(false);
+            renderStudy();
 
             var dtabs = $$('.lp-dtab');
             dtabs.forEach(function (t) {
@@ -4436,8 +4985,34 @@
                     $('lp-dock').classList.remove('is-collapsed');
                     if (key === 'profiles') { renderCharts(); resizePlots(['lp-chart-profile', 'lp-chart-surface', 'lp-chart-basin', 'lp-smallmults']); }
                     else if (key === 'performance') { renderPerformance(); resizePlots(['lp-chart-perf']); }
+                    else if (key === 'study') { renderStudy(); resizePlots(['lp-chart-study']); }
                 });
             });
+            /* The design study. The variable list is rebuilt from the
+               section every time it is opened, because layers get added,
+               renamed and deleted while a study is sitting there. */
+            $('lp-study-var').addEventListener('change', function (e) {
+                study.varId = e.target.value;
+                renderStudyControls(false);
+            });
+            $('lp-study-resp').addEventListener('change', function (e) {
+                study.resp = e.target.value;
+                renderStudyControls(true);
+                if (study.rows) renderStudyChart();
+            });
+            $('lp-study-target').addEventListener('input', debounce(function (e) {
+                var t = parseFloat(e.target.value);
+                study.target = isFinite(t) && t > 0 ? t : 0;
+                if (study.rows) renderStudyChart();
+            }, 260));
+            $('lp-study-steps').addEventListener('change', function (e) {
+                var n = clamp(Math.round(parseFloat(e.target.value) || 13), 3, 41);
+                e.target.value = String(n);
+                study.steps = n;
+            });
+            $('lp-study-run').addEventListener('click', runStudy);
+            $('lp-study-csv').addEventListener('click', exportStudyCsv);
+
             $('lp-dock-collapse').addEventListener('click', function () {
                 var d = $('lp-dock');
                 d.classList.toggle('is-collapsed');
@@ -4620,6 +5195,9 @@
         EQ: EQ,
         symHtml: symHtml,
         symText: symText,
-        axonometric: axonometric
+        axonometric: axonometric,
+        fatigueLife: fatigueLife,
+        ruttingLife: ruttingLife,
+        governingLife: governingLife
     };
 });

@@ -408,6 +408,10 @@
 
 #lp-colorbar { position: absolute; right: 12px; top: 64px; z-index: 4; pointer-events: none; }
 
+/* Away, not collapsed: the panel keeps whichever state the reader left
+   it in, because the 3-D view borrowing the canvas is not a decision about
+   the plan inset. */
+.lp-plan-panel.is-away { display: none; }
 .lp-plan-panel {
     position: absolute; right: 12px; bottom: 12px; z-index: 4;
     width: 300px;
@@ -506,6 +510,19 @@
 .lp-dpane.is-active { display: block; }
 
 .lp-prof-controls { display: flex; align-items: flex-end; gap: 1em; margin-bottom: 0.9em; flex-wrap: wrap; }
+/* The design study's control rows. Its own class rather than the profile
+   pane's, because the two will not stay the same shape and a shared name is
+   how a rule ends up being changed for one panel and breaking another. */
+.lp-study-row {
+    display: flex; align-items: flex-end; gap: 0.8em;
+    margin-bottom: 0.7em; flex-wrap: wrap;
+}
+.lp-study-row .lp-btn { height: 2.35em; }
+.lp-study-wide { min-width: 15em; flex: 1 1 16em; }
+.lp-study-num { width: 7.2em; flex: 0 0 auto; }
+.lp-study-num input { width: 100%; }
+.lp-field-inline > span em { font-style: normal; color: var(--lp-ink3); }
+.lp-chart-tall { height: 330px; }
 .lp-field-inline { margin: 0; min-width: 15em; }
 .lp-prof-controls .lp-hint { margin: 0; align-self: center; max-width: 60ch; }
 .lp-prof-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1em; margin-bottom: 1em; }
