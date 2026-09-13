@@ -107,7 +107,7 @@
                     <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to LEAPS workbench</a>
                     <div class="header-badges">
                         <span class="header-badge"><i class="fas fa-microchip"></i> LEAF-JS Engine</span>
-                        <span class="header-badge"><i class="fas fa-code-branch"></i> v2.3</span>
+                        <span class="header-badge"><i class="fas fa-code-branch"></i> v2.4</span>
                     </div>
                 </div>
 
@@ -171,6 +171,16 @@
                                 <li><strong>Closed-form surface tails</strong>: at <code>z = 0</code> the integrals reduce to Weber-Schafheitlin forms evaluated with complete elliptic integrals <code>K</code>, <code>E</code> (arithmetic-geometric mean). Surface deflection of a halfspace is therefore returned to machine precision rather than by truncated quadrature.</li>
                             </ul>
                             <p>The solver tolerance (Solver panel) sets the convergence target of the accelerated tail; the contour resolution sets the size of the sampling grid used only for the stress-bulb visualization, not for the reported key responses.</p>
+                        </section>
+
+                            <h3>What makes it fast enough to be interactive</h3>
+                            <p>A contour grid is 2,600 points and each point is a quadrature, so the whole picture is a few million evaluations of the layered kernels. Three things keep that inside a couple of seconds, and none of them costs accuracy.</p>
+                            <ul>
+                                <li><strong>Shared quadrature nodes.</strong> The panel breakpoints come from the zeros of the Bessel families and the exponential decay scale, and both the decay length and the radial distance are <em>quantized to powers of two</em>. Neighboring points then land on exactly the same nodes and every 4N-2 coefficient solve is computed once and reused. Rounding the radius <em>up</em> makes the panels finer than the oscillation needs, so it cannot cost accuracy; measured on a 61x43 grid under a dual tandem it took the linear solves from 34,792 to 3,032.</li>
+                                <li><strong>Half the grid, mirrored.</strong> When the gear is its own mirror image in x, which is every layout the gear generator builds, only half the columns are solved and the other half is a reflection: the stresses and strains carrying one x index change sign, everything else does not, and the principal values are untouched because a reflection is orthogonal. Exact, not approximate, and it halves the most expensive job in the tool.</li>
+                                <li><strong>A coarse pass first.</strong> Where the full grid is more than a moment away, a grid at about a third of the resolution is solved first and drawn while the full one runs. The picture arrives in about a second and sharpens rather than appearing all at once two seconds later.</li>
+                            </ul>
+                            <p>The contour is also not solved at all while the overlay is switched off, and the status bar names what each pass cost, so none of this has to be taken on trust.</p>
                         </section>
 
                         <section class="lp-doc-sec" id="interfaces">

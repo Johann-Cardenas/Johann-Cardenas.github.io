@@ -428,6 +428,30 @@
           get: function (r) { return r.Ng ? r.Ng.N : null; } }
     ];
 
+    /* x -> -x, applied to one solved point.
+     *
+     * The reflection is an ORTHOGONAL map, so every invariant comes through
+     * untouched - the principal stresses and strains, the von Mises stress,
+     * the maximum shear - and what changes sign is exactly the components
+     * carrying one x index: sigma_xy, sigma_xz, their strains, and u_x.
+     * Getting that list wrong would put a correct-looking shear bulb on the
+     * wrong side of the section, which is why the contour's mirrored half
+     * is checked against the engine's own answer rather than trusted. */
+    function mirrorXPoint(p) {
+        if (!p) return p;
+        var s2 = p.sig, e2 = p.eps, d2 = p.disp;
+        return {
+            x: -p.x, y: p.y, z: p.z, li: p.li,
+            sig: { xx: s2.xx, yy: s2.yy, zz: s2.zz, xy: -s2.xy, xz: -s2.xz, yz: s2.yz },
+            eps: { xx: e2.xx, yy: e2.yy, zz: e2.zz, xy: -e2.xy, xz: -e2.xz, yz: e2.yz },
+            disp: { ux: -d2.ux, uy: d2.uy, uz: d2.uz },
+            principal: p.principal, epsPrincipal: p.epsPrincipal,
+            vm: p.vm, tauMax: p.tauMax, tauOct: p.tauOct,
+            meanStress: p.meanStress, bulkStress: p.bulkStress,
+            converged: p.converged, singular: p.singular, tag: p.tag
+        };
+    }
+
     function mulberry32(seed) {
         var t0 = seed >>> 0;
         return function () {
@@ -1157,25 +1181,79 @@
             return list;
         }
 
-        function buildGridJob(box) {
+        /* Is the gear its own mirror image in x?
+         *
+         * The contour grid is the most expensive thing this app asks for,
+         * and half of it is redundant whenever the loads are symmetric
+         * about x = 0, which covers every gear the generator builds. The
+         * section plane is a y = const plane, so a mirror in x maps it to
+         * itself: the test is about the LOADS and nothing else, and holds
+         * at any section offset. */
+        function loadsMirrorX() {
+            var ws = state.loads;
+            if (!ws.length) return false;
+            /* a segment at any azimuth but along y maps to a different
+               segment under the mirror, so only the perpendicular case is
+               symmetric */
+            if (state.loadKind === 'line' &&
+                Math.abs(Math.cos(gearParams.theta * Math.PI / 180)) > 1e-9) return false;
+            var tol = 1e-6 * Math.max(1, maxA());
+            for (var i = 0; i < ws.length; i++) {
+                var found = false;
+                for (var j = 0; j < ws.length && !found; j++) {
+                    found = Math.abs(ws[j].x + ws[i].x) < tol &&
+                        Math.abs(ws[j].y - ws[i].y) < tol &&
+                        Math.abs(ws[j].F - ws[i].F) <= 1e-9 * Math.max(1, Math.abs(ws[i].F)) &&
+                        Math.abs(ws[j].p - ws[i].p) <= 1e-9 * Math.max(1, Math.abs(ws[i].p));
+                }
+                if (!found) return false;
+            }
+            return true;
+        }
+
+        function buildGridJob(box, scale) {
             var rr = state.settings.res.split('x');
             var nx = parseInt(rr[0], 10), nz = parseInt(rr[1], 10);
             /* A line load costs several times a circular one per point: it
              * is a quadrature inside a quadrature, so the contour grid is
              * trimmed rather than left to take five seconds. */
             if (state.loadKind === 'line') { nx = Math.round(nx * 0.7); nz = Math.round(nz * 0.7); }
+            if (scale && scale < 1) {
+                nx = Math.max(9, Math.round(nx * scale) | 1);
+                nz = Math.max(7, Math.round(nz * scale) | 1);
+            }
             var xs = [], zs = [], pts = [];
             for (var i = 0; i < nx; i++) xs.push(box.xL + (box.xR - box.xL) * i / (nx - 1));
             for (var j = 0; j < nz; j++) zs.push(box.zMax * j / (nz - 1));
+            /* Half the columns when the gear is its own mirror image, and
+             * the box is symmetric about x = 0 so the columns pair up
+             * exactly. The other half is arithmetic, not a solve. */
+            var mirror = loadsMirrorX() && Math.abs(box.xL + box.xR) < 1e-6 * Math.max(1, Math.abs(box.xR));
+            var i0 = mirror ? Math.ceil((nx - 1) / 2) : 0;
             for (j = 0; j < nz; j++) {
-                for (i = 0; i < nx; i++) pts.push({ x: xs[i], y: state.ySec, z: zs[j] });
+                for (i = i0; i < nx; i++) pts.push({ x: xs[i], y: state.ySec, z: zs[j] });
             }
             return {
                 job: {
                     layers: solverLayers(), interfaces: solverInterfaces(),
                     loads: solverLoads(), points: pts, options: solverOptions()
-                }, nx: nx, nz: nz, xs: xs, zs: zs
+                }, nx: nx, nz: nz, xs: xs, zs: zs, i0: i0
             };
+        }
+
+        /* Put a solved half-grid back into a whole one. */
+        function expandGrid(pts, g) {
+            if (!g.i0) return pts;
+            var w = g.nx - g.i0, out = new Array(g.nx * g.nz);
+            for (var j = 0; j < g.nz; j++) {
+                for (var i = g.i0; i < g.nx; i++) {
+                    var src = pts[j * w + (i - g.i0)];
+                    out[j * g.nx + i] = src;
+                    var mi = g.nx - 1 - i;
+                    if (mi < g.i0) out[j * g.nx + mi] = mirrorXPoint(src);
+                }
+            }
+            return out;
         }
 
         var scheduleRun = debounce(function () {
@@ -1198,20 +1276,67 @@
             var main = buildMainJob();
             var grid = buildGridJob(main.box);
 
+            var statsMain = '', statsGrid = '';
+            function showStats() {
+                $('lp-stats').textContent = statsMain + statsGrid;
+            }
+
             postJob('main', main.job, function (err, res) {
                 if (err || myGen !== jobGen || disposed) return;
                 applyMainResults(res, main.stations);
-                $('lp-stats').textContent =
-                    res.stats.nPoints + ' pts · ' + res.stats.systemSolves + ' kernel solves · ' +
-                    Math.round(res.stats.ms) + ' ms';
+                statsMain = res.stats.nPoints + ' pts · ' + res.stats.systemSolves +
+                    ' kernel solves · ' + Math.round(res.stats.ms) + ' ms';
+                showStats();
             });
-            postJob('grid', grid.job, function (err, res) {
-                if (err || myGen !== jobGen || disposed) return;
-                results.grid = { nx: grid.nx, nz: grid.nz, xs: grid.xs, zs: grid.zs, pts: res.points, box: main.box };
-                buildContour();
-                drawViewport();
-                $('lp-stats').textContent += ' · grid ' + grid.nx + '×' + grid.nz + ' in ' + Math.round(res.stats.ms) + ' ms';
-            });
+
+            /* The contour is the expensive half of a run and the only half
+             * a reader watches arrive, so it comes in two passes: a coarse
+             * one that costs about a tenth and puts a picture on the
+             * section within a moment, then the full one over the top of
+             * it. The preview is not free, but a blank viewport for two
+             * seconds after every edit costs more. */
+            if (state.settings.showContour) {
+                var fullDone = false;
+                /* Measured: a point costs about the same wherever it is, so
+                   the work is points times loads. Below this the full grid
+                   lands inside a second and a preview only delays it. */
+                var work = grid.job.points.length * Math.max(1, state.loads.length);
+                var coarse = buildGridJob(main.box, 0.38);
+                if (work > 2500) postJob('grid', coarse.job, function (err, res) {
+                    if (err || myGen !== jobGen || disposed) return;
+                    if (fullDone) return;            /* the full one won the race */
+                    results.grid = {
+                        nx: coarse.nx, nz: coarse.nz, xs: coarse.xs, zs: coarse.zs,
+                        pts: expandGrid(res.points, coarse), box: main.box, preview: true
+                    };
+                    buildContour();
+                    drawViewport();
+                    statsGrid = ' · preview ' + coarse.nx + '×' + coarse.nz +
+                        ' in ' + Math.round(res.stats.ms) + ' ms';
+                    showStats();
+                });
+                postJob('grid', grid.job, function (err, res) {
+                    if (err || myGen !== jobGen || disposed) return;
+                    fullDone = true;
+                    results.grid = {
+                        nx: grid.nx, nz: grid.nz, xs: grid.xs, zs: grid.zs,
+                        pts: expandGrid(res.points, grid), box: main.box
+                    };
+                    buildContour();
+                    drawViewport();
+                    statsGrid = ' · grid ' + grid.nx + '×' + grid.nz +
+                        ' in ' + Math.round(res.stats.ms) + ' ms' +
+                        (grid.i0 ? ' (half, mirrored)' : '');
+                    showStats();
+                });
+            } else {
+                /* No grid was asked for, so the one from the last run is no
+                   longer about this model: it goes with it, which is also
+                   what lets the overlay switch ask for a fresh one. */
+                results.grid = null;
+                contour = null;
+                drawColorbar();
+            }
         }
 
         function applyMainResults(res, stations) {
@@ -4106,7 +4231,12 @@
                 state.settings.showBasin = e.target.checked; drawViewport(); saveLocal();
             });
             $('lp-show-contour').addEventListener('change', function (e) {
-                state.settings.showContour = e.target.checked; drawViewport(); saveLocal();
+                state.settings.showContour = e.target.checked;
+                drawViewport();
+                saveLocal();
+                /* Nothing solves a field nobody is looking at, so turning
+                   the overlay back on is what asks for it. */
+                if (state.settings.showContour && !results.grid) scheduleRun();
             });
             $('lp-alpha').addEventListener('input', function (e) {
                 state.settings.alpha = parseFloat(e.target.value); drawViewport();
@@ -5198,6 +5328,7 @@
         axonometric: axonometric,
         fatigueLife: fatigueLife,
         ruttingLife: ruttingLife,
-        governingLife: governingLife
+        governingLife: governingLife,
+        mirrorXPoint: mirrorXPoint
     };
 });

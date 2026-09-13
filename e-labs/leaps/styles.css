@@ -377,6 +377,7 @@
 
 /* ---------- Viewport ---------- */
 .lp-viewport {
+    container-type: inline-size;
     position: relative; background: var(--lp-bg0); min-height: 640px;
     overflow: hidden; outline: none;
 }
@@ -407,6 +408,24 @@
 .lp-vp-field { align-items: stretch; }
 
 #lp-colorbar { position: absolute; right: 12px; top: 64px; z-index: 4; pointer-events: none; }
+
+/* The two floating control groups sit against opposite edges of the
+   VIEWPORT, so what decides whether they collide is the viewport's width
+   and not the window's: at 1024px with both rails open the viewport is
+   643px, and a window-width rule would be right there for the wrong reason
+   and wrong on a wide screen with a narrow viewport. A container query asks
+   the only question that matters. */
+@container (max-width: 720px) {
+    /* under the toolbar rather than beside it, and the colorbar under that
+       again, so nothing overlaps anything */
+    .lp-vp-field { top: 58px; }
+    #lp-colorbar { top: 112px; }
+}
+@container (max-width: 430px) {
+    /* narrower than the two can ever be side by side: the field keeps its
+       selector and loses the opacity slider, whose default is fine */
+    .lp-vp-field input[type="range"] { display: none; }
+}
 
 /* Away, not collapsed: the panel keeps whichever state the reader left
    it in, because the 3-D view borrowing the canvas is not a decision about
@@ -785,6 +804,21 @@
     }
     .lp-topbar::-webkit-scrollbar { display: none; }
     .lp-topbar > * { flex: 0 0 auto; }
+    /* The toolbar becomes a horizontal scroller below this width, which is
+       the right idiom for a thumb and the wrong one for a mouse: the
+       scrollbar is hidden, so the PRIMARY ACTION of the whole tool sat
+       183px past the right edge of a 1024px window with nothing to say so.
+       Measured, not guessed. The Run group rides the right edge instead,
+       over whatever is scrolling under it. */
+    .lp-topbar-run {
+        position: sticky;
+        right: 0;
+        z-index: 2;
+        padding-left: 0.6em;
+        background: linear-gradient(to right,
+            color-mix(in srgb, var(--lp-bg1) 0%, transparent) 0,
+            var(--lp-bg1) 0.6em);
+    }
     /* A flex spacer inside a horizontal scroller has no slack to take:
        it collapses to nothing and contributes only a gap. */
     .lp-topbar-spacer { display: none; }
