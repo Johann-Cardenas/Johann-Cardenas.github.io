@@ -452,6 +452,77 @@
         };
     }
 
+    /* =====================================================================
+     * LIGHT
+     * ---------------------------------------------------------------------
+     * A fixed world light would put one face of the box in the dark as soon
+     * as the camera swung past it, so the light follows the camera: up and
+     * to the reader's left, which is where a draughtsman has always put it.
+     * Lambert with a high ambient floor, because this is a drawing rather
+     * than a photograph and a face nobody can read is worse than a face
+     * that is not physically shaded.
+     * ================================================================== */
+    function light3(az, el) {
+        var aL = (az - 25) * Math.PI / 180;
+        var eL = Math.min(Math.max(el + 35, 30), 80) * Math.PI / 180;
+        var ce = Math.cos(eL);
+        return [-Math.sin(aL) * ce, -Math.cos(aL) * ce, -Math.sin(eL)];
+    }
+    function lambert3(n, L) {
+        var d = n[0] * L[0] + n[1] * L[1] + n[2] * L[2];
+        return 0.55 + 0.5 * (d > 0 ? d : 0);
+    }
+    /* The direction the camera looks, which is what decides whether a face
+     * is turned away. Derived from the same basis the projection uses, so
+     * the two cannot disagree about which side of the box is visible. */
+    function viewDir3(az, el) {
+        var a = az * Math.PI / 180, e = el * Math.PI / 180;
+        return [Math.sin(a) * Math.cos(e), Math.cos(a) * Math.cos(e), Math.sin(e)];
+    }
+    function shadeHex(hex, k) {
+        var c = hex2rgb(hex);
+        if (!c) return hex;
+        return 'rgb(' + Math.round(clamp(c[0] * k, 0, 255)) + ',' +
+            Math.round(clamp(c[1] * k, 0, 255)) + ',' +
+            Math.round(clamp(c[2] * k, 0, 255)) + ')';
+    }
+
+    /* Cut aggregate.
+     *
+     * A layer drawn as a flat band is a stripe of paint; a layer drawn with
+     * the stones the cut went through is a material. The particles are
+     * generated once per material in the face's own (u, v) coordinates and
+     * are sized in MILLIMETERS, so a 20 mm stone in a 200 mm base is a
+     * twentieth of the band and stays that way at every zoom. Deterministic
+     * from a seed, or the section would boil while the camera moved. */
+    var AGG = {
+        asphalt:    { n: 150, r0: 1.5, r1: 5,  lo: 0.55, hi: 1.35, edge: 0 },
+        concrete:   { n: 90,  r0: 4,   r1: 13, lo: 0.72, hi: 1.12, edge: 0.35 },
+        granular:   { n: 80,  r0: 6,   r1: 20, lo: 0.66, hi: 1.3,  edge: 0.5 },
+        stabilized: { n: 70,  r0: 3,   r1: 9,  lo: 0.78, hi: 1.12, edge: 0.25 },
+        rock:       { n: 40,  r0: 12,  r1: 34, lo: 0.6,  hi: 1.25, edge: 0.6 },
+        soil:       { n: 110, r0: 1,   r1: 4,  lo: 0.7,  hi: 1.25, edge: 0 }
+    };
+    var aggCache = {};
+    function aggregateFor(tex, seed) {
+        var key = tex + '|' + seed;
+        if (aggCache[key]) return aggCache[key];
+        var spec = AGG[tex] || AGG.soil;
+        var rnd = mulberry32(seed * 2654435761 % 4294967296 || 12345);
+        var out = [];
+        for (var i = 0; i < spec.n; i++) {
+            out.push({
+                u: rnd(), v: rnd(),
+                r: spec.r0 + rnd() * (spec.r1 - spec.r0),
+                e: 0.55 + rnd() * 0.45,
+                rot: rnd() * Math.PI,
+                k: spec.lo + rnd() * (spec.hi - spec.lo)
+            });
+        }
+        aggCache[key] = out;
+        return out;
+    }
+
     function mulberry32(seed) {
         var t0 = seed >>> 0;
         return function () {
@@ -624,7 +695,9 @@
         /* The perspective camera. Orthographic, not perspective, because a
          * drawing a reader measures must not foreshorten: parallel is
          * parallel and a length is a length wherever it sits in the box. */
-        var view3 = { az: 34, el: 26, scale: 1, ox: 0, oy: 0, fitted: false };
+        var ISO3 = { az: 45, el: 35.264 };
+        var sceneDraft = false;
+        var view3 = { az: ISO3.az, el: ISO3.el, scale: 1, ox: 0, oy: 0, fitted: false };
         var selPoint = null, selLayer = null;
         var history = [], future = [];
         var gearParams = { F: 20000, p: 0.7, Sd: 350, St: 350, L: 300, theta: 90 };
@@ -3001,6 +3074,20 @@
          * where they are. Orthographic rather than perspective because a
          * drawing that gets measured must not foreshorten.
          * ============================================================== */
+        /* How tall a drawn wheel is. Tied to the contact patch, because
+         * that is the only length the MODEL has: a wider tire is a wider
+         * footprint. A real truck tire is about five contact radii tall and
+         * 3.4 is a deliberate stylization - at five the pair of them fill
+         * the frame and the pavement, which is the subject, is what gets
+         * squeezed out. */
+        function tireR(w) { return 3.4 * Math.max(loadA(w), 20); }
+        function tireTop() {
+            if (state.loadKind !== 'circle' || !state.loads.length) return 0;
+            var r = 0;
+            state.loads.forEach(function (w) { r = Math.max(r, tireR(w)); });
+            return -r * 2;
+        }
+
         function sceneBox() {
             var box = worldBox();
             var yc = 0, n = state.loads.length;
@@ -3009,9 +3096,16 @@
                 state.loads.forEach(function (w) { sy += w.y; });
                 yc = sy / n;
             }
-            var yHalf = (box.xR - box.xL) * 0.5;
+            var span = box.xR - box.xL;
+            var yExt = 0;
+            state.loads.forEach(function (w) { yExt = Math.max(yExt, Math.abs(w.y - yc)); });
+            if (state.loadKind === 'line') {
+                yExt += 0.5 * gearParams.L * Math.abs(Math.sin(gearParams.theta * Math.PI / 180));
+            }
+            var yHalf = clamp(yExt + 4 * maxA(), 0.2 * span, 0.5 * span);
             return {
                 xL: box.xL, xR: box.xR, zMax: box.zMax, df: box.df,
+                zTop: tireTop(),
                 y0: Math.min(yc - yHalf, state.ySec - 60),
                 y1: Math.max(yc + yHalf, state.ySec + 60)
             };
@@ -3032,7 +3126,7 @@
             var xs = [], ys = [];
             [sb.xL, sb.xR].forEach(function (x) {
                 [sb.y0, sb.y1].forEach(function (y) {
-                    [0, sb.zMax].forEach(function (z) {
+                    [sb.zTop, 0, sb.zMax].forEach(function (z) {
                         var p = P3(U, x, y, z, true);
                         xs.push(p[0]); ys.push(p[1]);
                     });
@@ -3084,9 +3178,18 @@
          * and reads as part of the structure, which it is not: it is the
          * reader's compass, and a compass belongs at the edge of the map.
          * It turns with the camera, which is the whole of its job. */
-        function drawTriad3(B, nearIsLow) {
+        function triadBox3() {
             var w = 108, h = 92, pad = 10;
-            var ox = pad, oy = vpH - h - pad;
+            return { x: pad, y: vpH - h - pad, w: w, h: h };
+        }
+        function hitTriad3(mx, my) {
+            if (!state.settings.view3d) return false;
+            var b = triadBox3();
+            return mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h;
+        }
+        function drawTriad3(B, nearIsLow) {
+            var bx = triadBox3(), w = bx.w, h = bx.h;
+            var ox = bx.x, oy = bx.y;
             ctx.save();
             ctx.fillStyle = rgba('--lp-bg1', 0.86);
             ctx.strokeStyle = cssVar('--lp-line');
@@ -3120,8 +3223,10 @@
             ctx.fillStyle = cssVar('--lp-ink3');
             ctx.font = '9px ' + monoFont();
             ctx.textAlign = 'center';
-            ctx.fillText(Math.round(((view3.az % 360) + 360) % 360) + '° / ' +
-                Math.round(view3.el) + '°', cx, oy + h - 7);
+            var isIso = Math.abs(view3.az - ISO3.az) < 0.6 && Math.abs(view3.el - ISO3.el) < 0.6;
+            ctx.fillText(isIso ? 'isometric' :
+                (Math.round(((view3.az % 360) + 360) % 360) + '° / ' + Math.round(view3.el) + '°  ·  reset'),
+                cx, oy + h - 7);
             ctx.textAlign = 'left';
             ctx.restore();
         }
@@ -3156,10 +3261,235 @@
             return (dx * ey[0] + dy * ey[1]) / len2;
         }
 
-        function drawScene3D() {
+        /* A face of the box: shaded by its own normal, textured, and then
+         * given the stones the cut went through. */
+        function face3(B, quad, mat, n, L, uv, quality) {
+            var k = lambert3(n, L);
+            poly3(B, quad, shadeHex(mat.color, k), null);
+            ctx.save();
+            ctx.globalAlpha = uv ? 0.42 : 0.2;
+            poly3(B, quad, texture(mat), null);
+            ctx.restore();
+            if (uv && quality !== 'draft') aggregate3(B, mat, n, L, uv, quad);
+            return k;
+        }
+
+        /* The particles, projected into the face. Sized in millimeters and
+         * drawn as flattened discs, which is what a saw cut through a
+         * graded aggregate actually looks like: no particle is a circle. */
+        function aggregate3(B, mat, n, L, uv, quad) {
+            var spec = AGG[mat.tex] || AGG.soil;
+            var pts = aggregateFor(mat.tex, (mat.id || mat.name || 'x').length * 977 + mat.tex.length * 31);
+            /* how much of the face is on screen decides how many are worth
+               drawing: a band two pixels tall gets none */
+            var scr = quad.map(function (q) { return P3(B, q[0], q[1], q[2]); });
+            var area = Math.abs(
+                (scr[1][0] - scr[0][0]) * (scr[3][1] - scr[0][1]) -
+                (scr[3][0] - scr[0][0]) * (scr[1][1] - scr[0][1]));
+            var want = clamp(Math.round(area / 2600), 0, pts.length);
+            if (want < 3) return;
+            var k = lambert3(n, L);
+            var sc = view3.scale;
+            ctx.save();
+            for (var i = 0; i < want; i++) {
+                var g = pts[i];
+                var w = uv(g.u, g.v);
+                var c = P3(B, w[0], w[1], w[2]);
+                var rr = g.r * sc;
+                if (rr < 0.55) continue;
+                ctx.fillStyle = shadeHex(mat.color, k * g.k);
+                ctx.beginPath();
+                ctx.ellipse(c[0], c[1], rr, rr * g.e, g.rot, 0, 6.3);
+                ctx.fill();
+                if (spec.edge && rr > 2.2) {
+                    ctx.strokeStyle = shadeHex(mat.color, k * 0.5);
+                    ctx.globalAlpha = spec.edge;
+                    ctx.lineWidth = Math.min(1, rr * 0.18);
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                }
+            }
+            ctx.restore();
+        }
+
+        /* A wheel, as a wheel.
+         *
+         * The model underneath is still a uniform pressure over a circle -
+         * the tire is scenery, and the contact patch it stands on is the
+         * physics - but a gear drawn as four discs on the ground is a gear
+         * nobody recognizes. Radius and width are tied to the CONTACT patch
+         * (R = 4.2a, W = 2a), so a wider tire is a wider footprint and the
+         * proportion stays a truck's rather than a cartoon's.
+         *
+         * Built as a swept band of quads around the axle with back faces
+         * culled and each quad lit by its own normal, which is the whole of
+         * what makes a cylinder look round. */
+        function drawTire3(B, w, wi, L, W3, quality, cutY, keep, part) {
+            var a = Math.max(loadA(w), 20);
+            var R = tireR(w), halfW = a;
+            var x0 = w.x, y0 = w.y;
+            var N = quality === 'draft' ? 16 : 34;
+            var dark = '#23262b';
+            var i, t0, t1, tm, nrm, k, quad;
+            /* q is where the plane crosses this wheel, as a fraction of its
+               radius: below -1 the wheel is wholly on one side of it. */
+            var q = cutY == null ? -2 : clamp((cutY - y0) / R, -2, 2);
+            var onKeptSide = function (yv) {
+                return cutY == null || (keep > 0 ? yv >= cutY : yv <= cutY);
+            };
+
+            if (part === 'cut') { /* the cross-section only */ }
+            else {
+            /* the shadow it casts, which is what puts it ON the ground
+               rather than floating over it */
+            if (quality !== 'draft') {
+                var c0 = P3(B, x0, y0, 0);
+                ctx.save();
+                ctx.transform(a * 1.9 * B.ex[0], a * 1.9 * B.ex[1],
+                    a * 1.9 * B.ey[0], a * 1.9 * B.ey[1], c0[0], c0[1]);
+                var rg = ctx.createRadialGradient(0, 0, 0.15, 0, 0, 1);
+                rg.addColorStop(0, 'rgba(0,0,0,0.42)');
+                rg.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = rg;
+                ctx.beginPath(); ctx.arc(0, 0, 1, 0, 6.3); ctx.fill();
+                ctx.restore();
+            }
+
+            /* the contact patch: the model's own footprint, under the tire */
+            if (onKeptSide(y0)) {
+                ellipse3(B, x0, y0, a, rgba('--lp-danger', 0.5), cssVar('--lp-danger'), 1.2);
+            }
+
+            for (i = 0; i < N; i++) {
+                t0 = i / N * 6.283185307; t1 = (i + 1) / N * 6.283185307;
+                tm = (t0 + t1) / 2;
+                nrm = [0, Math.sin(tm), Math.cos(tm)];
+                if (nrm[0] * W3[0] + nrm[1] * W3[1] + nrm[2] * W3[2] >= 0) continue;
+                if (!onKeptSide(y0 + R * Math.sin(tm))) continue;
+                quad = [
+                    [x0 - halfW, y0 + R * Math.sin(t0), -R + R * Math.cos(t0)],
+                    [x0 + halfW, y0 + R * Math.sin(t0), -R + R * Math.cos(t0)],
+                    [x0 + halfW, y0 + R * Math.sin(t1), -R + R * Math.cos(t1)],
+                    [x0 - halfW, y0 + R * Math.sin(t1), -R + R * Math.cos(t1)]
+                ];
+                k = lambert3(nrm, L);
+                /* the tread: every third band a shade down, which reads as
+                   a rib without drawing one */
+                poly3(B, quad, shadeHex(dark, k * (i % 3 === 0 ? 0.84 : 1.12)), null);
+            }
+
+            /* the sidewall the camera can see, and the rim inside it */
+            var xs = W3[0] > 0 ? x0 - halfW : x0 + halfW;
+            var c = P3(B, xs, y0, -R);
+            function disc(rad, fill, stroke, lw, from, to, whole) {
+                ctx.save();
+                ctx.transform(rad * B.ey[0], rad * B.ey[1], rad * B.ez[0], rad * B.ez[1], c[0], c[1]);
+                ctx.beginPath();
+                ctx.arc(0, 0, 1, from == null ? 0 : from, to == null ? 6.283185307 : to);
+                if (whole === false) ctx.closePath();
+                ctx.restore();
+                if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+                if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1; ctx.stroke(); }
+            }
+            var kSide = lambert3([W3[0] > 0 ? -1 : 1, 0, 0], L);
+            /* the arc of the sidewall that survives the cut. In the unit
+               circle the transform maps (cos a, sin a) to a·ey + a·ez, so
+               the y offset is R cos(a) and the plane is a vertical chord. */
+            var a0 = 0, a1 = 6.283185307, whole = true;
+            if (cutY != null && Math.abs(q) <= 1) {
+                var ac = Math.acos(clamp(keep > 0 ? q : -q, -1, 1));
+                a0 = keep > 0 ? -ac : Math.PI - ac;
+                a1 = keep > 0 ? ac : Math.PI + ac;
+                whole = false;
+            }
+            disc(R, shadeHex(dark, kSide * 1.05), 'rgba(0,0,0,0.5)', 1, a0, a1, whole);
+            if (R * view3.scale > 14) {
+                disc(R * 0.62, shadeHex('#9aa3ae', kSide * 1.1), 'rgba(0,0,0,0.45)', 1, a0, a1, whole);
+                disc(R * 0.5, shadeHex('#6f7883', kSide), null, 0, a0, a1, whole);
+                disc(R * 0.17, shadeHex('#b9c1cb', kSide * 1.15), 'rgba(0,0,0,0.4)', 1, a0, a1, whole);
+            }
+
+            /* the rubber the saw went through: a rectangle in the section
+               plane, as tall as the chord the plane cuts across the wheel.
+               It is coplanar with the cut face, so it is painted with it
+               rather than with the wheel. */
+            if (part === 'cut' && cutY != null && Math.abs(q) < 1) {
+                var d = R * Math.sqrt(1 - q * q);
+                var zc = -R + (keep > 0 ? 0 : 0);
+                var kCut = lambert3([0, keep > 0 ? -1 : 1, 0], L);
+                poly3(B, [
+                    [x0 - halfW, cutY, zc - d], [x0 + halfW, cutY, zc - d],
+                    [x0 + halfW, cutY, zc + d], [x0 - halfW, cutY, zc + d]
+                ], shadeHex('#3a3f47', kCut), 'rgba(0,0,0,0.45)', 1);
+            }
+
+            /* the tag, over the hub where it cannot be mistaken for a load
+               value */
+            if (R * view3.scale > 11 && (cutY == null || Math.abs(q) < 1 || onKeptSide(y0))) {
+                ctx.font = '700 10px ' + monoFont();
+                var tag = 'L' + (wi + 1), tw = ctx.measureText(tag).width;
+                ctx.fillStyle = 'rgba(15,24,41,0.88)';
+                roundRect(ctx, c[0] - tw / 2 - 5, c[1] - 8, tw + 10, 15, 4); ctx.fill();
+                ctx.fillStyle = '#e8eef9'; ctx.textAlign = 'center';
+                ctx.fillText(tag, c[0], c[1] + 3.5);
+                ctx.textAlign = 'left';
+            }
+            }
+        }
+
+        /* Numbers on the edges of the box. Without them the 3-D view is a
+         * picture of a pavement; with them it is a drawing of one. Each
+         * label is pushed off its edge along the edge's own screen normal,
+         * away from the solid, so the ticks never land on the material. */
+        function edgeTicks3(B, from, to, step, axis, outward, label) {
+            var p0 = P3(B, from[0], from[1], from[2]);
+            var p1 = P3(B, to[0], to[1], to[2]);
+            var dx = p1[0] - p0[0], dy = p1[1] - p0[1];
+            var len = Math.hypot(dx, dy);
+            if (len < 60) return;
+            var nx = -dy / len, ny = dx / len;
+            if (nx * outward[0] + ny * outward[1] < 0) { nx = -nx; ny = -ny; }
+            var v0 = from[axis], v1 = to[axis];
+            var lo = Math.min(v0, v1), hi = Math.max(v0, v1);
+            ctx.save();
+            ctx.font = '9px ' + monoFont();
+            ctx.fillStyle = cssVar('--lp-ink3');
+            ctx.strokeStyle = rgba('--lp-ink3', 0.55);
+            ctx.lineWidth = 1;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            function chip(text, x, y, strong) {
+                var w = ctx.measureText(text).width;
+                ctx.fillStyle = rgba('--lp-bg1', 0.88);
+                roundRect(ctx, x - w / 2 - 3, y - 7, w + 6, 14, 3);
+                ctx.fill();
+                ctx.fillStyle = strong ? cssVar('--lp-ink2') : cssVar('--lp-ink3');
+                ctx.fillText(text, x, y);
+            }
+            for (var v = Math.ceil(lo / step) * step; v <= hi + 1e-6; v += step) {
+                var t = (v - v0) / (v1 - v0 || 1);
+                var x = p0[0] + dx * t, y = p0[1] + dy * t;
+                ctx.beginPath();
+                ctx.moveTo(x, y); ctx.lineTo(x + nx * 5, y + ny * 5); ctx.stroke();
+                var lx = x + nx * 16, ly = y + ny * 16;
+                if (lx < 14 || lx > vpW - 14 || ly < 10 || ly > vpH - 10) continue;
+                chip(sig(toDisp('len', v), 3), lx, ly, false);
+            }
+            if (label) {
+                ctx.font = '700 10px ' + monoFont();
+                chip(label, p1[0] + nx * 16 + dx / len * 18, p1[1] + ny * 16 + dy / len * 18, true);
+            }
+            ctx.textBaseline = 'alphabetic';
+            ctx.textAlign = 'left';
+            ctx.restore();
+        }
+
+        function drawScene3D(quality) {
             var sb = sceneBox();
             if (!view3.fitted) fit3();
             var B = basis3();
+            var L3 = light3(view3.az, view3.el);
+            var W3 = viewDir3(view3.az, view3.el);
             var ink2 = cssVar('--lp-ink2'), ink3 = cssVar('--lp-ink3');
             var lineC = cssVar('--lp-line'), accent = cssVar('--lp-accent');
             var danger = cssVar('--lp-danger');
@@ -3178,19 +3508,20 @@
 
             /* ---- the surface of the solid half ---- */
             var top = state.layers[0];
-            poly3(B, [[sb.xL, solidA, 0], [sb.xR, solidA, 0], [sb.xR, solidB, 0], [sb.xL, solidB, 0]],
-                top.color, null);
+            var topQuad = [[sb.xL, solidA, 0], [sb.xR, solidA, 0], [sb.xR, solidB, 0], [sb.xL, solidB, 0]];
+            var kTop = face3(B, topQuad, top, [0, 0, -1], L3, null, quality);
+
+            /* the edges the light catches */
             ctx.save();
-            ctx.globalAlpha = 0.5;
-            ctx.fillStyle = texture(top);
-            poly3(B, [[sb.xL, solidA, 0], [sb.xR, solidA, 0], [sb.xR, solidB, 0], [sb.xL, solidB, 0]],
-                texture(top), null);
+            ctx.globalAlpha = 0.55;
+            line3(B, [sb.xL, solidA, 0], [sb.xR, solidA, 0], shadeHex(top.color, 2.1), 1.4);
+            line3(B, [sideX, solidA, 0], [sideX, solidB, 0], shadeHex(top.color, 1.9), 1.4);
             ctx.restore();
 
             /* ---- the ground grid: this is where x and y get their scale ---- */
             var gstep = niceStep((sb.xR - sb.xL) / 8);
             ctx.save();
-            ctx.globalAlpha = 0.5;
+            ctx.globalAlpha = 0.3;
             var gx, gy;
             for (gx = Math.ceil(sb.xL / gstep) * gstep; gx <= sb.xR; gx += gstep) {
                 line3(B, [gx, solidA, 0], [gx, solidB, 0], Math.abs(gx) < 1e-6 ? ink3 : lineC, 1);
@@ -3206,10 +3537,11 @@
                 ctx.globalAlpha = alpha;
                 var c = P3(B, w.x, w.y, 0);
                 if (state.loadKind === 'circle') {
-                    var a = loadA(w);
-                    ellipse3(B, w.x, w.y, a, rgba('--lp-danger', 0.55), danger, 1.4);
-                    ellipse3(B, w.x, w.y, a * 0.5, rgba('--lp-danger', 0.35), null, 0);
-                } else if (state.loadKind === 'line') {
+                    drawTire3(B, w, wi, L3, W3, quality, ySec, nearIsLow ? 1 : -1);
+                    ctx.restore();
+                    return;
+                }
+                if (state.loadKind === 'line') {
                     var th = gearParams.theta * Math.PI / 180, hl = 0.5 * gearParams.L;
                     line3(B, [w.x - hl * Math.cos(th), w.y - hl * Math.sin(th), 0],
                              [w.x + hl * Math.cos(th), w.y + hl * Math.sin(th), 0], danger, 3.5);
@@ -3235,42 +3567,72 @@
                 ctx.textAlign = 'left';
                 ctx.restore();
             }
-            state.loads.forEach(function (w, wi) {
-                var inSolid = nearIsLow ? w.y >= ySec : w.y <= ySec;
-                if (inSolid) drawLoad3(w, wi, 1);
+            var order = state.loads.map(function (w, wi) { return { w: w, wi: wi }; });
+            order.sort(function (p, q) {
+                return (q.w.x * B.sa + q.w.y * B.ca) - (p.w.x * B.sa + p.w.y * B.ca);
+            });
+            /* The kept half of every wheel stands BEHIND the cut plane, so
+             * it is painted before it: drawn afterwards it covered the
+             * stress bulb it is standing on, which is the one thing this
+             * view exists to show. */
+            order.forEach(function (o) {
+                if (state.loadKind === 'circle') { drawLoad3(o.w, o.wi, 1); return; }
+                var inSolid = nearIsLow ? o.w.y >= ySec : o.w.y <= ySec;
+                if (inSolid) drawLoad3(o.w, o.wi, 1);
             });
 
             /* ---- the side face, layer by layer ---- */
+            var sideN = [sideX === sb.xL ? -1 : 1, 0, 0];
             var z = 0, i;
             for (i = 0; i < n; i++) {
-                var L = state.layers[i];
-                var zT = z, zB = i < n - 1 ? z + L.h : sb.zMax;
+                var Ly = state.layers[i];
+                var zT = z, zB = i < n - 1 ? z + Ly.h : sb.zMax;
                 z = zB;
                 var quad = [[sideX, solidA, zT], [sideX, solidB, zT], [sideX, solidB, zB], [sideX, solidA, zB]];
-                poly3(B, quad, L.color, null);
-                ctx.save();
-                ctx.globalAlpha = 0.42;
-                poly3(B, quad, texture(L), null);
-                ctx.restore();
-                /* the side is in shade: one flat wash, so the two faces of
-                   the same layer are not the same value and the corner of
-                   the box reads as a corner */
-                poly3(B, quad, 'rgba(0,0,0,0.22)', rgba('--lp-ink', 0.25), 1);
+                (function (zT2, zB2) {
+                    face3(B, quad, Ly, sideN, L3, function (u, v) {
+                        return [sideX, solidA + (solidB - solidA) * u, zT2 + (zB2 - zT2) * v];
+                    }, quality);
+                })(zT, zB);
+                /* the cut edge at the top of every band, which is the line
+                   a saw leaves and the thing that makes a stack of layers
+                   read as a stack rather than as stripes */
+                line3(B, [sideX, solidA, zT], [sideX, solidB, zT], rgba('--lp-ink', 0.3), 1);
             }
 
             /* ---- the cut face: layers, contour, interfaces ---- */
+            var cutN = [0, nearIsLow ? -1 : 1, 0];
             z = 0;
             for (i = 0; i < n; i++) {
                 var L2 = state.layers[i];
                 var zT2 = z, zB2 = i < n - 1 ? z + L2.h : sb.zMax;
                 z = zB2;
                 var face = [[sb.xL, ySec, zT2], [sb.xR, ySec, zT2], [sb.xR, ySec, zB2], [sb.xL, ySec, zB2]];
-                poly3(B, face, L2.color, null);
-                ctx.save();
-                ctx.globalAlpha = 0.55;
-                poly3(B, face, texture(L2), null);
-                ctx.restore();
+                (function (zA, zBb) {
+                    var bare = !(contour && state.settings.showContour && results.grid);
+                    face3(B, face, L2, cutN, L3, bare ? function (u, v) {
+                        return [sb.xL + (sb.xR - sb.xL) * u, ySec, zA + (zBb - zA) * v];
+                    } : null, quality);
+                })(zT2, zB2);
             }
+
+            /* the subgrade has no bottom: the last band fades out rather
+               than ending on a line the model does not have */
+            (function () {
+                var fadeTop = sb.zMax - 0.22 * sb.zMax;
+                var a0 = P3(B, sb.xL, ySec, fadeTop), a1 = P3(B, sb.xL, ySec, sb.zMax);
+                var gr = ctx.createLinearGradient(a0[0], a0[1], a1[0], a1[1]);
+                gr.addColorStop(0, rgba('--lp-bg0', 0));
+                gr.addColorStop(1, cssVar('--lp-bg0'));
+                poly3(B, [[sb.xL, ySec, fadeTop], [sb.xR, ySec, fadeTop],
+                    [sb.xR, ySec, sb.zMax], [sb.xL, ySec, sb.zMax]], gr, null);
+                var b0 = P3(B, sideX, solidA, fadeTop), b1 = P3(B, sideX, solidA, sb.zMax);
+                var gr2 = ctx.createLinearGradient(b0[0], b0[1], b1[0], b1[1]);
+                gr2.addColorStop(0, rgba('--lp-bg0', 0));
+                gr2.addColorStop(1, cssVar('--lp-bg0'));
+                poly3(B, [[sideX, solidA, fadeTop], [sideX, solidB, fadeTop],
+                    [sideX, solidB, sb.zMax], [sideX, solidA, sb.zMax]], gr2, null);
+            })();
 
             if (contour && state.settings.showContour && results.grid) {
                 var g = results.grid;
@@ -3278,7 +3640,7 @@
                 var dz = (g.zs[g.nz - 1] - g.zs[0]) / (g.nz - 1);
                 var O = P3(B, g.xs[0], ySec, g.zs[0]);
                 ctx.save();
-                ctx.globalAlpha = state.settings.alpha;
+                ctx.globalAlpha = Math.min(1, state.settings.alpha * 1.12);
                 ctx.imageSmoothingEnabled = true;
                 ctx.transform(dx * B.ex[0], dx * B.ex[1], dz * B.ez[0], dz * B.ez[1], O[0], O[1]);
                 ctx.drawImage(contour.canvas, 0, 0);
@@ -3297,6 +3659,13 @@
                 });
                 ctx.stroke();
                 ctx.restore();
+            }
+
+            /* the rubber cross-sections, coplanar with the cut face */
+            if (state.loadKind === 'circle') {
+                order.forEach(function (o) {
+                    drawTire3(B, o.w, o.wi, L3, W3, quality, ySec, nearIsLow ? 1 : -1, 'cut');
+                });
             }
 
             /* interfaces on the cut face, and the outline of the face */
@@ -3347,7 +3716,11 @@
 
             /* ---- the half that was cut away, drawn as the glass it is ---- */
             var ghost = [[sb.xL, ghostA, 0], [sb.xR, ghostA, 0], [sb.xR, ghostB, 0], [sb.xL, ghostB, 0]];
-            poly3(B, ghost, rgba('--lp-bg1', 0.14), null);
+            /* No fill. The removed half is nearer the camera than the face
+               the cut exposes, so ANY ink in it is ink over the stress bulb:
+               a fourteen per cent white veil was enough to turn a saturated
+               blue into a smudge. Phantom lines only, the same rule the
+               removed half of a wheel follows. */
             ctx.save();
             ctx.setLineDash([5, 4]);
             ctx.globalAlpha = 0.75;
@@ -3360,10 +3733,64 @@
                 line3(B, [sb.xL, gy, 0], [sb.xR, gy, 0], lineC, 1);
             }
             ctx.restore();
-            state.loads.forEach(function (w, wi) {
-                var inSolid = nearIsLow ? w.y >= ySec : w.y <= ySec;
-                if (!inSolid) drawLoad3(w, wi, 0.82);
-            });
+            /* and the half of each wheel the cut took away, in phantom */
+            if (state.loadKind === 'circle') {
+                ctx.save();
+                ctx.setLineDash([5, 4]);
+                ctx.globalAlpha = 0.5;
+                ctx.strokeStyle = ink3;
+                ctx.lineWidth = 1.1;
+                order.forEach(function (o) {
+                    var R = tireR(o.w), aa = Math.max(loadA(o.w), 20);
+                    var qq = clamp((ySec - o.w.y) / R, -2, 2);
+                    if (Math.abs(qq) >= 1 && (nearIsLow ? o.w.y >= ySec : o.w.y <= ySec)) return;
+                    var cc = P3(B, W3[0] > 0 ? o.w.x - aa : o.w.x + aa, o.w.y, -R);
+                    var a0 = 0, a1 = 6.283185307;
+                    if (Math.abs(qq) <= 1) {
+                        var ac = Math.acos(clamp(nearIsLow ? -qq : qq, -1, 1));
+                        a0 = nearIsLow ? Math.PI - ac : -ac;
+                        a1 = nearIsLow ? Math.PI + ac : ac;
+                    }
+                    ctx.save();
+                    ctx.transform(R * B.ey[0], R * B.ey[1], R * B.ez[0], R * B.ez[1], cc[0], cc[1]);
+                    ctx.beginPath(); ctx.arc(0, 0, 1, a0, a1);
+                    ctx.restore();
+                    ctx.stroke();
+                    ellipse3(B, o.w.x, o.w.y, aa, null, ink3, 1);
+                });
+                ctx.restore();
+            } else {
+                order.forEach(function (o) {
+                    var inSolid = nearIsLow ? o.w.y >= ySec : o.w.y <= ySec;
+                    if (!inSolid) drawLoad3(o.w, o.wi, 0.95);
+                });
+            }
+
+            /* ---- the numbers on the box ---- */
+            if (quality !== 'draft') {
+                var mid = [(sb.xL + sb.xR) / 2, (sb.y0 + sb.y1) / 2];
+                var away = function (px, py) {
+                    /* away from the middle of the BLOCK, not of the surface:
+                       the material hangs below the ground plane, so a
+                       ground edge has to push its labels upward to clear
+                       it */
+                    var c = P3(B, mid[0], mid[1], sb.zMax * 0.5);
+                    return [px - c[0], py - c[1]];
+                };
+                var frontY = nearIsLow ? sb.y0 : sb.y1;
+                var xStep = niceStep((sb.xR - sb.xL) / 3.2);
+                var e0 = P3(B, (sb.xL + sb.xR) / 2, frontY, 0);
+                edgeTicks3(B, [sb.xL, frontY, 0], [sb.xR, frontY, 0], xStep, 0,
+                    away(e0[0], e0[1]), 'x ' + unit('len'));
+                var yStep = niceStep((sb.y1 - sb.y0) / 3.2);
+                var e1 = P3(B, sideX, (sb.y0 + sb.y1) / 2, 0);
+                edgeTicks3(B, [sideX, sb.y0, 0], [sideX, sb.y1, 0], yStep, 1,
+                    away(e1[0], e1[1]), 'y ' + unit('len'));
+                var zStep = niceStep(sb.zMax / 3.2);
+                var e2 = P3(B, sideX, ySec, sb.zMax / 2);
+                edgeTicks3(B, [sideX, ySec, 0], [sideX, ySec, sb.zMax], zStep, 2,
+                    away(e2[0], e2[1]), 'z ' + unit('len'));
+            }
 
             /* ---- the cut, named, under the face it names ---- */
             var badge = 'section y ' + sig(toDisp('len', state.ySec), 4) + ' ' + unit('len');
@@ -3400,7 +3827,11 @@
             ctx.clearRect(0, 0, vpW, vpH);
             itfChips = [];
             if (state.settings.view3d) {
-                drawScene3D();
+                /* The aggregate and the tread come off the drag, the same
+                 * way the contour comes off a slider: a scene that is
+                 * 60 fps while the hand moves and fully drawn the moment it
+                 * stops reads as faster than one that is neither. */
+                drawScene3D(sceneDraft ? 'draft' : null);
                 drawPlan();
                 drawColorbar();
                 return;
@@ -4013,6 +4444,13 @@
                  * is an infinite number of world positions and guessing one
                  * would move a layer the reader did not mean to touch. */
                 if (state.settings.view3d) {
+                    /* the orientation widget doubles as the way home */
+                    if (hitTriad3(mx, my)) {
+                        view3.az = ISO3.az; view3.el = ISO3.el;
+                        fit3();
+                        drawViewport();
+                        return;
+                    }
                     if (!e.shiftKey && hitCut3(mx, my)) {
                         drag = { type: 'ysec', sx: mx, sy: my, y0: state.ySec, moved: false };
                         cv.style.cursor = 'grabbing';
@@ -4020,6 +4458,7 @@
                     }
                     drag = { type: 'orbit', sx: mx, sy: my, az: view3.az, el: view3.el,
                              ox: view3.ox, oy: view3.oy, pan: e.shiftKey, moved: false };
+                    sceneDraft = true;
                     cv.style.cursor = 'grabbing';
                     return;
                 }
@@ -4089,7 +4528,13 @@
             });
             on(win, 'pointerup', function () {
                 if (!drag) { dragNote = null; return; }
-                if (drag.type === 'orbit') { drag = null; cv.style.cursor = 'grab'; return; }
+                if (drag.type === 'orbit') {
+                    drag = null;
+                    sceneDraft = false;
+                    cv.style.cursor = 'grab';
+                    drawViewport();          /* now at full quality */
+                    return;
+                }
                 if (drag.type === 'ysec') {
                     var moved = drag.moved;
                     drag = null;
@@ -4164,7 +4609,8 @@
                             view3.el = clamp(drag.el - ddy * 0.32, 12, 72);
                         }
                         drawViewport();
-                    } else cv.style.cursor = hitCut3(e.offsetX, e.offsetY) ? 'move' : 'grab';
+                    } else if (hitTriad3(e.offsetX, e.offsetY)) cv.style.cursor = 'pointer';
+                    else cv.style.cursor = hitCut3(e.offsetX, e.offsetY) ? 'move' : 'grab';
                     var c3 = $('lp-coords');
                     if (c3) {
                         c3.textContent = 'orbit ' + Math.round(((view3.az % 360) + 360) % 360) +
@@ -5329,6 +5775,8 @@
         fatigueLife: fatigueLife,
         ruttingLife: ruttingLife,
         governingLife: governingLife,
-        mirrorXPoint: mirrorXPoint
+        mirrorXPoint: mirrorXPoint,
+        viewDir3: viewDir3,
+        lambert3: lambert3
     };
 });
