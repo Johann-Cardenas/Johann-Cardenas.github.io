@@ -523,6 +523,44 @@
         return out;
     }
 
+    /* The tire that fits a gear.
+     *
+     * A wheel occupies 2w across the track and 2R along it, so a pair of
+     * them clears when |dx| >= 2w OR |dy| >= 2R. Scaling w and R together
+     * by ONE factor keeps the tire's proportion while it shrinks, and the
+     * factor the tightest pair allows is the one the whole gear uses:
+     * wheels of different sizes in one gear would read as different tires
+     * rather than as one set of them.
+     *
+     * Everything starts from the contact patch, which is the only length
+     * the model has. Below a quarter more than the patch there is no tire
+     * worth drawing - the wheels are closer together than wheels can be -
+     * and the caller falls back to the imprints, which is the honest
+     * picture of a gear that could not be built. */
+    var TIRE = { R0: 2.6, W0: 0.85, GAP: 1.08, MIN: 1.25 };
+    function tireFit(loads, a) {
+        if (!loads || !loads.length || !(a > 0)) return null;
+        var w0 = TIRE.W0 * a, R0 = TIRE.R0 * a, sc = 1, i, j;
+        for (i = 0; i < loads.length; i++) {
+            for (j = i + 1; j < loads.length; j++) {
+                var dx = Math.abs(loads[i].x - loads[j].x);
+                var dy = Math.abs(loads[i].y - loads[j].y);
+                var need = Math.max(dx / (2 * TIRE.GAP * w0), dy / (2 * TIRE.GAP * R0));
+                if (need < sc) sc = need;
+            }
+        }
+        if (!(sc * R0 >= TIRE.MIN * a)) return null;
+        var R = sc * R0;
+        /* the flat the load presses into the bottom of the tire: the
+           contact patch itself wherever the tire is big enough to carry
+           one, capped at a fraction of the radius where the gear is
+           cramped, so a squeezed wheel reads as a wheel rather than as a
+           pancake and the imprint shows fore and aft of the flat. */
+        var flat = Math.min(a, 0.42 * R);
+        return { R: R, w: sc * w0, a: a, s: sc, flat: flat,
+            h: Math.sqrt(Math.max(R * R - flat * flat, 1)) };
+    }
+
     function mulberry32(seed) {
         var t0 = seed >>> 0;
         return function () {
@@ -3074,18 +3112,37 @@
          * where they are. Orthographic rather than perspective because a
          * drawing that gets measured must not foreshorten.
          * ============================================================== */
-        /* How tall a drawn wheel is. Tied to the contact patch, because
-         * that is the only length the MODEL has: a wider tire is a wider
-         * footprint. A real truck tire is about five contact radii tall and
-         * 3.4 is a deliberate stylization - at five the pair of them fill
-         * the frame and the pavement, which is the subject, is what gets
-         * squeezed out. */
-        function tireR(w) { return 3.4 * Math.max(loadA(w), 20); }
+        /* ONE tire for the whole gear, sized so that no two of them touch.
+         *
+         * The test the sizing has to pass is a TRIDEM: three axles a
+         * spacing apart, and a radius that looks right under a single
+         * wheel puts all three of them through each other. So the radius
+         * is not a fixed multiple of anything. It starts from the contact
+         * patch, which is the only length the model actually has, and is
+         * then scaled down until every pair of wheels clears - whatever
+         * the gear, truck or aircraft.
+         *
+         * A wheel occupies 2w across the track and 2R along it, so a pair
+         * clears when |dx| >= 2w OR |dy| >= 2R. Scaling w and R together
+         * by ONE factor keeps the tire's proportion while it shrinks, and
+         * the factor the tightest pair allows is the one the whole gear
+         * uses: wheels of different sizes in one gear would read as
+         * different tires rather than as one set.
+         *
+         * Below a quarter more than the patch there is no tire worth
+         * drawing - the wheels would be closer together than wheels can
+         * be - and the view falls back to the imprints and their arrows,
+         * which is the honest picture of a gear that cannot exist. */
+        function tireGeom() {
+            var ws = state.loads;
+            if (state.loadKind !== 'circle' || !ws.length) return null;
+            var a = 0;
+            for (var i = 0; i < ws.length; i++) a = Math.max(a, loadA(ws[i]));
+            return tireFit(ws, Math.max(a, 20));
+        }
         function tireTop() {
-            if (state.loadKind !== 'circle' || !state.loads.length) return 0;
-            var r = 0;
-            state.loads.forEach(function (w) { r = Math.max(r, tireR(w)); });
-            return -r * 2;
+            var g = tireGeom();
+            return g ? -(g.h + g.R) : 0;
         }
 
         function sceneBox() {
@@ -3324,77 +3381,131 @@
          * Built as a swept band of quads around the axle with back faces
          * culled and each quad lit by its own normal, which is the whole of
          * what makes a cylinder look round. */
-        function drawTire3(B, w, wi, L, W3, quality, cutY, keep, part) {
-            var a = Math.max(loadA(w), 20);
-            var R = tireR(w), halfW = a;
+        function drawTire3(B, w, wi, L, W3, quality, cutY, keep, part, G) {
+            if (!G) return;
+            var R = G.R, halfW = G.w, h = G.h;
+            var a = loadA(w);
             var x0 = w.x, y0 = w.y;
-            var N = quality === 'draft' ? 16 : 34;
+            var N = quality === 'draft' ? 18 : 40;
             var dark = '#23262b';
-            var i, t0, t1, tm, nrm, k, quad;
-            /* q is where the plane crosses this wheel, as a fraction of its
-               radius: below -1 the wheel is wholly on one side of it. */
+            var scr = view3.scale, rr = R * scr;
             var q = cutY == null ? -2 : clamp((cutY - y0) / R, -2, 2);
-            var onKeptSide = function (yv) {
-                return cutY == null || (keep > 0 ? yv >= cutY : yv <= cutY);
-            };
+            function keptY(yv) { return cutY == null || (keep > 0 ? yv >= cutY : yv <= cutY); }
 
-            if (part === 'cut') { /* the cross-section only */ }
-            else {
-            /* the shadow it casts, which is what puts it ON the ground
-               rather than floating over it */
-            if (quality !== 'draft') {
+            /* The profile of a LOADED tire: a circle about the axle,
+             * flattened where it meets the ground. The axle rides at
+             * h = sqrt(R^2 - flat^2), so the flat comes out exactly as long
+             * as the contact it is standing on: the deformation IS the
+             * imprint, which is the one place this drawing and the model
+             * touch. */
+            function py(t) { return y0 + R * Math.sin(t); }
+            function pz(t) { var z = -h + R * Math.cos(t); return z > 0 ? 0 : z; }
+
+            if (part === 'cut') {
+                if (cutY == null || Math.abs(q) >= 1) return;
+                /* The wheel's own section is scenery beside the pavement's,
+                   which is data, so it is drawn a shade quieter: a tire cut
+                   through its axis is a tall narrow shape and at full
+                   strength it competes with the face it stands on. */
+                ctx.save();
+                ctx.globalAlpha *= 0.75;
+                var dy = cutY - y0;
+                var kCut = lambert3([0, keep > 0 ? -1 : 1, 0], L);
+                /* half the height of the section of a ring of radius r */
+                function hz(r) {
+                    var v = r * r - dy * dy;
+                    return v > 0 ? Math.sqrt(v) : 0;
+                }
+                /* one band of material, clipped at the ground */
+                function band(zA, zB, wid, col) {
+                    var z1 = Math.min(zA, zB), z2 = Math.max(zA, zB);
+                    z2 = Math.min(z2, 0);
+                    if (!(z2 - z1 > 0.4)) return;
+                    poly3(B, [
+                        [x0 - wid, cutY, z1], [x0 + wid, cutY, z1],
+                        [x0 + wid, cutY, z2], [x0 - wid, cutY, z2]
+                    ], shadeHex(col, kCut), 'rgba(0,0,0,0.28)', 1);
+                }
+                /* the tread and its carcass: the outer ring */
+                var oR = hz(R), iR = hz(R * 0.78);
+                band(-h - oR, -h - iR, halfW, '#43474f');
+                band(-h + iR, -h + oR, halfW, '#43474f');
+                /* the wheel itself: rim to rim through the disc, in one
+                   piece and narrower than the tire it carries */
+                var oW = hz(R * 0.66);
+                if (oW > 0) band(-h - oW, -h + oW, halfW * 0.5, '#96a0ac');
+                /* the hub boss, thicker again at the axle */
+                var oH = hz(R * 0.2);
+                if (oH > 0) band(-h - oH, -h + oH, halfW * 0.72, '#c3cad3');
+                ctx.restore();
+                return;
+            }
+
+            /* the shadow, which is what puts the wheel ON the ground */
+            if (quality !== 'draft' && keptY(y0)) {
                 var c0 = P3(B, x0, y0, 0);
                 ctx.save();
-                ctx.transform(a * 1.9 * B.ex[0], a * 1.9 * B.ex[1],
-                    a * 1.9 * B.ey[0], a * 1.9 * B.ey[1], c0[0], c0[1]);
-                var rg = ctx.createRadialGradient(0, 0, 0.15, 0, 0, 1);
-                rg.addColorStop(0, 'rgba(0,0,0,0.42)');
-                rg.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = rg;
+                ctx.transform(a * 2.1 * B.ex[0], a * 2.1 * B.ex[1],
+                    a * 2.1 * B.ey[0], a * 2.1 * B.ey[1], c0[0], c0[1]);
+                var sg = ctx.createRadialGradient(0, 0, 0.2, 0, 0, 1);
+                sg.addColorStop(0, 'rgba(0,0,0,0.4)');
+                sg.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = sg;
                 ctx.beginPath(); ctx.arc(0, 0, 1, 0, 6.3); ctx.fill();
                 ctx.restore();
             }
 
-            /* the contact patch: the model's own footprint, under the tire */
-            if (onKeptSide(y0)) {
-                ellipse3(B, x0, y0, a, rgba('--lp-danger', 0.5), cssVar('--lp-danger'), 1.2);
+            /* the imprint the model actually applies, under the tire */
+            if (keptY(y0)) {
+                ellipse3(B, x0, y0, a, rgba('--lp-danger', 0.42), null, 0);
+                /* and the dark line of the contact itself, tight to the
+                   flat: without it the wheel reads as hovering over its
+                   own footprint, which is the one thing it must not do */
+                var cf = P3(B, x0, y0, 0);
+                ctx.save();
+                ctx.transform(halfW * 1.12 * B.ex[0], halfW * 1.12 * B.ex[1],
+                    G.flat * 1.15 * B.ey[0], G.flat * 1.15 * B.ey[1], cf[0], cf[1]);
+                var cg = ctx.createRadialGradient(0, 0, 0.1, 0, 0, 1);
+                cg.addColorStop(0, 'rgba(0,0,0,0.5)');
+                cg.addColorStop(0.7, 'rgba(0,0,0,0.28)');
+                cg.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = cg;
+                ctx.beginPath(); ctx.arc(0, 0, 1, 0, 6.3); ctx.fill();
+                ctx.restore();
             }
 
-            for (i = 0; i < N; i++) {
-                t0 = i / N * 6.283185307; t1 = (i + 1) / N * 6.283185307;
+            /* ---- the tread, swept around the axle ---- */
+            var GR = [0.26, 0.5, 0.74], GW = 0.055;       /* circumferential grooves */
+            var t0, t1, tm, nrm, k, sinT0, sinT1, i2, gi;
+            for (i2 = 0; i2 < N; i2++) {
+                t0 = i2 / N * 6.283185307; t1 = (i2 + 1) / N * 6.283185307;
                 tm = (t0 + t1) / 2;
                 nrm = [0, Math.sin(tm), Math.cos(tm)];
                 if (nrm[0] * W3[0] + nrm[1] * W3[1] + nrm[2] * W3[2] >= 0) continue;
-                if (!onKeptSide(y0 + R * Math.sin(tm))) continue;
-                quad = [
-                    [x0 - halfW, y0 + R * Math.sin(t0), -R + R * Math.cos(t0)],
-                    [x0 + halfW, y0 + R * Math.sin(t0), -R + R * Math.cos(t0)],
-                    [x0 + halfW, y0 + R * Math.sin(t1), -R + R * Math.cos(t1)],
-                    [x0 - halfW, y0 + R * Math.sin(t1), -R + R * Math.cos(t1)]
-                ];
+                if (!keptY(py(tm))) continue;
+                sinT0 = py(t0); sinT1 = py(t1);
                 k = lambert3(nrm, L);
-                /* the tread: every third band a shade down, which reads as
-                   a rib without drawing one */
-                poly3(B, quad, shadeHex(dark, k * (i % 3 === 0 ? 0.84 : 1.12)), null);
+                poly3(B, [
+                    [x0 - halfW, sinT0, pz(t0)], [x0 + halfW, sinT0, pz(t0)],
+                    [x0 + halfW, sinT1, pz(t1)], [x0 - halfW, sinT1, pz(t1)]
+                ], shadeHex(dark, k * 1.08), null);
+                /* the grooves, which is what a tread is: without them a
+                   tire is a black doughnut */
+                if (quality !== 'draft' && halfW * scr > 5) {
+                    for (gi = 0; gi < GR.length; gi++) {
+                        var u0 = x0 - halfW + 2 * halfW * (GR[gi] - GW);
+                        var u1 = x0 - halfW + 2 * halfW * (GR[gi] + GW);
+                        poly3(B, [
+                            [u0, sinT0, pz(t0)], [u1, sinT0, pz(t0)],
+                            [u1, sinT1, pz(t1)], [u0, sinT1, pz(t1)]
+                        ], shadeHex(dark, k * 0.6), null);
+                    }
+                }
             }
 
-            /* the sidewall the camera can see, and the rim inside it */
+            /* ---- the sidewall the camera can see ---- */
             var xs = W3[0] > 0 ? x0 - halfW : x0 + halfW;
-            var c = P3(B, xs, y0, -R);
-            function disc(rad, fill, stroke, lw, from, to, whole) {
-                ctx.save();
-                ctx.transform(rad * B.ey[0], rad * B.ey[1], rad * B.ez[0], rad * B.ez[1], c[0], c[1]);
-                ctx.beginPath();
-                ctx.arc(0, 0, 1, from == null ? 0 : from, to == null ? 6.283185307 : to);
-                if (whole === false) ctx.closePath();
-                ctx.restore();
-                if (fill) { ctx.fillStyle = fill; ctx.fill(); }
-                if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1; ctx.stroke(); }
-            }
-            var kSide = lambert3([W3[0] > 0 ? -1 : 1, 0, 0], L);
-            /* the arc of the sidewall that survives the cut. In the unit
-               circle the transform maps (cos a, sin a) to a·ey + a·ez, so
-               the y offset is R cos(a) and the plane is a vertical chord. */
+            var c = P3(B, xs, y0, -h);
             var a0 = 0, a1 = 6.283185307, whole = true;
             if (cutY != null && Math.abs(q) <= 1) {
                 var ac = Math.acos(clamp(keep > 0 ? q : -q, -1, 1));
@@ -3402,30 +3513,82 @@
                 a1 = keep > 0 ? ac : Math.PI + ac;
                 whole = false;
             }
-            disc(R, shadeHex(dark, kSide * 1.05), 'rgba(0,0,0,0.5)', 1, a0, a1, whole);
-            if (R * view3.scale > 14) {
-                disc(R * 0.62, shadeHex('#9aa3ae', kSide * 1.1), 'rgba(0,0,0,0.45)', 1, a0, a1, whole);
-                disc(R * 0.5, shadeHex('#6f7883', kSide), null, 0, a0, a1, whole);
-                disc(R * 0.17, shadeHex('#b9c1cb', kSide * 1.15), 'rgba(0,0,0,0.4)', 1, a0, a1, whole);
+            function disc(rad, fill, stroke, lw) {
+                ctx.save();
+                ctx.transform(rad * B.ey[0], rad * B.ey[1], rad * B.ez[0], rad * B.ez[1], c[0], c[1]);
+                ctx.beginPath();
+                ctx.arc(0, 0, 1, a0, a1);
+                if (!whole) ctx.closePath();
+                ctx.restore();
+                if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+                if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1; ctx.stroke(); }
+            }
+            /* the outer sidewall: the profile itself, flat and all */
+            function wallPath() {
+                var M = Math.max(N, 28), started = false, i3, t, p;
+                ctx.beginPath();
+                for (i3 = 0; i3 <= M; i3++) {
+                    t = i3 / M * 6.283185307;
+                    if (!keptY(py(t))) { started = false; continue; }
+                    p = P3(B, xs, py(t), pz(t));
+                    if (started) ctx.lineTo(p[0], p[1]);
+                    else { ctx.moveTo(p[0], p[1]); started = true; }
+                }
+                ctx.closePath();
+            }
+            var kSide = lambert3([W3[0] > 0 ? -1 : 1, 0, 0], L);
+            /* a radial fall-off across the sidewall, in SCREEN space because
+               that is where the gradient lives: a flat disc reads as a
+               sticker, and one lit from the same side as the box reads as
+               rubber */
+            var sw = ctx.createRadialGradient(
+                c[0] - rr * 0.35, c[1] - rr * 0.4, rr * 0.05, c[0], c[1], rr * 1.05);
+            sw.addColorStop(0, shadeHex(dark, kSide * 1.5));
+            sw.addColorStop(0.55, shadeHex(dark, kSide * 1.08));
+            sw.addColorStop(1, shadeHex(dark, kSide * 0.72));
+            wallPath();
+            ctx.fillStyle = sw; ctx.fill();
+            ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1; ctx.stroke();
+            if (rr > 10) disc(R * 0.78, null, shadeHex(dark, kSide * 0.65), 1);   /* the bead */
+
+            if (rr > 15) {
+                var rim = ctx.createRadialGradient(
+                    c[0] - rr * 0.3, c[1] - rr * 0.35, rr * 0.03, c[0], c[1], rr * 0.66);
+                rim.addColorStop(0, shadeHex('#c6ced8', kSide * 1.12));
+                rim.addColorStop(0.6, shadeHex('#96a0ac', kSide * 1.02));
+                rim.addColorStop(1, shadeHex('#6d7681', kSide * 0.95));
+                disc(R * 0.62, rim, 'rgba(0,0,0,0.45)', 1);
+                disc(R * 0.46, shadeHex('#5f6771', kSide), null, 0);
+                disc(R * 0.16, shadeHex('#c3cad3', kSide * 1.12), 'rgba(0,0,0,0.4)', 1);
+                /* the lugs. Six of them, in the plane of the wheel, which is
+                   the detail that makes it read as a wheel at a glance */
+                if (rr > 34 && quality !== 'draft') {
+                    ctx.fillStyle = shadeHex('#aab3bd', kSide * 1.05);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+                    ctx.lineWidth = 0.8;
+                    for (var lg = 0; lg < 6; lg++) {
+                        var ph = lg / 6 * 6.283185307 + 0.4;
+                        var lx = c[0] + R * 0.32 * (Math.cos(ph) * B.ey[0] + Math.sin(ph) * B.ez[0]);
+                        var ly = c[1] + R * 0.32 * (Math.cos(ph) * B.ey[1] + Math.sin(ph) * B.ez[1]);
+                        if (!whole) {
+                            /* only the lugs on the half that survived */
+                            var yy = y0 + R * 0.32 * Math.cos(ph);
+                            if (!keptY(yy)) continue;
+                        }
+                        ctx.beginPath(); ctx.arc(lx, ly, Math.max(1.2, rr * 0.045), 0, 6.3);
+                        ctx.fill(); ctx.stroke();
+                    }
+                }
             }
 
-            /* the rubber the saw went through: a rectangle in the section
-               plane, as tall as the chord the plane cuts across the wheel.
-               It is coplanar with the cut face, so it is painted with it
-               rather than with the wheel. */
-            if (part === 'cut' && cutY != null && Math.abs(q) < 1) {
-                var d = R * Math.sqrt(1 - q * q);
-                var zc = -R + (keep > 0 ? 0 : 0);
-                var kCut = lambert3([0, keep > 0 ? -1 : 1, 0], L);
-                poly3(B, [
-                    [x0 - halfW, cutY, zc - d], [x0 + halfW, cutY, zc - d],
-                    [x0 + halfW, cutY, zc + d], [x0 - halfW, cutY, zc + d]
-                ], shadeHex('#3a3f47', kCut), 'rgba(0,0,0,0.45)', 1);
+            /* the imprint's own edge, over the flat, so the circle the model
+               applies is readable through the wheel standing on it */
+            if (keptY(y0)) {
+                ellipse3(B, x0, y0, a, null, cssVar('--lp-danger'), 1.3);
             }
 
-            /* the tag, over the hub where it cannot be mistaken for a load
-               value */
-            if (R * view3.scale > 11 && (cutY == null || Math.abs(q) < 1 || onKeptSide(y0))) {
+            /* the tag, on the hub */
+            if (rr > 11 && (cutY == null || Math.abs(q) < 1 || keptY(y0))) {
                 ctx.font = '700 10px ' + monoFont();
                 var tag = 'L' + (wi + 1), tw = ctx.measureText(tag).width;
                 ctx.fillStyle = 'rgba(15,24,41,0.88)';
@@ -3433,7 +3596,6 @@
                 ctx.fillStyle = '#e8eef9'; ctx.textAlign = 'center';
                 ctx.fillText(tag, c[0], c[1] + 3.5);
                 ctx.textAlign = 'left';
-            }
             }
         }
 
@@ -3490,6 +3652,7 @@
             var B = basis3();
             var L3 = light3(view3.az, view3.el);
             var W3 = viewDir3(view3.az, view3.el);
+            var G3 = tireGeom();
             var ink2 = cssVar('--lp-ink2'), ink3 = cssVar('--lp-ink3');
             var lineC = cssVar('--lp-line'), accent = cssVar('--lp-accent');
             var danger = cssVar('--lp-danger');
@@ -3536,10 +3699,16 @@
                 ctx.save();
                 ctx.globalAlpha = alpha;
                 var c = P3(B, w.x, w.y, 0);
-                if (state.loadKind === 'circle') {
-                    drawTire3(B, w, wi, L3, W3, quality, ySec, nearIsLow ? 1 : -1);
+                if (state.loadKind === 'circle' && G3) {
+                    drawTire3(B, w, wi, L3, W3, quality, ySec, nearIsLow ? 1 : -1, null, G3);
                     ctx.restore();
                     return;
+                }
+                if (state.loadKind === 'circle') {
+                    /* no tire fits between these wheels, so none is drawn:
+                       the imprint and its arrow are the model anyway */
+                    ellipse3(B, w.x, w.y, loadA(w), rgba('--lp-danger', 0.5), danger, 1.4);
+                    ellipse3(B, w.x, w.y, loadA(w) * 0.45, rgba('--lp-danger', 0.3), null, 0);
                 }
                 if (state.loadKind === 'line') {
                     var th = gearParams.theta * Math.PI / 180, hl = 0.5 * gearParams.L;
@@ -3662,9 +3831,9 @@
             }
 
             /* the rubber cross-sections, coplanar with the cut face */
-            if (state.loadKind === 'circle') {
+            if (state.loadKind === 'circle' && G3) {
                 order.forEach(function (o) {
-                    drawTire3(B, o.w, o.wi, L3, W3, quality, ySec, nearIsLow ? 1 : -1, 'cut');
+                    drawTire3(B, o.w, o.wi, L3, W3, quality, ySec, nearIsLow ? 1 : -1, 'cut', G3);
                 });
             }
 
@@ -3734,17 +3903,17 @@
             }
             ctx.restore();
             /* and the half of each wheel the cut took away, in phantom */
-            if (state.loadKind === 'circle') {
+            if (state.loadKind === 'circle' && G3) {
                 ctx.save();
                 ctx.setLineDash([5, 4]);
                 ctx.globalAlpha = 0.5;
                 ctx.strokeStyle = ink3;
                 ctx.lineWidth = 1.1;
                 order.forEach(function (o) {
-                    var R = tireR(o.w), aa = Math.max(loadA(o.w), 20);
+                    var R = G3.R, aa = loadA(o.w);
                     var qq = clamp((ySec - o.w.y) / R, -2, 2);
                     if (Math.abs(qq) >= 1 && (nearIsLow ? o.w.y >= ySec : o.w.y <= ySec)) return;
-                    var cc = P3(B, W3[0] > 0 ? o.w.x - aa : o.w.x + aa, o.w.y, -R);
+                    var cc = P3(B, W3[0] > 0 ? o.w.x - G3.w : o.w.x + G3.w, o.w.y, -G3.h);
                     var a0 = 0, a1 = 6.283185307;
                     if (Math.abs(qq) <= 1) {
                         var ac = Math.acos(clamp(nearIsLow ? -qq : qq, -1, 1));
@@ -5777,6 +5946,7 @@
         governingLife: governingLife,
         mirrorXPoint: mirrorXPoint,
         viewDir3: viewDir3,
-        lambert3: lambert3
+        lambert3: lambert3,
+        tireFit: tireFit
     };
 });
