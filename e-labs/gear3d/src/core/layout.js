@@ -440,6 +440,8 @@ export function swapToWideBase(axle, wbtDesignation, opts = {}) {
 
     const newAxle = {
         ...axle,
+        originalDTA: structuredClone({ tireConfig: axle.tireConfig, tire: axle.tire,
+            dualSpacing: axle.dualSpacing, trackWidth: axle.trackWidth, source: axle.source }),
         tireConfig: 'WBT',
         tire: wbtDesignation,
         dualSpacing: null,
@@ -474,4 +476,13 @@ export function swapToWideBase(axle, wbtDesignation, opts = {}) {
                 + 'Open the contact-patch panel for the area comparison at the stated load and pressure.'
         }
     };
+}
+
+/** Restore tire geometry while retaining subsequent position/load edits. */
+export function restoreDualTires(axle) {
+    if (axle.tireConfig !== 'WBT' || axle.originalDTA?.tireConfig !== 'DTA')
+        throw new Error('No original dual-tire setup is stored for this axle.');
+    const restored = { ...axle, ...structuredClone(axle.originalDTA) };
+    delete restored.originalDTA;
+    return restored;
 }

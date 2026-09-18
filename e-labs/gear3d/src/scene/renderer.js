@@ -150,7 +150,7 @@ export class Viewport {
 
         this.background = 'white';
         this.backgroundColor = '#ffffff';
-        this.showGrid = true;
+        this.showGrid = false;
         /** Quad view: all four modes rendered in one frame. */
         this.quad = false;
         /** @type {THREE.LineSegments|null} */
@@ -494,8 +494,14 @@ export class Viewport {
 
     /** @param {boolean} on */
     setGrid(on) {
-        this.showGrid = on;
-        this.rebuildGrid();
+        this.showGrid = !!on;
+        // Keep GPU buffers between toggles. Model/background/quality changes
+        // still rebuild the grid, so a cached grid never has stale bounds/ink.
+        if (on && !this._grid) this.rebuildGrid();
+        if (this._grid) this._grid.visible = this.showGrid;
+        // Hiding must also request a frame; removing the old grid used to
+        // return without invalidation and leave it on screen until an orbit.
+        this.invalidate();
     }
 
     /**
@@ -662,6 +668,11 @@ export class Viewport {
 
     render() {
         const quad = this.renderScene();
+        this.renderOverlay(quad);
+    }
+
+    /** Refresh SVG labels without redrawing tires, shadows and four GL panes. */
+    renderOverlay(quad = this.quad ? { panes: quadLayout(this.size.width, this.size.height, QUAD_GAP) } : null) {
         if (this.onFrame) {
             this.onFrame({
                 vp: this.viewProjection(),

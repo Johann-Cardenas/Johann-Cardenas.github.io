@@ -22,7 +22,7 @@ export const ISOLATION_LEVELS = Object.freeze(['unit', 'running-gear', 'group', 
 /** @type {Record<IsolationLevel, {label: string, hint: string}>} */
 export const ISOLATION_META = Object.freeze({
     unit: { label: 'Full unit', hint: 'Chassis silhouette and all axles' },
-    'running-gear': { label: 'Running gear only', hint: 'All axles and tires, chassis hidden' },
+    'running-gear': { label: 'All running gear', hint: 'All axles and tires; vehicle body is controlled separately' },
     group: { label: 'Axle group', hint: 'One group, e.g. the tandem drive' },
     axle: { label: 'Single axle', hint: 'One axle only' },
     position: { label: 'Wheel position', hint: 'One tire or one dual pair' }

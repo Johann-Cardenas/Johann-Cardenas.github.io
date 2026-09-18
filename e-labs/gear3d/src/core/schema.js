@@ -307,6 +307,20 @@ function validateAircraft(u, E, W) {
 
     checkProvenanceFields(u, REQUIRED_PROVENANCE.aircraftUnit, u.sources?.length ? 'unit sources' : null, E);
 
+    if(u.bodyFit != null) {
+        const fit=u.bodyFit;
+        for(const key of ['length','tailHeight','mainAttachmentInset']) if(fit[key]!=null &&
+            (!Number.isFinite(fit[key]) || fit[key]<=0)) E(`bodyFit.${key} must be positive`);
+        if(fit.noseOffset!=null && (!Number.isFinite(fit.noseOffset) || fit.noseOffset<0 ||
+            fit.noseOffset>=fit.length)) E('bodyFit.noseOffset must lie within the body length');
+        if(fit.attachmentHeights!=null) {
+            if(typeof fit.attachmentHeights!=='object') E('bodyFit.attachmentHeights must be an object');
+            else for(const [role,height] of Object.entries(fit.attachmentHeights))
+                if(!['nose','main'].includes(role) || !Number.isFinite(height) || height<=0)
+                    E(`bodyFit.attachmentHeights.${role} must be a positive nose/main attachment height`);
+        }
+    }
+
     if (u.mtow != null && !quantityHasProvenance(u.mtow)) E('mtow is present but has no basis');
     if (u.maxTaxiWeight != null && !quantityHasProvenance(u.maxTaxiWeight)) {
         E('maxTaxiWeight is present but has no basis');

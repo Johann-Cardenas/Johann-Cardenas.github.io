@@ -174,7 +174,15 @@ noise and costs nothing in accuracy.
 
 ## 8. Status
 
-**No assets ship, and none are required.** The procedural path is the reference
+**v1.13: vehicle bodies ship, and they are not slot assets.** The illustrative
+bodies in `assets/bodies/` (DECISIONS D38) are a separate overlay with their
+own loader in `src/geometry/vehicleBody.js`. They never replace a tire, rim or
+hub, nothing can be measured off them, and §8.1 was applied to them in full:
+CC0, or CC BY 4.0 with the attribution in `assets/bodies/CREDITS.md`, and GPL
+v2 only because each derived GLB ships its corresponding source beside it. The
+rest of this section, which is about the wheel slots, stands.
+
+**No slot assets ship, and none are required.** The procedural path is the reference
 implementation, not a placeholder: it is deterministic, it scales to any
 designation in the library including sizes nobody has modeled, and it is what
 the test suite exercises. Authored meshes are an enhancement to appearance only

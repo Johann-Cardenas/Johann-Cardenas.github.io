@@ -1,0 +1,525 @@
+{
+  "schemaVersion": "1.0",
+  "units": [
+    {
+      "schemaVersion": "1.0",
+      "id": "b757-200",
+      "domain": "aircraft",
+      "manufacturer": "Boeing",
+      "model": "757-200",
+      "gearDesignation": "2D",
+      "mtow": {
+        "value": 255500,
+        "unit": "lb",
+        "basis": "Boeing D6-58327 Rev H, December 2024; PDF pages 16, 20, 22, 117 (weights, dimensions, clearances, footprint). https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf Selected 255500 lb option applies below 1500 ft airport altitude (table footnote 1)."
+      },
+      "maxTaxiWeight": {
+        "value": 256000,
+        "unit": "lb",
+        "basis": "Boeing D6-58327 Rev H, December 2024; PDF pages 16, 20, 22, 117 (weights, dimensions, clearances, footprint). https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 18288,
+      "mainGearTrack": 7315.2,
+      "tirePressure": {
+        "value": 183,
+        "unit": "psi",
+        "basis": "Boeing 757 ACAP section 7.2, PDF page 117. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.tailHeight (midpoint of published clearance range; illustrative rigid attitude)",
+        "bodyFit.attachmentHeights (illustrative mesh attachments)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 609.6,
+          "tandemSpacing": null,
+          "tire": "H31x13.0-12",
+          "pressure": {
+            "value": 155,
+            "unit": "psi",
+            "basis": "Boeing 757 ACAP section 7.2, PDF page 117. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+          },
+          "source": "Boeing 757 ACAP section 7.2, PDF page 117. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 18288,
+          "y": -3657.6,
+          "dualSpacing": 863.6,
+          "tandemSpacing": 1143,
+          "tire": "H40x14.5-19",
+          "source": "Boeing 757 ACAP section 7.2, PDF page 117. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 18288,
+          "y": 3657.6,
+          "dualSpacing": 863.6,
+          "tandemSpacing": 1143,
+          "tire": "H40x14.5-19",
+          "source": "Boeing 757 ACAP section 7.2, PDF page 117. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 47320.2,
+        "noseOffset": 5892.8,
+        "tailHeight": 13615,
+        "attachmentHeights": {
+          "nose": 3420,
+          "main": 3900
+        },
+        "source": "Boeing D6-58327 Rev H, December 2024; PDF pages 16, 20, 22, 117 (weights, dimensions, clearances, footprint). Overall length and nose overhang use imperial general-dimension labels. Tail height is the midpoint of the published clearance range, with zero visual pitch. Strut tops are illustrative mesh attachments. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+      },
+      "notes": "Dedicated variant airframe from FlightGear/Flightradar24; illustrative geometry, not manufacturer CAD. Landing-gear track and spacings use manufacturer footprint dimensions, not rounded FAA outer-width derivations. Loads use MTOW with an assumed 95% main-gear split; taxi weight is separate. Selected MTOW option is limited to airports below 1500 ft. ",
+      "sources": [
+        {
+          "id": "boeing-757-acap",
+          "title": "757 Airplane Characteristics for Airport Planning",
+          "publisher": "Boeing Commercial Airplanes",
+          "year": 2024,
+          "url": "https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf",
+          "note": "Boeing D6-58327 Rev H, December 2024; PDF pages 16, 20, 22, 117 (weights, dimensions, clearances, footprint)."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "b757-300",
+      "domain": "aircraft",
+      "manufacturer": "Boeing",
+      "model": "757-300",
+      "gearDesignation": "2D",
+      "mtow": {
+        "value": 270000,
+        "unit": "lb",
+        "basis": "Boeing D6-58327 Rev H, December 2024; PDF pages 19, 21, 23, 117 (weights, dimensions, clearances, footprint). https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+      },
+      "maxTaxiWeight": {
+        "value": 271000,
+        "unit": "lb",
+        "basis": "Boeing D6-58327 Rev H, December 2024; PDF pages 19, 21, 23, 117 (weights, dimensions, clearances, footprint). https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 22352,
+      "mainGearTrack": 7315.2,
+      "tirePressure": {
+        "value": 200,
+        "unit": "psi",
+        "basis": "Boeing 757 ACAP section 7.2, PDF page 117. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.tailHeight (midpoint of published clearance range; illustrative rigid attitude)",
+        "bodyFit.attachmentHeights (illustrative mesh attachments)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 609.6,
+          "tandemSpacing": null,
+          "tire": "H31x13.0-12",
+          "pressure": {
+            "value": 136,
+            "unit": "psi",
+            "basis": "Boeing 757 ACAP section 7.2, PDF page 117. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+          },
+          "source": "Boeing 757 ACAP section 7.2, PDF page 117. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 22352,
+          "y": -3657.6,
+          "dualSpacing": 863.6,
+          "tandemSpacing": 1143,
+          "tire": "H40x14.5-19",
+          "source": "Boeing 757 ACAP section 7.2, PDF page 117. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 22352,
+          "y": 3657.6,
+          "dualSpacing": 863.6,
+          "tandemSpacing": 1143,
+          "tire": "H40x14.5-19",
+          "source": "Boeing 757 ACAP section 7.2, PDF page 117. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 54432.2,
+        "noseOffset": 5892.8,
+        "tailHeight": 13600,
+        "attachmentHeights": {
+          "nose": 3430,
+          "main": 3910
+        },
+        "source": "Boeing D6-58327 Rev H, December 2024; PDF pages 19, 21, 23, 117 (weights, dimensions, clearances, footprint). Overall length and nose overhang use imperial general-dimension labels. Tail height is the midpoint of the published clearance range, with zero visual pitch. Strut tops are illustrative mesh attachments. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf"
+      },
+      "notes": "Dedicated variant airframe from FlightGear/Flightradar24; illustrative geometry, not manufacturer CAD. Landing-gear track and spacings use manufacturer footprint dimensions, not rounded FAA outer-width derivations. Loads use MTOW with an assumed 95% main-gear split; taxi weight is separate. ",
+      "sources": [
+        {
+          "id": "boeing-757-acap",
+          "title": "757 Airplane Characteristics for Airport Planning",
+          "publisher": "Boeing Commercial Airplanes",
+          "year": 2024,
+          "url": "https://www.boeing.com/content/dam/boeing/v2/airports/acaps/757_Rev_H.pdf",
+          "note": "Boeing D6-58327 Rev H, December 2024; PDF pages 19, 21, 23, 117 (weights, dimensions, clearances, footprint)."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "b767-200",
+      "domain": "aircraft",
+      "manufacturer": "Boeing",
+      "model": "767-200",
+      "gearDesignation": "2D",
+      "mtow": {
+        "value": 315000,
+        "unit": "lb",
+        "basis": "Boeing D6-58328 Rev K, December 2024; PDF pages 22, 28, 32, 193 (weights, dimensions, clearances, footprint). https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "maxTaxiWeight": {
+        "value": 317000,
+        "unit": "lb",
+        "basis": "Boeing D6-58328 Rev K, December 2024; PDF pages 22, 28, 32, 193 (weights, dimensions, clearances, footprint). https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 19685,
+      "mainGearTrack": 9296.4,
+      "tirePressure": {
+        "value": 165,
+        "unit": "psi",
+        "basis": "Boeing 767 ACAP section 7.2, PDF page 193. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.tailHeight (midpoint of published clearance range; illustrative rigid attitude)",
+        "bodyFit.attachmentHeights (illustrative mesh attachments)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 635,
+          "tandemSpacing": null,
+          "tire": "H37x14.0-15",
+          "pressure": {
+            "value": 146,
+            "unit": "psi",
+            "basis": "Boeing 767 ACAP section 7.2, PDF page 193. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+          },
+          "source": "Boeing 767 ACAP section 7.2, PDF page 193. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 19685,
+          "y": -4648.2,
+          "dualSpacing": 1143,
+          "tandemSpacing": 1422.4,
+          "tire": "H46x18.0-20",
+          "source": "Boeing 767 ACAP section 7.2, PDF page 193. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 19685,
+          "y": 4648.2,
+          "dualSpacing": 1143,
+          "tandemSpacing": 1422.4,
+          "tire": "H46x18.0-20",
+          "source": "Boeing 767 ACAP section 7.2, PDF page 193. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 48514,
+        "noseOffset": 4546.6,
+        "tailHeight": 15865,
+        "attachmentHeights": {
+          "nose": 2730,
+          "main": 3620
+        },
+        "source": "Boeing D6-58328 Rev K, December 2024; PDF pages 22, 28, 32, 193 (weights, dimensions, clearances, footprint). Overall length and nose overhang use imperial general-dimension labels. Tail height is the midpoint of the published clearance range, with zero visual pitch. Strut tops are illustrative mesh attachments. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "notes": "Dedicated variant airframe from FlightGear/Flightradar24; illustrative geometry, not manufacturer CAD. Landing-gear track and spacings use manufacturer footprint dimensions, not rounded FAA outer-width derivations. Loads use MTOW with an assumed 95% main-gear split; taxi weight is separate. ",
+      "sources": [
+        {
+          "id": "boeing-767-acap",
+          "title": "767 Airplane Characteristics for Airport Planning",
+          "publisher": "Boeing Commercial Airplanes",
+          "year": 2024,
+          "url": "https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf",
+          "note": "Boeing D6-58328 Rev K, December 2024; PDF pages 22, 28, 32, 193 (weights, dimensions, clearances, footprint)."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "b767-300er",
+      "domain": "aircraft",
+      "manufacturer": "Boeing",
+      "model": "767-300ER",
+      "gearDesignation": "2D",
+      "mtow": {
+        "value": 412000,
+        "unit": "lb",
+        "basis": "Boeing D6-58328 Rev K, December 2024; PDF pages 25, 29, 33, 194 (weights, dimensions, clearances, footprint). https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "maxTaxiWeight": {
+        "value": 413000,
+        "unit": "lb",
+        "basis": "Boeing D6-58328 Rev K, December 2024; PDF pages 25, 29, 33, 194 (weights, dimensions, clearances, footprint). https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 22758.4,
+      "mainGearTrack": 9296.4,
+      "tirePressure": {
+        "value": 200,
+        "unit": "psi",
+        "basis": "Boeing 767 ACAP section 7.2, PDF page 194. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.tailHeight (midpoint of published clearance range; illustrative rigid attitude)",
+        "bodyFit.attachmentHeights (illustrative mesh attachments)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 635,
+          "tandemSpacing": null,
+          "tire": "H37x14.0-15",
+          "pressure": {
+            "value": 172,
+            "unit": "psi",
+            "basis": "Boeing 767 ACAP section 7.2, PDF page 194. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+          },
+          "source": "Boeing 767 ACAP section 7.2, PDF page 194. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 22758.4,
+          "y": -4648.2,
+          "dualSpacing": 1143,
+          "tandemSpacing": 1422.4,
+          "tire": "H46x18.0-20",
+          "source": "Boeing 767 ACAP section 7.2, PDF page 194. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 22758.4,
+          "y": 4648.2,
+          "dualSpacing": 1143,
+          "tandemSpacing": 1422.4,
+          "tire": "H46x18.0-20",
+          "source": "Boeing 767 ACAP section 7.2, PDF page 194. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 54940.2,
+        "noseOffset": 4546.6,
+        "tailHeight": 15710,
+        "attachmentHeights": {
+          "nose": 2240,
+          "main": 3020
+        },
+        "source": "Boeing D6-58328 Rev K, December 2024; PDF pages 25, 29, 33, 194 (weights, dimensions, clearances, footprint). Overall length and nose overhang use imperial general-dimension labels. Tail height is the midpoint of the published clearance range, with zero visual pitch. Strut tops are illustrative mesh attachments. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "notes": "Dedicated variant airframe from FlightGear/Flightradar24; illustrative geometry, not manufacturer CAD. Landing-gear track and spacings use manufacturer footprint dimensions, not rounded FAA outer-width derivations. Loads use MTOW with an assumed 95% main-gear split; taxi weight is separate. The 767-300 mesh represents the ER configuration; engine option detail remains illustrative. ",
+      "sources": [
+        {
+          "id": "boeing-767-acap",
+          "title": "767 Airplane Characteristics for Airport Planning",
+          "publisher": "Boeing Commercial Airplanes",
+          "year": 2024,
+          "url": "https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf",
+          "note": "Boeing D6-58328 Rev K, December 2024; PDF pages 25, 29, 33, 194 (weights, dimensions, clearances, footprint)."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "b767-400er",
+      "domain": "aircraft",
+      "manufacturer": "Boeing",
+      "model": "767-400ER",
+      "gearDesignation": "2D",
+      "mtow": {
+        "value": 450000,
+        "unit": "lb",
+        "basis": "Boeing D6-58328 Rev K, December 2024; PDF pages 27, 31, 35, 195 (weights, dimensions, clearances, footprint). https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "maxTaxiWeight": {
+        "value": 451000,
+        "unit": "lb",
+        "basis": "Boeing D6-58328 Rev K, December 2024; PDF pages 27, 31, 35, 195 (weights, dimensions, clearances, footprint). https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 26162,
+      "mainGearTrack": 9296.4,
+      "tirePressure": {
+        "value": 213,
+        "unit": "psi",
+        "basis": "Boeing 767 ACAP section 7.2, PDF page 195. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.tailHeight (midpoint of published clearance range; illustrative rigid attitude)",
+        "bodyFit.attachmentHeights (illustrative mesh attachments)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 635,
+          "tandemSpacing": null,
+          "tire": "H37x14.0-15",
+          "pressure": {
+            "value": 170,
+            "unit": "psi",
+            "basis": "Boeing 767 ACAP section 7.2, PDF page 195. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+          },
+          "source": "Boeing 767 ACAP section 7.2, PDF page 195. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 26162,
+          "y": -4648.2,
+          "dualSpacing": 1163.32,
+          "tandemSpacing": 1371.6,
+          "tire": "50x20.0R22",
+          "source": "Boeing 767 ACAP section 7.2, PDF page 195. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 26162,
+          "y": 4648.2,
+          "dualSpacing": 1163.32,
+          "tandemSpacing": 1371.6,
+          "tire": "50x20.0R22",
+          "source": "Boeing 767 ACAP section 7.2, PDF page 195. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 61366.4,
+        "noseOffset": 4546.6,
+        "tailHeight": 16845,
+        "attachmentHeights": {
+          "nose": 2670,
+          "main": 3520
+        },
+        "source": "Boeing D6-58328 Rev K, December 2024; PDF pages 27, 31, 35, 195 (weights, dimensions, clearances, footprint). Overall length and nose overhang use imperial general-dimension labels. Tail height is the midpoint of the published clearance range, with zero visual pitch. Strut tops are illustrative mesh attachments. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "notes": "Dedicated variant airframe from FlightGear/Flightradar24; illustrative geometry, not manufacturer CAD. Landing-gear track and spacings use manufacturer footprint dimensions, not rounded FAA outer-width derivations. Loads use MTOW with an assumed 95% main-gear split; taxi weight is separate. ",
+      "sources": [
+        {
+          "id": "boeing-767-acap",
+          "title": "767 Airplane Characteristics for Airport Planning",
+          "publisher": "Boeing Commercial Airplanes",
+          "year": 2024,
+          "url": "https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf",
+          "note": "Boeing D6-58328 Rev K, December 2024; PDF pages 27, 31, 35, 195 (weights, dimensions, clearances, footprint)."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    }
+  ]
+}

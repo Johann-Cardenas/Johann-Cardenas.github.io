@@ -17,7 +17,7 @@
 import * as THREE from 'three';
 
 import { setNominalTable } from './src/core/tires.js';
-import { resolveLayout, swapToWideBase } from './src/core/layout.js';
+import { resolveLayout, swapToWideBase, restoreDualTires } from './src/core/layout.js';
 import { validateUnit, tireCount } from './src/core/schema.js';
 import { Store } from './src/core/store.js';
 import { checkBridgeFormula } from './src/core/bridge.js';
@@ -40,6 +40,7 @@ import { MaterialLibrary, MATERIAL_SPECS } from './src/scene/materials.js';
 import { LIGHTING_PRESETS } from './src/scene/lighting.js';
 import { Viewport, RENDER_TIERS } from './src/scene/renderer.js';
 import { VIEW_META } from './src/scene/cameras.js';
+import { styleVehicleBody, ensureVehicleBody, vehicleBodyStatus, vehicleBodySpec } from './src/geometry/vehicleBody.js';
 import { buildAssembly } from './src/geometry/assembly.js';
 
 import {
@@ -70,6 +71,10 @@ import {
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const $ = (id) => document.getElementById(id);
 
+/** Binary assets beside this file. Vehicle bodies load from assets/bodies/,
+ *  on demand, the first time a unit is shown with its body on. */
+const ASSET_BASE = new URL('./assets/', import.meta.url).href;
+
 /* ============================================================
    1. State
    ============================================================ */
@@ -95,15 +100,11 @@ const app = {
 /** Everything that is not the document: view flags, not undoable. */
 function defaultView() {
     return {
-        // Quad, not 3D. A gear configuration is a PLAN first — the thing an
-        // engineer needs from it is where the wheels are, and a single
-        // pictorial 3D view is the one arrangement that answers that worst:
-        // it foreshortens both axes at once, so no spacing can be read off it.
-        // Opening on plan / 3D / side / front shows the layout, the elevation,
-        // the track and the pictorial together, which is what a gear drawing
-        // has looked like for as long as there have been gear drawings.
-        // Clicking any pane still opens it full size.
+        // Open with vehicle context in all four views and a clear background.
         mode: 'quad',
+        showVehicleBody: true,
+        bodyOpacity: 28,
+        bodyColor: '#71899b',
         unitSystem: 'SI',
         precision: 0,
         dualUnits: false,
@@ -111,11 +112,11 @@ function defaultView() {
         // set enabled puts around twenty dimension lines over the model and
         // the geometry stops being readable; the point of the app is the
         // gear, with the numbers available on demand.
-        annotations: true,
+        annotations: false,
         dimensionSets: ['longitudinal', 'custom'],
         showCallouts: false,
         showScaleBar: true,
-        showGrid: true,
+        showGrid: false,
         showPatches: false,
         patchModel: 'rectangular',
         inflationKpa: DEFAULT_INFLATION_KPA,
@@ -262,6 +263,7 @@ function setupViewport() {
     // The viewport owns the environment map; the library owns the materials
     // it has to be pushed onto.
     app.viewport.setMaterialLibrary(app.materials);
+    app.viewport.setGrid(app.store.view.showGrid);
 
     app.viewport.onFrame = (info) => drawOverlay(info);
     // The buffer size changes on resize, on a tier change and when an orbit
@@ -323,6 +325,8 @@ function setupViewport() {
 
 /** @param {string} id */
 function loadUnitById(id) {
+    app.lastWideBase = null;
+    $('g3-wbt-report').hidden = true;
     const unit = [...app.library.trucks, ...app.library.aircraft].find((u) => u.id === id);
     if (!unit) { toast(`Unit "${id}" is not in the library.`, 'error'); return; }
     app.store.replaceDoc({
@@ -371,13 +375,32 @@ function rebuild(opts = {}) {
    5. Isolation
    ============================================================ */
 
+function bodyAwareBounds(iso) {
+    if (app.store.view.showVehicleBody && app.assembly?.hasVehicleBody()) {
+        const b = app.assembly.visibleBounds();
+        return { minX: b.min.z * 1000, maxX: b.max.z * 1000,
+            minY: b.min.x * 1000, maxY: b.max.x * 1000,
+            minZ: b.min.y * 1000, maxZ: b.max.y * 1000 };
+    }
+    return isolationBounds(iso, app.layout);
+}
+
 function applyIsolation(opts = {}) {
     if (!app.assembly) return;
     const iso = app.store.view.isolation;
+    if (app.store.view.showVehicleBody && vehicleBodyStatus(app.store.doc.unit) === 'loading') {
+        const unit = app.store.doc.unit;
+        ensureVehicleBody(unit, ASSET_BASE).then(() => {
+            if (app.store.doc.unit === unit && app.store.view.showVehicleBody)
+                applyIsolation({ frame: true });
+        });
+    }
     app.assembly.setWheelFilter(wheelPredicate(iso), {
         ghost: iso.ghost,
+        vehicleBody: app.store.view.showVehicleBody,
         chassis: showChassis(iso)
     });
+    applyBodyStyle();
     // Snap targets follow visibility — see rebuildSnapPoints. The chassis is
     // deliberately NOT snappable: it is a schematic envelope, so measuring to
     // it would produce a number with no sourced meaning.
@@ -385,7 +408,7 @@ function applyIsolation(opts = {}) {
     renderChassisNotice();
 
     if (opts.frame) {
-        const b = isolationBounds(iso, app.layout);
+        const b = bodyAwareBounds(iso);
         if (b) app.viewport.frameEngineering(b);
     }
     app.viewport.invalidate();
@@ -552,6 +575,11 @@ function drawQuadOverlay(svg, info) {
         maxY: Math.max(...shown.wheels.map((w) => w.y + w.geometry.sectionWidth / 2))
     };
 
+    // The engineering dimensions are shared; only projection differs by pane.
+    const dims = v.annotations ? [
+        ...autoDimensions(shown, { sets: v.dimensionSets }),
+        ...(v.dimensionSets.includes('custom') ? (app.store.doc.customDimensions || []) : [])
+    ] : [];
     for (const pane of info.panes) {
         // Pane separators, drawn as the app's hairlines.
         const frame = document.createElementNS(SVG_NS, 'rect');
@@ -609,10 +637,6 @@ function drawQuadOverlay(svg, info) {
             container: g
         };
 
-        const dims = [
-            ...autoDimensions(shown, { sets: v.dimensionSets }),
-            ...(v.dimensionSets.includes('custom') ? (app.store.doc.customDimensions || []) : [])
-        ];
         renderDimensions(svg, dims, opts);
         if (v.showScaleBar) renderScaleBar(g, opts);
     }
@@ -642,6 +666,15 @@ function renderChassisNotice() {
     if (!box) return;
     const iso = app.store.view.isolation;
     const env = app.assembly?.chassis;
+    $('g3-vehicle-body').checked = !!app.store.view.showVehicleBody;
+    if (app.store.view.showVehicleBody) {
+        box.hidden = false;
+        const status = vehicleBodyStatus(app.store.doc.unit);
+        box.textContent = status === 'loading' ? 'Loading vehicle body...' : status === 'failed' ? 'Vehicle body could not load. Reload the page to retry.' : app.assembly?.hasVehicleBody()
+            ? `${vehicleBodySpec(app.store.doc.unit)?.label}. Illustrative overlay: proportions and body placement are approximate. Axle and gear coordinates remain those of the selected layout. Body surfaces cannot be measured.`
+            : 'No vehicle body for this bare or unsupported gear configuration.';
+        return;
+    }
 
     if (iso.level !== 'unit') { box.hidden = true; return; }
 
@@ -649,8 +682,7 @@ function renderChassisNotice() {
         box.hidden = false;
         box.innerHTML = '<i class="fas fa-info-circle"></i><span>'
             + (app.layout?.domain === 'aircraft'
-                ? 'No fuselage silhouette: nothing in the sourced data constrains an aircraft body, '
-                + 'so drawing one would be invention. The gear is shown alone.'
+                ? 'Enable Show vehicle body for an illustrative aircraft overlay.'
                 : 'This unit has no chassis silhouette.')
             + '</span>';
         return;
@@ -1041,7 +1073,7 @@ function setupToolbar() {
     $('g3-annot').addEventListener('click', () => {
         app.store.view.annotations = !app.store.view.annotations;
         syncToggle($('g3-annot'), app.store.view.annotations);
-        app.viewport.invalidate();
+        app.viewport.renderOverlay();
     });
     $('g3-grid').addEventListener('click', () => {
         app.store.view.showGrid = !app.store.view.showGrid;
@@ -1050,7 +1082,7 @@ function setupToolbar() {
     });
 
     $('g3-fit').addEventListener('click', () => {
-        const b = isolationBounds(app.store.view.isolation, app.layout);
+        const b = bodyAwareBounds(app.store.view.isolation);
         if (b) app.viewport.frameEngineering(b);
     });
     $('g3-undo').addEventListener('click', () => { if (app.store.undo()) rebuild(); });
@@ -1144,7 +1176,7 @@ function setViewMode(mode) {
     }
     $('g3-hud-right').textContent = viewportHint(mode, quad);
 
-    const b = isolationBounds(app.store.view.isolation, app.layout);
+    const b = bodyAwareBounds(app.store.view.isolation);
     if (b) app.viewport.frameEngineering(b);
     updateStatus();
 }
@@ -1238,12 +1270,22 @@ function setupUnitPanel() {
     syncCategories();
     syncUnits();
 
-    $('g3-wbt').addEventListener('change', (e) => {
-        const designation = /** @type {HTMLSelectElement} */(e.target).value;
-        if (!designation) return;
-        applyWideBaseSwap(designation);
-        /** @type {HTMLSelectElement} */(e.target).value = '';
+    $('g3-wbt-axle').addEventListener('change', () => {
+        app.selection.axleId = $('g3-wbt-axle').value || null;
+        renderProperties(); renderTree(); app.viewport.renderOverlay();
     });
+    $('g3-wbt-apply').addEventListener('click', () => applyWideBaseSwap($('g3-wbt').value));
+    $('g3-wbt-restore').addEventListener('click', () => {
+        const id=$('g3-wbt-axle').value;
+        try {
+            const axle=app.store.doc.unit.axles.find(a=>a.id===id);
+            const restored=restoreDualTires(axle);
+            app.store.update(d=>{d.unit.axles[d.unit.axles.findIndex(a=>a.id===id)]=restored;}, `restore DTA on ${id}`);
+            app.lastWideBase=null; $('g3-wbt-report').hidden=true;
+            rebuild(); toast(`${id}: original dual tires restored.`);
+        } catch(error) { toast(error.message,'error'); }
+    });
+
 }
 
 /**
@@ -1373,6 +1415,7 @@ function syncUnits(opts = {}) {
         sel.appendChild(o);
         return;
     }
+    const manufacturerGroups = new Map();
     for (const u of filtered) {
         const o = document.createElement('option');
         o.value = u.id;
@@ -1386,7 +1429,15 @@ function syncUnits(opts = {}) {
                 ? `${u.gearDesignation} — ${describeGearCode(u.gearDesignation).replace(/ main gear$/, '')}`
                     + (u.kind === 'schematic' ? '  · schematic' : `  · ${u.manufacturer} ${u.model}`)
                 : `${u.manufacturer} ${u.model} (${u.gearDesignation})`;
-        sel.appendChild(o);
+        if(domain==='aircraft') {
+            if(!manufacturerGroups.has(u.manufacturer)) {
+                const group=document.createElement('optgroup');
+                group.label=u.manufacturer;
+                manufacturerGroups.set(u.manufacturer,group);
+                sel.appendChild(group);
+            }
+            manufacturerGroups.get(u.manufacturer).appendChild(o);
+        } else sel.appendChild(o);
     }
     // Keep the loaded unit selected when it survives the new filter. When it
     // does not, the dropdown would otherwise fall to its first option while
@@ -1593,11 +1644,10 @@ function renderAssumptionNotice(u) {
             + `${list}Its wheel geometry — track, dual and tandem spacings — is real where a source `
             + 'carries it, and the panel below says which. Its tire size and wheelbase are nominal '
             + 'in every case, so do not read a wheel diameter or a nose gear position off this figure.</span>'
-        : lead + `<span>${list}Everything else on this aircraft — gear code, `
-            + 'wheelbase, main gear outer width, MTOW, tire size and pressure — is taken from the '
-            + 'FAA Aircraft Characteristics Database and the manufacturer ACAP. Set the assumed '
-            + 'spacings from FAARFIELD before using this figure for pavement work; the track '
-            + 're-derives so the published outer width is preserved.</span>';
+        : lead + `<span>${list}The source panel documents this aircraft’s dimensions, tires and loads, `
+            + 'including manufacturer drawings and any FAARFIELD-derived coordinates. '
+            + 'Review the listed assumptions and weight variant before using the geometry for pavement work. '
+            + 'The translucent body is an illustrative family mesh; its surface is not an engineering dimension.</span>';
 }
 
 /* ============================================================
@@ -1921,10 +1971,42 @@ function setupIsolationPanel() {
         app.store.view.isolation = { ...app.store.view.isolation, level: sel.value, targetId: null };
         applyIsolation({ frame: true });
     });
+    $('g3-body-opacity').addEventListener('input', e => {
+        app.store.view.bodyOpacity=Number(e.target.value);applyBodyStyle();scheduleAutosave();
+    });
+    $('g3-body-reset').addEventListener('click', () => {
+        app.store.view.bodyOpacity=28;app.store.view.bodyColor='#71899b';
+        applyBodyStyle();scheduleAutosave();
+    });
+    $('g3-body-color').addEventListener('input', e => {
+        app.store.view.bodyColor=e.target.value;applyBodyStyle();scheduleAutosave();
+    });
+    for(const button of document.querySelectorAll('[data-body-opacity]')) button.addEventListener('click',()=>{
+        app.store.view.bodyOpacity=Number(button.dataset.bodyOpacity);applyBodyStyle();scheduleAutosave();
+    });
+    $('g3-vehicle-body').addEventListener('change', (e) => {
+        app.store.view.showVehicleBody = e.target.checked;
+        applyIsolation({ frame: true });
+        scheduleAutosave();
+    });
     $('g3-ghost').addEventListener('change', (e) => {
         app.store.view.isolation.ghost = /** @type {HTMLInputElement} */(e.target).checked;
         applyIsolation();
     });
+}
+
+function applyBodyStyle() {
+    const v=app.store.view;
+    $('g3-body-opacity').value=String(v.bodyOpacity);
+    $('g3-body-opacity-value').textContent=`${v.bodyOpacity}%`;
+    $('g3-body-color').value=v.bodyColor;
+    for(const button of document.querySelectorAll('[data-body-opacity]')) {
+        const active=Number(button.dataset.bodyOpacity)===v.bodyOpacity;
+        button.classList.toggle('is-on',active);button.setAttribute('aria-pressed',String(active));
+    }
+    const body=app.assembly?.root.getObjectByName('vehicle-body');
+    if(body)styleVehicleBody(body,{opacity:v.bodyOpacity/100,color:v.bodyColor});
+    app.viewport?.invalidate();
 }
 
 function setupDimensionPanel() {
@@ -2294,6 +2376,43 @@ function setupBackgroundPanel() {
 }
 
 function setupExportPanel() {
+    let figureBusy = false;
+    for (const action of ['copy', 'download']) {
+        $('g3-figure-' + action).addEventListener('click', async () => {
+            if (figureBusy) return;
+            figureBusy = true;
+            const buttons = ['copy', 'download'].map(id => $('g3-figure-' + id));
+            buttons.forEach(button => button.disabled = true);
+            const format = $('g3-figure-background').value;
+            const makeFigure = async () => {
+                const source = { ...app.viewport.size };
+                const scale = Math.min(2, 2000 / Math.max(source.width, source.height));
+                const width = Math.round(source.width * scale), height = Math.round(source.height * scale);
+                const canvas = await renderSupersampled(app.viewport, { width, height, supersample: 1, format });
+                await compositeOverlay(canvas, $('g3-overlay'), {
+                    width, height, sourceWidth: source.width, sourceHeight: source.height
+                });
+                return canvasToBlob(canvas, format);
+            };
+            try {
+                if (action === 'copy') {
+                    if (!navigator.clipboard?.write || !window.ClipboardItem)
+                        throw new Error('Image copying is unavailable in this browser. Use Download PNG.');
+                    await navigator.clipboard.write([new ClipboardItem({ 'image/png': makeFigure() })]);
+                    toast('Figure copied.');
+                } else {
+                    const blob = await makeFigure();
+                    download(blob, `${filenameFor(app.store.doc.unit, app.store.view.mode)}${format === 'png-alpha' ? '-transparent' : ''}.png`);
+                    toast('Figure downloaded.');
+                }
+            } catch (error) {
+                toast(action === 'copy' ? `${error.message} Use Download PNG if clipboard access is blocked.` : error.message, 'error');
+            } finally {
+                figureBusy = false;
+                buttons.forEach(button => button.disabled = false);
+            }
+        });
+    }
     const sel = $('g3-exp-size');
     for (const p of RESOLUTION_PRESETS) {
         const o = document.createElement('option');
@@ -2481,6 +2600,7 @@ function setupTreeKeys() {
 }
 
 function renderProperties() {
+    renderTireControls();
     const box = $('g3-props');
     const a = app.layout?.axles.find((x) => x.id === app.selection.axleId);
     if (!a) {
@@ -2552,9 +2672,28 @@ function revertToReference() {
     toast('Reverted to the cited reference configuration.');
 }
 
+function renderTireControls() {
+    const select=$('g3-wbt-axle');
+    const axles=(app.store.doc.unit?.axles || []).filter(a=>['DTA','WBT'].includes(a.tireConfig));
+    const previous=select.value;
+    select.replaceChildren(...axles.map(a=>new Option(`${a.id} · ${a.role} · ${a.tireConfig}`,a.id)));
+    const id=axles.some(a=>a.id===app.selection.axleId)?app.selection.axleId
+        :axles.some(a=>a.id===previous)?previous:axles[0]?.id;
+    if(id)select.value=id;
+    const axle=axles.find(a=>a.id===id);
+    select.disabled=!axle;
+    $('g3-wbt-apply').disabled=axle?.tireConfig!=='DTA';
+    $('g3-wbt').disabled=axle?.tireConfig!=='DTA';
+    $('g3-wbt-restore').disabled=!(axle?.tireConfig==='WBT'&&axle.originalDTA);
+    $('g3-wbt-status').textContent=!axle?'This vehicle has no dual-tire axles to convert.'
+        :`${axle.id}: ${axle.tire} · ${axle.tireConfig==='DTA'?'4 tires per axle':'2 tires per axle'}${axle.tireConfig==='WBT'&&!axle.originalDTA?' · No original DTA stored in this project.':''}`;
+    $('g3-wbt-report').hidden=!app.lastWideBase || app.lastWideBase.axleId!==id || axle?.tireConfig!=='WBT';
+}
+
 /** @param {string} designation */
 function applyWideBaseSwap(designation) {
-    const axleId = app.selection.axleId;
+    const axleId = $('g3-wbt-axle').value;
+    app.selection.axleId = axleId;
     if (!axleId) { toast('Select a dual-tire axle in the structure tree first.', 'warn'); return; }
     const unit = app.store.doc.unit;
     const src = unit.axles?.find((x) => x.id === axleId);
@@ -2881,6 +3020,9 @@ function currentState() {
             showScaleBar: v.showScaleBar,
             annotations: v.annotations,
             showGrid: v.showGrid,
+            showVehicleBody: v.showVehicleBody,
+            bodyOpacity: v.bodyOpacity,
+            bodyColor: v.bodyColor,
             materials: v.materials,
             isolation: v.isolation
         }
@@ -2895,6 +3037,8 @@ function saveProject() {
 
 /** @param {any} p */
 function applyProject(p) {
+    app.lastWideBase = null;
+    $('g3-wbt-report').hidden = true;
     app.store.replaceDoc({
         unit: p.unit,
         seed: p.seed || DEFAULT_SEED,
@@ -2908,6 +3052,9 @@ function applyProject(p) {
         // A project records the view it was saved with, so that wins; the
         // fallback follows whatever the app's current default is.
         mode: p.view?.mode || defaultView().mode,
+        showVehicleBody: p.view?.showVehicleBody !== false,
+        bodyOpacity: Number.isFinite(p.view?.bodyOpacity) ? Math.max(10,Math.min(80,p.view.bodyOpacity)) : 28,
+        bodyColor: /^#[0-9a-f]{6}$/i.test(p.view?.bodyColor) ? p.view.bodyColor : '#71899b',
         lighting: p.view?.lighting || { ...LIGHTING_PRESETS.studio },
         background: p.view?.background || 'white',
         backgroundColor: p.view?.backgroundColor || '#eef1f4',
@@ -2917,8 +3064,8 @@ function applyProject(p) {
         dimensionSets: p.view?.dimensionSets || ['longitudinal', 'transverse'],
         showCallouts: !!p.view?.showCallouts,
         showScaleBar: p.view?.showScaleBar !== false,
-        annotations: p.view?.annotations !== false,
-        showGrid: p.view?.showGrid !== false,
+        annotations: p.view?.annotations === true,
+        showGrid: p.view?.showGrid === true,
         materials: p.view?.materials || {},
         quality: p.view?.quality || 'auto',
         renderTier: p.view?.renderTier || defaultView().renderTier,

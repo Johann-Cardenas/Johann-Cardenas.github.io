@@ -80,7 +80,7 @@ export function buildExportScene(viewport, opts = {}) {
         if (!any.isMesh && !any.isInstancedMesh) return;
         if (!o.visible) return;
         // Ghosts are context for the screen, not geometry anyone wants.
-        if (o.name.startsWith('ghost:')) return;
+        if (o.name.startsWith('ghost:') || o.name.startsWith('vehicle-body')) return;
         if (!opts.includeChassis && o.name.startsWith('chassis')) return;
 
         const tris = any.geometry?.index

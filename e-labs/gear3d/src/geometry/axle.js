@@ -212,7 +212,7 @@ export function buildAxleBeam(trackWidth, g, material, opts = {}) {
  * Build a landing gear strut: an oleo leg with a bogie beam when the gear
  * has more than one tandem row.
  *
- * @param {{axleHeight: number, tandemRows: number, tandemSpacing: number, trackSpan: number}} spec
+ * @param {{axleHeight: number, tandemRows: number, tandemSpacing: number, trackSpan: number, attachmentHeight?: number, attachmentOffset?: number}} spec
  * @param {import('../core/tires.js').TireGeometry} g
  * @param {THREE.Material} material
  * @param {{radialSegments?: number}} [opts]
@@ -230,8 +230,12 @@ export function buildGearStrut(spec, g, material, opts = {}) {
     // The leg runs from the axle up to roughly two tire diameters, which is
     // enough to read as a strut without pretending to model the actual
     // retraction geometry — that is out of scope by design.
-    const legLen = g.overallDiameter * 1.35;
+    // Reviewed high-wing aircraft attach at nacelles or low fuselage sponsons.
+    // This is a visual strut length, not a change to wheel centers or loading.
+    const legLen = Number.isFinite(spec.attachmentHeight) && spec.attachmentHeight>spec.axleHeight
+        ? spec.attachmentHeight-spec.axleHeight : g.overallDiameter * 1.35;
     const topY = spec.axleHeight + legLen;
+    const lean=Number.isFinite(spec.attachmentOffset)?spec.attachmentOffset:0;
 
     const leg = new THREE.Mesh(
         new THREE.CylinderGeometry(legR * 0.82, legR, legLen, seg),
@@ -330,6 +334,20 @@ export function buildGearStrut(spec, g, material, opts = {}) {
                 geo.rotateZ(Math.PI / 2);
                 geo.translate(0, spec.axleHeight, z);
             });
+    }
+
+    // Low fuselage sponsons can be inboard of the wheel-pair center. Lean only
+    // the illustrative leg/link assembly; axle stubs and tire centers stay put.
+    if(lean)for(const mesh of grp.children) {
+        if(mesh.name.startsWith('axle-stub'))continue;
+        mesh.updateMatrix();
+        const shear=new THREE.Matrix4().set(1,lean/legLen,0,-lean*spec.axleHeight/legLen,
+            0,1,0,0, 0,0,1,0, 0,0,0,1);
+        const origin=mesh.position.clone().applyMatrix4(shear);
+        const transform=new THREE.Matrix4().makeTranslation(-origin.x,-origin.y,-origin.z)
+            .multiply(shear).multiply(mesh.matrix);
+        mesh.geometry.applyMatrix4(transform);
+        mesh.position.copy(origin);mesh.rotation.set(0,0,0);mesh.scale.set(1,1,1);
     }
 
     return grp;

@@ -33,7 +33,7 @@ Tests need only Node ≥ 18:
 
 ```bash
 cd e-labs/gear3d
-npm test          # 141 checks, no dependencies
+npm test          # 196 checks, no dependencies
 ```
 
 ---
@@ -386,6 +386,39 @@ D, 2D, 3D, 2D/2D2, 2D/3D2 — were missing from the one list in the app that
 exists to enumerate the convention. It now lists all twenty-one, and a test
 asserts the coverage at library level. 176 checks.
 
+**v1.13** gives every vehicle an illustrative body (below), makes the
+wide-base swap reversible, moves the figure's controls and read-outs off the
+canvas with a one-click Copy / Download PNG, opens with annotations and the
+grid off, and grows the aircraft library from 7 to 28 measured aircraft: the
+757/767 family re-dimensioned from Boeing's ACAPs, the 787 family, the A319,
+A320, A321, A330-200/-300, A350-900/-1000 and A220-100/-300, and six regional
+aircraft from Embraer, Bombardier, De Havilland Canada and ATR, grouped by
+manufacturer in the Model list. Library 38 → 59. It was built in the CEE 406
+port of this app and brought back here; see DECISIONS D38–D43. 196 checks.
+
+## Vehicle bodies (v1.13)
+
+*Show vehicle body* (Isolation panel, on by default) draws a dimmed,
+translucent body around the running gear: a family airframe for 24 aircraft
+families, a car, pickup, bus, motorcycle or rigid-truck body for road
+vehicles, and a procedural conventional tractor with van trailers for classes
+8–13. Opacity, color and three presets restyle it in place, and the settings
+ride the project file.
+
+It is an illustration and is kept out of every number. Body meshes cannot be
+picked or snapped to, the geometry and footprint exports skip them, and the
+panel names the body and says its proportions are approximate. Road bodies
+are stretched to the selected axles from the source mesh's own wheel centers;
+aircraft are scaled uniformly from the manufacturer's body length and nose
+station (`bodyFit` in the unit data). Bare FAA schematic configurations get no
+body, and an aircraft family without one never borrows a neighbor's.
+
+The GLBs live in `assets/bodies/` and load on demand, the first time a unit is
+shown with its body on. Licenses, sources and modifications are in
+`assets/bodies/CREDITS.md`; the eighteen airframes adapted from GPL v2 models
+ship their corresponding source in `assets/bodies/sources/`, pinned by hash in
+the test suite.
+
 ## Render resolution (v1.10)
 
 The viewport used to render at `min(devicePixelRatio, 2)`, which on an ordinary
@@ -582,4 +615,5 @@ project file and re-applied when the material library is rebuilt.
 - `DECISIONS.md` — every `[DECISION]`, and every deliberate deviation from the spec
 - `DESIGN.md` — token system, signature element, self-critique, accessibility
 - `ASSETS.md` — the contract for contributing higher-fidelity glTF meshes
+- `assets/bodies/CREDITS.md` — vehicle body sources, licenses and modifications
 - `src/data/SOURCES.md` — citations and verification status

@@ -1,28 +1,11 @@
 {
   "schemaVersion": "1.0",
   "$comment": [
-    "Six Boeing aircraft spanning gear codes D, 2D, 3D and 2D/2D2.",
-    "",
-    "TWO DIFFERENT SOURCING METHODS LIVE IN THIS FILE.",
-    "",
-    "The four two-strut aircraft (737, 757, 767, 777) record `mainGearOuterWidth`",
-    "as authoritative, from the FAA database, and DERIVE the gear centerlines",
-    "from it, because no consulted source publishes their track directly. See",
-    "index.json for that method.",
-    "",
-    "The two 747s invert it. Their ACAP section 7.2 footprint figures publish the",
-    "track, both gear positions, and every spacing outright, so the geometry is",
-    "read off the figure and the outer width becomes a CROSS-CHECK rather than an",
-    "input. That is the better arrangement wherever the data allows it — it is",
-    "simply not available for the other four.",
-    "",
-    "The 747s were absent until v1.6 because a single outer width cannot close a",
-    "four-bogie layout the way it closes a two-strut one: the body gear's offset",
-    "from the wing gear is a free parameter that no summary table carries. The",
-    "ACAP figures state it (10 ft 1 in, and the two models agree independently),",
-    "which is what made these entries possible without inventing geometry.",
-    "",
-    "See data/SOURCES.md section 5 for what is and is not verified."
+    "Four Boeing entries: 737-800, 777-300ER, 747-400 and 747-8.",
+    "757 and 767 entries are now in boeing-757-767.json, using direct Boeing ACAP footprint dimensions.",
+    "737 and 777 derive main-gear track from FAA outer width, dual spacing and tire width.",
+    "747 entries use the manufacturer footprint drawings directly.",
+    "See data/SOURCES.md, and docs/gear3d-body-review/boeing-757-767.md in the CEE-406 repository, for sourcing and limitations."
   ],
   "units": [
     {
@@ -65,92 +48,6 @@
         { "id": "faa-acd", "title": "Aircraft Characteristics Database (type B738)", "publisher": "U.S. Federal Aviation Administration", "url": "https://www.faa.gov/airports/engineering/aircraft_char_database", "note": "Gear config D; wheelbase 51.2 ft; main gear width 23.0 ft; MTOW 174 200 lb. Downloaded and parsed during this build." },
         { "id": "boeing-737-acap", "title": "737 Airplane Characteristics for Airport Planning, D6-58325-7 Rev C", "publisher": "Boeing Commercial Airplanes", "year": 2025, "note": "Section 7.2.1 landing gear footprint: tire sizes, tire pressures and maximum design taxi weight. Downloaded and read during this build." },
         { "id": "ac-6g", "title": "AC 150/5320-6G Appendix G, G.1.3", "publisher": "U.S. Federal Aviation Administration", "note": "Percent gross weight on the whole main gear: 0.95 assumed for thickness design." }
-      ]
-    },
-
-    {
-      "schemaVersion": "1.0",
-      "id": "b757-200",
-      "domain": "aircraft",
-      "manufacturer": "Boeing",
-      "model": "757-200",
-      "gearDesignation": "2D",
-      "mtow": { "value": 255500, "unit": "lb", "basis": "FAA Aircraft Characteristics Database, MTOW_lb for ICAO type B752." },
-      "maxTaxiWeight": { "value": 256000, "unit": "lb", "basis": "Boeing 757 Airplane Characteristics for Airport Planning, D6-58327 Rev H (December 2024), section 7.2, highest 757-200 maximum design taxi weight." },
-      "percentOnMainGear": 95,
-      "wheelbase": 18288,
-      "mainGearOuterWidth": 8534,
-      "tirePressure": { "value": 183, "unit": "psi", "basis": "Boeing 757 ACAP D6-58327 Rev H, section 7.2, main gear tire pressure at 256 000 lb taxi weight." },
-      "assumedFields": ["NLG.dualSpacing"],
-      "gears": [
-        {
-          "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1,
-          "x": 0, "y": 0, "dualSpacing": 508, "tandemSpacing": null,
-          "tire": "H31x13.0-12",
-          "pressure": { "value": 155, "unit": "psi", "basis": "Boeing 757 ACAP D6-58327 Rev H, section 7.2, nose gear tire pressure." },
-          "source": "Tire size H31x13.0-12, 20PR from Boeing 757 ACAP D6-58327 Rev H section 7.2. ASSUMED: nose gear dual spacing 508 mm (20 in), declared in assumedFields."
-        },
-        {
-          "id": "MLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
-          "x": 18288, "y": -3651, "dualSpacing": 864, "tandemSpacing": 1143,
-          "tire": "H40x14.5-19",
-          "source": "Longitudinal position = the FAA wheelbase of 60.0 ft (18 288 mm), measured to the main gear centroid, so the tandem spread does not shift it. Transverse position derived from the FAA main gear outer width of 28.0 ft (8534 mm): track = 8534 - 864 - 368.3 = 7302 mm, strut centerline at 3651 mm. That agrees with Boeing's published 757 tread of 24 ft (7315 mm) to within 13 mm. Tire H40x14.5-19 from Boeing 757 ACAP section 7.2. ASSUMED: tandem spacing 1143 mm (45 in) — no source consulted constrains it, and the wheelbase is measured to the centroid so nothing else pins it down. Declared in assumedFields. Tandem spacing 1143 mm is no longer assumed: it is the FAARFIELD 2.1.1 aircraft library value for B757-200 (wheel coordinates Y ±571.5 mm), the same source this library already relies on to corroborate the 747 and A380 geometry. The v1.2 assumption of 45 in was exactly right, and is now sourced rather than guessed."
-        },
-        {
-          "id": "MLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
-          "x": 18288, "y": 3651, "dualSpacing": 864, "tandemSpacing": 1143,
-          "tire": "H40x14.5-19",
-          "source": "Mirror of MLG-L about the aircraft centerline; same derivation."
-        }
-      ],
-      "notes": "A 2D gear on a narrowbody airframe — the classic high-ACN narrowbody and a useful contrast with the 737's single-axle D gear at similar span.",
-      "sources": [
-        { "id": "faa-acd", "title": "Aircraft Characteristics Database (type B752)", "publisher": "U.S. Federal Aviation Administration", "url": "https://www.faa.gov/airports/engineering/aircraft_char_database", "note": "Gear config 2D; wheelbase 60.0 ft; main gear width 28.0 ft; MTOW 255 500 lb." },
-        { "id": "boeing-757-acap", "title": "757 Airplane Characteristics for Airport Planning, D6-58327 Rev H", "publisher": "Boeing Commercial Airplanes", "year": 2024, "note": "Section 7.2 landing gear footprint." },
-        { "id": "ac-6g", "title": "AC 150/5320-6G Appendix G, G.1.3", "publisher": "U.S. Federal Aviation Administration", "note": "Percent gross weight on the whole main gear: 0.95." }
-      ]
-    },
-
-    {
-      "schemaVersion": "1.0",
-      "id": "b767-400er",
-      "domain": "aircraft",
-      "manufacturer": "Boeing",
-      "model": "767-400ER",
-      "gearDesignation": "2D",
-      "mtow": { "value": 450000, "unit": "lb", "basis": "FAA Aircraft Characteristics Database, MTOW_lb for the Boeing 767-400." },
-      "maxTaxiWeight": { "value": 451000, "unit": "lb", "basis": "Boeing 767 Airplane Characteristics for Airport Planning, D6-58328 Rev K (December 2024), section 7.2.3." },
-      "percentOnMainGear": 95,
-      "wheelbase": 26152,
-      "mainGearOuterWidth": 10973,
-      "tirePressure": { "value": 213, "unit": "psi", "basis": "Boeing 767 ACAP D6-58328 Rev K, section 7.2.3, main gear tire pressure for the 767-400ER." },
-      "assumedFields": ["NLG.dualSpacing"],
-      "gears": [
-        {
-          "id": "NLG", "role": "nose", "type": "dual", "wheelsAcross": 2, "tandemRows": 1,
-          "x": 0, "y": 0, "dualSpacing": 546, "tandemSpacing": null,
-          "tire": "H37x14.0-15",
-          "pressure": { "value": 170, "unit": "psi", "basis": "Boeing 767 ACAP D6-58328 Rev K, section 7.2.3, nose gear tire pressure." },
-          "source": "Tire size H37x14.0-15, 22PR from Boeing 767 ACAP D6-58328 Rev K section 7.2.3. ASSUMED: nose gear dual spacing 546 mm (21.5 in), declared in assumedFields."
-        },
-        {
-          "id": "MLG-L", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
-          "x": 26152, "y": -4651, "dualSpacing": 1163, "tandemSpacing": 1371.6,
-          "tire": "50x20.0R22",
-          "source": "Longitudinal position = the FAA wheelbase of 85.8 ft (26 152 mm). Transverse position derived from the FAA main gear outer width of 36.0 ft (10 973 mm): track = 10973 - 1163 - 508 = 9302 mm, strut centerline at 4651 mm. That agrees with Boeing's published 767 tread of 30 ft 6 in (9296 mm) to within 6 mm. Tire 50x20.0R22, 32PR from Boeing 767 ACAP section 7.2.3. CORRECTED in v1.6.1: this entry previously carried a dual spacing of 1143 mm, taken as a round 45 in because no consulted source stated it. The FAARFIELD 2.1.1 aircraft library gives 45.800 in (1163.32 mm) as an explicit wheel coordinate (X +/-22.900 in), and it is the better number in the strongest available sense — because the track is DERIVED from the dual spacing, the error propagated, and 1143 was what made this aircraft's tread cross-check the worst of the four at 26 mm against 12, -13 and -10 for the others. At 1163 the residual falls to 6 mm and the outlier disappears. What moves: the OUTBOARD tire of each dual pair does not move at all, because the FAA outer width is the authoritative datum and is held; the INBOARD tire moves 20 mm inboard, and the strut centerline 10 mm. That is the derivation behaving exactly as intended — a corrected dual spacing is absorbed inside the fixed outer width rather than displacing the whole gear. ASSUMED: tandem spacing 1422 mm (56 in), declared in assumedFields; FAARFIELD gives 54.000 in for this too, but replacing it is a separate change and is not made here. Tandem spacing 1371.6 mm is no longer assumed: it is the FAARFIELD 2.1.1 aircraft library value for B767-400 ER (wheel coordinates Y ±685.8 mm), the same source this library already relies on to corroborate the 747 and A380 geometry. CORRECTED in v1.9 from the v1.2 assumption of 1422 mm (56 in), which was 50.4 mm too long. The tandem spread is symmetric about the bogie center, so it moves both axle lines and leaves the wheelbase, the track and the outer width untouched — which is exactly the property that let a wrong value sit here undetected while every other check on this aircraft passed."
-        },
-        {
-          "id": "MLG-R", "role": "main", "type": "dual", "wheelsAcross": 2, "tandemRows": 2,
-          "x": 26152, "y": 4651, "dualSpacing": 1163, "tandemSpacing": 1371.6,
-          "tire": "50x20.0R22",
-          "source": "Mirror of MLG-L about the aircraft centerline; same derivation."
-        }
-      ],
-      "notes": "A widebody 2D gear. Useful against the 757 for showing how the same gear code scales.",
-      "sources": [
-        { "id": "faa-acd", "title": "Aircraft Characteristics Database (Boeing 767-400)", "publisher": "U.S. Federal Aviation Administration", "url": "https://www.faa.gov/airports/engineering/aircraft_char_database", "note": "Gear config 2D; wheelbase 85.8 ft; main gear width 36.0 ft; MTOW 450 000 lb." },
-        { "id": "boeing-767-acap", "title": "767 Airplane Characteristics for Airport Planning, D6-58328 Rev K", "publisher": "Boeing Commercial Airplanes", "year": 2024, "note": "Section 7.2.3 landing gear footprint for the 767-400ER." },
-        { "id": "faarfield-aclib", "title": "FAARFIELD 2.1.1 aircraft library (aircraft.xml), entry B767-400 ER", "publisher": "U.S. Federal Aviation Administration", "note": "Explicit main gear wheel coordinates X +/-22.900 in, Y 0 and 54.000 in. Source of the corrected 45.800 in (1163 mm) dual spacing in v1.6.1, replacing a round 45 in that no document stated." },        { "id": "ac-6g", "title": "AC 150/5320-6G Appendix G, G.1.3", "publisher": "U.S. Federal Aviation Administration", "note": "Percent gross weight on the whole main gear: 0.95." }
       ]
     },
 

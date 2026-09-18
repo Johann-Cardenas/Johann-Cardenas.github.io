@@ -6,6 +6,166 @@ why, so a later maintainer can overturn it on the merits rather than guessing.
 
 ---
 
+## D38. Vehicles get a body, drawn as illustration, and nothing can be measured off it (v1.13)
+
+**Decision.** *Show vehicle body* (Isolation panel, on by default) puts a
+dimmed, translucent airframe or road-vehicle body around the running gear, in
+every view mode and in the figure exports. It replaces the chassis envelope
+while it is on. Twenty-four aircraft families and six road bodies are GLBs in
+`assets/bodies/`; articulated trucks (classes 8–13) get a procedural
+conventional tractor and van trailers from `src/geometry/conventionalTruck.js`
+instead (`trailer.glb` is retained there, credited, and no longer loaded).
+Bare FAA schematic configurations, and any aircraft whose family has no body,
+get none: an unknown family never borrows a neighbor's airframe.
+
+**This overturns two earlier entries, on purpose.** D13 shipped no
+third-party meshes, and D18 drew only a regulatory envelope, and nothing at
+all for an aircraft, because no sourced dimension constrains a body. Both
+reasons were about *measurement*, and this keeps them there: a body is context
+for the gear, not a dimension. So the rules D18 applied to the envelope apply
+to the body, and more strictly:
+
+- **It is never an engineering surface.** Body meshes are non-pickable (their
+  `raycast` is a no-op), they are not snap targets, and the glTF/OBJ geometry
+  export and every footprint export skip them (`exportScene.js` drops any
+  `vehicle-body` node). Figures include the body when it is on, because a
+  figure is a picture.
+- **It is placed from the gear, never the other way round.** Road bodies are
+  stretched to the selected axles from the source mesh's own wheel centers;
+  aircraft are scaled uniformly from the manufacturer's body length and
+  nose-to-nose-gear distance (`bodyFit` in the unit data), with ground
+  attitude and strut attachment heights declared in `assumedFields` where they
+  are illustrative. Wheel centers, loads and every export are unchanged by it.
+- **The panel says so every time.** The notice under the toggle names the body
+  ("Representative B767-400 airframe…") and states that proportions and
+  placement are approximate and that body surfaces cannot be measured.
+
+**Licensing.** ASSETS.md §8.1's rule held: nothing ships whose license cannot
+be stated. Road bodies are CC0 (Kenney, Quaternius, AliceCassie); six aircraft
+(five AMV Lab airframes and the 747) are CC BY 4.0 with attribution in
+`assets/bodies/CREDITS.md`; eighteen are
+adapted from GPL v2 FlightGear models via Flightradar24, and for those the
+license's own condition is met in the repository rather than by reference:
+each archive in `assets/bodies/sources/` holds the editable `.blend` and the
+original GLB, and a test pins every archive's hash. That is 68 MB of the 78 MB
+the bodies add, and it is the price of those eighteen airframes. The meshes
+were prepared (textures stripped, transforms baked, wheels removed) by the
+scripts in the CEE 406 repository, where this work was built — see D43.
+
+**Cost at runtime.** None until the toggle is on: a body is fetched the first
+time a unit is shown with it, shared between loads, and none is larger than
+1 MB.
+
+---
+
+## D39. The figure's controls and read-outs live outside the canvas (v1.13)
+
+**Decision.** The viewport sits inside a `.g3-figure` frame: a bar above it
+carries *Copy PNG* / *Download PNG* with a background or transparent choice,
+and a strip below it carries the status HUD and a collapsible *View controls*
+hint with the axis badge. Nothing floats over the canvas any more.
+
+**Why.** The HUD, the hint and the axis badge were absolutely positioned over
+the rendering, where on a tablet they covered a quad pane and on every screen
+they sat over part of the drawing. The viewport now has no padding and no
+chrome of its own, so the WebGL canvas and the SVG overlay share its
+coordinates exactly, picking included.
+
+**The quick figure is the view, not the export dialog.** It renders the
+current viewport at up to 2000 px on its long side, composites the dimension
+overlay, and writes a PNG. The clipboard receives a *promise* of the blob, so
+Safari's user-activation check passes; where the clipboard is unavailable the
+toast says to use Download instead. A transparent figure now also clears the
+scene background for the render and restores it after (`exportRaster.js`);
+before, only the clear alpha changed and the background still painted.
+
+---
+
+## D40. Annotations and the grid now open off (v1.13)
+
+**Decision.** A new sheet opens with dimension lines and the ground grid off;
+`A` and `G` still bring them back, and a project that saved them on reopens
+with them on. This overturns the grid half of D17.
+
+**Why.** With the body on, the grid and twenty-odd dimension lines were three
+layers of line work over one drawing, and the first thing anyone did was turn
+two of them off. The numbers are still one key away, and the scale bar stays.
+
+**And both toggles got cheap.** Turning annotations on or off used to redraw
+the whole scene, tires, shadows and four GL panes, to change SVG; it now
+redraws only the overlay (`Viewport.renderOverlay`). The grid keeps its GPU
+buffers across toggles and only hides; it is rebuilt when the model, the
+background or the quality changes, so a cached grid never has stale bounds.
+Hiding it also invalidates the frame, which it never did: before, a grid
+switched off stayed on screen until the next orbit.
+
+---
+
+## D41. A wide-base swap is reversible, and remembers only the tires (v1.13)
+
+**Decision.** The Configuration panel names the axle it acts on, swaps it to
+a chosen wide-base size (*Use WBT*), and can put the duals back (*Restore
+DTA*). `swapToWideBase` stores the axle's original tire, configuration, dual
+spacing, track and source on the axle itself as `originalDTA`, so it travels
+in the project file; `restoreDualTires` puts back exactly those five fields.
+
+**Why only those five.** Anything edited after the swap, such as an axle
+moved or a load changed, is the user's and must survive the restore. Resetting
+the whole vehicle was already *Revert*. The suite checks both halves: every
+dual axle in the library swaps to each of the three sizes and restores field
+for field through a save, and a later position and load edit survive the
+restore.
+
+---
+
+## D42. The 757 and 767 are dimensioned by Boeing, not derived (v1.13)
+
+**Decision.** `aircraft/boeing-757-767.json` carries the 757-200/-300 and
+767-200/-300ER/-400ER straight from Boeing's ACAPs (757 D6-58327 Rev H, 767
+D6-58328 Rev K): wheelbase, track, nose and main dual spacing and tandem
+spacing, all as stated in inches. It replaces the two older entries in
+`boeing.json`, keeping their ids so saved projects still open.
+
+**This supersedes D14 for these five aircraft**, and with it the v1.6.1
+correction. D14 derived the track from the FAA outer width and a nominal tire;
+here Boeing states the track, so nothing is derived. For the 767-400ER that
+moves the strut from ±4651 mm to ±4648.2 mm (366 in track) and the dual
+spacing from 1163 mm to 1163.32 mm (45.8 in exactly). The check that pinned
+the v1.6.1 value is re-pinned to the ACAP one, with the same purpose: a silent
+revert to either earlier value fails.
+
+---
+
+## D43. The work came back from the CEE 406 port, and so did two data defects (v1.13)
+
+**What happened.** Everything in v1.13 was built in the CEE 406 course site's
+port of this app (`ictuillinois/CEE-406`), which is meant to be generated from
+this directory and never edited by hand. It was brought back here as a
+reverse sync: the engine modules and data are byte-for-byte what the port
+ships, and `main.js` / `styles.css` are written so that the port's own
+transforms regenerate its shipped `gear3d.js` / `gear3d.css` from them exactly.
+The review renders, the Aircrafter importer and the body-preparation scripts
+stay in that repository and are linked from `SOURCES.md` and
+`assets/bodies/CREDITS.md`.
+
+**What this suite caught that the port's could not.** The port never ran
+these checks, and two failed on arrival:
+
+1. **Twenty citations had no publisher.** Every reviewed aircraft cited
+   "Manufacturer airport planning manual" by URL alone, and two regional
+   entries the Goodyear databook the same way. A URL does not name who issued
+   a document, and two of these were third-party mirrors. Fixed where the
+   data is generated, in the importer, and regenerated from the same workbook
+   (hash unchanged): twenty `publisher` lines, nothing else.
+2. **The 767-400ER pin** (D42) held the superseded value.
+
+A new section (§16) ports the three.js-free half of the port's own tests, so
+the tire restore, the body-fit validation, the 757/767 and regional
+footprints, the shipped GLBs and GPL sources, and every id `main.js` looks up
+are now checked here too. 196 checks, up from 187.
+
+---
+
 ## D34. English is rounded to three significant figures, and the figure is not (v1.12)
 
 **Decision.** `src/core/readable.js` wraps the five `format*` functions of

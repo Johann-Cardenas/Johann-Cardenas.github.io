@@ -104,9 +104,22 @@ export class CameraRig {
      * @param {number} height
      */
     setSize(width, height) {
-        this.aspect = Math.max(1e-6, width / height);
+        const aspect = Math.max(1e-6, width / height);
+        const changed = Math.abs(aspect - this.aspect) > 1e-6;
+        this.aspect = aspect;
         this.persp.aspect = this.aspect;
         this.persp.updateProjectionMatrix();
+        if (changed && this._box) {
+            const views = VIEW_MODES.map(mode=>({mode,zoom:this.states[mode].zoom,distance:this.states[mode].distance,
+                target:this.states[mode].target.clone()}));
+            this.fit(this._box);
+            for (const {mode,zoom,distance,target} of views) {
+                this.states[mode].zoom=zoom;
+                this.states[mode].distance=distance;
+                this.states[mode].target.copy(target);
+            }
+            this._applyState();
+        }
         this._updateOrthoFrustum();
     }
 

@@ -142,12 +142,16 @@ export async function renderToCanvas(viewport, opts) {
     const camera = viewport.cameras.camera;
     const prevSize = viewport.size;
     const prevRatio = renderer.getPixelRatio();
-    const prevAlpha = transparent ? null : undefined;
+    const prevAlpha = renderer.getClearAlpha();
+    const prevBackground = viewport.scene.background;
 
     // The export is not the live view: pixel ratio must be exactly 1 or the
     // requested pixel dimensions come out multiplied by the display scale.
     renderer.setPixelRatio(1);
-    if (transparent) renderer.setClearAlpha(0);
+    if (transparent) {
+        viewport.scene.background = null;
+        renderer.setClearAlpha(0);
+    }
 
     try {
         if (!needsTiles) {
@@ -203,7 +207,8 @@ export async function renderToCanvas(viewport, opts) {
         }
     } finally {
         // Restore the live view exactly as it was.
-        if (transparent) renderer.setClearAlpha(prevAlpha === null ? 1 : 1);
+        viewport.scene.background = prevBackground;
+        renderer.setClearAlpha(prevAlpha);
         renderer.setPixelRatio(prevRatio);
         renderer.setSize(prevSize.width, prevSize.height, false);
         viewport.cameras.setSize(prevSize.width, prevSize.height);

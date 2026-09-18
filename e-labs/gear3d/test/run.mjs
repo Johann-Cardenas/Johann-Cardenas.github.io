@@ -15,7 +15,8 @@
        claims it
    ============================================================ */
 
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -43,7 +44,7 @@ import {
     overridePatch, equivalentRadius, HUANG_K
 } from '../src/contact/models.js';
 import { checkBridgeFormula, bridgeAllowanceLb, knToLb, minimumSpreadMm } from '../src/core/bridge.js';
-import { resolveLayout, swapToWideBase } from '../src/core/layout.js';
+import { resolveLayout, swapToWideBase, restoreDualTires } from '../src/core/layout.js';
 import { computePatches, patchTotals, DEFAULT_INFLATION_KPA } from '../src/contact/patch.js';
 import {
     buildSnapPoints, nearestSnapPoint, inferAxis, dimensionFromSnaps
@@ -1140,6 +1141,7 @@ test('EVERY view flag survives save and reopen', () => {
         dimensionSets: ['transverse', 'custom'],
         showCallouts: true, showScaleBar: false,
         annotations: false, showGrid: false,
+        showVehicleBody: false, bodyOpacity: 60, bodyColor: '#ad7044',
         materials: { rubberTread: { tint: '#ff3333', roughness: 0.7 } },
         isolation: { level: 'axle', targetId: 'A2', ghost: true }
     };
@@ -1705,31 +1707,32 @@ test('CROSS-CHECK: the derived track matches each manufacturer\'s published trea
     }
 });
 
-test('the 767-400ER dual spacing is the FAARFIELD value, not a rounded guess', () => {
-    // Pinned deliberately. This is the number the v1.6.1 correction turned on,
-    // and because the track is DERIVED from it, a silent revert would move
-    // every 767 main wheel 10 mm per side while every other check still passed.
+test('the 767-400ER main gear is the ACAP footprint, not a rounded guess', () => {
+    // Pinned deliberately, and re-pinned once. v1.6.1 replaced a rounded 56 in
+    // dual spacing with FAARFIELD's 45.8 in, rounded it to 1163 mm and
+    // re-derived the strut from the FAA outer width (±4651 mm, track 9302).
+    // v1.13 moved the 757/767 family to Boeing's directly dimensioned footprint
+    // (767 ACAP D6-58328 Rev K, section 7.2): dual 45.8 in and track 366 in,
+    // both stated, so nothing is derived and nothing is rounded any more. A
+    // silent revert to either earlier value moves every main wheel by a few
+    // millimeters while every other check still passes, which is why this
+    // check exists at all.
+    const IN = 25.4;
     const u = aircraftUnits.find((x) => x.id === 'b767-400er');
     const mlg = u.gears.filter((g) => g.role === 'main');
     for (const g of mlg) {
-        assertEqual(g.dualSpacing, 1163, `${g.id} dual spacing (45.800 in per FAARFIELD)`);
-        assertEqual(Math.abs(g.y), 4651, `${g.id} strut centerline re-derived from the corrected spacing`);
+        assertClose(g.dualSpacing, 45.8 * IN, 1e-6, `${g.id} dual spacing (45.8 in, ACAP)`);
+        assertClose(Math.abs(g.y), 366 / 2 * IN, 1e-6, `${g.id} strut centerline (half the 366 in track)`);
     }
-    // And the geometry must still close the authoritative outer width exactly.
-    assert(validateUnit(u).ok, '767-400ER must validate after the correction');
+    assert(validateUnit(u).ok, '767-400ER must validate');
     const l = resolveLayout(u);
-    assertClose(l.derived.mainGearTrack, 9302, 1, 'derived track');
+    assertClose(l.derived.mainGearTrack, 366 * IN, 1e-6, 'track (30 ft 6 in)');
 
-    // The property that makes correcting a dual spacing safe: the FAA outer
-    // width is held, so the change is absorbed INSIDE it. The outboard tire
-    // edge does not move. Before the correction the outer tire sat at the same
-    // 5232.5 mm it does now; only the inboard tire and the strut moved.
+    // Each dual pair straddles its strut symmetrically: the outboard and
+    // inboard tire centers are the track and the dual spacing, and nothing else.
     const ys = l.wheels.filter((w) => w.axleId !== 'NLG').map((w) => Math.abs(w.y));
-    assertClose(Math.max(...ys), 5232.5, 0.1, 'outboard tire center is unmoved');
-    assertClose(Math.min(...ys), 4069.5, 0.1, 'inboard tire moved 20 mm inboard');
-    const sec = 508;  // 50x20.0R22 section width, mm
-    assertClose(2 * (Math.max(...ys) + sec / 2), u.mainGearOuterWidth, 1,
-        'outer tire EDGES still reproduce the authoritative outer width');
+    assertClose(Math.max(...ys), (366 + 45.8) / 2 * IN, 1e-6, 'outboard tire center');
+    assertClose(Math.min(...ys), (366 - 45.8) / 2 * IN, 1e-6, 'inboard tire center');
 });
 
 test('aircraft wheelbase is measured to the main gear centroid', () => {
@@ -2437,6 +2440,216 @@ test('the inflation field offers the same physical band in both systems', () => 
         const off = Math.abs(a - b) / b;
         assert(off < 0.05, `inflation ${what} differs by ${(off * 100).toFixed(1)}% between systems`);
     }
+});
+
+/* ============================================================
+   16. Tire swaps, vehicle bodies and the expanded aircraft library
+   ------------------------------------------------------------
+   This work was built in the CEE 406 port of this app and came
+   back upstream in v1.13, with the port's own node:test files.
+   The parts of those that need three.js (building a body mesh,
+   styling it) stay in the port, which has three installed; this
+   suite runs with no dependencies at all. What is left is every
+   rule that is pure data, pure layout or pure markup, and that
+   is most of what a figure depends on.
+   ============================================================ */
+
+group('16. Tire swaps, vehicle bodies and the expanded aircraft library');
+
+/** Key-order-free comparison: a restored axle is the same axle whatever
+ *  order its fields come back in. */
+const canon = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x))
+    ? Object.fromEntries(Object.keys(x).sort().map((key) => [key, x[key]])) : x);
+
+test('every dual axle swaps to each wide-base size and restores exactly, across a save', () => {
+    // The swap holds the outer tire edge, so the vehicle's overall width does
+    // not change; the restore must then give back the axle that was there
+    // before, field for field, even after the project has been written to a
+    // file and read back, which is where the stored duals actually live.
+    const outer = (a) => a.trackWidth / 2 + (a.dualSpacing || 0) / 2
+        + resolveTire(a.tire).geometry.sectionWidth / 2;
+    let checked = 0;
+    for (const unit of truckUnits) for (const axle of unit.axles || []) {
+        if (axle.tireConfig !== 'DTA') continue;
+        for (const size of ['445/50R22.5', '455/55R22.5', '425/65R22.5']) {
+            const original = structuredClone(axle);
+            const swap = swapToWideBase(axle, size).axle;
+            assertClose(outer(swap), outer(axle), 0.06, `${unit.id}/${axle.id} -> ${size}: outer tire edge`);
+            const saved = parseProject(serializeProject({ unit: { ...unit, axles: [swap] }, view: {} }));
+            assertEqual(canon(restoreDualTires(saved.unit.axles[0])), canon(original),
+                `${unit.id}/${axle.id}: restored after ${size} and a save`);
+            assertEqual(canon(axle), canon(original), `${unit.id}/${axle.id}: the swap must not touch its input`);
+            checked++;
+        }
+    }
+    assert(checked > 20, `only ${checked} swaps exercised`);
+});
+
+test('restoring the duals keeps later edits, and refuses an axle with nothing stored', () => {
+    const axle = truckUnits.flatMap((u) => u.axles || []).find((a) => a.tireConfig === 'DTA');
+    const swap = swapToWideBase(axle, '445/50R22.5').axle;
+    swap.x += 750;
+    swap.load = { value: 150, unit: 'kN', basis: 'edited after the swap' };
+    const restored = restoreDualTires(swap);
+    assertEqual(restored.x, swap.x, 'a position edit made after the swap survives');
+    assertEqual(canon(restored.load), canon(swap.load), 'a load edit made after the swap survives');
+    assertEqual(restored.tireConfig, 'DTA');
+    assertEqual(restored.trackWidth, axle.trackWidth, 'track restored');
+    assertEqual(restored.dualSpacing, axle.dualSpacing, 'dual spacing restored');
+    assert(!('originalDTA' in restored), 'the stored duals are consumed by the restore');
+    assertThrows(() => restoreDualTires({ ...swap, originalDTA: undefined }), 'a WBT axle with no stored duals');
+    assertThrows(() => restoreDualTires(axle), 'an axle that was never swapped');
+});
+
+test('an aircraft body fit that cannot be drawn is rejected on import', () => {
+    const u = aircraftUnits.find((x) => x.id === 'dhc8-400');
+    assert(u?.bodyFit?.attachmentHeights, 'the DHC8-400 carries a full body fit');
+    assertEqual(validateUnit(u).errors.join('; '), '', 'the shipped fit validates');
+    for (const [what, bodyFit] of [
+        ['a negative tail height', { ...u.bodyFit, tailHeight: -1 }],
+        ['a nose station past the tail', { ...u.bodyFit, noseOffset: u.bodyFit.length + 1 }],
+        ['a non-numeric strut attachment', { ...u.bodyFit, attachmentHeights: { main: 'unknown' } }],
+        ['an attachment for a gear role that has no strut', { ...u.bodyFit, attachmentHeights: { tail: 3000 } }]
+    ]) {
+        assert(validateUnit({ ...u, bodyFit }).errors.some((e) => e.includes('bodyFit')), `${what} must be rejected`);
+    }
+});
+
+test('the 757 and 767 variants carry their ACAP footprints, dimension for dimension', () => {
+    // Inches, as Boeing dimensions them: wheelbase, track, nose dual, main
+    // dual, main tandem; then MTOW and taxi weight in lb and tire pressure in
+    // psi, for the weight variant each entry names.
+    const IN = 25.4;
+    const expected = [
+        ['b757-200',    720, 288, 24, 34,   45, 255500, 256000, 183],
+        ['b757-300',    880, 288, 24, 34,   45, 270000, 271000, 200],
+        ['b767-200',    775, 366, 25, 45,   56, 315000, 317000, 165],
+        ['b767-300er',  896, 366, 25, 45,   56, 412000, 413000, 200],
+        ['b767-400er', 1030, 366, 25, 45.8, 54, 450000, 451000, 213]
+    ];
+    for (const [id, wb, track, nose, dual, tandem, mtow, taxi, psi] of expected) {
+        const u = aircraftUnits.find((x) => x.id === id);
+        assert(u, `${id} missing from the library`);
+        assertEqual(validateUnit(u).errors.join('; '), '', `${id} validates`);
+        assertEqual(u.mtow.value, mtow, `${id} MTOW`);
+        assertEqual(u.maxTaxiWeight.value, taxi, `${id} taxi weight`);
+        assertEqual(u.tirePressure.value, psi, `${id} tire pressure`);
+        assertClose(u.wheelbase, wb * IN, 1e-6, `${id} wheelbase`);
+        assertClose(u.mainGearTrack, track * IN, 1e-6, `${id} track`);
+        assertClose(u.gears[0].dualSpacing, nose * IN, 1e-6, `${id} nose dual spacing`);
+        const mains = resolveLayout(u).wheels.filter((w) => w.axleId !== 'NLG');
+        assertEqual(mains.length, 8, `${id} main wheels`);
+        for (const side of [-1, 1]) for (const row of [-1, 1]) for (const across of [-1, 1]) {
+            assert(mains.some((w) => Math.abs(w.x - (wb + row * tandem / 2) * IN) < 1e-6
+                && Math.abs(w.y - (side * track / 2 + across * dual / 2) * IN) < 1e-6),
+            `${id}: no main wheel at its ACAP station`);
+        }
+        assert(u.sources[0].url?.startsWith('https://www.boeing.com/'), `${id} cites Boeing's own document first`);
+    }
+});
+
+test('the regional aircraft carry their manufacturers and reviewed footprints', () => {
+    // [manufacturer, wheelbase, track, main dual, tire pressure in psi]. The
+    // CRJs are dimensioned in inches by Bombardier, the rest in millimeters.
+    const IN = 25.4;
+    const expected = {
+        'e170-std': ['Embraer', 10620, 5200, 710, 126],
+        'e190-std': ['Embraer', 13830, 5940, 870, 157],
+        'crj700': ['Bombardier / Canadair', 590.98 * IN, 162 * IN, 24.52 * IN, 142],
+        'crj900': ['Bombardier / Canadair', 681.07 * IN, 160 * IN, 24.52 * IN, 162],
+        'dhc8-400': ['De Havilland Canada', 549 * IN, 8800, 533.4, 227],
+        'atr42-500': ['ATR', 8781, 4100, 380, 8.6 * 14.503773773]
+    };
+    for (const [id, [manufacturer, wb, track, dual, psi]] of Object.entries(expected)) {
+        const u = aircraftUnits.find((x) => x.id === id);
+        assert(u, `${id} missing from the library`);
+        assertEqual(u.manufacturer, manufacturer, `${id} manufacturer`);
+        assertEqual(u.wheelbase, wb, `${id} wheelbase`);
+        assertEqual(u.mainGearTrack, track, `${id} track`);
+        assertEqual(u.tirePressure.value, psi, `${id} tire pressure`);
+        const mains = resolveLayout(u).wheels.filter((w) => w.axleId !== 'NLG');
+        for (const side of [-1, 1]) for (const across of [-1, 1]) {
+            assert(mains.some((w) => Math.abs(w.x - wb) < 1e-6
+                && Math.abs(w.y - (side * track / 2 + across * dual / 2)) < 1e-6),
+            `${id}: no main wheel at its reviewed station`);
+        }
+        assert(u.maxTaxiWeight.value > u.mtow.value, `${id}: taxi and takeoff weights are distinct`);
+    }
+    assertEqual(aircraftUnits.find((x) => x.id === 'dhc8-400').gears[1].tire, '32x8.8-16');
+    assertEqual(aircraftUnits.find((x) => x.id === 'atr42-500').gears[1].tire, '32x8.8R16');
+});
+
+const BODIES = join(ROOT, 'assets', 'bodies');
+const BODY_SOURCE = readText(join(ROOT, 'src', 'geometry', 'vehicleBody.js'));
+
+test('every body the page can ask for is shipped, as a well-formed binary glTF, and credited', () => {
+    // vehicleBodySpec cannot be imported here (it pulls in three.js), so its
+    // two tables are read from the source: the aircraft family map and the
+    // four road profiles, plus the two delivery bodies it falls back to.
+    const family = BODY_SOURCE.match(/const id = \{([^}]*)\}\[family\]/);
+    assert(family, 'the aircraft family table is where this test expects it');
+    const aircraft = [...family[1].matchAll(/:'([A-Z0-9-]+)'/g)].map((m) => m[1]);
+    const road = BODY_SOURCE.match(/\{ car: 'sedan'[^}]*\}/);
+    assert(road, 'the road profile table is where this test expects it');
+    const ids = [...aircraft, ...[...road[0].matchAll(/: '([a-z-]+)'/g)].map((m) => m[1]), 'delivery', 'delivery-flat'];
+    assert(aircraft.length >= 24, `only ${aircraft.length} aircraft bodies found in the table`);
+    const credits = readText(join(BODIES, 'CREDITS.md'));
+    for (const id of ids) {
+        const path = join(BODIES, `${id}.glb`);
+        assert(existsSync(path), `${id}.glb is named by vehicleBody.js but not shipped`);
+        const b = readFileSync(path);
+        assertEqual(b.toString('latin1', 0, 4), 'glTF', `${id}.glb magic`);
+        assertEqual(b.readUInt32LE(4), 2, `${id}.glb glTF version`);
+        assertEqual(b.readUInt32LE(8), b.length, `${id}.glb header length (truncated or padded file)`);
+        assert(credits.includes(`${id}.glb`) || credits.includes(`**${id}.glb`), `${id}.glb has no credit line`);
+    }
+});
+
+test('every GPL-derived body ships its corresponding source, byte for byte', () => {
+    // Eighteen airframes are adapted from GPL v2 FlightGear models. The
+    // license travels with the binary: each archive holds the editable
+    // .blend and the original GLB, and the manifest pins its hash, so a
+    // re-encoded or truncated archive fails here rather than on a takedown.
+    const manifest = readJson(join(BODIES, 'sources', 'manifest.json'));
+    assert(existsSync(join(BODIES, 'sources', 'GPL-2.0.txt')), 'the license text itself is shipped');
+    assertEqual(manifest.length, 18, 'GPL source archives');
+    for (const m of manifest) {
+        const path = join(BODIES, 'sources', m.sourceArchive);
+        assert(existsSync(path), `${m.sourceArchive} is listed but not shipped`);
+        const sha = createHash('sha256').update(readFileSync(path)).digest('hex');
+        assertEqual(sha, m.archiveSha256, `${m.sourceArchive} hash`);
+    }
+});
+
+test('every element main.js looks up by id exists in index.html', () => {
+    // The page and the controller are two hand-kept lists of the same ids,
+    // and a lookup that misses returns null, which throws only when that
+    // control is first used. This is the audit the port README asks for by
+    // hand, done on every run.
+    const ids = new Set([...MAIN.matchAll(/\$\('([\w-]+)'\)/g)].map((m) => m[1]));
+    for (const action of ['copy', 'download']) ids.add(`g3-figure-${action}`);  // built as 'g3-figure-' + action
+    const onPage = new Set([...HTML.matchAll(/\bid="([\w-]+)"/g)].map((m) => m[1]));
+    assert(ids.size > 100, `only ${ids.size} lookups found; the pattern has drifted`);
+    assertEqual([...ids].filter((id) => !onPage.has(id)).join(', '), '', 'ids main.js reads that the page lacks');
+});
+
+test('the page opens on what the controller opens on: body shown, annotations and grid off', () => {
+    // A toggle drawn "on" over a state that is off reads as a broken button.
+    const defaults = mainFn('defaultView');
+    assert(/showVehicleBody: true/.test(defaults), 'the body is on by default');
+    assert(/annotations: false/.test(defaults), 'annotations are off by default');
+    assert(/showGrid: false/.test(defaults), 'the grid is off by default');
+    assert(/id="g3-vehicle-body" checked/.test(HTML), 'and the body checkbox is drawn checked');
+    for (const id of ['g3-annot', 'g3-grid']) {
+        const tag = HTML.match(new RegExp(`<button id="${id}"[^>]*>`))?.[0] || '';
+        assert(tag && !/is-on/.test(tag) && /aria-pressed="false"/.test(tag), `${id} is drawn off`);
+    }
+    // A project from before v1.13 has no body flags; it opens with the body
+    // on, like a new sheet, and with the grid and annotations off unless it
+    // says otherwise.
+    const apply = mainFn('applyProject');
+    assert(/showVehicleBody: p\.view\?\.showVehicleBody !== false/.test(apply), 'body defaults on when unstated');
+    assert(/showGrid: p\.view\?\.showGrid === true/.test(apply), 'grid defaults off when unstated');
 });
 
 process.exit(summary());

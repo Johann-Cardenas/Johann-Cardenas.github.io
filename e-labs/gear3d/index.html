@@ -96,18 +96,30 @@
                         <!-- Originator block: mark, name, and the way back. -->
                         <div class="g3-tb-mark">
                             <span class="g3-tb-icon" aria-hidden="true">
-                                <!-- A wheel seen face on: tire ring and hub,
-                                     drawn for this app rather than borrowed
-                                     from an icon font. The previous mark was a
-                                     dharmachakra, which is a religious symbol
-                                     standing in for a wheel; a first attempt
-                                     at replacing it drew a front-view axle —
-                                     two tires on a beam — which at this size
-                                     read unmistakably as the letter H. -->
-                                <svg viewBox="0 0 24 24" width="21" height="21"
-                                     fill="none" stroke="currentColor" stroke-width="3">
-                                    <circle cx="12" cy="12" r="9.4"/>
-                                    <circle cx="12" cy="12" r="3.1" stroke-width="2.4"/>
+                                <!-- An axle in three-quarter view: the near
+                                     wheel with its rim and hub, the far wheel
+                                     behind it, the beam between them and the
+                                     ground line beneath, drawn for this app
+                                     rather than borrowed from an icon font.
+                                     The previous mark, a wheel seen face on,
+                                     said "wheel"; this one says "axle", which
+                                     is what the app draws. Earlier attempts:
+                                     a dharmachakra (a religious symbol
+                                     standing in for a wheel), and a front-view
+                                     axle, two tires on a beam, which at this
+                                     size read unmistakably as the letter H. -->
+                                <svg viewBox="0 0 48 48" width="38" height="38"
+                                     fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+                                    <path d="M8 32 29 43 42 35" stroke="#22d3d1" opacity=".7"/>
+                                    <path d="M17 19 32 11 39 15 24 23Z" fill="#22d3d1" stroke="#22d3d1"/>
+                                    <ellipse cx="35" cy="18" rx="7" ry="11" transform="rotate(-18 35 18)" fill="#1d4650"/>
+                                    <ellipse cx="31" cy="19" rx="7" ry="11" transform="rotate(-18 31 19)" fill="#06222a"/>
+                                    <path d="M16 27 31 19" stroke="#22d3d1" stroke-width="4"/>
+                                    <path d="M13 12 19 10C29 8 34 31 24 35L18 38" fill="#2c5a63"/>
+                                    <ellipse cx="15" cy="25" rx="9" ry="13" transform="rotate(-18 15 25)" fill="#06222a"/>
+                                    <ellipse cx="15" cy="25" rx="4.5" ry="7" transform="rotate(-18 15 25)" fill="#dce8ef" stroke="#dce8ef"/>
+                                    <ellipse cx="15" cy="25" rx="1.5" ry="2.4" fill="#22d3d1" stroke="#22d3d1"/>
+                                    <path d="m11 15 4-2m4 3 4-2m0 6 4-2m-1 7 4-2m-3 7 4-2" opacity=".6"/>
                                 </svg>
                             </span>
                             <span class="g3-tb-id">
@@ -171,10 +183,10 @@
                             <i class="fas fa-th"></i> Gear catalog
                         </button>
                         <span class="g3-tool-sep"></span>
-                        <button id="g3-annot" class="g3-btn is-on" title="Show or hide all dimensions, callouts and the scale bar (A)" aria-pressed="true">
+                        <button id="g3-annot" class="g3-btn" title="Show or hide all dimensions, callouts and the scale bar (A)" aria-pressed="false">
                             <i class="fas fa-ruler-combined"></i> Annotations
                         </button>
-                        <button id="g3-grid" class="g3-btn is-on" title="Ground reference grid (G)" aria-pressed="true">
+                        <button id="g3-grid" class="g3-btn" title="Ground reference grid (G)" aria-pressed="false">
                             <i class="fas fa-border-all"></i> Grid
                         </button>
                         <span class="g3-tool-sep"></span>
@@ -278,6 +290,29 @@
                                         <input type="checkbox" id="g3-ghost"> Ghost hidden parts
                                     </label>
                                 </div>
+                                <div class="g3-field">
+                                    <label class="g3-check" for="g3-vehicle-body">
+                                        <input type="checkbox" id="g3-vehicle-body" checked> Show vehicle body
+                                    </label>
+                                </div>
+                                <div class="g3-body-style">
+                                    <div class="g3-field">
+                                        <label for="g3-body-opacity">Body opacity</label>
+                                        <input type="range" id="g3-body-opacity" class="g3-range" min="10" max="80" step="1" value="28">
+                                        <output id="g3-body-opacity-value" for="g3-body-opacity">28%</output>
+                                    </div>
+                                    <div class="g3-field">
+                                        <label for="g3-body-color">Body color</label>
+                                        <input type="color" id="g3-body-color" class="g3-color" value="#71899b">
+                                    </div>
+                                    <div class="g3-body-presets" aria-label="Body appearance presets">
+                                        <button type="button" class="g3-btn" data-body-opacity="16">Faint</button>
+                                        <button type="button" class="g3-btn" data-body-opacity="28">Balanced</button>
+                                        <button type="button" class="g3-btn" data-body-opacity="60">Detailed</button>
+                                    </div>
+                                    <button type="button" id="g3-body-reset" class="g3-btn g3-body-reset">Reset body appearance</button>
+                                </div>
+                                <p class="g3-note">A dimmed, illustrative body puts the axles in context. Body proportions are approximate; bare gear configurations have no body. <a href="assets/bodies/CREDITS.md" target="_blank" rel="noopener">Model sources and licenses</a>.</p>
                                 <div id="g3-chassis-notice" class="g3-badge-assumed" hidden></div>
                                 <p class="g3-note">Click an axle in the viewport to isolate it. <kbd>Esc</kbd> steps back one level.</p>
                             </div>
@@ -287,16 +322,24 @@
                             <summary><i class="fas fa-sliders-h"></i> Configuration</summary>
                             <div class="g3-group" id="g3-config-group">
                                 <div class="g3-field">
-                                    <label for="g3-wbt">Wide-base</label>
+                                    <label for="g3-wbt-axle">Axle</label>
+                                    <select id="g3-wbt-axle" class="g3-select"></select>
+                                </div>
+                                <p id="g3-wbt-status" class="g3-note" aria-live="polite"></p>
+                                <div class="g3-field">
+                                    <label for="g3-wbt">WBT size</label>
                                     <select id="g3-wbt" class="g3-select">
-                                        <option value="">Swap selected axle to…</option>
-                                        <option value="445/50R22.5">445/50R22.5</option>
+                                        <option value="445/50R22.5" selected>445/50R22.5</option>
                                         <option value="455/55R22.5">455/55R22.5</option>
                                         <option value="425/65R22.5">425/65R22.5</option>
                                     </select>
                                 </div>
+                                <div class="g3-tire-actions">
+                                    <button type="button" id="g3-wbt-apply" class="g3-btn">Use WBT</button>
+                                    <button type="button" id="g3-wbt-restore" class="g3-btn">Restore DTA</button>
+                                </div>
                                 <div id="g3-wbt-report" class="g3-report" hidden></div>
-                                <p class="g3-note">Select a dual-tire axle in the tree, then swap it. The outer tire edge is held so the vehicle's overall width does not change.</p>
+                                <p class="g3-note">DTA: dual tire assembly. WBT: wide-base tire. Swapping holds the outer tire edge. Restore DTA returns the original tire, track and spacing without resetting the vehicle.</p>
                             </div>
                         </details>
 
@@ -601,15 +644,34 @@
                         </details>
                     </aside>
 
-                    <!-- Viewport -->
-                    <div class="g3-viewport" id="g3-viewport">
-                        <canvas id="g3-canvas" aria-label="3D gear viewport"></canvas>
-                        <svg id="g3-overlay" class="g3-overlay" aria-hidden="true"></svg>
-                        <div class="g3-axisbadge" id="g3-axisbadge"></div>
-                        <div class="g3-hud" id="g3-hud">—</div>
-                        <div class="g3-hud-right" id="g3-hud-right">orbit: drag · zoom: wheel · pan: right-drag · click an axle to isolate</div>
-                        <div class="g3-progress" id="g3-progress" hidden><div class="g3-progress-bar"><span></span></div><span class="g3-progress-label"></span></div>
-                    </div>
+                    <!-- Viewport. The figure's own controls and read-outs sit
+                         in a bar above it and a strip below it, never over
+                         the canvas: the viewport carries no padding and no
+                         floating chrome, so picking and the SVG overlay share
+                         its coordinates exactly, and nothing covers a pane. -->
+                    <section class="g3-figure" aria-label="Vehicle visualization">
+                        <div class="g3-figure-actions" aria-label="Save figure">
+                            <select id="g3-figure-background" class="g3-select" aria-label="Figure background">
+                                <option value="png">Background</option>
+                                <option value="png-alpha">Transparent</option>
+                            </select>
+                            <button type="button" class="g3-btn" id="g3-figure-copy">Copy PNG</button>
+                            <button type="button" class="g3-btn" id="g3-figure-download">Download PNG</button>
+                        </div>
+                        <div class="g3-viewport" id="g3-viewport">
+                            <canvas id="g3-canvas" aria-label="3D gear viewport"></canvas>
+                            <svg id="g3-overlay" class="g3-overlay" aria-hidden="true"></svg>
+                            <div class="g3-progress" id="g3-progress" hidden><div class="g3-progress-bar"><span></span></div><span class="g3-progress-label"></span></div>
+                        </div>
+                        <div class="g3-figure-footer">
+                            <div class="g3-hud" id="g3-hud">—</div>
+                            <details class="g3-view-help">
+                                <summary>View controls</summary>
+                                <div class="g3-hud-right" id="g3-hud-right">Drag to orbit · scroll to zoom · right-drag to pan</div>
+                                <div class="g3-axisbadge" id="g3-axisbadge"></div>
+                            </details>
+                        </div>
+                    </section>
 
                     <!-- Right rail -->
                     <aside class="g3-panel g3-right" aria-label="Structure and properties">
