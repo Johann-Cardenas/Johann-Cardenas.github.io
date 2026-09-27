@@ -1,0 +1,211 @@
+{
+  "schemaVersion": "1.0",
+  "units": [
+    {
+      "schemaVersion": "1.0",
+      "id": "b767-200er",
+      "domain": "aircraft",
+      "manufacturer": "Boeing",
+      "model": "767-200ER",
+      "gearDesignation": "2D",
+      "mtow": {
+        "value": 395000,
+        "unit": "lb",
+        "basis": "Boeing D6-58328 Rev K (December 2024), PDF page 23, selected highest listed design weight. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "maxTaxiWeight": {
+        "value": 396000,
+        "unit": "lb",
+        "basis": "Boeing D6-58328 Rev K (December 2024), PDF page 23, selected highest listed design weight. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 19685,
+      "mainGearTrack": 9296.4,
+      "tirePressure": {
+        "value": 190,
+        "unit": "psi",
+        "basis": "Boeing D6-58328 Rev K, section 7.2, PDF page 193; 396,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit (same-length passenger airframe, attitude and attachments retained for illustration; not variant-specific CAD)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 635,
+          "tandemSpacing": null,
+          "tire": "H37x14.0-15",
+          "pressure": {
+            "value": 185,
+            "unit": "psi",
+            "basis": "Boeing D6-58328 Rev K, section 7.2, PDF page 193; 396,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+          },
+          "source": "Boeing D6-58328 Rev K, section 7.2, PDF page 193; 396,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 19685,
+          "y": -4648.2,
+          "dualSpacing": 1143,
+          "tandemSpacing": 1422.4,
+          "tire": "H46x18.0-20",
+          "source": "Boeing D6-58328 Rev K, section 7.2, PDF page 193; 396,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 19685,
+          "y": 4648.2,
+          "dualSpacing": 1143,
+          "tandemSpacing": 1422.4,
+          "tire": "H46x18.0-20",
+          "source": "Boeing D6-58328 Rev K, section 7.2, PDF page 193; 396,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 48514,
+        "noseOffset": 4546.6,
+        "tailHeight": 15865,
+        "attachmentHeights": {
+          "nose": 2730,
+          "main": 3620
+        },
+        "source": "Illustrative b767-200 body fit reused without geometric distortion. Boeing D6-58328 Rev K, December 2024; PDF pages 22, 28, 32, 193 (weights, dimensions, clearances, footprint). Overall length and nose overhang use imperial general-dimension labels. Tail height is the midpoint of the published clearance range, with zero visual pitch. Strut tops are illustrative mesh attachments. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "notes": "767-200ER: takeoff and taxi weights are distinct. Tire pressure follows the selected taxi-weight column; loads use MTOW and an assumed 95% main-gear split. Body is the same-length b767-200 passenger mesh; variant-specific engines, cargo doors and glazing are not represented. Published gear geometry is independent of this illustrative overlay.",
+      "sources": [
+        {
+          "id": "boeing-767-acap",
+          "title": "767 Airplane Characteristics for Airport Planning",
+          "publisher": "Boeing Commercial Airplanes",
+          "year": 2024,
+          "url": "https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf",
+          "note": "D6-58328 Rev K, PDF pages 23 (weights), 193 (gear footprint and tires)."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "b767-300f",
+      "domain": "aircraft",
+      "manufacturer": "Boeing",
+      "model": "767-300F",
+      "gearDesignation": "2D",
+      "mtow": {
+        "value": 412000,
+        "unit": "lb",
+        "basis": "Boeing D6-58328 Rev K (December 2024), PDF page 26, selected highest listed design weight. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "maxTaxiWeight": {
+        "value": 413000,
+        "unit": "lb",
+        "basis": "Boeing D6-58328 Rev K (December 2024), PDF page 26, selected highest listed design weight. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 22758.4,
+      "mainGearTrack": 9296.4,
+      "tirePressure": {
+        "value": 200,
+        "unit": "psi",
+        "basis": "Boeing D6-58328 Rev K, section 7.2, PDF page 194; 413,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit (same-length passenger airframe, attitude and attachments retained for illustration; not variant-specific CAD)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 635,
+          "tandemSpacing": null,
+          "tire": "H37x14.0-15",
+          "pressure": {
+            "value": 172,
+            "unit": "psi",
+            "basis": "Boeing D6-58328 Rev K, section 7.2, PDF page 194; 413,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+          },
+          "source": "Boeing D6-58328 Rev K, section 7.2, PDF page 194; 413,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 22758.4,
+          "y": -4648.2,
+          "dualSpacing": 1143,
+          "tandemSpacing": 1422.4,
+          "tire": "H46x18.0-20",
+          "source": "Boeing D6-58328 Rev K, section 7.2, PDF page 194; 413,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 2,
+          "x": 22758.4,
+          "y": 4648.2,
+          "dualSpacing": 1143,
+          "tandemSpacing": 1422.4,
+          "tire": "H46x18.0-20",
+          "source": "Boeing D6-58328 Rev K, section 7.2, PDF page 194; 413,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 54940.2,
+        "noseOffset": 4546.6,
+        "tailHeight": 15710,
+        "attachmentHeights": {
+          "nose": 2240,
+          "main": 3020
+        },
+        "source": "Illustrative b767-300er body fit reused without geometric distortion. Boeing D6-58328 Rev K, December 2024; PDF pages 25, 29, 33, 194 (weights, dimensions, clearances, footprint). Overall length and nose overhang use imperial general-dimension labels. Tail height is the midpoint of the published clearance range, with zero visual pitch. Strut tops are illustrative mesh attachments. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf"
+      },
+      "notes": "767-300F: takeoff and taxi weights are distinct. Tire pressure follows the selected taxi-weight column; loads use MTOW and an assumed 95% main-gear split. Body is the same-length b767-300er passenger mesh; variant-specific engines, cargo doors and glazing are not represented. Published gear geometry is independent of this illustrative overlay.",
+      "sources": [
+        {
+          "id": "boeing-767-acap",
+          "title": "767 Airplane Characteristics for Airport Planning",
+          "publisher": "Boeing Commercial Airplanes",
+          "year": 2024,
+          "url": "https://www.boeing.com/content/dam/boeing/v2/airports/acaps/767_REV_K.pdf",
+          "note": "D6-58328 Rev K, PDF pages 26 (weights), 194 (gear footprint and tires)."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    }
+  ]
+}

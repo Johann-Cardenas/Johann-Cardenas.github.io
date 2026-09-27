@@ -105,6 +105,9 @@ function defaultView() {
         showVehicleBody: true,
         bodyOpacity: 28,
         bodyColor: '#71899b',
+        bodySurface: 'shaded',
+        bodyFinish: 'matte',
+        bodyDetail: 65,
         unitSystem: 'SI',
         precision: 0,
         dualUnits: false,
@@ -1975,9 +1978,15 @@ function setupIsolationPanel() {
         app.store.view.bodyOpacity=Number(e.target.value);applyBodyStyle();scheduleAutosave();
     });
     $('g3-body-reset').addEventListener('click', () => {
-        app.store.view.bodyOpacity=28;app.store.view.bodyColor='#71899b';
+        Object.assign(app.store.view,{bodyOpacity:28,bodyColor:'#71899b',bodySurface:'shaded',bodyFinish:'matte',bodyDetail:65});
         applyBodyStyle();scheduleAutosave();
     });
+    for(const [id,key] of [['g3-body-surface','bodySurface'],['g3-body-finish','bodyFinish'],['g3-body-detail','bodyDetail']]) {
+        $(id).addEventListener(key==='bodyDetail'?'input':'change',e=>{
+            app.store.view[key]=key==='bodyDetail'?Number(e.target.value):e.target.value;
+            applyBodyStyle();scheduleAutosave();
+        });
+    }
     $('g3-body-color').addEventListener('input', e => {
         app.store.view.bodyColor=e.target.value;applyBodyStyle();scheduleAutosave();
     });
@@ -2000,12 +2009,17 @@ function applyBodyStyle() {
     $('g3-body-opacity').value=String(v.bodyOpacity);
     $('g3-body-opacity-value').textContent=`${v.bodyOpacity}%`;
     $('g3-body-color').value=v.bodyColor;
+    $('g3-body-surface').value=v.bodySurface;
+    $('g3-body-finish').value=v.bodyFinish;
+    $('g3-body-detail').value=String(v.bodyDetail);
+    $('g3-body-detail-value').textContent=v.bodyDetail+'%';
+    $('g3-body-detail').disabled=app.store.doc.unit?.domain!=='aircraft';
     for(const button of document.querySelectorAll('[data-body-opacity]')) {
         const active=Number(button.dataset.bodyOpacity)===v.bodyOpacity;
         button.classList.toggle('is-on',active);button.setAttribute('aria-pressed',String(active));
     }
     const body=app.assembly?.root.getObjectByName('vehicle-body');
-    if(body)styleVehicleBody(body,{opacity:v.bodyOpacity/100,color:v.bodyColor});
+    if(body)styleVehicleBody(body,{opacity:v.bodyOpacity/100,color:v.bodyColor,surface:v.bodySurface,finish:v.bodyFinish,detail:v.bodyDetail/100});
     app.viewport?.invalidate();
 }
 
@@ -3023,6 +3037,9 @@ function currentState() {
             showVehicleBody: v.showVehicleBody,
             bodyOpacity: v.bodyOpacity,
             bodyColor: v.bodyColor,
+            bodySurface: v.bodySurface,
+            bodyFinish: v.bodyFinish,
+            bodyDetail: v.bodyDetail,
             materials: v.materials,
             isolation: v.isolation
         }
@@ -3055,6 +3072,9 @@ function applyProject(p) {
         showVehicleBody: p.view?.showVehicleBody !== false,
         bodyOpacity: Number.isFinite(p.view?.bodyOpacity) ? Math.max(10,Math.min(80,p.view.bodyOpacity)) : 28,
         bodyColor: /^#[0-9a-f]{6}$/i.test(p.view?.bodyColor) ? p.view.bodyColor : '#71899b',
+        bodySurface: p.view?.bodySurface==='wireframe'?'wireframe':'shaded',
+        bodyFinish: ['matte','satin','metallic'].includes(p.view?.bodyFinish)?p.view.bodyFinish:'matte',
+        bodyDetail: Number.isFinite(p.view?.bodyDetail)?Math.max(0,Math.min(100,p.view.bodyDetail)):65,
         lighting: p.view?.lighting || { ...LIGHTING_PRESETS.studio },
         background: p.view?.background || 'white',
         backgroundColor: p.view?.backgroundColor || '#eef1f4',

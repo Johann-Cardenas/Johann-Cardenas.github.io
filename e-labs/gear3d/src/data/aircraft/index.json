@@ -11,7 +11,14 @@
     "The 95% main-gear load split is a pavement-design assumption. Body meshes and strut attachments are illustrative, not engineering CAD.",
     "Unknown and generic schematic aircraft do not receive substitute bodies."
   ],
-  "files": ["boeing.json", "airbus.json", "aircrafter-reviewed.json", "boeing-757-767.json", "faa-5300-7.json"],
+  "files": [
+    "boeing.json",
+    "airbus.json",
+    "aircrafter-reviewed.json",
+    "boeing-757-767.json",
+    "faa-5300-7.json",
+    "boeing-variants.json"
+  ],
   "$gearCodes": [
     "REMOVED in v1.9. This list was a third hand-maintained copy of the gear",
     "code table — after src/core/schema.js and the app's own dropdown — and it",

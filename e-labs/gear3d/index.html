@@ -305,6 +305,26 @@
                                         <label for="g3-body-color">Body color</label>
                                         <input type="color" id="g3-body-color" class="g3-color" value="#71899b">
                                     </div>
+                                    <div class="g3-field">
+                                        <label for="g3-body-surface">Surface</label>
+                                        <select id="g3-body-surface" class="g3-select" title="Shaded surfaces or the airframe mesh; wheel geometry is unchanged">
+                                            <option value="shaded">Shaded</option>
+                                            <option value="wireframe">Wireframe</option>
+                                        </select>
+                                    </div>
+                                    <div class="g3-field">
+                                        <label for="g3-body-finish">Finish</label>
+                                        <select id="g3-body-finish" class="g3-select" title="Body surface finish; glazing retains its own appearance">
+                                            <option value="matte">Matte</option>
+                                            <option value="satin">Satin</option>
+                                            <option value="metallic">Metallic</option>
+                                        </select>
+                                    </div>
+                                    <div class="g3-field">
+                                        <label for="g3-body-detail">Intake detail</label>
+                                        <input type="range" id="g3-body-detail" class="g3-range" min="0" max="100" step="1" value="65" title="Aircraft engine intake contrast; illustrative shading only">
+                                        <output id="g3-body-detail-value" for="g3-body-detail">65%</output>
+                                    </div>
                                     <div class="g3-body-presets" aria-label="Body appearance presets">
                                         <button type="button" class="g3-btn" data-body-opacity="16">Faint</button>
                                         <button type="button" class="g3-btn" data-body-opacity="28">Balanced</button>

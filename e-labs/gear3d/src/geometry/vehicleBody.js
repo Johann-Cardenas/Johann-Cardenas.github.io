@@ -13,7 +13,7 @@ export function vehicleBodySpec(unit) {
     if (!unit || unit.kind === 'schematic') return null;
     if (unit.domain === 'aircraft') {
         if (!unit.gears?.some(g => g.role === 'nose')) return null;
-        const family = String(unit.id).toLowerCase().match(/^(e170|e190|crj700|crj900|dhc8-400|atr42|a220-100|a220-300|a319|a320|a321|a330-200|a330-300|a350|a380|b737|b747|b757-200|b757-300|b767-200|b767-300|b767-400|b777|b787)(?:er)?(?:-|$)/)?.[1];
+        const family = String(unit.id).toLowerCase().match(/^(e170|e190|crj700|crj900|dhc8-400|atr42|a220-100|a220-300|a319|a320|a321|a330-200|a330-300|a350|a380|b737|b747|b757-200|b757-300|b767-200|b767-300|b767-400|b777|b787)(?:er|f)?(?:-|$)/)?.[1];
         const id = {'a220-100':'A220-100','a220-300':'A220-300',a319:'A319',a320:'A320',a321:'A321',
             'a330-200':'A330-200','a330-300':'A330-300',a350:'A350',a380:'A380',b737:'B737',b747:'B747',
             'b757-200':'B757-200','b757-300':'B757-300','b767-200':'B767-200',
@@ -21,7 +21,7 @@ export function vehicleBodySpec(unit) {
             crj700:'CRJ700',crj900:'CRJ900','dhc8-400':'DHC8-400',atr42:'ATR42'}[family];
         if (!id) return null;
         return { id, label: `Representative ${id} airframe`, aircraft: true,
-            representative: !unit.id.toLowerCase().includes(id.toLowerCase()) };
+            representative: /f$/i.test(unit.id) || !unit.id.toLowerCase().includes(id.toLowerCase()) };
     }
     if (unit.domain !== 'truck') return null;
     const profile = profileFor(unit.bodyType).key;
@@ -168,12 +168,16 @@ export function buildVehicleBody(layout) {
             // Emphasize existing forward-facing intake surfaces without adding
             // shapes or changing the airframe geometry students already know.
             const colors=new Float32Array(p.count*3).fill(1), n=geo.attributes.normal;
+            const intake=new Float32Array(p.count);
             for(let i=0;i<p.count;i++) {
                 if(Math.abs(p.getX(i))>meta.width*.09 && p.getY(i)<fuselageBelly+meta.length*.015 &&
                     p.getZ(i)>meta.length*.2 && p.getZ(i)<meta.length*.65 && n.getZ(i)<-.4)
-                    colors.set([.62,.69,.76],i*3);
+                    intake[i]=THREE.MathUtils.smoothstep(-n.getZ(i),.4,.95);
+                const shade=intake[i]*.65;
+                colors.set([1-.58*shade,1-.48*shade,1-.37*shade],i*3);
             }
             geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
+            geo.setAttribute('intakeDetail',new THREE.BufferAttribute(intake,1));
         }
         for(let i=0;i<p.count;i++) {
             const z=p.getZ(i);
@@ -255,14 +259,33 @@ function addBusDetails(group,fit,material) {
 }
 
 
-/** Adjust the overlay in place; preserve authored glazing/trim contrast. */
-export function styleVehicleBody(root,{opacity=.28,color='#71899b'}={}) {
+/** Style existing meshes in place. No visual option changes engineering geometry. */
+export function styleVehicleBody(root,{opacity=.28,color='#71899b',surface='shaded',finish='matte',detail=.65}={}) {
+    opacity=Number.isFinite(opacity)?THREE.MathUtils.clamp(opacity,0,.8):.28;
+    detail=Number.isFinite(detail)?THREE.MathUtils.clamp(detail,0,1):.65;
     const materials=new Set();
-    root.traverse(o=>{if(o.material)materials.add(o.material);});
+    root.traverse(o=>{
+        for(const m of (Array.isArray(o.material)?o.material:o.material?[o.material]:[]))materials.add(m);
+        const mask=o.geometry?.getAttribute('intakeDetail'),colors=o.geometry?.getAttribute('color');
+        if(mask && colors && o.userData.bodyDetail!==detail) {
+            for(let i=0;i<mask.count;i++) {
+                const shade=mask.getX(i)*detail;
+                colors.setXYZ(i,1-.58*shade,1-.48*shade,1-.37*shade);
+            }
+            colors.needsUpdate=true;o.userData.bodyDetail=detail;
+        }
+    });
     for(const material of materials) {
         material.userData.bodyBaseOpacity ??= material.opacity;
         material.userData.bodyBaseColor ??= material.color.getHex();
+        material.userData.bodyBaseRoughness ??= material.roughness;
+        material.userData.bodyBaseMetalness ??= material.metalness;
         material.opacity=Math.min(.92,material.userData.bodyBaseOpacity*opacity/.28);
-        if(material.userData.bodyBaseColor===0x71899b)material.color.set(color);
+        material.wireframe=surface==='wireframe';
+        if(material.userData.bodyBaseColor===0x71899b) {
+            material.color.set(/^#[0-9a-f]{6}$/i.test(color)?color:'#71899b');
+            material.roughness=finish==='metallic'?.3:finish==='satin'?.45:material.userData.bodyBaseRoughness;
+            material.metalness=finish==='metallic'?.65:material.userData.bodyBaseMetalness;
+        }
     }
 }
