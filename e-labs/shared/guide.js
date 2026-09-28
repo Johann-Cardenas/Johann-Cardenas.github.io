@@ -92,7 +92,7 @@
       const overview = document.createElement("main");
       overview.id = "course-overview";
       overview.hidden = true;
-      overview.innerHTML = `<header class="overview-heading"><span class="eyebrow">Interactive learning path</span><h1 tabindex="-1">${api.kind === "fea" ? "Finite-Elemented" : "Frontier"}</h1><p>Build your understanding, one experiment at a time. Explore any module or follow the sequence below.</p><div class="overview-actions"><button id="resume-course" class="primary"></button><a id="next-unfinished"></a></div><div id="overview-stats" class="overview-stats"></div><progress id="overall-progress" value="0" max="${api.lessons.length}" aria-label="Completed lesson checks"></progress><p id="overview-progress" role="status"></p></header><nav id="course-picker" aria-label="Choose a module"></nav><div class="course-search"><label for="lesson-search">Find a lesson or concept</label><input id="lesson-search" type="search" placeholder="Search titles, concepts, and experiments…"><div class="progress-filter"><label for="progress-filter">Show lessons</label><select id="progress-filter"><option value="all">All lessons</option><option value="not-started">Not started</option><option value="in-progress">In progress</option><option value="completed">Completed</option></select></div><p id="search-status" role="status"></p><button id="clear-course-filters" hidden>Show all lessons</button></div><div id="course-grid"></div>`;
+      overview.innerHTML = `<header class="overview-heading"><span class="eyebrow">Interactive learning path</span><h1 tabindex="-1">${api.kind === "fea" ? "Finite-Elemented" : "Frontier"}</h1><p>Choose a module or follow the lesson order.</p><div class="overview-actions"><button id="resume-course" class="primary"></button><a id="next-unfinished"></a></div><div id="overview-stats" class="overview-stats"></div><progress id="overall-progress" value="0" max="${api.lessons.length}" aria-label="Completed lesson checks"></progress><p id="overview-progress" role="status"></p></header><nav id="course-picker" aria-label="Choose a module"></nav><div class="course-search"><label for="lesson-search">Find a lesson or concept</label><input id="lesson-search" type="search" placeholder="Search titles, concepts, and experiments…"><div class="progress-filter"><label for="progress-filter">Show lessons</label><select id="progress-filter"><option value="all">All lessons</option><option value="not-started">Not started</option><option value="in-progress">In progress</option><option value="completed">Completed</option></select></div><p id="search-status" role="status"></p><button id="clear-course-filters" hidden>Show all lessons</button></div><div id="course-grid"></div>`;
       document.querySelector(".workspace").before(overview);
       $("resume-course").onclick = () => { this.resume = { lesson: api.lesson.id, step: this.step }; location.hash = api.lesson.id; };
       $("lesson-search").oninput = () => this.renderOverview();
@@ -351,7 +351,7 @@
       if (next) { $("module-next").href = "#" + next.id; $("module-next").textContent = "Continue: " + next.nav + " →"; }
       if (a.lessons.every(l => a.completed[l.id])) {
         $("milestone-title").textContent = "Learning path complete";
-        $("milestone-copy").textContent = "You have passed every lesson check. Revisit an experiment with different settings and explain how the result changes.";
+        $("milestone-copy").textContent = "All checks passed. Try different settings to review a lesson.";
       }
     },
     renderStepActions() {

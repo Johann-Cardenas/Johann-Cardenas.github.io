@@ -96,7 +96,7 @@
                             <span class="qs-icon"><i class="fas fa-qrcode"></i></span>
                             <span>QR <span class="highlight">Studio</span></span>
                         </h1>
-                        <p>Turn a link into a QR code you would actually put on a poster — shaped modules, gradients, a logo and a captioned frame, checked by a real decode before you ship it.</p>
+                        <p>Enter content, style the code, then test and export it.</p>
                     </div>
                 </div>
 
@@ -309,7 +309,7 @@
                                             <label class="qs-field qs-field--grow"><span>Backing color</span><input type="color" id="qs-logo-bg" value="#ffffff"></label>
                                         </div>
                                         <label class="qs-check"><input type="checkbox" id="qs-logo-excavate" checked> <span>Clear modules behind the logo</span></label>
-                                        <p class="qs-hint">Clearing is safer than covering: the decoder sees a clean gap instead of ambiguous pixels.</p>
+                                        <p class="qs-hint">Clear modules beneath the logo to improve readability.</p>
                                     </div>
                                 </div>
 
@@ -317,7 +317,7 @@
                                 <div class="qs-tabpane" data-pane="frame">
                                     <p class="qs-label">Frame style</p>
                                     <div class="qs-swatches qs-swatches--frame" id="qs-frame-styles"></div>
-                                    <p class="qs-hint" id="qs-frame-none-note">Pick a frame above to add a caption, a border and a phrase.</p>
+                                    <p class="qs-hint" id="qs-frame-none-note">Choose a frame to add a border and caption.</p>
                                     <div id="qs-frame-controls">
                                         <label class="qs-field">
                                             <span>Frame phrase</span>
@@ -453,12 +453,7 @@
                     <!-- About -->
                     <div class="qs-about">
                         <p>
-                            <b>How this works.</b> The symbol is built here in your browser to ISO/IEC 18004 — segment
-                            encoding, Reed-Solomon error correction, and mask selection by penalty score — then drawn
-                            through one geometry pass that feeds both the on-screen canvas and the vector export, so
-                            what you see is what you ship. Nothing is uploaded: your link and your logo never leave
-                            this page. <b>Test decode</b> runs an actual image-based decoder over the rendered pixels,
-                            which is the only honest way to know a styled code still scans.
+                            <b>Before exporting:</b> Use Test decode to check the styled code, then scan it with your phone at the intended size. Your content and logo stay in your browser.
                         </p>
                     </div>
 
