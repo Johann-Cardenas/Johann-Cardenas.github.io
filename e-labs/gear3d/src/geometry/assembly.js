@@ -29,6 +29,10 @@ import { buildTireGeometry, treadPatternFor, pickQuality } from './tire.js';
 import { buildRimBarrel, buildRimDisc } from './rim.js';
 import { buildHubGeometry } from './hub.js';
 import { buildVehicleBody } from './vehicleBody.js';
+import { ResourceCache } from './resourceCache.js';
+
+const wheelGeometryCache=new ResourceCache(8,geometries=>geometries.forEach(g=>g.dispose()));
+export function clearWheelGeometryCache() { wheelGeometryCache.clear(); }
 import { chassisEnvelope } from './chassis.js';
 import { buildAxleBeam, buildGearStrut } from './axle.js';
 
@@ -71,6 +75,8 @@ export function buildAssembly(layout, materials, opts = {}) {
 
     /** @type {THREE.BufferGeometry[]} */
     const ownedGeometries = [];
+    const borrowedGeometries = new Set();
+    const geometryLeases = [];
     /** Materials this assembly creates itself, as opposed to borrowing from
      *  the shared MaterialLibrary — only these may be disposed here. */
     /** @type {THREE.Material[]} */
@@ -107,25 +113,18 @@ export function buildAssembly(layout, materials, opts = {}) {
 
         // Tread relief is cut into the geometry, so the pattern has to be
         // known here rather than only at material time.
-        const tireGeo = buildTireGeometry(g, {
-            quality,
-            radialSegments: opts.radialSegments,
-            pattern: tp,
-            seed: opts.seed,
-            designation
+        // Dimensions, seed, handedness and detail are part of the cache key.
+        // Live and export scenes borrow the same immutable geometry safely.
+        const cacheKey=JSON.stringify([g,quality,opts.radialSegments,tp,opts.seed,designation,sign]);
+        const lease=wheelGeometryCache.acquire(cacheKey,()=>{
+            const discOffset=.30*sign;
+            return [buildTireGeometry(g,{quality,radialSegments:opts.radialSegments,pattern:tp,seed:opts.seed,designation}),
+                buildRimBarrel(g,{quality}),buildRimDisc(g,{quality,offsetRatio:discOffset}),
+                buildHubGeometry(g,{quality,offsetRatio:discOffset})];
         });
-        const barrelGeo = buildRimBarrel(g, { quality });
-        // The disc sits near the OUTBOARD face of the rim, not at its center.
-        // Left at the center it is buried behind a section-width of sidewall
-        // and the wheel reads as a hollow ring.
-        // ONE offset, read by both. The hub has to stand its nuts on the
-        // disc's face and plug the disc's bore, so it is laid out from the
-        // disc's own stations (rim.js `wheelStations`) rather than from
-        // parameters of its own that only happened to be nearby.
-        const discOffset = 0.30 * sign;
-        const discGeo = buildRimDisc(g, { quality, offsetRatio: discOffset });
-        const hubGeo = buildHubGeometry(g, { quality, offsetRatio: discOffset });
-        ownedGeometries.push(tireGeo, barrelGeo, discGeo, hubGeo);
+        geometryLeases.push(lease);
+        const [tireGeo,barrelGeo,discGeo,hubGeo]=lease.value;
+        lease.value.forEach(g=>borrowedGeometries.add(g));
 
         // Two materials, ordered to match the geometry groups: sidewall, tread.
         const rubber = materials.tireMaterials(tp, g, designation);
@@ -295,6 +294,7 @@ export function buildAssembly(layout, materials, opts = {}) {
                 root.add(vehicleBody);
                 const bodyMaterials = new Set();
                 vehicleBody.traverse(o => {
+                    if(o.geometry && !o.geometry.getAttribute('intakeDetail')) borrowedGeometries.add(o.geometry);
                     if (Array.isArray(o.material)) o.material.forEach(m => bodyMaterials.add(m));
                     else if (o.material) bodyMaterials.add(o.material);
                 });
@@ -373,14 +373,20 @@ export function buildAssembly(layout, materials, opts = {}) {
         return box.isEmpty() ? bounds() : box;
     }
 
+    let disposed=false;
     function dispose() {
+        if(disposed) return;
+        disposed=true;
         for (const g of ownedGeometries) g.dispose();
         for (const m of ownedMaterials) m.dispose();
         root.traverse((o) => {
             const anyO = /** @type {any} */ (o);
-            if (anyO.geometry && !ownedGeometries.includes(anyO.geometry)) anyO.geometry.dispose?.();
+            if(anyO.isInstancedMesh) anyO.dispose();
+            if (anyO.geometry && !ownedGeometries.includes(anyO.geometry) && !borrowedGeometries.has(anyO.geometry)) anyO.geometry.dispose?.();
         });
         root.clear();
+        vehicleBody?.releaseGeometry?.();
+        geometryLeases.forEach(lease=>lease.release());
     }
 
     api = {

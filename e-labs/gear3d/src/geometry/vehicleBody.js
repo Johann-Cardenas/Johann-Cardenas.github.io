@@ -2,6 +2,9 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { profileFor } from './chassis.js';
 import { buildConventionalTruck } from './conventionalTruck.js';
+import { ResourceCache } from './resourceCache.js';
+
+const fittedBodies=new ResourceCache(4,disposeTemplate);
 
 const templates = new Map();
 const requests = new Map();
@@ -57,6 +60,7 @@ export function ensureVehicleBody(unit, base) {
 }
 
 function disposeTemplate(root) {
+    if(!root) return;
     root.traverse(o => {
         o.geometry?.dispose();
         if (Array.isArray(o.material)) o.material.forEach(m => m.dispose());
@@ -65,6 +69,7 @@ function disposeTemplate(root) {
 }
 export function disposeVehicleBodies() {
     generation++;
+    fittedBodies.clear();
     templates.forEach(disposeTemplate);
     templates.clear(); requests.clear(); failures.clear();
 }
@@ -74,6 +79,27 @@ export function disposeVehicleBodies() {
  * representative fractions, since these external airframes have no gear.
  */
 export function buildVehicleBody(layout) {
+    if(vehicleBodyStatus(layout.unit)!=='ready') return null;
+    const key=JSON.stringify([layout.unit,layout.axles,layout.extents]);
+    const lease=fittedBodies.acquire(key,()=>buildFittedBody(layout));
+    if(!lease.value) {lease.release();return null;}
+    const group=lease.value.clone(true);
+    const materials=new Map();
+    const copyMaterial=m=>{
+        if(!materials.has(m)) materials.set(m,m.clone());
+        return materials.get(m);
+    };
+    group.traverse(o=>{
+        // Intake colors are editable; each scene needs its own color buffer.
+        if(o.geometry?.getAttribute('intakeDetail')) o.geometry=o.geometry.clone();
+        if(o.material) o.material=Array.isArray(o.material)?o.material.map(copyMaterial):copyMaterial(o.material);
+        if(o.isMesh) o.raycast=()=>{};
+    });
+    group.releaseGeometry=lease.release;
+    return group;
+}
+
+function buildFittedBody(layout) {
     const spec = vehicleBodySpec(layout.unit);
     const template = spec && templates.get(spec.id);
     if (!spec || (!template && !spec.articulated) || vehicleBodyStatus(layout.unit) !== 'ready' || !layout.wheels.length) return null;
