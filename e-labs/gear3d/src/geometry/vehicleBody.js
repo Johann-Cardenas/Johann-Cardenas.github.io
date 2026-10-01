@@ -265,6 +265,10 @@ export function styleVehicleBody(root,{opacity=.28,color='#71899b',surface='shad
     detail=Number.isFinite(detail)?THREE.MathUtils.clamp(detail,0,1):.65;
     const materials=new Set();
     root.traverse(o=>{
+        if(o.isMesh) {
+            o.userData.bodyBaseCastShadow ??= o.castShadow;
+            o.castShadow=surface==='solid'?true:o.userData.bodyBaseCastShadow;
+        }
         for(const m of (Array.isArray(o.material)?o.material:o.material?[o.material]:[]))materials.add(m);
         const mask=o.geometry?.getAttribute('intakeDetail'),colors=o.geometry?.getAttribute('color');
         if(mask && colors && o.userData.bodyDetail!==detail) {
@@ -280,7 +284,13 @@ export function styleVehicleBody(root,{opacity=.28,color='#71899b',surface='shad
         material.userData.bodyBaseColor ??= material.color.getHex();
         material.userData.bodyBaseRoughness ??= material.roughness;
         material.userData.bodyBaseMetalness ??= material.metalness;
-        material.opacity=Math.min(.92,material.userData.bodyBaseOpacity*opacity/.28);
+        material.userData.bodyBaseTransparent ??= material.transparent;
+        material.userData.bodyBaseDepthWrite ??= material.depthWrite;
+        const solid=surface==='solid';
+        material.opacity=solid?1:Math.min(.92,material.userData.bodyBaseOpacity*opacity/.28);
+        const transparent=solid?false:material.userData.bodyBaseTransparent;
+        if(material.transparent!==transparent) { material.transparent=transparent; material.needsUpdate=true; }
+        material.depthWrite=solid?true:material.userData.bodyBaseDepthWrite;
         material.wireframe=surface==='wireframe';
         if(material.userData.bodyBaseColor===0x71899b) {
             material.color.set(/^#[0-9a-f]{6}$/i.test(color)?color:'#71899b');

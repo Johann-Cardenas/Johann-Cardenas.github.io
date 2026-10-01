@@ -130,6 +130,8 @@ function defaultView() {
         lighting: { ...LIGHTING_PRESETS.studio },
         background: 'white',
         backgroundColor: '#eef1f4',
+        groundSurface: 'studio',
+        surfaceScale: 4,
         exportFormat: 'png',
         exportSize: '2400x1800',
         exportW: 2400,
@@ -1650,7 +1652,7 @@ function renderAssumptionNotice(u) {
         : lead + `<span>${list}The source panel documents this aircraft’s dimensions, tires and loads, `
             + 'including manufacturer drawings and any FAARFIELD-derived coordinates. '
             + 'Review the listed assumptions and weight variant before using the geometry for pavement work. '
-            + 'The translucent body is an illustrative family mesh; its surface is not an engineering dimension.</span>';
+            + 'The vehicle body is an illustrative family mesh; its surface is not an engineering dimension.</span>';
 }
 
 /* ============================================================
@@ -1975,23 +1977,23 @@ function setupIsolationPanel() {
         applyIsolation({ frame: true });
     });
     $('g3-body-opacity').addEventListener('input', e => {
-        app.store.view.bodyOpacity=Number(e.target.value);applyBodyStyle();scheduleAutosave();
+        app.store.view.bodyOpacity=Number(e.target.value);app.viewport.markInteracting();applyBodyStyle();scheduleAutosave();
     });
     $('g3-body-reset').addEventListener('click', () => {
         Object.assign(app.store.view,{bodyOpacity:28,bodyColor:'#71899b',bodySurface:'shaded',bodyFinish:'matte',bodyDetail:65});
-        applyBodyStyle();scheduleAutosave();
+        app.viewport.markInteracting();applyBodyStyle();scheduleAutosave();
     });
     for(const [id,key] of [['g3-body-surface','bodySurface'],['g3-body-finish','bodyFinish'],['g3-body-detail','bodyDetail']]) {
         $(id).addEventListener(key==='bodyDetail'?'input':'change',e=>{
             app.store.view[key]=key==='bodyDetail'?Number(e.target.value):e.target.value;
-            applyBodyStyle();scheduleAutosave();
+            app.viewport.markInteracting();applyBodyStyle();scheduleAutosave();
         });
     }
     $('g3-body-color').addEventListener('input', e => {
-        app.store.view.bodyColor=e.target.value;applyBodyStyle();scheduleAutosave();
+        app.store.view.bodyColor=e.target.value;app.viewport.markInteracting();applyBodyStyle();scheduleAutosave();
     });
     for(const button of document.querySelectorAll('[data-body-opacity]')) button.addEventListener('click',()=>{
-        app.store.view.bodyOpacity=Number(button.dataset.bodyOpacity);applyBodyStyle();scheduleAutosave();
+        app.store.view.bodyOpacity=Number(button.dataset.bodyOpacity);app.viewport.markInteracting();applyBodyStyle();scheduleAutosave();
     });
     $('g3-vehicle-body').addEventListener('change', (e) => {
         app.store.view.showVehicleBody = e.target.checked;
@@ -2006,8 +2008,9 @@ function setupIsolationPanel() {
 
 function applyBodyStyle() {
     const v=app.store.view;
+    $('g3-body-opacity').disabled=v.bodySurface==='solid';
     $('g3-body-opacity').value=String(v.bodyOpacity);
-    $('g3-body-opacity-value').textContent=`${v.bodyOpacity}%`;
+    $('g3-body-opacity-value').textContent=v.bodySurface==='solid'?'Solid':`${v.bodyOpacity}%`;
     $('g3-body-color').value=v.bodyColor;
     $('g3-body-surface').value=v.bodySurface;
     $('g3-body-finish').value=v.bodyFinish;
@@ -2373,18 +2376,42 @@ function setupMaterialPanel() {
     syncFields();
 }
 
+function syncScenery() {
+    const v=app.store.view;
+    $('g3-bg-mode').value=v.background;
+    $('g3-bg-color').value=v.backgroundColor;
+    $('g3-bg-color-field').hidden=v.background!=='color';
+    $('g3-ground-surface').value=v.groundSurface;
+    $('g3-surface-scale').value=String(v.surfaceScale);
+    $('g3-surface-scale-value').textContent=v.surfaceScale+' m';
+    $('g3-surface-scale').disabled=v.groundSurface==='studio';
+    app.viewport.lighting.setSurface(v.groundSurface,v.surfaceScale);
+    app.viewport.invalidate();
+}
+
 function setupBackgroundPanel() {
+    $('g3-ground-surface').addEventListener('change',e=>{
+        app.store.view.groundSurface=e.target.value;syncScenery();scheduleAutosave();
+    });
+    $('g3-surface-scale').addEventListener('input',e=>{
+        app.store.view.surfaceScale=Number(e.target.value);app.viewport.markInteracting();syncScenery();scheduleAutosave();
+    });
+    $('g3-scene-reset').addEventListener('click',()=>{
+        Object.assign(app.store.view,{background:'white',backgroundColor:'#eef1f4',groundSurface:'studio',surfaceScale:4});
+        app.viewport.setBackground('white');syncScenery();scheduleAutosave();
+    });
     const mode = $('g3-bg-mode');
     const field = $('g3-bg-color-field');
     const sync = () => { field.hidden = mode.value !== 'color'; };
     mode.addEventListener('change', () => {
         app.store.view.background = mode.value;
         app.viewport.setBackground(mode.value, $('g3-bg-color').value);
-        sync();
+        sync();scheduleAutosave();
     });
     $('g3-bg-color').addEventListener('input', (e) => {
         app.store.view.backgroundColor = /** @type {HTMLInputElement} */(e.target).value;
         app.viewport.setBackground('color', app.store.view.backgroundColor);
+        scheduleAutosave();
     });
     sync();
 }
@@ -3026,6 +3053,8 @@ function currentState() {
             lighting: v.lighting,
             background: v.background,
             backgroundColor: v.backgroundColor,
+            groundSurface: v.groundSurface,
+            surfaceScale: v.surfaceScale,
             unitSystem: v.unitSystem,
             precision: v.precision,
             dualUnits: v.dualUnits,
@@ -3072,11 +3101,13 @@ function applyProject(p) {
         showVehicleBody: p.view?.showVehicleBody !== false,
         bodyOpacity: Number.isFinite(p.view?.bodyOpacity) ? Math.max(10,Math.min(80,p.view.bodyOpacity)) : 28,
         bodyColor: /^#[0-9a-f]{6}$/i.test(p.view?.bodyColor) ? p.view.bodyColor : '#71899b',
-        bodySurface: p.view?.bodySurface==='wireframe'?'wireframe':'shaded',
+        bodySurface: ['shaded','wireframe','solid'].includes(p.view?.bodySurface)?p.view.bodySurface:'shaded',
         bodyFinish: ['matte','satin','metallic'].includes(p.view?.bodyFinish)?p.view.bodyFinish:'matte',
         bodyDetail: Number.isFinite(p.view?.bodyDetail)?Math.max(0,Math.min(100,p.view.bodyDetail)):65,
         lighting: p.view?.lighting || { ...LIGHTING_PRESETS.studio },
-        background: p.view?.background || 'white',
+        background: ['white','color','transparent','sky','sunset'].includes(p.view?.background)?p.view.background:'white',
+        groundSurface: ['studio','asphalt','concrete'].includes(p.view?.groundSurface)?p.view.groundSurface:'studio',
+        surfaceScale: Number.isFinite(p.view?.surfaceScale)?Math.max(1,Math.min(20,p.view.surfaceScale)):4,
         backgroundColor: p.view?.backgroundColor || '#eef1f4',
         unitSystem: p.view?.unitSystem || 'SI',
         precision: p.view?.precision ?? 0,
@@ -3107,6 +3138,7 @@ function applyProject(p) {
     if (p.view?.camera) app.viewport.cameras.fromJSON(p.view.camera);
     app.viewport.setLighting(app.store.view.lighting);
     app.viewport.setBackground(app.store.view.background, app.store.view.backgroundColor);
+    syncScenery();
 
     syncUnitSelectors();
     // The toolbar is not driven by state, so a session or a project restored

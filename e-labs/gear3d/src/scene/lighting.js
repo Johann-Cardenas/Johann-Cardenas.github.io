@@ -15,6 +15,7 @@
 'use strict';
 
 import * as THREE from 'three';
+import { surfaceTexture } from './scenery.js';
 
 /**
  * @typedef {Object} LightingState
@@ -73,6 +74,9 @@ export class LightingRig {
         this.key.shadow.normalBias = 0.02;
 
         this.ground = null;
+        this.surface = 'studio';
+        this.surfaceScale = 4;
+        this._surfaceTextures = new Map();
         this._radius = 10;
 
         scene.add(this.ambient, this.hemi, this.key, this.key.target, this.fill, this.rim);
@@ -149,7 +153,7 @@ export class LightingRig {
         this.key.castShadow = s.groundShadow;
 
         this._place();
-        if (this.ground) this.ground.material.opacity = s.shadowOpacity;
+        if (this.ground?.material.isShadowMaterial) this.ground.material.opacity = s.shadowOpacity;
     }
 
     /**
@@ -245,7 +249,7 @@ export class LightingRig {
         }
         const geo = new THREE.PlaneGeometry(size, size);
         geo.rotateX(-Math.PI / 2);
-        const mat = new THREE.ShadowMaterial({ opacity: this.state.shadowOpacity });
+        const mat = this.surfaceMaterial(size);
         const mesh = new THREE.Mesh(geo, mat);
         const c = this._center;
         if (c) mesh.position.set(c.x, 0, c.z);
@@ -257,7 +261,31 @@ export class LightingRig {
         return mesh;
     }
 
+    setSurface(kind='studio',scale=4) {
+        const previous=this.surface;
+        this.surface=['studio','asphalt','concrete'].includes(kind)?kind:'studio';
+        this.surfaceScale=Number.isFinite(scale)?THREE.MathUtils.clamp(scale,1,20):4;
+        if(this.ground) {
+            if(previous===this.surface) {
+                this.ground.material.map?.repeat.set(this.ground.geometry.parameters.width/this.surfaceScale,this.ground.geometry.parameters.width/this.surfaceScale);
+                return;
+            }
+            this.ground.material.dispose();
+            this.ground.material=this.surfaceMaterial(this.ground.geometry.parameters.width);
+        }
+    }
+
+    surfaceMaterial(size) {
+        if(this.surface==='studio') return new THREE.ShadowMaterial({opacity:this.state.shadowOpacity});
+        if(!this._surfaceTextures.has(this.surface)) this._surfaceTextures.set(this.surface,surfaceTexture(this.surface));
+        const map=this._surfaceTextures.get(this.surface);
+        map.repeat.set(size/this.surfaceScale,size/this.surfaceScale);
+        return new THREE.MeshStandardMaterial({map,roughness:.95,metalness:0});
+    }
+
     dispose() {
+        for(const texture of this._surfaceTextures.values()) texture.dispose();
+        this._surfaceTextures.clear();
         if (this.ground) {
             this.scene.remove(this.ground);
             this.ground.geometry.dispose();

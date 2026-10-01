@@ -20,6 +20,7 @@ import * as THREE from 'three';
 import { CameraRig } from './cameras.js';
 import { LightingRig, LIGHTING_PRESETS } from './lighting.js';
 import { EnvironmentRig } from './environment.js';
+import { skyTexture } from './scenery.js';
 import { buildGrid } from './grid.js';
 import { quadLayout } from '../views/quadview.js';
 
@@ -101,6 +102,8 @@ const SETTLE_MS = 220;
 /** Background modes. */
 export const BACKGROUND_MODES = Object.freeze({
     white: { label: 'Publication white', color: '#ffffff', alpha: 1 },
+    sky: { label: 'Daylight sky', color: '#d5e7f3', alpha: 1 },
+    sunset: { label: 'Evening sky', color: '#e0b5a7', alpha: 1 },
     color: { label: 'Custom color', color: '#eef1f4', alpha: 1 },
     transparent: { label: 'Transparent', color: '#000000', alpha: 0 }
 });
@@ -148,6 +151,7 @@ export class Viewport {
         /** @type {import('../geometry/assembly.js').Assembly|null} */
         this.assembly = null;
 
+        this._skies = new Map();
         this.background = 'white';
         this.backgroundColor = '#ffffff';
         this.showGrid = false;
@@ -388,7 +392,10 @@ export class Viewport {
         const m = BACKGROUND_MODES[mode] || BACKGROUND_MODES.white;
         const c = mode === 'color' ? this.backgroundColor : m.color;
         this.renderer.setClearColor(new THREE.Color(c), m.alpha);
-        this.scene.background = m.alpha === 0 ? null : new THREE.Color(c);
+        if(mode==='sky' || mode==='sunset') {
+            if(!this._skies.has(mode)) this._skies.set(mode,skyTexture(mode));
+            this.scene.background=this._skies.get(mode);
+        } else this.scene.background = m.alpha === 0 ? null : new THREE.Color(c);
         // The grid's contrast depends on what it is drawn over.
         if (this._grid) this.rebuildGrid();
         this.invalidate();
@@ -818,6 +825,8 @@ export class Viewport {
         if (this.assembly) this.assembly.dispose();
         this.lighting.dispose();
         this.environment.dispose();
+        for(const texture of this._skies.values()) texture.dispose();
+        this._skies.clear();
         this.cameras.dispose();
         this.renderer.dispose();
     }

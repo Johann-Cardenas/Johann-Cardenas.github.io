@@ -306,10 +306,10 @@
                                         <input type="color" id="g3-body-color" class="g3-color" value="#71899b">
                                     </div>
                                     <div class="g3-field">
-                                        <label for="g3-body-surface">Surface</label>
-                                        <select id="g3-body-surface" class="g3-select" title="Shaded surfaces or the airframe mesh; wheel geometry is unchanged">
+                                        <label for="g3-body-surface">Body rendering</label>
+                                        <select id="g3-body-surface" class="g3-select" title="Translucent, solid, or wireframe body; wheel geometry is unchanged">
                                             <option value="shaded">Shaded</option>
-                                            <option value="wireframe">Wireframe</option>
+                                            <option value="solid">Solid body</option><option value="wireframe">Wireframe</option>
                                         </select>
                                     </div>
                                     <div class="g3-field">
@@ -594,17 +594,21 @@
                         </details>
 
                         <details>
-                            <summary><i class="fas fa-fill-drip"></i> Background</summary>
+                            <summary><i class="fas fa-fill-drip"></i> Scene</summary>
                             <div class="g3-group">
                                 <div class="g3-field">
                                     <label for="g3-bg-mode">Mode</label>
                                     <select id="g3-bg-mode" class="g3-select">
                                         <option value="white">Publication white</option>
-                                        <option value="color">Custom color</option>
+                                        <option value="sky">Daylight sky</option><option value="sunset">Evening sky</option><option value="color">Custom color</option>
                                         <option value="transparent">Transparent</option>
                                     </select>
                                 </div>
-                                <div class="g3-field" id="g3-bg-color-field">
+                                <div class="g3-field"><label for="g3-ground-surface">Pavement</label><select id="g3-ground-surface" class="g3-select" value="studio"><option value="studio">Studio — current view</option><option value="asphalt">Asphalt</option><option value="concrete">Concrete slabs</option></select></div>
+                <div class="g3-field"><label for="g3-surface-scale">Texture tile</label><input type="range" id="g3-surface-scale" class="g3-range" min="1" max="20" step="1" value="4" /><output id="g3-surface-scale-value">4 m</output></div>
+                <p class="g3-note">Surface and sky are visual settings. They do not change loads, contact areas, or pavement properties.</p>
+                <button type="button" id="g3-scene-reset" class="g3-btn">Reset scene</button>
+                <div class="g3-field" id="g3-bg-color-field">
                                     <label for="g3-bg-color">Color</label>
                                     <input type="color" id="g3-bg-color" class="g3-color" value="#eef1f4">
                                 </div>
