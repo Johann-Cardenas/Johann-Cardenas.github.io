@@ -1809,3 +1809,47 @@ body.Gear3D .g3-cat-card {
 .g3-tb-name b { display: inline-block; margin-left: 2px; font-weight: 600; letter-spacing: -.045em; }
 
 .g3-body-reset { margin-top: 6px; width: 100%; }
+
+/* Full-width portrait views. Stable units avoid buffer resizing as browser chrome moves. */
+@media (max-width: 1100px) and (orientation: portrait),
+       (max-width: 719px),
+       (max-width: 1100px) and (max-height: 500px) and (orientation: landscape) {
+    .g3-studio {
+        grid-template-columns: minmax(0,1fr);
+        grid-template-rows: auto clamp(400px,62svh,720px) auto auto auto;
+        grid-template-areas: "toolbar" "viewport" "status" "left" "right";
+    }
+    .g3-left { max-height: none; overflow-y: visible; }
+    .g3-figure { grid-template-rows: minmax(0,1fr) auto auto; }
+    .g3-figure > .g3-viewport { grid-row: 1; }
+    .g3-figure-actions { grid-row: 2; border-top: 1px solid var(--g3-rule); border-bottom: 0; }
+    .g3-figure-footer { grid-row: 3; }
+    .g3-status { font-size: .75rem; }
+    .g3-status-item { min-width: 0; overflow-wrap: anywhere; }
+    .g3-right { display: block; max-height: none; }
+    .g3-tree { max-height: 40svh; }
+    .g3-props { max-height: none; border-left: 0; }
+}
+@media (max-width: 1100px) and (max-height: 500px) and (orientation: landscape) {
+    .g3-studio { grid-template-rows: auto minmax(280px,76svh) auto auto auto; }
+}
+@media (max-width: 1100px) {
+    .g3-status { font-size: .75rem; }
+    .g3-figure-footer, .g3-figure-footer .g3-hud,
+    .g3-figure-footer .g3-hud-right, .g3-figure-footer .g3-axisbadge,
+    .g3-view-help summary { font-size: .8125rem; line-height: 1.45; }
+    .g3-app .g3-figure-actions .g3-btn { font-size: .8125rem; }
+    .g3-field label, .g3-check, .g3-note { font-size: .8125rem; line-height: 1.45; }
+}
+@media (pointer: coarse) {
+    .g3-select, .g3-num, .g3-text, .g3-textarea { font-size: 16px; }
+}
+.g3-toast-wrap {
+    width: min(420px,calc(100vw - 2rem));
+    bottom: max(.75rem,env(safe-area-inset-bottom));
+    max-height: calc(100svh - 2rem);
+}
+.g3-toast {
+    box-sizing: border-box; width: 100%; font-size: .875rem;
+    line-height: 1.45; overflow-wrap: anywhere;
+}

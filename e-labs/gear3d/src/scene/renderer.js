@@ -21,7 +21,7 @@ import { CameraRig } from './cameras.js';
 import { LightingRig, LIGHTING_PRESETS } from './lighting.js';
 import { EnvironmentRig } from './environment.js';
 import { skyTexture } from './scenery.js';
-import { liveRenderRatio, mobileViewport } from './renderBudget.js';
+import { liveRenderRatio, mobileViewport, liveGeometryQuality } from './renderBudget.js';
 import { buildGrid } from './grid.js';
 import { quadLayout } from '../views/quadview.js';
 
@@ -303,6 +303,7 @@ export class Viewport {
 
     get mobileBudget() { return mobileViewport(this.size.width,window.matchMedia?.('(pointer: coarse)').matches); }
     geometryFloor() { return this.mobileBudget?null:RENDER_TIERS[this.renderTier]?.minGeometry || null; }
+    geometryQuality(requested,tireCount) { return liveGeometryQuality(requested,tireCount,this.mobileBudget); }
 
     /**
      * Install a pixel ratio. Reallocates the drawing buffer, so it is guarded

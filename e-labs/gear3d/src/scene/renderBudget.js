@@ -10,3 +10,9 @@ export function liveRenderRatio({width,height,dpr=1,targetPx=3840,maxRatio=4,gpu
 export function mobileViewport(width,coarsePointer=false) {
     return coarsePointer || width<600;
 }
+
+/** Auto favors interaction on compact/touch views; explicit detail always wins. */
+export function liveGeometryQuality(requested,tireCount,mobile=false) {
+    if(mobile && (!requested || requested==='auto')) return tireCount>8?'draft':'standard';
+    return requested;
+}
