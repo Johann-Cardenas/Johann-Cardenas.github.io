@@ -1993,6 +1993,7 @@ function setupIsolationPanel() {
         app.store.view.bodyColor=e.target.value;app.viewport.markInteracting();applyBodyStyle();scheduleAutosave();
     });
     for(const button of document.querySelectorAll('[data-body-opacity]')) button.addEventListener('click',()=>{
+        if(app.store.view.bodySurface==='solid') app.store.view.bodySurface='shaded';
         app.store.view.bodyOpacity=Number(button.dataset.bodyOpacity);app.viewport.markInteracting();applyBodyStyle();scheduleAutosave();
     });
     $('g3-vehicle-body').addEventListener('change', (e) => {
@@ -2018,7 +2019,7 @@ function applyBodyStyle() {
     $('g3-body-detail-value').textContent=v.bodyDetail+'%';
     $('g3-body-detail').disabled=app.store.doc.unit?.domain!=='aircraft';
     for(const button of document.querySelectorAll('[data-body-opacity]')) {
-        const active=Number(button.dataset.bodyOpacity)===v.bodyOpacity;
+        const active=v.bodySurface!=='solid' && Number(button.dataset.bodyOpacity)===v.bodyOpacity;
         button.classList.toggle('is-on',active);button.setAttribute('aria-pressed',String(active));
     }
     const body=app.assembly?.root.getObjectByName('vehicle-body');
