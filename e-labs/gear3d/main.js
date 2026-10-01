@@ -132,6 +132,8 @@ function defaultView() {
         backgroundColor: '#eef1f4',
         groundSurface: 'studio',
         surfaceScale: 4,
+        surfaceRelief: 35,
+        skyClouds: 'clear',
         exportFormat: 'png',
         exportSize: '2400x1800',
         exportW: 2400,
@@ -362,9 +364,10 @@ function rebuild(opts = {}) {
     app.assembly = buildAssembly(app.layout, app.materials, {
         showAxles: true,
         quality: app.store.view.quality,
-        minQuality: RENDER_TIERS[app.store.view.renderTier]?.minGeometry || null,
+        minQuality: app.viewport.geometryFloor(),
         seed: app.store.doc.seed
     });
+    app.assembly.mobileBudgetProfile=app.viewport.mobileBudget;
     app.viewport.setAssembly(app.assembly);
 
     applyIsolation({ frame: opts.frame });
@@ -1242,13 +1245,14 @@ function renderResolutionReadout() {
     const el = $('g3-res-value');
     const note = $('g3-res-note');
     if (!el || !app.viewport) return;
+    if(app.assembly && app.store.view.quality==='auto' && app.assembly.mobileBudgetProfile!==app.viewport.mobileBudget) rebuild();
     const r = app.viewport.renderResolution();
     el.textContent = `${r.width} × ${r.height}`;
     const mp = r.megapixels;
     const tier = RENDER_TIERS[app.store.view.renderTier];
     const uhd = r.width >= 3840 * 0.95;
     note.textContent = `${mp.toFixed(1)} MP · ${r.ratio.toFixed(2)}× the viewport`
-        + (uhd ? ' · UHD' : '');
+        + (uhd ? ' · UHD' : '') + (app.viewport.mobileBudget?' · Adaptive budget':'');
     note.classList.toggle('is-uhd', uhd);
     el.title = tier ? tier.note : '';
 
@@ -2393,11 +2397,24 @@ function syncScenery() {
     $('g3-surface-scale').value=String(v.surfaceScale);
     $('g3-surface-scale-value').textContent=v.surfaceScale+' m';
     $('g3-surface-scale').disabled=v.groundSurface==='studio';
-    app.viewport.lighting.setSurface(v.groundSurface,v.surfaceScale);
+    $('g3-surface-relief').value=String(v.surfaceRelief);
+    $('g3-surface-relief-value').textContent=v.surfaceRelief+'%';
+    $('g3-surface-relief').disabled=v.groundSurface==='studio';
+    $('g3-sky-clouds').value=v.skyClouds;
+    $('g3-sky-clouds').disabled=!['sky','sunset'].includes(v.background);
+    app.viewport.lighting.setSurface(v.groundSurface,v.surfaceScale,v.surfaceRelief);
     app.viewport.invalidate();
 }
 
 function setupBackgroundPanel() {
+    $('g3-surface-relief').addEventListener('input',e=>{
+        app.store.view.surfaceRelief=Number(e.target.value);app.viewport.markInteracting();syncScenery();scheduleAutosave();
+    });
+    $('g3-sky-clouds').addEventListener('change',e=>{
+        app.store.view.skyClouds=e.target.value;
+        app.viewport.setBackground(app.store.view.background,app.store.view.backgroundColor,app.store.view.skyClouds);
+        syncScenery();scheduleAutosave();
+    });
     $('g3-ground-surface').addEventListener('change',e=>{
         app.store.view.groundSurface=e.target.value;syncScenery();scheduleAutosave();
     });
@@ -2405,7 +2422,7 @@ function setupBackgroundPanel() {
         app.store.view.surfaceScale=Number(e.target.value);app.viewport.markInteracting();syncScenery();scheduleAutosave();
     });
     $('g3-scene-reset').addEventListener('click',()=>{
-        Object.assign(app.store.view,{background:'white',backgroundColor:'#eef1f4',groundSurface:'studio',surfaceScale:4});
+        Object.assign(app.store.view,{background:'white',backgroundColor:'#eef1f4',groundSurface:'studio',surfaceScale:4,surfaceRelief:35,skyClouds:'clear'});
         app.viewport.setBackground('white');syncScenery();scheduleAutosave();
     });
     const mode = $('g3-bg-mode');
@@ -2413,15 +2430,15 @@ function setupBackgroundPanel() {
     const sync = () => { field.hidden = mode.value !== 'color'; };
     mode.addEventListener('change', () => {
         app.store.view.background = mode.value;
-        app.viewport.setBackground(mode.value, $('g3-bg-color').value);
-        sync();scheduleAutosave();
+        app.viewport.setBackground(mode.value, $('g3-bg-color').value, app.store.view.skyClouds);
+        syncScenery();sync();scheduleAutosave();
     });
     $('g3-bg-color').addEventListener('input', (e) => {
         app.store.view.backgroundColor = /** @type {HTMLInputElement} */(e.target).value;
         app.viewport.setBackground('color', app.store.view.backgroundColor);
         scheduleAutosave();
     });
-    sync();
+    syncScenery();sync();
 }
 
 function setupExportPanel() {
@@ -3063,6 +3080,8 @@ function currentState() {
             backgroundColor: v.backgroundColor,
             groundSurface: v.groundSurface,
             surfaceScale: v.surfaceScale,
+            surfaceRelief: v.surfaceRelief,
+            skyClouds: v.skyClouds,
             unitSystem: v.unitSystem,
             precision: v.precision,
             dualUnits: v.dualUnits,
@@ -3116,6 +3135,8 @@ function applyProject(p) {
         background: ['white','color','transparent','sky','sunset'].includes(p.view?.background)?p.view.background:'white',
         groundSurface: ['studio','asphalt','concrete'].includes(p.view?.groundSurface)?p.view.groundSurface:'studio',
         surfaceScale: Number.isFinite(p.view?.surfaceScale)?Math.max(1,Math.min(20,p.view.surfaceScale)):4,
+        surfaceRelief: Number.isFinite(p.view?.surfaceRelief)?Math.max(0,Math.min(100,p.view.surfaceRelief)):35,
+        skyClouds: ['clear','scattered','overcast'].includes(p.view?.skyClouds)?p.view.skyClouds:'clear',
         backgroundColor: p.view?.backgroundColor || '#eef1f4',
         unitSystem: p.view?.unitSystem || 'SI',
         precision: p.view?.precision ?? 0,
@@ -3145,7 +3166,7 @@ function applyProject(p) {
     rebuild({ frame: true });
     if (p.view?.camera) app.viewport.cameras.fromJSON(p.view.camera);
     app.viewport.setLighting(app.store.view.lighting);
-    app.viewport.setBackground(app.store.view.background, app.store.view.backgroundColor);
+    app.viewport.setBackground(app.store.view.background, app.store.view.backgroundColor, app.store.view.skyClouds);
     syncScenery();
 
     syncUnitSelectors();

@@ -76,6 +76,7 @@ export class LightingRig {
         this.ground = null;
         this.surface = 'studio';
         this.surfaceScale = 4;
+        this.surfaceRelief = 35;
         this._surfaceTextures = new Map();
         this._radius = 10;
 
@@ -261,13 +262,16 @@ export class LightingRig {
         return mesh;
     }
 
-    setSurface(kind='studio',scale=4) {
+    setSurface(kind='studio',scale=4,relief=35) {
         const previous=this.surface;
         this.surface=['studio','asphalt','concrete'].includes(kind)?kind:'studio';
         this.surfaceScale=Number.isFinite(scale)?THREE.MathUtils.clamp(scale,1,20):4;
+        this.surfaceRelief=Number.isFinite(relief)?THREE.MathUtils.clamp(relief,0,100):35;
         if(this.ground) {
             if(previous===this.surface) {
                 this.ground.material.map?.repeat.set(this.ground.geometry.parameters.width/this.surfaceScale,this.ground.geometry.parameters.width/this.surfaceScale);
+                this.ground.material.bumpMap?.repeat.copy(this.ground.material.map.repeat);
+                this.ground.material.bumpScale=this.surfaceRelief*.00006;
                 return;
             }
             this.ground.material.dispose();
@@ -277,14 +281,22 @@ export class LightingRig {
 
     surfaceMaterial(size) {
         if(this.surface==='studio') return new THREE.ShadowMaterial({opacity:this.state.shadowOpacity});
-        if(!this._surfaceTextures.has(this.surface)) this._surfaceTextures.set(this.surface,surfaceTexture(this.surface));
+        if(!this._surfaceTextures.has(this.surface)) {
+            const color=surfaceTexture(this.surface);
+            const height=new THREE.CanvasTexture(color.image);
+            height.wrapS=height.wrapT=THREE.RepeatWrapping;
+            color.userData.height=height;
+            this._surfaceTextures.set(this.surface,color);
+        }
         const map=this._surfaceTextures.get(this.surface);
         map.repeat.set(size/this.surfaceScale,size/this.surfaceScale);
-        return new THREE.MeshStandardMaterial({map,roughness:.95,metalness:0});
+        const bumpMap=map.userData.height;
+        bumpMap.repeat.copy(map.repeat);
+        return new THREE.MeshStandardMaterial({map,bumpMap,bumpScale:this.surfaceRelief*.00006,roughness:.95,metalness:0});
     }
 
     dispose() {
-        for(const texture of this._surfaceTextures.values()) texture.dispose();
+        for(const texture of this._surfaceTextures.values()) { texture.userData.height?.dispose();texture.dispose(); }
         this._surfaceTextures.clear();
         if (this.ground) {
             this.scene.remove(this.ground);

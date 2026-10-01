@@ -21,6 +21,7 @@ import { CameraRig } from './cameras.js';
 import { LightingRig, LIGHTING_PRESETS } from './lighting.js';
 import { EnvironmentRig } from './environment.js';
 import { skyTexture } from './scenery.js';
+import { liveRenderRatio, mobileViewport } from './renderBudget.js';
 import { buildGrid } from './grid.js';
 import { quadLayout } from '../views/quadview.js';
 
@@ -203,6 +204,14 @@ export class Viewport {
 
         this._observer = new ResizeObserver(() => this.resize());
         this._observer.observe(container);
+        this._visible=true;
+        if(typeof IntersectionObserver!=='undefined') {
+            this._visibilityObserver=new IntersectionObserver(entries=>{
+                this._visible=entries[0]?.isIntersecting!==false;
+                if(this._visible) this.invalidate();
+            },{rootMargin:'100px'});
+            this._visibilityObserver.observe(container);
+        }
 
         canvas.addEventListener('webglcontextlost', (e) => {
             e.preventDefault();
@@ -266,16 +275,22 @@ export class Viewport {
         const tier = RENDER_TIERS[this.renderTier] || RENDER_TIERS.high;
         const { width, height } = this.size;
         const dpr = window.devicePixelRatio || 1;
-        const wanted = Math.max(dpr, tier.targetPx / Math.max(1, width));
-        const gpu = this._maxBufferDim() / Math.max(width, height);
-        return Math.max(1, Math.min(wanted, tier.maxRatio, gpu));
+        return liveRenderRatio({width,height,dpr,targetPx:tier.targetPx,maxRatio:tier.maxRatio,gpuLimit:this._maxBufferDim(),mobile:this.mobileBudget});
     }
 
     /** @returns {number} the ratio to use right now, interaction included */
     _currentRatio() {
         if (!this._interacting) return this.targetRatio();
+        if(this.mobileBudget) {
+            const {width,height}=this.size;
+            const tier=RENDER_TIERS[this.renderTier] || RENDER_TIERS.high;
+            return liveRenderRatio({width,height,dpr:window.devicePixelRatio||1,targetPx:tier.targetPx,maxRatio:tier.maxRatio,gpuLimit:this._maxBufferDim(),mobile:true,moving:true});
+        }
         return Math.min(this.targetRatio(), Math.max(INTERACTIVE_RATIO, window.devicePixelRatio || 1));
     }
+
+    get mobileBudget() { return mobileViewport(this.size.width,window.matchMedia?.('(pointer: coarse)').matches); }
+    geometryFloor() { return this.mobileBudget?null:RENDER_TIERS[this.renderTier]?.minGeometry || null; }
 
     /**
      * Install a pixel ratio. Reallocates the drawing buffer, so it is guarded
@@ -333,7 +348,7 @@ export class Viewport {
         const { width, height } = this.size;
         const longEdge = Math.max(width, height) * this.targetRatio();
         const pow2 = Math.pow(2, Math.round(Math.log2(Math.max(1024, longEdge))));
-        this.lighting.setShadowMapSize(Math.min(tier.shadowMap, pow2));
+        this.lighting.setShadowMapSize(Math.min(tier.shadowMap, pow2,this.mobileBudget?1024:4096));
     }
 
     /** @param {RenderTier} tier */
@@ -386,15 +401,16 @@ export class Viewport {
      * @param {keyof typeof BACKGROUND_MODES} mode
      * @param {string} [color]
      */
-    setBackground(mode, color) {
+    setBackground(mode, color, clouds='clear') {
         this.background = mode;
         if (color) this.backgroundColor = color;
         const m = BACKGROUND_MODES[mode] || BACKGROUND_MODES.white;
         const c = mode === 'color' ? this.backgroundColor : m.color;
         this.renderer.setClearColor(new THREE.Color(c), m.alpha);
         if(mode==='sky' || mode==='sunset') {
-            if(!this._skies.has(mode)) this._skies.set(mode,skyTexture(mode));
-            this.scene.background=this._skies.get(mode);
+            const key=mode+':'+clouds;
+            if(!this._skies.has(key)) this._skies.set(key,skyTexture(mode,clouds));
+            this.scene.background=this._skies.get(key);
         } else this.scene.background = m.alpha === 0 ? null : new THREE.Color(c);
         // The grid's contrast depends on what it is drawn over.
         if (this._grid) this.rebuildGrid();
@@ -614,6 +630,7 @@ export class Viewport {
         const loop = () => {
             if (!this._running) return;
             requestAnimationFrame(loop);
+            if(document.hidden || !this._visible) return;
             // OrbitControls damping needs continuous updates while settling.
             // Its return value is NOT usable as "the camera moved": it stays
             // true indefinitely on a stationary camera (see the note on the
@@ -816,7 +833,9 @@ export class Viewport {
 
     dispose() {
         this.stop();
+        clearTimeout(this._settleTimer);
         this._observer.disconnect();
+        this._visibilityObserver?.disconnect();
         if (this._grid) {
             this.scene.remove(this._grid);
             this._grid.geometry.dispose();
