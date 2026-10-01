@@ -346,6 +346,7 @@ async function loadUnitById(id) {
         if(token!==app.unitLoadToken || app.store.doc!==previousDoc) return;
     }
 
+    app.viewport.markInteracting();
     app.store.replaceDoc({
         ...app.store.doc,
         unit: structuredClone(unit),
