@@ -100,14 +100,14 @@ const app = {
 /** Everything that is not the document: view flags, not undoable. */
 function defaultView() {
     return {
-        // Open with vehicle context in all four views and a clear background.
-        mode: 'quad',
+        // Open in 3D with all running gear and vehicle context.
+        mode: '3d',
         showVehicleBody: true,
-        bodyOpacity: 28,
+        bodyOpacity: 60,
         bodyColor: '#71899b',
         bodySurface: 'shaded',
-        bodyFinish: 'matte',
-        bodyDetail: 65,
+        bodyFinish: 'satin',
+        bodyDetail: 100,
         unitSystem: 'SI',
         precision: 0,
         dualUnits: false,
@@ -116,9 +116,9 @@ function defaultView() {
         // the geometry stops being readable; the point of the app is the
         // gear, with the numbers available on demand.
         annotations: false,
-        dimensionSets: ['longitudinal', 'custom'],
+        dimensionSets: [],
         showCallouts: false,
-        showScaleBar: true,
+        showScaleBar: false,
         showGrid: false,
         showPatches: false,
         patchModel: 'rectangular',
@@ -269,6 +269,7 @@ function setupViewport() {
     // it has to be pushed onto.
     app.viewport.setMaterialLibrary(app.materials);
     app.viewport.setGrid(app.store.view.showGrid);
+    syncViewChecks();
 
     app.viewport.onFrame = (info) => drawOverlay(info);
     // The buffer size changes on resize, on a tier change and when an orbit
@@ -1980,7 +1981,7 @@ function setupIsolationPanel() {
         app.store.view.bodyOpacity=Number(e.target.value);app.viewport.markInteracting();applyBodyStyle();scheduleAutosave();
     });
     $('g3-body-reset').addEventListener('click', () => {
-        Object.assign(app.store.view,{bodyOpacity:28,bodyColor:'#71899b',bodySurface:'shaded',bodyFinish:'matte',bodyDetail:65});
+        Object.assign(app.store.view,{bodyOpacity:60,bodyColor:'#71899b',bodySurface:'shaded',bodyFinish:'satin',bodyDetail:100});
         app.viewport.markInteracting();applyBodyStyle();scheduleAutosave();
     });
     for(const [id,key] of [['g3-body-surface','bodySurface'],['g3-body-finish','bodyFinish'],['g3-body-detail','bodyDetail']]) {
@@ -2025,6 +2026,12 @@ function applyBodyStyle() {
     const body=app.assembly?.root.getObjectByName('vehicle-body');
     if(body)styleVehicleBody(body,{opacity:v.bodyOpacity/100,color:v.bodyColor,surface:v.bodySurface,finish:v.bodyFinish,detail:v.bodyDetail/100});
     app.viewport?.invalidate();
+}
+
+function syncViewChecks() {
+    for(const [id,on] of [['g3-ghost',app.store.view.isolation.ghost],['g3-scalebar',app.store.view.showScaleBar],['g3-callouts',app.store.view.showCallouts],['g3-dual-units',app.store.view.dualUnits]]) {
+        $(id).checked=!!on;
+    }
 }
 
 function setupDimensionPanel() {
@@ -3100,11 +3107,11 @@ function applyProject(p) {
         // fallback follows whatever the app's current default is.
         mode: p.view?.mode || defaultView().mode,
         showVehicleBody: p.view?.showVehicleBody !== false,
-        bodyOpacity: Number.isFinite(p.view?.bodyOpacity) ? Math.max(10,Math.min(80,p.view.bodyOpacity)) : 28,
+        bodyOpacity: Number.isFinite(p.view?.bodyOpacity) ? Math.max(10,Math.min(80,p.view.bodyOpacity)) : defaultView().bodyOpacity,
         bodyColor: /^#[0-9a-f]{6}$/i.test(p.view?.bodyColor) ? p.view.bodyColor : '#71899b',
         bodySurface: ['shaded','wireframe','solid'].includes(p.view?.bodySurface)?p.view.bodySurface:'shaded',
-        bodyFinish: ['matte','satin','metallic'].includes(p.view?.bodyFinish)?p.view.bodyFinish:'matte',
-        bodyDetail: Number.isFinite(p.view?.bodyDetail)?Math.max(0,Math.min(100,p.view.bodyDetail)):65,
+        bodyFinish: ['matte','satin','metallic'].includes(p.view?.bodyFinish)?p.view.bodyFinish:defaultView().bodyFinish,
+        bodyDetail: Number.isFinite(p.view?.bodyDetail)?Math.max(0,Math.min(100,p.view.bodyDetail)):defaultView().bodyDetail,
         lighting: p.view?.lighting || { ...LIGHTING_PRESETS.studio },
         background: ['white','color','transparent','sky','sunset'].includes(p.view?.background)?p.view.background:'white',
         groundSurface: ['studio','asphalt','concrete'].includes(p.view?.groundSurface)?p.view.groundSurface:'studio',
@@ -3113,15 +3120,15 @@ function applyProject(p) {
         unitSystem: p.view?.unitSystem || 'SI',
         precision: p.view?.precision ?? 0,
         dualUnits: !!p.view?.dualUnits,
-        dimensionSets: p.view?.dimensionSets || ['longitudinal', 'transverse'],
+        dimensionSets: p.view?.dimensionSets || defaultView().dimensionSets,
         showCallouts: !!p.view?.showCallouts,
-        showScaleBar: p.view?.showScaleBar !== false,
+        showScaleBar: p.view?.showScaleBar === true,
         annotations: p.view?.annotations === true,
         showGrid: p.view?.showGrid === true,
         materials: p.view?.materials || {},
         quality: p.view?.quality || 'auto',
         renderTier: p.view?.renderTier || defaultView().renderTier,
-        isolation: p.view?.isolation || defaultIsolation(),
+        isolation: { ...defaultIsolation(), ...(p.view?.isolation || {}) },
         patchModel: p.contact?.model || 'rectangular',
         inflationKpa: p.contact?.inflationKpa ?? DEFAULT_INFLATION_KPA,
         showPatches: !!p.contact?.show,
@@ -3152,6 +3159,7 @@ function applyProject(p) {
     syncOverrideUnits();
     renderCustomList();
     app.viewport.setGrid(app.store.view.showGrid);
+    syncViewChecks();
     for (const cb of document.querySelectorAll('.g3-dimset')) {
         const el = /** @type {HTMLInputElement} */ (cb);
         el.checked = app.store.view.dimensionSets.includes(el.getAttribute('data-set'));

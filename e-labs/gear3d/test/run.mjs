@@ -2636,6 +2636,11 @@ test('every element main.js looks up by id exists in index.html', () => {
 test('the page opens on what the controller opens on: body shown, annotations and grid off', () => {
     // A toggle drawn "on" over a state that is off reads as a broken button.
     const defaults = mainFn('defaultView');
+    assert(/mode: '3d'/.test(defaults), 'a fresh sheet opens in single 3D view');
+    assert(/dimensionSets: \[\]/.test(defaults), 'all dimension sets start off');
+    assert(/showScaleBar: false/.test(defaults), 'the scale bar starts off');
+    assert(/bodyFinish: 'satin'/.test(defaults) && /bodyDetail: 100/.test(defaults), 'the body starts satin with full intake detail');
+    assert(/id="g3-ghost" checked/.test(HTML), 'ghost context starts checked');
     assert(/showVehicleBody: true/.test(defaults), 'the body is on by default');
     assert(/annotations: false/.test(defaults), 'annotations are off by default');
     assert(/showGrid: false/.test(defaults), 'the grid is off by default');

@@ -172,8 +172,8 @@
                              pictorial view answers worst. The V-then-digit
                              shortcuts follow this order. -->
                         <div class="g3-viewtabs" role="tablist" aria-label="View mode">
-                            <button class="g3-vtab is-active" data-view="quad" role="tab" aria-selected="true" title="All four views in one frame (V then 1) — click a pane to open it full size">Quad</button>
-                            <button class="g3-vtab" data-view="3d" role="tab" aria-selected="false" title="Free 3D view (V then 2)">3D</button>
+                            <button class="g3-vtab" data-view="quad" role="tab" aria-selected="false" title="All four views in one frame (V then 1) — click a pane to open it full size">Quad</button>
+                            <button class="g3-vtab is-active" data-view="3d" role="tab" aria-selected="true" title="Free 3D view (V then 2)">3D</button>
                             <button class="g3-vtab" data-view="plan" role="tab" aria-selected="false" title="Plan view — locked (V then 3)">Plan</button>
                             <button class="g3-vtab" data-view="side" role="tab" aria-selected="false" title="Side view — locked (V then 4)">Side</button>
                             <button class="g3-vtab" data-view="front" role="tab" aria-selected="false" title="Front view — locked (V then 5)">Front</button>
@@ -287,7 +287,7 @@
                                 </div>
                                 <div class="g3-field">
                                     <label class="g3-check" for="g3-ghost">
-                                        <input type="checkbox" id="g3-ghost"> Ghost hidden parts
+                                        <input type="checkbox" id="g3-ghost" checked> Ghost hidden parts
                                     </label>
                                 </div>
                                 <div class="g3-field">
@@ -298,8 +298,8 @@
                                 <div class="g3-body-style">
                                     <div class="g3-field">
                                         <label for="g3-body-opacity">Body opacity</label>
-                                        <input type="range" id="g3-body-opacity" class="g3-range" min="10" max="80" step="1" value="28">
-                                        <output id="g3-body-opacity-value" for="g3-body-opacity">28%</output>
+                                        <input type="range" id="g3-body-opacity" class="g3-range" min="10" max="80" step="1" value="60">
+                                        <output id="g3-body-opacity-value" for="g3-body-opacity">60%</output>
                                     </div>
                                     <div class="g3-field">
                                         <label for="g3-body-color">Body color</label>
@@ -316,14 +316,14 @@
                                         <label for="g3-body-finish">Finish</label>
                                         <select id="g3-body-finish" class="g3-select" title="Body surface finish; glazing retains its own appearance">
                                             <option value="matte">Matte</option>
-                                            <option value="satin">Satin</option>
+                                            <option value="satin" selected>Satin</option>
                                             <option value="metallic">Metallic</option>
                                         </select>
                                     </div>
                                     <div class="g3-field">
                                         <label for="g3-body-detail">Intake detail</label>
-                                        <input type="range" id="g3-body-detail" class="g3-range" min="0" max="100" step="1" value="65" title="Aircraft engine intake contrast; illustrative shading only">
-                                        <output id="g3-body-detail-value" for="g3-body-detail">65%</output>
+                                        <input type="range" id="g3-body-detail" class="g3-range" min="0" max="100" step="1" value="100" title="Aircraft engine intake contrast; illustrative shading only">
+                                        <output id="g3-body-detail-value" for="g3-body-detail">100%</output>
                                     </div>
                                     <div class="g3-body-presets" aria-label="Body appearance presets">
                                         <button type="button" class="g3-btn" data-body-opacity="16">Faint</button>
@@ -366,11 +366,11 @@
                         <details open>
                             <summary><i class="fas fa-ruler-combined"></i> Dimensions</summary>
                             <div class="g3-group">
-                                <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="longitudinal" checked> Longitudinal</label></div>
+                                <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="longitudinal"> Longitudinal</label></div>
                                 <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="transverse"> Transverse</label></div>
                                 <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="vertical"> Vertical</label></div>
                                 <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="aircraft"> Aircraft gear</label></div>
-                                <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="custom" checked> Custom</label></div>
+                                <div class="g3-field"><label class="g3-check"><input type="checkbox" class="g3-dimset" data-set="custom"> Custom</label></div>
                                 <hr class="g3-rule">
 
                                 <div class="g3-mini-row">
@@ -397,7 +397,7 @@
                                 </div>
                                 <div class="g3-field"><label class="g3-check" for="g3-dual-units"><input type="checkbox" id="g3-dual-units"> Show both units</label></div>
                                 <div class="g3-field"><label class="g3-check" for="g3-callouts"><input type="checkbox" id="g3-callouts"> Axle callouts</label></div>
-                                <div class="g3-field"><label class="g3-check" for="g3-scalebar"><input type="checkbox" id="g3-scalebar" checked> Scale bar</label></div>
+                                <div class="g3-field"><label class="g3-check" for="g3-scalebar"><input type="checkbox" id="g3-scalebar"> Scale bar</label></div>
                             </div>
                         </details>
 

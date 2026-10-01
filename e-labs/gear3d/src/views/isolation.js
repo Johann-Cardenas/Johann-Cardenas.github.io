@@ -8,8 +8,8 @@
      Running gear only -> Axle group -> {single|tandem} x {STA|DTA}
 
    Hidden elements can optionally draw as a faint ghost so context
-   is not lost. Default OFF, because a ghost is a lie in a
-   published figure unless the caption explains it.
+   is not lost. Enabled initially to retain context; describe a ghost in a
+   published figure’s caption when using isolation.
    ============================================================ */
 
 'use strict';
@@ -37,7 +37,7 @@ export const ISOLATION_META = Object.freeze({
 
 /** @returns {IsolationState} */
 export function defaultIsolation() {
-    return { level: 'running-gear', targetId: null, ghost: false };
+    return { level: 'running-gear', targetId: null, ghost: true };
 }
 
 /**
