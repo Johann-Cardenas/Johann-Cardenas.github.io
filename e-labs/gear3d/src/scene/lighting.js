@@ -244,14 +244,17 @@ export class LightingRig {
      */
     _makeGround(size) {
         if (this.ground) {
-            this.scene.remove(this.ground);
-            this.ground.geometry.dispose();
-            this.ground.material.dispose();
+            this.ground.scale.set(size,1,size);
+            const c=this._center;
+            if(c) this.ground.position.set(c.x,0,c.z);
+            this.updateSurfaceRepeat(size);
+            return this.ground;
         }
-        const geo = new THREE.PlaneGeometry(size, size);
+        const geo = new THREE.PlaneGeometry(1, 1);
         geo.rotateX(-Math.PI / 2);
         const mat = this.surfaceMaterial(size);
         const mesh = new THREE.Mesh(geo, mat);
+        mesh.scale.set(size,1,size);
         const c = this._center;
         if (c) mesh.position.set(c.x, 0, c.z);
         mesh.receiveShadow = true;
@@ -269,14 +272,19 @@ export class LightingRig {
         this.surfaceRelief=Number.isFinite(relief)?THREE.MathUtils.clamp(relief,0,100):35;
         if(this.ground) {
             if(previous===this.surface) {
-                this.ground.material.map?.repeat.set(this.ground.geometry.parameters.width/this.surfaceScale,this.ground.geometry.parameters.width/this.surfaceScale);
-                this.ground.material.bumpMap?.repeat.copy(this.ground.material.map.repeat);
+                this.updateSurfaceRepeat(this.ground.scale.x);
                 this.ground.material.bumpScale=this.surfaceRelief*.00006;
                 return;
             }
             this.ground.material.dispose();
-            this.ground.material=this.surfaceMaterial(this.ground.geometry.parameters.width);
+            this.ground.material=this.surfaceMaterial(this.ground.scale.x);
         }
+    }
+
+    updateSurfaceRepeat(size) {
+        const material=this.ground.material;
+        material.map?.repeat.set(size/this.surfaceScale,size/this.surfaceScale);
+        material.bumpMap?.repeat.copy(material.map.repeat);
     }
 
     surfaceMaterial(size) {

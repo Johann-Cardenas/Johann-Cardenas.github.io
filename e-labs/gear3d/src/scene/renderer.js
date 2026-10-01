@@ -140,6 +140,9 @@ export class Viewport {
         this.renderer.toneMappingExposure = 1.0;
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        // Camera movement does not change this directional-light depth map.
+        this.renderer.shadowMap.autoUpdate = false;
+        this.renderer.shadowMap.needsUpdate = true;
 
         this.scene = new THREE.Scene();
         this.cameras = new CameraRig(container);
@@ -226,7 +229,16 @@ export class Viewport {
             this.start();
         });
 
-        canvas.addEventListener('pointermove', (e) => this._handlePointer(e, 'hover'));
+        canvas.addEventListener('pointermove', (e) => {
+            if(e.buttons) return; // Orbiting does not need a tire raycast.
+            this._hoverEvent=e;
+            if(this._hoverFrame) return;
+            this._hoverFrame=requestAnimationFrame(()=>{
+                this._hoverFrame=0;
+                if(this._visible && !document.hidden && !this._contextLost)
+                    this._handlePointer(this._hoverEvent,'hover');
+            });
+        });
         canvas.addEventListener('pointerdown', (e) => { this._downAt = { x: e.clientX, y: e.clientY }; });
         canvas.addEventListener('pointerup', (e) => {
             // Only treat it as a click if the pointer barely moved — otherwise
@@ -309,7 +321,7 @@ export class Viewport {
         // the ratio makes it thinner in CSS terms and the grid fades out. It
         // has to be re-weighted, not just re-rendered.
         this.rebuildGrid();
-        this.invalidate();
+        this.invalidate(false);
     }
 
     /**
@@ -587,7 +599,11 @@ export class Viewport {
         if (p) this.setLighting({ ...p });
     }
 
-    invalidate() { this._dirty = true; }
+    /** Scene edits refresh shadows; camera/buffer changes reuse the depth map. */
+    invalidate(shadows=true) {
+        this._dirty = true;
+        if(shadows) this.renderer.shadowMap.needsUpdate=true;
+    }
 
     /**
      * Has the camera actually moved since the last frame?
@@ -833,6 +849,7 @@ export class Viewport {
 
     dispose() {
         this.stop();
+        cancelAnimationFrame(this._hoverFrame);
         clearTimeout(this._settleTimer);
         this._observer.disconnect();
         this._visibilityObserver?.disconnect();
