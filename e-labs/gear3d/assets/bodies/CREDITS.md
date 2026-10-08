@@ -64,10 +64,10 @@ Unknown aircraft families receive no substitute body.
 A319.glb, A321.glb, A330-200.glb, A330-300.glb, A220-100.glb,
 A220-300.glb, B777.glb, E170.glb, E190.glb, CRJ700.glb, CRJ900.glb,
 DHC8-400.glb, ATR42.glb, B757-200.glb, B757-300.glb, B767-200.glb,
-B767-300.glb and B767-400.glb are adapted from the FlightGear/FGMEMBERS
+B767-300.glb, B767-400.glb, B737-600.glb, B737-700.glb and B737-900.glb are adapted from the FlightGear/FGMEMBERS
 contributors' aircraft, distributed by
 [Flightradar24/fr24-3d-models](https://github.com/Flightradar24/fr24-3d-models).
-These eighteen derived assets are licensed under [GNU GPL v2](sources/GPL-2.0.txt).
+These twenty-one derived assets are licensed under [GNU GPL v2](sources/GPL-2.0.txt).
 The other assets retain their separately stated licenses above.
 
 | Body | Upstream authors/project | Corresponding editable source and original GLB |
@@ -86,6 +86,7 @@ The other assets retain their separately stated licenses above.
 | B757-200 / B757-300 | [FGMEMBERS 757-200](https://github.com/FGMEMBERS/757-200) | [b752-source.zip](sources/b752-source.zip), [b753-source.zip](sources/b753-source.zip) |
 | B767-200 / B767-400 | [FGMEMBERS 767](https://github.com/FGMEMBERS/767) | [b762-source.zip](sources/b762-source.zip), [b764-source.zip](sources/b764-source.zip) |
 | B767-300 | [FGMEMBERS 767-300](https://github.com/FGMEMBERS/767-300) | [b763-source.zip](sources/b763-source.zip) |
+| B737-600 / B737-700 / B737-900 | [FGMEMBERS 737NG](https://github.com/FGMEMBERS/737NG) | [b736-source.zip](sources/b736-source.zip), [b737-source.zip](sources/b737-source.zip), [b739-source.zip](sources/b739-source.zip) |
 
 Changes by CEE-406: glTF 1 converted to glTF 2 with gltf-pipeline 4.3.1;
 textures and materials removed; named gear nodes excluded; transforms baked;
@@ -117,3 +118,46 @@ non-winglet ACAP drawing. The 767-300 mesh represents the 300ER entry.
 Engine options and mesh details remain illustrative. Ground attitude uses
 the midpoint of each published tail-clearance range; attachment heights are
 visually calibrated. No source geometry is stretched to create another variant.
+
+The three 737 NG inputs use the same pinned FR24 commit. Original GLBs and
+all supplied per-model editable files are retained unchanged in the archives.
+The 737-600 input contains an orphaned, sub-centimeter nose decal primitive
+(`rootNode_mesh_92`) 3.527 source units ahead of the fuselage; that primitive
+is excluded so it cannot distort length-based placement. Other retained
+triangles are merged without simplification. Pixel comparisons use that
+explicitly filtered source, not the untouched input. Each body is scaled
+uniformly to published overall length. Wingspan, engine details and clearances
+remain illustrative. The 737-900 clearance floor raises the fitted tail about
+214 mm above its target; wheel geometry is independent of that adjustment.
+
+## Additional regional aircraft: editable AC3D sources (GPL v2)
+
+E175.glb, E195.glb, CRJ200.glb and CRJ1000.glb are adapted directly from
+FlightGear/FGMEMBERS editable AC3D aircraft. They are licensed under GNU GPL v2
+(CRJ1000's source permits v2 or later). These are four additional derivatives;
+the twenty-one FR24 derivatives above retain their original archives.
+
+| Body | Authors/project, pinned commit | Corresponding editable source |
+|---|---|---|
+| E175.glb / E195.glb | [FGMEMBERS E-jet-family](https://github.com/FGMEMBERS/E-jet-family/tree/45be9f83c479c5df6a03b117513aae740ffe9cc3) | [e175-ac3d-source.zip](sources/e175-ac3d-source.zip), [e195-ac3d-source.zip](sources/e195-ac3d-source.zip) |
+| CRJ200.glb | [FGMEMBERS CRJ-200](https://github.com/FGMEMBERS/CRJ-200/tree/393440fa957ea1763dc63c969363a24aa829cf6d) | [crj200-ac3d-source.zip](sources/crj200-ac3d-source.zip) |
+| CRJ1000.glb | [FGMEMBERS CRJ700-family](https://github.com/FGMEMBERS/CRJ700-family/tree/4862db2fe6e4ebab817ccf387c63f847bcf49c5a) | [crj1000-ac3d-source.zip](sources/crj1000-ac3d-source.zip) |
+
+Archives retain the original AC3D geometry, scene XML, supplied author/readme
+files and license. CRJ1000 includes its engine submodel and XML placement.
+[Input and archive hashes](sources/ac3d-manifest.json) pin every archived input.
+Changes: omit textures, simulation animations and named running-gear subtrees;
+triangulate polygons while preserving corners and winding; derive crease-based
+normals; apply rigid scene transforms; merge neutral surfaces without triangle
+simplification. Four non-simple projected CRJ200 wing quads use an explicit
+triangle fan, as recorded in the review. CRJ200 light-effect billboards and duplicate emissive overlays are excluded.
+Source XML engine heading/pitch offsets
+are mapped to the AC3D coordinate system. No variant is made by stretching another.
+
+The development reader, preparation script and pixel comparison tools are in
+`scripts/gear3d-body-assets/` in the CEE-406 repository. Pixel comparisons
+validate the converted, filtered source surfaces against the prepared GLB,
+not manufacturer CAD or the unconverted textured simulation. Runtime uniformly
+scales the illustrative body, keeps 150 mm minimum clearance and attaches its
+struts to retained surfaces/gear-bay roofs. The source archives are never fetched
+by the viewer. Source proportions and visual height remain approximate.

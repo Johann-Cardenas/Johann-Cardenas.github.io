@@ -2612,7 +2612,7 @@ test('every GPL-derived body ships its corresponding source, byte for byte', () 
     // re-encoded or truncated archive fails here rather than on a takedown.
     const manifest = readJson(join(BODIES, 'sources', 'manifest.json'));
     assert(existsSync(join(BODIES, 'sources', 'GPL-2.0.txt')), 'the license text itself is shipped');
-    assertEqual(manifest.length, 18, 'GPL source archives');
+    assertEqual(manifest.length, 21, 'GPL source archives');
     for (const m of manifest) {
         const path = join(BODIES, 'sources', m.sourceArchive);
         assert(existsSync(path), `${m.sourceArchive} is listed but not shipped`);
@@ -2655,6 +2655,60 @@ test('the page opens on what the controller opens on: body shown, annotations an
     const apply = mainFn('applyProject');
     assert(/showVehicleBody: p\.view\?\.showVehicleBody !== false/.test(apply), 'body defaults on when unstated');
     assert(/showGrid: p\.view\?\.showGrid === true/.test(apply), 'grid defaults off when unstated');
+});
+
+test('737 NG additions use the reviewed standard tire and highest weight columns', () => {
+    for (const [id, wb, mtow, taxi, main, nose, tire] of [
+        ['b737-600',442,144500,145000,182,206,'H43.5x16.0-21'],
+        ['b737-700',496,154500,155000,197,205,'H43.5x16.0-21'],
+        ['b737-900',676,174200,174700,204,163,'H44.5x16.5-21']
+    ]) {
+        const u=aircraftUnits.find(u=>u.id===id);
+        assert(u, `${id} exists`);
+        assert(validateUnit(u).ok, `${id} validates`);
+        assertClose(u.wheelbase,wb*25.4,1e-6,'wheelbase');
+        assertEqual(u.mainGearTrack,5715,'wheel-center track');
+        assertEqual(u.mtow.value,mtow,'takeoff');assertEqual(u.maxTaxiWeight.value,taxi,'taxi');
+        assertEqual(u.tirePressure.value,main,'main pressure');assertEqual(u.gears[0].pressure.value,nose,'nose pressure');
+        assertEqual(u.gears[1].tire,tire,'standard main tire');
+        const layout=resolveLayout(u);
+        assertEqual(layout.wheels.length,6,'six wheels');
+        for(const side of [-1,1])for(const across of [-1,1])
+            assert(layout.wheels.some(w=>Math.abs(w.x-wb*25.4)<1e-6 &&
+                Math.abs(w.y-(side*225/2+across*34/2)*25.4)<1e-6),'published main wheel centers');
+        assertClose(layout.wheels.reduce((sum,w)=>sum+w.loadKn,0),mtow*.45359237*9.80665/1000,1e-8,'load conservation');
+    }
+});
+
+test('regional hub aircraft retain their separately reviewed manufacturer choices', () => {
+    for (const [id,wb,track,pitch,mtow,taxi,main,nose] of [
+        ['e175-std',11400,5200,710,37500,37660,136,102],
+        ['e195-std',14640,5940,870,48790,48950,154,126],
+        ['crj200',11404.6,3175,441.96,47450,47700,160,125],
+        ['crj1000',18846.8,4074.16,622.808,91800,92300,193,143]
+    ]) {
+        const u=aircraftUnits.find(u=>u.id===id);
+        assert(u && validateUnit(u).ok, `${id} exists and validates`);
+        assertEqual(u.wheelbase,wb,'wheelbase');assertEqual(u.mainGearTrack,track,'track');
+        assertEqual(u.gears[1].dualSpacing,pitch,'main pitch');
+        assertEqual(u.mtow.value,mtow,'MTOW');assertEqual(u.maxTaxiWeight.value,taxi,'taxi weight');
+        assertEqual(u.tirePressure.value,main,'main pressure');assertEqual(u.gears[0].pressure.value,nose,'nose pressure');
+        assertEqual(resolveLayout(u).wheels.length,6,'six wheels');
+    }
+    assert(aircraftUnits.find(u=>u.id==='crj1000').tirePressure.basis.includes('UNLOADED'),'pressure convention is explicit');
+    assert(aircraftUnits.find(u=>u.id==='crj200').assumedFields.some(s=>s.startsWith('mainGearTrack')),'track discrepancy is explicit');
+});
+
+test('the four direct AC3D bodies carry corresponding editable source archives', () => {
+    const manifest=readJson(join(BODIES,'sources','ac3d-manifest.json'));
+    assertEqual(manifest.length,4,'AC3D source archive count');
+    for(const source of manifest) {
+        assert(/^[a-f0-9]{40}$/.test(source.commit),'source commit is pinned');
+        assert(source.files.some(f=>/license|copying/i.test(f.path)),'license is archived');
+        assert(source.files.some(f=>f.path.endsWith('.ac')),'editable geometry is archived');
+        assert(source.files.some(f=>f.path.endsWith('.xml')),'scene placement is archived');
+        assertEqual(createHash('sha256').update(readFileSync(join(BODIES,'sources',source.sourceArchive))).digest('hex'),source.archiveSha256,'archive hash');
+    }
 });
 
 process.exit(summary());

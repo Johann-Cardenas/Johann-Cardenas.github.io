@@ -1,0 +1,122 @@
+[
+  {
+    "model": "e175",
+    "bodyId": "E175",
+    "repo": "FGMEMBERS/E-jet-family",
+    "commit": "45be9f83c479c5df6a03b117513aae740ffe9cc3",
+    "sourceArchive": "e175-ac3d-source.zip",
+    "archiveSha256": "f5b99f3ec4e4b6940525fdfcb1db92d20d2c93e3c45521ae07d653409f4a6194",
+    "files": [
+      {
+        "path": "Models/erj175.ac",
+        "sha256": "578ecd8e5dac5cd492e8486b3cb47530470ffea01d9d115e14cdea33546eff40"
+      },
+      {
+        "path": "XMLs/ERJ-175-Model.xml",
+        "sha256": "4b4f9aa2eb16db5cbb577d0b0dd61f8536d15afb38cb2c00e36911275b575472"
+      },
+      {
+        "path": "XMLs/ERJ-175.xml",
+        "sha256": "cb354a62c5c27afb31bb0fa4a31f5dd2217c1e972585c9424407a22800e93729"
+      },
+      {
+        "path": "License.txt",
+        "sha256": "da0eca0fb517ac939d167924c9d4b3f8750a6b7191932ef2cb145acfa624ac7e"
+      },
+      {
+        "path": "README.txt",
+        "sha256": "a817263f709c0d769b6dc138e624c236ff11a25ac7fe21b3db50fcac0a0ae104"
+      }
+    ]
+  },
+  {
+    "model": "e195",
+    "bodyId": "E195",
+    "repo": "FGMEMBERS/E-jet-family",
+    "commit": "45be9f83c479c5df6a03b117513aae740ffe9cc3",
+    "sourceArchive": "e195-ac3d-source.zip",
+    "archiveSha256": "448b0e1d5b077f8a460b2088deb8f9ec9547b9425338c348a3c7a54c786f673c",
+    "files": [
+      {
+        "path": "Models/erj195.ac",
+        "sha256": "18839e18a9cafd46c5a18d83a1899d8db8a0b2c7077f0f7c646e3f29ace444c0"
+      },
+      {
+        "path": "XMLs/ERJ-195-Model.xml",
+        "sha256": "9f7a4c7274ad4a194420c33bc4a61403216446b0a7e8a2d25b23e6a75150be9f"
+      },
+      {
+        "path": "XMLs/ERJ-195.xml",
+        "sha256": "a779b592e5497cc9071272eaec4d171a5be5918c559bad452db2911928b0fc86"
+      },
+      {
+        "path": "License.txt",
+        "sha256": "da0eca0fb517ac939d167924c9d4b3f8750a6b7191932ef2cb145acfa624ac7e"
+      },
+      {
+        "path": "README.txt",
+        "sha256": "a817263f709c0d769b6dc138e624c236ff11a25ac7fe21b3db50fcac0a0ae104"
+      }
+    ]
+  },
+  {
+    "model": "crj200",
+    "bodyId": "CRJ200",
+    "repo": "FGMEMBERS/CRJ-200",
+    "commit": "393440fa957ea1763dc63c969363a24aa829cf6d",
+    "sourceArchive": "crj200-ac3d-source.zip",
+    "archiveSha256": "e152c2831ac5211964179fa572b5f94a197bad4b492feba9f73465d179aaec8e",
+    "files": [
+      {
+        "path": "Models/crj-200.ac",
+        "sha256": "3f401120cb3300992754ff2dc871b70a27e97ba3d0a7cb4b4c2a60bed00f8f61"
+      },
+      {
+        "path": "Models/CRJ-200.xml",
+        "sha256": "2b4db93ad049cc9fdb3e6fa7c60f5c945e05421d6d4871b9e2d368d6373365df"
+      },
+      {
+        "path": "COPYING.txt",
+        "sha256": "da0eca0fb517ac939d167924c9d4b3f8750a6b7191932ef2cb145acfa624ac7e"
+      },
+      {
+        "path": "README.txt",
+        "sha256": "8e77ae2f6d21f9d8d16afebe1e59c98a58042c6de8477893f402e450c0416fdd"
+      }
+    ]
+  },
+  {
+    "model": "crj1000",
+    "bodyId": "CRJ1000",
+    "repo": "FGMEMBERS/CRJ700-family",
+    "commit": "4862db2fe6e4ebab817ccf387c63f847bcf49c5a",
+    "sourceArchive": "crj1000-ac3d-source.zip",
+    "archiveSha256": "27d3277c1609ffea091880aef41864e4cdc9229e3191cb39c8f549360f48b6e7",
+    "files": [
+      {
+        "path": "Models/CRJ1000.ac",
+        "sha256": "322d4feacbd531dee82d859f998c020a2659ea1d665e858ca770273237c71da9"
+      },
+      {
+        "path": "Models/CRJ1000.xml",
+        "sha256": "978c0930121f2db75c5e6aca46a284ae50b61bd77d61c7149c3ace7524928b7d"
+      },
+      {
+        "path": "Models/CRJ700-engine.ac",
+        "sha256": "6180da399ea52a7ab4039774212f882ebc64ef6eee2917755562f9fc830332bd"
+      },
+      {
+        "path": "Models/CRJ700-engine.xml",
+        "sha256": "3db14be937eb8f0c61d643dfaa2d7dd6fd1ad21c0929e87a950399a894706409"
+      },
+      {
+        "path": "LICENSE",
+        "sha256": "9f2ea023bb32f950ae91990487ea9f3d63263851bd77bac5fd01a82419421d90"
+      },
+      {
+        "path": "README.md",
+        "sha256": "8ff1eb068feff3edd9fe28181af9cbeec98995fd6fd64ed2b8f0fd1a3a1e02b8"
+      }
+    ]
+  }
+]

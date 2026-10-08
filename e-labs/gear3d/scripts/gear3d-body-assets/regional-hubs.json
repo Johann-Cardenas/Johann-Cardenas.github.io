@@ -1,0 +1,135 @@
+[
+  {
+    "id": "e175-std",
+    "manufacturer": "Embraer",
+    "model": "E175 STD",
+    "body": "E175",
+    "mtow": 37500,
+    "taxi": 37660,
+    "massUnit": "kg",
+    "wheelbase": 11400,
+    "track": 5200,
+    "mainPitch": 710,
+    "nosePitch": 400,
+    "mainTire": "H38x13-18",
+    "noseTire": "24x7.7-10",
+    "pressure": 136,
+    "nosePressure": 102,
+    "length": 31680,
+    "noseOffset": 4130,
+    "tailHeight": 9610,
+    "attachments": {
+      "nose": 4480,
+      "main": 1690
+    },
+    "url": "https://portalfly.flyembraer.com/",
+    "reference": "Embraer APM-2259 Rev 24, July 24 2026; PDF pages 16 (STD weights), 18 (pre-mod winglet dimensions), 25 (STD forward-CG ramp clearances), 106 (footprint and pressures). Public Airport Planning menu: E175 APM_APM_175 1.PDF.",
+    "pressureNote": "Loaded nominal lower bound of the published -0/+10 psi service band; STD ramp-weight column.",
+    "bodyNote": "Pre-Mod SB 170-57-0058 winglet airframe. Length and nose overhang from Figure 2.1; tail reference from Table 2.2 at STD ramp weight, forward CG. Rigid attitude and attachment heights are illustrative, not a CG or suspension simulation. Nose attachment reaches the retained gear-bay roof where the source has an open belly cutout. The renderer may raise the target attitude to maintain 150 mm clearance; neither attachment nor height changes wheel centers.",
+    "assumptions": [
+      "bodyFit.attachmentHeights (illustrative source-mesh attachments)"
+    ]
+  },
+  {
+    "id": "e195-std",
+    "manufacturer": "Embraer",
+    "model": "E195 STD",
+    "body": "E195",
+    "mtow": 48790,
+    "taxi": 48950,
+    "massUnit": "kg",
+    "wheelbase": 14640,
+    "track": 5940,
+    "mainPitch": 870,
+    "nosePitch": 400,
+    "mainTire": "H41x16-20",
+    "noseTire": "24x7.7-10",
+    "pressure": 154,
+    "nosePressure": 126,
+    "length": 38670,
+    "noseOffset": 4130,
+    "tailHeight": 10410,
+    "attachments": {
+      "nose": 4460,
+      "main": 1760
+    },
+    "url": "https://portalfly.flyembraer.com/",
+    "reference": "Embraer APM-1997 Rev 21, November 29 2024; PDF pages 16 (STD weights), 18 (dimensions), 24 (STD forward-CG ramp clearances), 102 (footprint and pressures). Public Airport Planning menu: E195 APM_APM_195 1.pdf.",
+    "pressureNote": "Loaded nominal lower bound of the published -0/+10 psi service band; STD ramp-weight column.",
+    "bodyNote": "Dedicated first-generation E195 airframe, not E195-E2. Length from Figure 2.1; tail reference from Table 2.2 at STD ramp weight, forward CG. Nose overhang is an illustrative 4.13 m family alignment, not dimensioned on the consulted E195 drawing. Attachment heights are illustrative. Nose attachment reaches the retained gear-bay roof where the source has an open belly cutout. The renderer may raise the target attitude to maintain 150 mm clearance; neither attachment nor height changes wheel centers.",
+    "assumptions": [
+      "bodyFit.noseOffset (illustrative family-mesh alignment)",
+      "bodyFit.attachmentHeights (illustrative source-mesh attachments)"
+    ]
+  },
+  {
+    "id": "crj200",
+    "manufacturer": "Bombardier / Canadair",
+    "model": "CRJ200 (standard)",
+    "body": "CRJ200",
+    "mtow": 47450,
+    "taxi": 47700,
+    "massUnit": "lb",
+    "wheelbase": 11404.6,
+    "track": 3175,
+    "mainPitch": 441.96,
+    "nosePitch": 292.1,
+    "mainTire": "H29x9-15",
+    "noseTire": "18x4.4-12",
+    "pressure": 160,
+    "nosePressure": 125,
+    "length": 26771.6,
+    "noseOffset": 1800,
+    "tailHeight": 6260,
+    "attachments": {
+      "nose": 1010,
+      "main": 1110
+    },
+    "url": "https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT1ES4H.pdf/CRJ200APMR8.pdf",
+    "reference": "Bombardier CSP A-020 Rev 8, January 10 2016; PDF pages 22 (standard CRJ100/200 weight column), 24 (general dimensions), 26 (ER/LR clearance ranges), 97 (standard loaded tire pressures and footprint).",
+    "pressureNote": "Loaded/in-service values for the standard 47,700 lb taxi-weight column; ER and LR service ranges are not mixed into this entry.",
+    "bodyNote": "Dedicated CRJ200 source mesh. Overall length 87 ft 10 in from general drawing. Nose overhang is an illustrative 1.8 m source fit. Tail reference is an illustrative midpoint of the related ER clearance range (6.20-6.32 m), not a standard-weight measured attitude. Attachments are illustrative. Nose attachment reaches the retained gear-bay roof where the source has an open belly cutout. The renderer may raise the target attitude to maintain 150 mm clearance; neither attachment nor height changes wheel centers.",
+    "assumptions": [
+      "mainGearTrack (125 in footprint selected; Aircrafter gives 128.6 in and the general front view suggests 124 in)",
+      "bodyFit.noseOffset (illustrative source-mesh alignment)",
+      "bodyFit.tailHeight (illustrative related ER clearance midpoint)",
+      "bodyFit.attachmentHeights (illustrative source-mesh attachments)"
+    ],
+    "discrepancy": "The footprint is not to scale: the 158 in outside dimension does not reconcile with 125 in track, 17.4 in pitch and 9 in tire width. The selected manufacturer footprint is explicit; the Aircrafter/FAARFIELD-derived 128.6 in track is a conflicting cross-check. No outer width is asserted."
+  },
+  {
+    "id": "crj1000",
+    "manufacturer": "Bombardier / Canadair",
+    "model": "CRJ1000",
+    "body": "CRJ1000",
+    "mtow": 91800,
+    "taxi": 92300,
+    "massUnit": "lb",
+    "wheelbase": 18846.8,
+    "track": 4074.16,
+    "mainPitch": 622.808,
+    "nosePitch": 309.88,
+    "mainTire": "H36x11.5-19",
+    "noseTire": "H20.5x6.75-10",
+    "pressure": 193,
+    "nosePressure": 143,
+    "length": 39202.36,
+    "noseOffset": 1730,
+    "tailHeight": 7649,
+    "attachments": {
+      "nose": 3780,
+      "main": 2090
+    },
+    "url": "https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT82VLY.pdf/CRJ1000APMR8.pdf",
+    "reference": "Bombardier CSP D-020 Rev 8, December 17 2015; PDF pages 25 (weights), 31 (dimensions), 108 (footprint and unloaded tire pressures).",
+    "pressureNote": "Manufacturer UNLOADED inflation values, not loaded service pressures. Uniform contact pressure equated to inflation is a modeling approximation.",
+    "bodyNote": "Dedicated CRJ1000 source, with both CF34 engine submodels at the archived XML offsets. Overall length uses 1543.4 in rather than its inconsistent 39.133 m conversion. Tail reference 7.649 m and nose overhang 1.73 m from general drawing. Rigid source fit and attachments remain illustrative. Nose attachment reaches the retained gear-bay roof where the source has an open belly cutout. The renderer may raise the target attitude to maintain 150 mm clearance; neither attachment nor height changes wheel centers.",
+    "assumptions": [
+      "wheelbase (742 in footprint selected over inconsistent 18.80 m conversion and inherited fuselage station labels)",
+      "mainGearTrack (160.40 in footprint selected over 160 in general drawing)",
+      "bodyFit.length (1543.4 in selected over inconsistent 39.133 m conversion)",
+      "bodyFit.attachmentHeights (illustrative source-mesh attachments)"
+    ],
+    "discrepancy": "The footprint retains FS228.40/FS819.38 from a shorter variant; their difference does not reproduce its dimensioned 742 in wheelbase. The 160.40 in footprint track differs slightly from the 160 in general drawing and 160.18 in workbook. Imperial footprint labels govern."
+  }
+]

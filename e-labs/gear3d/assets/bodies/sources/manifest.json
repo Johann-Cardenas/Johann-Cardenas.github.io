@@ -135,5 +135,26 @@
     "sourceArchive": "b764-source.zip",
     "archiveSha256": "0e783a89e1f3f252fd875f02624490858c66125cc4826031d3b4fe1609d0646a",
     "commit": "dd53267690c6a4ecbb290a3acf0284333a5d68a9"
+  },
+  {
+    "model": "b736",
+    "url": "https://raw.githubusercontent.com/Flightradar24/fr24-3d-models/dd53267690c6a4ecbb290a3acf0284333a5d68a9/models/b736.glb",
+    "sha256": "2769301de449d5dc5f0b96eb2b861b2f241b1237aee83780298cb1b19cfbaac5",
+    "sourceArchive": "b736-source.zip",
+    "archiveSha256": "329e0a7610213220afaf325cb0a3ad67a69fafe65524efd421a7089d2bcd7c7d"
+  },
+  {
+    "model": "b737",
+    "url": "https://raw.githubusercontent.com/Flightradar24/fr24-3d-models/dd53267690c6a4ecbb290a3acf0284333a5d68a9/models/b737.glb",
+    "sha256": "ad66bb64ed9c3691377a657bf69ec2893b99314069f088ee3700d09f8f85ec19",
+    "sourceArchive": "b737-source.zip",
+    "archiveSha256": "8d73b9c18c167539c0b08b75c59840ce145c02c9282956cdcfa4988617680062"
+  },
+  {
+    "model": "b739",
+    "url": "https://raw.githubusercontent.com/Flightradar24/fr24-3d-models/dd53267690c6a4ecbb290a3acf0284333a5d68a9/models/b739.glb",
+    "sha256": "6c3d94ae131949fa93c5f8207bd80c5897c6946a13e3810cb6610b0d4194bad7",
+    "sourceArchive": "b739-source.zip",
+    "archiveSha256": "8b2b4342189cc08f597a89400b9f96da3250c9e8554c7a7c515406e492606265"
   }
 ]

@@ -495,3 +495,27 @@ manual pages, weight variants, corrected geometry, model licensing, and known
 visual differences. Reproduce the catalog with `scripts/build-gear3d-boeing.mjs` in
 [the CEE-406 repository](https://github.com/ictuillinois/CEE-406/tree/main/scripts), where this expansion and its
 reviews were made.
+
+## Boeing 737 NG expansion
+
+`aircraft/boeing-737ng.json` adds 737-600, 737-700 and 737-900 from Boeing
+D6-58325-7 Rev C (October 2025). The directly dimensioned 18 ft 9 in
+wheel-center track, 34 in main pitch and 16 in nose pitch supersede any
+outer-width derivation for these additions. The existing 737-800 remains
+unchanged. Standard tires and pressures use the matching maximum taxi-weight
+columns; loads use the separate takeoff weights and assumed 95% main split.
+The 737-600 optional larger tire is not used above its 144,000 lb taxi limit.
+The 737-900 entry is not a 900ER or a MAX 9.
+
+See [the manufacturer, mesh and validation review](https://github.com/ictuillinois/CEE-406/blob/main/docs/gear3d-body-review/boeing-737ng.md).
+
+## Regional and medium-hub expansion
+
+`aircraft/regional-hubs.json` adds E175 STD, E195 STD, standard CRJ200 and
+CRJ1000. Manufacturer loading variants, tire sizes and measurement conventions
+are individually reviewed. CRJ1000 uses published unloaded inflation pressures;
+CRJ200 track conflicts and CRJ1000 inherited station/unit-conversion conflicts
+are explicit assumptions, not silently reconciled data. Each has a dedicated
+GPL FlightGear mesh, corresponding editable AC3D/XML source and recorded hashes.
+
+See [the manufacturer and mesh review](https://github.com/ictuillinois/CEE-406/blob/main/docs/gear3d-body-review/regional-hubs.md).

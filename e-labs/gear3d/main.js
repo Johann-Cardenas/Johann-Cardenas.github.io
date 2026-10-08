@@ -1255,7 +1255,7 @@ function renderResolutionReadout() {
     const el = $('g3-res-value');
     const note = $('g3-res-note');
     if (!el || !app.viewport) return;
-    if(app.assembly && app.store.view.quality==='auto' && app.assembly.mobileBudgetProfile!==app.viewport.mobileBudget) rebuild();
+    if(app.assembly && app.store.view.quality==='auto' && app.assembly.mobileBudgetProfile!==app.viewport.mobileBudget) rebuild({ frame: true });
     const r = app.viewport.renderResolution();
     el.textContent = `${r.width} × ${r.height}`;
     const mp = r.megapixels;

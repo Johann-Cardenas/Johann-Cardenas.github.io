@@ -1,0 +1,317 @@
+{
+  "schemaVersion": "1.0",
+  "units": [
+    {
+      "schemaVersion": "1.0",
+      "id": "b737-600",
+      "domain": "aircraft",
+      "manufacturer": "Boeing",
+      "model": "737-600",
+      "gearDesignation": "D",
+      "mtow": {
+        "value": 144500,
+        "unit": "lb",
+        "basis": "Boeing D6-58325-7 Rev C (October 2025), PDF pages 23, 30, 38 (weights, dimensions, clearances); footprint section 7.2.1, PDF page 200. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf Highest listed takeoff-weight option."
+      },
+      "maxTaxiWeight": {
+        "value": 145000,
+        "unit": "lb",
+        "basis": "Boeing D6-58325-7 Rev C (October 2025), PDF pages 23, 30, 38 (weights, dimensions, clearances); footprint section 7.2.1, PDF page 200. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 11226.8,
+      "mainGearTrack": 5715,
+      "tirePressure": {
+        "value": 182,
+        "unit": "psi",
+        "basis": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 145,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.tailHeight (midpoint of published clearance range; illustrative rigid attitude)",
+        "bodyFit.attachmentHeights (illustrative mesh attachments)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 406.4,
+          "tandemSpacing": null,
+          "tire": "27x7.75-15",
+          "pressure": {
+            "value": 206,
+            "unit": "psi",
+            "basis": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 145,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+          },
+          "source": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 145,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 11226.8,
+          "y": -2857.5,
+          "dualSpacing": 863.6,
+          "tandemSpacing": null,
+          "tire": "H43.5x16.0-21",
+          "source": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 145,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 11226.8,
+          "y": 2857.5,
+          "dualSpacing": 863.6,
+          "tandemSpacing": null,
+          "tire": "H43.5x16.0-21",
+          "source": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 145,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 31242,
+        "noseOffset": 4089.4,
+        "tailHeight": 12575,
+        "attachmentHeights": {
+          "nose": 3100,
+          "main": 2680
+        },
+        "source": "Boeing D6-58325-7 Rev C (October 2025), PDF pages 23, 30, 38 (weights, dimensions, clearances); footprint section 7.2.1, PDF page 200. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf Overall length includes the tail tip, not the shorter fuselage-only dimension. Nose overhang is 13 ft 5 in. Tail-height target is the midpoint of the published range; the renderer raises the body if needed to retain 150 mm minimum clearance. Strut attachments are illustrative and calibrated to the prepared mesh."
+      },
+      "notes": "Dedicated variant FlightGear/Flightradar24 airframe; source proportions and wing details are illustrative, not manufacturer CAD. Track is the directly dimensioned 18 ft 9 in wheel-center track, not the outer tire width. Standard tire pressures match the selected taxi-weight column; wheel loads use MTOW and an assumed 95% main-gear split. Source proportions differ from the manual: uniform scaling fixes overall length, not exact wingspan or engine clearance. The optional larger main tire is limited to 144,000 lb taxi weight and is not used at this 145,000 lb option. ",
+      "sources": [
+        {
+          "id": "boeing-737ng-acap",
+          "title": "Next-Generation 737 Airplane Characteristics for Airport Planning",
+          "publisher": "Boeing Commercial Airplanes",
+          "year": 2025,
+          "url": "https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf",
+          "note": "Boeing D6-58325-7 Rev C (October 2025), PDF pages 23, 30, 38 (weights, dimensions, clearances); footprint section 7.2.1, PDF page 200. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "b737-700",
+      "domain": "aircraft",
+      "manufacturer": "Boeing",
+      "model": "737-700",
+      "gearDesignation": "D",
+      "mtow": {
+        "value": 154500,
+        "unit": "lb",
+        "basis": "Boeing D6-58325-7 Rev C (October 2025), PDF pages 24, 32, 38 (weights, dimensions, clearances); footprint section 7.2.1, PDF page 200. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf Highest listed takeoff-weight option."
+      },
+      "maxTaxiWeight": {
+        "value": 155000,
+        "unit": "lb",
+        "basis": "Boeing D6-58325-7 Rev C (October 2025), PDF pages 24, 32, 38 (weights, dimensions, clearances); footprint section 7.2.1, PDF page 200. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 12598.4,
+      "mainGearTrack": 5715,
+      "tirePressure": {
+        "value": 197,
+        "unit": "psi",
+        "basis": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 155,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.tailHeight (midpoint of published clearance range; illustrative rigid attitude)",
+        "bodyFit.attachmentHeights (illustrative mesh attachments)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 406.4,
+          "tandemSpacing": null,
+          "tire": "27x7.75-15",
+          "pressure": {
+            "value": 205,
+            "unit": "psi",
+            "basis": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 155,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+          },
+          "source": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 155,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 12598.4,
+          "y": -2857.5,
+          "dualSpacing": 863.6,
+          "tandemSpacing": null,
+          "tire": "H43.5x16.0-21",
+          "source": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 155,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 12598.4,
+          "y": 2857.5,
+          "dualSpacing": 863.6,
+          "tandemSpacing": null,
+          "tire": "H43.5x16.0-21",
+          "source": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 155,000 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 33629.6,
+        "noseOffset": 4089.4,
+        "tailHeight": 12560,
+        "attachmentHeights": {
+          "nose": 2860,
+          "main": 2410
+        },
+        "source": "Boeing D6-58325-7 Rev C (October 2025), PDF pages 24, 32, 38 (weights, dimensions, clearances); footprint section 7.2.1, PDF page 200. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf Overall length includes the tail tip, not the shorter fuselage-only dimension. Nose overhang is 13 ft 5 in. Tail-height target is the midpoint of the published range; the renderer raises the body if needed to retain 150 mm minimum clearance. Strut attachments are illustrative and calibrated to the prepared mesh."
+      },
+      "notes": "Dedicated variant FlightGear/Flightradar24 airframe; source proportions and wing details are illustrative, not manufacturer CAD. Track is the directly dimensioned 18 ft 9 in wheel-center track, not the outer tire width. Standard tire pressures match the selected taxi-weight column; wheel loads use MTOW and an assumed 95% main-gear split. Source proportions differ from the manual: uniform scaling fixes overall length, not exact wingspan or engine clearance. ",
+      "sources": [
+        {
+          "id": "boeing-737ng-acap",
+          "title": "Next-Generation 737 Airplane Characteristics for Airport Planning",
+          "publisher": "Boeing Commercial Airplanes",
+          "year": 2025,
+          "url": "https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf",
+          "note": "Boeing D6-58325-7 Rev C (October 2025), PDF pages 24, 32, 38 (weights, dimensions, clearances); footprint section 7.2.1, PDF page 200. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "b737-900",
+      "domain": "aircraft",
+      "manufacturer": "Boeing",
+      "model": "737-900",
+      "gearDesignation": "D",
+      "mtow": {
+        "value": 174200,
+        "unit": "lb",
+        "basis": "Boeing D6-58325-7 Rev C (October 2025), PDF pages 26, 36, 39 (weights, dimensions, clearances); footprint section 7.2.1, PDF page 200. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf Highest listed takeoff-weight option."
+      },
+      "maxTaxiWeight": {
+        "value": 174700,
+        "unit": "lb",
+        "basis": "Boeing D6-58325-7 Rev C (October 2025), PDF pages 26, 36, 39 (weights, dimensions, clearances); footprint section 7.2.1, PDF page 200. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 17170.4,
+      "mainGearTrack": 5715,
+      "tirePressure": {
+        "value": 204,
+        "unit": "psi",
+        "basis": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 174,700 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.tailHeight (midpoint of published clearance range; illustrative rigid attitude)",
+        "bodyFit.attachmentHeights (illustrative mesh attachments)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 406.4,
+          "tandemSpacing": null,
+          "tire": "27x7.75-15",
+          "pressure": {
+            "value": 163,
+            "unit": "psi",
+            "basis": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 174,700 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+          },
+          "source": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 174,700 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 17170.4,
+          "y": -2857.5,
+          "dualSpacing": 863.6,
+          "tandemSpacing": null,
+          "tire": "H44.5x16.5-21",
+          "source": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 174,700 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 17170.4,
+          "y": 2857.5,
+          "dualSpacing": 863.6,
+          "tandemSpacing": null,
+          "tire": "H44.5x16.5-21",
+          "source": "Boeing D6-58325-7 Rev C, section 7.2.1, PDF page 200; standard tires, 174,700 lb taxi-weight column. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 42113.2,
+        "noseOffset": 4089.4,
+        "tailHeight": 12495,
+        "attachmentHeights": {
+          "nose": 2250,
+          "main": 1700
+        },
+        "source": "Boeing D6-58325-7 Rev C (October 2025), PDF pages 26, 36, 39 (weights, dimensions, clearances); footprint section 7.2.1, PDF page 200. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf Overall length includes the tail tip, not the shorter fuselage-only dimension. Nose overhang is 13 ft 5 in. Tail-height target is the midpoint of the published range; the renderer raises the body if needed to retain 150 mm minimum clearance. Strut attachments are illustrative and calibrated to the prepared mesh."
+      },
+      "notes": "Dedicated variant FlightGear/Flightradar24 airframe; source proportions and wing details are illustrative, not manufacturer CAD. Track is the directly dimensioned 18 ft 9 in wheel-center track, not the outer tire width. Standard tire pressures match the selected taxi-weight column; wheel loads use MTOW and an assumed 95% main-gear split. Source proportions differ from the manual: uniform scaling fixes overall length, not exact wingspan or engine clearance. This is the 737-900, not the heavier 737-900ER or 737 MAX 9. ",
+      "sources": [
+        {
+          "id": "boeing-737ng-acap",
+          "title": "Next-Generation 737 Airplane Characteristics for Airport Planning",
+          "publisher": "Boeing Commercial Airplanes",
+          "year": 2025,
+          "url": "https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf",
+          "note": "Boeing D6-58325-7 Rev C (October 2025), PDF pages 26, 36, 39 (weights, dimensions, clearances); footprint section 7.2.1, PDF page 200. https://www.boeing.com/content/dam/boeing/v2/airports/acaps/737NG_REV_C.pdf"
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    }
+  ]
+}

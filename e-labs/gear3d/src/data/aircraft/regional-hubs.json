@@ -1,0 +1,434 @@
+{
+  "schemaVersion": "1.0",
+  "units": [
+    {
+      "schemaVersion": "1.0",
+      "id": "e175-std",
+      "domain": "aircraft",
+      "manufacturer": "Embraer",
+      "model": "E175 STD",
+      "gearDesignation": "D",
+      "mtow": {
+        "value": 37500,
+        "unit": "kg",
+        "basis": "Embraer APM-2259 Rev 24, July 24 2026; PDF pages 16 (STD weights), 18 (pre-mod winglet dimensions), 25 (STD forward-CG ramp clearances), 106 (footprint and pressures). Public Airport Planning menu: E175 APM_APM_175 1.PDF. https://portalfly.flyembraer.com/"
+      },
+      "maxTaxiWeight": {
+        "value": 37660,
+        "unit": "kg",
+        "basis": "Embraer APM-2259 Rev 24, July 24 2026; PDF pages 16 (STD weights), 18 (pre-mod winglet dimensions), 25 (STD forward-CG ramp clearances), 106 (footprint and pressures). Public Airport Planning menu: E175 APM_APM_175 1.PDF. https://portalfly.flyembraer.com/"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 11400,
+      "mainGearTrack": 5200,
+      "tirePressure": {
+        "value": 136,
+        "unit": "psi",
+        "basis": "Embraer APM-2259 Rev 24, July 24 2026; PDF pages 16 (STD weights), 18 (pre-mod winglet dimensions), 25 (STD forward-CG ramp clearances), 106 (footprint and pressures). Public Airport Planning menu: E175 APM_APM_175 1.PDF. https://portalfly.flyembraer.com/ Loaded nominal lower bound of the published -0/+10 psi service band; STD ramp-weight column."
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.attachmentHeights (illustrative source-mesh attachments)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 400,
+          "tandemSpacing": null,
+          "tire": "24x7.7-10",
+          "pressure": {
+            "value": 102,
+            "unit": "psi",
+            "basis": "Embraer APM-2259 Rev 24, July 24 2026; PDF pages 16 (STD weights), 18 (pre-mod winglet dimensions), 25 (STD forward-CG ramp clearances), 106 (footprint and pressures). Public Airport Planning menu: E175 APM_APM_175 1.PDF. https://portalfly.flyembraer.com/ Loaded nominal lower bound of the published -0/+10 psi service band; STD ramp-weight column."
+          },
+          "source": "Embraer APM-2259 Rev 24, July 24 2026; PDF pages 16 (STD weights), 18 (pre-mod winglet dimensions), 25 (STD forward-CG ramp clearances), 106 (footprint and pressures). Public Airport Planning menu: E175 APM_APM_175 1.PDF. https://portalfly.flyembraer.com/"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 11400,
+          "y": -2600,
+          "dualSpacing": 710,
+          "tandemSpacing": null,
+          "tire": "H38x13-18",
+          "source": "Embraer APM-2259 Rev 24, July 24 2026; PDF pages 16 (STD weights), 18 (pre-mod winglet dimensions), 25 (STD forward-CG ramp clearances), 106 (footprint and pressures). Public Airport Planning menu: E175 APM_APM_175 1.PDF. https://portalfly.flyembraer.com/"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 11400,
+          "y": 2600,
+          "dualSpacing": 710,
+          "tandemSpacing": null,
+          "tire": "H38x13-18",
+          "source": "Embraer APM-2259 Rev 24, July 24 2026; PDF pages 16 (STD weights), 18 (pre-mod winglet dimensions), 25 (STD forward-CG ramp clearances), 106 (footprint and pressures). Public Airport Planning menu: E175 APM_APM_175 1.PDF. https://portalfly.flyembraer.com/"
+        }
+      ],
+      "bodyFit": {
+        "length": 31680,
+        "noseOffset": 4130,
+        "tailHeight": 9610,
+        "attachmentHeights": {
+          "nose": 4480,
+          "main": 1690
+        },
+        "source": "Pre-Mod SB 170-57-0058 winglet airframe. Length and nose overhang from Figure 2.1; tail reference from Table 2.2 at STD ramp weight, forward CG. Rigid attitude and attachment heights are illustrative, not a CG or suspension simulation. Nose attachment reaches the retained gear-bay roof where the source has an open belly cutout. The renderer may raise the target attitude to maintain 150 mm clearance; neither attachment nor height changes wheel centers. Embraer APM-2259 Rev 24, July 24 2026; PDF pages 16 (STD weights), 18 (pre-mod winglet dimensions), 25 (STD forward-CG ramp clearances), 106 (footprint and pressures). Public Airport Planning menu: E175 APM_APM_175 1.PDF. https://portalfly.flyembraer.com/"
+      },
+      "notes": "Manufacturer-selected loading variant; takeoff and ramp/taxi weights are separate. Loads use MTOW with an assumed 95% main-gear allocation. Loaded nominal lower bound of the published -0/+10 psi service band; STD ramp-weight column.  Dedicated FlightGear airframe; uniformly scaled illustrative overlay, not manufacturer CAD. Source proportions and engine details are retained, not used for engineering dimensions.",
+      "sources": [
+        {
+          "id": "manufacturer-apm",
+          "title": "Embraer E175 STD Airport Planning Manual",
+          "publisher": "Embraer",
+          "url": "https://portalfly.flyembraer.com/",
+          "note": "Embraer APM-2259 Rev 24, July 24 2026; PDF pages 16 (STD weights), 18 (pre-mod winglet dimensions), 25 (STD forward-CG ramp clearances), 106 (footprint and pressures). Public Airport Planning menu: E175 APM_APM_175 1.PDF."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        },
+        {
+          "id": "goodyear",
+          "title": "Goodyear Aviation Databook 2022",
+          "publisher": "The Goodyear Tire & Rubber Company",
+          "url": "https://www.goodyearaviation.com/resources/pdf/Aviation-Databook-2022.pdf",
+          "note": "The 24x7.7 nose tire uses a 10-inch rim; normalized to 24x7.7-10 without changing its construction."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "e195-std",
+      "domain": "aircraft",
+      "manufacturer": "Embraer",
+      "model": "E195 STD",
+      "gearDesignation": "D",
+      "mtow": {
+        "value": 48790,
+        "unit": "kg",
+        "basis": "Embraer APM-1997 Rev 21, November 29 2024; PDF pages 16 (STD weights), 18 (dimensions), 24 (STD forward-CG ramp clearances), 102 (footprint and pressures). Public Airport Planning menu: E195 APM_APM_195 1.pdf. https://portalfly.flyembraer.com/"
+      },
+      "maxTaxiWeight": {
+        "value": 48950,
+        "unit": "kg",
+        "basis": "Embraer APM-1997 Rev 21, November 29 2024; PDF pages 16 (STD weights), 18 (dimensions), 24 (STD forward-CG ramp clearances), 102 (footprint and pressures). Public Airport Planning menu: E195 APM_APM_195 1.pdf. https://portalfly.flyembraer.com/"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 14640,
+      "mainGearTrack": 5940,
+      "tirePressure": {
+        "value": 154,
+        "unit": "psi",
+        "basis": "Embraer APM-1997 Rev 21, November 29 2024; PDF pages 16 (STD weights), 18 (dimensions), 24 (STD forward-CG ramp clearances), 102 (footprint and pressures). Public Airport Planning menu: E195 APM_APM_195 1.pdf. https://portalfly.flyembraer.com/ Loaded nominal lower bound of the published -0/+10 psi service band; STD ramp-weight column."
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.noseOffset (illustrative family-mesh alignment)",
+        "bodyFit.attachmentHeights (illustrative source-mesh attachments)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 400,
+          "tandemSpacing": null,
+          "tire": "24x7.7-10",
+          "pressure": {
+            "value": 126,
+            "unit": "psi",
+            "basis": "Embraer APM-1997 Rev 21, November 29 2024; PDF pages 16 (STD weights), 18 (dimensions), 24 (STD forward-CG ramp clearances), 102 (footprint and pressures). Public Airport Planning menu: E195 APM_APM_195 1.pdf. https://portalfly.flyembraer.com/ Loaded nominal lower bound of the published -0/+10 psi service band; STD ramp-weight column."
+          },
+          "source": "Embraer APM-1997 Rev 21, November 29 2024; PDF pages 16 (STD weights), 18 (dimensions), 24 (STD forward-CG ramp clearances), 102 (footprint and pressures). Public Airport Planning menu: E195 APM_APM_195 1.pdf. https://portalfly.flyembraer.com/"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 14640,
+          "y": -2970,
+          "dualSpacing": 870,
+          "tandemSpacing": null,
+          "tire": "H41x16-20",
+          "source": "Embraer APM-1997 Rev 21, November 29 2024; PDF pages 16 (STD weights), 18 (dimensions), 24 (STD forward-CG ramp clearances), 102 (footprint and pressures). Public Airport Planning menu: E195 APM_APM_195 1.pdf. https://portalfly.flyembraer.com/"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 14640,
+          "y": 2970,
+          "dualSpacing": 870,
+          "tandemSpacing": null,
+          "tire": "H41x16-20",
+          "source": "Embraer APM-1997 Rev 21, November 29 2024; PDF pages 16 (STD weights), 18 (dimensions), 24 (STD forward-CG ramp clearances), 102 (footprint and pressures). Public Airport Planning menu: E195 APM_APM_195 1.pdf. https://portalfly.flyembraer.com/"
+        }
+      ],
+      "bodyFit": {
+        "length": 38670,
+        "noseOffset": 4130,
+        "tailHeight": 10410,
+        "attachmentHeights": {
+          "nose": 4460,
+          "main": 1760
+        },
+        "source": "Dedicated first-generation E195 airframe, not E195-E2. Length from Figure 2.1; tail reference from Table 2.2 at STD ramp weight, forward CG. Nose overhang is an illustrative 4.13 m family alignment, not dimensioned on the consulted E195 drawing. Attachment heights are illustrative. Nose attachment reaches the retained gear-bay roof where the source has an open belly cutout. The renderer may raise the target attitude to maintain 150 mm clearance; neither attachment nor height changes wheel centers. Embraer APM-1997 Rev 21, November 29 2024; PDF pages 16 (STD weights), 18 (dimensions), 24 (STD forward-CG ramp clearances), 102 (footprint and pressures). Public Airport Planning menu: E195 APM_APM_195 1.pdf. https://portalfly.flyembraer.com/"
+      },
+      "notes": "Manufacturer-selected loading variant; takeoff and ramp/taxi weights are separate. Loads use MTOW with an assumed 95% main-gear allocation. Loaded nominal lower bound of the published -0/+10 psi service band; STD ramp-weight column.  Dedicated FlightGear airframe; uniformly scaled illustrative overlay, not manufacturer CAD. Source proportions and engine details are retained, not used for engineering dimensions.",
+      "sources": [
+        {
+          "id": "manufacturer-apm",
+          "title": "Embraer E195 STD Airport Planning Manual",
+          "publisher": "Embraer",
+          "url": "https://portalfly.flyembraer.com/",
+          "note": "Embraer APM-1997 Rev 21, November 29 2024; PDF pages 16 (STD weights), 18 (dimensions), 24 (STD forward-CG ramp clearances), 102 (footprint and pressures). Public Airport Planning menu: E195 APM_APM_195 1.pdf."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        },
+        {
+          "id": "goodyear",
+          "title": "Goodyear Aviation Databook 2022",
+          "publisher": "The Goodyear Tire & Rubber Company",
+          "url": "https://www.goodyearaviation.com/resources/pdf/Aviation-Databook-2022.pdf",
+          "note": "The 24x7.7 nose tire uses a 10-inch rim; normalized to 24x7.7-10 without changing its construction."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "crj200",
+      "domain": "aircraft",
+      "manufacturer": "Bombardier / Canadair",
+      "model": "CRJ200 (standard)",
+      "gearDesignation": "D",
+      "mtow": {
+        "value": 47450,
+        "unit": "lb",
+        "basis": "Bombardier CSP A-020 Rev 8, January 10 2016; PDF pages 22 (standard CRJ100/200 weight column), 24 (general dimensions), 26 (ER/LR clearance ranges), 97 (standard loaded tire pressures and footprint). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT1ES4H.pdf/CRJ200APMR8.pdf"
+      },
+      "maxTaxiWeight": {
+        "value": 47700,
+        "unit": "lb",
+        "basis": "Bombardier CSP A-020 Rev 8, January 10 2016; PDF pages 22 (standard CRJ100/200 weight column), 24 (general dimensions), 26 (ER/LR clearance ranges), 97 (standard loaded tire pressures and footprint). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT1ES4H.pdf/CRJ200APMR8.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 11404.6,
+      "mainGearTrack": 3175,
+      "tirePressure": {
+        "value": 160,
+        "unit": "psi",
+        "basis": "Bombardier CSP A-020 Rev 8, January 10 2016; PDF pages 22 (standard CRJ100/200 weight column), 24 (general dimensions), 26 (ER/LR clearance ranges), 97 (standard loaded tire pressures and footprint). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT1ES4H.pdf/CRJ200APMR8.pdf Loaded/in-service values for the standard 47,700 lb taxi-weight column; ER and LR service ranges are not mixed into this entry."
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "mainGearTrack (125 in footprint selected; Aircrafter gives 128.6 in and the general front view suggests 124 in)",
+        "bodyFit.noseOffset (illustrative source-mesh alignment)",
+        "bodyFit.tailHeight (illustrative related ER clearance midpoint)",
+        "bodyFit.attachmentHeights (illustrative source-mesh attachments)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 292.1,
+          "tandemSpacing": null,
+          "tire": "18x4.4-12",
+          "pressure": {
+            "value": 125,
+            "unit": "psi",
+            "basis": "Bombardier CSP A-020 Rev 8, January 10 2016; PDF pages 22 (standard CRJ100/200 weight column), 24 (general dimensions), 26 (ER/LR clearance ranges), 97 (standard loaded tire pressures and footprint). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT1ES4H.pdf/CRJ200APMR8.pdf Loaded/in-service values for the standard 47,700 lb taxi-weight column; ER and LR service ranges are not mixed into this entry."
+          },
+          "source": "Bombardier CSP A-020 Rev 8, January 10 2016; PDF pages 22 (standard CRJ100/200 weight column), 24 (general dimensions), 26 (ER/LR clearance ranges), 97 (standard loaded tire pressures and footprint). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT1ES4H.pdf/CRJ200APMR8.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 11404.6,
+          "y": -1587.5,
+          "dualSpacing": 441.96,
+          "tandemSpacing": null,
+          "tire": "H29x9-15",
+          "source": "Bombardier CSP A-020 Rev 8, January 10 2016; PDF pages 22 (standard CRJ100/200 weight column), 24 (general dimensions), 26 (ER/LR clearance ranges), 97 (standard loaded tire pressures and footprint). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT1ES4H.pdf/CRJ200APMR8.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 11404.6,
+          "y": 1587.5,
+          "dualSpacing": 441.96,
+          "tandemSpacing": null,
+          "tire": "H29x9-15",
+          "source": "Bombardier CSP A-020 Rev 8, January 10 2016; PDF pages 22 (standard CRJ100/200 weight column), 24 (general dimensions), 26 (ER/LR clearance ranges), 97 (standard loaded tire pressures and footprint). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT1ES4H.pdf/CRJ200APMR8.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 26771.6,
+        "noseOffset": 1800,
+        "tailHeight": 6260,
+        "attachmentHeights": {
+          "nose": 1010,
+          "main": 1110
+        },
+        "source": "Dedicated CRJ200 source mesh. Overall length 87 ft 10 in from general drawing. Nose overhang is an illustrative 1.8 m source fit. Tail reference is an illustrative midpoint of the related ER clearance range (6.20-6.32 m), not a standard-weight measured attitude. Attachments are illustrative. Nose attachment reaches the retained gear-bay roof where the source has an open belly cutout. The renderer may raise the target attitude to maintain 150 mm clearance; neither attachment nor height changes wheel centers. Bombardier CSP A-020 Rev 8, January 10 2016; PDF pages 22 (standard CRJ100/200 weight column), 24 (general dimensions), 26 (ER/LR clearance ranges), 97 (standard loaded tire pressures and footprint). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT1ES4H.pdf/CRJ200APMR8.pdf"
+      },
+      "notes": "Manufacturer-selected loading variant; takeoff and ramp/taxi weights are separate. Loads use MTOW with an assumed 95% main-gear allocation. Loaded/in-service values for the standard 47,700 lb taxi-weight column; ER and LR service ranges are not mixed into this entry. The footprint is not to scale: the 158 in outside dimension does not reconcile with 125 in track, 17.4 in pitch and 9 in tire width. The selected manufacturer footprint is explicit; the Aircrafter/FAARFIELD-derived 128.6 in track is a conflicting cross-check. No outer width is asserted. Dedicated FlightGear airframe; uniformly scaled illustrative overlay, not manufacturer CAD. Source proportions and engine details are retained, not used for engineering dimensions.",
+      "sources": [
+        {
+          "id": "manufacturer-apm",
+          "title": "Bombardier / Canadair CRJ200 (standard) Airport Planning Manual",
+          "publisher": "Bombardier / Canadair",
+          "url": "https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT1ES4H.pdf/CRJ200APMR8.pdf",
+          "note": "Bombardier CSP A-020 Rev 8, January 10 2016; PDF pages 22 (standard CRJ100/200 weight column), 24 (general dimensions), 26 (ER/LR clearance ranges), 97 (standard loaded tire pressures and footprint)."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "crj1000",
+      "domain": "aircraft",
+      "manufacturer": "Bombardier / Canadair",
+      "model": "CRJ1000",
+      "gearDesignation": "D",
+      "mtow": {
+        "value": 91800,
+        "unit": "lb",
+        "basis": "Bombardier CSP D-020 Rev 8, December 17 2015; PDF pages 25 (weights), 31 (dimensions), 108 (footprint and unloaded tire pressures). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT82VLY.pdf/CRJ1000APMR8.pdf"
+      },
+      "maxTaxiWeight": {
+        "value": 92300,
+        "unit": "lb",
+        "basis": "Bombardier CSP D-020 Rev 8, December 17 2015; PDF pages 25 (weights), 31 (dimensions), 108 (footprint and unloaded tire pressures). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT82VLY.pdf/CRJ1000APMR8.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 18846.8,
+      "mainGearTrack": 4074.16,
+      "tirePressure": {
+        "value": 193,
+        "unit": "psi",
+        "basis": "Bombardier CSP D-020 Rev 8, December 17 2015; PDF pages 25 (weights), 31 (dimensions), 108 (footprint and unloaded tire pressures). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT82VLY.pdf/CRJ1000APMR8.pdf Manufacturer UNLOADED inflation values, not loaded service pressures. Uniform contact pressure equated to inflation is a modeling approximation."
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "wheelbase (742 in footprint selected over inconsistent 18.80 m conversion and inherited fuselage station labels)",
+        "mainGearTrack (160.40 in footprint selected over 160 in general drawing)",
+        "bodyFit.length (1543.4 in selected over inconsistent 39.133 m conversion)",
+        "bodyFit.attachmentHeights (illustrative source-mesh attachments)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 309.88,
+          "tandemSpacing": null,
+          "tire": "H20.5x6.75-10",
+          "pressure": {
+            "value": 143,
+            "unit": "psi",
+            "basis": "Bombardier CSP D-020 Rev 8, December 17 2015; PDF pages 25 (weights), 31 (dimensions), 108 (footprint and unloaded tire pressures). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT82VLY.pdf/CRJ1000APMR8.pdf Manufacturer UNLOADED inflation values, not loaded service pressures. Uniform contact pressure equated to inflation is a modeling approximation."
+          },
+          "source": "Bombardier CSP D-020 Rev 8, December 17 2015; PDF pages 25 (weights), 31 (dimensions), 108 (footprint and unloaded tire pressures). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT82VLY.pdf/CRJ1000APMR8.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 18846.8,
+          "y": -2037.08,
+          "dualSpacing": 622.808,
+          "tandemSpacing": null,
+          "tire": "H36x11.5-19",
+          "source": "Bombardier CSP D-020 Rev 8, December 17 2015; PDF pages 25 (weights), 31 (dimensions), 108 (footprint and unloaded tire pressures). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT82VLY.pdf/CRJ1000APMR8.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 18846.8,
+          "y": 2037.08,
+          "dualSpacing": 622.808,
+          "tandemSpacing": null,
+          "tire": "H36x11.5-19",
+          "source": "Bombardier CSP D-020 Rev 8, December 17 2015; PDF pages 25 (weights), 31 (dimensions), 108 (footprint and unloaded tire pressures). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT82VLY.pdf/CRJ1000APMR8.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 39202.36,
+        "noseOffset": 1730,
+        "tailHeight": 7649,
+        "attachmentHeights": {
+          "nose": 3780,
+          "main": 2090
+        },
+        "source": "Dedicated CRJ1000 source, with both CF34 engine submodels at the archived XML offsets. Overall length uses 1543.4 in rather than its inconsistent 39.133 m conversion. Tail reference 7.649 m and nose overhang 1.73 m from general drawing. Rigid source fit and attachments remain illustrative. Nose attachment reaches the retained gear-bay roof where the source has an open belly cutout. The renderer may raise the target attitude to maintain 150 mm clearance; neither attachment nor height changes wheel centers. Bombardier CSP D-020 Rev 8, December 17 2015; PDF pages 25 (weights), 31 (dimensions), 108 (footprint and unloaded tire pressures). https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT82VLY.pdf/CRJ1000APMR8.pdf"
+      },
+      "notes": "Manufacturer-selected loading variant; takeoff and ramp/taxi weights are separate. Loads use MTOW with an assumed 95% main-gear allocation. Manufacturer UNLOADED inflation values, not loaded service pressures. Uniform contact pressure equated to inflation is a modeling approximation. The footprint retains FS228.40/FS819.38 from a shorter variant; their difference does not reproduce its dimensioned 742 in wheelbase. The 160.40 in footprint track differs slightly from the 160 in general drawing and 160.18 in workbook. Imperial footprint labels govern. Dedicated FlightGear airframe; uniformly scaled illustrative overlay, not manufacturer CAD. Source proportions and engine details are retained, not used for engineering dimensions.",
+      "sources": [
+        {
+          "id": "manufacturer-apm",
+          "title": "Bombardier / Canadair CRJ1000 Airport Planning Manual",
+          "publisher": "Bombardier / Canadair",
+          "url": "https://customer.aero.bombardier.com/webd/BAG/CustSite/BRAD/RACSDocument.nsf/51aae8b2b3bfdf6685256c300045ff31/ec63f8639ff3ab9d85257c1500635bd8/$FILE/ATT82VLY.pdf/CRJ1000APMR8.pdf",
+          "note": "Bombardier CSP D-020 Rev 8, December 17 2015; PDF pages 25 (weights), 31 (dimensions), 108 (footprint and unloaded tire pressures)."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    }
+  ]
+}

@@ -9,7 +9,8 @@
     "The 757/767 drawings explicitly dimension wheelbase, track, nose pitch, main dual pitch, and tandem pitch. Exact imperial-to-mm conversions supersede the old rounded FAA geometry.",
     "MTOW, taxi weight, tires and pressure refer to the individually documented aircraft configuration.",
     "The 95% main-gear load split is a pavement-design assumption. Body meshes and strut attachments are illustrative, not engineering CAD.",
-    "Unknown and generic schematic aircraft do not receive substitute bodies."
+    "Unknown and generic schematic aircraft do not receive substitute bodies.",
+    "737-600/-700/-900 additions use directly dimensioned Boeing D6-58325-7 Rev C (October 2025) footprints and dedicated variant bodies."
   ],
   "files": [
     "boeing.json",
@@ -17,7 +18,9 @@
     "aircrafter-reviewed.json",
     "boeing-757-767.json",
     "faa-5300-7.json",
-    "boeing-variants.json"
+    "boeing-variants.json",
+    "boeing-737ng.json",
+    "regional-hubs.json"
   ],
   "$gearCodes": [
     "REMOVED in v1.9. This list was a third hand-maintained copy of the gear",
