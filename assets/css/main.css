@@ -2715,6 +2715,9 @@ body.Publications .pub-article .pub-section:first-of-type {
 }
 
 /* Per-app gradient colors */
+.gradient-noun[data-app="pdf-studio"] {
+	background-image: linear-gradient(90deg, #a6b4ff, #90d5be, #a6b4ff);
+}
 .gradient-noun[data-app="aircrafter"] {
 	background-image: linear-gradient(90deg, #ff8c42, #ff1744, #ff6d00, #ff8c42);
 }

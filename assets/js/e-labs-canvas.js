@@ -1085,7 +1085,25 @@
   /* ===========================================================
      Controller: DPR-aware sizing, hover-gated rAF loop
      =========================================================== */
+  var pdfStudio = {
+    init: function () { return {}; },
+    draw: function (ctx, state, w, h, time) {
+      ctx.fillStyle = '#1d2843'; ctx.fillRect(0, 0, w, h);
+      // A small document assembly desk, animated only on hover.
+      var drift = Math.sin(time / 1000) * 4;
+      for (var i = 0; i < 3; i++) {
+        ctx.save(); ctx.translate(w * 0.5 + (i - 1) * 37, h * 0.5 + drift + i * 3);
+        ctx.rotate((i - 1) * 0.13); ctx.fillStyle = ['#8395cb', '#b3bfe0', '#edf1fc'][i];
+        ctx.fillRect(-37, -60, 74, 104);
+        ctx.fillStyle = i === 2 ? '#7489c6' : '#5d72aa';
+        for (var j = 0; j < 4; j++) ctx.fillRect(-24, -39 + j * 10, j === 3 ? 31 : 48, 3);
+        ctx.fillStyle = '#8bbba9'; ctx.fillRect(-24, 10, 13, 20); ctx.fillRect(-6, -1, 13, 31); ctx.fillRect(12, -12, 13, 42);
+        ctx.restore();
+      }
+    }
+  };
   var engines = {
+    'pdf-studio': pdfStudio,
     'asphera': asphera,
     'aircrafter': aircrafter,
     'frontier': frontier,
@@ -1125,6 +1143,7 @@
     var rafId = null;
 
     card.addEventListener('mouseenter', function () {
+      if (type === 'pdf-studio' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       if (rafId) return;
       (function loop(ts) {
         engine.draw(ctx, state, dims.w, dims.h, ts);
