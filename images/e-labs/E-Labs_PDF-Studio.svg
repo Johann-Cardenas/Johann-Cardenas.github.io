@@ -1,16 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1312" height="788" viewBox="0 0 1312 788" role="img" aria-labelledby="title desc">
-<title id="title">PDF Studio</title><desc id="desc">A miniature PDF workspace with a document preview and a colorful toolkit.</desc>
-<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#e9edf9"/><stop offset="1" stop-color="#f8f7fc"/></linearGradient><filter id="shadow"><feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#35456f" flood-opacity=".12"/></filter><pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#b7c2df" opacity=".3"/></pattern></defs>
-<rect width="1312" height="788" fill="url(#bg)"/><rect width="1312" height="788" fill="url(#dots)"/>
-<g filter="url(#shadow)"><rect x="118" y="84" width="1076" height="620" rx="22" fill="#fff"/><path d="M118 149H1194" stroke="#e8ebf3"/>
-<rect x="150" y="103" width="34" height="34" rx="9" fill="#6072d8"/><text x="159" y="128" font-family="Georgia,serif" font-size="26" fill="white">p</text><text x="198" y="127" font-family="Arial,sans-serif" font-size="20" fill="#303e57">PDF Studio</text><circle cx="1080" cy="120" r="4" fill="#80b69f"/><text x="1092" y="124" font-family="Arial,sans-serif" font-size="10" fill="#8b94a6">ON DEVICE</text>
-<text x="166" y="198" font-family="Arial,sans-serif" font-size="10" letter-spacing="3" fill="#8b94a6">YOUR DOCUMENTS, REIMAGINED</text><text x="164" y="244" font-family="Georgia,serif" font-size="39" fill="#37445f">A little less paperwork.</text>
-<g font-family="Arial,sans-serif" font-size="13" fill="#42506b">
-<rect x="165" y="278" width="180" height="132" rx="11" fill="#f7f8fc" stroke="#e9ecf4"/><rect x="181" y="294" width="33" height="33" rx="8" fill="#e8ecfc"/><text x="189" y="318" font-size="24" fill="#7887ce">⇉</text><text x="182" y="353">Merge PDF</text><text x="182" y="377" font-size="10" fill="#939bad">Bring it all together.</text>
-<rect x="359" y="278" width="180" height="132" rx="11" fill="#f7f8fc" stroke="#e9ecf4"/><rect x="375" y="294" width="33" height="33" rx="8" fill="#e8f3ed"/><text x="385" y="317" font-size="22" fill="#74a58b">T</text><text x="376" y="353">Edit &amp; annotate</text><text x="376" y="377" font-size="10" fill="#939bad">Your finishing touches.</text>
-<rect x="165" y="424" width="180" height="132" rx="11" fill="#f7f8fc" stroke="#e9ecf4"/><rect x="181" y="440" width="33" height="33" rx="8" fill="#f2eaf8"/><text x="190" y="464" font-size="23" fill="#ae89bd">↙</text><text x="182" y="499">Compress PDF</text><text x="182" y="523" font-size="10" fill="#939bad">A little more breathing room.</text>
-<rect x="359" y="424" width="180" height="132" rx="11" fill="#f7f8fc" stroke="#e9ecf4"/><rect x="375" y="440" width="33" height="33" rx="8" fill="#fff0e4"/><text x="384" y="463" font-size="21" fill="#c99d73">↗</text><text x="376" y="499">Convert PDF</text><text x="376" y="523" font-size="10" fill="#939bad">New possibilities, same story.</text></g>
-<rect x="166" y="589" width="373" height="49" rx="8" fill="#5c70d7"/><text x="190" y="620" font-family="Arial,sans-serif" font-size="13" fill="white">Make room for better ideas.</text><text x="503" y="620" font-family="Arial,sans-serif" font-size="20" fill="white">↗</text>
-<rect x="587" y="180" width="561" height="481" rx="12" fill="#eff2f9"/>
-<g transform="translate(724 211) rotate(7 142 200)"><rect x="-20" y="2" width="284" height="396" rx="5" fill="#d9e0f0" transform="rotate(-12 142 200)"/><rect width="284" height="396" rx="5" fill="white"/><text x="28" y="44" font-family="Arial,sans-serif" font-size="8" letter-spacing="2" fill="#8e98ae">STUDIO NOTES / 01</text><text x="27" y="95" font-family="Georgia,serif" font-size="36" fill="#3b4967">Room for</text><text x="27" y="136" font-family="Georgia,serif" font-size="36" fill="#3b4967">better ideas.</text><g fill="#e6eaf4"><rect x="28" y="166" width="214" height="4"/><rect x="28" y="178" width="188" height="4"/><rect x="28" y="190" width="201" height="4"/></g><g><rect x="29" y="267" width="28" height="41" rx="3" fill="#b0bce9"/><rect x="70" y="243" width="28" height="65" rx="3" fill="#c4cef0"/><rect x="111" y="255" width="28" height="53" rx="3" fill="#d5dcf3"/><rect x="152" y="222" width="28" height="86" rx="3" fill="#8ea0dd"/><rect x="193" y="207" width="28" height="101" rx="3" fill="#657ed0"/></g><path d="M28 337H242" stroke="#e6eaf4"/><text x="28" y="360" font-family="Arial,sans-serif" font-size="7" letter-spacing="1" fill="#8e98ae">A FRESH PERSPECTIVE</text></g>
-<rect x="953" y="225" width="146" height="41" rx="8" fill="#fff"/><text x="971" y="250" font-family="Arial,sans-serif" font-size="12" fill="#699781">✓  Made simpler</text></g></svg>
+  <title id="title">PDF Studio</title>
+  <desc id="desc">Layered documents with edit, OCR and security icons.</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1"><stop stop-color="#192139"/><stop offset="1" stop-color="#282547"/></linearGradient>
+    <radialGradient id="glow"><stop stop-color="#8b7cf5" stop-opacity=".25"/><stop offset="1" stop-color="#8b7cf5" stop-opacity="0"/></radialGradient>
+    <linearGradient id="violet" x2="1" y2="1"><stop stop-color="#9387f6"/><stop offset="1" stop-color="#6858d5"/></linearGradient>
+    <filter id="shadow" x="-60%" y="-40%" width="220%" height="220%"><feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#070c20" flood-opacity=".25"/></filter>
+  </defs>
+  <rect width="1312" height="788" fill="url(#background)"/>
+  <ellipse cx="746" cy="329" rx="535" ry="373" fill="url(#glow)"/>
+  <g fill="none" stroke="#aaa1ef" stroke-opacity=".1"><ellipse cx="717" cy="340" rx="406" ry="235" transform="rotate(-13 717 340)"/><ellipse cx="717" cy="340" rx="477" ry="287" transform="rotate(-13 717 340)"/></g>
+  <g transform="translate(80 70)" fill="none" stroke="#f2f0ff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><rect width="64" height="64" rx="18" fill="url(#violet)" stroke="none"/><path d="M21 14h16l10 10v27H21zM37 14v12h10M28 34h12M28 42h12"/></g>
+  <g filter="url(#shadow)">
+    <g transform="translate(431 176) rotate(-15 134 183)"><rect width="268" height="366" rx="14" fill="#7c74b6"/><path d="M31 57h167M31 76h119M31 108h186M31 128h155" stroke="#c2bcef" stroke-width="6" opacity=".4" stroke-linecap="round"/></g>
+    <g transform="translate(635 154) rotate(19 134 183)"><rect width="268" height="366" rx="14" fill="#b7afe1"/><path d="M35 58h152M35 78h116M35 113h184M35 133h157" stroke="#e2ddf6" stroke-width="6" opacity=".6" stroke-linecap="round"/></g>
+    <g transform="translate(542 119) rotate(5 140 190)">
+      <path d="M15 0h219l46 46v319a15 15 0 0 1-15 15H15A15 15 0 0 1 0 365V15A15 15 0 0 1 15 0Z" fill="#fcfcff"/>
+      <path d="M234 0v34a12 12 0 0 0 12 12h34" fill="#e8e4f8"/>
+      <rect x="33" y="42" width="88" height="45" rx="11" fill="#eeebff"/>
+      <text x="51" y="73" font-family="Arial,sans-serif" font-size="26" font-weight="700" letter-spacing="1" fill="#7464cc">PDF</text>
+      <path d="M35 123h163M35 143h199M35 163h127" stroke="#d9d7e9" stroke-width="6" stroke-linecap="round"/>
+      <rect x="29" y="191" width="219" height="70" rx="9" fill="#f1effc" stroke="#b0a3e7" stroke-width="1.5" stroke-dasharray="5 5"/>
+      <path d="M44 211h134M44 230h177M44 248h98" stroke="#a497d8" stroke-width="5" stroke-linecap="round" opacity=".6"/>
+      <path d="M43 322c14-46 39-52 25-17-14 31-7 31 19 7-4 19 12 20 30 1 9 16 27 11 43-2" fill="none" stroke="#8b7ec7" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M38 346h202" stroke="#e2dfed" stroke-width="1.5"/>
+    </g>
+    <g transform="translate(329 299) rotate(-8 48 48)"><rect width="96" height="96" rx="25" fill="#ece9ff"/><g fill="none" stroke="#7b69ce" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m28 59 32-32 10 10-32 32-14 3zM55 32l10 10M46 74h28"/></g></g>
+    <g transform="translate(942 166) rotate(9 48 48)"><rect width="96" height="96" rx="25" fill="#e7edf9"/><g fill="none" stroke="#6e8ebc" stroke-width="3.5" stroke-linecap="round"><path d="M25 36V25h11M60 25h11v11M71 60v11H60M36 71H25V60M33 41h30M33 53h24M18 47h60"/></g></g>
+    <g transform="translate(925 433) rotate(-7 48 48)"><rect width="96" height="96" rx="25" fill="#e4f1e9"/><g fill="none" stroke="#6a9f82" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><rect x="26" y="43" width="44" height="33" rx="7"/><path d="M34 43V32a14 14 0 0 1 28 0v11M48 55v9"/></g></g>
+  </g>
+  <circle cx="1047" cy="368" r="5" fill="#b8adef" opacity=".6"/><circle cx="351" cy="184" r="4" fill="#b8adef" opacity=".4"/><circle cx="470" cy="549" r="3" fill="#a4ccb4" opacity=".7"/>
+  <text x="79" y="690" font-family="Arial,sans-serif" font-size="72" font-weight="500" letter-spacing="-3" fill="#f4f2ff">PDF Studio</text>
+  <g transform="translate(1096 644)"><rect width="130" height="48" rx="24" fill="#ffffff" fill-opacity=".06" stroke="#ffffff" stroke-opacity=".12"/><circle cx="25" cy="24" r="5" fill="#91bfa6"/><text x="42" y="32" font-family="Arial,sans-serif" font-size="22" fill="#d4cee9">32 tools</text></g>
+</svg>

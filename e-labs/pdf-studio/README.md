@@ -69,6 +69,8 @@ Run `node e-labs/pdf-studio/test/premium.cjs` for print layouts, comparison math
 
 The interface includes loading and processing states, contextual instructions, a locally generated sample document, up to 20 page-arrangement undo steps, reusable download links, responsive light/dark themes, reduced-motion support, and keyboard placement of annotations (arrows then Enter; Shift increases the step). Ctrl/Cmd+Enter exports; `/` focuses tool search; Escape closes the preview.
 
+The visual refresh adds a dedicated E-Labs document-stack illustration and 32 individual vector tool miniatures, with a shared SVG icon set. Default copy is shortened; full tool descriptions, notes and guidance are expandable, while essential cautions remain visible. Drag page previews to reorder them (arrows remain available), zoom or fit the page preview, and use Page Up/Down to browse. `test/design-browser.cjs` checks these interactions and the refreshed layouts.
+
 Dependency license notices are in `vendor/`. PDF.js retains its existing repository license headers.
 
 See [the feature review](../../docs/pdf-studio-feature-review.md) for the research informing this iteration.

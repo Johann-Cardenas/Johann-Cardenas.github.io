@@ -40,7 +40,7 @@
     <div id="boot-screen" class="boot-screen" role="status">
       <span class="boot-logo">PDF <b>Studio</b></span
       ><span class="loading-dots"><i></i><i></i><i></i></span>
-      <p>Making room for your next document…</p>
+      <p>Opening studio…</p>
       <p id="boot-error" hidden>
         The workspace could not load. Check your connection and
         <a href="./">reload the studio</a>.
@@ -55,11 +55,10 @@
     <header class="topbar">
       <a class="brand" href="../../E-Labs.html"
         ><span class="brand-mark" aria-hidden="true">p<span>f</span></span
-        ><span>PDF <b>Studio</b><small>AN E-LABS WORKSPACE</small></span></a
+        ><span>PDF <b>Studio</b><small>E-LABS</small></span></a
       >
       <nav aria-label="Studio navigation">
-        <a href="../../E-Labs.html">← E-Labs</a
-        ><a href="#tools">Explore tools</a
+        <a href="../../E-Labs.html">← E-Labs</a><a href="#tools">Tools</a
         ><button id="theme" class="icon-button" aria-label="Toggle color theme">
           ◐
         </button>
@@ -68,39 +67,27 @@
     <main>
       <section class="hero">
         <div>
-          <div class="eyebrow"><span></span> A LITTLE LESS PAPERWORK</div>
-          <h1>Your documents.<br /><em>Beautifully handled.</em></h1>
-          <p>
-            From a quick fix to the final draft. A calmer place to<br
-              class="desktop"
-            />
-            organize, edit, and transform your PDFs.
-          </p>
+          <div class="eyebrow"><span></span> YOUR PRIVATE PDF WORKSPACE</div>
+          <h1>Less paperwork.<br /><em>More done.</em></h1>
+          <p>Edit. Convert. Organize. All on your device.</p>
         </div>
         <div class="hero-art" aria-hidden="true">
-          <div class="art-orbit"></div>
-          <div class="paper paper-back"><i></i><i></i><i></i></div>
-          <div class="paper paper-front">
-            <span class="paper-label">THE EVERYDAY, REIMAGINED</span
-            ><strong>Room for<br />better ideas.</strong>
-            <div class="paper-chart"><i></i><i></i><i></i><i></i><i></i></div>
-            <div class="paper-lines"></div>
-            <span class="paper-footer">STUDIO NOTES <b>01 / 03</b></span>
-          </div>
-          <span class="art-tag tag-one">↗ &nbsp; Made simpler</span
-          ><span class="art-tag tag-two">✓ &nbsp; All on your device</span>
+          <img
+            src="../../images/e-labs/E-Labs_PDF-Studio.svg"
+            alt=""
+            width="1312"
+            height="788"
+            decoding="async"
+          />
         </div>
       </section>
       <div class="trust-line">
-        <span>◎ &nbsp; Files stay on your device</span
-        ><span>↗ &nbsp; No account. No upload.</span
-        ><span>✦ &nbsp; A whole toolkit, one workspace</span>
+        <span>32 tools</span><span>No uploads</span><span>No account</span>
       </div>
       <section id="tools" class="tools-section" aria-labelledby="tools-title">
         <div class="section-heading">
           <div>
-            <span class="eyebrow">THE TOOLKIT</span>
-            <h2 id="tools-title">What are we working on?</h2>
+            <h2 id="tools-title">Your tools.</h2>
           </div>
           <label class="search"
             ><span aria-hidden="true">⌕</span
@@ -114,17 +101,11 @@
         </div>
         <div class="workflow-recipes" aria-label="Suggested workflows">
           <button data-recipe="review">
-            <span>DOCUMENT REVIEW</span
-            ><strong>Compare → annotate → sign</strong
-            ><small>Make every revision count. ↗</small></button
+            <span>Review</span><strong>Compare · edit · sign</strong></button
           ><button data-recipe="scan">
-            <span>SCANNED DOCUMENTS</span
-            ><strong>Clean up → OCR → export</strong
-            ><small>Give paperwork a searchable future. ↗</small></button
+            <span>Scan</span><strong>Clean · recognize · export</strong></button
           ><button data-recipe="print">
-            <span>PRINT & SHARE</span
-            ><strong>Booklet → compress → protect</strong
-            ><small>A thoughtful finishing process. ↗</small>
+            <span>Print</span><strong>Booklet · compress · protect</strong>
           </button>
         </div>
         <div class="filter-row" role="group" aria-label="Filter tools">
@@ -139,7 +120,7 @@
           ><button class="filter" data-category="organize" aria-pressed="false">
             Organize</button
           ><button class="filter" data-category="edit" aria-pressed="false">
-            Edit & personalize</button
+            Edit</button
           ><button class="filter" data-category="convert" aria-pressed="false">
             Convert</button
           ><button class="filter" data-category="optimize" aria-pressed="false">
@@ -149,9 +130,7 @@
           </button>
         </div>
         <div id="tool-grid" class="tool-grid"></div>
-        <p id="no-tools" hidden>
-          No matching tools. Try a different search or add a favorite with ☆.
-        </p>
+        <p id="no-tools" hidden>No tools found.</p>
         <button id="show-all-tools" class="secondary catalog-toggle">
           Explore all tools ↓
         </button>
@@ -175,42 +154,48 @@
         </div>
         <div class="workspace-heading">
           <div>
-            <span class="eyebrow">YOUR WORKSPACE</span>
             <h2 id="workspace-title">Merge PDF</h2>
-            <p id="tool-description"></p>
+            <p id="tool-summary"></p>
+            <details class="tool-details">
+              <summary>Details</summary>
+              <p id="tool-description"></p>
+            </details>
           </div>
-          <span class="local-badge"><span></span> Local processing</span>
+          <span class="local-badge"><span></span> On device</span>
         </div>
         <ol class="workflow" aria-label="Document workflow">
           <li id="step-add" aria-current="step">
             <span>1</span>
-            <div>Add your files<small>Drop them right in</small></div>
+            <div>Upload</div>
           </li>
           <li id="step-refine">
             <span>2</span>
-            <div>Make it yours<small>Choose pages & settings</small></div>
+            <div>Edit</div>
           </li>
           <li id="step-save">
             <span>3</span>
-            <div>Take it with you<small>Export your finished work</small></div>
+            <div>Export</div>
           </li>
         </ol>
         <div id="workspace-guide" class="workspace-guide">
-          <span id="guide-icon" aria-hidden="true">✦</span>
-          <div>
-            <strong id="guide-title">A few files. One good document.</strong>
-            <p id="guide-text">
-              Add your PDFs, arrange them in the order you need, then choose
-              Merge PDF.
-            </p>
-          </div>
-          <button id="load-example" class="secondary">Try an example ↗</button>
+          <details class="quick-guide">
+            <summary>Quick guide</summary>
+            <div>
+              <span id="guide-icon" aria-hidden="true"></span>
+              <strong id="guide-title">A few files. One good document.</strong>
+              <p id="guide-text">
+                Add your PDFs, arrange them in the order you need, then choose
+                Merge PDF.
+              </p>
+            </div>
+          </details>
+          <button id="load-example" class="text-button">Try sample</button>
         </div>
         <div class="work-layout">
           <div class="work-main">
             <div id="dropzone" class="dropzone">
               <span class="upload-icon" aria-hidden="true">↥</span>
-              <h3>A fresh start. Drop your files here.</h3>
+              <h3>Drop files here.</h3>
               <p id="accept-hint">Choose PDFs to bring them together.</p>
               <label class="primary file-button"
                 >Choose files <span>＋</span
@@ -219,10 +204,7 @@
                   type="file"
                   accept="application/pdf,.pdf"
                   multiple /></label
-              ><small
-                >Files are processed in this browser and are never
-                uploaded.</small
-              >
+              ><small>Private. No uploads.</small>
             </div>
             <div id="document-area" hidden>
               <div class="document-bar">
@@ -242,18 +224,15 @@
                   ><input
                     id="page-search"
                     type="search"
-                    placeholder="Find words in your PDFs…"
+                    placeholder="Find in document…"
                     aria-label="Search document text"
                   /><button id="search-pages" class="secondary">
                     Find
                   </button></label
                 ><span id="search-count" role="status"></span
-                ><button id="reverse-pages" class="text-button">
-                  Reverse order</button
-                ><button id="odd-pages" class="text-button">Select odd</button
-                ><button id="even-pages" class="text-button">
-                  Select even
-                </button>
+                ><button id="reverse-pages" class="text-button">Reverse</button
+                ><button id="odd-pages" class="text-button">Odd</button
+                ><button id="even-pages" class="text-button">Even</button>
               </div>
               <div id="search-results" class="search-results" hidden></div>
               <div class="page-toolbar">
@@ -284,6 +263,20 @@
                 <div class="editor-heading">
                   <strong id="editor-label">Page preview</strong>
                   <div>
+                    <button
+                      id="zoom-out"
+                      class="text-button"
+                      aria-label="Zoom out"
+                    >
+                      −</button
+                    ><span id="zoom-level">Fit</span
+                    ><button
+                      id="zoom-in"
+                      class="text-button"
+                      aria-label="Zoom in"
+                    >
+                      +</button
+                    ><button id="zoom-fit" class="text-button">Fit</button>
                     <button id="undo-mark" class="text-button">Undo mark</button
                     ><button id="close-preview" class="text-button">
                       Close
@@ -291,18 +284,20 @@
                   </div>
                 </div>
                 <p id="editor-help">Click the page to place your annotation.</p>
-                <div id="preview-stage" class="preview-stage">
-                  <canvas
-                    id="preview"
-                    aria-label="Document page preview"
-                  ></canvas>
-                  <div
-                    id="marks"
-                    class="marks"
-                    tabindex="0"
-                    role="button"
-                    aria-label="Place annotation: use arrow keys to position, then press Enter"
-                  ></div>
+                <div class="preview-scroll">
+                  <div id="preview-stage" class="preview-stage">
+                    <canvas
+                      id="preview"
+                      aria-label="Document page preview"
+                    ></canvas>
+                    <div
+                      id="marks"
+                      class="marks"
+                      tabindex="0"
+                      role="button"
+                      aria-label="Place annotation: use arrow keys to position, then press Enter"
+                    ></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -310,9 +305,10 @@
           <aside class="settings" aria-label="Tool settings">
             <div class="settings-title">
               <span id="settings-icon" class="tool-icon">⇉</span>
-              <h3>Make it yours</h3>
+              <h3>Settings</h3>
             </div>
             <div id="options"></div>
+            <p id="tool-caution" class="tool-caution" hidden></p>
             <label class="field"
               >Output name<input
                 id="output-name"
@@ -320,8 +316,7 @@
                 maxlength="100"
             /></label>
             <div class="export-summary">
-              <span>Ready when you are</span
-              ><strong id="export-count">Add your first file</strong>
+              <span>Export</span><strong id="export-count">Add files</strong>
             </div>
             <button id="run" class="primary run-button" disabled>
               Merge PDF <span>↗</span>
@@ -329,26 +324,23 @@
             <div id="processing" class="processing" hidden>
               <span class="spinner" aria-hidden="true"></span>
               <div>
-                <strong id="processing-label">A little document magic…</strong
-                ><small>Your files are staying right here.</small>
+                <strong id="processing-label">Processing…</strong
+                ><small>On your device.</small>
               </div>
             </div>
             <progress id="progress" hidden></progress>
             <p id="status" role="status" aria-live="polite">
-              Your next good document starts here.
+              Add files to start.
             </p>
             <div id="result-card" class="result-card" hidden>
               <span class="result-check" aria-hidden="true">✓</span>
               <div>
-                <strong>Your document is ready.</strong
-                ><small id="result-details"></small
-                ><a id="download" class="download-link" hidden
-                  >↓ Download result again</a
-                >
+                <strong>Ready.</strong><small id="result-details"></small
+                ><a id="download" class="download-link" hidden>Download</a>
               </div>
             </div>
             <details class="tool-help">
-              <summary>A little guidance</summary>
+              <summary>Help & shortcuts</summary>
               <p>1. Choose a tool, then add the accepted file type.</p>
               <p>
                 2. Check pages to include. Click a thumbnail for a larger
@@ -364,20 +356,17 @@
               </p>
             </details>
             <p class="small-note">
-              Keep a copy of your original. Page assembly may remove bookmarks,
-              signatures, and interactive forms.
+              Keep originals. Page assembly can remove forms, bookmarks and
+              signatures.
             </p>
           </aside>
         </div>
       </section>
       <section class="studio-sessions" aria-label="Workspace productivity">
         <div>
-          <span class="eyebrow">PICK UP WHERE YOU LEFT OFF</span>
-          <h2>Your workflow, your way.</h2>
+          <h2>Save your setup.</h2>
           <p>
-            Save an editable workspace to your device, or keep a reusable tool
-            preset. Workspace files are unencrypted and include your original
-            documents and placed signatures. Nothing is saved automatically.
+            Workspace files include originals and signatures. Not encrypted.
           </p>
         </div>
         <div class="session-actions">
@@ -392,32 +381,25 @@
               id="preset-name"
               maxlength="100"
               placeholder="My review settings" /></label
-          ><button id="save-preset" class="secondary">★ Save tool preset</button
+          ><button id="save-preset" class="secondary">Save preset</button
           ><label class="field"
             >Saved presets<select id="presets">
               <option value="">Choose a preset…</option>
             </select></label
-          ><button id="delete-preset" class="text-button">
-            Delete selected preset
-          </button>
+          ><button id="delete-preset" class="text-button">Delete preset</button>
         </div>
       </section>
       <section class="closing-note">
         <span>◎</span>
         <div>
-          <h2>A little more peace of mind.</h2>
-          <p>
-            Your files belong to you. PDF Studio processes documents in your
-            browser, without accounts or a document upload server.
-          </p>
+          <h2>Private by default.</h2>
         </div>
-        <a href="README.md">Capabilities & limitations ↗</a>
+        <a href="README.md">Help & limits ↗</a>
       </section>
     </main>
     <footer>
       <a href="../../E-Labs.html">Johann Cardenas <span>/ E-Labs</span></a
-      ><span>Made for the work between the big ideas.</span
-      ><span>PDF Studio · v2.0</span>
+      ><span>On your device.</span><span>PDF Studio · v2.0</span>
     </footer>
     <noscript
       ><style>

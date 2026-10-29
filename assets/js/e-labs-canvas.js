@@ -1088,16 +1088,21 @@
   var pdfStudio = {
     init: function () { return {}; },
     draw: function (ctx, state, w, h, time) {
-      ctx.fillStyle = '#1d2843'; ctx.fillRect(0, 0, w, h);
-      // A small document assembly desk, animated only on hover.
-      var drift = Math.sin(time / 1000) * 4;
+      ctx.fillStyle = '#20213b'; ctx.fillRect(0, 0, w, h);
+      // The same violet document stack as PDF Studio's vector miniature.
+      var drift = Math.sin(time / 1800) * 3;
       for (var i = 0; i < 3; i++) {
         ctx.save(); ctx.translate(w * 0.5 + (i - 1) * 37, h * 0.5 + drift + i * 3);
-        ctx.rotate((i - 1) * 0.13); ctx.fillStyle = ['#8395cb', '#b3bfe0', '#edf1fc'][i];
-        ctx.fillRect(-37, -60, 74, 104);
-        ctx.fillStyle = i === 2 ? '#7489c6' : '#5d72aa';
-        for (var j = 0; j < 4; j++) ctx.fillRect(-24, -39 + j * 10, j === 3 ? 31 : 48, 3);
-        ctx.fillStyle = '#8bbba9'; ctx.fillRect(-24, 10, 13, 20); ctx.fillRect(-6, -1, 13, 31); ctx.fillRect(12, -12, 13, 42);
+        ctx.rotate((i - 1) * 0.16); ctx.fillStyle = ['#7970ae', '#b6acdd', '#faf9ff'][i];
+        ctx.shadowColor = '#090b2830'; ctx.shadowBlur = 12; ctx.fillRect(-37, -60, 74, 104); ctx.shadowBlur = 0;
+        ctx.fillStyle = i === 2 ? '#d5cfee' : '#9385c0';
+        for (var j = 0; j < 3; j++) ctx.fillRect(-24, -18 + j * 8, j === 2 ? 31 : 48, 2);
+        if (i === 2) {
+          ctx.fillStyle = '#ede9ff'; ctx.fillRect(-25, -44, 29, 16);
+          ctx.fillStyle = '#8470cc'; ctx.font = '600 9px Inter, sans-serif'; ctx.fillText('PDF', -20, -33);
+          ctx.strokeStyle = '#a597d1'; ctx.lineWidth = 1.3; ctx.beginPath();
+          ctx.moveTo(-23, 27); ctx.bezierCurveTo(-8, -1, -17, 41, -4, 23); ctx.bezierCurveTo(1, 34, 10, 18, 21, 24); ctx.stroke();
+        }
         ctx.restore();
       }
     }

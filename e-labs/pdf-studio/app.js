@@ -1,5 +1,6 @@
 import * as pdfjs from "../../pdfjs/build/pdf.mjs";
 import * as Premium from "./premium.js";
+import { toolMiniature, uiIcon } from "./visuals.js";
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "../../pdfjs/build/pdf.worker.mjs",
   import.meta.url,
@@ -324,6 +325,79 @@ let presets = readStored("pdf-studio-presets", []);
 if (!Array.isArray(presets)) presets = [];
 let catalogExpanded = false;
 const toolSettings = new Map();
+const conciseCopy = {
+  merge: "Combine PDFs in your chosen order.",
+  split: "Export pages or groups as separate PDFs.",
+  organize: "Drag, rotate, duplicate, or select pages.",
+  compress: "Reduce size. Keep text or flatten pages.",
+  edit: "Add text, highlights, or images.",
+  sign: "Draw or type your signature.",
+  watermark: "Stamp selected pages.",
+  numbers: "Number selected pages.",
+  "images-pdf": "One image per page.",
+  "pdf-images": "Export pages as PNG or JPG.",
+  "pdf-word": "Export selectable text to Word.",
+  "word-pdf": "Turn DOCX or TXT into a PDF.",
+  text: "Export selectable text.",
+  crop: "Trim page margins.",
+  redact: "Mark areas for permanent removal.",
+  forms: "Fill an existing PDF form.",
+  metadata: "Edit document information.",
+  flatten: "Create a fixed, image-only PDF.",
+  ocr: "Make scanned pages searchable.",
+  compare: "Compare an original and a revision.",
+  protect: "Encrypt with a password.",
+  unlock: "Open a PDF with its password.",
+  scan: "Clean up scanned pages.",
+  resize: "Fit pages to one paper size.",
+  nup: "Print two or four pages per sheet.",
+  booklet: "Prepare folded, duplex booklets.",
+  interleave: "Alternate pages from multiple files.",
+  bates: "Add sequential reference IDs.",
+  bookmarks: "Add a clickable document outline.",
+  blank: "Find and omit visually blank pages.",
+  web: "Prepare a PDF for progressive loading.",
+  repair: "Rebuild readable PDF structures.",
+};
+const cautions = {
+  "pdf-word": "Text only. Layout and images are not preserved.",
+  "word-pdf": "Text only. Layout and images are not preserved.",
+  crop: "Cropped content remains recoverable.",
+  redact: "Image-only output. Text, forms and links are removed.",
+  sign: "Visual signature only; no identity verification.",
+  flatten: "Image-only output. Text, forms and links are removed.",
+  scan: "Image-only output. Use OCR next for searchable text.",
+  ocr: "English / Spanish. Review recognized text.",
+  compare: "Visual comparison, not semantic analysis.",
+  protect: "No password recovery. Keep your password.",
+  unlock: "Enter the password before adding the file.",
+  blank: "Faint content may be removed. Review the report.",
+  metadata: "Basic metadata only. Hidden content remains.",
+  repair: "Best effort. Missing content cannot be restored.",
+};
+let draggedPageId = null,
+  previewZoom = 1;
+function actionLabel() {
+  return (
+    {
+      ocr: "Run OCR",
+      compare: "Compare",
+      protect: "Protect PDF",
+      unlock: "Unlock PDF",
+      repair: "Recover PDF",
+      blank: "Remove blanks",
+      web: "Optimize PDF",
+    }[tool.id] || "Export"
+  );
+}
+function updateCaution() {
+  const message =
+    tool.id === "compress" && $("compression")?.value !== "lossless"
+      ? "Image-only output. Text, forms and links are removed."
+      : cautions[tool.id] || "";
+  $("tool-caution").textContent = message;
+  $("tool-caution").hidden = !message;
+}
 const iconPaths = {
   merge: ["M6 3v5c0 3 6 3 6 6v7", "M18 3v5c0 3-6 3-6 6", "m8 17 4 4 4-4"],
   split: [
@@ -491,8 +565,8 @@ function renderTools() {
   const compact = category === "all" && !$("search").value && !catalogExpanded;
   $("show-all-tools").hidden = category !== "all" || !!$("search").value;
   $("show-all-tools").textContent = catalogExpanded
-    ? "Show fewer tools ↑"
-    : `Explore all ${tools.length} tools ↓`;
+    ? "Show less ↑"
+    : `All ${tools.length} tools ↓`;
   for (const item of compact ? filtered.slice(0, 12) : filtered) {
     const wrapper = el("div", "tool-tile");
     const button = el(
@@ -501,28 +575,19 @@ function renderTools() {
     );
     button.type = "button";
     button.setAttribute("aria-pressed", tool.id === item.id);
-    const icon = el("span", "tool-icon");
-    icon.append(toolIcon(item.id));
     const [tint, tone] = tones[item.category];
-    icon.style.setProperty("--tint", tint);
-    icon.style.setProperty("--tone", tone);
-    button.append(
-      icon,
-      el("span", "tool-arrow", "↗"),
-      el("h3", "", item.name),
-      el("p", "", item.short),
-    );
+    wrapper.style.setProperty("--tint", tint);
+    wrapper.style.setProperty("--tone", tone);
+    button.title = conciseCopy[item.id];
+    button.append(toolMiniature(item.id), el("h3", "", item.name));
     button.addEventListener("click", () => {
       if (busy) return;
       chooseTool(item);
       $("workspace").focus({ preventScroll: true });
       $("workspace").scrollIntoView({ behavior: "smooth", block: "start" });
     });
-    const star = el(
-      "button",
-      "favorite-button",
-      favorites.has(item.id) ? "★" : "☆",
-    );
+    const star = el("button", "favorite-button");
+    star.append(uiIcon("star"));
     star.setAttribute("aria-label", `Favorite ${item.name}`);
     star.setAttribute("aria-pressed", String(favorites.has(item.id)));
     star.addEventListener("click", () => {
@@ -569,7 +634,14 @@ function select(label, id, choices) {
   return input;
 }
 function note(text) {
-  $("options").append(el("p", "option-note", text));
+  let details = $("option-notes");
+  if (!details) {
+    details = el("details", "option-help");
+    details.id = "option-notes";
+    details.append(el("summary", "", "Notes"));
+    $("options").append(details);
+  }
+  details.append(el("p", "option-note", text));
 }
 function updateEditOptions() {
   if (tool.id !== "edit") return;
@@ -599,8 +671,12 @@ function chooseTool(next) {
   tool = next;
   $("workspace-title").textContent = tool.name;
   $("tool-description").textContent = tool.description;
+  $("tool-summary").textContent = conciseCopy[tool.id];
+  $("tool-caution").hidden = !cautions[tool.id];
+  $("tool-caution").textContent = cautions[tool.id] || "";
+  document.querySelector(".tool-details").open = false;
   $("settings-icon").replaceChildren(toolIcon(tool.id));
-  $("guide-title").textContent = tool.short;
+  $("guide-title").textContent = tool.name;
   $("guide-text").textContent = ["edit", "sign", "redact"].includes(tool.id)
     ? "Add your PDF, click a page thumbnail, then click the large preview to place your mark. Export when it looks right."
     : tool.id === "forms"
@@ -611,8 +687,8 @@ function chooseTool(next) {
   $("load-example").hidden =
     ["images-pdf", "word-pdf", "forms"].includes(tool.id) || !!sources.length;
   $("run").replaceChildren(
-    document.createTextNode(tool.name),
-    el("span", "", "↗"),
+    document.createTextNode(actionLabel()),
+    uiIcon("right"),
   );
   $("options").replaceChildren();
   closePreview();
@@ -624,10 +700,10 @@ function chooseTool(next) {
       ? ".docx,.txt"
       : "application/pdf,.pdf";
   $("accept-hint").textContent = imageMode
-    ? "JPG, PNG, and WebP images welcome."
+    ? "JPG · PNG · WebP"
     : textMode
-      ? "Choose DOCX or UTF-8 TXT files."
-      : "Choose PDFs to make them your own.";
+      ? "DOCX · TXT"
+      : "PDF · 150 MB per file";
   if (tool.id === "split") {
     select("Split mode", "split-mode", [
       ["each", "One PDF per selected page"],
@@ -873,7 +949,7 @@ function chooseTool(next) {
       "page-ranges",
       "",
       "text",
-      "Optional: 1, 3-5 refers to the current page order. Apply to replace the checked selection.",
+      "e.g. 1, 3-5 (current page order)",
     ).addEventListener("change", applyRange);
   if (["merge", "organize"].includes(tool.id))
     note(
@@ -895,13 +971,17 @@ function chooseTool(next) {
       "This tool needs a different file type. Clear the workspace to start with new files.",
     );
   restoreSettings(toolSettings.get(tool.id));
+  updateCaution();
+  if ($("compression"))
+    $("compression").addEventListener("change", updateCaution);
+  if ($("option-notes")) $("options").append($("option-notes"));
   if (tool.id === "edit")
     $("mark-kind").addEventListener("change", updateEditOptions);
   updateEditOptions();
   renderRecipe();
   renderTools();
   updateSummary();
-  status("Choose files or use the documents already in your workspace.");
+  status(sources.length ? "Ready." : "Add files to start.");
 }
 function applyRange() {
   try {
@@ -922,7 +1002,7 @@ function updateSummary() {
     `${count} of ${pages.length} pages selected`;
   $("export-count").textContent = pages.length
     ? `${count} page${count === 1 ? "" : "s"} selected`
-    : "Add your first file";
+    : "Add files";
   $("run").disabled = busy || count === 0;
   $("document-area").hidden = !sources.length;
   $("dropzone").hidden = !!sources.length;
@@ -1076,12 +1156,7 @@ async function addFiles(fileList) {
     $("output-name").value = C.safeName(
       sources[0].name.replace(/\.[^.]+$/, "") + "-studio",
     );
-  status(
-    errors.length
-      ? errors.join(" ")
-      : "Files ready. Choose pages and settings, then export.",
-    !!errors.length,
-  );
+  status(errors.length ? errors.join(" ") : "Ready.", !!errors.length);
 }
 function friendlyError(error) {
   if (error.name === "AbortError")
@@ -1106,24 +1181,20 @@ function setBusy(state) {
   $("processing").hidden = !state;
   $("run").classList.toggle("working", state);
   $("run").replaceChildren(
-    document.createTextNode(state ? "Working on it…" : tool.name),
-    el("span", "", state ? "" : "↗"),
+    document.createTextNode(state ? "Processing…" : actionLabel()),
+    uiIcon("right"),
   );
   if (state) {
     $("processing-label").textContent = sources.length
-      ? "Preparing your next good document…"
-      : "Opening your documents…";
+      ? "Processing…"
+      : "Opening files…";
     const curtain = el("div", "busy-curtain");
     curtain.id = "busy-curtain";
     const inner = el("div");
     inner.append(
       el("span", "spinner"),
-      el("strong", "", "A little document magic…"),
-      el(
-        "small",
-        "",
-        "Reading your files locally. Larger documents may take a moment.",
-      ),
+      el("strong", "", "Opening files…"),
+      el("small", "", "On your device."),
     );
     curtain.append(inner);
     $("dropzone").append(curtain);
@@ -1250,6 +1321,56 @@ async function renderPages() {
       "aria-label",
       `Open page ${index + 1} from ${entry.source.name}`,
     );
+    card.dataset.pageId = entry.id;
+    preview.draggable = true;
+    preview.title = "Drag to reorder · Click to preview";
+    preview.addEventListener("dragstart", (event) => {
+      if (busy) {
+        event.preventDefault();
+        return;
+      }
+      draggedPageId = entry.id;
+      event.dataTransfer.setData("text/plain", entry.id);
+      event.dataTransfer.effectAllowed = "move";
+      card.classList.add("is-dragging");
+    });
+    preview.addEventListener("dragend", () => {
+      draggedPageId = null;
+      document
+        .querySelectorAll(".is-dragging,.drop-target")
+        .forEach((node) => node.classList.remove("is-dragging", "drop-target"));
+      $("dropzone").classList.remove("dragging");
+    });
+    card.addEventListener("dragover", (event) => {
+      if (!draggedPageId || busy) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      card.classList.add("drop-target");
+    });
+    card.addEventListener("dragleave", (event) => {
+      if (!card.contains(event.relatedTarget))
+        card.classList.remove("drop-target");
+    });
+    card.addEventListener("drop", (event) => {
+      if (!draggedPageId || busy) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const from = pages.findIndex((page) => page.id === draggedPageId),
+        to = pages.indexOf(entry);
+      draggedPageId = null;
+      $("dropzone").classList.remove("dragging");
+      if (from < 0 || from === to) {
+        card.classList.remove("drop-target");
+        return;
+      }
+      rememberPages();
+      const [moved] = pages.splice(from, 1);
+      pages.splice(to, 0, moved);
+      closePreview();
+      renderPages();
+      updateSummary();
+      status("Page moved.");
+    });
     preview.addEventListener("click", () => openPreview(entry));
     card.append(preview);
     const label = el("label", "page-label"),
@@ -1314,7 +1435,12 @@ async function renderPages() {
         },
       ],
     ]) {
-      const button = el("button", "", symbol);
+      const button = el("button");
+      button.append(
+        uiIcon(
+          { "←": "left", "→": "right", "↻": "rotate", "+": "copy" }[symbol],
+        ),
+      );
       button.setAttribute("aria-label", `${title} (${index + 1})`);
       button.title = title;
       button.addEventListener("click", () => {
@@ -1336,6 +1462,7 @@ async function renderPages() {
     try {
       if (entry.source.kind === "image") {
         const image = el("img", "image-thumb");
+        image.draggable = false;
         image.src = entry.source.data;
         image.alt = entry.source.name;
         image.style.transform = `rotate(${entry.rotation}deg)`;
@@ -1352,6 +1479,7 @@ async function renderPages() {
         }
         if (version !== renderVersion) return;
         const image = el("img", "image-thumb");
+        image.draggable = false;
         image.src = data;
         image.alt = `Page ${entry.index + 1}`;
         preview.append(image);
@@ -1368,11 +1496,31 @@ function closePreview() {
   previewViewport = null;
   $("editor").hidden = true;
   $("marks").replaceChildren();
+  document
+    .querySelectorAll(".page-card.active")
+    .forEach((card) => card.classList.remove("active"));
+}
+function setPreviewZoom(next) {
+  previewZoom = Math.min(3, Math.max(1, next));
+  const stage = $("preview-stage"),
+    base = Math.min(stage.parentElement.clientWidth - 16, 600);
+  stage.style.width = previewZoom === 1 ? "" : `${base * previewZoom}px`;
+  stage.classList.toggle("zoomed", previewZoom > 1);
+  $("zoom-level").textContent =
+    previewZoom === 1 ? "Fit" : `${Math.round(previewZoom * 100)}%`;
+  $("zoom-out").disabled = previewZoom === 1;
+  $("zoom-in").disabled = previewZoom === 3;
+  renderMarks();
 }
 async function openPreview(entry) {
   if (busy || entry.source.kind !== "pdf") return;
   const version = ++previewVersion;
   activePage = entry;
+  document
+    .querySelectorAll(".page-card")
+    .forEach((card) =>
+      card.classList.toggle("active", card.dataset.pageId === entry.id),
+    );
   try {
     const { canvas, viewport } = await renderedPage(entry, 100);
     if (version !== previewVersion) {
@@ -1388,10 +1536,10 @@ async function openPreview(entry) {
     $("editor-label").textContent =
       `Page ${pages.indexOf(entry) + 1} · ${entry.source.name}`;
     $("editor-help").textContent = ["edit", "sign", "redact"].includes(tool.id)
-      ? "Click to place a mark, or focus the page and use arrow keys + Enter. Export to save your marks."
-      : "Preview your page. Switch to Edit, Sign, or Redact to add marks.";
+      ? "Click to place. Arrows + Enter also work."
+      : "Page Up / Down to browse.";
     $("marks").tabIndex = ["edit", "sign", "redact"].includes(tool.id) ? 0 : -1;
-    renderMarks();
+    setPreviewZoom(1);
     $("editor").scrollIntoView({ behavior: "smooth", block: "nearest" });
   } catch (error) {
     status(friendlyError(error), true);
@@ -2397,7 +2545,7 @@ async function clearWorkspace() {
   renderFiles();
   renderPages();
   if (tool.id === "forms") renderFormFields();
-  status("Workspace cleared. Choose files to start again.");
+  status("Workspace cleared.");
   setBusy(false);
 }
 function captureSettings() {
@@ -2436,6 +2584,7 @@ function restoreSettings(settings) {
       input.value = val;
   }
   updateEditOptions();
+  updateCaution();
 }
 function renderPresets() {
   const select = $("presets");
@@ -2491,9 +2640,7 @@ async function saveProject() {
       `${C.safeName(value("output-name"))}.pdfstudio`,
       "application/zip",
     );
-    status(
-      "Workspace saved to your device. It contains your documents and placed marks, including signatures; passwords are excluded.",
-    );
+    status("Workspace saved. Includes originals and placed signatures.");
   } catch (error) {
     status(friendlyError(error), true);
   } finally {
@@ -2791,9 +2938,7 @@ async function continueWithResult(nextTool) {
     renderFiles();
     renderPages();
     $("workspace").scrollIntoView({ behavior: "smooth" });
-    status(
-      "Your result is now the active document. Choose the next tool or keep refining it.",
-    );
+    status("Result is now the active document.");
   } catch (error) {
     if (source?.viewer && !sources.includes(source))
       await source.viewer.destroy();
@@ -2990,6 +3135,18 @@ $("workspace").addEventListener("drop", (e) => {
 });
 document.addEventListener("keydown", (e) => {
   if (
+    !busy &&
+    activePage &&
+    ["PageUp", "PageDown"].includes(e.key) &&
+    !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)
+  ) {
+    const index = pages.indexOf(activePage) + (e.key === "PageDown" ? 1 : -1);
+    if (pages[index]) {
+      e.preventDefault();
+      openPreview(pages[index]);
+    }
+  }
+  if (
     e.key === "/" &&
     !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)
   ) {
@@ -3015,11 +3172,7 @@ cancelTask.addEventListener("click", () => {
   status("Cancelling at the next processing boundary…");
 });
 $("progress").after(cancelTask);
-const continueResult = el(
-  "button",
-  "secondary",
-  "Use this PDF in the workspace →",
-);
+const continueResult = el("button", "secondary", "Keep editing →");
 continueResult.id = "continue-result";
 continueResult.hidden = true;
 continueResult.addEventListener("click", () => continueWithResult());
@@ -3054,9 +3207,7 @@ $("save-preset").addEventListener("click", () => {
   localStorage.setItem("pdf-studio-presets", JSON.stringify(presets));
   renderPresets();
   $("presets").value = preset.id;
-  status(
-    `Saved preset: ${preset.name}. Passwords, signatures, files, and page selections were excluded.`,
-  );
+  status(`Saved: ${preset.name}. No files, passwords or signatures.`);
 });
 $("presets").addEventListener("change", () => {
   if (busy) return;
@@ -3112,6 +3263,30 @@ $("close-recipe").addEventListener("click", () => {
   recipe = null;
   renderRecipe();
 });
+$("zoom-in").addEventListener("click", () =>
+  setPreviewZoom(previewZoom + 0.25),
+);
+$("zoom-out").addEventListener("click", () =>
+  setPreviewZoom(previewZoom - 0.25),
+);
+$("zoom-fit").addEventListener("click", () => setPreviewZoom(1));
+$("zoom-in").replaceChildren(uiIcon("plus"));
+$("zoom-out").replaceChildren(uiIcon("minus"));
+$("theme").replaceChildren(uiIcon("theme"));
+document.querySelector(".brand-mark").replaceChildren(uiIcon("file"));
+document.querySelector(".search>span").replaceChildren(uiIcon("search"));
+document.querySelector(".upload-icon").replaceChildren(uiIcon("upload"));
+document
+  .querySelectorAll("[data-recipe]")
+  .forEach((button) =>
+    button.prepend(
+      toolIcon(
+        { review: "compare", scan: "ocr", print: "booklet" }[
+          button.dataset.recipe
+        ],
+      ),
+    ),
+  );
 renderPresets();
 chooseTool(tools[0]);
 clearTimeout(window.pdfStudioBootTimer);
