@@ -1,28 +1,69 @@
-const assert = require('node:assert/strict');
-globalThis.PDFLib = require('../vendor/pdf-lib.min.js');
-globalThis.fflate = require('../vendor/fflate.min.js');
-require('../core.js');
-const C = globalThis.PDFStudioCore, P = globalThis.PDFLib;
+const assert = require("node:assert/strict");
+globalThis.PDFLib = require("../vendor/pdf-lib.min.js");
+globalThis.fflate = require("../vendor/fflate.min.js");
+require("../core.js");
+const C = globalThis.PDFStudioCore,
+  P = globalThis.PDFLib;
 (async () => {
-  assert.deepEqual(C.parseRanges('1, 3-5, 3',5),[0,2,3,4]);
-  assert.deepEqual(C.parseRanges('',3),[0,1,2]);
-  for(const input of ['0','3-1','1-6','1,,2','x','2.5']) assert.throws(()=>C.parseRanges(input,5));
-  assert.equal(C.safeName('../bad:name?'),'..-bad-name-');
-  const source=await P.PDFDocument.create();
-  source.addPage([300,400]).drawText('FIRST');source.addPage([500,600]).drawText('SECOND');
-  const entries=[{source:{doc:source},index:1,rotation:90,marks:[]},{source:{doc:source},index:0,rotation:0,marks:[]}];
-  const merged=await C.assemble(entries);
-  assert.equal(merged.getPageCount(),2);assert.equal(merged.getPage(0).getWidth(),500);assert.equal(merged.getPage(0).getRotation().angle,90);
-  assert.equal(merged.getPage(1).getHeight(),400);
-  await assert.rejects(()=>C.assemble([]),/Select/);
-  entries[1].marks=[{kind:'text',text:'ADDED',x:20,y:50,size:16,angle:0,color:'#123456'},{kind:'highlight',x:20,y:25,width:50,height:15,color:'#ffdd00'}];
-  await C.applyMarks(merged,entries);
-  const restored=await P.PDFDocument.load(await merged.save());assert.equal(restored.getPageCount(),2);
-  const font=await merged.embedFont(P.StandardFonts.Helvetica),long='https://'+'a'.repeat(500),lines=C.wrapText(long,font,11,100);assert.ok(lines.length>10);assert.ok(lines.every(l=>font.widthOfTextAtSize(l,11)<=100));
-  const textPdf=await C.textPdf(('A real text page.\n').repeat(150));assert.ok(textPdf.getPageCount()>=3);
-  await assert.rejects(()=>C.textPdf(''),/no readable text/);
-  const docx=C.textDocx(['First & <second>','Next page']),unzipped=fflate.unzipSync(docx);
-  assert.ok(unzipped['[Content_Types].xml']);assert.ok(unzipped['_rels/.rels']);
-  const xml=new TextDecoder().decode(unzipped['word/document.xml']);assert.match(xml,/First &amp; &lt;second&gt;/);assert.match(xml,/w:type="page"/);
-  console.log('PASS: ranges, filename handling, page order/rotation, annotations, text wrapping/pagination, DOCX package and escaping.');
-})().catch(error=>{console.error(error);process.exitCode=1;});
+  assert.deepEqual(C.parseRanges("1, 3-5, 3", 5), [0, 2, 3, 4]);
+  assert.deepEqual(C.parseRanges("", 3), [0, 1, 2]);
+  for (const input of ["0", "3-1", "1-6", "1,,2", "x", "2.5"])
+    assert.throws(() => C.parseRanges(input, 5));
+  assert.equal(C.safeName("../bad:name?"), "..-bad-name-");
+  const source = await P.PDFDocument.create();
+  source.addPage([300, 400]).drawText("FIRST");
+  source.addPage([500, 600]).drawText("SECOND");
+  const entries = [
+    { source: { doc: source }, index: 1, rotation: 90, marks: [] },
+    { source: { doc: source }, index: 0, rotation: 0, marks: [] },
+  ];
+  const merged = await C.assemble(entries);
+  assert.equal(merged.getPageCount(), 2);
+  assert.equal(merged.getPage(0).getWidth(), 500);
+  assert.equal(merged.getPage(0).getRotation().angle, 90);
+  assert.equal(merged.getPage(1).getHeight(), 400);
+  await assert.rejects(() => C.assemble([]), /Select/);
+  entries[1].marks = [
+    {
+      kind: "text",
+      text: "ADDED",
+      x: 20,
+      y: 50,
+      size: 16,
+      angle: 0,
+      color: "#123456",
+    },
+    {
+      kind: "highlight",
+      x: 20,
+      y: 25,
+      width: 50,
+      height: 15,
+      color: "#ffdd00",
+    },
+  ];
+  await C.applyMarks(merged, entries);
+  const restored = await P.PDFDocument.load(await merged.save());
+  assert.equal(restored.getPageCount(), 2);
+  const font = await merged.embedFont(P.StandardFonts.Helvetica),
+    long = "https://" + "a".repeat(500),
+    lines = C.wrapText(long, font, 11, 100);
+  assert.ok(lines.length > 10);
+  assert.ok(lines.every((l) => font.widthOfTextAtSize(l, 11) <= 100));
+  const textPdf = await C.textPdf("A real text page.\n".repeat(150));
+  assert.ok(textPdf.getPageCount() >= 3);
+  await assert.rejects(() => C.textPdf(""), /no readable text/);
+  const docx = C.textDocx(["First & <second>", "Next page"]),
+    unzipped = fflate.unzipSync(docx);
+  assert.ok(unzipped["[Content_Types].xml"]);
+  assert.ok(unzipped["_rels/.rels"]);
+  const xml = new TextDecoder().decode(unzipped["word/document.xml"]);
+  assert.match(xml, /First &amp; &lt;second&gt;/);
+  assert.match(xml, /w:type="page"/);
+  console.log(
+    "PASS: ranges, filename handling, page order/rotation, annotations, text wrapping/pagination, DOCX package and escaping.",
+  );
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
