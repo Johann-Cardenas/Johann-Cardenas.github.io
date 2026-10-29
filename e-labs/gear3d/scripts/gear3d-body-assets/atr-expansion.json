@@ -1,0 +1,38 @@
+[
+  {
+    "id": "atr72-500",
+    "manufacturer": "ATR",
+    "model": "72-500 (MOD 5555)",
+    "body": "ATR72-500",
+    "mtow": 22800,
+    "taxi": 22970,
+    "massUnit": "kg",
+    "wheelbase": 10770,
+    "track": 4100,
+    "mainPitch": 436,
+    "nosePitch": 336,
+    "mainTire": "H34x10R16",
+    "noseTire": "450x190-5",
+    "pressure": 123.282077,
+    "nosePressure": 62.366227,
+    "length": 27166,
+    "noseOffset": 1750,
+    "tailHeight": 7650,
+    "attachments": {
+      "nose": 3010,
+      "main": 1300
+    },
+    "url": "https://www.scribd.com/document/536701853/Ac-All-Issue00",
+    "reference": "ATR Aircraft Characteristics Airport Planning, Issue 00 June 2013, manufacturer-authored manual mirrored by Scribd; Section 2.1 page 3 (72-212A MOD 5555 weights), Section 7.3 page 2 (ATR 72 footprint, tires and pressure). ATR manufacturer 72-500 brochure, printed pages 20-21 / PDF pages 1-2: https://www.atr-aircraft.com/wp-content/uploads/2020/07/72-500.pdf (length, height and MTOW option 2 cross-check).",
+    "pressureNote": "Footprint table 8.5 bar main / 4.3 bar nose, converted to psi. The manual does not label these loaded or unloaded. Do not substitute the older pavement charts' 121 psi constant pressure. Equating inflation and uniform contact pressure remains a modeling approximation.",
+    "bodyNote": "Dedicated licensed ATR 72-500 mesh with both engine submodels at the scene XML offsets and static six-blade propellers. Brochure gives 27.166 m length and 7.65 m reference height. Nose overhang and attachment heights are illustrative source-mesh fits; tail reference is a general brochure dimension, not a MOD 5555 loaded/CG-specific attitude. Main strut tops lean 430 mm inward into the source sponsons; tire centers are unchanged. Open source gear wells can remain after named gear exclusion. Neither body placement nor attachment calibration changes wheel centers or loads. Nose struts meet retained bay-roof/upper-body surfaces where gear exclusion leaves an open belly cutout. Attachment heights are illustrative and do not measure manufacturer strut lengths.",
+    "assumptions": [
+      "bodyFit.noseOffset (illustrative source-mesh alignment)",
+      "bodyFit.tailHeight (general brochure reference, not loaded/CG-specific)",
+      "bodyFit.attachmentHeights (illustrative source-mesh attachments)",
+      "bodyFit.mainAttachmentInset (illustrative inward lean into source sponsons; wheel centers unchanged)"
+    ],
+    "discrepancy": "Select 72-212A MOD 5555 at 22,800 kg MTOW and 22,970 kg ramp; do not mix the basic 22,000/22,180 kg column or MOD 6219 23,000/23,170 kg. Footprint table 8.5 bar equals 123.282 psi and differs from the manual's older 121 psi pavement curves. The older clearance table is for 21,530 kg ramp and is not claimed as MOD 5555 attitude.",
+    "mainAttachmentInset": 430
+  }
+]

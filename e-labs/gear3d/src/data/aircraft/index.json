@@ -20,7 +20,9 @@
     "faa-5300-7.json",
     "boeing-variants.json",
     "boeing-737ng.json",
-    "regional-hubs.json"
+    "regional-hubs.json",
+    "regional-expansion.json",
+    "airbus-derivatives.json"
   ],
   "$gearCodes": [
     "REMOVED in v1.9. This list was a third hand-maintained copy of the gear",

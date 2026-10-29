@@ -118,5 +118,119 @@
         "sha256": "8ff1eb068feff3edd9fe28181af9cbeec98995fd6fd64ed2b8f0fd1a3a1e02b8"
       }
     ]
+  },
+  {
+    "model": "atr72-500",
+    "bodyId": "ATR72-500",
+    "repo": "FGMEMBERS/ATR-72-500",
+    "commit": "b1c036cde19c0cdba32f3c9b8abc4370406134f8",
+    "sourceArchive": "atr72-500-ac3d-source.zip",
+    "archiveSha256": "876266be4caf38bcb4a947cf31b0c1913c21474e189cf484f884730147d99828",
+    "files": [
+      {
+        "path": "Models/ATR-72-500.ac",
+        "sha256": "e29f5e24481d8b38cf6b2cb40b4f5edf118aa78ca5e51f047eae04d9b42199cc"
+      },
+      {
+        "path": "Models/ATR-72-500.xml",
+        "sha256": "67e5c248254c621dcc9d586c9bb7502f6d01f82305b23b8f8ccbfac6510c3df8"
+      },
+      {
+        "path": "Models/ATR-72-500-engine.ac",
+        "sha256": "7a4c2ea210be8b6b51b57f304dc9c00afb273e63efba3c31b8ef00b41c84f6c5"
+      },
+      {
+        "path": "Models/ATR-72-500-engine.xml",
+        "sha256": "0e1191ae0fbdba8fca59ba7eed1d7dc4a880f1aef2e50e848275beae5a9ac163"
+      },
+      {
+        "path": "COPYING",
+        "sha256": "dcc100d4161cc0b7177545ab6e47216f84857cda3843847c792a25289852dcaa"
+      },
+      {
+        "path": "README.md",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "Docs/README.pdf",
+        "sha256": "c418f95b304da1fcd295e11620ec15d5ae79b927617a8cfc8029ab7d7c7c23bc"
+      },
+      {
+        "path": "ATR-72-500-set.xml",
+        "sha256": "173d539d950aabb6cb1678ac7e13aad71fc5ac636a8a765af692a5ca32225c64"
+      }
+    ]
+  },
+  {
+    "model": "erj145",
+    "bodyId": "ERJ145",
+    "repo": "FGMEMBERS/Embraer-ERJ-145",
+    "commit": "6bb8e16db9772e5b9a6012de7c955e064c6550e1",
+    "sourceArchive": "erj145-ac3d-source.zip",
+    "archiveSha256": "31d2d72055993b7cc0b8c0846320579400e71ba3eecf8b18b38caa1aaa3321be",
+    "files": [
+      {
+        "path": "Models/erj145.ac",
+        "sha256": "c9a263b1a16ad1a82025b506e0c8e6b82ed41610da397caf4274d049bad7d5c6"
+      },
+      {
+        "path": "Models/erj145.xml",
+        "sha256": "e06e2ac5531532006dcbe369fc0adaf9cb1780989cf28bd09d3fcdd73a029cec"
+      },
+      {
+        "path": "README.txt",
+        "sha256": "cce0462aadcd93e8ec1ebdd70aa96f06ab6ec825b9c50664bfc6bde7ab288e73"
+      },
+      {
+        "path": "Read-me.txt",
+        "sha256": "3430c6fb8456fe35b4ba554536f67d65ae56c0c33927f0e44be8b1ec98f7464d"
+      },
+      {
+        "path": "COPYING",
+        "sha256": "dcc100d4161cc0b7177545ab6e47216f84857cda3843847c792a25289852dcaa"
+      },
+      {
+        "path": "erj145-set.xml",
+        "sha256": "9ffef98e1fa464d8ebccb2dac91c612a2ccdf9a3fc5a084ace60e283a8bab4fb"
+      },
+      {
+        "path": "erj145-base.xml",
+        "sha256": "04b7fa65c8da1adc662c8f559334996f8fa976483bb791effd628ae870e0ea58"
+      }
+    ]
+  },
+  {
+    "model": "dhc8-300",
+    "bodyId": "DHC8-300",
+    "repo": "FGMEMBERS/dhc8",
+    "commit": "37ed47c80200d7879ebcd11a3139abbb026d8498",
+    "sourceArchive": "dhc8-300-ac3d-source.zip",
+    "archiveSha256": "8a441fc4d0bc1fed9be3a54703a208554870932da36741ed25de7a7c6f920599",
+    "files": [
+      {
+        "path": "Models/dhc8.ac",
+        "sha256": "9a359b83d991c5753fee60202633df7d908b39876b9292bdad43d7bf7e890b01"
+      },
+      {
+        "path": "Models/dhc8-300Q.xml",
+        "sha256": "6937a81e805dcd53a34a9d4fc9d42a11cbfe41f45b53e9caec2a0db8f033e566"
+      },
+      {
+        "path": "dhc8-set.xml",
+        "sha256": "a795ac799e38d9a15e72439526855ce188866feaf9e9aca0da46d7757a3ba3a2"
+      },
+      {
+        "path": "dhc8-base.xml",
+        "sha256": "2e477366f09fa6057d0b1732c09692ac6faaee962a3f061bff2c6050e8db2705"
+      },
+      {
+        "path": "dhc8.xml",
+        "sha256": "20b0573074f47002e2c3efd0dd5b4302603b42a0c025b92e9e29d04459d51965"
+      },
+      {
+        "path": "COPYING",
+        "sha256": "dcc100d4161cc0b7177545ab6e47216f84857cda3843847c792a25289852dcaa"
+      }
+    ]
   }
 ]

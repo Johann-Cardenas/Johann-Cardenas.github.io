@@ -396,6 +396,28 @@ aircraft from Embraer, Bombardier, De Havilland Canada and ATR, grouped by
 manufacturer in the Model list. Library 38 → 59. It was built in the CEE 406
 port of this app and brought back here; see DECISIONS D38–D43. 196 checks.
 
+**v1.14 aircraft additions** add five regional loading configurations (ATR
+72-500 MOD 5555, ERJ145 ER/LR, and Dash 8-300Q Model 311 basic/HGW) with three
+dedicated family airframes, plus seven Airbus derivatives (A319neo, A320neo,
+A321neo, A321XLR, A330-200F, A330-800 and A330-900) on explicitly representative
+parent airframes. The current library has 49 measured aircraft, 16 schematic
+gear configurations, and 15 road vehicles. Manufacturer-selected takeoff and
+taxi weights, tires, pressures, and footprint dimensions remain separate from
+illustrative body fits. Source registers and reproducible builders live in
+`scripts/gear3d-body-assets/` and `scripts/build-*-expansion.mjs` /
+`scripts/build-airbus-derivatives.mjs`; provenance and limitations are recorded
+in `src/data/SOURCES.md`, `assets/bodies/CREDITS.md`, and DECISIONS D44.
+
+Rebuild the new catalog files with `node scripts/build-regional-expansion.mjs`
+and `node scripts/build-airbus-derivatives.mjs` from this directory. Run
+`npm test` for the complete regression suite. The optional
+`node test/aircraft-browser.cjs` checks all twelve additions through the UI
+and runtime body loader. It requires an external installation of
+`playwright-core` (available through `NODE_PATH`), Chrome, and an HTTP server
+serving the repository on port 8765. Override the browser executable with
+`GEAR3D_BROWSER` or the app URL with `GEAR3D_TEST_URL`. Screenshots are written
+to a temporary directory, outside the repository.
+
 ## Vehicle bodies (v1.13)
 
 *Show vehicle body* (Isolation panel, on by default) draws a dimmed,

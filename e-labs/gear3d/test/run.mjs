@@ -2699,9 +2699,9 @@ test('regional hub aircraft retain their separately reviewed manufacturer choice
     assert(aircraftUnits.find(u=>u.id==='crj200').assumedFields.some(s=>s.startsWith('mainGearTrack')),'track discrepancy is explicit');
 });
 
-test('the four direct AC3D bodies carry corresponding editable source archives', () => {
+test('the seven direct AC3D bodies carry corresponding editable source archives', () => {
     const manifest=readJson(join(BODIES,'sources','ac3d-manifest.json'));
-    assertEqual(manifest.length,4,'AC3D source archive count');
+    assertEqual(manifest.length,7,'AC3D source archive count');
     for(const source of manifest) {
         assert(/^[a-f0-9]{40}$/.test(source.commit),'source commit is pinned');
         assert(source.files.some(f=>/license|copying/i.test(f.path)),'license is archived');
@@ -2709,6 +2709,133 @@ test('the four direct AC3D bodies carry corresponding editable source archives',
         assert(source.files.some(f=>f.path.endsWith('.xml')),'scene placement is archived');
         assertEqual(createHash('sha256').update(readFileSync(join(BODIES,'sources',source.sourceArchive))).digest('hex'),source.archiveSha256,'archive hash');
     }
+});
+
+// Independently pinned source expectations, not values imported from generator inputs.
+// ATR APM Issue 00 June 2013, 2.1 p3 and 7.3 p2: MOD 5555, pressures in bar.
+// Embraer APM-145/1100 Rev16 Nov29 2024, PDF18/97/100: ER/LR, loaded pressures.
+// Q300 Model311 APM July27 2001, PDF22/104: BASIC/CR803SO00002,
+// footprint dimensions in inches and pressures at rated tire deflection.
+const regionalExpansionReviewed = [
+    {id:'atr72-500', body:'ATR72-500', takeoff:22800, taxi:22970, mass:'kg',
+        wb:10770, track:4100, mainPitch:436, nosePitch:336,
+        mainTire:'H34x10R16', noseTire:'450x190-5', mainPsi:8.5*14.503773773,
+        nosePsi:4.3*14.503773773, mainRim:16, noseRim:5, construction:'radial'},
+    {id:'erj145-er', body:'ERJ145', takeoff:20600, taxi:20700, mass:'kg',
+        wb:14440, track:4100, mainPitch:460, nosePitch:340,
+        mainTire:'30x9.5-14', noseTire:'19.5x6.75-8', mainPsi:145, nosePsi:82,
+        mainRim:14, noseRim:8, construction:'bias'},
+    {id:'erj145-lr', body:'ERJ145', takeoff:22000, taxi:22100, mass:'kg',
+        wb:14440, track:4100, mainPitch:460, nosePitch:340,
+        mainTire:'H30x9.5-16', noseTire:'19.5x6.75-8', mainPsi:160, nosePsi:84,
+        mainRim:16, noseRim:8, construction:'bias'},
+    {id:'dhc8-300-basic', body:'DHC8-300', takeoff:41100, taxi:41300, mass:'lb',
+        wb:394*25.4, track:310.4*25.4, mainPitch:17.2*25.4, nosePitch:15*25.4,
+        mainTire:'31x9.75-14', noseTire:'22x6.5-10', mainPsi:101, nosePsi:62,
+        mainRim:14, noseRim:10, construction:'bias'},
+    {id:'dhc8-300-hgw', body:'DHC8-300', takeoff:43000, taxi:43200, mass:'lb',
+        wb:394*25.4, track:310.4*25.4, mainPitch:17.2*25.4, nosePitch:15*25.4,
+        mainTire:'31x9.75-14', noseTire:'22x6.5-10', mainPsi:101, nosePsi:62,
+        mainRim:14, noseRim:10, construction:'bias'},
+];
+
+for (const expected of regionalExpansionReviewed) test(`${expected.id}: independent regional manufacturer footprint and loading`, () => {
+    const unit=aircraftUnits.find(u=>u.id===expected.id);
+    assert(unit && validateUnit(unit).ok, 'configuration exists and validates');
+    assertEqual(unit.mtow.value,expected.takeoff,'MTOW');
+    assertEqual(unit.maxTaxiWeight.value,expected.taxi,'taxi weight');
+    assertEqual(unit.mtow.unit,expected.mass,'mass unit');
+    assertClose(unit.wheelbase,expected.wb,1e-7,'wheelbase');
+    assertClose(unit.mainGearTrack,expected.track,1e-7,'main strut track');
+    assertEqual(unit.gears[0].tire,expected.noseTire,'nose tire');
+    assertEqual(unit.gears[1].tire,expected.mainTire,'main tire');
+    assertClose(unit.gears[0].dualSpacing,expected.nosePitch,1e-7,'nose pitch');
+    assertClose(unit.gears[1].dualSpacing,expected.mainPitch,1e-7,'main pitch');
+    assertClose(unit.tirePressure.value,expected.mainPsi,1e-6,'main pressure');
+    assertClose(unit.gears[0].pressure.value,expected.nosePsi,1e-6,'nose pressure');
+    assertClose(parseTire(unit.gears[0].tire).rimDiameter,expected.noseRim*25.4,1e-7,'nose rim');
+    assertClose(parseTire(unit.gears[1].tire).rimDiameter,expected.mainRim*25.4,1e-7,'main rim');
+    assertEqual(parseTire(unit.gears[1].tire).construction,expected.construction,'main construction');
+    const wheels=resolveLayout(unit).wheels;
+    const coordinates=[[0,-expected.nosePitch/2],[0,expected.nosePitch/2]];
+    for(const side of [-1,1])for(const across of [-1,1])coordinates.push([
+        expected.wb,side*expected.track/2+across*expected.mainPitch/2]);
+    assertEqual(wheels.length,6,'six wheels');
+    for(const [x,y] of coordinates)assertEqual(wheels.filter(w=>
+        Math.abs(w.x-x)<1e-7&&Math.abs(w.y-y)<1e-7).length,1,'exact published wheel center');
+    const force=expected.takeoff*(expected.mass==='lb'?.45359237:1)*9.80665/1000;
+    assertClose(wheels.reduce((total,w)=>total+w.loadKn,0),force,1e-8,'MTOW force conservation');
+    for(const wheel of wheels)assertClose(wheel.loadKn,
+        force*(wheel.axleId==='NLG'?.05/2:.95/4),1e-8,'individual wheel load');
+    assert(unit.assumedFields.includes('percentOnMainGear'),'load split remains explicit assumption');
+});
+test('regional variants preserve pressure conventions and separate ER/LR tires and loads', () => {
+    const byId=id=>aircraftUnits.find(u=>u.id===id);
+    assert(byId('atr72-500').tirePressure.basis.includes('does not label these loaded or unloaded'),'ATR measurement convention remains unknown');
+    assert(byId('erj145-er').tirePressure.basis.includes('Loaded nominal lower bound'),'ER loaded band lower bound');
+    assert(byId('erj145-lr').tirePressure.basis.includes('Loaded nominal center'),'LR loaded band center');
+    for(const id of ['dhc8-300-basic','dhc8-300-hgw'])assert(byId(id).tirePressure.basis.includes('rated deflection'),'Q300 uses rated rather than unloaded pressure');
+    const er=resolveLayout(byId('erj145-er')).wheels,lr=resolveLayout(byId('erj145-lr')).wheels;
+    assertEqual(JSON.stringify(er.map(w=>[w.x,w.y])),JSON.stringify(lr.map(w=>[w.x,w.y])),'ER/LR share wheel centers');
+    assert(er.every((w,i)=>w.loadKn<lr[i].loadKn),'LR wheel loads exceed ER');
+    assertEqual(new Set(aircraftUnits.map(u=>u.id)).size,aircraftUnits.length,'unique catalog IDs');
+});
+
+// Independently pinned Airbus derivative expectations, not values imported from the generator input.
+// Aircraft Characteristics 2-1-1 weights and 7-2-0 footprint at MRW: A319 Rev Jul 01/26 PDF 38/343,
+// A320 Rev Dec 01/23 PDF 35/366, A321 Rev Jul 01/26 PDF 61/63/418/420,
+// A330 Rev Dec 01/25 PDF 50/54-55/57/544/550/552.
+const airbusDerivatives = [
+    {id:'a319-neo', body:'A319', takeoff:75500, ramp:75900, wb:11039, track:7590, mainPitch:927, nosePitch:500,
+        tandem:null, mainTire:'46x17R20', noseTire:'30x8.8R15', mainPsi:200, nosePsi:191},
+    {id:'a320-neo', body:'A320', takeoff:79000, ramp:79400, wb:12640, track:7590, mainPitch:927, nosePitch:500,
+        tandem:null, mainTire:'46x17R20', noseTire:'30x8.8R15', mainPsi:209, nosePsi:178},
+    {id:'a321-neo', body:'A321', takeoff:93500, ramp:93900, wb:16906, track:7590, mainPitch:927, nosePitch:500,
+        tandem:null, mainTire:'1270x455R22', noseTire:'30x8.8R15', mainPsi:218, nosePsi:168},
+    {id:'a321-neo-xlr', body:'A321', takeoff:101000, ramp:101400, wb:16906, track:7590, mainPitch:927, nosePitch:500,
+        tandem:null, mainTire:'1270x455R22', noseTire:'30x8.8R15', mainPsi:235, nosePsi:177},
+    {id:'a330-200f', body:'A330-200', takeoff:233000, ramp:233900, wb:22180, track:10684, mainPitch:1397, nosePitch:710,
+        tandem:1981, mainTire:'1400x530R23', noseTire:'1050x395R16', mainPsi:206, nosePsi:184},
+    {id:'a330-800', body:'A330-200', takeoff:251000, ramp:251900, wb:22180, track:10684, mainPitch:1397, nosePitch:710,
+        tandem:1981, mainTire:'1400x530R23', noseTire:'1050x395R16', mainPsi:226, nosePsi:184},
+    {id:'a330-900', body:'A330-300', takeoff:251000, ramp:251900, wb:25375, track:10684, mainPitch:1397, nosePitch:710,
+        tandem:1981, mainTire:'1400x530R23', noseTire:'1050x395R16', mainPsi:226, nosePsi:168},
+];
+
+for (const expected of airbusDerivatives) test(`${expected.id}: Airbus weight variant, footprint and loading`, () => {
+    const unit=aircraftUnits.find(u=>u.id===expected.id);
+    assert(unit && validateUnit(unit).ok, 'configuration exists and validates');
+    assertEqual(unit.mtow.value,expected.takeoff,'MTOW');
+    assertEqual(unit.maxTaxiWeight.value,expected.ramp,'ramp weight');
+    assertEqual(unit.mtow.unit,'kg','mass unit');
+    assertClose(unit.wheelbase,expected.wb,1e-7,'wheelbase');
+    assertClose(unit.mainGearTrack,expected.track,1e-7,'main strut track');
+    assertEqual(unit.gears[0].tire,expected.noseTire,'nose tire');
+    assertEqual(unit.gears[1].tire,expected.mainTire,'main tire');
+    assertEqual(unit.tirePressure.value,expected.mainPsi,'main pressure');
+    assertEqual(unit.gears[0].pressure.value,expected.nosePsi,'nose pressure');
+    assertEqual(unit.gears[1].tandemSpacing,expected.tandem,'tandem spacing');
+    const wheels=resolveLayout(unit).wheels;
+    const rows=expected.tandem==null?[0]:[-expected.tandem/2,expected.tandem/2];
+    const coordinates=[[0,-expected.nosePitch/2],[0,expected.nosePitch/2]];
+    for(const side of [-1,1])for(const across of [-1,1])for(const row of rows)coordinates.push([
+        expected.wb+row,side*expected.track/2+across*expected.mainPitch/2]);
+    assertEqual(wheels.length,coordinates.length,'wheel count');
+    for(const [x,y] of coordinates)assertEqual(wheels.filter(w=>
+        Math.abs(w.x-x)<1e-7&&Math.abs(w.y-y)<1e-7).length,1,'exact published wheel center');
+    const force=expected.takeoff*9.80665/1000,mains=coordinates.length-2;
+    assertClose(wheels.reduce((total,w)=>total+w.loadKn,0),force,1e-8,'MTOW force conservation');
+    for(const wheel of wheels)assertClose(wheel.loadKn,
+        force*(wheel.axleId==='NLG'?.05/2:.95/mains),1e-8,'individual wheel load');
+    assert(unit.assumedFields.includes('percentOnMainGear'),'load split remains explicit assumption');
+    assert(/the manual gives \d+(\.\d)?% at MRW/.test(unit.notes),'manufacturer load split is recorded');
+});
+test('Airbus derivatives reuse their parent airframes and are marked representative', () => {
+    const family=BODY_SOURCE.match(/const id = \{([^}]*)\}\[family\]/)[1];
+    assert(family.includes("'a330-800':'A330-200'")&&family.includes("'a330-900':'A330-300'"),'A330neo maps to its ceo airframe');
+    assert(/representative: \/f\$\|-neo\(\?:-\|\$\)\/i/.test(BODY_SOURCE),'neo and freighter ids are representative');
+    for(const expected of airbusDerivatives)assert(existsSync(join(BODIES,`${expected.body}.glb`)),`${expected.body}.glb is shipped`);
+    assertEqual(new Set(aircraftUnits.map(u=>u.id)).size,aircraftUnits.length,'unique catalog IDs');
 });
 
 process.exit(summary());

@@ -1,0 +1,528 @@
+{
+  "schemaVersion": "1.0",
+  "units": [
+    {
+      "schemaVersion": "1.0",
+      "id": "atr72-500",
+      "domain": "aircraft",
+      "manufacturer": "ATR",
+      "model": "72-500 (MOD 5555)",
+      "gearDesignation": "D",
+      "mtow": {
+        "value": 22800,
+        "unit": "kg",
+        "basis": "ATR Aircraft Characteristics Airport Planning, Issue 00 June 2013, manufacturer-authored manual mirrored by Scribd; Section 2.1 page 3 (72-212A MOD 5555 weights), Section 7.3 page 2 (ATR 72 footprint, tires and pressure). ATR manufacturer 72-500 brochure, printed pages 20-21 / PDF pages 1-2: https://www.atr-aircraft.com/wp-content/uploads/2020/07/72-500.pdf (length, height and MTOW option 2 cross-check). https://www.scribd.com/document/536701853/Ac-All-Issue00"
+      },
+      "maxTaxiWeight": {
+        "value": 22970,
+        "unit": "kg",
+        "basis": "ATR Aircraft Characteristics Airport Planning, Issue 00 June 2013, manufacturer-authored manual mirrored by Scribd; Section 2.1 page 3 (72-212A MOD 5555 weights), Section 7.3 page 2 (ATR 72 footprint, tires and pressure). ATR manufacturer 72-500 brochure, printed pages 20-21 / PDF pages 1-2: https://www.atr-aircraft.com/wp-content/uploads/2020/07/72-500.pdf (length, height and MTOW option 2 cross-check). https://www.scribd.com/document/536701853/Ac-All-Issue00"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 10770,
+      "mainGearTrack": 4100,
+      "tirePressure": {
+        "value": 123.282077,
+        "unit": "psi",
+        "basis": "ATR Aircraft Characteristics Airport Planning, Issue 00 June 2013, manufacturer-authored manual mirrored by Scribd; Section 2.1 page 3 (72-212A MOD 5555 weights), Section 7.3 page 2 (ATR 72 footprint, tires and pressure). ATR manufacturer 72-500 brochure, printed pages 20-21 / PDF pages 1-2: https://www.atr-aircraft.com/wp-content/uploads/2020/07/72-500.pdf (length, height and MTOW option 2 cross-check). https://www.scribd.com/document/536701853/Ac-All-Issue00 Footprint table 8.5 bar main / 4.3 bar nose, converted to psi. The manual does not label these loaded or unloaded. Do not substitute the older pavement charts' 121 psi constant pressure. Equating inflation and uniform contact pressure remains a modeling approximation."
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.noseOffset (illustrative source-mesh alignment)",
+        "bodyFit.tailHeight (general brochure reference, not loaded/CG-specific)",
+        "bodyFit.attachmentHeights (illustrative source-mesh attachments)",
+        "bodyFit.mainAttachmentInset (illustrative inward lean into source sponsons; wheel centers unchanged)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 336,
+          "tandemSpacing": null,
+          "tire": "450x190-5",
+          "pressure": {
+            "value": 62.366227,
+            "unit": "psi",
+            "basis": "ATR Aircraft Characteristics Airport Planning, Issue 00 June 2013, manufacturer-authored manual mirrored by Scribd; Section 2.1 page 3 (72-212A MOD 5555 weights), Section 7.3 page 2 (ATR 72 footprint, tires and pressure). ATR manufacturer 72-500 brochure, printed pages 20-21 / PDF pages 1-2: https://www.atr-aircraft.com/wp-content/uploads/2020/07/72-500.pdf (length, height and MTOW option 2 cross-check). https://www.scribd.com/document/536701853/Ac-All-Issue00 Footprint table 8.5 bar main / 4.3 bar nose, converted to psi. The manual does not label these loaded or unloaded. Do not substitute the older pavement charts' 121 psi constant pressure. Equating inflation and uniform contact pressure remains a modeling approximation."
+          },
+          "source": "ATR Aircraft Characteristics Airport Planning, Issue 00 June 2013, manufacturer-authored manual mirrored by Scribd; Section 2.1 page 3 (72-212A MOD 5555 weights), Section 7.3 page 2 (ATR 72 footprint, tires and pressure). ATR manufacturer 72-500 brochure, printed pages 20-21 / PDF pages 1-2: https://www.atr-aircraft.com/wp-content/uploads/2020/07/72-500.pdf (length, height and MTOW option 2 cross-check). https://www.scribd.com/document/536701853/Ac-All-Issue00"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 10770,
+          "y": -2050,
+          "dualSpacing": 436,
+          "tandemSpacing": null,
+          "tire": "H34x10R16",
+          "source": "ATR Aircraft Characteristics Airport Planning, Issue 00 June 2013, manufacturer-authored manual mirrored by Scribd; Section 2.1 page 3 (72-212A MOD 5555 weights), Section 7.3 page 2 (ATR 72 footprint, tires and pressure). ATR manufacturer 72-500 brochure, printed pages 20-21 / PDF pages 1-2: https://www.atr-aircraft.com/wp-content/uploads/2020/07/72-500.pdf (length, height and MTOW option 2 cross-check). https://www.scribd.com/document/536701853/Ac-All-Issue00"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 10770,
+          "y": 2050,
+          "dualSpacing": 436,
+          "tandemSpacing": null,
+          "tire": "H34x10R16",
+          "source": "ATR Aircraft Characteristics Airport Planning, Issue 00 June 2013, manufacturer-authored manual mirrored by Scribd; Section 2.1 page 3 (72-212A MOD 5555 weights), Section 7.3 page 2 (ATR 72 footprint, tires and pressure). ATR manufacturer 72-500 brochure, printed pages 20-21 / PDF pages 1-2: https://www.atr-aircraft.com/wp-content/uploads/2020/07/72-500.pdf (length, height and MTOW option 2 cross-check). https://www.scribd.com/document/536701853/Ac-All-Issue00"
+        }
+      ],
+      "bodyFit": {
+        "length": 27166,
+        "noseOffset": 1750,
+        "tailHeight": 7650,
+        "attachmentHeights": {
+          "nose": 3010,
+          "main": 1300
+        },
+        "mainAttachmentInset": 430,
+        "source": "Dedicated licensed ATR 72-500 mesh with both engine submodels at the scene XML offsets and static six-blade propellers. Brochure gives 27.166 m length and 7.65 m reference height. Nose overhang and attachment heights are illustrative source-mesh fits; tail reference is a general brochure dimension, not a MOD 5555 loaded/CG-specific attitude. Main strut tops lean 430 mm inward into the source sponsons; tire centers are unchanged. Open source gear wells can remain after named gear exclusion. Neither body placement nor attachment calibration changes wheel centers or loads. Nose struts meet retained bay-roof/upper-body surfaces where gear exclusion leaves an open belly cutout. Attachment heights are illustrative and do not measure manufacturer strut lengths. ATR Aircraft Characteristics Airport Planning, Issue 00 June 2013, manufacturer-authored manual mirrored by Scribd; Section 2.1 page 3 (72-212A MOD 5555 weights), Section 7.3 page 2 (ATR 72 footprint, tires and pressure). ATR manufacturer 72-500 brochure, printed pages 20-21 / PDF pages 1-2: https://www.atr-aircraft.com/wp-content/uploads/2020/07/72-500.pdf (length, height and MTOW option 2 cross-check). https://www.scribd.com/document/536701853/Ac-All-Issue00"
+      },
+      "notes": "Manufacturer-selected loading variant; takeoff and ramp/taxi weights are separate. Loads use MTOW with an assumed 95% main-gear allocation. Footprint table 8.5 bar main / 4.3 bar nose, converted to psi. The manual does not label these loaded or unloaded. Do not substitute the older pavement charts' 121 psi constant pressure. Equating inflation and uniform contact pressure remains a modeling approximation. Select 72-212A MOD 5555 at 22,800 kg MTOW and 22,970 kg ramp; do not mix the basic 22,000/22,180 kg column or MOD 6219 23,000/23,170 kg. Footprint table 8.5 bar equals 123.282 psi and differs from the manual's older 121 psi pavement curves. The older clearance table is for 21,530 kg ramp and is not claimed as MOD 5555 attitude. Dedicated FlightGear family airframe; uniformly scaled illustrative overlay, not manufacturer CAD. Source proportions and engine details are not engineering dimensions.",
+      "sources": [
+        {
+          "id": "manufacturer-apm",
+          "title": "ATR 72-500 (MOD 5555) Airport Planning Manual",
+          "publisher": "ATR",
+          "url": "https://www.scribd.com/document/536701853/Ac-All-Issue00",
+          "note": "ATR Aircraft Characteristics Airport Planning, Issue 00 June 2013, manufacturer-authored manual mirrored by Scribd; Section 2.1 page 3 (72-212A MOD 5555 weights), Section 7.3 page 2 (ATR 72 footprint, tires and pressure). ATR manufacturer 72-500 brochure, printed pages 20-21 / PDF pages 1-2: https://www.atr-aircraft.com/wp-content/uploads/2020/07/72-500.pdf (length, height and MTOW option 2 cross-check)."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "erj145-er",
+      "domain": "aircraft",
+      "manufacturer": "Embraer",
+      "model": "ERJ145 ER",
+      "gearDesignation": "D",
+      "mtow": {
+        "value": 20600,
+        "unit": "kg",
+        "basis": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 ER weights and external dimensions), 20 (non-XR general dimensions), 22 (Table 2.3.1 ER forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and ER tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/"
+      },
+      "maxTaxiWeight": {
+        "value": 20700,
+        "unit": "kg",
+        "basis": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 ER weights and external dimensions), 20 (non-XR general dimensions), 22 (Table 2.3.1 ER forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and ER tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 14440,
+      "mainGearTrack": 4100,
+      "tirePressure": {
+        "value": 145,
+        "unit": "psi",
+        "basis": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 ER weights and external dimensions), 20 (non-XR general dimensions), 22 (Table 2.3.1 ER forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and ER tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/ Loaded nominal lower bound of published -0/+5 psi main and -0/+4 psi nose service bands, ER maximum-taxi-weight column."
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.noseOffset (illustrative source-mesh alignment)",
+        "bodyFit.attachmentHeights (illustrative source-mesh attachments)",
+        "bodyFit (representative ERJ145 source exterior; raised wingtip surfaces retained)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 340,
+          "tandemSpacing": null,
+          "tire": "19.5x6.75-8",
+          "pressure": {
+            "value": 82,
+            "unit": "psi",
+            "basis": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 ER weights and external dimensions), 20 (non-XR general dimensions), 22 (Table 2.3.1 ER forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and ER tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/ Loaded nominal lower bound of published -0/+5 psi main and -0/+4 psi nose service bands, ER maximum-taxi-weight column."
+          },
+          "source": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 ER weights and external dimensions), 20 (non-XR general dimensions), 22 (Table 2.3.1 ER forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and ER tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 14440,
+          "y": -2050,
+          "dualSpacing": 460,
+          "tandemSpacing": null,
+          "tire": "30x9.5-14",
+          "source": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 ER weights and external dimensions), 20 (non-XR general dimensions), 22 (Table 2.3.1 ER forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and ER tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 14440,
+          "y": 2050,
+          "dualSpacing": 460,
+          "tandemSpacing": null,
+          "tire": "30x9.5-14",
+          "source": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 ER weights and external dimensions), 20 (non-XR general dimensions), 22 (Table 2.3.1 ER forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and ER tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/"
+        }
+      ],
+      "bodyFit": {
+        "length": 29870,
+        "noseOffset": 2000,
+        "tailHeight": 6683,
+        "attachmentHeights": {
+          "nose": 2190,
+          "main": 1800
+        },
+        "source": "Dedicated ERJ145 source exterior shared by ER and LR. The source retains raised wingtip surfaces and is a representative family illustration, not an exact ER/LR variant exterior. Manufacturer length 29.87 m; tail height 6.683 m is the ER forward-CG taxi-weight ground-clearance reference. Nose overhang 2.0 m and strut attachments are illustrative source-mesh fits calibrated to retained source surfaces. Rigid fitting is not a CG or suspension simulation. Service door and passenger door remain part of the exterior; running gear and animated gear doors are excluded. Published wheel dimensions and pressure do not derive from the mesh. Nose struts meet retained bay-roof/upper-body surfaces where gear exclusion leaves an open belly cutout. Attachment heights are illustrative and do not measure manufacturer strut lengths. Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 ER weights and external dimensions), 20 (non-XR general dimensions), 22 (Table 2.3.1 ER forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and ER tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/"
+      },
+      "notes": "Manufacturer-selected loading variant; takeoff and ramp/taxi weights are separate. Loads use MTOW with an assumed 95% main-gear allocation. Loaded nominal lower bound of published -0/+5 psi main and -0/+4 psi nose service bands, ER maximum-taxi-weight column. Metric manufacturer dimensions govern; rounded imperial equivalents are not exact conversions. The ER footprint rounds its taxi weight to 45,635 lb whereas Table 2.1.1.1 gives 45,636 lb; the common 20,700 kg value is used. MTOW follows the base column rather than post-mod SB 145-53-0068 increased-weight option. Dedicated FlightGear family airframe; uniformly scaled illustrative overlay, not manufacturer CAD. Source proportions and engine details are not engineering dimensions.",
+      "sources": [
+        {
+          "id": "manufacturer-apm",
+          "title": "Embraer ERJ145 ER Airport Planning Manual",
+          "publisher": "Embraer",
+          "url": "https://portalfly.flyembraer.com/",
+          "note": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 ER weights and external dimensions), 20 (non-XR general dimensions), 22 (Table 2.3.1 ER forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and ER tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "erj145-lr",
+      "domain": "aircraft",
+      "manufacturer": "Embraer",
+      "model": "ERJ145 LR",
+      "gearDesignation": "D",
+      "mtow": {
+        "value": 22000,
+        "unit": "kg",
+        "basis": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 LR weights and external dimensions), 20 (non-XR general dimensions), 23 (Table 2.3.1 LR forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and LR tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/"
+      },
+      "maxTaxiWeight": {
+        "value": 22100,
+        "unit": "kg",
+        "basis": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 LR weights and external dimensions), 20 (non-XR general dimensions), 23 (Table 2.3.1 LR forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and LR tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 14440,
+      "mainGearTrack": 4100,
+      "tirePressure": {
+        "value": 160,
+        "unit": "psi",
+        "basis": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 LR weights and external dimensions), 20 (non-XR general dimensions), 23 (Table 2.3.1 LR forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and LR tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/ Loaded nominal center of published +/-4 psi main and +/-2 psi nose service bands, LR/LU maximum-taxi-weight column; LR MTOW selected independently."
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.noseOffset (illustrative source-mesh alignment)",
+        "bodyFit.attachmentHeights (illustrative source-mesh attachments)",
+        "bodyFit (representative ERJ145 source exterior; raised wingtip surfaces retained)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 340,
+          "tandemSpacing": null,
+          "tire": "19.5x6.75-8",
+          "pressure": {
+            "value": 84,
+            "unit": "psi",
+            "basis": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 LR weights and external dimensions), 20 (non-XR general dimensions), 23 (Table 2.3.1 LR forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and LR tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/ Loaded nominal center of published +/-4 psi main and +/-2 psi nose service bands, LR/LU maximum-taxi-weight column; LR MTOW selected independently."
+          },
+          "source": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 LR weights and external dimensions), 20 (non-XR general dimensions), 23 (Table 2.3.1 LR forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and LR tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 14440,
+          "y": -2050,
+          "dualSpacing": 460,
+          "tandemSpacing": null,
+          "tire": "H30x9.5-16",
+          "source": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 LR weights and external dimensions), 20 (non-XR general dimensions), 23 (Table 2.3.1 LR forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and LR tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 14440,
+          "y": 2050,
+          "dualSpacing": 460,
+          "tandemSpacing": null,
+          "tire": "H30x9.5-16",
+          "source": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 LR weights and external dimensions), 20 (non-XR general dimensions), 23 (Table 2.3.1 LR forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and LR tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/"
+        }
+      ],
+      "bodyFit": {
+        "length": 29870,
+        "noseOffset": 2000,
+        "tailHeight": 6675,
+        "attachmentHeights": {
+          "nose": 2185,
+          "main": 1790
+        },
+        "source": "Dedicated ERJ145 source exterior shared by ER and LR. The source retains raised wingtip surfaces and is a representative family illustration, not an exact ER/LR variant exterior. Manufacturer length 29.87 m; tail height 6.675 m is the LR forward-CG taxi-weight ground-clearance reference. Nose overhang 2.0 m and strut attachments are illustrative source-mesh fits calibrated to retained source surfaces. Rigid fitting is not a CG or suspension simulation. Service door and passenger door remain part of the exterior; running gear and animated gear doors are excluded. Published wheel dimensions and pressure do not derive from the mesh. Nose struts meet retained bay-roof/upper-body surfaces where gear exclusion leaves an open belly cutout. Attachment heights are illustrative and do not measure manufacturer strut lengths. Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 LR weights and external dimensions), 20 (non-XR general dimensions), 23 (Table 2.3.1 LR forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and LR tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100. https://portalfly.flyembraer.com/"
+      },
+      "notes": "Manufacturer-selected loading variant; takeoff and ramp/taxi weights are separate. Loads use MTOW with an assumed 95% main-gear allocation. Loaded nominal center of published +/-4 psi main and +/-2 psi nose service bands, LR/LU maximum-taxi-weight column; LR MTOW selected independently. Metric manufacturer dimensions govern; rounded imperial equivalents are not exact conversions. The ER footprint rounds its taxi weight to 45,635 lb whereas Table 2.1.1.1 gives 45,636 lb; the common 20,700 kg value is used. MTOW follows the base column rather than post-mod SB 145-53-0068 increased-weight option. Dedicated FlightGear family airframe; uniformly scaled illustrative overlay, not manufacturer CAD. Source proportions and engine details are not engineering dimensions.",
+      "sources": [
+        {
+          "id": "manufacturer-apm",
+          "title": "Embraer ERJ145 LR Airport Planning Manual",
+          "publisher": "Embraer",
+          "url": "https://portalfly.flyembraer.com/",
+          "note": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 LR weights and external dimensions), 20 (non-XR general dimensions), 23 (Table 2.3.1 LR forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and LR tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "dhc8-300-basic",
+      "domain": "aircraft",
+      "manufacturer": "De Havilland Canada",
+      "model": "Dash 8-300Q (Model 311 basic)",
+      "gearDesignation": "D",
+      "mtow": {
+        "value": 41100,
+        "unit": "lb",
+        "basis": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf"
+      },
+      "maxTaxiWeight": {
+        "value": 41300,
+        "unit": "lb",
+        "basis": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 10007.6,
+      "mainGearTrack": 7884.16,
+      "tirePressure": {
+        "value": 101,
+        "unit": "psi",
+        "basis": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf 101 psi main / 62 psi nose at rated deflection, as tabulated on footprint; cold unloaded service values are 97 / 60 psi. Footprint pressures and tire sizes apply across the listed Model 311 weights; footprint header uses the highest 43,200 lb taxi weight."
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.noseOffset (illustrative source-mesh alignment)",
+        "bodyFit.attachmentHeights (illustrative source-mesh attachments)",
+        "gear.track (explicit footprint 25 ft 10.4 in governs over rounded 25 ft 10 in front-view label)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 381,
+          "tandemSpacing": null,
+          "tire": "22x6.5-10",
+          "pressure": {
+            "value": 62,
+            "unit": "psi",
+            "basis": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf 101 psi main / 62 psi nose at rated deflection, as tabulated on footprint; cold unloaded service values are 97 / 60 psi. Footprint pressures and tire sizes apply across the listed Model 311 weights; footprint header uses the highest 43,200 lb taxi weight."
+          },
+          "source": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 10007.6,
+          "y": -3942.08,
+          "dualSpacing": 436.88,
+          "tandemSpacing": null,
+          "tire": "31x9.75-14",
+          "source": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 10007.6,
+          "y": 3942.08,
+          "dualSpacing": 436.88,
+          "tandemSpacing": null,
+          "tire": "31x9.75-14",
+          "source": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 25679.4,
+        "noseOffset": 2440,
+        "tailHeight": 7400,
+        "attachmentHeights": {
+          "nose": 910,
+          "main": 2220
+        },
+        "source": "Dedicated FlightGear DHC8-300Q airframe shared by basic and approved higher-gross-weight Model 311 configurations; no geometric stretching. Length uses exact conversion of 84 ft 3 in. Tail target 7.40 m comes from basic 41,300 lb taxi-weight minimum clearance column; HGW use is illustrative. Nose overhang 2.44 m and attachment heights are source-mesh alignment assumptions calibrated to retained source surfaces. Ground heights depend on loading and configuration; source geometry does not derive pavement wheel centers. Nose struts meet retained bay-roof/upper-body surfaces where gear exclusion leaves an open belly cutout. Attachment heights are illustrative and do not measure manufacturer strut lengths. Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf"
+      },
+      "notes": "Manufacturer-selected loading variant; takeoff and ramp/taxi weights are separate. Loads use MTOW with an assumed 95% main-gear allocation. 101 psi main / 62 psi nose at rated deflection, as tabulated on footprint; cold unloaded service values are 97 / 60 psi. Footprint pressures and tire sizes apply across the listed Model 311 weights; footprint header uses the highest 43,200 lb taxi weight.  Dedicated FlightGear family airframe; uniformly scaled illustrative overlay, not manufacturer CAD. Source proportions and engine details are not engineering dimensions.",
+      "sources": [
+        {
+          "id": "manufacturer-apm",
+          "title": "De Havilland Canada Dash 8-300Q (Model 311 basic) Airport Planning Manual",
+          "publisher": "Bombardier Aerospace",
+          "url": "https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf",
+          "note": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads)."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "dhc8-300-hgw",
+      "domain": "aircraft",
+      "manufacturer": "De Havilland Canada",
+      "model": "Dash 8-300Q (Model 311 HGW)",
+      "gearDesignation": "D",
+      "mtow": {
+        "value": 43000,
+        "unit": "lb",
+        "basis": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf"
+      },
+      "maxTaxiWeight": {
+        "value": 43200,
+        "unit": "lb",
+        "basis": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf"
+      },
+      "percentOnMainGear": 95,
+      "wheelbase": 10007.6,
+      "mainGearTrack": 7884.16,
+      "tirePressure": {
+        "value": 101,
+        "unit": "psi",
+        "basis": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf 101 psi main / 62 psi nose at rated deflection, as tabulated on footprint; cold unloaded service values are 97 / 60 psi. Footprint pressures and tire sizes apply across the listed Model 311 weights; footprint header uses the highest 43,200 lb taxi weight."
+      },
+      "assumedFields": [
+        "percentOnMainGear",
+        "bodyFit.noseOffset (illustrative source-mesh alignment)",
+        "bodyFit.attachmentHeights (illustrative source-mesh attachments)",
+        "gear.track (explicit footprint 25 ft 10.4 in governs over rounded 25 ft 10 in front-view label)",
+        "bodyFit.tailHeight (basic-weight clearance retained illustratively for HGW)"
+      ],
+      "gears": [
+        {
+          "id": "NLG",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 0,
+          "dualSpacing": 381,
+          "tandemSpacing": null,
+          "tire": "22x6.5-10",
+          "pressure": {
+            "value": 62,
+            "unit": "psi",
+            "basis": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf 101 psi main / 62 psi nose at rated deflection, as tabulated on footprint; cold unloaded service values are 97 / 60 psi. Footprint pressures and tire sizes apply across the listed Model 311 weights; footprint header uses the highest 43,200 lb taxi weight."
+          },
+          "source": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf"
+        },
+        {
+          "id": "MLG-L",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 10007.6,
+          "y": -3942.08,
+          "dualSpacing": 436.88,
+          "tandemSpacing": null,
+          "tire": "31x9.75-14",
+          "source": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf"
+        },
+        {
+          "id": "MLG-R",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 10007.6,
+          "y": 3942.08,
+          "dualSpacing": 436.88,
+          "tandemSpacing": null,
+          "tire": "31x9.75-14",
+          "source": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf"
+        }
+      ],
+      "bodyFit": {
+        "length": 25679.4,
+        "noseOffset": 2440,
+        "tailHeight": 7400,
+        "attachmentHeights": {
+          "nose": 910,
+          "main": 2220
+        },
+        "source": "Dedicated FlightGear DHC8-300Q airframe shared by basic and approved higher-gross-weight Model 311 configurations; no geometric stretching. Length uses exact conversion of 84 ft 3 in. Tail target 7.40 m comes from basic 41,300 lb taxi-weight minimum clearance column; HGW use is illustrative. Nose overhang 2.44 m and attachment heights are source-mesh alignment assumptions calibrated to retained source surfaces. Ground heights depend on loading and configuration; source geometry does not derive pavement wheel centers. Nose struts meet retained bay-roof/upper-body surfaces where gear exclusion leaves an open belly cutout. Attachment heights are illustrative and do not measure manufacturer strut lengths. Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads). https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf"
+      },
+      "notes": "Manufacturer-selected loading variant; takeoff and ramp/taxi weights are separate. Loads use MTOW with an assumed 95% main-gear allocation. 101 psi main / 62 psi nose at rated deflection, as tabulated on footprint; cold unloaded service values are 97 / 60 psi. Footprint pressures and tire sizes apply across the listed Model 311 weights; footprint header uses the highest 43,200 lb taxi weight.  Dedicated FlightGear family airframe; uniformly scaled illustrative overlay, not manufacturer CAD. Source proportions and engine details are not engineering dimensions.",
+      "sources": [
+        {
+          "id": "manufacturer-apm",
+          "title": "De Havilland Canada Dash 8-300Q (Model 311 HGW) Airport Planning Manual",
+          "publisher": "Bombardier Aerospace",
+          "url": "https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf",
+          "note": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads)."
+        },
+        {
+          "id": "ac-6g",
+          "title": "AC 150/5320-6G, Appendix G, G.1.3",
+          "publisher": "U.S. Federal Aviation Administration",
+          "note": "95% main-gear loading is an assumed pavement-design load split."
+        }
+      ]
+    }
+  ]
+}

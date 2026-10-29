@@ -1,0 +1,71 @@
+[
+  {
+    "manufacturer": "De Havilland Canada",
+    "body": "DHC8-300",
+    "massUnit": "lb",
+    "wheelbase": 10007.6,
+    "track": 7884.16,
+    "mainPitch": 436.88,
+    "nosePitch": 381,
+    "mainTire": "31x9.75-14",
+    "noseTire": "22x6.5-10",
+    "pressure": 101,
+    "nosePressure": 62,
+    "length": 25679.4,
+    "noseOffset": 2440,
+    "tailHeight": 7400,
+    "attachments": {
+      "nose": 910,
+      "main": 2220
+    },
+    "url": "https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf",
+    "reference": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads).",
+    "pressureNote": "101 psi main / 62 psi nose at rated deflection, as tabulated on footprint; cold unloaded service values are 97 / 60 psi. Footprint pressures and tire sizes apply across the listed Model 311 weights; footprint header uses the highest 43,200 lb taxi weight.",
+    "bodyNote": "Dedicated FlightGear DHC8-300Q airframe shared by basic and approved higher-gross-weight Model 311 configurations; no geometric stretching. Length uses exact conversion of 84 ft 3 in. Tail target 7.40 m comes from basic 41,300 lb taxi-weight minimum clearance column; HGW use is illustrative. Nose overhang 2.44 m and attachment heights are source-mesh alignment assumptions calibrated to retained source surfaces. Ground heights depend on loading and configuration; source geometry does not derive pavement wheel centers. Nose struts meet retained bay-roof/upper-body surfaces where gear exclusion leaves an open belly cutout. Attachment heights are illustrative and do not measure manufacturer strut lengths.",
+    "assumptions": [
+      "bodyFit.noseOffset (illustrative source-mesh alignment)",
+      "bodyFit.attachmentHeights (illustrative source-mesh attachments)",
+      "gear.track (explicit footprint 25 ft 10.4 in governs over rounded 25 ft 10 in front-view label)"
+    ],
+    "id": "dhc8-300-basic",
+    "model": "Dash 8-300Q (Model 311 basic)",
+    "mtow": 41100,
+    "taxi": 41300,
+    "manualPublisher": "Bombardier Aerospace"
+  },
+  {
+    "manufacturer": "De Havilland Canada",
+    "body": "DHC8-300",
+    "massUnit": "lb",
+    "wheelbase": 10007.6,
+    "track": 7884.16,
+    "mainPitch": 436.88,
+    "nosePitch": 381,
+    "mainTire": "31x9.75-14",
+    "noseTire": "22x6.5-10",
+    "pressure": 101,
+    "nosePressure": 62,
+    "length": 25679.4,
+    "noseOffset": 2440,
+    "tailHeight": 7400,
+    "attachments": {
+      "nose": 910,
+      "main": 2220
+    },
+    "url": "https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf",
+    "reference": "Bombardier Q300 Model 311 Airport Planning Manual, July 27 2001; PDF pages 21-22 (weight definitions and BASIC/CR803SO00002 columns), 24 (general dimensions), 25 (basic-weight ground clearances), 104 (dimensioned footprint and tire pressures), 105 (taxi-weight maximum ground loads).",
+    "pressureNote": "101 psi main / 62 psi nose at rated deflection, as tabulated on footprint; cold unloaded service values are 97 / 60 psi. Footprint pressures and tire sizes apply across the listed Model 311 weights; footprint header uses the highest 43,200 lb taxi weight.",
+    "bodyNote": "Dedicated FlightGear DHC8-300Q airframe shared by basic and approved higher-gross-weight Model 311 configurations; no geometric stretching. Length uses exact conversion of 84 ft 3 in. Tail target 7.40 m comes from basic 41,300 lb taxi-weight minimum clearance column; HGW use is illustrative. Nose overhang 2.44 m and attachment heights are source-mesh alignment assumptions calibrated to retained source surfaces. Ground heights depend on loading and configuration; source geometry does not derive pavement wheel centers. Nose struts meet retained bay-roof/upper-body surfaces where gear exclusion leaves an open belly cutout. Attachment heights are illustrative and do not measure manufacturer strut lengths.",
+    "assumptions": [
+      "bodyFit.noseOffset (illustrative source-mesh alignment)",
+      "bodyFit.attachmentHeights (illustrative source-mesh attachments)",
+      "gear.track (explicit footprint 25 ft 10.4 in governs over rounded 25 ft 10 in front-view label)",
+      "bodyFit.tailHeight (basic-weight clearance retained illustratively for HGW)"
+    ],
+    "id": "dhc8-300-hgw",
+    "model": "Dash 8-300Q (Model 311 HGW)",
+    "mtow": 43000,
+    "taxi": 43200,
+    "manualPublisher": "Bombardier Aerospace"
+  }
+]

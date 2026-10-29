@@ -1,0 +1,70 @@
+[
+  {
+    "id": "erj145-er",
+    "manufacturer": "Embraer",
+    "model": "ERJ145 ER",
+    "body": "ERJ145",
+    "mtow": 20600,
+    "taxi": 20700,
+    "massUnit": "kg",
+    "wheelbase": 14440,
+    "track": 4100,
+    "mainPitch": 460,
+    "nosePitch": 340,
+    "mainTire": "30x9.5-14",
+    "noseTire": "19.5x6.75-8",
+    "pressure": 145,
+    "nosePressure": 82,
+    "length": 29870,
+    "noseOffset": 2000,
+    "tailHeight": 6683,
+    "attachments": {
+      "nose": 2190,
+      "main": 1800
+    },
+    "url": "https://portalfly.flyembraer.com/",
+    "reference": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 ER weights and external dimensions), 20 (non-XR general dimensions), 22 (Table 2.3.1 ER forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and ER tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100.",
+    "pressureNote": "Loaded nominal lower bound of published -0/+5 psi main and -0/+4 psi nose service bands, ER maximum-taxi-weight column.",
+    "bodyNote": "Dedicated ERJ145 source exterior shared by ER and LR. The source retains raised wingtip surfaces and is a representative family illustration, not an exact ER/LR variant exterior. Manufacturer length 29.87 m; tail height 6.683 m is the ER forward-CG taxi-weight ground-clearance reference. Nose overhang 2.0 m and strut attachments are illustrative source-mesh fits calibrated to retained source surfaces. Rigid fitting is not a CG or suspension simulation. Service door and passenger door remain part of the exterior; running gear and animated gear doors are excluded. Published wheel dimensions and pressure do not derive from the mesh. Nose struts meet retained bay-roof/upper-body surfaces where gear exclusion leaves an open belly cutout. Attachment heights are illustrative and do not measure manufacturer strut lengths.",
+    "assumptions": [
+      "bodyFit.noseOffset (illustrative source-mesh alignment)",
+      "bodyFit.attachmentHeights (illustrative source-mesh attachments)",
+      "bodyFit (representative ERJ145 source exterior; raised wingtip surfaces retained)"
+    ],
+    "discrepancy": "Metric manufacturer dimensions govern; rounded imperial equivalents are not exact conversions. The ER footprint rounds its taxi weight to 45,635 lb whereas Table 2.1.1.1 gives 45,636 lb; the common 20,700 kg value is used. MTOW follows the base column rather than post-mod SB 145-53-0068 increased-weight option."
+  },
+  {
+    "id": "erj145-lr",
+    "manufacturer": "Embraer",
+    "model": "ERJ145 LR",
+    "body": "ERJ145",
+    "mtow": 22000,
+    "taxi": 22100,
+    "massUnit": "kg",
+    "wheelbase": 14440,
+    "track": 4100,
+    "mainPitch": 460,
+    "nosePitch": 340,
+    "mainTire": "H30x9.5-16",
+    "noseTire": "19.5x6.75-8",
+    "pressure": 160,
+    "nosePressure": 84,
+    "length": 29870,
+    "noseOffset": 2000,
+    "tailHeight": 6675,
+    "attachments": {
+      "nose": 2185,
+      "main": 1790
+    },
+    "url": "https://portalfly.flyembraer.com/",
+    "reference": "Embraer APM-145/1100 Rev 16, November 29 2024; PDF pages 18 (Table 2.1.1.1 LR weights and external dimensions), 20 (non-XR general dimensions), 23 (Table 2.3.1 LR forward-CG taxi-weight clearances), 97 (loaded pressure definition), 100 (Figure 7.2.1 footprint and LR tire/pressure column). Public Airport Planning menu: (4)ERJ-EMB 145_APM_140pdf; downloaded document title is EMB-145 APM-145/1100.",
+    "pressureNote": "Loaded nominal center of published +/-4 psi main and +/-2 psi nose service bands, LR/LU maximum-taxi-weight column; LR MTOW selected independently.",
+    "bodyNote": "Dedicated ERJ145 source exterior shared by ER and LR. The source retains raised wingtip surfaces and is a representative family illustration, not an exact ER/LR variant exterior. Manufacturer length 29.87 m; tail height 6.675 m is the LR forward-CG taxi-weight ground-clearance reference. Nose overhang 2.0 m and strut attachments are illustrative source-mesh fits calibrated to retained source surfaces. Rigid fitting is not a CG or suspension simulation. Service door and passenger door remain part of the exterior; running gear and animated gear doors are excluded. Published wheel dimensions and pressure do not derive from the mesh. Nose struts meet retained bay-roof/upper-body surfaces where gear exclusion leaves an open belly cutout. Attachment heights are illustrative and do not measure manufacturer strut lengths.",
+    "assumptions": [
+      "bodyFit.noseOffset (illustrative source-mesh alignment)",
+      "bodyFit.attachmentHeights (illustrative source-mesh attachments)",
+      "bodyFit (representative ERJ145 source exterior; raised wingtip surfaces retained)"
+    ],
+    "discrepancy": "Metric manufacturer dimensions govern; rounded imperial equivalents are not exact conversions. The ER footprint rounds its taxi weight to 45,635 lb whereas Table 2.1.1.1 gives 45,636 lb; the common 20,700 kg value is used. MTOW follows the base column rather than post-mod SB 145-53-0068 increased-weight option."
+  }
+]

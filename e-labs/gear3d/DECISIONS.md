@@ -6,6 +6,29 @@ why, so a later maintainer can overturn it on the merits rather than guessing.
 
 ---
 
+## D44. A derivative borrows its parent's airframe, and says so (v1.14)
+
+**Decision.** `aircraft/airbus-derivatives.json` adds the A319neo, A320neo,
+A321neo, A321XLR, A330-200F, A330-800 and A330-900, each pinned to one weight
+variant of Airbus's own Aircraft Characteristics manual. None has a mesh of its
+own. Each is drawn on its parent's airframe (A330-800 on the A330-200, A330-900
+on the A330-300, a neo on its ceo) and `vehicleBodySpec` marks it
+`representative`.
+
+**Why this does not contradict D38.** D38 forbids a family borrowing a
+*neighbor's* airframe. A re-engined or freighter derivative is the same
+family: the fuselage length and nose station are unchanged (the A330-900
+differs from the A330-300 by 10 mm), so the uniform scale is exact in length.
+What is not modelled (larger nacelles, sharklets, the A330neo's 64.00 m span,
+the freighter's nose fairing) is named in each unit's `bodyFit.source`. The
+wheels, tires, pressures and loads come only from the manual, never the mesh.
+
+**Load split.** The manuals print the percentage of MRW on the main gear group
+at maximum aft CG (91.6% to 95.2%). The units keep the library's explicit 95%
+design split for consistency, and record the manufacturer value in `notes`.
+
+---
+
 ## D38. Vehicles get a body, drawn as illustration, and nothing can be measured off it (v1.13)
 
 **Decision.** *Show vehicle body* (Isolation panel, on by default) puts a

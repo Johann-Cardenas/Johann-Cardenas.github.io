@@ -519,3 +519,54 @@ are explicit assumptions, not silently reconciled data. Each has a dedicated
 GPL FlightGear mesh, corresponding editable AC3D/XML source and recorded hashes.
 
 See [the manufacturer and mesh review](https://github.com/ictuillinois/CEE-406/blob/main/docs/gear3d-body-review/regional-hubs.md).
+
+## Further regional configurations
+
+`aircraft/regional-expansion.json` adds ATR 72-500 MOD 5555, ERJ145 ER,
+ERJ145 LR, Dash 8-300Q Model 311 basic and Model 311 HGW. These five loading
+configurations use three dedicated licensed airframes. Manufacturer footprints,
+tires, pressures, takeoff and taxi weights are individually reviewed; the 95%
+main-load allocation remains an explicit pavement-design assumption.
+
+ATR uses manufacturer-authored June 2013 A.C. Issue 00, Sections 2.1 page 3
+and 7.3 page 2, publicly mirrored by
+[Scribd](https://www.scribd.com/document/536701853/Ac-All-Issue00).
+The [manufacturer brochure](https://www.atr-aircraft.com/wp-content/uploads/2020/07/72-500.pdf)
+confirms dimensions and 22,800 kg takeoff option. Footprint pressures 8.5/4.3 bar
+govern over the older pavement chart's 121 psi; loaded/unloaded convention is
+unspecified. ERJ uses Embraer APM-145/1100 Rev 16, November 29 2024, PDF pages
+18, 20, 22-23, 97 and 100 through the
+[public Airport Planning portal](https://portalfly.flyembraer.com/); separate ER/LR
+columns retain their own loaded tire pressures and rim sizes. Dash 8 uses the
+[Bombardier Model 311 manual](https://dehavillandportal.com/assets/public-documents/D8300-APM.pdf),
+July 27 2001, PDF pages 21-25 and 104-105; pressures at rated deflection govern
+over cold unloaded values, and precise imperial footprint dimensions govern
+over rounded general drawing labels.
+
+See [the consolidated review](https://github.com/ictuillinois/CEE-406/blob/main/docs/gear3d-body-review/regional-expansion.md)
+for configuration-specific sources, discrepancies, archived editable meshes and
+conversion comparisons. Visual attachments and body proportions do not define
+engineering wheel centers, tire dimensions or loads.
+
+The ERJ145 source mesh retains raised wingtip surfaces. Its ER/LR overlays are
+marked representative; their appearance is not a claim of variant-exact CAD.
+
+## Airbus re-engined and freighter derivatives
+
+`aircraft/airbus-derivatives.json` adds the A319neo (WV055), A320neo (WV054),
+A321neo (WV053), A321XLR (WV100), A330-200F (WV000), A330-800 (WV821) and
+A330-900 (WV921). Each is the heaviest standard variant in the manufacturer's
+Aircraft Characteristics: weights from section 2-1-1, dimensions from 2-2-0,
+and wheel base, track, tire sizes and pressures at MRW from the 7-2-0 footprint.
+Manuals: [A319, Rev. Jul 01/26](https://mediaassets.airbus.com/pm_38_916_916263-0hxcf0237y.pdf?fileName=aca31901-jul-2026-2.pdf),
+[A320, Rev. Dec 01/23](https://www.aircraft.airbus.com/sites/g/files/jlcbta126/files/2023-12/ac_a320_1223.pdf),
+[A321, Rev. Jul 01/26](https://mediaassets.airbus.com/pm_38_916_916230-7u6neg4lfg.pdf?fileName=aca32101-jul-2026.pdf),
+[A330, Rev. Dec 01/25](https://www.aircraft.airbus.com/sites/g/files/jlcbta126/files/2025-12/AC_A330_20251201.pdf).
+Page references are carried per unit.
+
+Choices that matter: the A321neo-ACF table (97 t) is not mixed into the A321neo;
+dynamic-payload variants (WV820, WV920, WV002) give way to the plain variant of
+the same weight; the footprint pressures are not labelled loaded or unloaded.
+The 95% main-gear split stays an explicit assumption; each unit's notes give
+the manufacturer's own percentage. Bodies are the parent airframes, marked
+representative (DECISIONS D44).

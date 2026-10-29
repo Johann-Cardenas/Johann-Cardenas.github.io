@@ -161,3 +161,44 @@ not manufacturer CAD or the unconverted textured simulation. Runtime uniformly
 scales the illustrative body, keeps 150 mm minimum clearance and attaches its
 struts to retained surfaces/gear-bay roofs. The source archives are never fetched
 by the viewer. Source proportions and visual height remain approximate.
+
+## Further regional aircraft: editable AC3D sources (GPL v2)
+
+ATR72-500.glb, ERJ145.glb and DHC8-300.glb are three additional GPL v2
+FlightGear derivatives. ERJ145 ER/LR and Dash 8-300Q basic/HGW configurations
+share their corresponding dedicated family exterior.
+
+The ERJ145 source retains raised wingtip surfaces. It is a representative
+family illustration, not an exact ER/LR variant exterior; the source geometry
+does not establish the selected manufacturer's configuration.
+
+| Body | Authors/project, pinned commit | Corresponding editable source |
+|---|---|---|
+| ATR72-500.glb | Ryan Miller, [FGMEMBERS ATR-72-500](https://github.com/FGMEMBERS/ATR-72-500/tree/b1c036cde19c0cdba32f3c9b8abc4370406134f8) | [atr72-500-ac3d-source.zip](sources/atr72-500-ac3d-source.zip) |
+| ERJ145.glb | Emmanuel Baranger, [FGMEMBERS Embraer-ERJ-145](https://github.com/FGMEMBERS/Embraer-ERJ-145/tree/6bb8e16db9772e5b9a6012de7c955e064c6550e1) | [erj145-ac3d-source.zip](sources/erj145-ac3d-source.zip) |
+| DHC8-300.glb | Alex Park, [FGMEMBERS dhc8](https://github.com/FGMEMBERS/dhc8/tree/37ed47c80200d7879ebcd11a3139abbb026d8498) | [dhc8-300-ac3d-source.zip](sources/dhc8-300-ac3d-source.zip) |
+
+Archives retain original geometry, scene/setup XML, COPYING and supplied author
+documentation. ATR includes both engine inputs and their XML offsets. Manufacturer
+manuals and brochures are referenced separately and are not redistributed in
+these source archives. [Archive/input hashes](sources/ac3d-manifest.json) pin
+the corresponding sources.
+
+Changes: remove textures and simulation states; exclude running gear, internal
+equipment and effect billboards; retain exterior surfaces and static propellers;
+triangulate polygons and bake rigid transforms; merge without triangle
+simplification. ATR retains its six-blade state; four-blade alternatives and blur
+disks are excluded. ERJ excludes explicitly named French running-gear objects.
+Dash 8 uses an exterior object allowlist. Uniform length scaling preserves
+source proportions; no fuselage or wing is stretched to create another variant.
+Attachments and ground attitude remain illustrative. See the
+[consolidated source and conversion review](https://github.com/ictuillinois/CEE-406/blob/main/docs/gear3d-body-review/regional-expansion.md).
+
+## Airbus derivatives on parent airframes
+
+The A319neo, A320neo, A321neo and A321XLR use the A319, A320 and A321 bodies;
+the A330-200F and A330-800 use the A330-200 body; the A330-900 uses the A330-300
+body. No new mesh is added and the credits above apply unchanged. Each is
+labelled a representative airframe: fuselage length and nose station match the
+manufacturer, while neo nacelles, sharklets, the A330neo wing and the
+freighter's nose fairing are not modelled.
