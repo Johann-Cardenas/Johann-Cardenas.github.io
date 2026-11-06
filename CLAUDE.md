@@ -71,7 +71,7 @@ Failing to follow this protocol risks merge conflicts and lost work.
 
 ## What This Is
 Personal academic portfolio & research tools site (GitHub Pages + Jekyll).
-Owner: Johann Cardenas — PhD, civil/transportation engineering.
+Owner: Johann Cardenas — PhD(c), civil/transportation engineering.
 
 ## Project Layout
 ```
