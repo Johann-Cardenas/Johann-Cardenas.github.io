@@ -13,6 +13,9 @@ import { gateImplausibleSegments, frameIsWorldFixed } from './pose/plausible.js'
 import { travelDirection, classifyView, frontalFacing, perFrameScale } from './calib/scale.js';
 import { detectEvents } from './events/detect.js';
 import { computeMetrics } from './metrics/compute.js';
+import { fitKinematicModel } from './model/kinematic.js';
+import { energyCurves } from './model/energetics.js';
+import { efficiencyReport } from './model/efficiency.js';
 import { scoreAnalysis } from './scoring/score.js';
 import { recommend } from './recommend/rules.js';
 import { ENGINE_VERSION } from './version.js';
@@ -233,6 +236,31 @@ export function runPipeline(series, opts) {
         facing,
         viewMargin: auto.margin
     };
+    /* ---- the rigid-body model (v1.1) -----------------------------------
+       Fitted once, after scaling and events, because neither depends on it:
+       the event detectors and the scale stay exactly as validated, and the
+       model adds measurements rather than replacing the inputs to the old
+       ones. Sagittal only — it is a planar model. */
+    const model = view === 'sagittal'
+        ? fitKinematicModel(cond, { view })
+        : { available: false, reason: 'The rigid-body model is planar and is fitted to sagittal views only.' };
+    if (model.available && model.fit.residualPct > 3) {
+        warnings.push({
+            code: 'model-fit-poor',
+            message: `A rigid human skeleton explains the landmarks poorly in this clip (median residual ${model.fit.residualPct.toFixed(1)}% of leg length). Limbs that appear to change shape usually mean the camera is not square to the runner or one side is hidden. The model-based measurements are downgraded.`
+        });
+    }
+    /* What turns a camera-frame horizontal velocity into one over the ground:
+       the belt speed on a treadmill, nothing for a fixed camera overground, and
+       no answer at all for a camera that panned. */
+    const groundVxMs = (ctx.surface === 'treadmill')
+        ? (Number.isFinite(ctx.speedMs) ? ctx.speedMs : null)
+        : (spatialFromDisplacement ? 0 : null);
+    const energy = model.available ? energyCurves(model, cond, scale.mPerPxMedian, { groundVxMs }) : null;
+    ctx.model = model;
+    ctx.energy = energy;
+    ctx.groundVxMs = groundVxMs;
+
     const computed = computeMetrics(cond, scale, events, ctx);
 
     /* Overground speed is measured, not entered, so it becomes available only
@@ -241,7 +269,11 @@ export function runPipeline(series, opts) {
         : (computed.metrics.speed.combined && computed.metrics.speed.combined.value) || null;
 
     const scores = scoreAnalysis(computed.metrics, { speedMs: speedForNorms, sex: opts.sex });
-    const plan = recommend(computed.metrics, { ...ctx, speedMs: speedForNorms });
+    const efficiency = efficiencyReport(computed.metrics, {
+        speedMs: speedForNorms, model, workPerStride: computed.workPerStride,
+        springCheck: computed.springCheck, fps, view
+    });
+    const plan = recommend(computed.metrics, { ...ctx, speedMs: speedForNorms, efficiency });
 
     const elapsed = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
 
@@ -283,12 +315,22 @@ export function runPipeline(series, opts) {
         plausibility,
         strideCount: computed.strideCount,
         metrics: computed.metrics,
+        /* a summary of the fit, not the per-frame arrays: those live in
+           _internal, and a stored record should not carry them */
+        model: model.available
+            ? { available: true, dof: model.fit.dof, residualPct: model.fit.residualPct,
+                residualP90Pct: model.fit.residualP90Pct, coverage: model.fit.coverage,
+                meanIterations: model.fit.meanIterations, perLandmarkPct: model.fit.perLandmarkPct,
+                segmentLengthsM: Object.fromEntries(Object.entries(model.geom.lengths)
+                    .map(([k, L]) => [k, Number.isFinite(L) ? L * scale.mPerPxMedian : null])) }
+            : { available: false, reason: model.reason },
+        efficiency,
         scores,
         findings: plan.findings,
         findingsSuppressed: plan.suppressed,
         warnings,
         /* kept for the charts and the overlay, not part of the stored record */
-        _internal: { cond, series: computed.series, strides: computed.strides, scale, com: computed.com }
+        _internal: { cond, series: computed.series, strides: computed.strides, scale, com: computed.com, model, energy }
     };
 }
 

@@ -32,7 +32,7 @@ export const DEMOS = [
         kind: 'synthetic',
         label: 'Synthetic runner',
         menuLabel: 'Demo — synthetic runner',
-        summary: 'A runner generated from a physical model, so the true answers are known and the engine can be marked against them.',
+        summary: 'Generated from a physical model — the true answers are known.',
         /* generated at 240 fps: the demo should not also be demonstrating
            the frame-rate limit, which the filmed clip covers */
         fps: 240,
@@ -43,7 +43,7 @@ export const DEMOS = [
         kind: 'video',
         label: 'Filmed on a treadmill',
         menuLabel: 'Demo — filmed on a treadmill',
-        summary: 'A real phone clip: portrait, 30 fps, shot at an angle from the side of a treadmill. Much of the report is withheld, and the app says why.',
+        summary: 'A real 30 fps phone clip, deliberately ordinary.',
         src: './demo/treadmill-30fps.mp4',
         filename: 'treadmill-30fps.mp4',
         bytes: 4310714,

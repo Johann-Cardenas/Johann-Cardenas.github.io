@@ -60,6 +60,11 @@ import { createTracker } from '../src/engine/pose/mediapipe.js';
 import { DEMOS, DEMO_BY_ID } from '../src/ui/demos.js';
 import { bestMotionWindow, MOTION_MARGIN } from '../src/ui/propose.js';
 import { readFileSync } from 'node:fs';
+import { fitKinematicModel, jointAngles as modelJointAngles } from '../src/engine/model/kinematic.js';
+import { energyCurves, workOver, minettiInternalWork } from '../src/engine/model/energetics.js';
+import { cadenceSweep } from '../src/engine/model/efficiency.js';
+import { kneeFlexionSeries, elbowAngleSeries } from '../src/engine/metrics/angles.js';
+import { atLeast as atLeastConf } from '../src/engine/types.js';
 
 /* ============================================================
    1. Statistics and geometry primitives
@@ -1400,7 +1405,7 @@ test('the metric catalog is complete and self-describing', () => {
     for (const m of METRICS) {
         assert(m.label && m.definition && m.formula, `${m.id} must carry a label, a definition and a formula`);
         assert(['sagittal', 'frontal'].includes(m.view), `${m.id} view`);
-        assert(DIMENSIONS.some(d => d.id === m.dimension) || m.dimension === 'spatial',
+        assert(DIMENSIONS.some(d => d.id === m.dimension) || m.dimension === 'spatial' || m.dimension === 'mechanics',
             `${m.id} dimension ${m.dimension} must be known`);
     }
     for (const id of SYMMETRY_SOURCES) assert(METRIC_BY_ID[id], `symmetry source ${id} must be a real metric`);
@@ -1817,6 +1822,233 @@ test('the stage-2 hook accepts a model when one is supplied', () => {
     const without = runPipeline(g.series, { heightM: 1.75, surface: 'treadmill', speedMs: 3.0 }).metrics.gct.sides.L.value;
     assertClose(withModel, g.truth.gctMs.L, 10, 'a perfect stage-2 model must not make the answer worse');
     note(`geometry only ${without.toFixed(1)} ms, with a perfect stage-2 voter ${withModel.toFixed(1)} ms, truth ${g.truth.gctMs.L.toFixed(1)} ms`);
+});
+
+/* ============================================================
+   v1.1 — the rigid-body model, segmental energetics, the
+   efficiency report, and strike detection under noise.
+   ============================================================ */
+
+group('Rigid-body model — fit and accuracy (v1.1)');
+
+const rmsBetween = (a, b, skip = 60) => {
+    let s = 0, n = 0;
+    for (let i = skip; i < a.length - skip; i++) {
+        if (Number.isFinite(a[i]) && Number.isFinite(b[i])) { s += (a[i] - b[i]) ** 2; n++; }
+    }
+    return Math.sqrt(s / n);
+};
+
+test('a clean rigid runner is explained almost exactly, with its own segment lengths', () => {
+    const g = synthGait({ fps: 120, seed: 7, rigidLegs: true });
+    const c = condition(g.series, { fps: 120 });
+    const m = fitKinematicModel(c, { view: 'sagittal' });
+    assert(m.available, m.reason);
+    assertEqual(m.fit.dof, 14, 'fourteen degrees of freedom');
+    assert(m.fit.residualPct < 0.1, `clean residual ${m.fit.residualPct.toFixed(3)}% of leg length`);
+    const pxPerM = (g.params.fillFrac * g.params.imageH) / g.params.heightM;
+    assertClose(m.geom.lengths.thighL / pxPerM, 0.245 * g.params.heightM, 0.005, 'thigh length recovered');
+    assertClose(m.geom.lengths.shankL / pxPerM, 0.246 * g.params.heightM, 0.005, 'shank length recovered');
+    note(`residual ${m.fit.residualPct.toFixed(3)}%, ${m.fit.meanIterations.toFixed(1)} Gauss-Newton iterations per frame`);
+});
+
+test('under landmark noise the model beats three-landmark angles', () => {
+    const clean = condition(synthGait({ fps: 120, seed: 7, rigidLegs: true }).series, { fps: 120 });
+    const noisy = condition(synthGait({ fps: 120, seed: 7, rigidLegs: true, noiseFrac: 0.02 }).series, { fps: 120 });
+    const m = fitKinematicModel(noisy, { view: 'sagittal' });
+    const truthKnee = kneeFlexionSeries(clean, 'L'), directKnee = kneeFlexionSeries(noisy, 'L');
+    const truthElbow = elbowAngleSeries(clean, 'L'), directElbow = elbowAngleSeries(noisy, 'L');
+    const modelElbow = m.angles.L.elbowFlex.map(v => 180 - v);
+    const k = [rmsBetween(directKnee, truthKnee), rmsBetween(m.angles.L.kneeFlex, truthKnee)];
+    const e = [rmsBetween(directElbow, truthElbow), rmsBetween(modelElbow, truthElbow)];
+    assert(k[1] < 0.85 * k[0], `knee: model ${k[1].toFixed(2)} deg must beat direct ${k[0].toFixed(2)} deg by 15%`);
+    assert(e[1] < 0.75 * e[0], `elbow: model ${e[1].toFixed(2)} deg must beat direct ${e[0].toFixed(2)} deg by 25%`);
+    note(`RMS error at 2% noise — knee ${k[0].toFixed(2)} -> ${k[1].toFixed(2)} deg, elbow ${e[0].toFixed(2)} -> ${e[1].toFixed(2)} deg`);
+});
+
+test('the model is planar and says so on a frontal clip', () => {
+    const g = synthGait({ fps: 120, view: 'frontal' });
+    const r = runPipeline(g.series, { heightM: 1.75, surface: 'treadmill', speedMs: 3.0, view: 'frontal' });
+    assert(r.ok, r.message);
+    assertEqual(r.model.available, false, 'no model on a frontal view');
+    assertEqual(r.metrics.thighAngleContact.confidence, 'unavailable');
+    assertEqual(r.efficiency.available, false);
+});
+
+test('MIRROR INVARIANCE holds for the model-based measurements', () => {
+    const opts = { heightM: 1.75, surface: 'treadmill', speedMs: 3.0 };
+    const a = runPipeline(synthGait({ fps: 240, seed: 11, physical: true }).series, opts);
+    const b = runPipeline(synthGait({ fps: 240, seed: 11, physical: true, direction: -1 }).series, opts);
+    /* compared as the mean of both sides: the generator offsets each hip a few
+       millimeters along the line of travel, so mirroring the clip legitimately
+       exchanges which leg carries that offset (the direct angles show the same
+       exchange) */
+    const both = (r, id) => (r.metrics[id].sides.L.value + r.metrics[id].sides.R.value) / 2;
+    for (const id of ['thighAngleContact', 'peakKneeFlexionSwing', 'ankleAngleContact']) {
+        assertClose(both(b, id), both(a, id), 0.5, `${id} mirrored`);
+    }
+    assertClose(b.metrics.internalWork.combined.value, a.metrics.internalWork.combined.value, 0.03, 'internal work mirrored');
+});
+
+test('the angle wrap is arithmetic: a huge input cannot hang the fit', () => {
+    const n = 4;
+    const c = { trunk: new Float64Array(n).fill(1e12), head: new Float64Array(n) };
+    const r = { trunk: new Float64Array(n) };
+    for (const s of ['L', 'R']) for (const k of ['thigh', 'shank', 'foot', 'upperArm', 'forearm']) { c[k + s] = new Float64Array(n).fill(1e15); r[k + s] = new Float64Array(n); }
+    const t0 = Date.now();
+    const a = modelJointAngles(c, r, n);
+    assert(Date.now() - t0 < 200, 'returned promptly');
+    assert(a.L.hipFlex.every(v => Number.isFinite(v) && Math.abs(v) <= 180), 'wrapped into range');
+});
+
+group('Segmental energetics — against a runner whose physics is known (v1.1)');
+
+const PHYS = synthGait({ fps: 240, seed: 3, physical: true });
+const PHYS_R = runPipeline(PHYS.series, { heightM: 1.75, surface: 'treadmill', speedMs: PHYS.params.speedMs, massKg: 70 });
+
+test('the physical runner obeys the dynamics it was built with', () => {
+    const tr = PHYS.truth.physical;
+    assert(tr, 'physical truth present');
+    const ts = 60 / PHYS.params.cadenceSpm, tc = PHYS.params.dutyFactor * 2 * ts, tf = ts - tc;
+    assertClose(tr.comExcursionM, tr.stanceDropM + 9.80665 * tf * tf / 8, 1e-4, 'excursion = stance drop + ballistic flight');
+    assertBetween(tr.stanceDropM, 0.04, 0.08, 'stance drop is the spring-mass prediction');
+    note(`stance drop ${(tr.stanceDropM * 100).toFixed(2)} cm, excursion ${(tr.comExcursionM * 100).toFixed(2)} cm, vertical work ${tr.externalWorkVerticalJkgm.toFixed(3)}, forward ${tr.externalWorkForwardJkgm.toFixed(3)} J/kg/m`);
+});
+
+test('external work, vertical and forward, is recovered from the video', () => {
+    const tr = PHYS.truth.physical;
+    const v = PHYS_R.metrics.externalWorkVertical.combined.value;
+    const f = PHYS_R.metrics.externalWorkForward.combined.value;
+    assertClose(v, tr.externalWorkVerticalJkgm, 0.05 * tr.externalWorkVerticalJkgm, 'vertical within 5%');
+    assertClose(f, tr.externalWorkForwardJkgm, 0.15 * tr.externalWorkForwardJkgm, 'forward within 15%');
+    note(`vertical ${v.toFixed(3)} vs ${tr.externalWorkVerticalJkgm.toFixed(3)}, forward ${f.toFixed(3)} vs ${tr.externalWorkForwardJkgm.toFixed(3)} J/kg/m`);
+});
+
+test('the stance drop is measured, and agrees with the spring-mass model', () => {
+    const tr = PHYS.truth.physical;
+    const d = PHYS_R.metrics.stanceComDrop.combined.value;
+    assertClose(d, tr.stanceDropM * 100, 0.1 * tr.stanceDropM * 100, 'stance drop within 10%');
+    assertEqual(PHYS_R.efficiency.springCheck.verdict, 'good');
+});
+
+test('braking is recovered as the speed the runner was built to lose', () => {
+    const b = PHYS_R.metrics.brakingLoss.sides.L.value;
+    assertClose(b, PHYS.truth.physical.brakingMs, 0.05, 'braking within 0.05 m/s');
+});
+
+test('arms locked to the opposite thigh read as in phase', () => {
+    for (const s of ['L', 'R']) assertClose(PHYS_R.metrics.armLegPhase.sides[s].value, 0, 10, `arm-leg phase ${s}`);
+});
+
+test('the assumed trunk radius of gyration cannot matter', () => {
+    const share = PHYS_R.efficiency.work.trunkRotationShare;
+    assert(share < 0.01, `trunk rotation is ${(share * 100).toFixed(3)}% of internal work`);
+});
+
+test("internal work does not depend on the reference frame (König's theorem)", () => {
+    const m = PHYS_R._internal.model;
+    const c = PHYS_R._internal.cond;
+    const mpp = PHYS_R.scale.mPerPxMedian;
+    const a = energyCurves(m, c, mpp, { groundVxMs: 0 });
+    const b = energyCurves(m, c, mpp, { groundVxMs: 7 });
+    const wa = workOver(a, 300, 470), wb = workOver(b, 300, 470);
+    assertClose(wb.internal.total, wa.internal.total, 1e-9, 'internal work unchanged by a frame shift');
+    assert(wb.forward > wa.forward, 'forward external work does change with the frame');
+});
+
+test("Minetti's equation reproduces a hand-computed value", () => {
+    /* q = 0.10, SF 1.4 Hz, v 3.3 m/s, d 0.36: 0.1 * 1.4 * 3.3 * (1 + (0.36/0.64)^2) */
+    assertClose(minettiInternalWork(1.4, 3.3, 0.36), 0.1 * 1.4 * 3.3 * (1 + (0.36 / 0.64) ** 2), 1e-12);
+    assert(!Number.isFinite(minettiInternalWork(1.4, 3.3, 1.2)), 'a duty factor above one is refused');
+});
+
+test('work per meter needs a distance, and says so', () => {
+    const g = synthGait({ fps: 240, seed: 3, physical: true });
+    const r = runPipeline(g.series, { heightM: 1.75, surface: 'treadmill' });
+    assertEqual(r.metrics.internalWork.confidence, 'unavailable');
+    assert(/speed/.test(r.metrics.internalWork.combined.note || ''), 'the note names the missing speed');
+    assertEqual(r.metrics.footSpeedContact.confidence, 'unavailable', 'no ground frame on a treadmill without its speed');
+});
+
+test('work terms never claim more than medium confidence', () => {
+    for (const id of ['internalWork', 'externalWorkVertical', 'externalWorkForward', 'totalMechanicalWork', 'mechanicalPower']) {
+        assert(!atLeastConf(PHYS_R.metrics[id].confidence, 'high'), `${id} is ${PHYS_R.metrics[id].confidence}`);
+    }
+});
+
+group('Efficiency report — the sweep and the levers (v1.1)');
+
+test('the cadence sweep trades bounce against limb work and has an interior minimum', () => {
+    const sw = cadenceSweep({ speedMs: 3.3, contactS: 0.23, userSpm: 170 });
+    assert(sw.optimumSpm > sw.points[0].spm && sw.optimumSpm < sw.points[sw.points.length - 1].spm, 'interior minimum');
+    assert(sw.points[0].vertical > sw.points[sw.points.length - 1].vertical, 'bounce falls with step rate');
+    assert(sw.points[0].internal < sw.points[sw.points.length - 1].internal, 'limb work rises with step rate');
+    assert(sw.flatBand[0] <= sw.optimumSpm && sw.flatBand[1] >= sw.optimumSpm, 'the flat band contains the minimum');
+    assertBetween(sw.optimumSpm, 160, 195, 'a plausible optimum at 3.3 m/s');
+    note(`3.3 m/s, 230 ms contact: minimum ${sw.optimumSpm} spm, within 1% from ${sw.flatBand[0]} to ${sw.flatBand[1]}`);
+});
+
+test('a calibrated sweep passes through the bounce the clip measured', () => {
+    const sw = PHYS_R.efficiency.sweep;
+    assert(sw && sw.calibrated.vertical, 'calibrated to the measured bounce');
+    const measured = PHYS_R.metrics.comVerticalOscillation.combined.value;
+    assertClose(sw.user.excursionCm, measured, 0.01, 'the curve passes through the runner');
+});
+
+test('levers are ranked by evidence first', () => {
+    const rank = { moderate: 3, small: 2, trivial: 1, untested: 0 };
+    const L = PHYS_R.efficiency.levers;
+    assert(L.length >= 3, 'several levers');
+    for (let i = 1; i < L.length; i++) {
+        assert(rank[L[i - 1].evidence.strength] >= rank[L[i].evidence.strength], `${L[i - 1].id} before ${L[i].id}`);
+    }
+});
+
+test('a modeled effect can price a finding but never make one fire', () => {
+    const without = recommend(PHYS_R.metrics, { speedMs: 3.0 });
+    const withEff = recommend(PHYS_R.metrics, { speedMs: 3.0, efficiency: PHYS_R.efficiency });
+    assertEqual(withEff.findings.map(f => f.id).join(), without.findings.map(f => f.id).join(), 'same findings either way');
+});
+
+group('Strike detection under landmark noise (v1.1)');
+
+test('residual analysis measures the noise that is left after filtering', () => {
+    const clean = condition(synthGait({ fps: 120, seed: 5 }).series, { fps: 120 });
+    const noisy = condition(synthGait({ fps: 120, seed: 5, noiseFrac: 0.01 }).series, { fps: 120 });
+    assert(clean.kp.heelL.noisePx < 0.05, `clean ${clean.kp.heelL.noisePx.toFixed(3)} px`);
+    assertBetween(noisy.kp.heelL.noisePx, 0.6, 1.8, 'about 2.5 px raw x sqrt(24/120)');
+});
+
+test('contact time survives 1% landmark noise, every strike pattern', () => {
+    let sum = 0, n = 0, worst = 0;
+    for (const strike of [12, 2, -6]) for (const physical of [false, true]) {
+        const g = synthGait({ fps: 120, seed: 2, noiseFrac: 0.01, durationS: 8, strikeAngleDeg: strike, physical });
+        const r = runPipeline(g.series, { heightM: 1.75, surface: 'treadmill', speedMs: 3.0 });
+        for (const s of ['L', 'R']) {
+            const e = Math.abs(r.metrics.gct.sides[s].value - g.truth.gctMs[s]);
+            sum += e; n++; worst = Math.max(worst, e);
+        }
+    }
+    assert(sum / n < 15, `mean absolute contact-time error ${(sum / n).toFixed(1)} ms`);
+    assert(worst < 40, `worst ${worst.toFixed(0)} ms`);
+    note(`1% noise, 120 fps: contact time MAE ${(sum / n).toFixed(1)} ms, worst ${worst.toFixed(0)} ms (the v1.0 detector: ~28 ms MAE)`);
+});
+
+test('a heel that lands after the toe does not outvote the toe', () => {
+    const g = synthGait({ fps: 240, seed: 1, physical: true, strikeAngleDeg: -6, durationS: 8 });
+    const r = runPipeline(g.series, { heightM: 1.75, surface: 'treadmill', speedMs: 3.0 });
+    for (const s of ['L', 'R']) assertClose(r.metrics.gct.sides[s].value, g.truth.gctMs[s], 25, `forefoot contact ${s}`);
+});
+
+test('REGRESSION: a strike extrapolated past the last frame cannot hang the vote', () => {
+    /* seed 14 of the demo configuration put one candidate past the end of the
+       clip; its time was NaN, it never joined its own cluster, and the vote
+       looped forever with the browser tab frozen */
+    const g = synthGait({ heightM: 1.75, fps: 240, durationS: 6, seed: 14, noiseFrac: 0.008, dropout: 0.01, asymmetry: 0.05, physical: true });
+    const t0 = Date.now();
+    const r = runPipeline(g.series, { heightM: 1.75, surface: 'treadmill', speedMs: 3.0 });
+    assert(r.ok, r.message);
+    assert(Date.now() - t0 < 5000, 'finished');
 });
 
 summary();

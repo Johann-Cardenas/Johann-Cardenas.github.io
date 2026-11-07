@@ -50,7 +50,7 @@ export function fmtWithCi(slot, spec) {
 
 export function fmtUnit(unit) {
     if (!unit) return '';
-    return unit === 'deg' ? '°' : unit;
+    return unit === 'deg' ? '°' : unit === 'deg/s' ? '°/s' : unit;
 }
 
 export function fmtDuration(ms) {

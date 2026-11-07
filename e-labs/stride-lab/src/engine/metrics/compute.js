@@ -21,6 +21,8 @@ import {
 import { METRICS, METRIC_BY_ID } from './catalog.js';
 import { intervalUncertaintyMs, instantUncertaintyMs } from '../events/detect.js';
 import { bodyCoM, springMassStiffness, brakingProfile } from './com.js';
+import { derivative } from '../signal/filter.js';
+import { workOver, springMassDrop } from '../model/energetics.js';
 import {
     kneeFlexionSeries, trunkLeanSeries, footAngleSeries, shankAngleSeries,
     hipExtensionSeries, ankleDorsiflexionSeries, elbowAngleSeries,
@@ -33,7 +35,8 @@ import {
  * @param {ReturnType<import('../calib/scale.js').perFrameScale>} scale
  * @param {ReturnType<import('../events/detect.js').detectEvents>} events
  * @param {{view:'sagittal'|'frontal', surface:string, speedMs:number|null,
- *          heightM:number, facing:'rear'|'front'}} ctx
+ *          heightM:number, facing:'rear'|'front', model?:any, energy?:any,
+ *          groundVxMs?:number|null}} ctx
  */
 export function computeMetrics(cond, scale, events, ctx) {
     const { fps, kp, t: times } = cond;
@@ -61,6 +64,26 @@ export function computeMetrics(cond, scale, events, ctx) {
         shoulderRot: axialRotationSeries(cond, 'shoulderL', 'shoulderR'),
         pelvisRot: axialRotationSeries(cond, 'hipL', 'hipR')
     };
+
+    /* The rigid-body model's joint angles and rates, where it was fitted.
+       Added to the same series map so the gait-cycle charts can draw them with
+       no special casing. */
+    const model = ctx.model && ctx.model.available ? ctx.model : null;
+    const energy = ctx.energy || null;
+    const ankleVx = {};
+    if (model) {
+        const A = model.angles;
+        for (const [key, field] of [['mHipFlex', 'hipFlex'], ['mKneeFlex', 'kneeFlex'], ['mAnkle', 'ankle'],
+            ['mThigh', 'thigh'], ['mThighVel', 'thighVel'], ['mKneeVel', 'kneeVel'], ['mShoulder', 'shoulderFlex']]) {
+            S[key] = { L: A.L[field], R: A.R[field] };
+        }
+        for (const s of ['L', 'R']) {
+            const tr = model.tracks['ankle' + s];
+            ankleVx[s] = tr ? maskLike(derivative(patchHold(tr.x), 1 / fps, cond.cutoffHz, fps), model.coord['shank' + s]) : null;
+        }
+    }
+    /** @type {any[]} per-stride work, for the efficiency report */
+    const workPerStride = [];
 
     /* The whole-body center of mass, from a fourteen-segment inertial model.
        This is the reference for the best-evidenced technique variable in the
@@ -197,6 +220,62 @@ export function computeMetrics(cond, scale, events, ctx) {
                 }
             }
 
+            /* --- rigid-body model (v1.1) --------------------------------- */
+            if (model) {
+                const A = model.angles[side];
+                const iOff = Number.isFinite(tOff) ? indexAtTime(tOff, times) : NaN;
+                push('thighAngleContact', side, val(A.thigh, t0));
+                push('thighRetractionContact', side, -val(A.thighVel, t0));
+                push('ankleAngleContact', side, val(A.ankle, t0));
+                if (Number.isFinite(tOff)) {
+                    push('plantarflexionToeoff', side, -val(A.ankle, tOff));
+                    push('peakHipFlexionSwing', side, extremumOf(A.hipFlex, iOff, i1, 'max'));
+                    push('peakKneeFlexionSwing', side, extremumOf(A.kneeFlex, iOff, i1, 'max'));
+                }
+                /* foot speed over the ground at touchdown: only where the
+                   camera frame can be tied to the ground at all */
+                /* Sampled half a filter period BEFORE the detected strike. At
+                   contact the foot's velocity steps to the ground's; the low-pass
+                   smears that step across about +-1/(2 fc), so a value read AT the
+                   strike is half swing and half stance and understates a reaching
+                   foot by about half. */
+                if (ankleVx[side] && Number.isFinite(ctx.groundVxMs)) {
+                    const tPre = t0 - 0.5 / cond.cutoffHz;
+                    push('footSpeedContact', side, val(ankleVx[side], tPre) * scale.mPerPxMedian + ctx.groundVxMs);
+                }
+                /* center-of-mass drop through stance, from the model's own CoM */
+                if (energy && Number.isFinite(tOff)) {
+                    const y0 = val(energy.com.y, t0);
+                    const yMin = extremumOf(energy.com.y, i0, iOff, 'min');
+                    push('stanceComDrop', side, 100 * (y0 - yMin));
+                }
+                /* arm against the OPPOSITE leg, by first-harmonic phase */
+                const lag = phaseLagDeg(model.angles[side].shoulderFlex, model.angles[other].thigh, times, t0, t1);
+                push('armLegPhase', side, lag);
+
+                /* mechanical work over the stride, per meter */
+                if (energy) {
+                    const w = workOver(energy, i0, i1, Number.isFinite(tOpp) ? [indexAtTime(tOpp, times)] : null);
+                    const dist = ctx.spatialFromDisplacement ? strideLen
+                        : (Number.isFinite(ctx.speedMs) ? ctx.speedMs * st.strideTime : NaN);
+                    if (w && Number.isFinite(dist) && dist > 0) {
+                        const total = w.external + w.internal.total;
+                        push('internalWork', side, w.internal.total / dist);
+                        push('externalWorkVertical', side, w.vertical / dist);
+                        push('externalWorkForward', side, w.forward / dist);
+                        push('totalMechanicalWork', side, total / dist);
+                        push('mechanicalPower', side, total / st.strideTime);
+                        workPerStride.push({
+                            side, dist, strideTime: st.strideTime,
+                            vertical: w.vertical / dist, forward: w.forward / dist,
+                            external: w.external / dist,
+                            internal: Object.fromEntries(Object.entries(w.internal).map(([k, v]) => [k, v / dist])),
+                            trunkRot: w.trunkRotWork / dist
+                        });
+                    }
+                }
+            }
+
             /* --- frontal-plane additions --------------------------------- */
             const shoulderPx = Math.abs(val(kp.shoulderR.x, tMid) - val(kp.shoulderL.x, tMid));
             if (shoulderPx > 1) {
@@ -261,7 +340,7 @@ export function computeMetrics(cond, scale, events, ctx) {
     for (const spec of METRICS) {
         out[spec.id] = aggregate(spec, per[spec.id], {
             cond, scale, events, ctx, view, fps, fpsClass, meanSpread, stepTimes, sideSign,
-            strideMs, viewMargin: ctx.viewMargin
+            strideMs, viewMargin: ctx.viewMargin, per
         });
     }
 
@@ -282,13 +361,53 @@ export function computeMetrics(cond, scale, events, ctx) {
     out.strikePattern.confidence = weakest(
         out.strikePattern.sides.L.confidence, out.strikePattern.sides.R.confidence);
 
+    /* The stiffness figures rest on a spring-mass model that predicts how far
+       the center of mass sinks in stance from contact and flight time alone.
+       The rigid-body model MEASURES that sink. Where the two disagree badly the
+       model does not describe this runner, and the stiffness numbers say so. */
+    const springCheck = springMassCheck(out);
+    if (springCheck && springCheck.verdict === 'poor') {
+        for (const id of ['verticalStiffness', 'legStiffness']) {
+            const c = out[id] && out[id].combined;
+            if (c && c.value != null) {
+                c.note = [c.note, `the spring-mass model predicts a ${springCheck.predictedCm.toFixed(1)} cm stance drop and ${springCheck.measuredCm.toFixed(1)} cm was measured, so the model fits this stride poorly`].filter(Boolean).join('; ');
+                c.confidence = weakest(c.confidence, 'low');
+                out[id].confidence = weakest(out[id].confidence, 'low');
+            }
+        }
+    }
+
     return {
         metrics: out,
         strideCount: { L: bySide.L.length, R: bySide.R.length, usable: usable.length, total: events.strides.length },
         sideSign,
         series: S,
         strides: bySide,
-        com
+        com,
+        workPerStride,
+        springCheck
+    };
+}
+
+/**
+ * Measured stance drop against the spring-mass prediction (Morin et al. 2005),
+ * from the aggregated metrics. Null when either side of the comparison is
+ * missing.
+ */
+export function springMassCheck(out) {
+    const drop = out.stanceComDrop && out.stanceComDrop.combined;
+    const gct = out.gct, fl = out.flightTime;
+    if (!drop || drop.value == null || !gct || !fl) return null;
+    const tc = mean([gct.sides.L.value, gct.sides.R.value].filter(v => v != null)) / 1000;
+    const tf = mean([fl.sides.L.value, fl.sides.R.value].filter(v => v != null)) / 1000;
+    const pred = springMassDrop(tc, Math.max(0, tf));
+    if (!Number.isFinite(pred) || !(pred > 0)) return null;
+    const ratio = (drop.value / 100) / pred;
+    return {
+        predictedCm: pred * 100,
+        measuredCm: drop.value,
+        ratio,
+        verdict: Math.abs(ratio - 1) <= 0.25 ? 'good' : Math.abs(ratio - 1) <= 0.5 ? 'fair' : 'poor'
     };
 }
 
@@ -310,11 +429,13 @@ function aggregate(spec, values, env) {
     for (const side of ['L', 'R']) {
         const raw = (values && values[side]) || [];
         const n = raw.length;
+        const strideSet = spec.id === 'strideTimeVariability' && env.per.strideTime ? env.per.strideTime[side] : null;
         let value = spec.id === 'cadence'
             ? (stepTimes.length ? 60 / median(stepTimes) : NaN)
-            : trimmedMean(raw, 0.1);
-        let spread = spec.id === 'cadence' ? sdOfCadence(stepTimes) : sd(raw);
-        const nEff = spec.id === 'cadence' ? stepTimes.length : n;
+            : strideSet ? cv(strideSet)
+                : trimmedMean(raw, 0.1);
+        let spread = spec.id === 'cadence' ? sdOfCadence(stepTimes) : strideSet ? NaN : sd(raw);
+        const nEff = spec.id === 'cadence' ? stepTimes.length : strideSet ? strideSet.length : n;
 
         let confidence = 'high';
         const notes = [];
@@ -337,6 +458,13 @@ function aggregate(spec, values, env) {
                 notes.push(ctx.surface === 'treadmill'
                     ? 'on a treadmill there is no displacement to measure, so this needs the belt speed'
                     : `the runner barely moves across the frame (${Number.isFinite(ctx.travelLegs) ? ctx.travelLegs.toFixed(1) : '?'} leg lengths), so this is either a treadmill or a camera that followed them — select Treadmill and enter the speed`);
+            } else if (spec.model && !(ctx.model && ctx.model.available)) {
+                notes.push(ctx.model && ctx.model.reason ? ctx.model.reason.replace(/\.$/, '').replace(/^./, c => c.toLowerCase())
+                    : 'needs the rigid-body model, which is fitted to sagittal views only');
+            } else if ((spec.energetics || spec.groundFrame) && !ctx.spatialFromDisplacement && !Number.isFinite(ctx.speedMs)) {
+                notes.push(spec.energetics
+                    ? 'work per meter needs the distance covered — on a treadmill, enter the belt speed'
+                    : 'needs the foot\'s speed over the GROUND, so on a treadmill it needs the belt speed');
             } else if ((spec.id === 'verticalStiffness' || spec.id === 'legStiffness') && !Number.isFinite(ctx.massKg)) {
                 notes.push('needs your body mass — the spring-mass model scales with it, and a population average would be inventing the answer');
             } else if ((spec.id === 'verticalStiffness' || spec.id === 'legStiffness') && !Number.isFinite(ctx.speedMs)) {
@@ -411,6 +539,25 @@ function aggregate(spec, values, env) {
                         notes.push('a spring-mass model estimate, not a force measurement');
                     }
                 }
+                if (spec.model && ctx.model && ctx.model.available) {
+                    /* A rigid body that does not explain the landmarks is not a
+                       measurement of them. The residual is what says so. */
+                    const res = ctx.model.fit.residualPct;
+                    if (res > 3) {
+                        confidence = weakest(confidence, 'low');
+                        notes.push(`the rigid-body model explains the landmarks poorly here (median residual ${res.toFixed(1)}% of leg length)`);
+                    } else if (res > 1.5) {
+                        confidence = weakest(confidence, 'medium');
+                    }
+                }
+                if (spec.rate && fps < FPS_TIMING_MIN) {
+                    confidence = weakest(confidence, 'low');
+                    notes.push(`a rate of change, differentiated from a ${fps.toFixed(0)} fps trajectory`);
+                }
+                if (spec.energetics) {
+                    confidence = weakest(confidence, fps < FPS_TIMING_MIN ? 'low' : 'medium');
+                    notes.push('two-dimensional mechanical work from population segment inertias — mechanical, not metabolic');
+                }
                 if (spec.id === 'footProgressionAngle' && nEff < 1) {
                     notes.push('the default pose model has no lateral forefoot landmark, so the foot is a line rather than a plane and this angle cannot be formed');
                 }
@@ -440,7 +587,7 @@ function aggregate(spec, values, env) {
                 const sigma = intervalUncertaintyMs(fps, meanSpread.strike, meanSpread.strike);
                 const stepMs = 60000 / value;
                 ci95 = 1.96 * Math.hypot(value * sigma / stepMs, se);
-            } else if (spec.scaleDependent) {
+            } else if (spec.scaleDependent || spec.energetics) {
                 ci95 = 1.96 * Math.hypot(se, Math.abs(value) * scale.scatter);
             } else {
                 ci95 = 1.96 * se;
@@ -462,22 +609,25 @@ function aggregate(spec, values, env) {
     let combined;
     if (!spec.sided) {
         const both = ((values && values.L) || []).concat((values && values.R) || []);
+        const pooledStrides = spec.id === 'strideTimeVariability' && env.per.strideTime
+            ? env.per.strideTime.L.concat(env.per.strideTime.R) : null;
         const v = spec.id === 'cadence'
             ? (stepTimes.length ? 60 / median(stepTimes) : NaN)
-            : trimmedMean(both, 0.1);
+            : pooledStrides ? cv(pooledStrides)
+                : trimmedMean(both, 0.1);
         combined = {
             value: Number.isFinite(v) && sides.L.confidence !== 'unavailable' ? v : (Number.isFinite(v) && sides.R.confidence !== 'unavailable' ? v : null),
             sd: spec.id === 'cadence' ? sdOfCadence(stepTimes) : sd(both),
             ci95: sides.L.ci95 ?? sides.R.ci95 ?? null,
             /* cadence is estimated from step INTERVALS, which belong to neither
                side, so its sample size is the number of intervals */
-            n: spec.id === 'cadence' ? stepTimes.length : both.length,
+            n: spec.id === 'cadence' ? stepTimes.length : pooledStrides ? pooledStrides.length : both.length,
             confidence: bestOf(sides.L.confidence, sides.R.confidence),
             note: sides.L.note || sides.R.note
         };
     }
 
-    const ai = spec.sided && sides.L.value != null && sides.R.value != null
+    const ai = spec.sided && !spec.noAsymmetry && sides.L.value != null && sides.R.value != null
         ? asymmetryIndex(sides.L.value, sides.R.value)
         : null;
 
@@ -493,6 +643,61 @@ function aggregate(spec, values, env) {
 function bestOf(a, b) {
     const rank = { unavailable: 0, low: 1, medium: 2, high: 3 };
     return rank[a] >= rank[b] ? a : b;
+}
+
+/**
+ * Coefficient of variation, percent, ROBUST: 1.4826 x MAD over the median.
+ * Needs at least three values. A stride whose events were detected a frame
+ * off is a measurement error, not variability, and a plain standard deviation
+ * reported it as 6% variability in a runner built with none.
+ */
+function cv(values) {
+    const a = values.filter(Number.isFinite);
+    if (a.length < 3) return NaN;
+    const m = median(a);
+    const dev = median(a.map(v => Math.abs(v - m)));
+    return 100 * 1.4826 * dev / m;
+}
+
+/**
+ * Phase lag, degrees, of `a` behind `b` at the stride frequency over [t0, t1]:
+ * the difference between the arguments of their first Fourier coefficients.
+ * Positive means `a` peaks later.
+ */
+export function phaseLagDeg(a, b, times, t0, t1) {
+    const T = t1 - t0;
+    if (!(T > 0)) return NaN;
+    const lo = Math.max(0, Math.ceil(indexAtTime(t0, times)));
+    const hi = Math.min(times.length - 1, Math.floor(indexAtTime(t1, times)));
+    let ac = 0, as = 0, bc = 0, bs = 0, used = 0;
+    for (let i = lo; i <= hi; i++) {
+        if (!Number.isFinite(a[i]) || !Number.isFinite(b[i])) continue;
+        const w = 2 * Math.PI * (times[i] - t0) / T;
+        ac += a[i] * Math.cos(w); as += a[i] * Math.sin(w);
+        bc += b[i] * Math.cos(w); bs += b[i] * Math.sin(w);
+        used++;
+    }
+    if (used < 0.8 * (hi - lo + 1) || used < 8) return NaN;
+    let d = (Math.atan2(as, ac) - Math.atan2(bs, bc)) * 180 / Math.PI;
+    while (d > 180) d -= 360;
+    while (d <= -180) d += 360;
+    return d;
+}
+
+function patchHold(a) {
+    const out = Float64Array.from(a);
+    let last = NaN;
+    for (let i = 0; i < out.length; i++) { if (Number.isFinite(out[i])) last = out[i]; else out[i] = last; }
+    let first = NaN;
+    for (let i = 0; i < out.length; i++) if (Number.isFinite(out[i])) { first = out[i]; break; }
+    if (!Number.isFinite(first)) first = 0;
+    for (let i = 0; i < out.length; i++) if (!Number.isFinite(out[i])) out[i] = first;
+    return out;
+}
+
+function maskLike(a, ref) {
+    for (let i = 0; i < a.length; i++) if (!ref || !Number.isFinite(ref[i])) a[i] = NaN;
+    return a;
 }
 
 function sdOfCadence(stepTimes) {
@@ -530,6 +735,12 @@ function requiredLandmarks(id, side) {
         case 'shoulderRotation': return ['shoulderL', 'shoulderR'];
         case 'overstride': case 'stepLength': case 'strideLength': case 'stepWidth':
             return ['ankle' + s, 'hipMid'];
+        case 'thighAngleContact': case 'thighRetractionContact': case 'peakHipFlexionSwing':
+            return ['hip' + s, 'knee' + s];
+        case 'peakKneeFlexionSwing': return ['hip' + s, 'knee' + s, 'ankle' + s];
+        case 'ankleAngleContact': case 'plantarflexionToeoff': return ['knee' + s, 'ankle' + s, 'heel' + s, 'toe' + s];
+        case 'footSpeedContact': return ['ankle' + s];
+        case 'armLegPhase': return ['shoulder' + s, 'elbow' + s, 'knee' + (s === 'L' ? 'R' : 'L')];
         default: return [];
     }
 }

@@ -17,7 +17,7 @@
         as a measurement of a person.
    ============================================================ */
 
-import { CANONICAL, WINTER } from '../engine/types.js';
+import { CANONICAL, WINTER, SEGMENTS, G } from '../engine/types.js';
 import { makeSeries } from '../engine/pose/skeleton.js';
 
 /** Deterministic PRNG (mulberry32) so a seed reproduces a clip exactly. */
@@ -72,7 +72,14 @@ export const DEFAULTS = {
     fillFrac: 0.72,          /* subject height as a fraction of frame height  */
     noiseFrac: 0,            /* keypoint noise, sigma as a fraction of leg len*/
     dropout: 0,              /* probability per keypoint per frame of a gap   */
-    seed: 1
+    seed: 1,
+    rigidLegs: false,        /* see the ankle construction below, and D51       */
+    /* `physical`: drive the whole-body center of mass with real dynamics and
+       solve the pelvis to match, instead of prescribing the pelvis and letting
+       the center of mass fall where the limbs put it (D52). Implies rigidLegs
+       and a contralateral arm swing; `vertOscM` is then an OUTPUT. */
+    physical: false,
+    brakingMs: 0.15          /* physical mode: forward speed lost to mid-stance */
 };
 
 /**
@@ -173,14 +180,11 @@ export function synthGait(overrides = {}) {
             : hipHeight + scale * Bp * (1 - Math.pow(2 * (dt - gct) / tf - 1, 2));
     }
 
-    for (let f = 0; f < nFrames; f++) {
-        const t = f / p.fps;
-        series.t[f] = t;
-
-        /* --- pelvis: rises and falls once per step, lowest at mid-stance --- */
-        const hipY = pelvisHeight(t);
-        const hipX = p.direction * (drift * t - xCenter);
-
+    /**
+     * Every landmark of the runner at time t, for a given pelvis position.
+     * Split out of the frame loop so physical mode can solve for the pelvis.
+     */
+    function pose(t, hipX, hipY) {
         const world = {};
         world.hipMid = { x: hipX, y: hipY };
         /* the lean tilts the trunk in the direction of TRAVEL, so it has to
@@ -309,6 +313,17 @@ export function synthGait(overrides = {}) {
 
             const ankle = { x: ankleX, y: ankleY };
             const hip = world['hip' + side];
+            /* `rigidLegs`: a prescribed ankle the leg cannot reach is pulled
+               back onto the reachable sphere, foot and all, instead of letting
+               the shank stretch to meet it. Off by default because the golden
+               values were committed against the stretching generator; ON for
+               every test of the rigid-body model, whose oracle has to be a body
+               whose bones do not change length (D51). */
+            if (p.rigidLegs || p.physical) {
+                const dx = ankle.x - hip.x, dy = ankle.y - hip.y;
+                const d = Math.hypot(dx, dy), dMax = (thigh + shank) * 0.999;
+                if (d > dMax) { ankle.x = hip.x + dx * dMax / d; ankle.y = hip.y + dy * dMax / d; }
+            }
             const knee = solveKnee(hip, ankle, thigh, shank, dir);
 
             world['knee' + side] = knee;
@@ -319,7 +334,11 @@ export function synthGait(overrides = {}) {
 
         /* --- arms: counter-phase to the legs ---------------------------- */
         for (const side of ['L', 'R']) {
-            const phaseOffset = side === 'L' ? 0.5 : 0;   /* opposite the same-side leg */
+            /* Default: opposite the same-side leg. Physical mode locks each arm to
+               the OPPOSITE thigh instead — forward peak with that thigh's forward
+               peak, just before its strike — which is how a runner cancels the
+               legs' angular momentum, and what the arm-leg phase metric reads. */
+            const phaseOffset = p.physical ? (side === 'L' ? 0.10 : 0.60) : (side === 'L' ? 0.5 : 0);
             const ang = 2 * Math.PI * (t / strideTime - phaseOffset);
             const shoulderAngle = 0.52 * Math.sin(ang);   /* +-30 deg from vertical */
             const sh = world['shoulder' + side];
@@ -351,6 +370,135 @@ export function synthGait(overrides = {}) {
             };
         }
 
+        return world;
+    }
+
+    /** Whole-body center of mass of a posed runner (Winter segments). */
+    function comOfWorld(world) {
+        const name = (n) => n === 'neck' ? world.shoulderMid : n === 'pelvis' ? world.hipMid
+            : n === 'headCenter' ? { x: (world.earL.x + world.earR.x) / 2, y: (world.earL.y + world.earR.y) / 2 }
+                : world[n];
+        let sx = 0, sy = 0, m = 0;
+        for (const seg of SEGMENTS) {
+            const a = name(seg.from), b = name(seg.to);
+            if (!a || !b) continue;
+            sx += seg.mass * (a.x + (b.x - a.x) * seg.com);
+            sy += seg.mass * (a.y + (b.y - a.y) * seg.com);
+            m += seg.mass;
+        }
+        return { x: sx / m, y: sy / m };
+    }
+
+    /**
+     * Physical mode: the center-of-mass trajectory relative to a steady
+     * reference, from the spring-mass dynamics of Morin et al. (2005).
+     *
+     * Vertical: in stance the ground pushes with a half-sine force
+     * F = Fmax sin(pi t / tc), Fmax set by impulse balance over the step
+     * (the average vertical force over a step must be body weight); in flight
+     * the body is ballistic. Integrated in closed form, so the stance drop is
+     * EXACTLY the model's prediction and flight is exact free fall.
+     *
+     * Forward: the body loses `brakingMs` of speed by mid-stance and regains
+     * it by toe-off, as dv = c - a sin^2(pi t / tc), and moves at constant
+     * speed through flight. c is chosen so the mean speed over a step is the
+     * running speed — the treadmill does not drift.
+     */
+    function physicalOffsets(t) {
+        let i = 0;
+        while (i + 1 < truthStrikes.length && truthStrikes[i + 1].t <= t) i++;
+        const s0 = truthStrikes[i];
+        const s1 = truthStrikes[i + 1] || { t: s0.t + stepTime };
+        const ts = s1.t - s0.t;
+        const tc = dutyBySide[s0.side] * strideTime;
+        const tf = Math.max(1e-4, ts - tc);
+        const Fm = G * (Math.PI / 2) * ts / tc;      /* per kilogram */
+        const vy0 = -G * tf / 2;
+        const a = p.brakingMs, c = a * tc / (2 * ts);
+        const sT = t - s0.t;
+        if (sT < tc) {
+            return {
+                dy: vy0 * sT + Fm * (tc / Math.PI) * (sT - (tc / Math.PI) * Math.sin(Math.PI * sT / tc)) - G * sT * sT / 2,
+                dx: c * sT - a * (sT / 2 - tc * Math.sin(2 * Math.PI * sT / tc) / (4 * Math.PI)),
+                vy: vy0 + Fm * (tc / Math.PI) * (1 - Math.cos(Math.PI * sT / tc)) - G * sT,
+                vx: c - a * Math.sin(Math.PI * sT / tc) ** 2
+            };
+        }
+        const vyTo = vy0 + 2 * Fm * tc / Math.PI - G * tc;
+        const tau = sT - tc;
+        return {
+            dy: vyTo * tau - G * tau * tau / 2,
+            dx: (c * tc - a * tc / 2) + c * tau,
+            vy: vyTo - G * tau,
+            vx: c
+        };
+    }
+
+    const pelvisTrack = [];
+    const comTrack = [];
+    /* the steady offset of the center of mass from the hip, from a reference
+       posture; physical mode holds the center of mass at this offset plus the
+       dynamics above */
+    const comRef = (function () {
+        const w0 = pose(0, p.direction * (0 - xCenter), hipHeight);
+        const c = comOfWorld(w0);
+        return { x: c.x - w0.hipMid.x, y: c.y - hipHeight };
+    })();
+
+    /* Physical mode cannot stretch a leg to meet the ground, so the pelvis has
+       to be low enough for the foot to REACH its prescribed plant at touchdown
+       and at toe-off — the two instants the leg is longest. The default hip
+       height of 0.53 H is a standing figure; at toe-off the foot is about
+       0.47 m behind the hip and a 0.86 m leg reaches only about 0.86 m up from
+       a plantarflexed ankle. Solved here from the same foot geometry the frame
+       loop uses, with a centimeter of margin. */
+    const hipBase = (function () {
+        if (!p.physical) return hipHeight;
+        const reach = (thigh + shank) * 0.999;
+        const ankleHeight = (pitchDeg) => {
+            const th = pitchDeg * Math.PI / 180;
+            const heelY = -0.25 * footLen * Math.sin(th) - ankleH * Math.cos(th);
+            const toeY = 0.75 * footLen * Math.sin(th) - ankleH * Math.cos(th);
+            return -Math.min(heelY, toeY);
+        };
+        const gctMax = Math.max(dutyBySide.L, dutyBySide.R) * strideTime;
+        const dxTD = p.speedMs * STANCE_ALIGN_FRACTION * gctMax;
+        const dxTO = p.speedMs * (1 - STANCE_ALIGN_FRACTION) * gctMax;
+        const atTD = Math.sqrt(Math.max(0, reach * reach - dxTD * dxTD)) + ankleHeight(p.strikeAngleDeg);
+        const atTO = Math.sqrt(Math.max(0, reach * reach - dxTO * dxTO)) + ankleHeight(-26);
+        return Math.min(hipHeight, atTD, atTO) - 0.01;
+    })();
+
+    for (let f = 0; f < nFrames; f++) {
+        const t = f / p.fps;
+        series.t[f] = t;
+
+        /* --- pelvis: rises and falls once per step, lowest at mid-stance --- */
+        let hipY = pelvisHeight(t);
+        let hipX = p.direction * (drift * t - xCenter);
+        let world = pose(t, hipX, hipY);
+
+        /* Physical mode: the center of mass is where the dynamics put it, and
+           the pelvis is wherever it has to be for the limbs to produce that.
+           A fixed point iteration on the pelvis; the center of mass moves about
+           0.8 m per meter of pelvis, so it converges in a handful of steps. */
+        if (p.physical) {
+            const off = physicalOffsets(t);
+            const target = {
+                x: p.direction * (drift * t - xCenter) + comRef.x + p.direction * off.dx,
+                y: hipBase + comRef.y + off.dy
+            };
+            for (let k = 0; k < 12; k++) {
+                const c = comOfWorld(world);
+                const ex = target.x - c.x, ey = target.y - c.y;
+                hipX += ex; hipY += ey;
+                world = pose(t, hipX, hipY);
+                if (Math.hypot(ex, ey) < 1e-9) break;
+            }
+            comTrack.push({ t, y: target.y, x: target.x });
+        }
+        pelvisTrack.push(hipY);
+
         /* Shoulder separation. In a sagittal view the shoulders project almost
            on top of each other; in a frontal view they are a real width apart.
            This is exactly the cue classifyView() keys off, so the generator has
@@ -381,6 +529,37 @@ export function synthGait(overrides = {}) {
         }
     }
 
+    /** Ground truth for the energetics, integrated finely over one step. */
+    function physicalTruth() {
+        const k = Math.floor(truthStrikes.length / 2);
+        const s0 = truthStrikes[k], s1 = truthStrikes[k + 1];
+        const ts = s1.t - s0.t, tc = dutyBySide[s0.side] * strideTime, tf = ts - tc;
+        const N = 4000;
+        let wv = 0, wf = 0, prevV = NaN, prevF = NaN, yMin = Infinity, yMax = -Infinity, vMin = Infinity;
+        for (let i = 0; i <= N; i++) {
+            const o = physicalOffsets(s0.t + ts * i / N * 0.999999);
+            const ev = G * o.dy + 0.5 * o.vy * o.vy;
+            const ef = 0.5 * (p.speedMs + o.vx) ** 2;
+            if (Number.isFinite(prevV) && ev > prevV) wv += ev - prevV;
+            if (Number.isFinite(prevF) && ef > prevF) wf += ef - prevF;
+            prevV = ev; prevF = ef;
+            yMin = Math.min(yMin, o.dy); yMax = Math.max(yMax, o.dy);
+            vMin = Math.min(vMin, o.vx);
+        }
+        const stepLen = p.speedMs * ts;
+        return {
+            stanceDropM: G * tc * tc * ((tf / tc + 1) / (2 * Math.PI) - 1 / 8),
+            comExcursionM: yMax - yMin,
+            brakingMs: p.brakingMs,
+            externalWorkVerticalJkgm: wv / stepLen,
+            externalWorkForwardJkgm: wf / stepLen,
+            /* where the arm should sit against the opposite thigh: in phase */
+            armLegPhaseDeg: 0,
+            /* the prescribed center of mass, per frame, world meters */
+            comTrack
+        };
+    }
+
     return {
         series,
         params: p,
@@ -403,7 +582,7 @@ export function synthGait(overrides = {}) {
             /* what the metric measures: peak-to-trough over a full STRIDE,
                which equals the per-step amplitude only when the two steps are
                symmetric */
-            vertOscStrideM: (function () {
+            vertOscStrideM: p.physical ? strideExcursion(pelvisTrack, p.fps, strideTime) : (function () {
                 let lo = Infinity, hi = -Infinity;
                 const t0 = strideTime, steps = 400;
                 for (let i = 0; i <= steps; i++) {
@@ -413,6 +592,8 @@ export function synthGait(overrides = {}) {
                 }
                 return hi - lo;
             })(),
+            /* physical mode only: what the energetics must recover */
+            physical: p.physical ? physicalTruth() : null,
             stanceAlignFraction: STANCE_ALIGN_FRACTION,
             overstrideFracHeight: 100 * (p.speedMs * STANCE_ALIGN_FRACTION * p.dutyFactor * strideTime) / p.heightM,
             legLengthM: legLen,
@@ -420,6 +601,17 @@ export function synthGait(overrides = {}) {
             toeoffs: truthToeoffs
         }
     };
+}
+
+/** Peak-to-trough of a per-frame track over one stride in the middle of the clip. */
+function strideExcursion(track, fps, strideTime) {
+    const n = Math.round(strideTime * fps);
+    const i0 = Math.max(0, Math.floor(track.length / 2) - (n >> 1));
+    let lo = Infinity, hi = -Infinity;
+    for (let i = i0; i < Math.min(track.length, i0 + n); i++) {
+        lo = Math.min(lo, track[i]); hi = Math.max(hi, track[i]);
+    }
+    return hi - lo;
 }
 
 /** Smoothstep, C1 continuous at both ends. */

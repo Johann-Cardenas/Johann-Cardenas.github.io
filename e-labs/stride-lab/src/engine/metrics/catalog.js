@@ -16,7 +16,13 @@
  * @property {string} unit
  * @property {'sagittal'|'frontal'} view
  * @property {boolean} sided        reported separately for left and right
- * @property {'timing'|'posture'|'contact'|'symmetry'|'spatial'} dimension
+ * @property {'timing'|'posture'|'contact'|'symmetry'|'spatial'|'mechanics'} dimension
+ * @property {boolean} [model]      from the rigid-body model; capped on a poor fit
+ * @property {boolean} [rate]       a derivative; capped below 60 fps
+ * @property {boolean} [energetics] a work term; never above medium
+ * @property {boolean} [groundFrame] needs velocities relative to the ground
+ * @property {boolean} [noAsymmetry] signed and centered near zero, so a ratio
+ *                                   of the two sides is meaningless (200% for +1 vs -1)
  * @property {string} definition    plain-language, shown in the metric sheet
  * @property {string} formula       how it is actually computed
  * @property {string[]} drivers     what limits its confidence
@@ -311,6 +317,118 @@ export const METRICS = [
         definition: 'How much the hip line rotates about the body axis over a stride.',
         formula: 'Range of the apparent axial rotation recovered from the projected hip width.',
         drivers: ['view classification'], planeSensitive: true
+    },
+
+    /* ---------------- Rigid-body model (v1.1) ----------------
+       Everything below comes from the 14-degree-of-freedom model fitted to
+       the landmarks (model/kinematic.js), not from three landmarks at a time.
+       `model` marks them so the confidence logic can cap them on a poor fit;
+       `rate` marks the ones that are derivatives and need the frame rate;
+       `energetics` marks the work terms, which are never above medium. */
+    {
+        id: 'thighAngleContact', label: 'Thigh angle at contact', unit: 'deg', view: 'sagittal', sided: true,
+        dimension: 'mechanics', decimals: 1, model: true, planeSensitive: true,
+        definition: 'How far forward of vertical the thigh is when the foot lands. A large angle means the foot is being reached out in front of the body.',
+        formula: 'Angle of the fitted thigh segment (hip joint to knee) from the downward vertical at foot strike, from the 14-degree-of-freedom rigid-body model; positive is forward.',
+        drivers: ['model fit', 'knee landmark quality']
+    },
+    {
+        id: 'thighRetractionContact', label: 'Thigh retraction speed at contact', unit: 'deg/s', view: 'sagittal', sided: true,
+        dimension: 'mechanics', noAsymmetry: true, decimals: 0, model: true, rate: true, planeSensitive: true,
+        definition: 'How fast the thigh is already sweeping backward at the instant the foot lands. A leg still swinging forward at contact lands like a brake; one already pulling back meets the ground closer to its speed. A mechanical description of the landing — no pooled evidence links it to running economy.',
+        formula: 'Minus the angular velocity of the fitted thigh segment at foot strike, so positive means retracting. Differentiated from the model coordinate and low-pass filtered at the analysis cutoff.',
+        drivers: ['frame rate', 'model fit']
+    },
+    {
+        id: 'peakHipFlexionSwing', label: 'Peak hip flexion in swing', unit: 'deg', view: 'sagittal', sided: true,
+        dimension: 'mechanics', decimals: 1, model: true, planeSensitive: true,
+        definition: 'How far forward the knee is driven during swing: the thigh relative to the trunk at its most forward point.',
+        formula: 'Maximum fitted hip flexion (thigh relative to the trunk axis) between toe-off and the next strike of the same foot.',
+        drivers: ['model fit']
+    },
+    {
+        id: 'peakKneeFlexionSwing', label: 'Peak knee flexion in swing', unit: 'deg', view: 'sagittal', sided: true,
+        dimension: 'mechanics', decimals: 1, model: true, planeSensitive: true,
+        definition: 'How tightly the leg folds as it swings through. A folded leg has less rotational inertia about the hip, so the same swing costs less mechanical work.',
+        formula: 'Maximum fitted knee flexion between toe-off and the next strike of the same foot.',
+        drivers: ['model fit']
+    },
+    {
+        id: 'ankleAngleContact', label: 'Ankle angle at contact (foot plane)', unit: 'deg', view: 'sagittal', sided: true,
+        dimension: 'mechanics', decimals: 1, model: true, planeSensitive: true,
+        definition: 'Angle between the shin and the sole line of the foot at landing. Zero is a flat foot under a vertical shin; positive is toes pulled up. Unlike "Ankle dorsiflexion at contact" this needs no assumed neutral, because the foot is fitted as a rigid plate from heel, toe and ankle together.',
+        formula: 'Fitted foot orientation (heel-to-toe line) minus fitted shank orientation, minus 90 deg, at foot strike.',
+        drivers: ['foot landmark quality', 'model fit']
+    },
+    {
+        id: 'plantarflexionToeoff', label: 'Plantarflexion at toe-off', unit: 'deg', view: 'sagittal', sided: true,
+        dimension: 'mechanics', decimals: 1, model: true, planeSensitive: true,
+        definition: 'How far the foot is pointed as it leaves the ground — the share of push-off that comes from the ankle.',
+        formula: 'Minus the foot-plane ankle angle at toe-off, so positive is pointed.',
+        drivers: ['foot landmark quality', 'model fit']
+    },
+    {
+        id: 'footSpeedContact', label: 'Foot speed at contact', unit: 'm/s', view: 'sagittal', sided: true,
+        dimension: 'mechanics', noAsymmetry: true, decimals: 2, model: true, rate: true, groundFrame: true, scaleDependent: true,
+        definition: 'How fast the foot is still moving forward over the ground as it lands. Near zero means it is placed at ground speed; a large positive value means it is reaching and the ground has to stop it.',
+        formula: 'Horizontal velocity of the fitted ankle relative to the ground (belt speed added on a treadmill), read half a filter period before the detected strike — about 40 ms at the default cutoff — so the velocity step of the impact itself does not smear into it.',
+        drivers: ['frame rate', 'scaling', 'surface']
+    },
+    {
+        id: 'stanceComDrop', label: 'Center-of-mass drop in stance', unit: 'cm', view: 'sagittal', sided: false,
+        dimension: 'mechanics', decimals: 1, model: true, scaleDependent: true,
+        definition: 'How far the whole-body center of mass sinks from landing to its lowest point — the compression of the leg spring. The spring-mass model behind the stiffness figures predicts this number from timing alone, so measuring it checks that model.',
+        formula: 'Center of mass of the rigid-body model at foot strike minus its minimum before toe-off.',
+        drivers: ['scaling', 'model fit']
+    },
+    {
+        id: 'armLegPhase', label: 'Arm–leg phase lag', unit: 'deg', view: 'sagittal', sided: true,
+        dimension: 'mechanics', noAsymmetry: true, decimals: 0, model: true, planeSensitive: true,
+        definition: 'Timing between each arm and the OPPOSITE leg. Zero means the arm swings forward exactly as the opposite thigh does, which is how the two cancel each other\'s angular momentum about the long axis of the body.',
+        formula: 'Difference between the first-harmonic phases of the fitted upper-arm swing and the opposite thigh swing over the stride, in degrees of the gait cycle; positive means the arm lags.',
+        drivers: ['arm landmark quality', 'model fit']
+    },
+    {
+        id: 'strideTimeVariability', label: 'Stride-time variability', unit: '%', view: 'sagittal', sided: false,
+        dimension: 'mechanics', decimals: 1, timingGated: true,
+        definition: 'How much the duration of a stride varies from one stride to the next.',
+        formula: 'Robust coefficient of variation of stride time over the usable strides: 1.4826 x median absolute deviation, divided by the median, so one mis-detected stride does not read as variability.',
+        drivers: ['frame rate', 'number of strides']
+    },
+    {
+        id: 'internalWork', label: 'Internal work', unit: 'J/kg/m', view: 'sagittal', sided: false,
+        dimension: 'mechanics', decimals: 2, model: true, energetics: true,
+        definition: 'Mechanical work spent moving the limbs and trunk RELATIVE to the center of mass — swinging the legs and arms through and back — per kilogram per meter. Mechanical, not metabolic.',
+        formula: 'Sum of the positive increments, over a stride, of the kinetic energy of each limb relative to the center of mass (translational plus rotational, Winter segment masses and radii of gyration); exchange allowed within a limb, not between limbs (Willems et al. 1995). Divided by the distance covered.',
+        drivers: ['model fit', 'frame rate', 'needs speed']
+    },
+    {
+        id: 'externalWorkVertical', label: 'External work, vertical', unit: 'J/kg/m', view: 'sagittal', sided: false,
+        dimension: 'mechanics', decimals: 2, model: true, energetics: true,
+        definition: 'Mechanical work spent raising the center of mass and re-launching it upward each step, per kilogram per meter. This is the bounce, priced.',
+        formula: 'Sum of the positive increments of potential plus vertical kinetic energy of the center of mass over a stride (Cavagna 1975), divided by the distance covered.',
+        drivers: ['scaling', 'model fit', 'needs speed']
+    },
+    {
+        id: 'externalWorkForward', label: 'External work, forward', unit: 'J/kg/m', view: 'sagittal', sided: false,
+        dimension: 'mechanics', decimals: 2, model: true, energetics: true, groundFrame: true,
+        definition: 'Mechanical work spent re-accelerating the center of mass forward after each landing has slowed it, per kilogram per meter. This is braking, priced.',
+        formula: 'Sum of the positive increments of horizontal kinetic energy of the center of mass, relative to the ground, over a stride, divided by the distance covered.',
+        drivers: ['scaling', 'model fit', 'needs speed']
+    },
+    {
+        id: 'totalMechanicalWork', label: 'Total mechanical work', unit: 'J/kg/m', view: 'sagittal', sided: false,
+        dimension: 'mechanics', decimals: 2, model: true, energetics: true, groundFrame: true,
+        definition: 'External plus internal work: the mechanical cost of transport. It is NOT the metabolic cost — muscle efficiency and elastic return sit between the two — but it is the part of the cost that technique visibly moves.',
+        formula: 'External work (vertical and forward combined, so energy exchanged between them is not double counted) plus internal work, per kilogram per meter.',
+        drivers: ['scaling', 'model fit', 'needs speed']
+    },
+    {
+        id: 'mechanicalPower', label: 'Mechanical power', unit: 'W/kg', view: 'sagittal', sided: false,
+        dimension: 'mechanics', decimals: 1, model: true, energetics: true, groundFrame: true,
+        definition: 'Total mechanical work per second, per kilogram.',
+        formula: 'Total mechanical work over a stride divided by stride time.',
+        drivers: ['scaling', 'model fit', 'needs speed']
     }
 ];
 

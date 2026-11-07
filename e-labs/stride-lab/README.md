@@ -2,9 +2,11 @@
 
 Client-side running-form and gait analysis. A short clip is decoded, pose-tracked
 and measured entirely in the browser: 25 landmarks, a 14-segment whole-body
-center-of-mass model, and 40 biomechanical measurements, each with the confidence
-interval that goes with it, plus a rule-based corrective plan. Nothing is
-uploaded, because there is no server to upload to.
+center-of-mass model, a 14-degree-of-freedom rigid-body skeleton fitted to every
+frame, 55 biomechanical measurements each with the confidence interval that goes
+with it, a segmental mechanical-work analysis with a cadence sweep, and a
+rule-based corrective plan. Nothing is uploaded, because there is no server to
+upload to.
 
 Live: `/e-labs/stride-lab/` · Method and limits: `/e-labs/stride-lab/science.html`
 
@@ -24,7 +26,7 @@ python -m http.server 8000        # from the repository root
 ## Test it
 
 ```bash
-npm test          # node test/run.mjs — 122 checks, no dependencies
+npm test          # node test/run.mjs — 145 checks, no dependencies
 npm run banner    # regenerate the E-Labs card image from the engine
 ```
 
@@ -59,6 +61,9 @@ src/engine/         PURE. No DOM, no fetch, no framework. This is the product.
   events/stage2.js    the learned model's inference path (no model ships)
   metrics/            angle series, the catalog, per-stride computation
   metrics/com.js      14-segment center of mass, Morin spring-mass stiffness
+  model/kinematic.js  14-DOF rigid-body skeleton, fitted per frame (inverse kinematics)
+  model/energetics.js segment energies; external and internal mechanical work
+  model/efficiency.js work breakdown, calibrated cadence sweep, evidence-ranked levers
   scoring/            normative bands, references, dimension scores
   recommend/          rules and exercises, as reviewable data
 

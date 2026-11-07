@@ -67,7 +67,7 @@
                     <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Stride Lab</a>
                     <div class="header-badges">
                         <span class="header-badge"><i class="fas fa-flask"></i> Method</span>
-                        <span class="header-badge"><i class="fas fa-code-branch"></i> engine v1.0.0</span>
+                        <span class="header-badge"><i class="fas fa-code-branch"></i> engine v1.1.0</span>
                     </div>
                 </div>
                 <div class="header-content">
@@ -344,6 +344,83 @@ Kleg  = Fmax / ΔL</code></pre>
             </section>
 
             <!-- ============================================ -->
+            <section class="sl-doc-section" id="mechanics">
+                <h2>The rigid-body model and mechanical work</h2>
+                <p>
+                    Since v1.1 the landmarks of a side-on clip are explained by a <strong>14-degree-of-freedom
+                    rigid skeleton</strong>: pelvis position (2), trunk and head orientation, and thigh, shank,
+                    foot, upper arm and forearm on each side. Segment lengths, and where each landmark sits on
+                    its segment, are calibrated from the clip itself as robust medians and then held constant.
+                    Every frame is fitted by weighted least squares — Gauss-Newton with a small damping term, a
+                    temporal prior and Cauchy re-weighting so one hallucinated landmark cannot drag the
+                    skeleton — which is inverse kinematics in the motion-capture sense.
+                </p>
+                <ul class="sl-list">
+                    <li><strong>Precision.</strong> On a rigid synthetic runner with landmark noise of 2% of leg
+                        length, RMS joint-angle error falls from 2.6° to 1.8° at the knee and from 3.6° to 1.9° at
+                        the elbow against angles read from three landmarks at a time.</li>
+                    <li><strong>Fit quality is reported.</strong> The median model-to-landmark distance, as a
+                        share of leg length. Above 1.5% every model-based value is capped at medium confidence,
+                        above 3% at low.</li>
+                    <li><strong>New measurements.</strong> Thigh angle and thigh retraction speed at contact,
+                        peak hip and knee flexion in swing, a foot-plane ankle angle that needs no assumed neutral,
+                        plantarflexion at toe-off, foot speed before contact, the center-of-mass drop in stance,
+                        arm–leg phase, and stride-time variability.</li>
+                </ul>
+
+                <h3>Where the mechanical work goes</h3>
+                <p>
+                    From the fitted segments and Winter's inertial table, the work of running is split as
+                    Cavagna and Kaneko did from film: <strong>external</strong> work to raise the center of mass
+                    (vertical) and to re-accelerate it after each landing (forward), and <strong>internal</strong>
+                    work to move the limbs relative to it, with energy exchange allowed within a limb but not
+                    between limbs (Willems et al. 1995). Values are per kilogram per meter, so no body mass is
+                    needed; a speed is. External terms are measured per step as the rise of the energy curve
+                    from its minimum, which keeps landmark noise from accumulating; internal work keeps the
+                    increment sum.
+                </p>
+                <p>
+                    Two independent checks run on every clip: Minetti's equation predicts internal work from
+                    timing and speed alone, and the spring-mass model behind the stiffness figures predicts the
+                    stance drop, which the rigid-body model measures.
+                </p>
+                <div class="sl-tablewrap">
+                    <table class="sl-doctable">
+                        <caption>Recovery against a physically driven synthetic runner, 240 fps</caption>
+                        <thead><tr><th>Quantity</th><th>Truth</th><th>Measured</th></tr></thead>
+                        <tbody>
+                        <tr><td>External work, vertical</td><td>0.756 J/kg/m</td><td>0.758 J/kg/m</td></tr>
+                        <tr><td>External work, forward</td><td>0.421 J/kg/m</td><td>0.425 J/kg/m</td></tr>
+                        <tr><td>Center-of-mass drop in stance</td><td>6.19 cm</td><td>5.99 cm</td></tr>
+                        <tr><td>Arm–leg phase</td><td>0°</td><td>within 1°</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>
+                    The synthetic runner used here drives its center of mass with the half-sine ground force of
+                    Morin et al. and solves its pelvis to match, so its mechanics are known exactly. The
+                    original generator prescribed the pelvis instead, which let its center of mass change speed
+                    in mid-air; it is kept for the golden values.
+                </p>
+
+                <h3>The cadence sweep</h3>
+                <p>
+                    At the measured speed and contact time, the spring-mass model gives the bounce, and so the
+                    vertical work, at any step rate; Minetti's equation gives the limb work. One falls with step
+                    rate and the other rises, and their sum has a minimum. Both terms are calibrated to the
+                    runner's own measured bounce and limb work, so the curve passes through the measurement and
+                    the models supply only the slopes. The report shows the minimum, the range within 1% of it,
+                    and the modeled effect of a 5% change.
+                </p>
+                <p class="sl-callout sl-callout-warn">
+                    <strong>Mechanical work is not metabolic cost.</strong> Muscle efficiency, elastic return and
+                    the cost of holding force sit between them, and technique explains roughly 4–12% of the
+                    differences in economy between runners. Levers are therefore ranked by the evidence linking
+                    each variable to running economy first, and by the modeled saving second.
+                </p>
+            </section>
+
+            <!-- ============================================ -->
             <section class="sl-doc-section" id="evidence">
                 <h2>What the evidence supports</h2>
                 <p>
@@ -470,7 +547,10 @@ Kleg  = Fmax / ΔL</code></pre>
 
                 <h3>What the suite covers</h3>
                 <ul class="sl-list">
-                    <li>104 automated checks, run with <code>node test/run.mjs</code>, no dependencies.</li>
+                    <li>145 automated checks, run with <code>node test/run.mjs</code>, no dependencies.</li>
+                    <li>The rigid-body model: exact fit of a clean rigid runner, beating three-landmark angles under noise, mirror invariance, and a loop-free angle wrap.</li>
+                    <li>Energetics against a physically driven runner: vertical and forward work, stance drop, braking, arm–leg phase, frame independence of internal work, and the trunk's assumed radius of gyration shown not to matter.</li>
+                    <li>Foot-strike timing under 1% landmark noise across all strike patterns.</li>
                     <li>Container orientation, against a hand-built MP4 whose display matrix is known exactly: all four quarter turns, both track-header versions, the display-dimension swap, and a mirrored source that must not read as a rotation.</li>
                     <li>The refusals: a treadmill clip labeled overground must not invent a speed, an oblique camera must not let a planar angle be scored, and an implanted impossible limb must be discarded while a clean clip survives untouched.</li>
                     <li>The inertial model: segment masses summing to a whole body, the center of mass moving less than the pelvis, a lost hand not deleting mass, and the spring-mass stiffness reproducing hand-checked values from the published equations.</li>
@@ -482,6 +562,27 @@ Kleg  = Fmax / ΔL</code></pre>
                     <li>Data integrity: every reference range resolves to a real reference entry; every rule resolves to real exercises; every unsourced range is labeled unsourced and weighted lowest.</li>
                     <li>Golden values, pinned twice — against the engine's own committed output <em>and</em> against physical truth, because a golden file alone will happily preserve a bug forever.</li>
                 </ul>
+
+                <h3>Foot strike under landmark noise</h3>
+                <p>
+                    The table above uses perfect landmarks. With noise added, v1.0 placed foot strikes late: its
+                    plateau search started at the noisy minimum, somewhere in mid-stance. Since v1.1 each
+                    landmark's remaining noise is measured by residual analysis, the plateau is measured from a
+                    robust ground level, the arrival is searched forward from the swing, the descent is
+                    extrapolated to the ground, and a heel that lands after the toe cannot outvote it.
+                </p>
+                <div class="sl-tablewrap">
+                    <table class="sl-doctable">
+                        <caption>Contact-time mean absolute error, 36 synthetic clips per cell (3 strike patterns, 2 generators, 3 seeds)</caption>
+                        <thead><tr><th>Landmark noise</th><th>60 fps v1.0 → v1.1</th><th>120 fps v1.0 → v1.1</th><th>240 fps v1.0 → v1.1</th></tr></thead>
+                        <tbody>
+                        <tr><td>none</td><td>8.9 → 7.3 ms</td><td>12.8 → 7.8 ms</td><td>11.8 → 7.4 ms</td></tr>
+                        <tr><td>0.3% of leg</td><td>26.5 → 8.6 ms</td><td>22.3 → 7.0 ms</td><td>15.2 → 8.8 ms</td></tr>
+                        <tr><td>0.6% of leg</td><td>34.6 → 14.8 ms</td><td>25.4 → 5.7 ms</td><td>28.2 → 8.5 ms</td></tr>
+                        <tr><td>1% of leg</td><td>38.3 → 10.5 ms</td><td>27.8 → 6.6 ms</td><td>27.5 → 6.1 ms</td></tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <h3>What would be needed for a real accuracy figure</h3>
                 <ol class="sl-list">

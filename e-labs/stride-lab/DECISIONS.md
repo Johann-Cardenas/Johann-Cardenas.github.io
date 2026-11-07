@@ -1148,6 +1148,137 @@ untested is the hardware, not the code it feeds.
 
 ---
 
+## D50. The landmarks are explained by a rigid-body model (v1.1)
+
+**Context.** Every angle was read from three landmarks in one frame, so each
+landmark's error landed in full on every angle it touched, limbs "breathed" as
+noise changed their apparent length, and angular velocity was a derivative of an
+angle rebuilt from noisy points every frame.
+
+**Decision.** `model/kinematic.js` fits a 14-degree-of-freedom planar skeleton
+(pelvis x/y, trunk, head, thigh/shank/foot and upper arm/forearm per side;
+absolute segment orientations as coordinates) to every frame by weighted least
+squares: Gauss-Newton, Levenberg damping, a small temporal prior, Cauchy
+re-weighting. Segment geometry — lengths, and each landmark's local position on
+its segment — is calibrated from the clip as robust medians and held constant.
+The foot is a rigid plate (heel, toe, ankle), which gives a foot-plane ankle
+angle with no assumed neutral.
+
+**Measured.** Rigid synthetic runner, 2% landmark noise: knee RMS error
+2.57° → 1.80°, elbow 3.60° → 1.87°, hip 2.15° → 1.69°; foot unchanged. Clean
+residual 0.03% of leg length, 3.4 iterations per frame, ~0.2 s per clip.
+
+**Kept separate on purpose.** The model runs after events and scaling and does
+not replace any v1.0 metric's input, so every validated number and every golden
+value is untouched; the model adds 15 measurements under a new `mechanics`
+dimension that is reported, not scored.
+
+**Two defects found building it.** (1) Cauchy re-weighting with no floor: on a
+nearly exact frame the median residual is ~0, every point a pixel off became an
+"outlier", and the prior dragged the limb toward the previous frame — a 22°
+knee error on a noise-free clip. Fixed with a floor of 2% of leg length.
+(2) The angle wrap was a subtraction loop; a large input would hang the tab. It
+is arithmetic now, with a test.
+
+## D51. `rigidLegs`: the old synthetic runner stretched its shank
+
+The generator placed the ankle where the stride prescribed and solved the knee;
+when the ankle was out of reach the shank stretched, by up to 13% at toe-off.
+Invisible to the v1.0 metrics, fatal to a rigid-body oracle. `rigidLegs: true`
+pulls an unreachable ankle back onto the leg's reach. Off by default because the
+golden values were committed against the stretching generator.
+
+## D52. A physically driven synthetic runner (`physical: true`)
+
+The original generator prescribes the pelvis and lets the limbs put the center
+of mass wherever they put it — including changing its horizontal speed in
+mid-air, which no body can do. That made the forward external work 2.7× the
+vertical work, and the spring-mass stance-drop check failed on the demo.
+
+`physical` drives the CENTER OF MASS instead: in stance the half-sine ground
+force of Morin et al. (2005) with its peak set by impulse balance, ballistic
+flight, and a forward speed loss of `brakingMs` by mid-stance regained by
+toe-off; then solves the pelvis by fixed-point iteration so the limbs produce
+exactly that center of mass. The hip baseline is lowered until the leg can
+reach its plant at touchdown and toe-off (at 0.53 H a 0.86 m leg cannot reach a
+foot 0.47 m behind it). Arms are phase-locked to the opposite thigh. Ground
+truth for stance drop, excursion, braking and vertical/forward work is computed
+in closed form. The synthetic demo uses it; the golden clip does not.
+
+Result: vertical work 0.758 vs 0.756 J/kg/m, forward 0.425 vs 0.421, stance
+drop 5.99 vs 6.19 cm, spring-mass check "good".
+
+## D53. Foot strike under landmark noise
+
+**Found while testing D52.** With 0.3–1% landmark noise, foot strikes were a
+median 30–40 ms late with a tail past 150 ms; contact time was off by 27–38 ms
+(MAE). The primary detector (M0, lowest point of the foot) walked back from the
+signal's minimum while within 1% of the excursion. On noisy data the minimum is
+a noise trough in mid-stance and the walk-back stopped at the first wobble.
+
+**Decision.**
+- Conditioning measures each landmark's remaining noise by residual analysis
+  (Winter): σ of the filter residual, scaled by √(passband/(1−passband)).
+- Where that noise matters (3σ above a quarter of the 1% tolerance), the
+  plateau is measured from a ROBUST floor (median of the lowest quarter), the
+  arrival is found by searching FORWARD from the last sample clearly in the air
+  to the first within max(1%, 3σ) of the floor, and the descent is extrapolated
+  to the floor with a local power law fitted from two crossings (p = 1 for a
+  foot that hits at speed, 2 for a tangential landing).
+- Below that threshold the v1.0 walk-back runs unchanged, so the golden values
+  did not move. Using the new path everywhere moved the golden contact times by
+  8–18 ms in the wrong direction and was rejected.
+
+**Result** (36 clips per cell; see science.html): contact-time MAE at 1% noise
+38.3 → 10.5 ms (60 fps), 27.8 → 6.6 (120), 27.5 → 6.1 (240); clean clips
+unchanged or better.
+
+## D54. Who arrived first
+
+On a forefoot strike the two heel methods (one landmark seen twice) plus a late
+pelvis vote outweighed the toe and lowest-point methods, and contact was placed
+at heel-down: 50 ms late on the physical runner. A heel candidate is now cut to
+a quarter of its weight when the toe's ground contact began more than 25 ms
+before the heel's, and the toe method likewise on a rearfoot strike. Ground
+level per landmark is its 8th percentile — a forefoot striker's heel is down for
+less than a quarter of the cycle, so the lowest-quartile median sat centimeters
+above it.
+
+**Regression found with it.** A strike extrapolated past the last frame got a
+NaN time; in the vote a NaN candidate never falls inside its own window, so it
+was chosen as a seed forever and the browser tab froze (demo seed 14). The vote
+now drops non-finite candidates and marks the seed used; the extrapolation is
+clamped to the clip. Both have tests.
+
+## D55. Segmental energetics and the efficiency report
+
+External work (vertical, forward) and internal work (per limb, exchange allowed
+within a limb only — Willems 1995) from the model's segments and Winter's
+inertia table, per kilogram per meter. External terms per step as rise from the
+minimum: a sum of positive frame increments let velocity noise, multiplied by
+running speed, accumulate — forward work doubled at 1% noise. Trunk radius of
+gyration is assumed (Winter gives none); its rotational share is under 1% of
+internal work and a test holds it there.
+
+The efficiency report adds a cadence sweep (spring-mass bounce + Minetti limb
+work, both calibrated to the clip), and levers ranked by Van Hooren et al.
+(2024) evidence first, modeled effect second. A modeled effect may PRICE a
+finding; it can never make a rule fire — tested.
+
+## D56. The interface was cut back (v1.1)
+
+The app explained itself inline everywhere and nobody reads that. Explanations
+moved behind info icons (`<details>`-based, so they work by touch and keyboard
+with no handler); warnings collapse into "N capture notes"; demo context is one
+line; metric-card notes moved to the detail sheet. On phones: the player is
+sized to the clip's aspect, inputs fold away once there is a result, the overlay
+defaults to Clean (skeleton, contacts, mechanics), layer chips give way to the
+preset picker, and dock tabs scroll instead of truncating. A Mechanics overlay
+layer draws the fitted skeleton, the center of mass with its speed-change arrow,
+and a three-row live panel on the video.
+
+---
+
 ## Open questions the specification left for the human
 
 These were answered with the conservative default and are easy to change.
@@ -1182,3 +1313,8 @@ today matches yesterday.
 Current baseline, seed 20260831: cadence 171.949, GCT 217.830 / 228.976 ms, duty
 0.3120, step length 1.1163 m, vertical oscillation 8.596 cm, trunk lean 6.000°,
 foot-strike angle 10.851°, overstride 11.197% of height.
+
+v1.1 (engine 1.1.0) did not move them: the rigid-body model adds measurements
+without changing any input to these, and the noise-aware strike path (D53) only
+engages when measured landmark noise is non-negligible, which on this
+noise-free clip it is not.

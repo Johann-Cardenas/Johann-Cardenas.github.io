@@ -26,7 +26,7 @@
 import {
     CLUSTER_WINDOW_MS, EVENT_SPREAD_LIMIT_MS, STANCE_MS, STRIDE_MS,
     DUTY_FACTOR_RANGE, SAME_FOOT_MIN_MS, CADENCE_CROSSCHECK_TOL,
-    median, weightedMedian, sampleAt
+    median, weightedMedian, sampleAt, quantile
 } from '../types.js';
 import {
     localMinima, localMaxima, zeroCrossings, dominantFrequency,
@@ -40,6 +40,123 @@ export const MIN_CLUSTER_WEIGHT = 1.4;
 
 /** Plateau tolerance, as a fraction of a landmark's own excursion. */
 export const PLATEAU_TOL_FRACTION = 0.01;
+
+/**
+ * "Who arrived first" (D54). A heel minimum is evidence of contact only if the
+ * heel was the first part of the foot down; if the toe was already on the
+ * ground this long before it, the heel minimum is the foot FLATTENING, which
+ * happens after contact, and its weight is cut to ARRIVAL_DISCOUNT. The same in
+ * reverse for the toe method on a rearfoot strike.
+ *
+ * Why it is needed: M1 and M2 are the same landmark seen twice, so on a
+ * forefoot strike two late heel votes plus one late pelvis vote outweigh the
+ * two on-time votes from the toe and the lowest point. That was latent while
+ * the pelvis method happened to be exact on the synthetic runner; on the
+ * physically driven one, whose pelvis velocity minimum trails contact by
+ * ~30 ms as a sine-shaped ground force says it must, every forefoot strike
+ * was placed 55 ms late.
+ */
+export const ARRIVAL_LEAD_MS = 25;
+export const ARRIVAL_DISCOUNT = 0.25;
+
+/**
+ * ...and never less than this many sigmas of the noise still in the filtered
+ * track (D53).
+ *
+ * The plateau walk-back used to start from the signal's own minimum and stop
+ * at the first sample more than 1% of the excursion above it. Both halves of
+ * that assume a clean plateau. On pose data the stance plateau wobbles — the
+ * filtered noise is slow, so it wobbles rather than jitters — and its minimum
+ * is a noise trough somewhere in mid-stance. The walk-back then stopped at the
+ * first wobble, and the strongest strike detector placed contact a median
+ * 75 ms late at 0.3% landmark noise. Two changes, both of which reduce to the
+ * old behavior on a clean signal (so the golden values did not move):
+ *
+ *   - the floor is the ROBUST ground level (median of the lowest quarter of
+ *     the signal, which for a foot is all stance), not the noisy minimum;
+ *   - the tolerance is at least PLATEAU_NOISE_SIGMAS of the track's measured
+ *     noise, from residual analysis in conditioning.
+ */
+export const PLATEAU_NOISE_SIGMAS = 3;
+
+/**
+ * Where the noise-aware path takes over: once three noise sigmas reach a
+ * quarter of the fixed 1% tolerance. Below that the plateau is clean for every
+ * practical purpose — a synthetic clip with no added noise measures about 2%
+ * of it — and the original walk-back is kept unchanged, which is what keeps
+ * the golden values where they were. The quarter, rather than the full
+ * tolerance, because at 240 fps the filtered noise is small enough to stay
+ * under 1% while still breaking the old walk-back on forefoot strikes
+ * (measured: up to 35 ms of contact-time error at 0.3% landmark noise).
+ */
+export const NOISE_PATH_FRACTION = 0.25;
+function noiseMatters(x, noisePx) {
+    return PLATEAU_NOISE_SIGMAS * (noisePx || 0) > NOISE_PATH_FRACTION * PLATEAU_TOL_FRACTION * range(x);
+}
+
+/**
+ * Contact time from a descent seen crossing two levels above the floor.
+ *
+ * A threshold above the floor fires BEFORE the foot arrives, by however long
+ * the last `tol` of the descent takes — and that depends on how the foot
+ * comes in. Near the ground the height above the floor behaves locally like
+ * h = a (t* - t)^p: p = 1 for a foot that hits at speed, p = 2 for one that
+ * settles tangentially. The slope there is v = p h / (t* - t), so two
+ * crossings, at h1 = tol and h2 = 2 tol, with their slopes, give
+ *
+ *     p  = (t1 - t2) / (h2 / v2 - h1 / v1)
+ *     t* = t1 + p h1 / v1
+ *
+ * which adapts to the approach rather than assuming one. p is clamped to
+ * [1, 2.5] and the extrapolation to a quarter of the descent, so a noisy slope
+ * cannot throw the event into the middle of stance.
+ */
+export function extrapolateContact(x, iCross, floor, tol, maxBack) {
+    const h1 = tol, h2 = 2 * tol;
+    const i2 = onsetBelow(x, iCross, floor + h2, maxBack);
+    if (!(i2 < iCross)) return iCross;
+    const slope = (fi) => {
+        const k = Math.round(fi);
+        if (k < 1 || k >= x.length - 1) return NaN;
+        return (x[k - 1] - x[k + 1]) / 2;          /* descending: positive */
+    };
+    const v1 = slope(iCross), v2 = slope(i2);
+    if (!(v1 > 0) || !(v2 > 0)) return iCross;
+    const denom = h2 / v2 - h1 / v1;
+    let pExp = denom > 0 ? (iCross - i2) / denom : 1;
+    pExp = Math.min(2.5, Math.max(1, pExp));
+    const ahead = Math.min(pExp * h1 / v1, 0.25 * maxBack, 2 * (iCross - i2) + 1);
+    return iCross + ahead;
+}
+
+/** Robust floor of a signal: the median of its lowest quarter. */
+export function robustFloor(x) {
+    const v = [];
+    for (let i = 0; i < x.length; i++) if (Number.isFinite(x[i])) v.push(x[i]);
+    if (!v.length) return NaN;
+    v.sort((a, b) => a - b);
+    return median(v.slice(0, Math.max(1, Math.floor(v.length / 4))));
+}
+
+/**
+ * Walk back from a minimum while the signal stays within `level`, then return
+ * the sub-frame crossing of `level` on the way in. `plateauOnset` with the
+ * floor fixed rather than taken from the sample at `index`.
+ */
+export function onsetBelow(x, index, level, maxBack) {
+    const i = Math.round(index);
+    if (!(i >= 0) || i >= x.length || !Number.isFinite(x[i]) || !(x[i] <= level)) return index;
+    const stop = Math.max(0, i - maxBack);
+    let j = i;
+    while (j > stop && Number.isFinite(x[j - 1]) && x[j - 1] <= level) j--;
+    if (j === i) return index;
+    const a = x[j - 1], b = x[j];
+    if (Number.isFinite(a) && a > b) {
+        const f = (level - b) / (a - b);
+        return j - Math.min(1, Math.max(0, f));
+    }
+    return j;
+}
 
 export const STRIKE_METHODS = {
     M0: { w: 1.3, label: 'lowest point of the foot reaching the ground' },
@@ -97,8 +214,11 @@ export function detectEvents(cond, opts = {}) {
            survives a change of camera distance. Small: the walk-back is looking
            for the moment the descent stops, and a generous tolerance walks past
            it into the approach. */
-        const heelTol = PLATEAU_TOL_FRACTION * range(heel.y);
-        const toeTol = PLATEAU_TOL_FRACTION * range(toe.y);
+        const heelTol = Math.max(PLATEAU_TOL_FRACTION * range(heel.y), PLATEAU_NOISE_SIGMAS * (heel.noisePx || 0));
+        const toeTol = Math.max(PLATEAU_TOL_FRACTION * range(toe.y), PLATEAU_NOISE_SIGMAS * (toe.noisePx || 0));
+        const heelFloor = robustFloor(heel.y), toeFloor = robustFloor(toe.y);
+        /* the noise the min of two tracks carries is about the larger of theirs */
+        const footNoise = Math.max(heel.noisePx || 0, toe.noisePx || 0);
 
         /* M0 — the lowest point of the FOOT reaching the ground.
            This is the primary strike detector and the only one here that is
@@ -126,16 +246,21 @@ export function detectEvents(cond, opts = {}) {
             footLow[f] = Number.isFinite(a) && Number.isFinite(b) ? Math.min(a, b)
                 : Number.isFinite(a) ? a : b;
         }
-        const lowTol = PLATEAU_TOL_FRACTION * range(footLow);
+        const lowTol = Math.max(PLATEAU_TOL_FRACTION * range(footLow), PLATEAU_NOISE_SIGMAS * footNoise);
+        const lowFloor = robustFloor(footLow);
         for (const pk of localMinima(footLow, sepSame)) {
-            const idx = plateauOnset(footLow, pk.index, lowTol, plateauBack);
+            const idx = noiseMatters(footLow, footNoise)
+                ? arrival(footLow, pk.index, lowFloor, lowTol, plateauBack)
+                : plateauOnset(footLow, pk.index, lowTol, plateauBack);
             strikeCands.push({ t: tAt(idx), side, method: 'M0', w: STRIKE_METHODS.M0.w });
         }
 
         /* M1 — heel vertical position minimum, taken at the ONSET of the
            plateau rather than at its far end (see plateauOnset). */
         for (const p of localMinima(heel.y, sepSame)) {
-            const idx = plateauOnset(heel.y, p.index, heelTol, plateauBack);
+            const idx = noiseMatters(heel.y, heel.noisePx)
+                ? arrival(heel.y, p.index, heelFloor, heelTol, plateauBack)
+                : plateauOnset(heel.y, p.index, heelTol, plateauBack);
             strikeCands.push({ t: tAt(idx), side, method: 'M1', w: STRIKE_METHODS.M1.w });
         }
 
@@ -159,7 +284,9 @@ export function detectEvents(cond, opts = {}) {
            foot to flatten, and the median vote below discards it rather than
            averaging it in. */
         for (const p of localMinima(toe.y, sepSame)) {
-            const idx = plateauOnset(toe.y, p.index, toeTol, plateauBack);
+            const idx = noiseMatters(toe.y, toe.noisePx)
+                ? arrival(toe.y, p.index, toeFloor, toeTol, plateauBack)
+                : plateauOnset(toe.y, p.index, toeTol, plateauBack);
             strikeCands.push({ t: tAt(idx), side, method: 'M3', w: STRIKE_METHODS.M3.w });
         }
 
@@ -203,6 +330,44 @@ export function detectEvents(cond, opts = {}) {
     if (opts.stage2) {
         for (const s of opts.stage2.strikes || []) {
             strikeCands.push({ t: s.t, side: s.side, method: 'S2', w: STRIKE_METHODS.S2.w });
+        }
+    }
+
+    /* ---- 1b. Who arrived first ------------------------------------------ */
+    for (const side of ['L', 'R']) {
+        const heel = kp['heel' + side], toe = kp['toe' + side];
+        /* The ground level of each landmark from a LOW PERCENTILE, not the
+           median of its lowest quarter: a forefoot striker's heel is on the
+           ground for well under a quarter of the cycle, so the quarter's median
+           sits centimeters above the heel's real contact height. */
+        const downMask = (trk) => {
+            const floor = quantile(Array.from(trk.y), 0.08);
+            const tol = Math.max(PLATEAU_TOL_FRACTION * range(trk.y), PLATEAU_NOISE_SIGMAS * (trk.noisePx || 0));
+            const m = new Uint8Array(n);
+            for (let f = 0; f < n; f++) m[f] = Number.isFinite(trk.y[f]) && trk.y[f] <= floor + tol ? 1 : 0;
+            return m;
+        };
+        const heelDown = downMask(heel), toeDown = downMask(toe);
+        /* When did this landmark's current ground contact begin? Walk back from
+           the candidate through the frames it is down. NaN if it is not down. */
+        const landedAt = (mask, tSec) => {
+            let f = Math.round(indexOf(tSec, t));
+            if (f < 0 || f >= n || !mask[f]) return NaN;
+            const stop = Math.max(0, f - plateauBack);
+            while (f > stop && mask[f - 1]) f--;
+            return t[f];
+        };
+        const lead = ARRIVAL_LEAD_MS / 1000;
+        for (const c of strikeCands) {
+            if (c.side !== side) continue;
+            if (c.method !== 'M1' && c.method !== 'M2' && c.method !== 'M3') continue;
+            /* look a little past the candidate so a heel that is about to settle
+               still counts as landed */
+            const probeT = c.t + lead;
+            const th = landedAt(heelDown, probeT), tt = landedAt(toeDown, probeT);
+            if (!Number.isFinite(th) || !Number.isFinite(tt)) continue;
+            if ((c.method === 'M1' || c.method === 'M2') && tt < th - lead) c.w *= ARRIVAL_DISCOUNT;
+            else if (c.method === 'M3' && th < tt - lead) c.w *= ARRIVAL_DISCOUNT;
         }
     }
 
@@ -309,7 +474,8 @@ export function detectEvents(cond, opts = {}) {
         cadenceDisagreement: disagreement,
         cadenceAgrees: Number.isFinite(disagreement) && disagreement <= CADENCE_CROSSCHECK_TOL,
         alternation,
-        candidateCount: { strike: strikeCands.length, toeoff: keptToeoffs.length }
+        candidateCount: { strike: strikeCands.length, toeoff: keptToeoffs.length },
+        ...(opts.debug ? { _strikeCandidates: strikeCands } : {})
     };
 }
 
@@ -323,7 +489,10 @@ export function detectEvents(cond, opts = {}) {
  */
 function vote(cands, side, kind) {
     const win = CLUSTER_WINDOW_MS / 1000;
-    const pool = cands.slice().sort((a, b) => a.t - b.t);
+    /* A candidate without a finite time can never fall inside its own window,
+       so it would be chosen as a seed, absorb nothing, stay unused, and be
+       chosen again forever. Dropped here, whatever produced it. */
+    const pool = cands.filter(c => Number.isFinite(c.t) && Number.isFinite(c.w)).sort((a, b) => a.t - b.t);
     const used = new Array(pool.length).fill(false);
     /** @type {import('../types.js').GaitEvent[]} */
     const out = [];
@@ -355,7 +524,8 @@ function vote(cands, side, kind) {
         }
         if (best < 0) break;
         const seed = pool[best];
-        const members = [];
+        used[best] = true;
+        const members = [seed];
         for (let j = 0; j < pool.length; j++) {
             if (used[j]) continue;
             if (Math.abs(pool[j].t - seed.t) <= win) { members.push(pool[j]); used[j] = true; }
@@ -424,6 +594,46 @@ function vote(cands, side, kind) {
         });
     }
     return out.sort((a, b) => a.t - b.t);
+}
+
+/**
+ * The noise-aware arrival.
+ *
+ * Walking BACK from the minimum through the plateau fails on real data even
+ * with a noise-scaled tolerance: the filtered noise is slow, so the stance
+ * plateau wobbles by up to three sigmas over a few frames, and the walk-back
+ * stops at whichever wobble is nearest the minimum — measured at 1% landmark
+ * noise, one strike in five placed 50-100 ms late. So the search runs the
+ * other way. Find the last sample before the minimum that is unambiguously
+ * still in the air (a quarter of the excursion up, and well clear of the
+ * noise), then walk FORWARD to the first arrival within `tol` of the floor.
+ * Whatever the plateau does after the foot has arrived cannot move that.
+ * Then extrapolate the descent to the floor itself.
+ */
+function arrival(x, index, robust, tol, maxBack) {
+    const r = arrivalRaw(x, index, robust, tol, maxBack);
+    /* the extrapolation can run past the last frame for a strike at the very
+       end of the clip; clamp it so the candidate keeps a real time */
+    return Number.isFinite(r) ? Math.min(x.length - 1, Math.max(0, r)) : index;
+}
+function arrivalRaw(x, index, robust, tol, maxBack) {
+    const i = Math.round(index);
+    if (!(i >= 0) || i >= x.length || !Number.isFinite(x[i])) return index;
+    const floor = robust;
+    const high = floor + Math.max(0.25 * range(x), 2 * tol);
+    const stop = Math.max(1, i - maxBack);
+    let j = i;
+    while (j > stop && !(x[j] > high)) j--;
+    if (!(x[j] > high)) return onsetBelow(x, index, Math.max(floor, x[i]) + tol, maxBack);
+    let k = j;
+    while (k < i && !(x[k] <= floor + tol)) k++;
+    /* sub-frame crossing of floor + tol between k-1 and k */
+    const a = x[k - 1], b = x[k];
+    let cross = k;
+    if (Number.isFinite(a) && Number.isFinite(b) && a > b) {
+        cross = k - Math.min(1, Math.max(0, (floor + tol - b) / (a - b)));
+    }
+    return extrapolateContact(x, cross, floor, tol, maxBack);
 }
 
 /** Drop the weaker of any two same-foot events closer than `minSep` seconds. */

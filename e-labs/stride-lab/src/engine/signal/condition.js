@@ -102,7 +102,18 @@ export function condition(series, opts) {
             if (!Number.isFinite(gapX[f])) { fx[f] = NaN; fy[f] = NaN; }
         }
 
+        /* Residual analysis (Winter): what the low-pass removed is noise
+           above the cutoff, plus whatever real signal lives there — little,
+           for a body landmark. From its robust spread, a white-noise model
+           recovers the noise that is STILL in the filtered track, which is
+           what a detector deciding "is this ripple or motion?" needs to know.
+             residual sigma   = sigma_raw * sqrt(1 - 2 fc / fs)
+             filtered sigma   = sigma_raw * sqrt(2 fc / fs)                */
+        const passFrac = Math.min(0.95, 2 * cutoffHz / fps);
+        const noisePx = residualNoise(gapX, fx, gapY, fy) * Math.sqrt(passFrac / (1 - passFrac));
+
         kpOut[name] = {
+            noisePx,
             x: fx, y: fy,
             vx: derivative(patchForFilter(fx), dt, cutoffHz, fps),
             vy: derivative(patchForFilter(fy), dt, cutoffHz, fps),
@@ -156,6 +167,20 @@ export function condition(series, opts) {
         kp: kpOut, t: series.t, fps, n, width, height, cutoffHz,
         mirrored: mirror, missing
     };
+}
+
+/**
+ * Robust sigma of the filter residual, both axes pooled: 1.4826 x MAD.
+ * A clean synthetic track has a residual of zero everywhere but at the few
+ * frames of a velocity kink, which the median ignores.
+ */
+function residualNoise(rx, fx, ry, fy) {
+    const r = [];
+    for (let i = 0; i < rx.length; i++) {
+        if (Number.isFinite(rx[i]) && Number.isFinite(fx[i])) r.push(Math.abs(rx[i] - fx[i]));
+        if (Number.isFinite(ry[i]) && Number.isFinite(fy[i])) r.push(Math.abs(ry[i] - fy[i]));
+    }
+    return r.length ? 1.4826 * median(r) : 0;
 }
 
 /**

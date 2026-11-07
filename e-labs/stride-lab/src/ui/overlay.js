@@ -55,7 +55,7 @@ export const BONES = [
 
 export const LAYERS = {
     skeleton: true, angles: true, guides: true, readout: true,
-    phase: true, measures: true, trails: false, events: true, com: true
+    phase: true, measures: true, trails: false, events: true, com: true, mechanics: true
 };
 
 /** Visibility below this draws a landmark as unsure rather than as fact. */
@@ -122,7 +122,66 @@ export function drawOverlay(ctx, o) {
     if (layers.guides && o.metersPerPx) drawScaleBar(g);
     if (layers.readout && o.readout) drawReadout(g);
     if (layers.phase && o.phase && o.phase.lanes) drawPhaseStrip(g);
+    if (layers.mechanics && o.mech) drawMechanics(g);
 
+    ctx.restore();
+}
+
+/**
+ * The mechanics layer: the rigid-body model the measurements come from,
+ * drawn over the landmarks so a fit that does not fit is visible; the center
+ * of mass with an arrow for its forward-speed change (braking points back);
+ * and a three-row live panel in the top-right corner.
+ */
+function drawMechanics(g) {
+    const { ctx, o, theme, u, w, h } = g;
+    const m = o.mech;
+    ctx.save();
+    /* fitted skeleton: thin, dashed, so it reads as a model laid over data */
+    ctx.strokeStyle = withAlpha(theme.accent, 0.9);
+    ctx.lineWidth = Math.max(1.1, u * 0.2);
+    ctx.setLineDash([u * 0.55, u * 0.35]);
+    for (const [a, b] of m.bones) {
+        ctx.beginPath(); ctx.moveTo(a.x * w, a.y * h); ctx.lineTo(b.x * w, b.y * h); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    /* center of mass, and its speed change as an arrow along travel */
+    if (m.com && Number.isFinite(m.dv)) {
+        const x = m.com.x * w, y = m.com.y * h;
+        const k = Math.max(-1, Math.min(1, m.dv / 0.3));
+        const len = k * u * 7 * m.fwd;
+        if (Math.abs(len) > u * 0.4) {
+            const col = m.dv < 0 ? theme.warn : theme.ok;
+            ctx.strokeStyle = col; ctx.lineWidth = Math.max(1.6, u * 0.32);
+            ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + len, y); ctx.stroke();
+            arrow(ctx, x + len, y, len > 0 ? 0 : Math.PI, u, col);
+        }
+    }
+
+    /* live panel, top right */
+    const rows = m.rows || [];
+    if (rows.length) {
+        const fs = Math.max(9, u * 0.95);
+        const lh = fs * 1.55, pad = u * 0.9;
+        ctx.font = `600 ${fs}px ${MONO}`;
+        let lw = 0, vw = 0;
+        for (const r of rows) { lw = Math.max(lw, ctx.measureText(r.label).width); vw = Math.max(vw, ctx.measureText(r.value).width); }
+        const bw = lw + vw + pad * 3, bh = rows.length * lh + pad;
+        /* below the scale bar, which owns the top-right corner when guides are on */
+        const x = w - pad - bw, y = pad + (g.layers.guides && o.metersPerPx ? u * 3.4 : 0);
+        roundRectPath(ctx, x, y, bw, bh, u * 0.55);
+        ctx.fillStyle = PANEL; ctx.fill();
+        ctx.strokeStyle = withAlpha(theme.accent, 0.5); ctx.lineWidth = 1; ctx.stroke();
+        rows.forEach((r, i) => {
+            const ry = y + pad / 2 + lh * (i + 0.5);
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'left'; ctx.fillStyle = theme.ink3;
+            ctx.fillText(r.label, x + pad, ry);
+            ctx.textAlign = 'right'; ctx.fillStyle = theme.ink;
+            ctx.fillText(r.value, x + bw - pad, ry);
+        });
+    }
     ctx.restore();
 }
 

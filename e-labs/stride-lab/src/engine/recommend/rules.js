@@ -243,6 +243,20 @@ export const RULES = [
 
 function side(s) { return s === 'L' ? 'left' : 'right'; }
 
+/**
+ * Which efficiency lever prices which finding. A rule decides WHETHER to say
+ * something, from a threshold a person can read; the efficiency layer, where
+ * it could be computed, says how much it is worth mechanically. The two are
+ * kept apart so a modeled number can never make a rule fire.
+ */
+const RULE_LEVER = { 'low-cadence': 'cadence', 'excessive-vertical': 'bounce', 'overstride': 'braking' };
+function modeledEffect(ruleId, efficiency) {
+    const leverId = RULE_LEVER[ruleId];
+    if (!leverId || !efficiency || !efficiency.available) return null;
+    const lever = (efficiency.levers || []).find(l => l.id === leverId);
+    return lever && lever.modeled && lever.modeled.text ? lever.modeled.text : null;
+}
+
 /** Findings are capped at this many, deliberately. */
 export const MAX_FINDINGS = 3;
 
@@ -266,7 +280,8 @@ export function recommend(metrics, ctx) {
             evidence: hit.evidence,
             detail: hit.detail || null,
             exercises: rule.exercises,
-            references: rule.references
+            references: rule.references,
+            modeled: modeledEffect(rule.id, ctx && ctx.efficiency)
         });
     }
     fired.sort((a, b) => a.priority - b.priority);

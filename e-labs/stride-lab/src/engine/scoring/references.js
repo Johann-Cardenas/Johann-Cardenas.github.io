@@ -141,6 +141,38 @@ export const REFERENCES = [
         used: 'The spring-mass model used to estimate vertical and leg stiffness from contact time, flight time, body mass, running speed and leg length, with no force plate. Its peak-force term is a model output and is never reported here as a measurement.'
     },
     {
+        id: 'minetti-1998',
+        authors: 'Minetti AE',
+        year: 1998,
+        title: 'A model equation for the prediction of mechanical internal work of terrestrial locomotion',
+        venue: 'Journal of Biomechanics 31(5):463-468',
+        used: 'Internal work predicted from stride frequency, speed and duty factor alone, with q = 0.10. Used as an independent cross-check on the internal work computed from the segment kinematics, and as the internal-work half of the cadence sweep.'
+    },
+    {
+        id: 'cavagna-kaneko-1977',
+        authors: 'Cavagna GA, Kaneko M',
+        year: 1977,
+        title: 'Mechanical work and efficiency in level walking and running',
+        venue: 'Journal of Physiology 268(2):467-481',
+        used: 'The split of the mechanical work of running into external work (the center of mass) and internal work (the segments relative to it), computed from filmed segment kinematics — the method the energetics here follow.'
+    },
+    {
+        id: 'willems-1995',
+        authors: 'Willems PA, Cavagna GA, Heglund NC',
+        year: 1995,
+        title: 'External, internal and total work in human locomotion',
+        venue: 'Journal of Experimental Biology 198:379-393',
+        used: 'The energy-transfer convention: exchange allowed between the segments of one limb, not between limbs or between a limb and the center of mass.'
+    },
+    {
+        id: 'cavagna-1975',
+        authors: 'Cavagna GA',
+        year: 1975,
+        title: 'Force platforms as ergometers',
+        venue: 'Journal of Applied Physiology 39(1):174-179',
+        used: 'External work as the sum of the positive increments of the center of mass energy curves, vertical and forward.'
+    },
+    {
         id: 'indicative-unsourced',
         authors: 'No primary source traced',
         year: null,

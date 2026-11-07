@@ -352,3 +352,101 @@ export function drawScoreBar(canvas, score, o = {}) {
     else ctx.fillRect(0, y - barH / 2, Math.max(4, w * score), barH);
     void o;
 }
+
+/**
+ * Where the mechanical work goes: one labeled horizontal bar per component,
+ * longest first. Bars rather than a stacked strip, because a stacked strip
+ * needs a legend and color to be read; these carry their label and their
+ * value as text, so nothing here is encoded by color alone.
+ */
+export function drawWorkBars(canvas, parts, o = {}) {
+    const theme = o.theme || themeFrom(canvas);
+    const rows = parts.filter(p => Number.isFinite(p.value));
+    const { ctx, w, h } = setup(canvas, { l: 0, r: 0, t: 0, b: 0 });
+    if (!rows.length) return;
+    const max = Math.max(...rows.map(r => r.value), 1e-9);
+    const labelW = Math.min(150, w * 0.38), valueW = 92;
+    const barW = Math.max(20, w - labelW - valueW - 12);
+    const rowH = Math.min(26, h / rows.length);
+    ctx.textBaseline = 'middle';
+    rows.forEach((r, i) => {
+        const y = i * rowH + rowH / 2;
+        ctx.fillStyle = theme.ink2;
+        ctx.textAlign = 'left';
+        ctx.fillText(r.label, 0, y);
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(labelW, y - 6, barW, 12);
+        ctx.fillStyle = r.kind === 'internal' ? theme.right : theme.accent;
+        ctx.globalAlpha = 0.85;
+        ctx.fillRect(labelW, y - 6, Math.max(2, barW * r.value / max), 12);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = theme.ink;
+        ctx.textAlign = 'right';
+        ctx.fillText(r.text || r.value.toFixed(2), w, y);
+    });
+}
+
+/**
+ * The cadence sweep: modeled mechanical work per meter against step rate,
+ * with the flat region shaded and the runner's own step rate marked.
+ * Three lines, told apart by dash pattern AND by a direct label at the end of
+ * each, never by color alone.
+ */
+export function drawSweep(canvas, sweep, o = {}) {
+    const theme = o.theme || themeFrom(canvas);
+    const { ctx, plot } = setup(canvas, { l: 54, r: 64, t: 22, b: 32 });
+    const pts = sweep && sweep.points;
+    if (!pts || pts.length < 2) return;
+    const xs = pts.map(p => p.spm);
+    const series = [
+        { key: 'total', label: 'total', dash: [], width: 2.2, color: theme.accent },
+        { key: 'vertical', label: 'bounce', dash: [6, 4], width: 1.4, color: theme.ink2 },
+        { key: 'internal', label: 'limbs', dash: [2, 3], width: 1.4, color: theme.ink2 }
+    ];
+    let lo = Infinity, hi = -Infinity;
+    for (const p of pts) for (const s of series) { lo = Math.min(lo, p[s.key]); hi = Math.max(hi, p[s.key]); }
+    const pad = (hi - lo) * 0.08 || 0.1;
+    lo = Math.max(0, lo - pad); hi += pad;
+    const x0 = xs[0], x1 = xs[xs.length - 1];
+    const X = (v) => plot.x + (v - x0) / (x1 - x0) * plot.w;
+    const Y = (v) => plot.y + plot.h - (v - lo) / (hi - lo) * plot.h;
+
+    /* the flat region: within 1% of the modeled minimum */
+    if (sweep.flatBand) {
+        ctx.fillStyle = theme.band;
+        ctx.fillRect(X(sweep.flatBand[0]), plot.y, Math.max(1, X(sweep.flatBand[1]) - X(sweep.flatBand[0])), plot.h);
+        ctx.fillStyle = theme.ink3;
+        /* labeled ABOVE the plot, where no curve can run through it */
+        ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillText('within 1% of minimum', (X(sweep.flatBand[0]) + X(sweep.flatBand[1])) / 2, plot.y - 4);
+    }
+    axes(ctx, plot, theme, 'step rate, steps/min', 'J/kg/m',
+        { lo: x0, hi: x1, ticks: niceTicks(x0, x1, 5).filter(t => t >= x0 && t <= x1) },
+        { lo, hi, ticks: niceTicks(lo, hi, 4) },
+        (v) => v.toFixed(2));
+
+    for (const s of series) {
+        ctx.beginPath();
+        pts.forEach((p, i) => { const x = X(p.spm), y = Y(p[s.key]); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+        ctx.strokeStyle = s.color; ctx.lineWidth = s.width; ctx.setLineDash(s.dash);
+        ctx.stroke(); ctx.setLineDash([]);
+        const last = pts[pts.length - 1];
+        ctx.fillStyle = s.color; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(s.label, plot.x + plot.w + 5, Y(last[s.key]));
+    }
+    /* the runner, and the model's optimum */
+    const mark = (spm, label, solid, top) => {
+        if (!(spm >= x0 && spm <= x1)) return;
+        ctx.strokeStyle = theme.ink; ctx.lineWidth = 1; ctx.setLineDash(solid ? [] : [3, 3]);
+        ctx.beginPath(); ctx.moveTo(X(spm), plot.y); ctx.lineTo(X(spm), plot.y + plot.h); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = theme.ink; ctx.textAlign = 'center';
+        ctx.textBaseline = top ? 'top' : 'bottom';
+        ctx.fillText(label, X(spm), top ? plot.y + 3 : plot.y + plot.h - 4);
+    };
+    /* the two markers are labeled at opposite ends of the plot so that a
+       runner sitting near the minimum does not get two labels on top of
+       each other */
+    if (sweep.user) mark(sweep.user.spm, 'you', true, false);
+    if (Number.isFinite(sweep.optimumSpm) && (!sweep.user || Math.abs(sweep.optimumSpm - sweep.user.spm) > 0.5)) mark(sweep.optimumSpm, 'min', false, true);
+}

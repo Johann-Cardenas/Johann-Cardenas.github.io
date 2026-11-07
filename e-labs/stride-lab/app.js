@@ -22,13 +22,51 @@ import * as store from './src/ui/store.js';
 import { DEMOS, DEMO_BY_ID } from './src/ui/demos.js';
 import { bestMotionWindow } from './src/ui/propose.js';
 import { drawOverlay, anglesFor, fitCanvas, contain } from './src/ui/overlay.js';
-import { drawGaitCycle, drawRangeBar, drawSparkline, drawStrideDots, drawScoreBar, themeFrom } from './src/ui/charts.js';
+import { drawGaitCycle, drawRangeBar, drawSparkline, drawStrideDots, drawScoreBar, drawWorkBars, drawSweep, themeFrom } from './src/ui/charts.js';
 import {
     fmt, fmtWithCi, fmtUnit, fmtBytes, fmtDateTime, convert, cmToFeetInches, heightToCm,
     paceFromSpeed, announce, errorFor, CONFIDENCE_COPY, STATUS_GLYPH, STATUS_COPY
 } from './src/ui/format.js';
 
 const $ = (id) => document.getElementById(id);
+
+/**
+ * An info icon that opens a short note. A <details> element, so it works by
+ * touch and keyboard with no handler and is announced as expandable; one
+ * document listener closes the others and keeps the popover on screen.
+ */
+function tip(text, label = 'More information') {
+    const d = document.createElement('details');
+    d.className = 'sl-tip';
+    const s = document.createElement('summary');
+    s.setAttribute('aria-label', label);
+    s.title = label;
+    s.innerHTML = '<i class="fas fa-info-circle" aria-hidden="true"></i>';
+    d.appendChild(s);
+    const body = document.createElement('div');
+    body.className = 'sl-tip-body';
+    if (Array.isArray(text)) {
+        for (const t of text) { const p = document.createElement('p'); p.textContent = t; body.appendChild(p); }
+    } else body.textContent = text;
+    d.appendChild(body);
+    return d;
+}
+document.addEventListener('toggle', (e) => {
+    const d = e.target;
+    if (!(d instanceof HTMLDetailsElement) || !d.classList.contains('sl-tip') || !d.open) return;
+    for (const o of document.querySelectorAll('details.sl-tip[open]')) if (o !== d) o.open = false;
+    const b = d.querySelector('.sl-tip-body');
+    b.style.transform = '';
+    const r = b.getBoundingClientRect();
+    const vw = document.documentElement.clientWidth;
+    let dx = 0;
+    if (r.right > vw - 8) dx = vw - 8 - r.right;
+    if (r.left + dx < 8) dx = 8 - r.left;
+    if (dx) b.style.transform = `translateX(${dx}px)`;
+}, true);
+document.addEventListener('click', (e) => {
+    for (const o of document.querySelectorAll('details.sl-tip[open]')) if (!o.contains(e.target)) o.open = false;
+});
 const el = (tag, cls, text) => {
     const n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -168,7 +206,7 @@ function describeDemo() {
     const d = DEMO_BY_ID[sel ? sel.value : DEMOS[0].id];
     if (!d) { note.textContent = ''; return; }
     note.textContent = d.kind === 'video'
-        ? `${d.summary} ${fmtBytes(d.bytes)} is downloaded to your browser and decoded here; nothing is sent back.`
+        ? `${d.summary} ${fmtBytes(d.bytes)}, decoded on your device.`
         : d.summary;
 }
 
@@ -195,8 +233,8 @@ function syncSurfaceHelp() {
     const treadmill = $('sl-surface').value === 'treadmill';
     $('sl-speed-field').style.opacity = treadmill ? '1' : '0.65';
     $('sl-speed-help').textContent = treadmill
-        ? 'On a treadmill you do not move through the frame, so there is no displacement to measure. Without the belt speed there is no step length, no running speed, and no way to pick the right cadence band — a cadence target that ignores speed is folklore.'
-        : 'Overground, speed and step length are measured from how far you travel between foot strikes, so this field is optional. Enter it if you know it and it will be used as a cross-check.';
+        ? 'Needed on a treadmill for speed, step length and mechanical work.'
+        : 'Optional overground — speed is measured from travel.';
 }
 
 /* ---------- the demo borrows the form, and gives it back ----------
@@ -1053,9 +1091,13 @@ async function runSyntheticDemo(demo) {
     $('sl-progress-text').textContent = 'Building a synthetic runner';
 
     const h = heightCm() / 100 || 1.75;
+    /* `physical`: the center of mass follows real dynamics and the pelvis is
+       solved to match (D52), so the mechanics tab is marked against a body
+       that obeys the physics it is measuring, not one whose limbs move the
+       center of mass through mid-air. */
     const g = synthGait({
         heightM: h, fps: demo.fps, durationS: demo.durationS, seed: Date.now() & 0xffff,
-        noiseFrac: 0.008, dropout: 0.01, asymmetry: 0.05
+        noiseFrac: 0.008, dropout: 0.01, asymmetry: 0.05, physical: true
     });
     await new Promise(r => setTimeout(r, 120));
     const result = runPipeline(g.series, {
@@ -1119,6 +1161,19 @@ async function adoptResult(result, name, synthetic) {
     $('sl-name').value = name || 'Untitled analysis';
     renderResult(result);
     showStage('player');
+    /* On a phone the inputs have done their job once there is a result: fold
+       them away so the results sit directly under the video, and draw the
+       clean overlay, which is what reads at that size. */
+    if (window.matchMedia('(max-width: 720px)').matches) {
+        for (const id of ['sl-step-profile', 'sl-step-capture', 'sl-step-guidance', 'sl-step-advanced']) {
+            const d = $(id);
+            if (d) d.open = false;
+        }
+        const pre = $('sl-overlay-preset');
+        if (pre) { pre.value = 'clean'; applyOverlayPreset('clean'); }
+        $('sl-dock').classList.remove('is-collapsed');
+        $('sl-dock-collapse').innerHTML = '<i class="fas fa-chevron-down"></i>';
+    }
     setupPlayer(result, synthetic);
 
     const record = {
@@ -1135,6 +1190,10 @@ async function adoptResult(result, name, synthetic) {
         scores: { dimensions: result.scores.dimensions, worstAsymmetry: result.scores.worstAsymmetry },
         findings: result.findings,
         warnings: result.warnings,
+        /* small, plain objects: the model's fit summary and the efficiency
+           report, so a reopened analysis still has its Mechanics tab */
+        model: result.model || null,
+        efficiency: result.efficiency || null,
         keypoints: result.series
             ? { names: result.series.names, n: result.series.n, width: result.series.width, height: result.series.height, t: result.series.t, xy: result.series.xy, vis: result.series.vis }
             : null,
@@ -1177,6 +1236,7 @@ async function openStoredAnalysis(a) {
         engine: a.engine, capture: a.capture, scale: a.scale,
         strideCount: a.strideCount, metrics: a.metrics,
         scores: a.scores, findings: a.findings || [], warnings: (a.warnings || []).slice(),
+        model: a.model || null, efficiency: a.efficiency || null,
         events: a.events, series: a.keypoints || null
     };
     /* A stored record keeps only the dimension scores — `stripMetrics` drops
@@ -1289,6 +1349,7 @@ function renderResult(r) {
     renderKey(r);
     renderFacts(r);
     renderFindings(r);
+    renderMechanics(r);
     renderMetricGrid(r);
     renderCycles(r);
     renderStrides(r);
@@ -1332,7 +1393,7 @@ function renderDimensions(r) {
    are: center-of-mass oscillation and the two stiffness terms are the only
    variables here with a significant pooled association with running economy. */
 const KEY_METRICS = ['comVerticalOscillation', 'cadence', 'verticalStiffness', 'legStiffness',
-    'gct', 'stepLength', 'overstride', 'footStrikeAngle', 'pelvicDrop'];
+    'totalMechanicalWork', 'gct', 'stepLength', 'overstride', 'footStrikeAngle', 'pelvicDrop'];
 
 function renderKey(r) {
     const host = $('sl-key');
@@ -1394,91 +1455,80 @@ function renderFindings(r) {
     const host = $('sl-pane-findings');
     host.innerHTML = '';
 
-    for (const w of r.warnings || []) {
-        const box = el('div', 'sl-warnbox');
-        box.appendChild(el('i', 'fas fa-exclamation-triangle'));
-        box.appendChild(el('div', '', w.message));
-        host.appendChild(box);
-    }
-
+    /* demo context: one line, details on demand */
     if (S.demo && r.synthetic) {
-        const box = el('div', 'sl-warnbox');
-        box.appendChild(el('i', 'fas fa-vial'));
-        box.appendChild(el('div', '',
-            `Synthetic demo. This runner was generated, not filmed, so the true answers are known: cadence ${r.synthetic.cadenceSpm} steps/min, `
-            + `contact ${r.synthetic.gctMs.L.toFixed(0)} ms left and ${r.synthetic.gctMs.R.toFixed(0)} ms right, trunk lean ${r.synthetic.trunkLeanDeg}°, `
-            + `foot-strike angle ${r.synthetic.strikeAngleDeg}°. Compare them with the measurements below — that difference is the engine's error, not a person's form.`));
-        host.appendChild(box);
+        const t = r.synthetic;
+        const line = el('div', 'sl-noteline');
+        line.appendChild(el('i', 'fas fa-vial'));
+        line.appendChild(el('span', '', `Synthetic runner — true values: ${t.cadenceSpm} spm, contact ${t.gctMs.L.toFixed(0)}/${t.gctMs.R.toFixed(0)} ms, lean ${t.trunkLeanDeg}°, strike ${t.strikeAngleDeg}°.`));
+        line.appendChild(tip('Generated from a physical model, so the true answers are known. Any difference from them is the engine\'s error, not a person\'s form.'));
+        host.appendChild(line);
     }
-
     const filmed = S.demoId ? DEMO_BY_ID[S.demoId] : null;
     if (filmed && filmed.kind === 'video' && !r.synthetic) {
-        const box = el('div', 'sl-warnbox');
-        box.appendChild(el('i', 'fas fa-vial'));
-        const body = el('div', '');
-        const windowS = filmed.window.endS - filmed.window.startS;
-        body.appendChild(el('p', '',
-            `Filmed demo — a real phone clip, not a rendering. ${filmed.coded.width}×${filmed.coded.height} stored with a `
-            + `${filmed.rotationDeg}° turn so it plays ${filmed.display.width}×${filmed.display.height}, ${filmed.fps} fps, `
-            + `${filmed.durationS.toFixed(1)} s, filmed from behind and to one side of a treadmill. `
-            + `${windowS.toFixed(0)} seconds of it were analyzed — twice the six the app proposes for a clip you bring, `
-            + 'because on this one six seconds left almost nothing above low confidence and twelve did not.'));
-        body.appendChild(el('p', '',
-            `Three numbers were SUPPLIED and could not be measured from the video: standing height ${filmed.stated.heightM.toFixed(2)} m, `
-            + `which sets the pixels-to-meters scale; body mass ${filmed.stated.massKg} kg; and belt speed `
-            + `${filmed.stated.speedMs.toFixed(2)} m/s, which on a treadmill is unmeasurable because the runner does not move `
-            + `through the frame. Everything else on this page was worked out from the pixels.`));
-        body.appendChild(el('p', '',
-            'This clip was chosen for the demo because it is ordinary rather than ideal, and the warnings above are the '
-            + 'honest result of that. A capture shot square-on at 120 fps, with the runner filling the frame, returns the '
-            + 'full report; this one does not, and the app says so instead of estimating.'));
-        box.appendChild(body);
-        host.appendChild(box);
+        const line = el('div', 'sl-noteline');
+        line.appendChild(el('i', 'fas fa-vial'));
+        line.appendChild(el('span', '', `Filmed demo — ${filmed.fps} fps phone clip, deliberately ordinary.`));
+        line.appendChild(tip([
+            `${filmed.display.width}×${filmed.display.height}, ${filmed.durationS.toFixed(1)} s, from behind and to one side of a treadmill.`,
+            `Supplied, not measured: height ${filmed.stated.heightM.toFixed(2)} m, mass ${filmed.stated.massKg} kg, belt ${filmed.stated.speedMs.toFixed(2)} m/s.`,
+            'At 30 fps and an angled camera, much of the report is withheld rather than estimated.'
+        ]));
+        host.appendChild(line);
+    }
+
+    /* capture warnings: counted, expandable */
+    const warns = r.warnings || [];
+    if (warns.length) {
+        const det = el('details', 'sl-notes');
+        const sum = el('summary', '');
+        sum.appendChild(el('i', 'fas fa-exclamation-triangle'));
+        sum.appendChild(document.createTextNode(` ${warns.length} capture note${warns.length === 1 ? '' : 's'}`));
+        det.appendChild(sum);
+        const ul = el('ul', '');
+        for (const w of warns) ul.appendChild(el('li', '', w.message));
+        det.appendChild(ul);
+        host.appendChild(det);
     }
 
     if (!r.findings.length) {
-        host.appendChild(el('p', 'sl-empty-note',
-            'No rule fired on this clip. That means nothing measured here at medium confidence or better fell outside its reference range — not that nothing could be improved. The measurements themselves are in the next tab.'));
+        host.appendChild(el('p', 'sl-empty-note', 'Nothing measured with confidence fell outside its reference range.'));
         return;
     }
 
     for (const f of r.findings) {
         const card = el('div', 'sl-finding');
-        card.appendChild(el('h4', '', f.finding));
+        const head = el('div', 'sl-finding-head');
+        head.appendChild(el('h4', '', f.finding));
+        const why = [f.mechanism];
+        const refNames = f.references.map(id => REFERENCE_BY_ID[id]).filter(Boolean)
+            .map(ref => `${ref.authors.split(',')[0]}${ref.year ? ` ${ref.year}` : ''}`);
+        if (refNames.length) why.push(`Sources: ${refNames.join('; ')}.`);
+        head.appendChild(tip(why, 'Why this matters'));
+        card.appendChild(head);
         card.appendChild(el('p', 'sl-evidence', f.evidence));
-        card.appendChild(el('p', 'sl-mech', f.mechanism));
+        if (f.modeled) card.appendChild(el('p', 'sl-modeled', f.modeled));
         const cue = el('p', 'sl-cue');
-        cue.appendChild(el('strong', '', 'Try this: '));
+        cue.appendChild(el('strong', '', 'Try: '));
         cue.appendChild(document.createTextNode(f.cue));
         card.appendChild(cue);
         const list = el('div', 'sl-ex-list');
         for (const id of f.exercises) {
             const ex = EXERCISE_BY_ID[id];
             if (!ex) continue;
-            const b = el('button', 'sl-ex', `${ex.name} · ${ex.dosage}`);
+            const b = el('button', 'sl-ex', ex.name);
+            b.title = ex.dosage;
             b.onclick = () => openExercise(ex);
             list.appendChild(b);
         }
         card.appendChild(list);
-        const refs = el('div', 'sl-refs');
-        refs.appendChild(document.createTextNode('Sources: '));
-        f.references.forEach((id, i) => {
-            const ref = REFERENCE_BY_ID[id];
-            if (!ref) return;
-            if (i) refs.appendChild(document.createTextNode('; '));
-            const a = el('a', '', `${ref.authors}${ref.year ? ` ${ref.year}` : ''}`);
-            a.href = ref.doi ? `https://doi.org/${ref.doi}` : 'science.html#references';
-            a.target = '_blank'; a.rel = 'noopener';
-            refs.appendChild(a);
-        });
-        card.appendChild(refs);
         host.appendChild(card);
     }
 
     if (r.findingsSuppressed > 0) {
-        host.appendChild(el('p', 'sl-empty-note',
-            `${r.findingsSuppressed} further rule${r.findingsSuppressed === 1 ? '' : 's'} fired and ${r.findingsSuppressed === 1 ? 'was' : 'were'} not shown. `
-            + 'Three is the cap, deliberately: a report listing eleven faults is the standard failure of automated gait analysis and nobody acts on it.'));
+        const p = el('p', 'sl-empty-note', `+${r.findingsSuppressed} more not shown `);
+        p.appendChild(tip('Capped at three on purpose: a long list of faults is not actionable.'));
+        host.appendChild(p);
     }
 }
 
@@ -1486,8 +1536,163 @@ const GROUPS = [
     { id: 'timing', label: 'Timing and rhythm' },
     { id: 'spatial', label: 'Stride and displacement' },
     { id: 'contact', label: 'Impact and foot contact' },
-    { id: 'posture', label: 'Posture and alignment' }
+    { id: 'posture', label: 'Posture and alignment' },
+    { id: 'mechanics', label: 'Rigid-body model — segment kinematics and mechanical work' }
 ];
+
+/**
+ * The mechanics tab: the rigid-body model, where the mechanical work goes, the
+ * cadence sweep and the levers, ranked by evidence. Every chart carries a table.
+ */
+function renderMechanics(r) {
+    const host = $('sl-pane-mechanics');
+    if (!host) return;
+    host.innerHTML = '';
+    const e = r.efficiency;
+    if (!e || !e.available) {
+        host.appendChild(el('p', 'sl-empty-note', e && e.reason ? e.reason : 'Re-run this analysis to see the mechanics.'));
+        return;
+    }
+
+    /* the model, as a row of chips */
+    const mdl = r.model || {};
+    const chips = el('div', 'sl-mech-chips');
+    const chip = (label, value) => {
+        const c = el('span', 'sl-mech-chip');
+        c.appendChild(el('span', '', label));
+        c.appendChild(el('strong', '', value));
+        chips.appendChild(c);
+    };
+    chip('Model', `${mdl.dof || 14} DOF`);
+    if (Number.isFinite(mdl.residualPct)) chip('Fit', `${mdl.residualPct.toFixed(2)}%`);
+    const seg = mdl.segmentLengthsM || {};
+    if (seg.thighL && seg.shankL) chip('Thigh/shank', `${(seg.thighL * 100).toFixed(0)}/${(seg.shankL * 100).toFixed(0)} cm`);
+    chips.appendChild(tip([
+        'A 14-degree-of-freedom rigid skeleton (pelvis, trunk, head, and thigh, shank, foot, upper arm, forearm per side) is fitted to every frame with segment lengths held constant.',
+        'Fit = median distance between model and landmarks, as % of leg length. Above 1.5% the model-based values are downgraded.'
+    ], 'About the model'));
+    host.appendChild(chips);
+
+    if ((e.missing || []).length) {
+        const line = el('div', 'sl-noteline');
+        line.appendChild(el('i', 'fas fa-info-circle'));
+        line.appendChild(el('span', '', e.missing[0].charAt(0).toUpperCase() + e.missing[0].slice(1) + '.'));
+        host.appendChild(line);
+    }
+
+    const grid = el('div', 'sl-charts');
+    const cardHead = (title, tipText) => {
+        const h = el('div', 'sl-chart-head');
+        h.appendChild(el('h4', '', title));
+        if (tipText) h.appendChild(tip(tipText));
+        return h;
+    };
+
+    if (e.work) {
+        const w = e.work;
+        const card = el('div', 'sl-chart');
+        const why = ['Mechanical work per kilogram per meter, from segment energies: bounce and braking move the center of mass; limb work moves segments relative to it.',
+            'Mechanical, not metabolic cost.'];
+        if (e.minetti && Number.isFinite(e.minetti.predicted)) why.push(`Cross-check: Minetti's equation predicts ${e.minetti.predicted.toFixed(2)} J/kg/m of limb work from timing alone${e.minetti.ratio != null ? ` (measured ${e.minetti.ratio.toFixed(2)}×)` : ''}.`);
+        card.appendChild(cardHead('Mechanical work', why));
+        card.appendChild(el('p', 'sl-chart-kpi', `${fmt(w.total, 2)} J/kg/m` + (e.speedMs ? ` · ${fmt(w.total * e.speedMs, 1)} W/kg` : '')));
+        const key = { 'Bounce': 'vertical', 'Braking': 'forward', 'Legs': 'legs', 'Arms': 'arms', 'Trunk/head': 'hat' };
+        const parts = [
+            { label: 'Bounce', value: w.vertical, kind: 'external' },
+            { label: 'Braking', value: w.forward, kind: 'external' },
+            { label: 'Legs', value: w.internal.legs, kind: 'internal' },
+            { label: 'Arms', value: w.internal.arms, kind: 'internal' },
+            { label: 'Trunk/head', value: w.internal.hat, kind: 'internal' }
+        ].filter(p => Number.isFinite(p.value)).sort((a, b) => b.value - a.value);
+        for (const p of parts) {
+            const share = w.shares ? w.shares[key[p.label]] : null;
+            p.text = Number.isFinite(share) ? `${share.toFixed(0)}%` : p.value.toFixed(2);
+        }
+        const c = document.createElement('canvas');
+        c.className = 'sl-workbars';
+        c.style.height = `${Math.max(90, parts.length * 24)}px`;
+        card.appendChild(c);
+        const det = document.createElement('details');
+        det.appendChild(el('summary', '', 'Table'));
+        const t = el('table', 'sl-datatable');
+        const head = document.createElement('tr');
+        for (const hcell of ['', 'J/kg/m', 'share']) head.appendChild(el('th', '', hcell));
+        t.appendChild(head);
+        for (const p of parts) {
+            const tr = document.createElement('tr');
+            for (const v of [p.label, p.value.toFixed(3), p.text]) tr.appendChild(el('td', '', v));
+            t.appendChild(tr);
+        }
+        det.appendChild(t);
+        card.appendChild(det);
+        grid.appendChild(card);
+        scheduleChart(() => drawWorkBars(c, parts));
+    }
+
+    if (e.sweep) {
+        const sw = e.sweep;
+        const card = el('div', 'sl-chart');
+        card.appendChild(cardHead('Step rate vs. cost', [
+            'Spring-mass bounce (falls with step rate) plus Minetti limb work (rises with it), at your speed. Shaded: within 1% of the minimum.',
+            ...sw.assumptions.map(a => a.charAt(0).toUpperCase() + a.slice(1) + '.'),
+            sw.calibrated.vertical || sw.calibrated.internal ? 'Calibrated to this clip, so the curve passes through your own numbers.' : 'Not calibrated to this clip.'
+        ]));
+        card.appendChild(el('p', 'sl-chart-kpi', `Min ${sw.optimumSpm} · you ${e.cadence.toFixed(0)} spm`
+            + (sw.plus5 ? ` · +5%: ${sw.plus5.deltaPct > 0 ? '+' : ''}${sw.plus5.deltaPct.toFixed(1)}%` : '')));
+        const c = document.createElement('canvas');
+        card.appendChild(c);
+        const det = document.createElement('details');
+        det.appendChild(el('summary', '', 'Table'));
+        const t = el('table', 'sl-datatable');
+        const head = document.createElement('tr');
+        for (const hcell of ['spm', 'bounce', 'limbs', 'total']) head.appendChild(el('th', '', hcell));
+        t.appendChild(head);
+        const step = Math.max(1, Math.round(sw.points.length / 10));
+        for (let i = 0; i < sw.points.length; i += step) {
+            const p = sw.points[i];
+            const tr = document.createElement('tr');
+            for (const v of [p.spm, p.vertical.toFixed(3), p.internal.toFixed(3), p.total.toFixed(3)]) tr.appendChild(el('td', '', String(v)));
+            t.appendChild(tr);
+        }
+        const wrap = el('div', 'sl-tablewrap');
+        wrap.appendChild(t);
+        det.appendChild(wrap);
+        card.appendChild(det);
+        grid.appendChild(card);
+        scheduleChart(() => drawSweep(c, sw));
+    }
+    host.appendChild(grid);
+
+    if (e.levers && e.levers.length) {
+        const gh = el('div', 'sl-grouphead', 'What moves the cost');
+        gh.appendChild(tip('Ranked by the strength of the evidence linking each variable to running economy (Van Hooren et al. 2024), then by the modeled effect. Technique explains about 4–12% of economy differences between runners.'));
+        host.appendChild(gh);
+        const list = el('div', 'sl-levers');
+        const STRENGTH = { moderate: 'moderate evidence', small: 'small evidence', trivial: 'no link', untested: 'untested' };
+        for (const l of e.levers) {
+            const card = el('div', `sl-lever ev-${l.evidence.strength}`);
+            const head = el('div', 'sl-lever-head');
+            head.appendChild(el('span', 'sl-lever-title', l.title));
+            const spec = METRIC_BY_ID[l.metric];
+            head.appendChild(el('span', 'sl-lever-value', `${fmt(l.value, spec ? spec.decimals : 2)} ${fmtUnit(l.unit)}`));
+            card.appendChild(head);
+            const evid = el('div', 'sl-lever-evidence');
+            evid.appendChild(el('span', 'sl-conf', STRENGTH[l.evidence.strength] || l.evidence.strength));
+            const more = [l.advice];
+            if (l.evidence.r != null) more.push(`r = ${l.evidence.r.toFixed(2)} with running economy.`);
+            if (l.check) more.push(`Spring-mass check: predicted stance drop ${l.check.predictedCm.toFixed(1)} cm, measured ${l.check.measuredCm.toFixed(1)} cm (${l.check.verdict}).`);
+            evid.appendChild(tip(more));
+            card.appendChild(evid);
+            if (l.modeled && l.modeled.text) card.appendChild(el('p', 'sl-lever-model', l.modeled.text));
+            list.appendChild(card);
+        }
+        host.appendChild(list);
+    }
+
+    const foot = el('p', 'sl-empty-note sl-mech-foot', 'Mechanical, not metabolic. 2D only. ');
+    foot.appendChild(tip(e.caveats || []));
+    host.appendChild(foot);
+}
 
 function renderMetricGrid(r) {
     const host = $('sl-pane-metrics');
@@ -1567,7 +1772,7 @@ function metricCard(r, id) {
     card.appendChild(foot);
 
     const note = (m.sided ? m.sides.L.note : (m.combined && m.combined.note));
-    if (note) card.appendChild(el('div', 'sl-mnote', note));
+    if (note) card.title = note;
 
     card.onclick = () => openSheet(id, r);
     return card;
@@ -1579,7 +1784,14 @@ const CYCLE_SERIES = [
     { key: 'footAngle', label: 'Foot angle', unit: '°', blurb: 'Heel-to-toe relative to horizontal. Positive is toe-up.' },
     { key: 'shank', label: 'Shank angle', unit: '°', blurb: 'Shin from vertical. Positive means the knee is behind the ankle.' },
     { key: 'ankleDf', label: 'Ankle angle', unit: '°', blurb: 'Relative to an assumed neutral, so read the shape rather than the offset.' },
-    { key: 'elbow', label: 'Elbow angle', unit: '°', blurb: 'Interior shoulder-elbow-wrist angle.' }
+    { key: 'elbow', label: 'Elbow angle', unit: '°', blurb: 'Interior shoulder-elbow-wrist angle.' },
+    /* from the 14-degree-of-freedom rigid-body model */
+    { key: 'mHipFlex', label: 'Hip flexion (model)', unit: '°', blurb: 'Fitted thigh relative to the trunk. Positive is in front of you. Fitted with every segment at its own constant length, so landmark noise does not make the limbs breathe.' },
+    { key: 'mKneeFlex', label: 'Knee flexion (model)', unit: '°', blurb: 'Fitted thigh minus fitted shank. The swing peak is how tightly the leg folds.' },
+    { key: 'mAnkle', label: 'Ankle, foot plane (model)', unit: '°', blurb: 'Shin against the fitted sole line. Zero is a flat foot under a vertical shin, positive is toes up — no assumed neutral.' },
+    { key: 'mThighVel', label: 'Thigh angular velocity (model)', unit: '°/s', blurb: 'Rate of the fitted thigh. Negative is sweeping backward; where it crosses zero before contact is when retraction begins.' },
+    { key: 'mKneeVel', label: 'Knee angular velocity (model)', unit: '°/s', blurb: 'Positive is bending. The fold-and-extend of swing is the largest part of the internal work.' },
+    { key: 'mShoulder', label: 'Shoulder flexion (model)', unit: '°', blurb: 'Upper arm relative to the trunk. Should mirror the OPPOSITE leg\'s hip curve.' }
 ];
 
 function renderCycles(r) {
@@ -1589,8 +1801,8 @@ function renderCycles(r) {
         host.appendChild(el('p', 'sl-empty-note', 'Curves are available for the analysis in this session. Re-run a stored analysis to see them.'));
         return;
     }
-    const intro = el('p', 'sl-empty-note',
-        'Every stride, resampled to 0–100% of the gait cycle and averaged. The shaded band is ±1 standard deviation across strides; the shaded left-hand region is stance. Left is solid, right is dashed.');
+    const intro = el('p', 'sl-empty-note', 'Mean of all strides ± 1 SD. Left solid, right dashed. ');
+    intro.appendChild(tip('Each stride is resampled to 0–100% of the gait cycle. The shaded left region is stance. "(model)" curves come from the fitted rigid-body skeleton.'));
     host.appendChild(intro);
     const grid = el('div', 'sl-charts');
     for (const s of CYCLE_SERIES) {
@@ -1598,8 +1810,10 @@ function renderCycles(r) {
         const R = gaitCycleCurves(r, s.key, 'R');
         if (!L && !R) continue;
         const card = el('div', 'sl-chart');
-        card.appendChild(el('h4', '', s.label));
-        card.appendChild(el('p', '', s.blurb));
+        const hd = el('div', 'sl-chart-head');
+        hd.appendChild(el('h4', '', s.label));
+        hd.appendChild(tip(s.blurb));
+        card.appendChild(hd);
         const c = document.createElement('canvas');
         card.appendChild(c);
         const sets = [];
@@ -1749,6 +1963,16 @@ function setupPlayer(result, synthetic) {
         video.currentTime = series.t[0];
         syncOverlayToVideo(video, series);
         video.onended = () => { S.playing = false; $('sl-play').innerHTML = '<i class="fas fa-play"></i>'; };
+    }
+    /* On a phone the player is sized to the clip, so a landscape clip does
+       not sit in a square of empty space and a portrait one is not cut short. */
+    const host = $('sl-player');
+    if (window.matchMedia('(max-width: 720px)').matches && series && series.width > 0) {
+        const wPx = host.clientWidth || window.innerWidth;
+        const ideal = wPx * series.height / series.width;
+        host.style.height = `${Math.round(Math.max(200, Math.min(window.innerHeight * 0.66, ideal)))}px`;
+    } else {
+        host.style.height = '';
     }
     renderEventTrack(result);
     drawPlayerFrame();
@@ -1939,6 +2163,7 @@ function drawPlayerFrame() {
         phase: phaseAt(result, f),
         measures: $('sl-l-measures').checked ? measuresAt(result, f) : null,
         metersPerPx: metersPerCanvasPx(result, f, box.w),
+        mech: mechAt(result, f),
         eventLabel: label
     });
     ctx.restore();
@@ -1959,15 +2184,57 @@ function comAt(result, frame) {
     return { x: x / w, y: 1 - com.y[frame] / h };
 }
 
-const OVERLAY_LAYERS = ['skeleton', 'angles', 'guides', 'readout', 'phase', 'measures', 'trails', 'events', 'com'];
+/**
+ * The mechanics layer at one frame: the fitted rigid skeleton, the center of
+ * mass with its forward-speed change, and three live numbers. Everything in
+ * normalized image coordinates, mirrored back if the engine flipped the clip.
+ */
+const MODEL_BONES = [['pelvis', 'neck'], ['neck', 'headCenter'], ['hipL', 'hipR'],
+    ...['L', 'R'].flatMap(s => [['hip' + s, 'knee' + s], ['knee' + s, 'ankle' + s], ['ankle' + s, 'heel' + s],
+        ['heel' + s, 'toe' + s], ['ankle' + s, 'toe' + s], ['shoulder' + s, 'elbow' + s], ['elbow' + s, 'wrist' + s]])];
+function mechAt(result, f) {
+    const inner = result._internal;
+    if (!inner || !inner.model || !inner.model.available) return null;
+    const { model, energy, scale } = inner;
+    const [W, H] = result.capture.resolution;
+    const mir = result.capture.mirrored;
+    const P = (name) => {
+        const t = model.tracks[name];
+        if (!t || !Number.isFinite(t.x[f])) return null;
+        return { x: (mir ? W - t.x[f] : t.x[f]) / W, y: 1 - t.y[f] / H };
+    };
+    const bones = [];
+    for (const [a, b] of MODEL_BONES) { const pa = P(a), pb = P(b); if (pa && pb) bones.push([pa, pb]); }
+    const out = { bones, fwd: mir ? -1 : 1, rows: [] };
+    if (energy && scale && scale.mPerPxMedian > 0) {
+        if (!energy._means) {
+            const m = (a) => { let s = 0, n = 0; for (const v of a) if (Number.isFinite(v)) { s += v; n++; } return n ? s / n : NaN; };
+            energy._means = { y: m(energy.com.y), vx: m(energy.com.vx) };
+        }
+        const mpp = scale.mPerPxMedian;
+        const cx = energy.com.x[f] / mpp, cy = energy.com.y[f] / mpp;
+        if (Number.isFinite(cx) && Number.isFinite(cy)) out.com = { x: (mir ? W - cx : cx) / W, y: 1 - cy / H };
+        const dh = (energy.com.y[f] - energy._means.y) * 100;
+        const dv = energy.com.vx[f] - energy._means.vx;
+        let limbs = 0;
+        for (const k of ['legL', 'legR', 'armL', 'armR']) limbs += energy.groups[k][f];
+        out.dv = dv;
+        if (Number.isFinite(dh)) out.rows.push({ label: 'CoM height', value: `${dh >= 0 ? '+' : ''}${dh.toFixed(1)} cm` });
+        if (Number.isFinite(dv)) out.rows.push({ label: 'CoM speed', value: `${dv >= 0 ? '+' : ''}${dv.toFixed(2)} m/s` });
+        if (Number.isFinite(limbs)) out.rows.push({ label: 'Limb energy', value: `${limbs.toFixed(2)} J/kg` });
+    }
+    return out;
+}
+
+const OVERLAY_LAYERS = ['skeleton', 'angles', 'guides', 'readout', 'phase', 'measures', 'trails', 'events', 'com', 'mechanics'];
 
 /* Three densities, because the right amount of annotation depends on what you
    are doing. "Clean" is for showing somebody the video; "analytical" is the
    working default; "everything" is for reading one frame carefully. */
 const OVERLAY_PRESETS = {
-    clean: { skeleton: 1, angles: 0, guides: 0, readout: 0, phase: 0, measures: 0, trails: 0, events: 1, com: 0 },
-    analytical: { skeleton: 1, angles: 1, guides: 1, readout: 1, phase: 1, measures: 1, trails: 0, events: 1, com: 1 },
-    everything: { skeleton: 1, angles: 1, guides: 1, readout: 1, phase: 1, measures: 1, trails: 1, events: 1, com: 1 }
+    clean: { skeleton: 1, angles: 0, guides: 0, readout: 0, phase: 0, measures: 0, trails: 0, events: 1, com: 0, mechanics: 1 },
+    analytical: { skeleton: 1, angles: 1, guides: 1, readout: 1, phase: 1, measures: 1, trails: 0, events: 1, com: 1, mechanics: 1 },
+    everything: { skeleton: 1, angles: 1, guides: 1, readout: 1, phase: 1, measures: 1, trails: 1, events: 1, com: 1, mechanics: 1 }
 };
 
 function applyOverlayPreset(name) {
