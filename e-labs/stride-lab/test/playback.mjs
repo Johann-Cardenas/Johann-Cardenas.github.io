@@ -1,6 +1,6 @@
 import { group, test, assert, assertEqual, assertClose } from './harness.mjs';
 import { createPlaybackClock } from '../src/ui/playback.js';
-import { drawOverlay } from '../src/ui/overlay.js';
+import { drawOverlay, fitCanvas } from '../src/ui/overlay.js';
 import { CANONICAL } from '../src/engine/types.js';
 
 export function playbackTests() {
@@ -42,6 +42,67 @@ export function playbackTests() {
         assertEqual(calls, 3); assertEqual(r.errors, 1);
         assertEqual(r.presented.size, 1); assertEqual(r.raf.size, 1);
         r.clock.dispose();
+    });
+    test('pausing retains the presented pose instead of following the audio clock', () => {
+        const frames = [], r = rig(time => frames.push(time));
+        r.present(0.5);
+        r.video.paused = true;
+        r.tick(30, 0.52);
+        assertEqual(frames.length, 1);
+        assertEqual(frames[0], 0.5);
+        r.listeners.get('seeked')();
+        assertEqual(frames.at(-1), 0.52);
+        r.clock.dispose();
+    });
+    test('a failed paused draw is retried at its target timestamp', () => {
+        const frames = [];
+        const r = rig(time => { frames.push(time); if (frames.length === 2) throw new Error('paused seek draw'); });
+        r.present(0.5);
+        r.video.paused = true;
+        r.video.currentTime = 0.8;
+        r.listeners.get('seeked')();
+        r.tick(20, 0.8);
+        assertEqual(frames.length, 3);
+        assertEqual(frames.at(-1), 0.8);
+        r.tick(20, 0.8);
+        assertEqual(frames.length, 3);
+        r.clock.dispose();
+        let attempts = 0;
+        const same = rig(() => { if (++attempts === 2) throw new Error('same-time redraw'); });
+        same.present(0.5); same.video.paused = true;
+        same.listeners.get('seeked')(); same.tick(20, 0.5);
+        assertEqual(attempts, 3);
+        same.clock.dispose();
+    });
+    test('a stable playback canvas reuses its backing buffer until resized', () => {
+        const previous = globalThis.window;
+        let writes = 0, width = 0, height = 0;
+        const canvas = { style: {}, get width() { return width; }, set width(value) { writes++; width = value; },
+            get height() { return height; }, set height(value) { writes++; height = value; },
+            getContext: () => ({ setTransform() {} }) };
+        try {
+            globalThis.window = { devicePixelRatio: 2 };
+            fitCanvas(canvas, 300, 500, true);
+            const initial = writes;
+            for (let i = 0; i < 60; i++) fitCanvas(canvas, 300, 500, true);
+            assertEqual(writes, initial);
+            fitCanvas(canvas, 400, 500, true);
+            assert(writes > initial);
+            assertEqual(canvas.width, 800);
+        } finally {
+            if (previous === undefined) delete globalThis.window; else globalThis.window = previous;
+        }
+    });
+    test('a UI-triggered redraw request wakes a paused clock at the requested frame', () => {
+        const frames = [], r = rig(time => frames.push(time));
+        r.present(0.5); r.video.paused = true;
+        r.clock.requestRedraw(0.8);
+        r.tick(20, 0.8);
+        assertEqual(frames.at(-1), 0.8);
+        r.clock.dispose();
+        r.clock.requestRedraw(1);
+        r.tick(20, 1);
+        assertEqual(frames.length, 2);
     });
     test('retired callbacks cannot mutate a replacement player or rearm themselves', () => {
         let calls = 0;

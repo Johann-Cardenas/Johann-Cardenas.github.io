@@ -19,7 +19,7 @@
    point of it.
    ============================================================ */
 
-const SHELL = 'stride-lab-shell-v5';
+const SHELL = 'stride-lab-shell-v6';
 const MODELS = 'stride-lab-models-v1';
 
 const SHELL_FILES = [

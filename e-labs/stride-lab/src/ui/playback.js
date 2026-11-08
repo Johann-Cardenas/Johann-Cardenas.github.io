@@ -7,13 +7,23 @@ export function createPlaybackClock(video, options) {
     const cancel = options.cancelAnimationFrame || globalThis.cancelAnimationFrame.bind(globalThis);
     const now = options.now || (() => performance.now());
     let active = true, raf = null, rvfc = null, lastTime = NaN, lastMedia = NaN, lastPresented = -Infinity;
+    let pendingTime = NaN, retryAt = 0, failures = 0;
     const errors = error => { try { onError(error); } catch { /* recovery must not kill the clock */ } };
     const paint = (time, force = false) => {
         if (!active || !Number.isFinite(time)) return;
         time = Math.max(start, Math.min(end, time));
-        if (!force && Math.abs(time - lastTime) < 1e-7) return;
-        lastTime = time;
-        try { onFrame(time, { force }); } catch (error) { errors(error); }
+        if (!force && !Number.isFinite(pendingTime) && Math.abs(time - lastTime) < 1e-7) return;
+        if (!force && video.paused && Number.isFinite(pendingTime) && now() < retryAt) return;
+        try {
+            onFrame(time, { force });
+            lastTime = time;
+            pendingTime = NaN;
+            failures = 0;
+        } catch (error) {
+            pendingTime = time;
+            retryAt = now() + Math.min(1000, 16 * 2 ** Math.min(failures++, 6));
+            errors(error);
+        }
     };
     const finish = () => {
         if (!active) return;
@@ -44,7 +54,13 @@ export function createPlaybackClock(video, options) {
         raf = request(tick);
         if (video.readyState < 2 || video.seeking) return;
         if (video.currentTime > end + 0.001 || (!video.paused && video.currentTime >= end)) { finish(); return; }
-        if (video.paused || now() - lastPresented > 120) paint(video.currentTime);
+        if (video.paused) {
+            // The audio/media clock can stop between source frames. Preserve
+            // the last presented pose until an explicit seek or new frame.
+            const target = Number.isFinite(pendingTime) ? pendingTime
+                : Number.isFinite(lastTime) ? lastTime : video.currentTime;
+            paint(target);
+        } else if (now() - lastPresented > 120) paint(video.currentTime);
     };
     const resetPresented = () => { lastPresented = -Infinity; lastMedia = NaN; };
     const seeked = () => { resetPresented(); paint(video.currentTime, true); };
@@ -55,6 +71,13 @@ export function createPlaybackClock(video, options) {
     armPresented();
     raf = request(tick);
     return {
+        requestRedraw(time = video.currentTime) {
+            if (!active || !Number.isFinite(time)) return;
+            pendingTime = time;
+            lastTime = NaN;
+            lastPresented = -Infinity;
+            retryAt = 0;
+        },
         dispose() {
             if (!active) return;
             active = false;

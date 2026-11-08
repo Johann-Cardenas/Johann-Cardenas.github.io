@@ -1390,6 +1390,24 @@ callback starvation and a draw error. Browser suspension itself cannot be
 prevented by application JavaScript; the design recovers to the current frame
 when execution resumes.
 
+## D62. Paused-frame fidelity and buffer reuse (v1.3.2)
+
+A paused element's media/audio clock can stop between video frame timestamps.
+Polling that clock could overwrite the last actually presented pose. Paused
+playback now retains the successful presentation until a seek or new frame.
+A draw is marked successful only after its callback returns; a failed paused
+draw retains its target timestamp and retries with bounded exponential backoff.
+Explicit seeking bypasses backoff, so an old failure cannot delay a new request.
+
+The playback canvas opts into backing-buffer reuse. Its dimensions change only
+when the rendered size or pixel ratio changes, and error recovery still resets
+the entire canvas state. Other canvas callers retain the original reset behavior.
+Three regression tests failed before these corrections and pass afterward.
+Real-video rate checks also count buffer resets to reject per-frame allocation.
+UI-triggered paint failures (including resize while paused) reset the full drawing
+state and request a repaint at the same pose. Browser tests inject these failures
+in both synthetic and real-video players and verify the canvas is repopulated.
+
 ## Open questions the specification left for the human
 
 These were answered with the conservative default and are easy to change.

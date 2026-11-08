@@ -68,6 +68,9 @@ repeated history reopening. Sample the displayed overlay timestamp on animation
 frames: require more than ten distinct poses over 1.8 seconds, less than 200 ms
 media-time mismatch and no pose held for 350 ms. Check the visible scores against
 direct engine evaluation at the displayed frame, including unavailable values.
+Stable-size playback must reuse its canvas backing buffer, with at most one
+resize/reset during each sampled interval. Paused-clock unit cases verify exact
+presentation retention and retry of failed draws at the original seek target.
 Verify stopping at the analyzed endpoint and restarting from the beginning.
 Inject a one-time failure in the real overlay canvas's stroke operation; verify
 that the canvas state resets and later poses render without an uncaught error.
@@ -107,6 +110,12 @@ software-rendered runner; the full real-video release gate must also be run on
 a graphics-capable development machine before release.
 
 ## Rendering caveats and unresolved validation
+
+The occluded treadmill fixture yields different accepted-cycle counts across
+heavy/full and CPU/GPU (observed: 1–9). A fixed three-cycle quota was therefore
+an invalid quality assertion. The release test requires valid cycle evidence,
+cadence within 170–200 spm, low confidence, and withheld movement scores across
+the entire clip; synthetic truth tests separately require numerical scores.
 
 Software WebGL must not be mistaken for a hardware neural accelerator. A forced
 SwiftShader experiment processed roughly 0.3 fps and hit the test timeout. The

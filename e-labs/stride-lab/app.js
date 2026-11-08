@@ -1926,6 +1926,7 @@ function stopPlayer() {
     if (!playerState) return;
     playerState.clock?.dispose();
     if (playerState.syntheticRaf != null) cancelAnimationFrame(playerState.syntheticRaf);
+    if (playerState.drawRetryRaf != null) cancelAnimationFrame(playerState.drawRetryRaf);
     playerState.video?.pause();
     playerState = null;
     S.playing = false;
@@ -2135,21 +2136,38 @@ function syncOverlayToVideo(video, series) {
             if (frame === state.frame && state.rendered && !force) return;
             state.frame = frame;
             $('sl-scrub').value = String(Math.round(frame / Math.max(1, series.n - 1) * 1000));
-            drawPlayerFrame();
+            paintPlayerFrame();
         },
         onEnd: () => { if (playerState === state) $('sl-play').innerHTML = '<i class="fas fa-play"></i>'; },
-        onError: () => {
-            if (playerState !== state) return;
-            state.renderErrors = (state.renderErrors || 0) + 1;
-            state.rendered = false;
-            const canvas = $('sl-overlay');
-            canvas.width = canvas.width; // reset pixels, clips, transforms and an interrupted save stack
-            canvas.dataset.renderErrors = String(state.renderErrors);
-        }
+        onError: () => recoverPlayerRender(state)
     });
 }
 
+function recoverPlayerRender(state) {
+    if (playerState !== state) return;
+    state.renderErrors = (state.renderErrors || 0) + 1;
+    state.rendered = false;
+    const canvas = $('sl-overlay');
+    canvas.width = canvas.width; // reset pixels, clips, transforms and an interrupted save stack
+    canvas.dataset.renderErrors = String(state.renderErrors);
+}
+
 function drawPlayerFrame() {
+    const state = playerState;
+    if (!state) return;
+    try { paintPlayerFrame(); }
+    catch {
+        recoverPlayerRender(state);
+        if (state.clock) state.clock.requestRedraw(state.series.t[state.frame]);
+        else if (state.drawRetryRaf == null) state.drawRetryRaf = requestAnimationFrame(() => {
+            state.drawRetryRaf = null;
+            if (playerState !== state) return;
+            try { paintPlayerFrame(); } catch { recoverPlayerRender(state); }
+        });
+    }
+}
+
+function paintPlayerFrame() {
     if (!playerState) return;
     const { series, result } = playerState;
     const host = $('sl-player');
@@ -2159,7 +2177,7 @@ function drawPlayerFrame() {
     const rect = host.getBoundingClientRect();
     if (!rect.width) return;
     const canvas = $('sl-overlay');
-    const ctx = fitCanvas(canvas, rect.width, rect.height);
+    const ctx = fitCanvas(canvas, rect.width, rect.height, true);
     ctx.clearRect(0, 0, rect.width, rect.height);
 
     const box = playerState.video && !playerState.video.hidden && playerState.video.videoWidth

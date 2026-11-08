@@ -54,6 +54,32 @@ async function expectScoresAtPlayhead(page) {
     for (const score of scores) expect(score.actual, `${score.id} score at the displayed frame`).toBe(score.expected);
 }
 
+async function pausedPaintRecovery(page) {
+    const before = await page.locator('#sl-overlay').evaluate(canvas => ({
+        errors: Number(canvas.dataset.renderErrors || 0), frame: canvas.dataset.frame
+    }));
+    await page.evaluate(() => {
+        const original = CanvasRenderingContext2D.prototype.stroke;
+        window.restorePausedStroke = () => { CanvasRenderingContext2D.prototype.stroke = original; };
+        let armed = true;
+        CanvasRenderingContext2D.prototype.stroke = function (...args) {
+            if (armed && this.canvas.id === 'sl-overlay') { armed = false; throw new Error('Injected paused UI paint failure'); }
+            return original.apply(this, args);
+        };
+        window.dispatchEvent(new Event('resize'));
+    });
+    try {
+        await expect.poll(() => page.locator('#sl-overlay').getAttribute('data-render-errors')).toBe(String(before.errors + 1));
+        await expect.poll(() => page.locator('#sl-overlay').evaluate(canvas => {
+            const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+            return pixels.some((value, index) => index % 4 === 3 && value > 0);
+        })).toBe(true);
+        await expect(page.locator('#sl-overlay')).toHaveAttribute('data-frame', before.frame);
+    } finally {
+        await page.evaluate(() => { window.restorePausedStroke(); delete window.restorePausedStroke; });
+    }
+}
+
 async function exerciseRates(page, testInfo) {
     for (const rate of ['0.5', '1']) {
         await seek(page, 250);
@@ -61,13 +87,19 @@ async function exerciseRates(page, testInfo) {
         await page.selectOption('#sl-rate', rate);
         const samples = await page.evaluate(async () => {
             const video = document.getElementById('sl-video'), overlay = document.getElementById('sl-overlay');
+            const width = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, 'width');
+            let buffers = 0;
+            Object.defineProperty(overlay, 'width', { configurable: true,
+                get() { return width.get.call(this); },
+                set(value) { buffers++; width.set.call(this, value); }
+            });
             const rows = [], start = performance.now();
             await video.play();
             await new Promise(resolve => {
                 function sample(now) {
                     rows.push({ wall: now - start, video: video.currentTime, overlay: Number(overlay.dataset.mediaTime),
-                        frame: Number(overlay.dataset.frame), errors: Number(overlay.dataset.renderErrors) });
-                    if (now - start >= 1800) { video.pause(); resolve(); }
+                        frame: Number(overlay.dataset.frame), errors: Number(overlay.dataset.renderErrors), buffers });
+                    if (now - start >= 1800) { video.pause(); delete overlay.width; resolve(); }
                     else requestAnimationFrame(sample);
                 }
                 requestAnimationFrame(sample);
@@ -79,6 +111,7 @@ async function exerciseRates(page, testInfo) {
         expect(samples.at(-1).video - samples[0].video).toBeGreaterThan(Number(rate) * 1.3);
         expect(Math.max(...samples.map(row => Math.abs(row.video - row.overlay)))).toBeLessThan(0.2);
         expect(samples.every(row => row.errors === 0)).toBe(true);
+        expect(samples.at(-1).buffers, 'stable playback must reuse the canvas buffer').toBeLessThanOrEqual(1);
         let changedAt = samples[0].wall, maxHold = 0, previous = samples[0].frame;
         for (const row of samples) {
             if (row.frame !== previous) { maxHold = Math.max(maxHold, row.wall - changedAt); changedAt = row.wall; previous = row.frame; }
@@ -136,6 +169,7 @@ test('synthetic runner: scores, seeking, responsive themes and saved result', as
     await expectScoresAtPlayhead(page);
     await inspectLayouts(page, testInfo, 'synthetic');
     expect((await saved(page)).movementSamples.length).toBeGreaterThan(0);
+    await pausedPaintRecovery(page);
     expect(errors).toEqual([]);
 });
 
@@ -158,7 +192,20 @@ for (const delegate of ['GPU', 'CPU']) test(`real treadmill ${delegate}: product
     expect(record.capture.resolution[1]).toBeGreaterThan(record.capture.resolution[0]);
     expect(record.metrics.cadence.combined.value).toBeGreaterThan(170);
     expect(record.metrics.cadence.combined.value).toBeLessThan(200);
-    expect(record.movementSamples.length).toBeGreaterThan(2);
+    // This occluded fixture supplies different numbers of accepted cycles on
+    // heavy/full and CPU/GPU. Validate the evidence rather than a cycle quota.
+    expect(record.movementSamples.length).toBeGreaterThan(0);
+    for (const sample of record.movementSamples) {
+        expect(sample.end).toBeGreaterThan(sample.start);
+        expect(['L', 'R']).toContain(sample.side);
+    }
+    expect(record.metrics.cadence.combined.confidence).toBe('low');
+    const withheld = await page.evaluate(async record => {
+        const { movementAt } = await import('/e-labs/stride-lab/src/engine/scoring/movement.js');
+        return Array.from({ length: 121 }, (_, i) => movementAt(record, i / 10))
+            .every(score => score.stride === null && score.cadence === null);
+    }, record);
+    expect(withheld, 'occluded treadmill footage must not produce confident scores').toBe(true);
     await exerciseRates(page, testInfo);
     await seek(page, 650);
     await page.locator('#sl-video').evaluate(video => new Promise(resolve => { if (!video.seeking) resolve(); else video.addEventListener('seeked', resolve, { once: true }); }));
@@ -217,6 +264,8 @@ for (const delegate of ['GPU', 'CPU']) test(`real treadmill ${delegate}: product
     } finally {
         await page.evaluate(() => { window.restoreStrideStroke(); delete window.restoreStrideStroke; document.getElementById('sl-video').pause(); });
     }
+    await page.waitForTimeout(100); // allow the final presented frame to settle after pause
+    await pausedPaintRecovery(page);
     expect(errors).toEqual([]);
 });
 

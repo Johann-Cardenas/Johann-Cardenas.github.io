@@ -868,12 +868,15 @@ export function anglesFor(view) {
  * Without this every line is soft on a retina screen, which on an overlay whose
  * whole job is to show precise geometry reads as imprecision.
  */
-export function fitCanvas(canvas, cssW, cssH) {
+export function fitCanvas(canvas, cssW, cssH, reuse = false) {
     const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    canvas.width = Math.max(1, Math.round(cssW * dpr));
-    canvas.height = Math.max(1, Math.round(cssH * dpr));
-    canvas.style.width = cssW + 'px';
-    canvas.style.height = cssH + 'px';
+    const width = Math.max(1, Math.round(cssW * dpr)), height = Math.max(1, Math.round(cssH * dpr));
+    if (!reuse || canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+    }
+    if (canvas.style.width !== cssW + 'px') canvas.style.width = cssW + 'px';
+    if (canvas.style.height !== cssH + 'px') canvas.style.height = cssH + 'px';
     const ctx = canvas.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     return ctx;
