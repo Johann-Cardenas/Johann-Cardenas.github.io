@@ -41,6 +41,54 @@ async function seek(page, value) {
     }, value);
 }
 
+async function expectScoresAtPlayhead(page) {
+    const scores = await page.evaluate(async () => {
+        const { movementAt } = await import('/e-labs/stride-lab/src/engine/scoring/movement.js');
+        const store = await import('/e-labs/stride-lab/src/ui/store.js');
+        const record = (await store.listAnalyses())[0];
+        const time = Number(document.getElementById('sl-overlay').dataset.mediaTime);
+        const expected = movementAt(record, time);
+        return ['stride', 'cadence'].map(id => ({ id, expected: expected[id] == null ? '—' : String(Math.round(expected[id] * 100)),
+            actual: document.getElementById(`sl-live-${id}`).textContent }));
+    });
+    for (const score of scores) expect(score.actual, `${score.id} score at the displayed frame`).toBe(score.expected);
+}
+
+async function exerciseRates(page, testInfo) {
+    for (const rate of ['0.5', '1']) {
+        await seek(page, 250);
+        await expect.poll(() => page.locator('#sl-video').evaluate(video => video.seeking)).toBe(false);
+        await page.selectOption('#sl-rate', rate);
+        const samples = await page.evaluate(async () => {
+            const video = document.getElementById('sl-video'), overlay = document.getElementById('sl-overlay');
+            const rows = [], start = performance.now();
+            await video.play();
+            await new Promise(resolve => {
+                function sample(now) {
+                    rows.push({ wall: now - start, video: video.currentTime, overlay: Number(overlay.dataset.mediaTime),
+                        frame: Number(overlay.dataset.frame), errors: Number(overlay.dataset.renderErrors) });
+                    if (now - start >= 1800) { video.pause(); resolve(); }
+                    else requestAnimationFrame(sample);
+                }
+                requestAnimationFrame(sample);
+            });
+            return rows;
+        });
+        await testInfo.attach(`playback-${rate}`, { body: JSON.stringify(samples), contentType: 'application/json' });
+        expect(new Set(samples.map(row => row.frame)).size).toBeGreaterThan(10);
+        expect(samples.at(-1).video - samples[0].video).toBeGreaterThan(Number(rate) * 1.3);
+        expect(Math.max(...samples.map(row => Math.abs(row.video - row.overlay)))).toBeLessThan(0.2);
+        expect(samples.every(row => row.errors === 0)).toBe(true);
+        let changedAt = samples[0].wall, maxHold = 0, previous = samples[0].frame;
+        for (const row of samples) {
+            if (row.frame !== previous) { maxHold = Math.max(maxHold, row.wall - changedAt); changedAt = row.wall; previous = row.frame; }
+        }
+        maxHold = Math.max(maxHold, samples.at(-1).wall - changedAt);
+        expect(maxHold).toBeLessThan(350);
+        await expectScoresAtPlayhead(page);
+    }
+}
+
 async function inspectLayouts(page, testInfo, prefix) {
     for (const theme of ['dark', 'light']) for (const [width, height] of [[1440, 1000], [768, 1024], [390, 844]]) {
         await page.setViewportSize({ width, height });
@@ -85,6 +133,7 @@ test('synthetic runner: scores, seeking, responsive themes and saved result', as
     await expect(page.locator('#sl-live-cadence')).toHaveText('—');
     await seek(page, 650);
     await expect(page.locator('#sl-live-cadence')).toHaveText(score);
+    await expectScoresAtPlayhead(page);
     await inspectLayouts(page, testInfo, 'synthetic');
     expect((await saved(page)).movementSamples.length).toBeGreaterThan(0);
     expect(errors).toEqual([]);
@@ -110,6 +159,7 @@ for (const delegate of ['GPU', 'CPU']) test(`real treadmill ${delegate}: product
     expect(record.metrics.cadence.combined.value).toBeGreaterThan(170);
     expect(record.metrics.cadence.combined.value).toBeLessThan(200);
     expect(record.movementSamples.length).toBeGreaterThan(2);
+    await exerciseRates(page, testInfo);
     await seek(page, 650);
     await page.locator('#sl-video').evaluate(video => new Promise(resolve => { if (!video.seeking) resolve(); else video.addEventListener('seeked', resolve, { once: true }); }));
     await page.selectOption('#sl-rate', '1');
@@ -135,6 +185,67 @@ for (const delegate of ['GPU', 'CPU']) test(`real treadmill ${delegate}: product
     await expect(page.locator('#sl-stage-player')).toBeVisible();
     await seek(page, 650);
     await expect(page.locator('#sl-video')).toBeVisible();
+    await exerciseRates(page, testInfo);
+    // A second reopen retires the former clock instead of retaining two owners.
+    await page.getByRole('tab', { name: 'History', exact: true }).click();
+    await page.locator('.sl-histrow').first().getByRole('button', { name: 'Open', exact: true }).click();
+    await exerciseRates(page, testInfo);
+    await seek(page, 985);
+    await page.locator('#sl-video').evaluate(video => video.play());
+    await expect.poll(() => page.locator('#sl-video').evaluate(video => video.paused)).toBe(true);
+    const end = record.keypoints.t[0] + record.capture.durationMs / 1000;
+    expect(await page.locator('#sl-video').evaluate(video => video.currentTime)).toBeCloseTo(end, 2);
+    await page.click('#sl-play');
+    await expect.poll(() => page.locator('#sl-video').evaluate(video => video.currentTime)).toBeLessThan(end - 1);
+    await page.locator('#sl-video').evaluate(video => video.pause());
+    await seek(page, 250);
+    await expect.poll(() => page.locator('#sl-video').evaluate(video => video.seeking)).toBe(false);
+    const beforeFault = await page.evaluate(() => {
+        const original = CanvasRenderingContext2D.prototype.stroke;
+        let armed = true;
+        window.restoreStrideStroke = () => { CanvasRenderingContext2D.prototype.stroke = original; };
+        CanvasRenderingContext2D.prototype.stroke = function (...args) {
+            if (armed && this.canvas.id === 'sl-overlay') { armed = false; throw new Error('Injected overlay paint failure'); }
+            return original.apply(this, args);
+        };
+        return Number(document.getElementById('sl-overlay').dataset.frame);
+    });
+    try {
+        await page.locator('#sl-video').evaluate(video => video.play());
+        await expect.poll(() => page.locator('#sl-overlay').getAttribute('data-render-errors')).toBe('1');
+        await expect.poll(() => page.locator('#sl-overlay').evaluate(canvas => Number(canvas.dataset.frame))).toBeGreaterThan(beforeFault + 4);
+    } finally {
+        await page.evaluate(() => { window.restoreStrideStroke(); delete window.restoreStrideStroke; document.getElementById('sl-video').pause(); });
+    }
+    expect(errors).toEqual([]);
+});
+
+test('real-video clock recovers from starved callbacks and an injected draw error', async ({ page }) => {
+    const errors = [];
+    await open(page, errors);
+    const observed = await page.evaluate(async () => {
+        const { createPlaybackClock } = await import('/e-labs/stride-lab/src/ui/playback.js');
+        const video = document.createElement('video');
+        video.muted = true; video.playsInline = true; video.width = 240;
+        document.body.appendChild(video);
+        video.src = '/e-labs/stride-lab/demo/treadmill-30fps.mp4';
+        await new Promise((resolve, reject) => { video.onloadedmetadata = resolve; video.onerror = reject; });
+        video.currentTime = 0.5;
+        await new Promise(resolve => { video.onseeked = resolve; });
+        video.requestVideoFrameCallback = () => 77; video.cancelVideoFrameCallback = () => {};
+        const frames = []; let failures = 0;
+        const clock = createPlaybackClock(video, { start: 0.5, end: 2,
+            onFrame(time) { if (frames.length === 0) { frames.push(time); throw new Error('injected draw'); } frames.push(time); },
+            onError() { failures++; }
+        });
+        await video.play();
+        await new Promise(resolve => { const check = () => video.paused ? resolve() : requestAnimationFrame(check); requestAnimationFrame(check); });
+        clock.dispose(); video.remove();
+        return { frames, failures, ended: video.currentTime };
+    });
+    expect(observed.failures).toBe(1);
+    expect(observed.frames.length).toBeGreaterThan(15);
+    expect(observed.ended).toBeCloseTo(2, 2);
     expect(errors).toEqual([]);
 });
 

@@ -42,7 +42,7 @@ aggregate knee-error regression beyond its stated 1% plus 0.01° tolerance.
 
 ## Browser matrix
 
-Each browser executes five scenarios:
+Each browser executes six scenarios:
 
 1. Synthetic runner through the normal UI: scored values, initial unavailable
    state, deterministic backward seeking, six theme/viewport combinations and
@@ -59,6 +59,20 @@ Each browser executes five scenarios:
    a sideways or stretched image even when dimensions look correct.
 5. Inject a worker failure, verify it terminates and reports the error, then run
    a successful synthetic analysis in the same page.
+6. On the real video, stop presented-frame callbacks and throw from one draw.
+   Verify that the independent animation clock continues updating and stops at
+   the analyzed boundary without an uncaught page error.
+
+The real-inference cases exercise both 0.5× and 1× playback before and after
+repeated history reopening. Sample the displayed overlay timestamp on animation
+frames: require more than ten distinct poses over 1.8 seconds, less than 200 ms
+media-time mismatch and no pose held for 350 ms. Check the visible scores against
+direct engine evaluation at the displayed frame, including unavailable values.
+Verify stopping at the analyzed endpoint and restarting from the beginning.
+Inject a one-time failure in the real overlay canvas's stroke operation; verify
+that the canvas state resets and later poses render without an uncaught error.
+These are explicit test budgets, not a guarantee against a browser or operating
+system suspending execution.
 
 The treadmill clip is `demo/treadmill-30fps.mp4`, analyzed over 0.5–12.5 seconds
 with the catalog's supplied height, mass and belt speed. Cadence is checked

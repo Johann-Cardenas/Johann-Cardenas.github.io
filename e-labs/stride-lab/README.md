@@ -26,7 +26,7 @@ python -m http.server 8000        # from the repository root
 ## Test it
 
 ```bash
-npm test          # node test/run.mjs — 170 checks, no dependencies
+npm test          # node test/run.mjs — 175 checks, no dependencies
 npm run test:release      # engine + Chrome/Firefox browser and real-video checks
 npm run benchmark:model  # compare framewise and adaptive temporal IK
 npm run banner    # regenerate the E-Labs card image from the engine

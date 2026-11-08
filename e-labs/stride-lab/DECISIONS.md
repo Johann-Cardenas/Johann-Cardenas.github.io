@@ -1364,6 +1364,32 @@ the canvas backing size and video/overlay rectangle after layout settles.
 Selecting a collapsed dock tab opens its content, including stored analyses.
 The default overlay is Clean, and the player height follows the clip on phones.
 
+## D61. One playback owner, one skeleton (v1.3.1)
+
+The raw tracked skeleton and fitted model were drawn simultaneously in Clean
+mode. The conditioned/model trajectory can differ from the raw points, making
+the second skeleton look like a lagging shadow. Mechanics now draws its bones
+only when Skeleton is off, and uses observation-supported measurement tracks.
+Readouts and center-of-mass arrows remain available with the tracked skeleton.
+
+Player replacement previously discarded the state containing the old callback
+ID before attempting cancellation. A dedicated disposable clock now owns its
+callbacks and event listeners; retired callbacks cannot mutate or rearm a new
+player. The next presented-frame callback is armed before drawing. An independent
+animation-frame watchdog takes over after 120 ms without presented callbacks;
+rendering exceptions are contained and the next frame can recover. There is no
+queue of old poses to catch up through. Synthetic playback uses elapsed wall
+time and the actual sample timestamps instead of a fixed frame increment.
+
+Playback is bounded to the analyzed timestamps. Previously the 23-second clip
+could keep playing after its 12-second analyzed window, holding the last pose
+over unseen movement. It now pauses at the analyzed endpoint, and Play restarts
+from the first analyzed frame. Browser regressions compare scores at the rendered
+playhead, measure lag at 0.5× and 1×, reopen saved analyses repeatedly and inject
+callback starvation and a draw error. Browser suspension itself cannot be
+prevented by application JavaScript; the design recovers to the current frame
+when execution resumes.
+
 ## Open questions the specification left for the human
 
 These were answered with the conservative default and are easy to change.

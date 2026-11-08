@@ -15,6 +15,7 @@ import { REFERENCE_BY_ID } from './src/engine/scoring/references.js';
 import { bandFor } from './src/engine/scoring/norms.js';
 import { scoreValue, scoreAnalysis } from './src/engine/scoring/score.js';
 import { movementTimeline, timelineIndex } from './src/engine/scoring/movement.js';
+import { createPlaybackClock } from './src/ui/playback.js';
 import { EXERCISE_BY_ID } from './src/engine/recommend/exercises.js';
 import { CANONICAL, ASYMMETRY_ATTENTION, ASYMMETRY_NOTABLE, indexAtTime } from './src/engine/types.js';
 import { adaptFrame } from './src/engine/pose/skeleton.js';
@@ -384,6 +385,7 @@ async function acceptFile(file, opts = {}) {
 }
 
 function clearFile(silent) {
+    stopPlayer();
     if (S.videoUrl) URL.revokeObjectURL(S.videoUrl);
     S.file = null; S.videoUrl = null;
     $('sl-filecard').hidden = true;
@@ -1299,6 +1301,7 @@ function stripMetrics(metrics) {
 }
 
 function showStage(which) {
+    if (which !== 'player') stopPlayer();
     for (const id of ['empty', 'camera', 'trim', 'run', 'player', 'error']) {
         $(`sl-stage-${id}`).hidden = id !== which;
     }
@@ -1919,6 +1922,15 @@ function strideValue(r, st, id, side) {
 
 let playerState = null;
 
+function stopPlayer() {
+    if (!playerState) return;
+    playerState.clock?.dispose();
+    if (playerState.syntheticRaf != null) cancelAnimationFrame(playerState.syntheticRaf);
+    playerState.video?.pause();
+    playerState = null;
+    S.playing = false;
+}
+
 function wirePlayer() {
     $('sl-play').addEventListener('click', togglePlay);
     $('sl-prev').addEventListener('click', () => step(-1));
@@ -1977,8 +1989,13 @@ function estimateGround(result) {
 }
 
 function setupPlayer(result, synthetic) {
+    stopPlayer();
+    S.playing = false;
     const series = result.series;
     const video = $('sl-video');
+    video.pause();
+    video.onseeked = video.ontimeupdate = video.onended = null;
+    $('sl-play').innerHTML = '<i class="fas fa-play"></i>';
     if (result._internal) result._internal.groundY = estimateGround(result);
     playerState = {
         result, series, synthetic: !!synthetic,
@@ -2042,27 +2059,48 @@ function nearestFrame(times, t) {
 
 function togglePlay() {
     if (!playerState) return;
+    const state = playerState;
     if (playerState.video && !playerState.video.hidden) {
-        if (playerState.video.paused) { playerState.video.play(); $('sl-play').innerHTML = '<i class="fas fa-pause"></i>'; }
+        if (playerState.video.paused) {
+            const times = playerState.series.t;
+            if (playerState.video.currentTime >= times[times.length - 1] - 0.001)
+                playerState.video.currentTime = times[0];
+            playerState.video.play().then(() => { if (playerState === state) $('sl-play').innerHTML = '<i class="fas fa-pause"></i>'; })
+                .catch(() => { if (playerState === state) $('sl-play').innerHTML = '<i class="fas fa-play"></i>'; });
+        }
         else { playerState.video.pause(); $('sl-play').innerHTML = '<i class="fas fa-play"></i>'; }
         return;
     }
     S.playing = !S.playing;
+    if (state.syntheticRaf != null) cancelAnimationFrame(state.syntheticRaf);
+    state.syntheticRaf = null;
+    playerState.syntheticWall = null;
+    playerState.syntheticTime = playerState.series.t[playerState.frame];
     $('sl-play').innerHTML = S.playing ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
     if (S.playing) tickSynthetic();
 }
 
 function tickSynthetic() {
     if (!S.playing || !playerState) return;
+    const state = playerState, now = performance.now();
     const rate = Number($('sl-rate').value);
-    playerState.frame = (playerState.frame + Math.max(1, Math.round(rate * 4))) % playerState.n;
+    const times = state.series.t;
+    const elapsed = state.syntheticWall == null ? 0 : (now - state.syntheticWall) / 1000;
+    state.syntheticWall = now;
+    state.syntheticTime = (state.syntheticTime ?? times[state.frame]) + elapsed * rate;
+    if (state.syntheticTime > times[times.length - 1]) state.syntheticTime = times[0];
+    state.frame = nearestFrame(times, state.syntheticTime);
     $('sl-scrub').value = String(Math.round(playerState.frame / Math.max(1, playerState.n - 1) * 1000));
     drawPlayerFrame();
-    setTimeout(() => requestAnimationFrame(tickSynthetic), 33);
+    state.syntheticRaf = requestAnimationFrame(() => { if (playerState === state) tickSynthetic(); });
 }
 
 function step(n) {
     if (!playerState) return;
+    S.playing = false;
+    if (playerState.syntheticRaf != null) cancelAnimationFrame(playerState.syntheticRaf);
+    playerState.syntheticRaf = null;
+    $('sl-play').innerHTML = '<i class="fas fa-play"></i>';
     playerState.frame = Math.max(0, Math.min(playerState.n - 1, playerState.frame + n));
     if (playerState.video && !playerState.video.hidden) {
         playerState.video.pause();
@@ -2074,70 +2112,41 @@ function step(n) {
 
 function seekFraction(f) {
     if (!playerState) return;
+    f = Number.isFinite(f) ? Math.max(0, Math.min(1, f)) : 0;
     playerState.frame = Math.round(f * (playerState.n - 1));
+    playerState.syntheticTime = playerState.series.t[playerState.frame];
+    playerState.syntheticWall = performance.now();
     if (playerState.video && !playerState.video.hidden) {
         playerState.video.currentTime = playerState.series.t[playerState.frame];
     }
     drawPlayerFrame();
 }
 
-/**
- * Keep the overlay on the frame the video is actually showing.
- *
- * This used to hang off `timeupdate`, and that is why the skeleton held
- * together at 0.15x and fell apart at 1x. Browsers throttle `timeupdate` to
- * about four events a second, so the overlay was redrawn every ~250 ms of WALL
- * time whatever the clip was doing. At 0.15x that is about one video frame and
- * looks perfect; at 1x it is seven or eight frames of a 30 fps clip, so the
- * skeleton sat on a pose the runner had already left, jumping to catch up
- * eight frames at a time. The overlay was never wrong about the frame it drew
- * — it was drawing the wrong frame.
- *
- * `requestVideoFrameCallback` fires once per PRESENTED frame and hands over the
- * exact `mediaTime` of that frame, so the pose drawn is by construction the
- * pose of the picture underneath it, at any playback rate. Where it does not
- * exist, an animation-frame loop reading `currentTime` is still far closer than
- * four updates a second, and `timeupdate` remains only as a coarse backstop for
- * a paused element being scrubbed.
- */
+/** Bind this analysis to a disposable presentation clock. The independent
+ * watchdog recovers callback stalls without queuing old poses. Seeking forces
+ * a redraw, and retired analyses cannot change the current player's frame. */
 function syncOverlayToVideo(video, series) {
-    /* A previous analysis may have left a callback chain running on this same
-       element; without canceling it two chains would draw over each other. */
-    if (playerState.rvfc != null && video.cancelVideoFrameCallback) {
-        try { video.cancelVideoFrameCallback(playerState.rvfc); } catch { /* gone */ }
-    }
-    if (playerState.raf != null) cancelAnimationFrame(playerState.raf);
-    playerState.rvfc = null;
-    playerState.raf = null;
-
-    const showTime = (t) => {
-        if (!playerState || playerState.video !== video) return;
-        const i = nearestFrame(series.t, t);
-        if (i !== playerState.frame) {
-            playerState.frame = i;
-            $('sl-scrub').value = String(Math.round(i / Math.max(1, series.n - 1) * 1000));
+    const state = playerState;
+    state.clock = createPlaybackClock(video, {
+        start: series.t[0], end: series.t[series.n - 1],
+        onFrame: (time, { force }) => {
+            if (playerState !== state) return;
+            const frame = nearestFrame(series.t, time);
+            if (frame === state.frame && state.rendered && !force) return;
+            state.frame = frame;
+            $('sl-scrub').value = String(Math.round(frame / Math.max(1, series.n - 1) * 1000));
+            drawPlayerFrame();
+        },
+        onEnd: () => { if (playerState === state) $('sl-play').innerHTML = '<i class="fas fa-play"></i>'; },
+        onError: () => {
+            if (playerState !== state) return;
+            state.renderErrors = (state.renderErrors || 0) + 1;
+            state.rendered = false;
+            const canvas = $('sl-overlay');
+            canvas.width = canvas.width; // reset pixels, clips, transforms and an interrupted save stack
+            canvas.dataset.renderErrors = String(state.renderErrors);
         }
-        drawPlayerFrame();
-    };
-
-    if ('requestVideoFrameCallback' in video) {
-        const step = (_now, meta) => {
-            showTime(meta.mediaTime);
-            playerState.rvfc = video.requestVideoFrameCallback(step);
-        };
-        playerState.rvfc = video.requestVideoFrameCallback(step);
-    } else {
-        const tick = () => {
-            showTime(video.currentTime);
-            playerState.raf = requestAnimationFrame(tick);
-        };
-        playerState.raf = requestAnimationFrame(tick);
-    }
-
-    /* Scrubbing a PAUSED video presents a frame, so the callback above covers
-       it; this is the belt to that pair of braces. */
-    video.onseeked = () => showTime(video.currentTime);
-    video.ontimeupdate = () => { if (video.paused) showTime(video.currentTime); };
+    });
 }
 
 function drawPlayerFrame() {
@@ -2171,6 +2180,7 @@ function drawPlayerFrame() {
     }
 
     const f = playerState.frame;
+    if (!Number.isInteger(f) || f < 0 || f >= series.n) return;
     const K = CANONICAL.length;
     const xy = new Float64Array(K * 2);
     const vis = new Float64Array(K);
@@ -2205,6 +2215,11 @@ function drawPlayerFrame() {
         eventLabel: label
     });
     ctx.restore();
+
+    playerState.rendered = true;
+    canvas.dataset.frame = String(f);
+    canvas.dataset.mediaTime = String(tNow);
+    canvas.dataset.renderErrors = String(playerState.renderErrors || 0);
 
     $('sl-time').textContent = `${tNow.toFixed(3)} s`;
     const movementIndex = timelineIndex(playerState.movement, tNow);
@@ -2260,7 +2275,7 @@ function mechAt(result, f) {
     const [W, H] = result.capture.resolution;
     const mir = result.capture.mirrored;
     const P = (name) => {
-        const t = model.tracks[name];
+        const t = (model.measurementTracks || model.tracks)[name];
         if (!t || !Number.isFinite(t.x[f])) return null;
         return { x: (mir ? W - t.x[f] : t.x[f]) / W, y: 1 - t.y[f] / H };
     };
@@ -2290,8 +2305,7 @@ function mechAt(result, f) {
 const OVERLAY_LAYERS = ['skeleton', 'angles', 'guides', 'readout', 'phase', 'measures', 'trails', 'events', 'com', 'mechanics'];
 
 /* Three densities, because the right amount of annotation depends on what you
-   are doing. "Clean" is for showing somebody the video; "analytical" is the
-   working default; "everything" is for reading one frame carefully. */
+   are doing. "Clean" is for showing somebody the video; "analytical" adds measurement detail; "everything" is for reading one frame carefully. */
 const OVERLAY_PRESETS = {
     clean: { skeleton: 1, angles: 0, guides: 0, readout: 0, phase: 0, measures: 0, trails: 0, events: 1, com: 0, mechanics: 1 },
     analytical: { skeleton: 1, angles: 1, guides: 1, readout: 1, phase: 1, measures: 1, trails: 0, events: 1, com: 1, mechanics: 1 },

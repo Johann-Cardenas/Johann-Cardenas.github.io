@@ -129,9 +129,9 @@ export function drawOverlay(ctx, o) {
 
 /**
  * The mechanics layer: the rigid-body model the measurements come from,
- * drawn over the landmarks so a fit that does not fit is visible; the center
- * of mass with an arrow for its forward-speed change (braking points back);
- * and a three-row live panel in the top-right corner.
+ * shown alone when the tracked skeleton is off. With the tracked skeleton on,
+ * only center-of-mass arrows and readouts are added, avoiding a second body
+ * that can look like a delayed trail.
  */
 function drawMechanics(g) {
     const { ctx, o, theme, u, w, h } = g;
@@ -141,7 +141,7 @@ function drawMechanics(g) {
     ctx.strokeStyle = withAlpha(theme.accent, 0.9);
     ctx.lineWidth = Math.max(1.1, u * 0.2);
     ctx.setLineDash([u * 0.55, u * 0.35]);
-    for (const [a, b] of m.bones) {
+    for (const [a, b] of (g.layers.skeleton ? [] : m.bones)) {
         ctx.beginPath(); ctx.moveTo(a.x * w, a.y * h); ctx.lineTo(b.x * w, b.y * h); ctx.stroke();
     }
     ctx.setLineDash([]);

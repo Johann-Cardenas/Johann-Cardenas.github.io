@@ -1,6 +1,6 @@
 {
   "name": "stride-lab",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "private": true,
   "type": "module",
   "description": "Stride Lab — client-side running-form and gait analysis. Pose estimation, gait-event detection and biomechanical metrics, computed entirely in the browser.",
@@ -9,7 +9,7 @@
     "banner": "node tools/make-banner.mjs",
     "benchmark:model": "node tools/benchmark-model.mjs",
     "test:browser": "playwright test",
-    "test:smoke": "playwright test --grep \"synthetic runner|playback decoder|inference worker\"",
+    "test:smoke": "playwright test --grep \"synthetic runner|playback decoder|inference worker|clock recovers\"",
     "test:release": "npm test && npm run test:browser"
   },
   "engines": {
