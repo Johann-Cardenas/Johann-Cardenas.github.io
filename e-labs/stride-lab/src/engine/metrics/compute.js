@@ -21,7 +21,7 @@ import {
 import { METRICS, METRIC_BY_ID } from './catalog.js';
 import { intervalUncertaintyMs, instantUncertaintyMs } from '../events/detect.js';
 import { bodyCoM, springMassStiffness, brakingProfile } from './com.js';
-import { derivative } from '../signal/filter.js';
+import { derivativeFinite } from '../signal/filter.js';
 import { workOver, springMassDrop } from '../model/energetics.js';
 import {
     kneeFlexionSeries, trunkLeanSeries, footAngleSeries, shankAngleSeries,
@@ -78,8 +78,8 @@ export function computeMetrics(cond, scale, events, ctx) {
             S[key] = { L: A.L[field], R: A.R[field] };
         }
         for (const s of ['L', 'R']) {
-            const tr = model.tracks['ankle' + s];
-            ankleVx[s] = tr ? maskLike(derivative(patchHold(tr.x), 1 / fps, cond.cutoffHz, fps), model.coord['shank' + s]) : null;
+            const tr = (model.measurementTracks || model.tracks)['ankle' + s];
+            ankleVx[s] = tr ? maskLike(derivativeFinite(tr.x, 1 / fps, cond.cutoffHz, fps), model.coord['shank' + s]) : null;
         }
     }
     /** @type {any[]} per-stride work, for the efficiency report */
@@ -103,14 +103,38 @@ export function computeMetrics(cond, scale, events, ctx) {
     /* ---- per-stride values --------------------------------------------- */
     /** @type {Record<string, {L:number[], R:number[]}>} */
     const per = {};
+    const samples = [];
+    let currentSample;
+    let localCoverage;
     const push = (id, side, v) => {
         if (!per[id]) per[id] = { L: [], R: [] };
-        if (Number.isFinite(v)) per[id][side].push(v);
+        if (Number.isFinite(v)) {
+            // Clip-wide coverage can hide an entirely missing gait cycle.
+            // Every required landmark must support this particular cycle.
+            for (const name of requiredLandmarks(id, side)) {
+                if (!localCoverage.has(name)) {
+                    const track = cond.kp[name];
+                    let valid = 0, count = 0;
+                    for (let f = currentSample.i0; f <= currentSample.i1; f++) {
+                        count++;
+                        if (track && Number.isFinite(track.x[f]) && Number.isFinite(track.y[f])) valid++;
+                    }
+                    localCoverage.set(name, count > 0 && valid >= 0.9 * count);
+                }
+                if (!localCoverage.get(name)) return;
+            }
+            per[id][side].push(v);
+            currentSample.values[id] = v;
+        }
     };
 
     for (const side of ['L', 'R']) {
         const other = side === 'L' ? 'R' : 'L';
         for (const st of bySide[side]) {
+            currentSample = { side, start: st.strike.t, end: st.nextStrike.t,
+                i0: Math.max(0, st.i0), i1: Math.min(cond.n - 1, st.i1), values: {} };
+            localCoverage = new Map();
+            samples.push(currentSample);
             const t0 = st.strike.t;
             const t1 = st.nextStrike.t;
             const tOff = st.toeoff ? st.toeoff.t : NaN;
@@ -332,14 +356,15 @@ export function computeMetrics(cond, scale, events, ctx) {
         strike: mean(usable.map(s => s.strike.sigmaMs)),
         toeoff: mean(usable.map(s => (s.toeoff ? s.toeoff.sigmaMs : NaN)))
     };
-    const fpsClass = fps >= FPS_FULL_PRECISION ? 'high' : fps >= FPS_TIMING_MIN ? 'medium' : 'low';
+    const observationFps = ctx.observationFps || fps;
+    const fpsClass = observationFps >= FPS_FULL_PRECISION ? 'high' : observationFps >= FPS_TIMING_MIN ? 'medium' : 'low';
     const strideMs = median(usable.map(s => s.strideTime * 1000));
 
     /** @type {Record<string, any>} */
     const out = {};
     for (const spec of METRICS) {
         out[spec.id] = aggregate(spec, per[spec.id], {
-            cond, scale, events, ctx, view, fps, fpsClass, meanSpread, stepTimes, sideSign,
+            cond, scale, events, ctx, view, fps: observationFps, fpsClass, meanSpread, stepTimes, sideSign,
             strideMs, viewMargin: ctx.viewMargin, per
         });
     }
@@ -379,6 +404,7 @@ export function computeMetrics(cond, scale, events, ctx) {
 
     return {
         metrics: out,
+        samples: samples.sort((a, b) => a.end - b.end),
         strideCount: { L: bySide.L.length, R: bySide.R.length, usable: usable.length, total: events.strides.length },
         sideSign,
         series: S,
@@ -542,7 +568,8 @@ function aggregate(spec, values, env) {
                 if (spec.model && ctx.model && ctx.model.available) {
                     /* A rigid body that does not explain the landmarks is not a
                        measurement of them. The residual is what says so. */
-                    const res = ctx.model.fit.residualPct;
+                    const res = Math.max(ctx.model.fit.residualPct,
+                        ctx.model.temporal?.baselineResidualPct || 0);
                     if (res > 3) {
                         confidence = weakest(confidence, 'low');
                         notes.push(`the rigid-body model explains the landmarks poorly here (median residual ${res.toFixed(1)}% of leg length)`);
@@ -684,16 +711,6 @@ export function phaseLagDeg(a, b, times, t0, t1) {
     return d;
 }
 
-function patchHold(a) {
-    const out = Float64Array.from(a);
-    let last = NaN;
-    for (let i = 0; i < out.length; i++) { if (Number.isFinite(out[i])) last = out[i]; else out[i] = last; }
-    let first = NaN;
-    for (let i = 0; i < out.length; i++) if (Number.isFinite(out[i])) { first = out[i]; break; }
-    if (!Number.isFinite(first)) first = 0;
-    for (let i = 0; i < out.length; i++) if (!Number.isFinite(out[i])) out[i] = first;
-    return out;
-}
 
 function maskLike(a, ref) {
     for (let i = 0; i < a.length; i++) if (!ref || !Number.isFinite(ref[i])) a[i] = NaN;

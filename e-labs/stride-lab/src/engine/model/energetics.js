@@ -42,7 +42,7 @@
    ============================================================ */
 
 import { SEGMENTS, G, DEG } from '../types.js';
-import { derivative } from '../signal/filter.js';
+import { derivativeFinite } from '../signal/filter.js';
 
 /**
  * Radius of gyration about the segment center of mass, as a fraction of
@@ -98,10 +98,10 @@ export const LIMB_GROUPS = {
  *        speed was not entered) — the forward terms are then unavailable.
  */
 export function energyCurves(model, cond, mPerPx, opts = {}) {
-    if (!model || !model.available || !(mPerPx > 0)) return null;
+    if (!model || !model.available || !Number.isFinite(mPerPx) || !(mPerPx > 0)) return null;
     const { n, fps, cutoffHz } = cond;
     const dt = 1 / fps;
-    const T = model.tracks;
+    const T = model.measurementTracks || model.tracks;
     const groundVx = Number.isFinite(opts.groundVxMs) ? opts.groundVxMs : null;
 
     /* segment centers of mass, meters */
@@ -121,8 +121,8 @@ export function energyCurves(model, cond, mPerPx, opts = {}) {
         const L = len.length ? len[len.length >> 1] : NaN;
         seg[s.id] = {
             mass: s.mass, x, y, lengthM: L,
-            vx: maskLike(derivative(patch(x), dt, cutoffHz, fps), x),
-            vy: maskLike(derivative(patch(y), dt, cutoffHz, fps), x),
+            vx: derivativeFinite(x, dt, cutoffHz, fps),
+            vy: derivativeFinite(y, dt, cutoffHz, fps),
             omega: model.rate[ROTATES_WITH[s.id]],
             inertia: s.mass * (GYRATION[s.id] * L) ** 2
         };
@@ -136,8 +136,8 @@ export function energyCurves(model, cond, mPerPx, opts = {}) {
         for (const s of SEGMENTS) { sx += s.mass * seg[s.id].x[f]; sy += s.mass * seg[s.id].y[f]; }
         cx[f] = sx / massSum; cy[f] = sy / massSum;
     }
-    const cvx = maskLike(derivative(patch(cx), dt, cutoffHz, fps), cx);
-    const cvy = maskLike(derivative(patch(cy), dt, cutoffHz, fps), cx);
+    const cvx = derivativeFinite(cx, dt, cutoffHz, fps);
+    const cvy = derivativeFinite(cy, dt, cutoffHz, fps);
 
     /* the curves */
     const Ev = new Float64Array(n), Ef = new Float64Array(n);
@@ -310,18 +310,3 @@ export function springMassExcursion(contactS, flightS) {
 }
 
 export { DEG };
-
-function patch(a) {
-    const out = Float64Array.from(a);
-    let last = NaN;
-    for (let i = 0; i < out.length; i++) { if (Number.isFinite(out[i])) last = out[i]; else out[i] = last; }
-    let first = NaN;
-    for (let i = 0; i < out.length; i++) if (Number.isFinite(out[i])) { first = out[i]; break; }
-    if (!Number.isFinite(first)) first = 0;
-    for (let i = 0; i < out.length; i++) if (!Number.isFinite(out[i])) out[i] = first;
-    return out;
-}
-function maskLike(a, ref) {
-    for (let i = 0; i < a.length; i++) if (!Number.isFinite(ref[i])) a[i] = NaN;
-    return a;
-}

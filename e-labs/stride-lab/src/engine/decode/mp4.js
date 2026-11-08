@@ -47,6 +47,7 @@ function* boxes(dv, start, end) {
         const type = String.fromCharCode(u8(dv, p + 4), u8(dv, p + 5), u8(dv, p + 6), u8(dv, p + 7));
         let header = 8;
         if (size === 1) {
+            if (p + 16 > end) throw new RangeError('truncated box header');
             /* 64-bit size. Number is exact to 2^53, far beyond any real file. */
             const hi = u32(dv, p + 8), lo = u32(dv, p + 12);
             size = hi * 4294967296 + lo;
@@ -54,7 +55,7 @@ function* boxes(dv, start, end) {
         } else if (size === 0) {
             size = end - p;
         }
-        if (size < header || p + size > end) return;
+        if (!Number.isSafeInteger(size) || size < header || p + size > end) throw new RangeError('invalid box size');
         yield { type, start: p + header, end: p + size, size };
         p += size;
     }
@@ -77,14 +78,35 @@ function findBox(dv, start, end, path) {
  * @returns {{ok:true, track:VideoTrackInfo} | {ok:false, reason:string}}
  */
 export function parseMp4(buffer) {
+    try { return parseBuffer(buffer); }
+    catch (error) {
+        if (error instanceof RangeError || error instanceof TypeError) return { ok: false, reason: 'malformed-isobmff' };
+        throw error;
+    }
+}
+
+function requireBytes(box, length) {
+    if (box.end - box.start < length) throw new RangeError('truncated box');
+}
+
+function tableCount(dv, box, stride, header = 8) {
+    requireBytes(box, header);
+    const count = u32(dv, box.start + 4);
+    if (count > Math.floor((box.end - box.start - header) / stride)) throw new RangeError('invalid table count');
+    return count;
+}
+
+function parseBuffer(buffer) {
     const dv = new DataView(buffer);
     const end = buffer.byteLength;
 
     let sawFtyp = false, moov = null, sawMoof = false;
+    const media = [];
     for (const b of boxes(dv, 0, end)) {
         if (b.type === 'ftyp') sawFtyp = true;
         else if (b.type === 'moov') moov = b;
         else if (b.type === 'moof') sawMoof = true;
+        else if (b.type === 'mdat') media.push(b);
     }
     if (!sawFtyp && !moov) return { ok: false, reason: 'not-isobmff' };
     if (sawMoof) return { ok: false, reason: 'fragmented' };
@@ -93,6 +115,7 @@ export function parseMp4(buffer) {
     for (const trak of [...boxes(dv, moov.start, moov.end)].filter(b => b.type === 'trak')) {
         const hdlr = findBox(dv, trak.start, trak.end, ['mdia', 'hdlr']);
         if (!hdlr) continue;
+        requireBytes(hdlr, 12);
         const handler = String.fromCharCode(u8(dv, hdlr.start + 8), u8(dv, hdlr.start + 9),
             u8(dv, hdlr.start + 10), u8(dv, hdlr.start + 11));
         if (handler !== 'vide') continue;
@@ -106,12 +129,16 @@ export function parseMp4(buffer) {
         if (elst && hasNonTrivialEdit(dv, elst)) return { ok: false, reason: 'edit-list' };
 
         const mv = u8(dv, mdhd.start);   /* version */
+        if (mv > 1) throw new RangeError('unsupported time header');
+        requireBytes(mdhd, mv === 1 ? 24 : 16);
         const timescale = mv === 1 ? u32(dv, mdhd.start + 20) : u32(dv, mdhd.start + 12);
         if (!(timescale > 0)) return { ok: false, reason: 'bad-timescale' };
 
         let id = 0, width = 0, height = 0, rotationDeg = 0, mirrored = false;
         if (tkhd) {
             const tv = u8(dv, tkhd.start);
+            if (tv > 1) throw new RangeError('unsupported track header');
+            requireBytes(tkhd, tv === 1 ? 96 : 84);
             id = tv === 1 ? u32(dv, tkhd.start + 20) : u32(dv, tkhd.start + 12);
             /* Display matrix, 3x3 of 16.16 fixed point.
                The offset is worth spelling out, because getting it wrong is
@@ -146,7 +173,7 @@ export function parseMp4(buffer) {
         if (!sd) return { ok: false, reason: 'no-sample-description' };
         if (sd.width) { width = sd.width; height = sd.height; }
 
-        const samples = readSampleTable(dv, stbl);
+        const samples = readSampleTable(dv, stbl, media);
         if (!samples || !samples.length) return { ok: false, reason: 'no-samples' };
 
         return {
@@ -163,15 +190,17 @@ export function parseMp4(buffer) {
 
 /** Only the identity edit (or none) is safe to ignore. */
 function hasNonTrivialEdit(dv, elst) {
+    requireBytes(elst, 8);
     const version = u8(dv, elst.start);
-    const count = u32(dv, elst.start + 4);
+    if (version > 1) return true;
+    const count = tableCount(dv, elst, version === 1 ? 20 : 12);
     let p = elst.start + 8;
     for (let i = 0; i < count; i++) {
         const mediaTime = version === 1
             ? Number(new DataView(dv.buffer, dv.byteOffset + p + 8, 8).getBigInt64(0))
             : (u32(dv, p + 4) | 0);
         const rate = u16(dv, p + (version === 1 ? 16 : 8));
-        if (mediaTime > 0 || rate !== 1) return true;
+        if (count > 1 || mediaTime !== 0 || rate !== 1 || u16(dv, p + (version === 1 ? 18 : 10)) !== 0) return true;
         p += version === 1 ? 20 : 12;
     }
     return false;
@@ -202,7 +231,9 @@ function transformFromMatrix(a, b, c, d) {
 function readStsd(dv, stbl) {
     const stsd = findBox(dv, stbl.start, stbl.end, ['stsd']);
     if (!stsd) return null;
+    requireBytes(stsd, 8);
     for (const e of boxes(dv, stsd.start + 8, stsd.end)) {
+        requireBytes(e, 78);
         const width = u16(dv, e.start + 24);
         const height = u16(dv, e.start + 26);
         let description = null, codec = e.type;
@@ -210,6 +241,7 @@ function readStsd(dv, stbl) {
             if (c.type === 'avcC' || c.type === 'hvcC' || c.type === 'av1C' || c.type === 'vpcC') {
                 description = new Uint8Array(dv.buffer, dv.byteOffset + c.start, c.end - c.start).slice();
                 if (c.type === 'avcC') {
+                    requireBytes(c, 4);
                     codec = `avc1.${hex(description[1])}${hex(description[2])}${hex(description[3])}`;
                 }
                 break;
@@ -231,13 +263,14 @@ const hex = (n) => n.toString(16).padStart(2, '0');
  * decode order is not the display order, and using decode time as presentation
  * time reorders the video without any error being raised anywhere.
  */
-function readSampleTable(dv, stbl) {
+function readSampleTable(dv, stbl, media) {
     const stts = findBox(dv, stbl.start, stbl.end, ['stts']);
     const stsc = findBox(dv, stbl.start, stbl.end, ['stsc']);
     const stsz = findBox(dv, stbl.start, stbl.end, ['stsz']);
     const stco = findBox(dv, stbl.start, stbl.end, ['stco'])
         || findBox(dv, stbl.start, stbl.end, ['co64']);
     if (!stts || !stsc || !stsz || !stco) return null;
+    requireBytes(stsz, 12);
     const is64 = !findBox(dv, stbl.start, stbl.end, ['stco']);
     const ctts = findBox(dv, stbl.start, stbl.end, ['ctts']);
     const stss = findBox(dv, stbl.start, stbl.end, ['stss']);
@@ -245,6 +278,10 @@ function readSampleTable(dv, stbl) {
     /* sizes */
     const uniform = u32(dv, stsz.start + 4);
     const count = u32(dv, stsz.start + 8);
+    // Bound declared expansion before allocating. Even uniform-size tables
+    // cannot describe more positive-byte samples than exist in the file.
+    if (!count || count > dv.byteLength || count > 1000000
+        || (!uniform && count > Math.floor((stsz.end - stsz.start - 12) / 4))) throw new RangeError('invalid sample count');
     const sizes = new Uint32Array(count);
     if (uniform) sizes.fill(uniform);
     else for (let i = 0; i < count; i++) sizes[i] = u32(dv, stsz.start + 12 + i * 4);
@@ -252,66 +289,80 @@ function readSampleTable(dv, stbl) {
     /* decode deltas */
     const deltas = new Float64Array(count);
     {
-        const n = u32(dv, stts.start + 4);
+        const n = tableCount(dv, stts, 8);
         let s = 0;
-        for (let i = 0; i < n && s < count; i++) {
+        for (let i = 0; i < n; i++) {
             const c = u32(dv, stts.start + 8 + i * 8);
             const d = u32(dv, stts.start + 12 + i * 8);
+            if (!c || !d || c > count - s) throw new RangeError('invalid decode run');
             for (let k = 0; k < c && s < count; k++) deltas[s++] = d;
         }
+        if (s !== count) throw new RangeError('incomplete decode table');
     }
 
     /* composition offsets */
     const offsets = new Float64Array(count);
     if (ctts) {
         const version = u8(dv, ctts.start);
-        const n = u32(dv, ctts.start + 4);
+        if (version > 1) throw new RangeError('unsupported composition version');
+        const n = tableCount(dv, ctts, 8);
         let s = 0;
-        for (let i = 0; i < n && s < count; i++) {
+        for (let i = 0; i < n; i++) {
             const c = u32(dv, ctts.start + 8 + i * 8);
             const raw = u32(dv, ctts.start + 12 + i * 8);
             const o = version === 1 ? (raw | 0) : raw;
+            if (!c || c > count - s) throw new RangeError('invalid composition run');
             for (let k = 0; k < c && s < count; k++) offsets[s++] = o;
         }
+        if (s !== count) throw new RangeError('incomplete composition table');
     }
 
     /* sync samples */
     const sync = new Uint8Array(count);
     if (stss) {
-        const n = u32(dv, stss.start + 4);
+        const n = tableCount(dv, stss, 4);
         for (let i = 0; i < n; i++) {
             const idx = u32(dv, stss.start + 8 + i * 4) - 1;
-            if (idx >= 0 && idx < count) sync[idx] = 1;
+            if (idx < 0 || idx >= count) throw new RangeError('invalid sync index');
+            sync[idx] = 1;
         }
     } else {
         sync.fill(1);   /* no stss means every sample is a sync sample */
     }
 
     /* chunk offsets and the sample-to-chunk map */
-    const chunkCount = u32(dv, stco.start + 4);
+    const chunkCount = tableCount(dv, stco, is64 ? 8 : 4);
+    if (!chunkCount || chunkCount > count) throw new RangeError('invalid chunk count');
     const chunkOffset = new Float64Array(chunkCount);
     for (let i = 0; i < chunkCount; i++) {
         chunkOffset[i] = is64
             ? Number(new DataView(dv.buffer, dv.byteOffset + stco.start + 8 + i * 8, 8).getBigUint64(0))
             : u32(dv, stco.start + 8 + i * 4);
     }
-    const scCount = u32(dv, stsc.start + 4);
+    const scCount = tableCount(dv, stsc, 12);
     const runs = [];
     for (let i = 0; i < scCount; i++) {
         runs.push({
             first: u32(dv, stsc.start + 8 + i * 12) - 1,
             perChunk: u32(dv, stsc.start + 12 + i * 12)
         });
+        const run = runs[i];
+        if (!run.perChunk || run.first < 0 || run.first >= chunkCount || (i ? run.first <= runs[i - 1].first : run.first !== 0)
+            || u32(dv, stsc.start + 16 + i * 12) !== 1) throw new RangeError('invalid sample-to-chunk run');
     }
+    if (!runs.length) throw new RangeError('empty sample-to-chunk table');
 
     /** @type {SampleEntry[]} */
     const samples = [];
-    let sample = 0, dts = 0;
+    let sample = 0, dts = 0, runIndex = 0;
     for (let c = 0; c < chunkCount && sample < count; c++) {
-        let per = runs[0] ? runs[0].perChunk : 1;
-        for (let r = 0; r < runs.length; r++) if (runs[r].first <= c) per = runs[r].perChunk;
+        while (runIndex + 1 < runs.length && runs[runIndex + 1].first <= c) runIndex++;
+        const per = runs[runIndex].perChunk;
+        if (per > count - sample) throw new RangeError('chunk overflows sample count');
         let off = chunkOffset[c];
         for (let k = 0; k < per && sample < count; k++) {
+            if (!Number.isSafeInteger(off) || !sizes[sample] || off < 0 || off + sizes[sample] > dv.byteLength
+                || !insideMedia(media, off, sizes[sample])) throw new RangeError('invalid sample byte range');
             samples.push({
                 offset: off,
                 size: sizes[sample],
@@ -324,7 +375,19 @@ function readSampleTable(dv, stbl) {
             sample++;
         }
     }
+    if (sample !== count) throw new RangeError('incomplete sample map');
     return samples;
+}
+
+function insideMedia(ranges, offset, size) {
+    let lo = 0, hi = ranges.length - 1;
+    while (lo <= hi) {
+        const mid = (lo + hi) >>> 1, range = ranges[mid];
+        if (offset < range.start) hi = mid - 1;
+        else if (offset >= range.end) lo = mid + 1;
+        else return offset + size <= range.end;
+    }
+    return false;
 }
 
 /**

@@ -368,6 +368,41 @@ Kleg  = Fmax / ΔL</code></pre>
                         arm–leg phase, and stride-time variability.</li>
                 </ul>
 
+                <h3>Temporal trajectories (v1.2)</h3>
+                <p>
+                    At 100 fps or higher, moderately noisy fits also use robust local cubic trajectories
+                    over the skeleton's coordinates. Centered windows have a 30 ms radius, or 45 ms when
+                    the original residual exceeds 1.5% of leg length. Clean fits and fits above 3% are
+                    left unchanged. Long occlusions remain missing, and reconstruction retains fixed
+                    segment lengths. This uses neighboring frames from an already decoded clip;
+                    it is not a live prediction model.
+                </p>
+                <p>
+                    In a paired synthetic benchmark with five seeds, both knees, and noise of 4% of leg
+                    length, RMS error against conditioned noise-free angles fell from 3.39° to 3.09°
+                    at 120 fps and from 2.48° to 2.25° at 240 fps. Clean results were unchanged.
+                    These are synthetic results, not validation on real runners. Smoothing can also
+                    attenuate brief motion; mechanical-work accuracy has not been independently
+                    validated for this temporal model.
+                </p>
+
+                <h3>Observation safeguards (v1.3)</h3>
+                <p>
+                    Irregularly timed landmarks are resampled on their actual timestamps before
+                    filtering. This creates a processing grid, not additional evidence: timing
+                    confidence uses the original intervals. Long missing runs isolate filters and
+                    derivatives. A held skeleton can remain visible during an occlusion, but its
+                    unsupported coordinates are excluded from mechanical measurements, including
+                    descendants of a hidden parent segment. Each measured cycle also requires
+                    local landmark coverage.
+                </p>
+                <p>
+                    Nonlinear fitting uses bounded steps and objective backtracking. Temporal
+                    reconstruction is constrained by each frame's original observation residual;
+                    it cannot improve a confidence rating by making an unsupported trajectory look
+                    smoother. These safeguards can reduce the number of reported measurements.
+                </p>
+
                 <h3>Where the mechanical work goes</h3>
                 <p>
                     From the fitted segments and Winter's inertial table, the work of running is split as

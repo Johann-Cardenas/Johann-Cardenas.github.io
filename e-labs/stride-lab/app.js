@@ -14,6 +14,7 @@ import { METRICS, METRIC_BY_ID, DIMENSIONS } from './src/engine/metrics/catalog.
 import { REFERENCE_BY_ID } from './src/engine/scoring/references.js';
 import { bandFor } from './src/engine/scoring/norms.js';
 import { scoreValue, scoreAnalysis } from './src/engine/scoring/score.js';
+import { movementTimeline, timelineIndex } from './src/engine/scoring/movement.js';
 import { EXERCISE_BY_ID } from './src/engine/recommend/exercises.js';
 import { CANONICAL, ASYMMETRY_ATTENTION, ASYMMETRY_NOTABLE, indexAtTime } from './src/engine/types.js';
 import { adaptFrame } from './src/engine/pose/skeleton.js';
@@ -97,6 +98,7 @@ const S = {
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
+    $('sl-version').textContent = `v${APP_VERSION}`;
     wireTopbar();
     wireProfile();
     wireCapture();
@@ -1104,7 +1106,7 @@ async function runSyntheticDemo(demo) {
         heightM: h, massKg: massKg(), surface: 'treadmill', speedMs: g.params.speedMs,
         backend: 'synthetic', cutoffHz: Number($('sl-cutoff').value)
     });
-    result.series = g.series;
+    result.series ||= g.series;
     result.synthetic = g.truth;
     S.running = false;
     updateRunEnabled();
@@ -1187,6 +1189,7 @@ async function adoptResult(result, name, synthetic) {
         scale: result.scale,
         strideCount: result.strideCount,
         metrics: stripMetrics(result.metrics),
+        movementSamples: result.movementSamples || [],
         scores: { dimensions: result.scores.dimensions, worstAsymmetry: result.scores.worstAsymmetry },
         findings: result.findings,
         warnings: result.warnings,
@@ -1235,6 +1238,7 @@ async function openStoredAnalysis(a) {
         ok: true,
         engine: a.engine, capture: a.capture, scale: a.scale,
         strideCount: a.strideCount, metrics: a.metrics,
+        movementSamples: a.movementSamples || [],
         scores: a.scores, findings: a.findings || [], warnings: (a.warnings || []).slice(),
         model: a.model || null, efficiency: a.efficiency || null,
         events: a.events, series: a.keypoints || null
@@ -1337,9 +1341,24 @@ function showError(result) {
  * the draws run inline instead, and the outcome stops depending on scheduling.
  */
 let chartsDrawSync = false;
-function scheduleChart(fn) {
+const chartPaints = new Map();
+let chartPaintPending = false;
+function scheduleChart(canvas, fn) {
+    for (const existing of chartPaints.keys()) if (!existing.isConnected) chartPaints.delete(existing);
+    chartPaints.set(canvas, fn);
     if (chartsDrawSync) { fn(); return; }
-    requestAnimationFrame(fn);
+    requestAnimationFrame(() => { if (canvas.isConnected) fn(); });
+}
+function repaintCharts() {
+    if (chartPaintPending) return;
+    chartPaintPending = true;
+    requestAnimationFrame(() => {
+        chartPaintPending = false;
+        for (const [canvas, paint] of chartPaints) {
+            if (!canvas.isConnected) chartPaints.delete(canvas);
+            else if (canvas.getBoundingClientRect().width > 0) paint();
+        }
+    });
 }
 
 function renderResult(r) {
@@ -1385,7 +1404,7 @@ function renderDimensions(r) {
         }
         if (dim.note) wrap.appendChild(el('div', 'sl-rail-note', dim.note));
         host.appendChild(wrap);
-        scheduleChart(() => drawScoreBar(c, dim.score));
+        scheduleChart(c, () => drawScoreBar(c, dim.score));
     }
 }
 
@@ -1626,7 +1645,7 @@ function renderMechanics(r) {
         det.appendChild(t);
         card.appendChild(det);
         grid.appendChild(card);
-        scheduleChart(() => drawWorkBars(c, parts));
+        scheduleChart(c, () => drawWorkBars(c, parts));
     }
 
     if (e.sweep) {
@@ -1659,7 +1678,7 @@ function renderMechanics(r) {
         det.appendChild(wrap);
         card.appendChild(det);
         grid.appendChild(card);
-        scheduleChart(() => drawSweep(c, sw));
+        scheduleChart(c, () => drawSweep(c, sw));
     }
     host.appendChild(grid);
 
@@ -1755,7 +1774,7 @@ function metricCard(r, id) {
     if (primary && primary.value != null && id !== 'strikePattern') {
         const c = document.createElement('canvas');
         card.appendChild(c);
-        scheduleChart(() => drawRangeBar(c, { value: primary.value, ci95: primary.ci95, band }));
+        scheduleChart(c, () => drawRangeBar(c, { value: primary.value, ci95: primary.ci95, band }));
     }
 
     const foot = el('div', 'sl-mcard-foot');
@@ -1821,7 +1840,7 @@ function renderCycles(r) {
         if (R) sets.push({ ...R, side: 'R', label: 'right' });
         card.appendChild(dataTable(sets, s.unit));
         grid.appendChild(card);
-        scheduleChart(() => drawGaitCycle(c, sets, { yLabel: s.unit }));
+        scheduleChart(c, () => drawGaitCycle(c, sets, { yLabel: s.unit }));
     }
     host.appendChild(grid);
 }
@@ -1874,7 +1893,7 @@ function renderStrides(r) {
             values: strides[side].map(st => strideValue(r, st, id, side))
         }));
         grid.appendChild(card);
-        scheduleChart(() => drawStrideDots(c, sets, { yLabel: fmtUnit(m.unit) }));
+        scheduleChart(c, () => drawStrideDots(c, sets, { yLabel: fmtUnit(m.unit) }));
     }
     host.appendChild(grid);
 }
@@ -1919,7 +1938,22 @@ function wirePlayer() {
     }
     const preset = $('sl-overlay-preset');
     if (preset) preset.addEventListener('change', () => applyOverlayPreset(preset.value));
-    window.addEventListener('resize', debounce(() => { if (playerState) drawPlayerFrame(); }, 180));
+    if (preset) applyOverlayPreset(preset.value);
+    let resizePending = false;
+    const redraw = () => {
+        if (resizePending) return;
+        resizePending = true;
+        requestAnimationFrame(() => {
+            resizePending = false;
+            if (!playerState) return;
+            playerState.theme = themeFrom($('sl-viewport'));
+            drawPlayerFrame();
+            repaintCharts();
+        });
+    };
+    window.addEventListener('resize', redraw);
+    new ResizeObserver(redraw).observe($('sl-player'));
+    new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 }
 
 /**
@@ -1948,6 +1982,7 @@ function setupPlayer(result, synthetic) {
     if (result._internal) result._internal.groundY = estimateGround(result);
     playerState = {
         result, series, synthetic: !!synthetic,
+        movement: movementTimeline(result),
         frame: 0,
         n: series ? series.n : 0,
         video: synthetic ? null : video,
@@ -2109,6 +2144,9 @@ function drawPlayerFrame() {
     if (!playerState) return;
     const { series, result } = playerState;
     const host = $('sl-player');
+    if (window.matchMedia('(max-width: 720px)').matches && series?.width > 0) {
+        host.style.height = `${Math.round(Math.max(160, Math.min(innerHeight * 0.62, host.clientWidth * series.height / series.width)))}px`;
+    } else host.style.height = '';
     const rect = host.getBoundingClientRect();
     if (!rect.width) return;
     const canvas = $('sl-overlay');
@@ -2169,6 +2207,29 @@ function drawPlayerFrame() {
     ctx.restore();
 
     $('sl-time').textContent = `${tNow.toFixed(3)} s`;
+    const movementIndex = timelineIndex(playerState.movement, tNow);
+    const movement = playerState.movement[movementIndex];
+    for (const id of ['stride', 'cadence']) {
+        const score = movement[id];
+        $(`sl-live-${id}`).textContent = score == null ? '—' : Math.round(score * 100);
+        $(`sl-live-${id}-bar`).value = score == null ? 0 : score * 100;
+        $(`sl-live-${id}-bar`).setAttribute('aria-valuetext', score == null ? 'Unavailable' : `${Math.round(score * 100)} out of 100`);
+        $(`sl-live-${id}`).closest('.sl-live-card').classList.toggle('is-scored', score != null);
+        const history = playerState.movement.slice(0, movementIndex + 1).filter(point => point.time >= tNow - 4);
+        let path = '', pen = false;
+        for (const point of history) {
+            if (point[id] == null) { pen = false; continue; }
+            const x = Math.max(0, Math.min(100, (point.time - tNow + 4) * 25));
+            const y = 22 - point[id] * 20;
+            path += `${pen ? 'L' : 'M'}${x.toFixed(2)},${y.toFixed(2)} `;
+            pen = true;
+        }
+        $(`sl-live-${id}-trend`).setAttribute('d', path);
+    }
+    $('sl-live-context').textContent = !result.movementSamples?.length
+        ? 'Scores unavailable' : movement.spm == null
+            ? movement.cycles >= 2 ? 'Low confidence' : 'Awaiting strides'
+            : `${Math.round(movement.spm)} spm · ${movement.cycles} cycles`;
 }
 
 /**
@@ -2500,11 +2561,16 @@ function selectPane(name) {
     }
     if (name === 'history') refreshHistory();
     if (name === 'compare') renderCompare();
+    repaintCharts();
 }
 
 function wireDock() {
     for (const tab of document.querySelectorAll('.sl-dtab')) {
-        tab.addEventListener('click', () => selectPane(tab.dataset.pane));
+        tab.addEventListener('click', () => {
+            $('sl-dock').classList.remove('is-collapsed');
+            $('sl-dock-collapse').innerHTML = '<i class="fas fa-chevron-down"></i>';
+            selectPane(tab.dataset.pane);
+        });
     }
     $('sl-dock-collapse').addEventListener('click', () => {
         const d = $('sl-dock');
@@ -2668,7 +2734,7 @@ async function refreshHistory() {
             c.style.height = '120px';
             card.appendChild(c);
             grid.appendChild(card);
-            scheduleChart(() => drawSparkline(c, pts));
+            scheduleChart(c, () => drawSparkline(c, pts));
         }
         host.appendChild(grid);
     }
@@ -2898,6 +2964,7 @@ function wirePrintTheme() {
 
 function exportCsv() {
     if (!S.result) return;
+    const number = value => Number.isFinite(value) ? value : '';
     const rows = [['metric', 'unit', 'side', 'value', 'ci95', 'sd', 'strides', 'confidence', 'note']];
     for (const spec of METRICS) {
         const m = S.result.metrics[spec.id];
@@ -2906,8 +2973,8 @@ function exportCsv() {
             const s = key ? m.sides[key] : m.combined;
             if (!s) continue;
             rows.push([spec.id, spec.unit, label,
-                s.value != null ? s.value : '', s.ci95 != null ? s.ci95 : '', s.sd != null ? s.sd : '',
-                s.n, s.confidence, (s.note || '').replace(/"/g, "'")]);
+                typeof s.value === 'string' ? s.value : number(s.value), number(s.ci95), number(s.sd),
+                number(s.n), s.confidence, (s.note || '').replace(/"/g, "'")]);
         }
     }
     const csv = rows.map(r => r.map(v => `"${String(v)}"`).join(',')).join('\n');

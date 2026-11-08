@@ -19,6 +19,9 @@ Desktop.ini
 
 # Playwright MCP artifacts
 .playwright-mcp/
+node_modules/
+playwright-report/
+test-results/
 
 # Python (preprocessing scripts)
 __pycache__/

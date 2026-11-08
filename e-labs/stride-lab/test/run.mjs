@@ -49,6 +49,9 @@ import { bodyCoM, springMassStiffness } from '../src/engine/metrics/com.js';
 import { NORMS, bandFor, STRENGTH_WEIGHT } from '../src/engine/scoring/norms.js';
 import { REFERENCES, REFERENCE_BY_ID } from '../src/engine/scoring/references.js';
 import { scoreValue, bandStatus, scoreAnalysis } from '../src/engine/scoring/score.js';
+import { movementAt, movementTimeline, timelineIndex } from '../src/engine/scoring/movement.js';
+import { smoothTrajectory } from '../src/engine/model/temporal.js';
+import { robustnessTests } from './robustness.mjs';
 import { RULES, MAX_FINDINGS, recommend } from '../src/engine/recommend/rules.js';
 import { EXERCISES, EXERCISE_BY_ID } from '../src/engine/recommend/exercises.js';
 import { parseMp4, displaySize, measuredFps } from '../src/engine/decode/mp4.js';
@@ -498,14 +501,14 @@ function buildMp4({ matrix, codedW = 848, codedH = 480, version = 0 }) {
     const stts = box('stts', cat(be32(0), be32(1), be32(2), be32(300)));
     const stsc = box('stsc', cat(be32(0), be32(1), be32(1), be32(2), be32(1)));
     const stsz = box('stsz', cat(be32(0), be32(0), be32(2), be32(100), be32(100)));
-    const stco = box('stco', cat(be32(0), be32(1), be32(4096)));
+    const ftyp = box('ftyp', new Uint8Array([105, 115, 111, 109, 0, 0, 2, 0]));
+    const stco = box('stco', cat(be32(0), be32(1), be32(ftyp.length + 8)));
     const stbl = box('stbl', cat(stsd, stts, stsc, stsz, stco));
     const minf = box('minf', stbl);
     const mdia = box('mdia', cat(box('mdhd', mdhdBody), box('hdlr', hdlrBody), minf));
     const trak = box('trak', cat(box('tkhd', tkhdBody), mdia));
     const moov = box('moov', trak);
-    const ftyp = box('ftyp', new Uint8Array([105, 115, 111, 109, 0, 0, 2, 0]));
-    chunks.push(ftyp, moov, box('mdat', u8a(200)));
+    chunks.push(ftyp, box('mdat', u8a(200)), moov);
     const all = cat(...chunks);
     return all.buffer.slice(all.byteOffset, all.byteOffset + all.byteLength);
 }
@@ -2051,4 +2054,146 @@ test('REGRESSION: a strike extrapolated past the last frame cannot hang the vote
     assert(Date.now() - t0 < 5000, 'finished');
 });
 
+group('Temporal trajectory model');
+test('local cubic preserves polynomial motion and leaves occlusions missing', () => {
+    const t = Float64Array.from({ length: 240 }, (_, i) => i / 240);
+    const y = t.map(x => 3 + 2 * x - 4 * x * x + x ** 3);
+    const smoothed = smoothTrajectory(y, t);
+    assert(smoothed.changed > 0);
+    for (let i = 0; i < y.length; i++) assertClose(smoothed.values[i], y[i], 1e-9);
+    for (let i = 90; i < 110; i++) y[i] = NaN;
+    const missing = smoothTrajectory(y, t).values;
+    for (let i = 90; i < 110; i++) assert(Number.isNaN(missing[i]));
+    assertClose(missing[89], y[89], 1e-9);
+    assertClose(missing[110], y[110], 1e-9);
+});
+test('centered trajectory model preserves phase and reduces noisy motion error', () => {
+    const t = Float64Array.from({ length: 480 }, (_, i) => i / 240);
+    const truth = t.map(x => Math.sin(2 * Math.PI * 3 * x));
+    const noisy = truth.map((v, i) => v + 0.1 * Math.sin(i * 1.7));
+    const smoothed = smoothTrajectory(noisy, t).values;
+    assert(rmsBetween(smoothed, truth) < 0.3 * rmsBetween(noisy, truth));
+    let best = Infinity, lag = null;
+    for (let shift = -3; shift <= 3; shift++) {
+        let error = 0;
+        for (let i = 30; i < 450; i++) error += (smoothed[i] - truth[i + shift]) ** 2;
+        if (error < best) { best = error; lag = shift; }
+    }
+    assertEqual(lag, 0);
+});
+test('adaptive IK preserves clean fits and improves a noisy held-out runner', () => {
+    const options = { fps: 120, durationS: 4, seed: 23, rigidLegs: true };
+    const clean = condition(synthGait(options).series, { fps: 120 });
+    const c = fitKinematicModel(clean);
+    assertEqual(c.temporal.method, 'framewise');
+    const noisy = condition(synthGait({ ...options, noiseFrac: 0.04 }).series, { fps: 120 });
+    const baseline = fitKinematicModel(noisy, { temporal: false });
+    const candidate = fitKinematicModel(noisy);
+    assertEqual(candidate.temporal.method, 'robust-local-cubic');
+    assert(candidate.temporal.changed > 0);
+    const truth = kneeFlexionSeries(clean, 'L');
+    const before = rmsBetween(baseline.angles.L.kneeFlex, truth, 30);
+    const after = rmsBetween(candidate.angles.L.kneeFlex, truth, 30);
+    assert(after < before, `knee error ${before} -> ${after}`);
+    // Forward reconstruction, not independent point smoothing: rigid lengths.
+    const tr = candidate.tracks;
+    for (let f = 30; f < noisy.n - 30; f += 10) {
+        assertClose(Math.hypot(tr.kneeL.x[f] - tr.ankleL.x[f], tr.kneeL.y[f] - tr.ankleL.y[f]),
+            candidate.geom.lengths.shankL, 1e-6);
+    }
+    note(`held-out knee RMS ${before.toFixed(2)} -> ${after.toFixed(2)} deg`);
+});
+
+test('temporal IK keeps long missing segments unavailable', () => {
+    const cond = condition(synthGait({ fps: 120, durationS: 4, seed: 31, rigidLegs: true, noiseFrac: 0.02 }).series, { fps: 120 });
+    for (let f = 100; f < 130; f++) {
+        cond.kp.ankleL.x[f] = NaN;
+        cond.kp.ankleL.y[f] = NaN;
+    }
+    const model = fitKinematicModel(cond, { temporal: true });
+    assert(model.available);
+    for (let f = 100; f < 130; f++) {
+        assertEqual(model.held.shankL[f], 1);
+        assert(Number.isNaN(model.coord.shankL[f]));
+        assert(Number.isNaN(model.angles.L.kneeFlex[f]));
+    }
+    assert(Number.isFinite(model.angles.L.kneeFlex[140]));
+});
+
+group('Playback movement scores');
+test('completed cycles only, bounded scores and deterministic backward seeking', () => {
+    assert(GTR.movementSamples.length > 0);
+    assertEqual(movementAt(GTR, 0).stride, null);
+    const t = GTR.movementSamples[GTR.movementSamples.length - 1].end;
+    const a = movementAt(GTR, t);
+    assert(a.cycles > 1);
+    assert(a.stride != null);
+    assertBetween(a.stride, 0, 1);
+    assertBetween(a.cadence, 0, 1);
+    assertClose(a.spm, GT.params.cadenceSpm, 3);
+    movementAt(GTR, 0);
+    assertEqual(JSON.stringify(movementAt(GTR, t)), JSON.stringify(a));
+});
+test('movement scores suppress missing confidence and missing pace', () => {
+    const t = GTR.movementSamples[GTR.movementSamples.length - 1].end;
+    const r = { ...GTR, metrics: {} };
+    assertEqual(movementAt(r, t).stride, null);
+    assertEqual(movementAt(r, t).cadence, null);
+    assertEqual(movementAt({ ...GTR, capture: { ...GTR.capture, speedMs: null } }, t).cadence, null);
+    assertEqual(movementAt({ ...GTR, movementSamples: [] }, t).stride, null);
+});
+test('future cycles and isolated outliers cannot change the current cadence', () => {
+    const t = GTR.movementSamples[GTR.movementSamples.length - 1].end;
+    const base = movementAt(GTR, t);
+    const future = { side: 'L', start: t, end: t + 1, values: { strideTime: 10 } };
+    assertEqual(movementAt({ ...GTR, movementSamples: [...GTR.movementSamples, future] }, t).spm, base.spm);
+    const altered = GTR.movementSamples.map(s => ({ ...s, values: { ...s.values } }));
+    altered[altered.length - 1].values.strideTime = 10;
+    assertClose(movementAt({ ...GTR, movementSamples: altered }, t).spm, base.spm, 2);
+});
+test('sustained movement changes update scores; one-sided evidence is withheld', () => {
+    const t = GTR.movementSamples[GTR.movementSamples.length - 1].end;
+    const base = movementAt(GTR, t);
+    const samples = GTR.movementSamples.map(s => ({ ...s, values: { ...s.values, strideTime: s.values.strideTime * 1.2 } }));
+    const changed = movementAt({ ...GTR, movementSamples: samples }, t);
+    assertClose(changed.spm, base.spm / 1.2, 0.01);
+    assert(changed.cadence !== base.cadence);
+    const oneSide = movementAt({ ...GTR, movementSamples: samples.filter(s => s.side === 'L') }, t);
+    assertEqual(oneSide.stride, null);
+    assertEqual(oneSide.cadence, null);
+});
+group('MP4 hostile-input audit');
+test('cached movement timeline matches direct evaluation through window expiry and backward seeking', () => {
+    const timeline = movementTimeline(GTR);
+    for (const point of timeline) for (const offset of [0, 0.0001, -0.0001]) {
+        const time = point.time + offset;
+        const cached = timeline[timelineIndex(timeline, time)];
+        const direct = movementAt(GTR, time);
+        for (const key of ['stride', 'cadence', 'spm', 'cycles']) assertEqual(cached[key], direct[key], `${key} at ${time}`);
+    }
+});
+test('truncated boxes and random bytes return a controlled parser result', () => {
+    const valid = buildMp4({ matrix: M.none });
+    for (let size = 0; size < valid.byteLength; size += 7) {
+        const result = parseMp4(valid.slice(0, size));
+        assertEqual(result.ok, false);
+    }
+    let state = 8723;
+    for (let i = 0; i < 250; i++) {
+        const bytes = new Uint8Array(8 + i % 128);
+        for (let j = 0; j < bytes.length; j++) { state = (1664525 * state + 1013904223) >>> 0; bytes[j] = state >>> 24; }
+        assertEqual(parseMp4(bytes.buffer).ok, false);
+    }
+});
+test('oversized sample counts, invalid byte ranges and decode runs are rejected', () => {
+    for (const [type, field, value] of [['stsz', 8, 0xffffffff], ['stco', 8, 0xffffffff],
+        ['stts', 12, 0], ['stsc', 8, 0], ['stco', 8, 0]]) {
+        const bytes = new Uint8Array(buildMp4({ matrix: M.none }));
+        const text = new TextDecoder('latin1').decode(bytes);
+        const start = text.indexOf(type) + 4;
+        new DataView(bytes.buffer).setUint32(start + field, value);
+        assertEqual(parseMp4(bytes.buffer).ok, false, `${type} invalid field`);
+    }
+});
+robustnessTests();
 summary();

@@ -275,8 +275,29 @@
 .sl-stage-error h2 { font-size: 1.15em; color: var(--sl-ink); margin: 0; }
 .sl-stage-error p { max-width: 36em; font-size: 0.88em; margin: 0; }
 
-.sl-player { position: relative; width: 100%; flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+.sl-playback-layout { display: flex; width: 100%; flex: 1; min-height: 0; gap: 0.8em; align-items: stretch; }
+.sl-player { position: relative; width: 100%; flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; min-width: 0; }
+.sl-live-scores { flex: 0 0 112px; display: flex; flex-direction: column; justify-content: center; gap: 0.7em; }
+.sl-live-card { padding: 0.8em; border: 1px solid var(--sl-line-soft); border-radius: 12px; background: linear-gradient(150deg, var(--sl-bg2), var(--sl-bg1)); transition: border-color 180ms; }
+.sl-live-card.is-scored { border-color: color-mix(in srgb, var(--sl-accent) 35%, var(--sl-line-soft)); }
+.sl-live-card > span i { color: var(--sl-accent); margin-right: 0.3em; font-size: 0.9em; }
+.sl-live-card > div { display: flex; align-items: baseline; gap: 0.2em; line-height: 1.3; margin-top: 0.25em; }
+.sl-score-trend { display: block; width: 100%; height: 24px; margin-top: 0.4em; border-bottom: 1px solid var(--sl-line-soft); }
+.sl-score-trend path { fill: none; stroke: var(--sl-accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.sl-live-card:not(.is-scored) progress { opacity: 0.25; }
+.sl-live-card > span { font-size: 0.8em; color: var(--sl-ink2); }
+.sl-live-card strong { font-size: 2.35em; font-weight: 650; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; color: var(--sl-ink); }
+.sl-live-card small, #sl-live-context { font-size: 0.68em; color: var(--sl-ink2); }
+.sl-live-card progress { display: block; width: 100%; height: 5px; accent-color: var(--sl-accent); margin-top: 0.4em; }
+@media (max-width: 600px) {
+    .sl-playback-layout { flex-direction: column; flex: none; }
+    .sl-live-scores { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5em; }
+    .sl-live-card { padding: 0.45em 0.7em; }
+    .sl-live-card strong { font-size: 1.5em; }
+    #sl-live-context { grid-column: 1 / -1; text-align: center; }
+}
 .sl-player video { max-width: 100%; max-height: 100%; display: block; background: #05080f; border-radius: 8px; }
+.sl-player { border-radius: 12px; overflow: hidden; background: var(--sl-bg0); box-shadow: inset 0 0 0 1px var(--sl-line-soft); }
 .sl-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .sl-live { width: 100%; max-height: 46vh; border-radius: 8px; background: #05080f; }
 

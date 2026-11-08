@@ -321,7 +321,8 @@ export function sampleAt(arr, i) {
     const i1 = Math.min(arr.length - 1, i0 + 1);
     const f = i - i0;
     const a = arr[i0], b = arr[i1];
-    if (!Number.isFinite(a) || !Number.isFinite(b)) return Number.isFinite(a) ? a : b;
+    if (f === 0) return Number.isFinite(a) ? a : NaN;
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return NaN;
     return a + (b - a) * f;
 }
 

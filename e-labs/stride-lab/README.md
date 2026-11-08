@@ -26,11 +26,14 @@ python -m http.server 8000        # from the repository root
 ## Test it
 
 ```bash
-npm test          # node test/run.mjs — 145 checks, no dependencies
+npm test          # node test/run.mjs — 170 checks, no dependencies
+npm run test:release      # engine + Chrome/Firefox browser and real-video checks
+npm run benchmark:model  # compare framewise and adaptive temporal IK
 npm run banner    # regenerate the E-Labs card image from the engine
 ```
 
-The suite runs on the engine alone and needs nothing but Node 18+.
+The engine suite needs nothing but Node 18+. Browser checks use pinned
+development dependencies; setup and release gates are in [TESTING.md](TESTING.md).
 
 ---
 
@@ -56,12 +59,14 @@ src/engine/         PURE. No DOM, no fetch, no framework. This is the product.
   signal/filter.js    zero-phase Butterworth, Hampel, gap fill, derivatives
   signal/peaks.js     extrema, plateau onset/end, zero crossings, FFT
   signal/condition.js stage E, in the order that matters
+  signal/timebase.js  input validation and timestamp-based uniform sampling
   calib/scale.js      view, direction of travel, per-frame pixels-to-meters
   events/detect.js    six strike detectors, three toe-off detectors, a vote
   events/stage2.js    the learned model's inference path (no model ships)
   metrics/            angle series, the catalog, per-stride computation
   metrics/com.js      14-segment center of mass, Morin spring-mass stiffness
   model/kinematic.js  14-DOF rigid-body skeleton, fitted per frame (inverse kinematics)
+  model/temporal.js   robust cubic trajectories for noisy fits, preserving occlusion masks
   model/energetics.js segment energies; external and internal mechanical work
   model/efficiency.js work breakdown, calibrated cadence sweep, evidence-ranked levers
   scoring/            normative bands, references, dimension scores

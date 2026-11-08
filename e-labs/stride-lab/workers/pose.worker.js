@@ -36,8 +36,9 @@ self.onmessage = async (e) => {
         }
 
         if (msg.t === 'frame') {
-            const poses = await backend.infer(msg.image, msg.timestampMs);
-            try { msg.image.close(); } catch { /* already closed */ }
+            let poses;
+            try { poses = await backend.infer(msg.image, msg.timestampMs); }
+            finally { try { msg.image.close(); } catch { /* already closed */ } }
             if (!poses) {
                 self.postMessage({ t: 'poses', index: msg.index, poses: [] });
                 return;

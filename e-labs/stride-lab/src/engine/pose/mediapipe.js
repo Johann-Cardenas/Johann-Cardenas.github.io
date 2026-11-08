@@ -61,6 +61,22 @@ export const MODEL_URLS = {
     heavy: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task'
 };
 
+// A software rasterizer exposes WebGL but can make neural GPU inference far
+// slower than WASM/XNNPACK. Keep WebGL for image conversion and use CPU
+// inference in that case. Unknown renderers retain the ordinary GPU trial.
+export function graphicsSupport() {
+    let gl;
+    try {
+        const canvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(1, 1) : document.createElement('canvas');
+        gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+        if (!gl) return { available: false, software: false, renderer: null };
+        const debug = gl.getExtension('WEBGL_debug_renderer_info');
+        const renderer = String(gl.getParameter(debug ? debug.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || '');
+        return { available: true, software: /swiftshader|llvmpipe|softpipe|software|microsoft basic render/i.test(renderer), renderer };
+    } catch { return { available: false, software: false, renderer: null }; }
+    finally { try { if (gl) gl.getExtension('WEBGL_lose_context')?.loseContext(); } catch { /* optional extension */ } }
+}
+
 /**
  * Pick a model variant. Desktop gets `heavy`; a phone gets `full`, because
  * heavy on mid-range Android turns a 40-second wait into a three-minute one
@@ -108,7 +124,9 @@ export function createMediaPipeBackend() {
                 outputSegmentationMasks: false
             });
 
-            if (opts.preferGpu !== false) {
+            const graphics = graphicsSupport();
+            if (!graphics.available) throw new Error('Pose processing requires WebGL for image conversion. Enable browser graphics acceleration and try again.');
+            if (opts.preferGpu !== false && !graphics.software) {
                 try {
                     landmarker = await build('GPU');
                     delegate = 'GPU';

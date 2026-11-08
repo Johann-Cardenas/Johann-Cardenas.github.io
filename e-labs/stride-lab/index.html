@@ -87,7 +87,7 @@
                     <div class="header-badges">
                         <a href="science.html" class="header-badge header-badge-link"><i class="fas fa-flask"></i> Method &amp; limits</a>
                         <span class="header-badge sl-badge-device"><i class="fas fa-lock"></i> On-device</span>
-                        <span class="header-badge"><i class="fas fa-code-branch"></i> v1.1</span>
+                        <span class="header-badge"><i class="fas fa-code-branch"></i> <span id="sl-version">v1.3</span></span>
                     </div>
                 </div>
                 <div class="header-content">
@@ -331,9 +331,24 @@
 
                             <!-- result player -->
                             <div class="sl-stage" id="sl-stage-player" hidden>
+                                <div class="sl-playback-layout">
                                 <div class="sl-player" id="sl-player">
                                     <video id="sl-video" playsinline muted></video>
                                     <canvas id="sl-overlay" class="sl-overlay"></canvas>
+                                </div>
+                                <aside class="sl-live-scores" aria-label="Movement scores at playback time">
+                                    <div class="sl-live-card" title="Stride: evidence-weighted foot contact and placement score. Median of completed cycles in the last four seconds; both sides required.">
+                                        <span><i class="fas fa-shoe-prints" aria-hidden="true"></i> Stride</span><div><strong id="sl-live-stride">—</strong><small>/100</small></div>
+                                        <svg class="sl-score-trend" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><path id="sl-live-stride-trend" /></svg>
+                                        <progress id="sl-live-stride-bar" max="100" value="0" aria-label="Stride score"></progress>
+                                    </div>
+                                    <div class="sl-live-card" title="Cadence: steps per minute from completed stride durations, compared with the pace-specific reference band. Requires medium confidence and a known speed.">
+                                        <span><i class="fas fa-wave-square" aria-hidden="true"></i> Cadence</span><div><strong id="sl-live-cadence">—</strong><small>/100</small></div>
+                                        <svg class="sl-score-trend" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><path id="sl-live-cadence-trend" /></svg>
+                                        <progress id="sl-live-cadence-bar" max="100" value="0" aria-label="Cadence score"></progress>
+                                    </div>
+                                    <small id="sl-live-context">Awaiting strides</small>
+                                </aside>
                                 </div>
                                 <div class="sl-transport">
                                     <button class="sl-tool" id="sl-play" aria-label="Play or pause"><i class="fas fa-play"></i></button>
@@ -354,8 +369,8 @@
                                 </div>
                                 <div class="sl-layers" role="group" aria-label="Overlay layers">
                                     <select id="sl-overlay-preset" class="sl-select sl-select-sm" aria-label="Overlay density" title="How much annotation to draw">
-                                        <option value="clean">Clean</option>
-                                        <option value="analytical" selected>Analytical</option>
+                                        <option value="clean" selected>Clean</option>
+                                        <option value="analytical">Analytical</option>
                                         <option value="everything">Everything</option>
                                     </select>
                                     <span class="sl-layer-sep"></span>

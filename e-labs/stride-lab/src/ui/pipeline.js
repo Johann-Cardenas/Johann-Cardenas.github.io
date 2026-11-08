@@ -66,7 +66,11 @@ export async function analyzeFile(file, opts) {
     const runner = await createRunner(opts);
 
     /* ---- decode + infer, streamed ------------------------------------- */
-    progress('pose', 0, info.frameCount || 0);
+    const targetFrames = info.track ? info.track.samples.filter(sample => {
+        const time = sample.cts / info.track.timescale;
+        return time >= (opts.startS ?? 0) && time <= (opts.endS ?? Infinity);
+    }).length : info.frameCount || 0;
+    progress('pose', 0, targetFrames);
     const tracker = createTracker();
     const times = [];
     let width = 0, height = 0;
@@ -83,46 +87,63 @@ export async function analyzeFile(file, opts) {
     const mirrored = !!info.mirrored;
     const swapAxes = rotationDeg === 90 || rotationDeg === 270;
 
-    const decode = await extractFrames(file, {
-        probe: info,
-        startS: opts.startS,
-        endS: opts.endS,
-        canceled: opts.canceled,
-        onFrame: async (frame) => {
-            const src = frame.image;
-            const cw = src.displayWidth || src.width;
-            const ch = src.displayHeight || src.height;
-            /* display dimensions, after the quarter turn */
-            const dw = swapAxes ? ch : cw;
-            const dh = swapAxes ? cw : ch;
-            if (!width) {
-                const d = downscaleSize(dw, dh);
-                width = d.width; height = d.height;
-            }
-            /* Rotate and downscale in one pass. Downscaling matters on its own:
-               the landmark model resizes internally anyway, so feeding it 4K
-               costs memory and time and buys nothing. */
-            const bitmap = await orientFrame(src, rotationDeg, mirrored, width, height);
-            const poses = await runner.infer(bitmap, frame.timestampUs / 1000, frameIndex);
-            times.push(frame.timestampUs / 1e6);
-            if (poses && poses.length) {
-                tracker.push(frameIndex, poses);
-                if (worldLeg == null) worldLeg = worldLegLength(poses[0]);
-                /* preview at most every third frame: the overlay does not need
-                   every frame and the message traffic would otherwise dominate */
-                if (opts.onPreview && frameIndex % 3 === 0) {
-                    opts.onPreview({
-                        index: frameIndex, landmarks: poses[0].xy, vis: poses[0].vis,
-                        people: poses.length, width, height
-                    });
+    let decode, decodeError;
+    try {
+        decode = await extractFrames(file, {
+            probe: info,
+            startS: opts.startS,
+            endS: opts.endS,
+            canceled: opts.canceled,
+            onFrame: async (frame) => {
+                const src = frame.image;
+                const cw = src.displayWidth || src.width;
+                const ch = src.displayHeight || src.height;
+                /* display dimensions, after the quarter turn */
+                const dw = swapAxes ? ch : cw;
+                const dh = swapAxes ? cw : ch;
+                if (!width) {
+                    const d = downscaleSize(dw, dh);
+                    width = d.width; height = d.height;
                 }
+                /* Rotate and downscale in one pass. Downscaling matters on its own:
+                   the landmark model resizes internally anyway, so feeding it 4K
+                   costs memory and time and buys nothing. */
+                const bitmap = await orientFrame(src, rotationDeg, mirrored, width, height);
+                const poses = await runner.infer(bitmap, frame.timestampUs / 1000, frameIndex);
+                times.push(frame.timestampUs / 1e6);
+                if (poses && poses.length) {
+                    tracker.push(frameIndex, poses);
+                    if (worldLeg == null) worldLeg = worldLegLength(poses[0]);
+                    /* preview at most every third frame: the overlay does not need
+                       every frame and the message traffic would otherwise dominate */
+                    if (opts.onPreview && frameIndex % 3 === 0) {
+                        opts.onPreview({
+                            index: frameIndex, landmarks: poses[0].xy, vis: poses[0].vis,
+                            people: poses.length, width, height
+                        });
+                    }
+                }
+                frameIndex++;
+                progress('pose', frameIndex, targetFrames || frameIndex);
             }
-            frameIndex++;
-            progress('pose', frameIndex, info.frameCount || frameIndex);
-        }
-    });
+        });
 
-    await runner.dispose();
+    } catch (error) {
+        decodeError = error;
+    } finally {
+        await runner.dispose();
+    }
+    if (decodeError) {
+        if (runner.delegate === 'GPU' && opts.preferGpu !== false && !(opts.canceled && opts.canceled())) {
+            // A GPU can initialize successfully then lose its context on the
+            // first frame. Replay the whole window once on CPU so temporal
+            // tracking never combines states from different model instances.
+            const retried = await analyzeFile(file, { ...opts, preferGpu: false });
+            if (retried.ok) retried.warnings.unshift({ code: 'gpu-fallback', message: 'GPU inference failed. The clip was analyzed again using the CPU.' });
+            return retried;
+        }
+        throw decodeError;
+    }
 
     if (opts.canceled && opts.canceled()) return { canceled: true };
     if (!times.length) {
@@ -228,7 +249,7 @@ export async function analyzeFile(file, opts) {
             });
         }
     }
-    result.series = series;
+    result.series ||= series;
     result.trackCandidates = resolved.candidates;
     if (result.ok && resolved.ambiguous) {
         result.warnings.push({
@@ -259,8 +280,9 @@ async function createRunner(opts) {
     const variant = opts.variant || defaultVariant();
 
     if (opts.useWorker !== false && typeof Worker !== 'undefined') {
+        let worker;
         try {
-            const worker = new Worker(new URL('../../workers/pose.worker.js', import.meta.url), { type: 'module' });
+            worker = new Worker(new URL('../../workers/pose.worker.js', import.meta.url), { type: 'module' });
             const ready = await new Promise((res, rej) => {
                 const to = setTimeout(() => rej(new Error('worker init timed out')), 30000);
                 worker.onmessage = (e) => {
@@ -271,15 +293,18 @@ async function createRunner(opts) {
                 worker.postMessage({ t: 'init', modelBase: MEDIAPIPE_CDN, preferGpu, variant });
             });
 
-            let seq = 0;
             const waiting = new Map();
+            const fail = message => {
+                for (const request of waiting.values()) { clearTimeout(request.timeout); request.reject(new Error(message)); }
+                waiting.clear();
+            };
+            worker.onerror = event => fail(event.message || 'Pose inference worker failed.');
             worker.onmessage = (e) => {
                 if (e.data.t === 'poses') {
                     const r = waiting.get(e.data.index);
-                    if (r) { waiting.delete(e.data.index); r(e.data.poses); }
+                    if (r) { waiting.delete(e.data.index); clearTimeout(r.timeout); r.resolve(e.data.poses); }
                 } else if (e.data.t === 'error') {
-                    for (const r of waiting.values()) r([]);
-                    waiting.clear();
+                    fail(e.data.message || 'Pose inference failed.');
                 }
             };
 
@@ -289,15 +314,17 @@ async function createRunner(opts) {
                 variant: ready.variant,
                 inWorker: true,
                 infer(bitmap, timestampMs, index) {
-                    void seq;
-                    return new Promise((res) => {
-                        waiting.set(index, res);
-                        worker.postMessage({ t: 'frame', image: bitmap, timestampMs, index }, [bitmap]);
+                    return new Promise((resolve, reject) => {
+                        const timeout = setTimeout(() => fail('Pose inference timed out for a frame.'), 60000);
+                        waiting.set(index, { resolve, reject, timeout });
+                        try { worker.postMessage({ t: 'frame', image: bitmap, timestampMs, index }, [bitmap]); }
+                        catch (error) { fail(error.message); try { bitmap.close(); } catch {} }
                     });
                 },
-                async dispose() { worker.terminate(); }
+                async dispose() { fail('Pose runner disposed.'); worker.terminate(); }
             };
         } catch {
+            if (worker) worker.terminate();
             /* fall through to the main thread */
         }
     }
@@ -310,9 +337,8 @@ async function createRunner(opts) {
         variant: backend.info.variant,
         inWorker: false,
         async infer(bitmap, timestampMs) {
-            const poses = await backend.infer(bitmap, timestampMs);
-            try { bitmap.close(); } catch { /* already closed */ }
-            return poses || [];
+            try { return await backend.infer(bitmap, timestampMs) || []; }
+            finally { try { bitmap.close(); } catch { /* already closed */ } }
         },
         async dispose() { backend.dispose(); }
     };

@@ -1279,6 +1279,91 @@ and a three-row live panel on the video.
 
 ---
 
+## D57. Movement scores follow playback
+
+The player shows separate Stride (the existing contact dimension) and Cadence
+scores, rather than a single overall form score. The engine retains finite
+per-cycle measurements from the same interior, valid, confidence-qualified
+strides used by the report. At playback time only cycles already completed in
+the preceding four seconds contribute. Per-side medians reject isolated spikes;
+both sides are required, metric confidence gates remain in force, and existing
+reference bands and evidence weights determine the scores. Cadence is 120,000
+divided by median stride duration in milliseconds; its score needs known pace.
+These are reference-band scores, not measured accuracy or running economy.
+The temporal model is deterministic when seeking backward and does not borrow
+future cycle values. Whole-clip confidence gates still apply; this does not
+claim independent validation of each local window. Saved analyses retain the
+cycle samples; older records show unavailable scores rather than static totals.
+
+## D58. Adaptive temporal trajectories (v1.2)
+
+The framewise 14-DOF fit remains the geometric model. A robust local cubic
+trajectory layer is selected only at >=100 fps and original median residual
+0.4–3% of leg length. Its radius is 30 ms, rising to 45 ms above 1.5% residual.
+Three Cauchy reweighting passes, unwrapped angles, actual timestamps, unchanged
+boundaries and missing-data splits preserve trajectory continuity without
+inventing observations through long occlusions. Forward reconstruction preserves
+rigid lengths; velocities, energies and fit residuals are recomputed. Confidence
+gates use the worse of the original and final residual, so smoothing cannot
+upgrade evidence. There is no new UI control.
+
+A fixed 60 ms radius was rejected for distorting clean motion. The selected
+model bypasses clean clips and leaves the golden metrics unchanged. Sixty
+paired synthetic trials show about 9% lower knee-angle RMS at 4% noise for
+120 and 240 fps. These are not real-world validation results, nor proof of
+improved mechanical-work accuracy. `MODEL-RESEARCH.md` records the alternatives,
+thresholds, benchmark and limits; `npm run benchmark:model` reproduces it.
+
+## D59. Observation support is separate from processing convenience (v1.3)
+
+Timestamp validation and uniform resampling now precede conditioning. The
+processing grid uses median observed FPS; precision and quantization use the
+lower of that rate and reciprocal p90 original frame interval. Supplied FPS
+cannot upgrade it. Long gaps split filters and derivatives; event sampling
+cannot borrow an adjacent observation for missing data. Calibrations, buffers,
+filter cutoff and allocation expansion are validated before analysis.
+
+The skeleton retains display tracks, but mechanical calculations use separate
+measurement tracks masked through every missing ancestor. Required landmarks
+need 90% coverage locally in a cycle, not just across the clip. Gating works on
+a private visibility copy. These corrections can intentionally withhold values
+that were previously inferred through missing observations.
+
+Nonlinear IK uses capped steps and objective backtracking. Temporal changes are
+backtracked to bound per-frame RMS increase to the greater of 10% or 0.2% leg
+length. Residual-based confidence still cannot improve through smoothing. Clean
+golden values remain unchanged.
+
+MP4 counts and box sizes are checked before allocation; samples must lie in
+mdat; timing tables and maps must agree. Sample-to-chunk mapping is linear,
+and duration calculation avoids argument spreading. The malformed-file fallback
+is retained. `ENGINE-AUDIT.md` records findings, bounds and remaining limits.
+
+## D60. Browser release gates exposed defects synthetic tests cannot (v1.3)
+
+The release protocol now executes the shipped treadmill clip through real pose
+inference on Chrome and Firefox, with GPU preference and explicit CPU mode.
+It also checks both themes, three widths, result panels, exports, saved video,
+slow playback consumers, cancellation and injected worker failure. A separate
+CI smoke matrix runs without claiming real-inference performance on a shared
+software-rendered machine. `TESTING.md` records the exact gates and limits.
+
+The checks exposed a Firefox distinction: `createImageBitmap(video)` returned
+coded landscape pixels even though the video element was upright. The playback
+decoder now copies the displayed video through Canvas 2D; a pixel fingerprint
+is compared with an independently rotated WebCodecs frame. Consumer exceptions
+are propagated and frames, callbacks, URLs and workers are cleaned up on errors.
+Known software WebGL renderers select CPU inference; runtime GPU failure can
+replay the complete window once on CPU rather than combine tracker states.
+
+The score cards use cached completion/expiry boundaries and actual history
+sparklines. Expiration compares `end + window > time` consistently, avoiding
+floating-point disagreement between direct and cached scoring. ResizeObserver
+and theme changes repaint the player and visible charts; the browser gate checks
+the canvas backing size and video/overlay rectangle after layout settles.
+Selecting a collapsed dock tab opens its content, including stored analyses.
+The default overlay is Clean, and the player height follows the clip on phones.
+
 ## Open questions the specification left for the human
 
 These were answered with the conservative default and are easy to change.

@@ -48,7 +48,8 @@
    ============================================================ */
 
 import { median, DEG } from '../types.js';
-import { derivative, missingFraction } from '../signal/filter.js';
+import { derivativeFinite, missingFraction } from '../signal/filter.js';
+import { smoothTrajectory } from './temporal.js';
 
 /* ---------------- Generalized coordinates ---------------- */
 
@@ -283,7 +284,7 @@ const CHAINS = Object.fromEntries(MODEL_SEGMENTS.map(s => [s.id, chainOf(s.id)])
  * Inverse kinematics over the whole clip.
  *
  * @param {import('../signal/condition.js').Conditioned} cond
- * @param {{view?:string}} [opts]
+ * @param {{view?:string, temporal?:boolean|'adaptive'}} [opts]
  */
 export function fitKinematicModel(cond, opts = {}) {
     const { kp, n, fps, cutoffHz } = cond;
@@ -317,6 +318,7 @@ export function fitKinematicModel(cond, opts = {}) {
     }
 
     const qs = new Float64Array(n * NQ).fill(NaN);
+    const fitted = new Uint8Array(n);
     const segObserved = {};
     for (const seg of MODEL_SEGMENTS) segObserved[seg.id] = new Uint8Array(n);
     const residual = new Float64Array(n).fill(NaN);
@@ -324,7 +326,7 @@ export function fitKinematicModel(cond, opts = {}) {
     for (const p of pointsOf) { perLandmarkSq[p.name] = 0; perLandmarkN[p.name] = 0; }
 
     let prev = null;
-    let iterTotal = 0, framesFit = 0;
+    let iterTotal = 0, framesFit = 0, rejectedSteps = 0;
     for (let f = 0; f < n; f++) {
         /* ---- initial guess: direct observation where it exists ---- */
         const q0 = new Float64Array(NQ);
@@ -402,11 +404,39 @@ export function fitKinematicModel(cond, opts = {}) {
             const mu = IK.damping * tr / NQ;
             for (let i = 0; i < NQ; i++) H[i * NQ + i] += mu;
             const step = solveSPD(H, g, NQ);
-            if (!step) break;
+            if (!step || !step.every(Number.isFinite)) break;
+            // Trust-region cap plus backtracking against the actual nonlinear
+            // weighted objective. An unconstrained GN step can increase error
+            // or flip a limb when observations are nearly singular.
+            const loss = (candidate) => {
+                const points = forwardKinematics(candidate, geom).P;
+                let value = 0;
+                for (let k = 0; k < zs.length; k++) {
+                    const p = points[zs[k].name];
+                    if (p) value += weights[k] * ((p.x - zs[k].z.x) ** 2 + (p.y - zs[k].z.y) ** 2);
+                }
+                for (let i = 0; i < NQ; i++) {
+                    const d = i < 2 ? candidate[i] - qPrior[i] : wrapPi(candidate[i] - qPrior[i]);
+                    value += IK.prior * priorLen[i] ** 2 * d * d;
+                }
+                return value;
+            };
+            const before = loss(q);
+            let fraction = 1;
+            for (let i = 0; i < NQ; i++) fraction = Math.min(fraction,
+                (i < 2 ? 0.15 * geom.legPx : 0.5) / Math.max(1e-12, Math.abs(step[i])));
+            const candidate = new Float64Array(NQ);
+            let accepted = false;
+            for (let attempt = 0; attempt < 10; attempt++, fraction *= 0.5) {
+                for (let i = 0; i < NQ; i++) candidate[i] = q[i] - fraction * step[i];
+                const after = loss(candidate);
+                if (Number.isFinite(after) && after <= before + 1e-10 * Math.max(1, before)) { accepted = true; break; }
+            }
+            if (!accepted) { rejectedSteps++; break; }
             let maxStep = 0;
             for (let i = 0; i < NQ; i++) {
-                q[i] -= step[i];
-                maxStep = Math.max(maxStep, Math.abs(step[i]) / (i < 2 ? geom.legPx : 1));
+                q[i] = candidate[i];
+                maxStep = Math.max(maxStep, fraction * Math.abs(step[i]) / (i < 2 ? geom.legPx : 1));
             }
             /* robust re-weighting from the residuals of this iteration */
             const finite = res.filter(Number.isFinite);
@@ -427,6 +457,7 @@ export function fitKinematicModel(cond, opts = {}) {
         }
         residual[f] = cnt ? Math.sqrt(ss / cnt) : NaN;
         qs.set(q, f * NQ);
+        fitted[f] = 1;
         prev = q;
         framesFit++;
     }
@@ -461,21 +492,103 @@ export function fitKinematicModel(cond, opts = {}) {
         const name = seg.id;
         for (let f = 0; f < n; f++) if (mask[f]) coord[name][f] = NaN;
     }
+    const baselineResidualPct = 100 * median(residual) / geom.legPx;
+    // Missing ancestors invalidate downstream model measurements too.
+    for (const seg of MODEL_SEGMENTS) for (let f = 0; f < n; f++) {
+        if (!fitted[f] || CHAINS[seg.id].some(parent => held[parent.id][f])) coord[seg.id][f] = NaN;
+    }
+    for (let f = 0; f < n; f++) if (!fitted[f] || held.trunk[f]) coord.px[f] = coord.py[f] = NaN;
+    const temporal = { method: 'framewise', changed: 0, constrainedFrames: 0, baselineResidualPct, radiusMs: 0 };
+    // Clean fits need no extra smoothing. Very poor fits need a confidence
+    // downgrade, not a smoother that disguises an incompatible observation.
+    const useTemporal = fps >= 100 && (opts.temporal === true || (opts.temporal !== false
+        && baselineResidualPct >= 0.4 && baselineResidualPct <= 3));
+    if (useTemporal) {
+        const radius = baselineResidualPct >= 1.5 ? 0.045 : 0.03;
+        temporal.method = 'robust-local-cubic';
+        temporal.radiusMs = radius * 1000;
+        for (const name of Object.keys(Q)) {
+            const smoothed = smoothTrajectory(coord[name], cond.t, { radius });
+            coord[name] = smoothed.values;
+            temporal.changed += smoothed.changed;
+        }
+        // Reconstruct from generalized coordinates, retaining rigid lengths.
+        // Masked coordinates keep their original fit for drawing only.
+        for (let f = 0; f < n; f++) {
+            const original = qs.slice(f * NQ, (f + 1) * NQ);
+            if (!original.every(Number.isFinite)) continue;
+            const delta = new Float64Array(NQ), candidate = new Float64Array(NQ);
+            for (const [name, i] of Object.entries(Q)) if (Number.isFinite(coord[name][f]))
+                delta[i] = i < 2 ? coord[name][f] - original[i] : wrapPi(coord[name][f] - original[i]);
+            let fraction = 1;
+            // Temporal smoothness cannot purchase an arbitrarily worse match
+            // to this frame's observations. Backtrack in generalized space,
+            // retaining the rigid skeleton at every trial.
+            const limit = Math.max(1.1 * residual[f], residual[f] + 0.002 * geom.legPx);
+            for (let attempt = 0; attempt <= 8; attempt++) {
+                if (attempt === 8) fraction = 0;
+                for (let i = 0; i < NQ; i++) candidate[i] = original[i] + fraction * delta[i];
+                const P = forwardKinematics(candidate, geom).P;
+                let sum = 0, count = 0;
+                for (const ob of pointsOf) {
+                    const z = obs(kp, ob.name, f), p = P[ob.name];
+                    if (z && p) { sum += (p.x - z.x) ** 2 + (p.y - z.y) ** 2; count++; }
+                }
+                const rms = count ? Math.sqrt(sum / count) : NaN;
+                if (fraction === 0 || (Number.isFinite(rms) && rms <= limit)) break;
+                fraction *= 0.5;
+            }
+            if (fraction < 1) temporal.constrainedFrames++;
+            qs.set(candidate, f * NQ);
+            for (const [name, i] of Object.entries(Q)) if (Number.isFinite(coord[name][f])) coord[name][f] = candidate[i];
+        }
+    }
     for (const name of Object.keys(Q)) {
-        rate[name] = maskLike(derivative(patch(coord[name]), dt, cutoffHz, fps), coord[name]);
+        rate[name] = derivativeFinite(coord[name], dt, cutoffHz, fps);
     }
 
     /* model point tracks, for the overlay and the energetics */
     const tracks = {};
+    if (useTemporal) for (const name of Object.keys(perLandmarkSq)) {
+        perLandmarkSq[name] = 0;
+        perLandmarkN[name] = 0;
+    }
     const qf = new Float64Array(NQ);
     for (let f = 0; f < n; f++) {
         let ok = true;
         for (let i = 0; i < NQ; i++) { qf[i] = qs[f * NQ + i]; if (!Number.isFinite(qf[i])) ok = false; }
         if (!ok) continue;
         const { P } = forwardKinematics(qf, geom);
+        if (useTemporal) {
+            let sum = 0, count = 0;
+            for (const ob of pointsOf) {
+                const z = obs(kp, ob.name, f), p = P[ob.name];
+                if (z && p) {
+                    const d2 = (p.x - z.x) ** 2 + (p.y - z.y) ** 2;
+                    sum += d2; count++;
+                    perLandmarkSq[ob.name] += d2;
+                    perLandmarkN[ob.name]++;
+                }
+            }
+            residual[f] = count ? Math.sqrt(sum / count) : NaN;
+        }
         for (const [name, p] of Object.entries(P)) {
             if (!tracks[name]) tracks[name] = { x: new Float64Array(n).fill(NaN), y: new Float64Array(n).fill(NaN) };
             tracks[name].x[f] = p.x; tracks[name].y[f] = p.y;
+        }
+    }
+
+    // Keep drawing holds separate from coordinates eligible for measurement.
+    // A child depends on every upstream segment, not just its own endpoints.
+    const measurementTracks = {};
+    for (const seg of MODEL_SEGMENTS) {
+        for (const name of [...seg.points, ...Object.keys(seg.virtual || {})]) {
+            if (!tracks[name]) continue;
+            const x = Float64Array.from(tracks[name].x), y = Float64Array.from(tracks[name].y);
+            for (let f = 0; f < n; f++) {
+                if (!fitted[f] || CHAINS[seg.id].some(parent => held[parent.id][f])) x[f] = y[f] = NaN;
+            }
+            measurementTracks[name] = { x, y };
         }
     }
 
@@ -487,7 +600,7 @@ export function fitKinematicModel(cond, opts = {}) {
     return {
         available: true,
         geom,
-        coord, rate, held, observed: segObserved, tracks,
+        coord, rate, held, observed: segObserved, tracks, measurementTracks,
         residualPx: residual,
         fit: {
             /* RMS model-to-landmark distance, % of leg length */
@@ -496,9 +609,11 @@ export function fitKinematicModel(cond, opts = {}) {
             perLandmarkPct: perLandmark,
             framesFit,
             meanIterations: framesFit ? iterTotal / framesFit : NaN,
+            rejectedSteps,
             coverage: framesFit / n,
             dof: NQ
         },
+        temporal,
         angles: jointAngles(coord, rate, n)
     };
 }
@@ -593,21 +708,7 @@ function unwrapInPlace(s) {
     }
 }
 
-function patch(a) {
-    const out = Float64Array.from(a);
-    let last = NaN;
-    for (let i = 0; i < out.length; i++) { if (Number.isFinite(out[i])) last = out[i]; else out[i] = last; }
-    let first = NaN;
-    for (let i = 0; i < out.length; i++) if (Number.isFinite(out[i])) { first = out[i]; break; }
-    if (!Number.isFinite(first)) first = 0;
-    for (let i = 0; i < out.length; i++) if (!Number.isFinite(out[i])) out[i] = first;
-    return out;
-}
 
-function maskLike(a, ref) {
-    for (let i = 0; i < a.length; i++) if (!Number.isFinite(ref[i])) a[i] = NaN;
-    return a;
-}
 
 function quantileOf(arr, q) {
     const v = Array.from(arr).filter(Number.isFinite).sort((a, b) => a - b);

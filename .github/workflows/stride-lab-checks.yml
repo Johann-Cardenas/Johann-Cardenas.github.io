@@ -1,0 +1,38 @@
+name: StrideLab engine and browser smoke
+
+on:
+  push:
+    paths:
+      - 'e-labs/stride-lab/**'
+      - 'assets/css/**'
+      - 'assets/js/**'
+      - '.github/workflows/stride-lab-checks.yml'
+  pull_request:
+    paths:
+      - 'e-labs/stride-lab/**'
+      - 'assets/css/**'
+      - 'assets/js/**'
+      - '.github/workflows/stride-lab-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: e-labs/stride-lab
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: e-labs/stride-lab/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npx playwright install --with-deps chrome firefox
+      - run: npm run test:smoke

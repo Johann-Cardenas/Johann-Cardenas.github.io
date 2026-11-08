@@ -85,7 +85,7 @@ export async function probe(file) {
         rotationDeg: parsed.track.rotationDeg,
         mirrored: parsed.track.mirrored,
         durationS: parsed.track.samples.length
-            ? (Math.max(...parsed.track.samples.map(s => s.cts)) + parsed.track.samples[0].duration) / parsed.track.timescale
+            ? parsed.track.samples.reduce((end, s) => Math.max(end, s.cts + s.duration), 0) / parsed.track.timescale
             : 0
     };
 }
@@ -213,89 +213,118 @@ async function decodeWithVideoElement(file, opts) {
     video.muted = true;
     video.playsInline = true;
     video.preload = 'auto';
+    let callback;
+    try {
 
-    await new Promise((res, rej) => {
-        video.onloadedmetadata = res;
-        video.onerror = () => rej(new Error('video-load-failed'));
-    });
+        await new Promise((res, rej) => {
+            video.onloadedmetadata = res;
+            video.onerror = () => rej(new Error('video-load-failed'));
+        });
 
-    if (!('requestVideoFrameCallback' in video)) {
-        URL.revokeObjectURL(url);
-        throw new Error('no-frame-callback');
-    }
-
-    const startS = opts.startS ?? 0;
-    const endS = opts.endS ?? video.duration;
-    const total = opts.maxFrames ?? Infinity;
-
-    video.currentTime = startS;
-    await new Promise(res => { video.onseeked = res; });
-
-    let emitted = 0, dropped = 0, lastPresented = 0;
-    let firstMediaTime = null, lastMediaTime = null;
-    let finish;
-    const done = new Promise(res => { finish = res; });
-
-    const step = async (_now, meta) => {
-        if (opts.canceled && opts.canceled()) { finish(); return; }
-        if (lastPresented && meta.presentedFrames > lastPresented + 1) {
-            dropped += meta.presentedFrames - lastPresented - 1;
+        if (!('requestVideoFrameCallback' in video)) {
+            URL.revokeObjectURL(url);
+            throw new Error('no-frame-callback');
         }
-        lastPresented = meta.presentedFrames;
-        /* Pausing and resuming can re-present the frame already handled. */
-        const fresh = lastMediaTime == null || meta.mediaTime > lastMediaTime + 1e-6;
-        if (fresh && meta.mediaTime >= startS && meta.mediaTime <= endS && emitted < total) {
-            /* STOP THE CLOCK. `onFrame` is pose inference — 100 ms and up per
-               frame — and the video does not wait for it. Registering the next
-               callback only after the await, as this did, means every frame
-               presented while the model was busy is simply gone: the decode
-               then samples at the speed of inference rather than at the frame
-               rate of the clip. Measured on a 30 fps recording, a free
-               consumer got 24 fps, a 40 ms consumer 11.5, and real inference
-               5 — at which point the pipeline refused the clip and told the
-               user to re-record at 60 fps, which would not have helped,
-               because the recording was never the problem. */
-            video.pause();
-            const bmp = await createImageBitmap(video);
-            const index = emitted++;
-            if (firstMediaTime == null) firstMediaTime = meta.mediaTime;
-            lastMediaTime = meta.mediaTime;
+
+        const startS = opts.startS ?? 0;
+        const endS = opts.endS ?? video.duration;
+        const total = opts.maxFrames ?? Infinity;
+
+        video.currentTime = startS;
+        await new Promise(res => { video.onseeked = res; });
+
+        let emitted = 0, dropped = 0, lastPresented = 0;
+        // Firefox can expose coded, unrotated pixels through
+        // createImageBitmap(video), despite upright videoWidth/videoHeight.
+        // Canvas video drawing follows the display transform consistently.
+        const copy = typeof OffscreenCanvas !== 'undefined'
+            ? new OffscreenCanvas(video.videoWidth, video.videoHeight) : document.createElement('canvas');
+        copy.width = video.videoWidth; copy.height = video.videoHeight;
+        const copyContext = copy.getContext('2d', { alpha: false });
+        let firstMediaTime = null, lastMediaTime = null;
+        let resolveDone, completed = false, decodeError = null;
+        const done = new Promise(res => { resolveDone = res; });
+        const finish = error => {
+            if (completed) return;
+            completed = true;
+            decodeError = error || null;
+            resolveDone();
+        };
+        video.onerror = () => finish(new Error('video-playback-failed'));
+        video.onended = () => finish();
+
+        const step = async (_now, meta) => {
+            if (completed) return;
             try {
-                await opts.onFrame({ image: bmp, timestampUs: Math.round(meta.mediaTime * 1e6), index });
-            } finally {
-                try { bmp.close(); } catch { /* already closed */ }
+            if (opts.canceled && opts.canceled()) { finish(); return; }
+            if (lastPresented && meta.presentedFrames > lastPresented + 1) {
+                dropped += meta.presentedFrames - lastPresented - 1;
             }
-            if (opts.onProgress) opts.onProgress(emitted, Number.isFinite(total) ? total : 0);
-        }
-        if (meta.mediaTime > endS || emitted >= total || video.ended) { finish(); return; }
-        /* Register BEFORE resuming, or the first frame after the resume can be
-           presented with nobody listening for it. */
-        video.requestVideoFrameCallback(step);
-        if (video.paused) await video.play().catch(() => { finish(); });
-    };
+            lastPresented = meta.presentedFrames;
+            /* Pausing and resuming can re-present the frame already handled. */
+            const fresh = lastMediaTime == null || meta.mediaTime > lastMediaTime + 1e-6;
+            if (fresh && meta.mediaTime >= startS && meta.mediaTime <= endS && emitted < total) {
+                /* STOP THE CLOCK. `onFrame` is pose inference — 100 ms and up per
+                   frame — and the video does not wait for it. Registering the next
+                   callback only after the await, as this did, means every frame
+                   presented while the model was busy is simply gone: the decode
+                   then samples at the speed of inference rather than at the frame
+                   rate of the clip. Measured on a 30 fps recording, a free
+                   consumer got 24 fps, a 40 ms consumer 11.5, and real inference
+                   5 — at which point the pipeline refused the clip and told the
+                   user to re-record at 60 fps, which would not have helped,
+                   because the recording was never the problem. */
+                video.pause();
+                copyContext.drawImage(video, 0, 0, copy.width, copy.height);
+                const bmp = await createImageBitmap(copy);
+                const index = emitted++;
+                if (firstMediaTime == null) firstMediaTime = meta.mediaTime;
+                lastMediaTime = meta.mediaTime;
+                try {
+                    await opts.onFrame({ image: bmp, timestampUs: Math.round(meta.mediaTime * 1e6), index });
+                } finally {
+                    try { bmp.close(); } catch { /* already closed */ }
+                }
+                if (opts.onProgress) opts.onProgress(emitted, Number.isFinite(total) ? total : 0);
+            }
+            if (meta.mediaTime > endS || emitted >= total || video.ended) { finish(); return; }
+            /* Register BEFORE resuming, or the first frame after the resume can be
+               presented with nobody listening for it. */
+            callback = video.requestVideoFrameCallback(step);
+            if (video.paused) await video.play().catch(error => finish(error));
+            } catch (error) { finish(error); }
+        };
 
-    video.requestVideoFrameCallback(step);
-    await video.play().catch(() => { });
-    await done;
-    video.pause();
-    URL.revokeObjectURL(url);
+        callback = video.requestVideoFrameCallback(step);
+        await video.play().catch(error => finish(error));
+        await done;
+        video.pause();
+        URL.revokeObjectURL(url);
+        if (decodeError) throw decodeError;
 
-    /* What the SOURCE ran at, as distinct from what we managed to sample. The
-       two differ only when frames were lost, and telling them apart is what
-       lets the pipeline say "this browser could not keep up" rather than
-       "your camera is too slow". */
-    const spanS = (firstMediaTime != null && lastMediaTime > firstMediaTime)
-        ? lastMediaTime - firstMediaTime : 0;
-    const sourceFps = spanS > 0 ? (emitted - 1 + dropped) / spanS : null;
+        /* What the SOURCE ran at, as distinct from what we managed to sample. The
+           two differ only when frames were lost, and telling them apart is what
+           lets the pipeline say "this browser could not keep up" rather than
+           "your camera is too slow". */
+        const spanS = (firstMediaTime != null && lastMediaTime > firstMediaTime)
+            ? lastMediaTime - firstMediaTime : 0;
+        const sourceFps = spanS > 0 ? (emitted - 1 + dropped) / spanS : null;
 
-    /* A <video> element applies the display matrix itself, so these frames are
-       already upright and must NOT be rotated again. The two decode paths
-       disagreeing about orientation would mean the same clip analyzed
-       differently on two browsers. */
-    return {
-        frames: emitted, dropped, sourceFps, path: 'video-element',
-        timingConfidence: 'reduced', rotationDeg: 0, mirrored: false
-    };
+        /* A <video> element applies the display matrix itself, so these frames are
+           already upright and must NOT be rotated again. The two decode paths
+           disagreeing about orientation would mean the same clip analyzed
+           differently on two browsers. */
+        return {
+            frames: emitted, dropped, sourceFps, path: 'video-element',
+            timingConfidence: 'reduced', rotationDeg: 0, mirrored: false
+        };
+    } finally {
+        video.pause();
+        if (callback != null && video.cancelVideoFrameCallback) video.cancelVideoFrameCallback(callback);
+        video.removeAttribute('src');
+        video.load();
+        URL.revokeObjectURL(url);
+    }
 }
 
 /**

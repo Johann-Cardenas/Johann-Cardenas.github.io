@@ -19,7 +19,7 @@
    point of it.
    ============================================================ */
 
-const SHELL = 'stride-lab-shell-v2';
+const SHELL = 'stride-lab-shell-v4';
 const MODELS = 'stride-lab-models-v1';
 
 const SHELL_FILES = [
@@ -36,6 +36,7 @@ const SHELL_FILES = [
     './src/engine/signal/filter.js',
     './src/engine/signal/peaks.js',
     './src/engine/signal/condition.js',
+    './src/engine/signal/timebase.js',
     './src/engine/pose/skeleton.js',
     './src/engine/pose/mediapipe.js',
     './src/engine/decode/mp4.js',
@@ -49,10 +50,12 @@ const SHELL_FILES = [
     './src/engine/metrics/com.js',
     './src/engine/pose/plausible.js',
     './src/engine/model/kinematic.js',
+    './src/engine/model/temporal.js',
     './src/engine/model/energetics.js',
     './src/engine/model/efficiency.js',
     './src/engine/scoring/norms.js',
     './src/engine/scoring/score.js',
+    './src/engine/scoring/movement.js',
     './src/engine/scoring/references.js',
     './src/engine/recommend/rules.js',
     './src/engine/recommend/exercises.js',

@@ -15,7 +15,7 @@ import {
     CANONICAL, VISIBILITY_GATE, MAX_GAP_FRAMES, DEFAULT_CUTOFF_HZ,
     MISSING_FRACTION_LIMIT, median
 } from '../types.js';
-import { filtfilt, hampel, fillGaps, derivative, missingFraction } from './filter.js';
+import { filtfiltFinite, hampel, fillGaps, derivativeFinite, missingFraction } from './filter.js';
 
 /**
  * @typedef {Object} Track
@@ -67,7 +67,8 @@ export function condition(series, opts) {
         const rv = new Float64Array(n);
 
         for (let f = 0; f < n; f++) {
-            const vis = series.vis[f * K + c];
+            const supplied = series.vis[f * K + c];
+            const vis = Number.isFinite(supplied) ? Math.min(1, Math.max(0, supplied)) : 0;
             rv[f] = vis;
             /* 1. Coordinate convention. MediaPipe hands back normalized image
                coordinates with y increasing DOWNWARD. Convert once, here, to a
@@ -89,15 +90,13 @@ export function condition(series, opts) {
         missing[name] = missingFraction(rx);
 
         /* 3. short-gap fill (long gaps stay NaN), 4. Hampel, 5. filtfilt.
-           A single NaN poisons an IIR filter for the rest of the signal, so
-           the long gaps are bridged with a hold ONLY to keep the filter fed,
-           and are masked straight back out afterward. They must not survive
-           as usable samples: a metric that lands in one has to report itself
-           unavailable rather than read interpolated fiction. */
+           Each finite run has independent filter state. Long occlusions
+           remain missing, and reacquiring a landmark cannot inject a step
+           into the preceding run or a velocity spike across the gap. */
         const gapX = hampel(fillGaps(rx, MAX_GAP_FRAMES)).y;
         const gapY = hampel(fillGaps(ry, MAX_GAP_FRAMES)).y;
-        const fx = filtfilt(patchForFilter(gapX), cutoffHz, fps);
-        const fy = filtfilt(patchForFilter(gapY), cutoffHz, fps);
+        const fx = filtfiltFinite(gapX, cutoffHz, fps);
+        const fy = filtfiltFinite(gapY, cutoffHz, fps);
         for (let f = 0; f < n; f++) {
             if (!Number.isFinite(gapX[f])) { fx[f] = NaN; fy[f] = NaN; }
         }
@@ -115,8 +114,8 @@ export function condition(series, opts) {
         kpOut[name] = {
             noisePx,
             x: fx, y: fy,
-            vx: derivative(patchForFilter(fx), dt, cutoffHz, fps),
-            vy: derivative(patchForFilter(fy), dt, cutoffHz, fps),
+            vx: derivativeFinite(fx, dt, cutoffHz, fps),
+            vy: derivativeFinite(fy, dt, cutoffHz, fps),
             ax: new Float64Array(n),
             v: rv,
             missing: missing[name]
@@ -125,7 +124,7 @@ export function condition(series, opts) {
         for (let f = 0; f < n; f++) {
             if (!Number.isFinite(fx[f])) { kpOut[name].vx[f] = NaN; kpOut[name].vy[f] = NaN; }
         }
-        kpOut[name].ax = derivative(patchForFilter(kpOut[name].vx), dt, cutoffHz, fps);
+        kpOut[name].ax = derivativeFinite(kpOut[name].vx, dt, cutoffHz, fps);
         for (let f = 0; f < n; f++) if (!Number.isFinite(fx[f])) kpOut[name].ax[f] = NaN;
     }
 
@@ -181,29 +180,6 @@ function residualNoise(rx, fx, ry, fy) {
         if (Number.isFinite(ry[i]) && Number.isFinite(fy[i])) r.push(Math.abs(ry[i] - fy[i]));
     }
     return r.length ? 1.4826 * median(r) : 0;
-}
-
-/**
- * Bridge NaN runs so filtfilt has finite input: forward-fill, then back-fill
- * the leading run, then fall back to the series median if the track is empty.
- * The result is only ever fed to the filter — the caller re-masks.
- */
-function patchForFilter(x) {
-    const out = Float64Array.from(x);
-    const n = out.length;
-    let last = NaN;
-    for (let i = 0; i < n; i++) {
-        if (Number.isFinite(out[i])) last = out[i]; else out[i] = last;
-    }
-    let first = NaN;
-    for (let i = 0; i < n; i++) if (Number.isFinite(out[i])) { first = out[i]; break; }
-    if (!Number.isFinite(first)) {
-        const m = median(x);
-        first = Number.isFinite(m) ? m : 0;
-    }
-    for (let i = 0; i < n; i++) { if (!Number.isFinite(out[i])) out[i] = first; else break; }
-    for (let i = 0; i < n; i++) if (!Number.isFinite(out[i])) out[i] = first;
-    return out;
 }
 
 function midpoint(a, b, n) {

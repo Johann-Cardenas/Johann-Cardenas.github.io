@@ -31,6 +31,8 @@ export function designCutoff(effectiveFc) {
  * Returns normalized coefficients (a0 = 1).
  */
 export function butter2LowpassCoeffs(fcHz, fsHz) {
+    if (!Number.isFinite(fcHz) || !Number.isFinite(fsHz) || !(fcHz > 0 && fsHz > 0 && fcHz < fsHz / 2))
+        throw new RangeError('The design cutoff must be finite, positive and below Nyquist.');
     const w = Math.tan(Math.PI * fcHz / fsHz);       /* pre-warped */
     const w2 = w * w;
     const a0 = 1 + Math.SQRT2 * w + w2;
@@ -170,6 +172,7 @@ export function fillGaps(x, maxGap = MAX_GAP_FRAMES) {
  * wrong on the previous frame.
  */
 export function derivative(x, dtSec, fcHz, fsHz) {
+    if (!Number.isFinite(dtSec) || dtSec <= 0) throw new RangeError('Derivative sampling interval must be finite and positive.');
     const n = x.length;
     const d = new Float64Array(n);
     if (n < 2) return d;
@@ -185,3 +188,20 @@ export function missingFraction(x) {
     for (let i = 0; i < x.length; i++) if (!Number.isFinite(x[i])) miss++;
     return x.length ? miss / x.length : 1;
 }
+
+/** Isolate filter state and finite differences at missing-data boundaries. */
+export function finiteRuns(x, transform) {
+    const out = new Float64Array(x.length).fill(NaN);
+    for (let start = 0; start < x.length;) {
+        if (!Number.isFinite(x[start])) { start++; continue; }
+        let end = start + 1;
+        while (end < x.length && Number.isFinite(x[end])) end++;
+        out.set(transform(Float64Array.from(x.slice(start, end))), start);
+        start = end;
+    }
+    return out;
+}
+
+export const filtfiltFinite = (x, fcHz, fsHz) => finiteRuns(x, run => filtfilt(run, fcHz, fsHz));
+export const derivativeFinite = (x, dtSec, fcHz, fsHz) => finiteRuns(x,
+    run => run.length < 2 ? new Float64Array(run.length).fill(NaN) : derivative(run, dtSec, fcHz, fsHz));

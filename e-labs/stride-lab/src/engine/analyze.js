@@ -9,6 +9,8 @@
    ============================================================ */
 
 import { condition } from './signal/condition.js';
+import { validateInput, uniformTimebase } from './signal/timebase.js';
+import { designCutoff } from './signal/filter.js';
 import { gateImplausibleSegments, frameIsWorldFixed } from './pose/plausible.js';
 import { travelDirection, classifyView, frontalFacing, perFrameScale } from './calib/scale.js';
 import { detectEvents } from './events/detect.js';
@@ -40,6 +42,8 @@ import {
  */
 export function runPipeline(series, opts) {
     const warnings = [];
+    const invalid = validateInput(series, opts);
+    if (invalid) return fail(invalid.code, invalid.message);
     const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
     /* ---- fps: from the DATA, not from the container ---------------------
@@ -50,10 +54,18 @@ export function runPipeline(series, opts) {
     for (let i = 1; i < series.n; i++) intervals.push(series.t[i] - series.t[i - 1]);
     const dtMed = median(intervals);
     const measuredFps = dtMed > 0 ? 1 / dtMed : NaN;
-    const fps = Number.isFinite(opts.fps) ? opts.fps : measuredFps;
+    const fps = Math.abs(measuredFps - Math.round(measuredFps)) < 1e-6 ? Math.round(measuredFps) : measuredFps;
+    const sourceFrameCount = series.n;
+    const observedRate = 1 / quantile(intervals, 0.9);
+    const observationFps = Math.min(fps, Math.abs(observedRate - Math.round(observedRate)) < 1e-6 ? Math.round(observedRate) : observedRate);
     if (!Number.isFinite(fps) || fps <= 0) {
         return fail('no-timebase', 'The clip has no usable frame timestamps.');
     }
+    if (opts.fps != null && (!Number.isFinite(opts.fps) || Math.abs(opts.fps - fps) / fps > 0.02)) {
+        warnings.push({ code: 'fps-metadata-mismatch', message: 'The supplied frame rate disagrees with the decoded timestamps. Analysis uses the timestamps.' });
+    }
+    if (opts.cutoffHz != null && (!Number.isFinite(opts.cutoffHz) || opts.cutoffHz <= 0 || designCutoff(opts.cutoffHz) >= fps / 2))
+        return fail('invalid-cutoff', 'The effective filter cutoff must be positive and its corrected design cutoff below half the measured frame rate.');
     /* Spread between the 10th and 90th percentile, NOT max minus min.
        A range is the least robust statistic there is: one skipped frame makes
        one interval twice the others and reports 100% variation, which is what a
@@ -69,13 +81,13 @@ export function runPipeline(series, opts) {
     if (jitter > 0.5) {
         warnings.push({
             code: 'variable-frame-rate',
-            message: `Frame intervals vary by ${(jitter * 100).toFixed(0)}%, so this was recorded at a variable frame rate. Timing metrics use the measured median rate of ${fps.toFixed(1)} fps.`
+            message: `Frame intervals vary by ${(jitter * 100).toFixed(0)}%. Landmarks are resampled on their timestamps to a uniform ${fps.toFixed(1)} fps grid before filtering; long gaps remain unavailable.`
         });
     } else if (skips > 0 && skips <= intervals.length * 0.1) {
         warnings.push({
             code: 'frames-skipped',
             message: `${skips} frame${skips === 1 ? ' was' : 's were'} skipped in an otherwise steady ${fps.toFixed(0)} fps clip. `
-                + 'Too few to affect the measurements; the gaps are interpolated over.'
+                + 'Short gaps are interpolated on their timestamps; long gaps remain unavailable.'
         });
     }
     if (fps < FPS_REJECT_BELOW) {
@@ -92,12 +104,17 @@ export function runPipeline(series, opts) {
               + 'pose model. The recording is fine. An MP4 (rather than WebM) will take the fast path, and so will a browser with WebCodecs.'
             : `This clip is ${fps.toFixed(0)} fps. Below ${FPS_REJECT_BELOW} fps there is not enough time resolution for any of these measurements. Record at 60 fps or higher.`);
     }
-    if (fps < FPS_TIMING_MIN) {
+    if (observationFps < FPS_TIMING_MIN) {
         warnings.push({
             code: 'timing-suppressed',
-            message: `At ${fps.toFixed(0)} fps a single frame is ${(1000 / fps).toFixed(0)} ms and ground contact is only about 230 ms, so contact time, flight time and duty factor are not reported. Cadence and the joint angles are.`
+            message: `At an observed timing rate of ${observationFps.toFixed(0)} fps a frame interval is ${(1000 / observationFps).toFixed(0)} ms and ground contact is only about 230 ms, so contact time, flight time and duty factor are not reported. Cadence and the joint angles are.`
         });
     }
+
+    const timebase = uniformTimebase(series, fps);
+    if (timebase.error) return fail('timebase-gaps', timebase.error);
+    series = { ...timebase.series, vis: Float64Array.from(timebase.series.vis,
+        value => Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0) };
 
     /* ---- anatomical plausibility ---------------------------------------
        Before anything is measured: a pose estimator asked for a landmark it
@@ -222,6 +239,7 @@ export function runPipeline(series, opts) {
     /* ---- metrics, scores, findings --------------------------------------- */
     const ctx = {
         view,
+        observationFps,
         /* Whether displacement across the frame is measurable at all. A
            treadmill and a camera that pans with the runner are the same
            situation as far as spatial measurement is concerned. */
@@ -242,7 +260,7 @@ export function runPipeline(series, opts) {
        model adds measurements rather than replacing the inputs to the old
        ones. Sagittal only — it is a planar model. */
     const model = view === 'sagittal'
-        ? fitKinematicModel(cond, { view })
+        ? fitKinematicModel(cond, { view, temporal: observationFps >= 100 ? 'adaptive' : false })
         : { available: false, reason: 'The rigid-body model is planar and is fitted to sagittal views only.' };
     if (model.available && model.fit.residualPct > 3) {
         warnings.push({
@@ -279,6 +297,7 @@ export function runPipeline(series, opts) {
 
     return {
         ok: true,
+        series,
         engine: {
             version: ENGINE_VERSION,
             backend: opts.backend || 'unknown',
@@ -298,6 +317,9 @@ export function runPipeline(series, opts) {
             surface: ctx.surface,
             fps,
             measuredFps,
+            observationFps,
+            sourceFrameCount,
+            timebaseResampled: timebase.resampled,
             frameCount: series.n,
             resolution: [series.width, series.height],
             durationMs: (series.t[series.n - 1] - series.t[0]) * 1000,
@@ -315,12 +337,15 @@ export function runPipeline(series, opts) {
         plausibility,
         strideCount: computed.strideCount,
         metrics: computed.metrics,
+        movementSamples: computed.samples,
         /* a summary of the fit, not the per-frame arrays: those live in
            _internal, and a stored record should not carry them */
         model: model.available
             ? { available: true, dof: model.fit.dof, residualPct: model.fit.residualPct,
                 residualP90Pct: model.fit.residualP90Pct, coverage: model.fit.coverage,
                 meanIterations: model.fit.meanIterations, perLandmarkPct: model.fit.perLandmarkPct,
+                rejectedSteps: model.fit.rejectedSteps,
+                temporal: model.temporal,
                 segmentLengthsM: Object.fromEntries(Object.entries(model.geom.lengths)
                     .map(([k, L]) => [k, Number.isFinite(L) ? L * scale.mPerPxMedian : null])) }
             : { available: false, reason: model.reason },
