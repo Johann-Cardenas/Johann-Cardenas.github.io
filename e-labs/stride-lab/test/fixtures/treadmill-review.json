@@ -1,0 +1,14 @@
+{
+  "video": "demo/treadmill-30fps.mp4",
+  "sha256": "c026a9b3c28c752226d8de064f69ad0a49e775bfc3f4f953bd57c986ba27b884",
+  "method": "Visual review of upright decoded frames at the listed source timestamps. Regions enclose the visible head and torso; they are coarse location checks, not joint or contact-time ground truth. Coordinates are normalized source-image coordinates before conditioning/mirroring.",
+  "reviewed": "2026-11-09",
+  "samples": [
+    { "time": 0.5, "head": [0.30, 0.14, 0.47, 0.28], "torso": [0.30, 0.25, 0.68, 0.53] },
+    { "time": 2, "head": [0.29, 0.10, 0.44, 0.25], "torso": [0.30, 0.20, 0.68, 0.53] },
+    { "time": 4, "head": [0.36, 0.09, 0.54, 0.24], "torso": [0.38, 0.20, 0.77, 0.52] },
+    { "time": 6, "head": [0.32, 0.12, 0.50, 0.26], "torso": [0.36, 0.21, 0.75, 0.53] },
+    { "time": 8, "head": [0.32, 0.12, 0.50, 0.27], "torso": [0.35, 0.21, 0.75, 0.53] },
+    { "time": 10, "head": [0.35, 0.12, 0.53, 0.27], "torso": [0.38, 0.21, 0.78, 0.53] }
+  ]
+}

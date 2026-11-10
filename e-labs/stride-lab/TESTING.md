@@ -69,6 +69,38 @@ timings in `engine.processing`. `prepareMs` and `inferMs` are components of
 
 ## Browser matrix
 
+The treadmill release gate additionally runs `test/treadmill-audit.mjs`, an
+independent checker with no production-engine imports, on every fresh real
+inference result. It requires the complete selected source window at 30 fps,
+finite visible points, valid confidence buffers, frame provenance, no frozen
+segments, and torso/visible-leg coverage and leg excursion in every one-second
+window. Model coverage and residual budgets reject a deteriorating fit. A
+separate sinusoidal projection of raw ankle motion relative to the pelvis must
+recover 170–200 spm and agree with reported cadence within 10 spm.
+
+`test/fixtures/treadmill-review.json` pins the video SHA-256 and six visually
+reviewed source frames. Broad head and torso regions reject gross position and
+orientation errors independently of model predictions. They are not joint,
+foot-contact, left/right identity or clinical ground truth. Do not tighten or
+relax them merely to match the model. Each real run attaches a six-frame video
+contact sheet with raw visible landmarks and review regions, plus a JSON audit
+with window coverage, excursion, anchor matches and independent cadence.
+
+The unit suite proves this checker rejects 14 corruptions, including whole-clip
+and temporary freezes, a moving torso hiding frozen legs, dropouts, timestamp
+and buffer corruption, mirrored/sideways output, a plausible wrong cadence and
+poor fit residuals. Its positive control has independently constructed motion
+at a known cadence; no recorded model output substitutes for release inference.
+
+The 2026-11-09 fresh Chrome/Firefox GPU/CPU runs each audited 363 frames and
+matched all six reviewed locations. Independent raw-motion cadence was
+183–183.6 spm; the minimum one-second visible-leg coverage was 80%, with no
+detected repeated-pose holds. Visual inspection of all four contact sheets
+still showed occasional foot-position drift, notably the full model near 2 s.
+This gate therefore supports coarse tracking and cadence, not precise joint
+localization. Contact/stride confidence gates must remain in force; a green
+release report is not evidence that every overlaid foot point is correct.
+
 Each browser executes eight scenarios:
 
 1. Synthetic runner through the normal UI: scored values, initial unavailable

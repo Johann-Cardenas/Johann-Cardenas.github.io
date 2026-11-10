@@ -1438,6 +1438,25 @@ without starting the main-thread fallback. Initialization timers and listeners
 are cleared on every settlement. Real-video tests require worker provenance,
 and injected cancellation must recover for the next analysis.
 
+## D64. Independent treadmill release audit
+
+Successful inference and plausible clip-wide cadence do not establish that a
+runner was followed throughout a clip. The test gate now audits raw source
+poses in one-second windows, validates source timestamps and buffers, detects
+held poses, requires visible leg excursion, and checks kinematic fit coverage
+and residuals. It independently projects raw leg motion onto sinusoids and
+compares its cadence with the reported measurement. This checker imports no
+production numerical code, and its own positive and corrupted controls verify
+that it can reject realistic failures.
+
+Six decoded source frames were visually reviewed for coarse head/torso regions,
+with source checksum and methodology recorded in the fixture. Release runs
+attach the actual source frames with raw pose points and these regions. This
+guards location/orientation and supports human inspection; it does not label
+joint centers or contacts. Occluded feet remain an explicit limit: these tests
+must not promote withheld scores or 30 fps contact timing into valid numbers.
+No production inference or scoring threshold changed in this iteration.
+
 ## Open questions the specification left for the human
 
 These were answered with the conservative default and are easy to change.

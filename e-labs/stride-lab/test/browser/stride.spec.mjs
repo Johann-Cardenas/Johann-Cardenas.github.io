@@ -1,5 +1,37 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
+import { auditTreadmill } from '../treadmill-audit.mjs';
+
+const treadmillReview = JSON.parse(await readFile(new URL('../fixtures/treadmill-review.json', import.meta.url), 'utf8'));
+
+async function treadmillEvidence(page, record, testInfo) {
+    const encoded = await page.evaluate(async ({ record, review }) => {
+        const video = document.getElementById('sl-video'); video.pause();
+        const sheet = document.createElement('canvas'); sheet.width = 600; sheet.height = 748;
+        const ctx = sheet.getContext('2d'); ctx.fillStyle = '#101820'; ctx.fillRect(0, 0, 600, 748);
+        const array = v => Array.isArray(v) || ArrayBuffer.isView(v) ? Array.from(v) : Object.values(v);
+        const k = record.keypoints, t = array(k.t), xy = array(k.xy), vis = array(k.vis), K = k.names.length;
+        for (let i = 0; i < review.samples.length; i++) {
+            const sample = review.samples[i];
+            if (Math.abs(video.currentTime - sample.time) > 1e-5 || video.seeking) await new Promise(resolve => {
+                video.addEventListener('seeked', resolve, { once: true }); video.currentTime = sample.time;
+            });
+            const x = i % 3 * 200, y = Math.floor(i / 3) * 374;
+            ctx.drawImage(video, x, y, 200, 354);
+            let f = 0;
+            for (let j = 1; j < t.length; j++) if (Math.abs(t[j] - sample.time) < Math.abs(t[f] - sample.time)) f = j;
+            ctx.strokeStyle = '#fbd34d'; ctx.lineWidth = 1;
+            for (const box of [sample.head, sample.torso]) ctx.strokeRect(x + box[0] * 200, y + box[1] * 354, (box[2] - box[0]) * 200, (box[3] - box[1]) * 354);
+            for (let j = 0; j < K; j++) if (vis[f * K + j] >= 0.5) {
+                ctx.fillStyle = '#00f5d4'; ctx.beginPath();
+                ctx.arc(x + xy[(f * K + j) * 2] * 200, y + xy[(f * K + j) * 2 + 1] * 354, 2, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.fillStyle = '#ffffff'; ctx.font = '12px sans-serif'; ctx.fillText(`${sample.time}s · source pose ${t[f].toFixed(3)}s`, x + 4, y + 369);
+        }
+        return sheet.toDataURL('image/png').split(',')[1];
+    }, { record, review: treadmillReview });
+    await testInfo.attach('treadmill-video-and-raw-pose-review', { body: Buffer.from(encoded, 'base64'), contentType: 'image/png' });
+}
 
 async function open(page, errors) {
     page.on('pageerror', error => errors.push(error.message));
@@ -183,6 +215,9 @@ for (const delegate of ['GPU', 'CPU']) test(`real treadmill ${delegate}: product
     await expect.poll(async () => !!(await saved(page))).toBeTruthy();
     const record = await saved(page);
     await testInfo.attach('treadmill-result', { body: JSON.stringify(record, null, 2), contentType: 'application/json' });
+    const audit = auditTreadmill(record, treadmillReview);
+    await testInfo.attach('treadmill-independent-audit', { body: JSON.stringify(audit, null, 2), contentType: 'application/json' });
+    await treadmillEvidence(page, record, testInfo);
     expect(record.engine.backend).not.toBe('synthetic');
     expect(record.engine.poseWorker, 'the supported browser must run inference off the UI thread').toBe(true);
     const timing = record.engine.processing;

@@ -26,7 +26,7 @@ python -m http.server 8000        # from the repository root
 ## Test it
 
 ```bash
-npm test          # node test/run.mjs — 179 checks, no dependencies
+npm test          # node test/run.mjs — 195 checks, no dependencies
 npm run test:release      # engine + Chrome/Firefox browser and real-video checks
 npm run benchmark:model  # compare framewise and adaptive temporal IK
 npm run benchmark:pipeline  # warmed timings + exact whole-result equivalence
