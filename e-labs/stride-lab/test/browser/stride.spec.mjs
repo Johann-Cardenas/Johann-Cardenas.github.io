@@ -184,6 +184,14 @@ for (const delegate of ['GPU', 'CPU']) test(`real treadmill ${delegate}: product
     const record = await saved(page);
     await testInfo.attach('treadmill-result', { body: JSON.stringify(record, null, 2), contentType: 'application/json' });
     expect(record.engine.backend).not.toBe('synthetic');
+    expect(record.engine.poseWorker, 'the supported browser must run inference off the UI thread').toBe(true);
+    const timing = record.engine.processing;
+    expect(timing.frames).toBe(record.capture.sourceFrameCount);
+    for (const key of ['modelMs', 'decodeAndPoseMs', 'prepareMs', 'inferMs', 'analysisMs', 'totalMs']) {
+        expect(Number.isFinite(timing[key]), key).toBe(true);
+        expect(timing[key], key).toBeGreaterThanOrEqual(0);
+    }
+    expect(timing.totalMs).toBeGreaterThanOrEqual(timing.modelMs + timing.decodeAndPoseMs + timing.analysisMs);
     if (delegate === 'CPU') expect(record.engine.delegate).toBe('CPU');
     expect(record.capture.fps).toBeGreaterThan(29);
     expect(record.capture.fps).toBeLessThan(31);
@@ -348,6 +356,91 @@ test('treadmill playback decoder: backpressure, orientation, cancellation and co
     expect(result.times.every((t, i) => i === 0 || t > result.times[i - 1])).toBe(true);
     expect(result.canceled.frames).toBe(3);
     expect(result.consumerError).toBe('Injected consumer failure');
+    expect(errors).toEqual([]);
+});
+
+test('playback decoder reuses orientation surfaces without changing pixels or bitmap ownership', async ({ page }, testInfo) => {
+    const errors = [];
+    await open(page, errors);
+    const result = await page.evaluate(async () => {
+        const { orientFrame, createFrameOrienter } = await import('/e-labs/stride-lab/src/engine/decode/frames.js');
+        const source = document.createElement('canvas'); source.width = 96; source.height = 64;
+        const ctx = source.getContext('2d');
+        const paint = color => { ctx.clearRect(0, 0, 96, 64); ctx.fillStyle = color; ctx.fillRect(0, 0, 48, 32); };
+        const read = image => {
+            const canvas = document.createElement('canvas'); canvas.width = image.width; canvas.height = image.height;
+            const context = canvas.getContext('2d'); context.drawImage(image, 0, 0);
+            return Array.from(context.getImageData(0, 0, image.width, image.height).data);
+        };
+        const NativeCanvas = window.OffscreenCanvas;
+        const checks = [], allocations = [];
+        try {
+            for (const fallback of [false, true]) {
+                let surfaces = 0;
+                window.OffscreenCanvas = fallback ? undefined : class extends NativeCanvas {
+                    constructor(...args) { super(...args); surfaces++; }
+                };
+                const orient = createFrameOrienter();
+                paint('red');
+                const retained = await orient(source, 90, false, 64, 96), original = read(retained);
+                for (const rotation of [0, 90, 180, 270]) for (const mirrored of [false, true]) for (const half of [false, true]) {
+                    paint(mirrored ? 'blue' : 'green');
+                    const swap = rotation % 180 !== 0, w = (swap ? 64 : 96) / (half ? 2 : 1), h = (swap ? 96 : 64) / (half ? 2 : 1);
+                    const reused = await orient(source, rotation, mirrored, w, h);
+                    const before = surfaces;
+                    const fresh = await orientFrame(source, rotation, mirrored, w, h);
+                    surfaces = before; // count only this run's reusable surface
+                    checks.push(JSON.stringify(read(reused)) === JSON.stringify(read(fresh)));
+                    reused.close(); fresh.close();
+                }
+                checks.push(JSON.stringify(read(retained)) === JSON.stringify(original));
+                retained.close();
+                if (!fallback) allocations.push(surfaces);
+            }
+        } finally { window.OffscreenCanvas = NativeCanvas; }
+        const timings = {};
+        source.width = 480; source.height = 848;
+        for (const [name, orient] of [['fresh', orientFrame], ['reused', createFrameOrienter()]]) {
+            for (let i = 0; i < 10; i++) (await orient(source, 90, false, 848, 480)).close();
+            const start = performance.now();
+            for (let i = 0; i < 120; i++) (await orient(source, 90, false, 848, 480)).close();
+            timings[name] = performance.now() - start;
+        }
+        return { checks, allocations, timings };
+    });
+    await testInfo.attach('orientation-performance', { body: JSON.stringify(result), contentType: 'application/json' });
+    expect(result.checks.every(Boolean)).toBe(true);
+    expect(result.allocations).toEqual([1]);
+    expect(errors).toEqual([]);
+});
+
+test('inference worker startup cancellation terminates without main-thread fallback', async ({ page }) => {
+    const errors = [];
+    await open(page, errors);
+    const result = await page.evaluate(async () => {
+        const { analyzeFile } = await import('/e-labs/stride-lab/src/ui/pipeline.js');
+        const NativeWorker = window.Worker;
+        const blob = await (await fetch('/e-labs/stride-lab/demo/treadmill-30fps.mp4')).blob();
+        let canceled = false, terminated = false, modelRequests = 0;
+        const nativeFetch = window.fetch;
+        window.fetch = (...args) => { if (/mediapipe|\.task/.test(String(args[0]))) modelRequests++; return nativeFetch(...args); };
+        window.Worker = class {
+            postMessage() { setTimeout(() => { canceled = true; }, 50); }
+            terminate() { terminated = true; }
+        };
+        try {
+            const start = performance.now();
+            const output = await analyzeFile(new File([blob], 'treadmill.mp4', { type: 'video/mp4' }), {
+                heightM: 1.7, surface: 'treadmill', view: 'sagittal', canceled: () => canceled
+            });
+            return { output, terminated, modelRequests, elapsed: performance.now() - start };
+        } finally { window.Worker = NativeWorker; window.fetch = nativeFetch; }
+    });
+    expect(result.output).toEqual({ canceled: true });
+    expect(result.terminated).toBe(true);
+    expect(result.modelRequests).toBe(0);
+    expect(result.elapsed).toBeLessThan(5000);
+    await runDemo(page, 'synthetic');
     expect(errors).toEqual([]);
 });
 

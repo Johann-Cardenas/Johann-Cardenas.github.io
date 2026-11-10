@@ -11,14 +11,14 @@
    — and landmarks go back as transferred typed arrays.
    ============================================================ */
 
-import { createMediaPipeBackend, defaultVariant, MEDIAPIPE_CDN } from '../src/engine/pose/mediapipe.js';
-
 let backend = null;
 
 self.onmessage = async (e) => {
     const msg = e.data;
     try {
         if (msg.t === 'init') {
+            // The WASM loader needs importScripts in a classic worker.
+            const { createMediaPipeBackend, defaultVariant, MEDIAPIPE_CDN } = await import('../src/engine/pose/mediapipe.js');
             backend = createMediaPipeBackend();
             await backend.init({
                 modelBase: msg.modelBase || MEDIAPIPE_CDN,

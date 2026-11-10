@@ -242,6 +242,7 @@ export function forwardKinematics(q, geom) {
     const frames = {};
     for (const seg of MODEL_SEGMENTS) {
         const th = q[seg.q];
+        const c = Math.cos(th), s = Math.sin(th);
         let o;
         if (!seg.parent) o = { x: q[Q.px], y: q[Q.py] };
         else o = P[seg.joint];
@@ -249,11 +250,11 @@ export function forwardKinematics(q, geom) {
         frames[seg.id] = { o, th };
         const loc = geom.local[seg.id];
         for (const name of Object.keys(loc)) {
-            const r = rot(th, loc[name].x, loc[name].y);
+            const lx = loc[name].x, ly = loc[name].y;
             /* a child joint lives on this segment; do not let a later segment
                that merely OBSERVES the same name overwrite it */
             if (P[name] && name !== seg.axis && !seg.points.includes(name)) continue;
-            P[name] = { x: o.x + r.x, y: o.y + r.y };
+            P[name] = { x: o.x + (c * lx - s * ly), y: o.y + (s * lx + c * ly) };
         }
         if (seg.virtual) {
             for (const [vn, kind] of Object.entries(seg.virtual)) {
@@ -306,7 +307,11 @@ export function fitKinematicModel(cond, opts = {}) {
     for (const seg of MODEL_SEGMENTS) {
         for (const name of seg.points) {
             const loc = geom.local[seg.id][name];
-            if (loc && !loc.fallback) pointsOf.push({ seg, name, loc });
+            if (loc && !loc.fallback) {
+                const chain = CHAINS[seg.id];
+                pointsOf.push({ seg, name, loc, chain,
+                    columns: [Q.px, Q.py, ...chain.map(s => s.q)] });
+            }
         }
     }
     /* Prior scale per coordinate: a length so an angular prior is in pixels. */
@@ -327,6 +332,10 @@ export function fitKinematicModel(cond, opts = {}) {
 
     let prev = null;
     let iterTotal = 0, framesFit = 0, rejectedSteps = 0;
+    // Scratch storage is private to this fit, never shared with returned tracks.
+    const H = new Float64Array(NQ * NQ), g = new Float64Array(NQ);
+    const jx = new Float64Array(NQ), jy = new Float64Array(NQ);
+    const candidate = new Float64Array(NQ);
     for (let f = 0; f < n; f++) {
         /* ---- initial guess: direct observation where it exists ---- */
         const q0 = new Float64Array(NQ);
@@ -365,8 +374,7 @@ export function fitKinematicModel(cond, opts = {}) {
         for (let it = 0; it < IK.iterations; it++) {
             iterTotal++;
             const { P, frames } = forwardKinematics(q, geom);
-            const H = new Float64Array(NQ * NQ);
-            const g = new Float64Array(NQ);
+            H.fill(0); g.fill(0);
             const res = [];
             for (let k = 0; k < zs.length; k++) {
                 const ob = zs[k];
@@ -378,19 +386,22 @@ export function fitKinematicModel(cond, opts = {}) {
                 /* Jacobian columns for this point: root translation, then one
                    angle per segment on the chain. d/dtheta of R(theta)l is the
                    perpendicular of the lever from the segment origin. */
-                const cols = [];
-                cols.push([Q.px, 1, 0], [Q.py, 0, 1]);
-                const chain = CHAINS[ob.seg.id];
+                jx[0] = 1; jy[0] = 0; jx[1] = 0; jy[1] = 1;
+                const chain = ob.chain, cols = ob.columns;
                 for (let c = 0; c < chain.length; c++) {
                     const s = chain[c];
                     const fr = frames[s.id];
                     const end = c === chain.length - 1 ? x : P[chain[c + 1].joint];
                     const lx = end.x - fr.o.x, ly = end.y - fr.o.y;
-                    cols.push([s.q, -ly, lx]);
+                    jx[c + 2] = -ly; jy[c + 2] = lx;
                 }
-                for (const [i, ax, ay] of cols) {
+                for (let a = 0; a < cols.length; a++) {
+                    const i = cols[a], ax = jx[a], ay = jy[a];
                     g[i] += w * (ax * rx + ay * ry);
-                    for (const [j, bx, by] of cols) H[i * NQ + j] += w * (ax * bx + ay * by);
+                    for (let b = 0; b < cols.length; b++) {
+                        const j = cols[b], bx = jx[b], by = jy[b];
+                        H[i * NQ + j] += w * (ax * bx + ay * by);
+                    }
                 }
             }
             /* temporal prior, in pixel-equivalent units */
@@ -408,8 +419,7 @@ export function fitKinematicModel(cond, opts = {}) {
             // Trust-region cap plus backtracking against the actual nonlinear
             // weighted objective. An unconstrained GN step can increase error
             // or flip a limb when observations are nearly singular.
-            const loss = (candidate) => {
-                const points = forwardKinematics(candidate, geom).P;
+            const loss = (candidate, points = forwardKinematics(candidate, geom).P) => {
                 let value = 0;
                 for (let k = 0; k < zs.length; k++) {
                     const p = points[zs[k].name];
@@ -421,11 +431,10 @@ export function fitKinematicModel(cond, opts = {}) {
                 }
                 return value;
             };
-            const before = loss(q);
+            const before = loss(q, P);
             let fraction = 1;
             for (let i = 0; i < NQ; i++) fraction = Math.min(fraction,
                 (i < 2 ? 0.15 * geom.legPx : 0.5) / Math.max(1e-12, Math.abs(step[i])));
-            const candidate = new Float64Array(NQ);
             let accepted = false;
             for (let attempt = 0; attempt < 10; attempt++, fraction *= 0.5) {
                 for (let i = 0; i < NQ; i++) candidate[i] = q[i] - fraction * step[i];

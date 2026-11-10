@@ -13,7 +13,7 @@
    WebCodecs, which is precisely the browser that needs one.
    ============================================================ */
 
-import { probe, extractFrames, downscaleSize, orientFrame } from '../engine/decode/frames.js';
+import { probe, extractFrames, downscaleSize, createFrameOrienter } from '../engine/decode/frames.js';
 import {
     createMediaPipeBackend, createTracker, seriesFromTrack, worldLegLength,
     defaultVariant, MEDIAPIPE_CDN
@@ -49,6 +49,8 @@ export const STAGES = [
  * @param {number} [opts.trackChoice]  a track id, when the user has picked one
  */
 export async function analyzeFile(file, opts) {
+    const started = performance.now();
+    const timing = { modelMs: 0, decodeAndPoseMs: 0, prepareMs: 0, inferMs: 0, analysisMs: 0 };
     const progress = (stage, done = 0, total = 1) => {
         if (opts.onProgress) {
             const s = STAGES.find(x => x.id === stage);
@@ -63,7 +65,14 @@ export async function analyzeFile(file, opts) {
     }
 
     progress('model');
-    const runner = await createRunner(opts);
+    const modelStarted = performance.now();
+    let runner;
+    try { runner = await createRunner(opts); }
+    catch (error) {
+        if (opts.canceled?.()) return { canceled: true };
+        throw error;
+    }
+    timing.modelMs = performance.now() - modelStarted;
 
     /* ---- decode + infer, streamed ------------------------------------- */
     const targetFrames = info.track ? info.track.samples.filter(sample => {
@@ -86,8 +95,10 @@ export async function analyzeFile(file, opts) {
     const rotationDeg = info.rotationDeg || 0;
     const mirrored = !!info.mirrored;
     const swapAxes = rotationDeg === 90 || rotationDeg === 270;
+    const orient = createFrameOrienter();
 
     let decode, decodeError;
+    const decodeStarted = performance.now();
     try {
         decode = await extractFrames(file, {
             probe: info,
@@ -108,8 +119,12 @@ export async function analyzeFile(file, opts) {
                 /* Rotate and downscale in one pass. Downscaling matters on its own:
                    the landmark model resizes internally anyway, so feeding it 4K
                    costs memory and time and buys nothing. */
-                const bitmap = await orientFrame(src, rotationDeg, mirrored, width, height);
+                const prepareStarted = performance.now();
+                const bitmap = await orient(src, rotationDeg, mirrored, width, height);
+                timing.prepareMs += performance.now() - prepareStarted;
+                const inferStarted = performance.now();
                 const poses = await runner.infer(bitmap, frame.timestampUs / 1000, frameIndex);
+                timing.inferMs += performance.now() - inferStarted;
                 times.push(frame.timestampUs / 1e6);
                 if (poses && poses.length) {
                     tracker.push(frameIndex, poses);
@@ -132,6 +147,7 @@ export async function analyzeFile(file, opts) {
         decodeError = error;
     } finally {
         await runner.dispose();
+        timing.decodeAndPoseMs = performance.now() - decodeStarted;
     }
     if (decodeError) {
         if (runner.delegate === 'GPU' && opts.preferGpu !== false && !(opts.canceled && opts.canceled())) {
@@ -203,6 +219,7 @@ export async function analyzeFile(file, opts) {
 
     /* ---- the pure engine ------------------------------------------------ */
     progress('events');
+    const analysisStarted = performance.now();
     const result = runPipeline(series, {
         heightM: opts.heightM,
         surface: opts.surface,
@@ -217,6 +234,7 @@ export async function analyzeFile(file, opts) {
         droppedFrames: decode ? decode.dropped : 0,
         sourceFps: decode ? decode.sourceFps : null
     });
+    timing.analysisMs = performance.now() - analysisStarted;
     progress('metrics');
     progress('score');
 
@@ -225,6 +243,8 @@ export async function analyzeFile(file, opts) {
         result.engine.modelVariant = runner.variant;
         result.engine.crossOriginIsolated = typeof crossOriginIsolated !== 'undefined' ? crossOriginIsolated : false;
         result.engine.decodePath = info.path;
+        result.engine.poseWorker = runner.inWorker;
+        result.engine.processing = { ...timing, totalMs: performance.now() - started, frames: frameIndex };
         result.capture.timingConfidence = info.timingConfidence;
         result.capture.rotationDeg = rotationDeg;
         result.capture.sourceMirrored = mirrored;
@@ -273,7 +293,8 @@ function estimateFps(times) {
  * when it does not. The fallback is not a nicety: module workers, dynamic
  * import inside a worker and WASM instantiation all fail on some real
  * configurations, and an app that cannot analyze anything there is worse than
- * one that analyzes slowly.
+ * one that analyzes slowly. A classic worker is required by the pinned WASM
+ * loader's importScripts call; the engine dependency uses dynamic import.
  */
 async function createRunner(opts) {
     const preferGpu = opts.preferGpu !== false;
@@ -282,15 +303,27 @@ async function createRunner(opts) {
     if (opts.useWorker !== false && typeof Worker !== 'undefined') {
         let worker;
         try {
-            worker = new Worker(new URL('../../workers/pose.worker.js', import.meta.url), { type: 'module' });
+            worker = new Worker(new URL('../../workers/pose.worker.js', import.meta.url));
             const ready = await new Promise((res, rej) => {
-                const to = setTimeout(() => rej(new Error('worker init timed out')), 30000);
-                worker.onmessage = (e) => {
-                    if (e.data.t === 'ready') { clearTimeout(to); res(e.data); }
-                    else if (e.data.t === 'error') { clearTimeout(to); rej(new Error(e.data.message)); }
+                let poll, settled = false;
+                const finish = (error, value) => {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(to); clearInterval(poll);
+                    worker.onmessage = worker.onerror = null;
+                    if (error) rej(error); else res(value);
                 };
-                worker.onerror = (e) => { clearTimeout(to); rej(new Error(e.message || 'worker failed')); };
-                worker.postMessage({ t: 'init', modelBase: MEDIAPIPE_CDN, preferGpu, variant });
+                const to = setTimeout(() => finish(new Error('worker init timed out')), 120000);
+                if (opts.canceled) poll = setInterval(() => {
+                    if (opts.canceled()) finish(new Error('Analysis canceled.'));
+                }, 100);
+                worker.onmessage = (e) => {
+                    if (e.data.t === 'ready') finish(null, e.data);
+                    else if (e.data.t === 'error') finish(new Error(e.data.message));
+                };
+                worker.onerror = (e) => finish(new Error(e.message || 'worker failed'));
+                try { worker.postMessage({ t: 'init', modelBase: MEDIAPIPE_CDN, preferGpu, variant }); }
+                catch (error) { finish(error); }
             });
 
             const waiting = new Map();
@@ -323,8 +356,9 @@ async function createRunner(opts) {
                 },
                 async dispose() { fail('Pose runner disposed.'); worker.terminate(); }
             };
-        } catch {
+        } catch (error) {
             if (worker) worker.terminate();
+            if (opts.canceled?.()) throw error;
             /* fall through to the main thread */
         }
     }

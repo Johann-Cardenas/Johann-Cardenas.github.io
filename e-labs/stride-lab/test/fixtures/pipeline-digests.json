@@ -1,0 +1,31 @@
+{
+  "engineVersion": "1.3.0",
+  "referenceCommit": "ba9241caaf31697a7a464f0831f0043448cb96ed",
+  "node": "v24.13.0",
+  "cases": [
+    {
+      "name": "30fps-noise0",
+      "digest": "355e964ca85a29d1b5bb35160978bd04be64dea29af557e5942f126daee06830"
+    },
+    {
+      "name": "30fps-noise0.02",
+      "digest": "291631140237696daf12e2c7bfd99501d8b1613a884a26e3b5765ec15beace11"
+    },
+    {
+      "name": "120fps-noise0",
+      "digest": "fed7b3bcaed8738ece06a0073ebe9d42d872ebddd386cab7c07cd47e07191bb7"
+    },
+    {
+      "name": "120fps-noise0.02",
+      "digest": "b23f01fb4f45a24722f7b3fa3811287172bd4d2697a74d34d51c79c22ed41c9e"
+    },
+    {
+      "name": "240fps-noise0",
+      "digest": "88446ab1466cc84a2753227556295dddd1ae5099144beb694b8ca21c39bbad7d"
+    },
+    {
+      "name": "240fps-noise0.02",
+      "digest": "e6a9e1d49d64f626abfa5f553dd7ca7f7db34a15edf814ecc7940f14071ef079"
+    }
+  ]
+}

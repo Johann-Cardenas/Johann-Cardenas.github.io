@@ -6,6 +6,7 @@ import { median } from '../types.js';
 
 export function smoothTrajectory(values, times, { radius = 0.045 } = {}) {
     const out = Float64Array.from(values);
+    const normal = Array.from({ length: 4 }, () => new Float64Array(5));
     let changed = 0;
     for (let start = 0; start < values.length;) {
         if (!Number.isFinite(values[start])) { start++; continue; }
@@ -21,9 +22,10 @@ export function smoothTrajectory(values, times, { radius = 0.045 } = {}) {
             for (let k = f + 1; k < end && times[k] - times[f] <= radius; k++)
                 rows.push({ x: (times[k] - times[f]) / radius, y: values[k] });
             if (rows.length < 7) continue;
+            for (const r of rows) r.p = [1, r.x, r.x ** 2, r.x ** 3];
             let weights = rows.map(() => 1), beta;
             for (let pass = 0; pass < 3; pass++) {
-                beta = fitCubic(rows, weights);
+                beta = fitCubic(rows, weights, normal);
                 if (!beta) break;
                 const residuals = rows.map(r => r.y - evaluate(beta, r.x));
                 const center = median(residuals);
@@ -39,15 +41,15 @@ export function smoothTrajectory(values, times, { radius = 0.045 } = {}) {
 
 const evaluate = (b, x) => b[0] + x * (b[1] + x * (b[2] + x * b[3]));
 
-function fitCubic(rows, weights) {
-    const a = Array.from({ length: 4 }, () => new Float64Array(5));
-    rows.forEach((r, k) => {
-        const p = [1, r.x, r.x ** 2, r.x ** 3];
+function fitCubic(rows, weights, a) {
+    for (let i = 0; i < 4; i++) a[i].fill(0);
+    for (let k = 0; k < rows.length; k++) {
+        const r = rows[k], p = r.p;
         for (let i = 0; i < 4; i++) {
             for (let j = 0; j < 4; j++) a[i][j] += weights[k] * p[i] * p[j];
             a[i][4] += weights[k] * p[i] * r.y;
         }
-    });
+    }
     for (let i = 0; i < 4; i++) {
         let pivot = i;
         for (let j = i + 1; j < 4; j++) if (Math.abs(a[j][i]) > Math.abs(a[pivot][i])) pivot = j;

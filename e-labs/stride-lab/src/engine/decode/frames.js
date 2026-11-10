@@ -343,31 +343,45 @@ async function decodeWithVideoElement(file, opts) {
  * @param {number} outW  target width, already in DISPLAY orientation
  * @param {number} outH
  */
-export async function orientFrame(src, rotationDeg, mirrored, outW, outH) {
-    const rot = ((Math.round((rotationDeg || 0) / 90) * 90) % 360 + 360) % 360;
-    if (!rot && !mirrored) {
-        return createImageBitmap(src, { resizeWidth: outW, resizeHeight: outH, resizeQuality: 'medium' });
-    }
-    const canvas = typeof OffscreenCanvas !== 'undefined'
-        ? new OffscreenCanvas(outW, outH)
-        : Object.assign(document.createElement('canvas'), { width: outW, height: outH });
-    const ctx = canvas.getContext('2d');
-    /* the drawing box, in the rotated coordinate system */
-    const swap = rot === 90 || rot === 270;
-    const drawW = swap ? outH : outW;
-    const drawH = swap ? outW : outH;
+export function orientFrame(src, rotationDeg, mirrored, outW, outH) {
+    return createFrameOrienter()(src, rotationDeg, mirrored, outW, outH);
+}
 
-    ctx.save();
-    if (rot === 90) { ctx.translate(outW, 0); ctx.rotate(Math.PI / 2); }
-    else if (rot === 180) { ctx.translate(outW, outH); ctx.rotate(Math.PI); }
-    else if (rot === 270) { ctx.translate(0, outH); ctx.rotate(-Math.PI / 2); }
-    if (mirrored) { ctx.translate(drawW, 0); ctx.scale(-1, 1); }
-    ctx.drawImage(src, 0, 0, drawW, drawH);
-    ctx.restore();
+/** One private drawing surface per decode run. Transferred bitmaps remain owned
+ * by the consumer; overlapping analyses never share pixels or transforms. */
+export function createFrameOrienter() {
+    let canvas, ctx;
+    return async (src, rotationDeg, mirrored, outW, outH) => {
+        const rot = ((Math.round((rotationDeg || 0) / 90) * 90) % 360 + 360) % 360;
+        if (!rot && !mirrored) {
+            return createImageBitmap(src, { resizeWidth: outW, resizeHeight: outH, resizeQuality: 'medium' });
+        }
+        if (!canvas) {
+            canvas = typeof OffscreenCanvas !== 'undefined'
+                ? new OffscreenCanvas(outW, outH)
+                : Object.assign(document.createElement('canvas'), { width: outW, height: outH });
+            ctx = canvas.getContext('2d');
+        } else if (canvas.width !== outW || canvas.height !== outH) {
+            canvas.width = outW; canvas.height = outH;
+        }
+        ctx.clearRect(0, 0, outW, outH);
+        /* the drawing box, in the rotated coordinate system */
+        const swap = rot === 90 || rot === 270;
+        const drawW = swap ? outH : outW;
+        const drawH = swap ? outW : outH;
 
-    return canvas.transferToImageBitmap
-        ? canvas.transferToImageBitmap()
-        : createImageBitmap(canvas);
+        ctx.save();
+        if (rot === 90) { ctx.translate(outW, 0); ctx.rotate(Math.PI / 2); }
+        else if (rot === 180) { ctx.translate(outW, outH); ctx.rotate(Math.PI); }
+        else if (rot === 270) { ctx.translate(0, outH); ctx.rotate(-Math.PI / 2); }
+        if (mirrored) { ctx.translate(drawW, 0); ctx.scale(-1, 1); }
+        ctx.drawImage(src, 0, 0, drawW, drawH);
+        ctx.restore();
+
+        return canvas.transferToImageBitmap
+            ? canvas.transferToImageBitmap()
+            : createImageBitmap(canvas);
+    };
 }
 
 /**

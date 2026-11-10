@@ -14,7 +14,8 @@ npx playwright install firefox
 ```
 
 Chrome and Firefox run by default, one worker at a time. Real inference fetches
-the pinned MediaPipe runtime and heavy pose model from their published URLs.
+the pinned MediaPipe runtime and device-selected heavy/full pose model from
+their published URLs.
 Video, frames and landmarks stay local. The test server binds to 127.0.0.1,
 serves the repository and supports byte-range video requests.
 
@@ -23,6 +24,7 @@ serves the repository and supports byte-range video requests.
 ```sh
 npm run test:release
 npm run benchmark:model
+npm run benchmark:pipeline
 git diff --check
 ```
 
@@ -40,9 +42,34 @@ cadences, seeds and noise levels. It is not real-world biomechanical validation.
 It fails on missing/non-finite trajectory support, changed clean results or
 aggregate knee-error regression beyond its stated 1% plus 0.01° tolerance.
 
+The pipeline benchmark warms each six-second workload twice, then reports the
+median of seven runs for clean/noisy 30, 120 and 240 fps inputs. It checks the
+entire serialized result against pre-optimization SHA-256 signatures, excluding
+only `elapsedMs`. An optional saved JSON reference adds paired speed ratios:
+`node tools/benchmark-pipeline.mjs previous-results.json`. Exact signatures are
+for the recorded Node/V8 environment; cross-runtime accuracy is covered by the
+tolerance-based engine suite. Do not regenerate signatures to conceal a change.
+Timing is diagnostic, with no flaky wall-clock threshold in shared CI.
+
+On Windows/Node 24.13.0, v1.3.2 → v1.3.3 local median milliseconds were:
+
+| Input | Before | After |
+| --- | ---: | ---: |
+| 30 fps, clean | 56.7 | 37.0 |
+| 30 fps, 2% noise | 100.5 | 53.6 |
+| 120 fps, clean | 247.3 | 123.4 |
+| 120 fps, 2% noise | 670.9 | 345.1 |
+| 240 fps, clean | 551.7 | 323.2 |
+| 240 fps, 2% noise | 1407.0 | 763.2 |
+
+These measure the pure biomechanics pipeline, excluding neural inference,
+downloads, decoding and UI. Real-file saved results additionally record phase
+timings in `engine.processing`. `prepareMs` and `inferMs` are components of
+`decodeAndPoseMs`, not additive to it. Timings vary with hardware and warm-up.
+
 ## Browser matrix
 
-Each browser executes six scenarios:
+Each browser executes eight scenarios:
 
 1. Synthetic runner through the normal UI: scored values, initial unavailable
    state, deterministic backward seeking, six theme/viewport combinations and
@@ -62,6 +89,16 @@ Each browser executes six scenarios:
 6. On the real video, stop presented-frame callbacks and throw from one draw.
    Verify that the independent animation clock continues updating and stops at
    the analyzed boundary without an uncaught page error.
+7. Reuse frame-orientation surfaces through all quarter turns, mirrored states
+   and resolution changes, including the DOM-canvas fallback. Compare every
+   pixel with fresh surfaces, keep an earlier bitmap alive to catch ownership
+   errors, and require only one reusable OffscreenCanvas per run. Attach timings
+   for 120 fresh versus reused portrait-frame preparations without an unstable
+   speed threshold.
+8. Cancel during worker startup before a model is ready. Require prompt return,
+   worker termination, no main-thread model fetch, and a subsequent successful
+   analysis. Real treadmill scenarios also require `engine.poseWorker === true`
+   so an accidental main-thread fallback cannot silently pass the release gate.
 
 The real-inference cases exercise both 0.5× and 1× playback before and after
 repeated history reopening. Sample the displayed overlay timestamp on animation

@@ -1408,6 +1408,36 @@ UI-triggered paint failures (including resize while paused) reset the full drawi
 state and request a repaint at the same pose. Browser tests inject these failures
 in both synthetic and real-video players and verify the canvas is repopulated.
 
+## D63. Optimize work, preserve the model (v1.3.3)
+
+CPU profiling of six deterministic whole-pipeline workloads identified inverse
+kinematics and local cubic fitting as the main numerical costs. The fit now
+reuses private normal-matrix, gradient, candidate and Jacobian storage; caches
+coordinate-column lists; and reuses the current forward model for the existing
+backtracking objective. Forward kinematics evaluates sine/cosine once per
+segment, and temporal fitting reuses its matrix and polynomial basis across
+robust passes. Iterations, priors, tolerances, weighting, observation gates and
+the neural model are unchanged. Whole-result signatures are identical, excluding
+elapsed time; the recorded timings and limits are in TESTING.md.
+
+Each video analysis owns a reusable orientation surface. It resets dimensions
+only when required, clears pixels, preserves transform balance and transfers
+each independent bitmap to the existing bounded inference path. A second run
+has its own surface. Browser regressions cover orientation, alpha, resize,
+retained bitmap ownership and the DOM fallback. Per-phase timing metadata makes
+future bottleneck investigation possible without adding interface text. Faster
+biomechanics must not be advertised as the same reduction in whole-video time:
+neural inference remains the dominant work.
+
+Startup tracing also exposed a broken worker path: the pinned MediaPipe WASM
+loader calls `importScripts`, which module workers reject. A classic worker
+with dynamic engine imports now runs the loader correctly. Model initialization
+allows up to 120 seconds for cold weight downloads (a traced heavy download
+took 59 seconds); a 100 ms cancellation poll terminates startup immediately
+without starting the main-thread fallback. Initialization timers and listeners
+are cleared on every settlement. Real-video tests require worker provenance,
+and injected cancellation must recover for the next analysis.
+
 ## Open questions the specification left for the human
 
 These were answered with the conservative default and are easy to change.
