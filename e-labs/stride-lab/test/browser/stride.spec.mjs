@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { auditTreadmill } from '../treadmill-audit.mjs';
+import { rotateLeg } from '../pose-reliability.mjs';
 
 const treadmillReview = JSON.parse(await readFile(new URL('../fixtures/treadmill-review.json', import.meta.url), 'utf8'));
 
@@ -205,6 +206,52 @@ test('synthetic runner: scores, seeking, responsive themes and saved result', as
     expect(errors).toEqual([]);
 });
 
+test('synthetic runner suppresses transient leg jumps without altering saved observations', async ({ page }) => {
+    const errors = []; await open(page, errors);
+    await page.evaluate(() => { Date.now = () => 1725148800014; });
+    await runDemo(page, 'synthetic');
+    const record = await saved(page), k = record.keypoints;
+    for (const key of ['t', 'xy', 'vis']) k[key] = Float64Array.from(Object.values(k[key]));
+    const start = Math.floor(k.n * 0.4), count = Math.max(2, Math.round(0.06 / (k.t[1] - k.t[0])));
+    rotateLeg(k, start, count);
+    // This regression supplies known bracketing observations; random demo
+    // dropout is tested separately and must not invalidate the planted return.
+    for (let f = start - 1; f <= start + count; f++) for (const name of ['hipL', 'kneeL', 'ankleL', 'heelL', 'toeL']) {
+        k.vis[f * k.names.length + k.names.indexOf(name)] = 1;
+    }
+    await page.evaluate(async record => {
+        for (const key of ['t', 'xy', 'vis']) record.keypoints[key] = Float64Array.from(Object.values(record.keypoints[key]));
+        const store = await import('/e-labs/stride-lab/src/ui/store.js'); await store.saveAnalysis(record);
+    }, record);
+    await page.reload(); // discard the app's pre-mutation history cache
+    await page.getByRole('tab', { name: 'History', exact: true }).click();
+    await page.locator('.sl-histrow').first().getByRole('button', { name: 'Open', exact: true }).click();
+    await expect(page.locator('#sl-stage-player')).toBeVisible();
+    await seek(page, Math.round((start + Math.floor(count / 2)) / (k.n - 1) * 1000));
+    await expect.poll(() => page.locator('#sl-overlay').evaluate(c => Number(c.dataset.poseMasked))).toBeGreaterThanOrEqual(4);
+    const drawn = await page.evaluate(async record => {
+        const original = CanvasRenderingContext2D.prototype.arc, arcs = [];
+        CanvasRenderingContext2D.prototype.arc = function (...args) {
+            if (this.canvas.id === 'sl-overlay') arcs.push(args.slice(0, 2)); return original.apply(this, args);
+        };
+        try {
+            window.dispatchEvent(new Event('resize'));
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            const { contain } = await import('/e-labs/stride-lab/src/ui/overlay.js');
+            const canvas = document.getElementById('sl-overlay'), host = document.getElementById('sl-player').getBoundingClientRect();
+            const k = record.keypoints, xy = Object.values(k.xy), f = Number(canvas.dataset.frame), c = k.names.indexOf('ankleL');
+            const box = contain(k.width, k.height, host.width, host.height);
+            const target = [xy[(f * k.names.length + c) * 2] * box.w, xy[(f * k.names.length + c) * 2 + 1] * box.h];
+            return { count: arcs.length, targetDrawn: arcs.some(p => Math.hypot(p[0] - target[0], p[1] - target[1]) < 0.25) };
+        } finally { CanvasRenderingContext2D.prototype.arc = original; }
+    }, record);
+    expect(drawn.count).toBeGreaterThan(0); expect(drawn.targetDrawn).toBe(false);
+    const persisted = await saved(page);
+    expect(Object.values(persisted.keypoints.vis)).toEqual(Array.from(k.vis));
+    expect(Object.values(persisted.keypoints.xy)).toEqual(Array.from(k.xy));
+    expect(errors).toEqual([]);
+});
+
 for (const delegate of ['GPU', 'CPU']) test(`real treadmill ${delegate}: production inference, playback and honest confidence gates`, async ({ page }, testInfo) => {
     const errors = [];
     await open(page, errors);
@@ -218,6 +265,21 @@ for (const delegate of ['GPU', 'CPU']) test(`real treadmill ${delegate}: product
     const audit = auditTreadmill(record, treadmillReview);
     await testInfo.attach('treadmill-independent-audit', { body: JSON.stringify(audit, null, 2), contentType: 'application/json' });
     await treadmillEvidence(page, record, testInfo);
+    const reliability = await page.evaluate(async record => {
+        const { playbackReliability } = await import('/e-labs/stride-lab/src/ui/pose-reliability.js');
+        const k = record.keypoints;
+        for (const name of ['t', 'xy', 'vis']) k[name] = Float64Array.from(Object.values(k[name]));
+        const r = playbackReliability(k);
+        return { counts: ['L', 'R'].map(s => r.sides[s].reduce((sum, v) => sum + v, 0)),
+            first: Array.from({ length: k.n }, (_, f) => f).find(f => r.sides.L[f] || r.sides.R[f]) ?? -1 };
+    }, record);
+    await testInfo.attach('treadmill-playback-reliability', { body: JSON.stringify(reliability), contentType: 'application/json' });
+    for (const count of reliability.counts) expect(count, 'confidence guard must not discard most of a leg track').toBeLessThan(record.keypoints.n * 0.2);
+    if (reliability.first >= 0) {
+        await seek(page, Math.round(reliability.first / (record.keypoints.n - 1) * 1000));
+        await expect.poll(() => page.locator('#sl-video').evaluate(v => v.seeking)).toBe(false);
+        await expect.poll(() => page.locator('#sl-overlay').evaluate(c => Number(c.dataset.poseMasked))).toBeGreaterThan(0);
+    }
     expect(record.engine.backend).not.toBe('synthetic');
     expect(record.engine.poseWorker, 'the supported browser must run inference off the UI thread').toBe(true);
     const timing = record.engine.processing;

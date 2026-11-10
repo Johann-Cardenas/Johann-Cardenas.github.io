@@ -449,7 +449,7 @@ function drawTrails(g) {
         let started = false;
         for (let k = 0; k < trail.pts.length; k += 2) {
             const x = trail.pts[k] * w, y = trail.pts[k + 1] * h;
-            if (!Number.isFinite(x)) continue;
+            if (!Number.isFinite(x) || !Number.isFinite(y)) { started = false; continue; }
             if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
         }
         ctx.strokeStyle = trail.color || sideColor(theme, trail.side);

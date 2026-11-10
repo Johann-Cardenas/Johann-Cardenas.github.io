@@ -1457,6 +1457,34 @@ joint centers or contacts. Occluded feet remain an explicit limit: these tests
 must not promote withheld scores or 30 fps contact timing into valid numbers.
 No production inference or scoring threshold changed in this iteration.
 
+## D65. Conservative playback masking for transient leg jumps (v1.3.4)
+
+The full pose model can briefly move a knee and its foot toward the other leg
+before returning. A segment-length gate can miss this because the misplaced
+leg remains internally consistent. Playback now computes a private confidence
+mask once per loaded analysis. Knee motion is expressed relative to its hip,
+in source pixels, and normalized by that side's median projected leg length.
+A candidate must depart and return faster than eight leg lengths per second,
+within 50–120 ms, with endpoint motion below four lengths per second. All
+interior samples must deviate more than 20% of a leg length from the endpoint
+chord. Missing observations and camera gaps cannot corroborate the return.
+These are conservative display heuristics, not validated physiological limits.
+
+During a detected interval, the knee and distal foot points are withheld, along
+with coupled per-frame measurement/mechanics annotations. Optional foot and COM
+trails break at the uncertain samples; canvas drawing must not bridge the gap.
+Raw coordinates, stored visibility, scores and numerical engine output remain
+unchanged. Heavy-model recordings from the reviewed treadmill runs were not
+masked; the CPU/full jump near two seconds was detected. Some other foot drift
+is not classified, so this is not a claim of corrected foot-placement accuracy.
+Units and a persisted-analysis browser regression verify both mask behavior and
+actual drawing; the complete treadmill audit continues to examine raw poses.
+Fresh release runs kept all 363 source frames and all six reviewed locations.
+The heavy model had zero masked frames on either delegate. Full/GPU masked
+21 left and 18 right frames; full/CPU masked 15 left and 11 right frames
+(3–6% per leg). All six exact serialized numerical benchmark outputs matched
+the existing engine reference.
+
 ## Open questions the specification left for the human
 
 These were answered with the conservative default and are easy to change.

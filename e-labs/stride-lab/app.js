@@ -16,6 +16,7 @@ import { bandFor } from './src/engine/scoring/norms.js';
 import { scoreValue, scoreAnalysis } from './src/engine/scoring/score.js';
 import { movementTimeline, timelineIndex } from './src/engine/scoring/movement.js';
 import { createPlaybackClock } from './src/ui/playback.js';
+import { playbackReliability, poseTrail } from './src/ui/pose-reliability.js';
 import { EXERCISE_BY_ID } from './src/engine/recommend/exercises.js';
 import { CANONICAL, ASYMMETRY_ATTENTION, ASYMMETRY_NOTABLE, indexAtTime } from './src/engine/types.js';
 import { adaptFrame } from './src/engine/pose/skeleton.js';
@@ -1992,14 +1993,15 @@ function estimateGround(result) {
 function setupPlayer(result, synthetic) {
     stopPlayer();
     S.playing = false;
-    const series = result.series;
+    const reliability = playbackReliability(result.series);
+    const series = { ...result.series, vis: reliability.vis };
     const video = $('sl-video');
     video.pause();
     video.onseeked = video.ontimeupdate = video.onended = null;
     $('sl-play').innerHTML = '<i class="fas fa-play"></i>';
     if (result._internal) result._internal.groundY = estimateGround(result);
     playerState = {
-        result, series, synthetic: !!synthetic,
+        result, series, reliability, synthetic: !!synthetic,
         movement: movementTimeline(result),
         frame: 0,
         n: series ? series.n : 0,
@@ -2210,6 +2212,7 @@ function paintPlayerFrame() {
     }
 
     const tNow = series.t[f];
+    const uncertain = !!(playerState.reliability.sides.L[f] || playerState.reliability.sides.R[f]);
     const near = [...result.events.strikes, ...result.events.toeoffs]
         .map(e => ({ e, d: Math.abs(e.t - tNow) }))
         .sort((a, b) => a.d - b.d)[0];
@@ -2222,15 +2225,15 @@ function paintPlayerFrame() {
     drawOverlay(ctx, {
         xy, vis, w: box.w, h: box.h, theme: playerState.theme,
         layers: currentLayers(),
-        angles: liveAngles(result, f),
-        trails: $('sl-l-trails').checked ? buildTrails(result, f) : null,
-        com: comAt(result, f),
-        readout: $('sl-l-readout').checked ? frameReadout(result, f) : null,
-        phase: phaseAt(result, f),
-        measures: $('sl-l-measures').checked ? measuresAt(result, f) : null,
+        angles: uncertain ? null : liveAngles(result, f),
+        trails: $('sl-l-trails').checked ? buildTrails({ ...result, series }, f, playerState.reliability.sides) : null,
+        com: uncertain ? null : comAt(result, f),
+        readout: !uncertain && $('sl-l-readout').checked ? frameReadout(result, f) : null,
+        phase: uncertain ? null : phaseAt(result, f),
+        measures: !uncertain && $('sl-l-measures').checked ? measuresAt(result, f) : null,
         metersPerPx: metersPerCanvasPx(result, f, box.w),
-        mech: mechAt(result, f),
-        eventLabel: label
+        mech: uncertain ? null : mechAt(result, f),
+        eventLabel: uncertain ? null : label
     });
     ctx.restore();
 
@@ -2238,6 +2241,7 @@ function paintPlayerFrame() {
     canvas.dataset.frame = String(f);
     canvas.dataset.mediaTime = String(tNow);
     canvas.dataset.renderErrors = String(playerState.renderErrors || 0);
+    canvas.dataset.poseMasked = String(playerState.reliability.mask.subarray(f * K, (f + 1) * K).reduce((sum, value) => sum + value, 0));
 
     $('sl-time').textContent = `${tNow.toFixed(3)} s`;
     const movementIndex = timelineIndex(playerState.movement, tNow);
@@ -2546,17 +2550,12 @@ function metersPerCanvasPx(result, frame, boxW) {
     return mpp[frame] * (result.series.width / boxW);
 }
 
-function buildTrails(result, frame) {
+function buildTrails(result, frame, unreliable) {
     const series = result.series;
-    const K = CANONICAL.length;
     const out = [];
     const from = Math.max(0, frame - 75);
     for (const [name, side] of [['toeL', 'L'], ['toeR', 'R']]) {
-        const c = CANONICAL.indexOf(name);
-        const pts = [];
-        for (let f = from; f <= frame; f++) {
-            pts.push(series.xy[(f * K + c) * 2], series.xy[(f * K + c) * 2 + 1]);
-        }
+        const pts = poseTrail(series, name, from, frame);
         out.push({ side, pts });
     }
     /* the center-of-mass path, which is the one trace worth watching */
@@ -2564,6 +2563,7 @@ function buildTrails(result, frame) {
     if (com) {
         const pts = [];
         for (let f = from; f <= frame; f++) {
+            if (unreliable && (unreliable.L[f] || unreliable.R[f])) { pts.push(NaN, NaN); continue; }
             pts.push(
                 (result.capture.mirrored ? (series.width - com.x[f]) : com.x[f]) / series.width,
                 1 - com.y[f] / series.height

@@ -54,6 +54,7 @@ import { smoothTrajectory } from '../src/engine/model/temporal.js';
 import { robustnessTests } from './robustness.mjs';
 import { playbackTests } from './playback.mjs';
 import { treadmillTests } from './treadmill.mjs';
+import { poseReliabilityTests } from './pose-reliability.mjs';
 import { RULES, MAX_FINDINGS, recommend } from '../src/engine/recommend/rules.js';
 import { EXERCISES, EXERCISE_BY_ID } from '../src/engine/recommend/exercises.js';
 import { parseMp4, displaySize, measuredFps } from '../src/engine/decode/mp4.js';
@@ -2200,4 +2201,5 @@ test('oversized sample counts, invalid byte ranges and decode runs are rejected'
 robustnessTests();
 playbackTests();
 treadmillTests();
+poseReliabilityTests();
 summary();

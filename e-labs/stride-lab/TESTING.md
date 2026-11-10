@@ -101,7 +101,7 @@ This gate therefore supports coarse tracking and cadence, not precise joint
 localization. Contact/stride confidence gates must remain in force; a green
 release report is not evidence that every overlaid foot point is correct.
 
-Each browser executes eight scenarios:
+Each browser executes nine scenarios:
 
 1. Synthetic runner through the normal UI: scored values, initial unavailable
    state, deterministic backward seeking, six theme/viewport combinations and
@@ -131,6 +131,22 @@ Each browser executes eight scenarios:
    worker termination, no main-thread model fetch, and a subsequent successful
    analysis. Real treadmill scenarios also require `engine.poseWorker === true`
    so an accidental main-thread fallback cannot silently pass the release gate.
+9. Plant a brief rigid-leg jump in a synthetic saved analysis, reload, and open
+   it from History. Require the playback confidence mask and intercept actual
+   canvas arc calls to prove the displaced ankle is not drawn. Verify stored
+   coordinates and visibility remain unchanged. The planted interval has known
+   bracketing observations and a fixed demo seed; random dropout is a separate
+   unit case, not evidence of a measured return.
+
+Playback-confidence units cover malformed buffers before allocation, clean 30–240 fps / 150–210 spm movement,
+camera translation, missing brackets, camera gaps, sustained postures, immutable
+raw observations and gaps in optional trails. Trail drawing must start a new
+subpath after either coordinate becomes unavailable. Fresh treadmill runs also
+attach per-side masked-frame counts, check that less than 20% of a leg track is
+masked, and seek a detected interval to verify the player applies its mask.
+The raw-pose audit and raw visual evidence remain independent of this display
+filter. This heuristic does not certify unflagged foot positions or modify
+the engine's numerical estimates, stored observations or movement scores.
 
 The real-inference cases exercise both 0.5× and 1× playback before and after
 repeated history reopening. Sample the displayed overlay timestamp on animation

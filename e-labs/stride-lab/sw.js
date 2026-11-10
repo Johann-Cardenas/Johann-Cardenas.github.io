@@ -19,7 +19,7 @@
    point of it.
    ============================================================ */
 
-const SHELL = 'stride-lab-shell-v7';
+const SHELL = 'stride-lab-shell-v8';
 const MODELS = 'stride-lab-models-v1';
 
 const SHELL_FILES = [
@@ -61,6 +61,7 @@ const SHELL_FILES = [
     './src/engine/recommend/exercises.js',
     './src/ui/pipeline.js',
     './src/ui/playback.js',
+    './src/ui/pose-reliability.js',
     './src/ui/overlay.js',
     './src/ui/charts.js',
     './src/ui/store.js',
