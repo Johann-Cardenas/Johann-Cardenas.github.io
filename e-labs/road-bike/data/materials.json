@@ -1,0 +1,110 @@
+{
+  "schema": "synapse-materials/1",
+  "status": "Placeholder colours; calibration pending",
+  "materials": [
+    {
+      "id": "paint_white_gloss",
+      "base_color": "#F3F3F0",
+      "metallic": 0,
+      "roughness": 0.3,
+      "confidence": "S",
+      "clearcoat": 1
+    },
+    {
+      "id": "paint_red_gloss",
+      "base_color": "#C41230",
+      "metallic": 0,
+      "roughness": 0.3,
+      "confidence": "S",
+      "clearcoat": 1
+    },
+    {
+      "id": "paint_black_gloss",
+      "base_color": "#0F0F10",
+      "metallic": 0,
+      "roughness": 0.3,
+      "confidence": "S",
+      "clearcoat": 1
+    },
+    {
+      "id": "alu_anodized_black",
+      "base_color": "#1C1C1E",
+      "metallic": 0.8,
+      "roughness": 0.4,
+      "confidence": "S",
+      "clearcoat": 0
+    },
+    {
+      "id": "alu_polished",
+      "base_color": "#D4D6D8",
+      "metallic": 1,
+      "roughness": 0.18,
+      "confidence": "S",
+      "clearcoat": 0
+    },
+    {
+      "id": "alu_rim_black",
+      "base_color": "#151516",
+      "metallic": 0.7,
+      "roughness": 0.45,
+      "confidence": "S",
+      "clearcoat": 0
+    },
+    {
+      "id": "steel_chain",
+      "base_color": "#8C8F93",
+      "metallic": 1,
+      "roughness": 0.35,
+      "confidence": "S",
+      "clearcoat": 0
+    },
+    {
+      "id": "steel_spoke_black",
+      "base_color": "#18181A",
+      "metallic": 0.6,
+      "roughness": 0.4,
+      "confidence": "S",
+      "clearcoat": 0
+    },
+    {
+      "id": "rubber_tire",
+      "base_color": "#151515",
+      "metallic": 0,
+      "roughness": 0.85,
+      "confidence": "S",
+      "clearcoat": 0
+    },
+    {
+      "id": "rubber_pad",
+      "base_color": "#1E1E1E",
+      "metallic": 0,
+      "roughness": 0.9,
+      "confidence": "S",
+      "clearcoat": 0
+    },
+    {
+      "id": "synthetic_saddle",
+      "base_color": "#121212",
+      "metallic": 0,
+      "roughness": 0.55,
+      "confidence": "S",
+      "clearcoat": 0
+    },
+    {
+      "id": "bar_tape",
+      "base_color": "#191919",
+      "metallic": 0,
+      "roughness": 0.75,
+      "confidence": "S",
+      "clearcoat": 0
+    },
+    {
+      "id": "decal_print",
+      "base_color": "#FFFFFF",
+      "metallic": 0,
+      "roughness": 0.35,
+      "confidence": "S",
+      "clearcoat": 0
+    }
+  ]
+}

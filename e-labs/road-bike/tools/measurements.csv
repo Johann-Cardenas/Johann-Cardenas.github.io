@@ -1,0 +1,19 @@
+ID,quantity,value,unit,date,method,confidence
+M01,Wheelbase,,mm,,,M
+M02,Chainstay,,mm,,,M
+M03,BB height and axle heights,,mm,,,M
+M04,Head and seat angles,,deg,,,M
+M05,Head tube length,,mm,,,M
+M06,Stack reach effective top tube,,mm,,,M
+M07,Seat tube C-TTT and C-T,,mm,,,M
+M08,Fork axle-to-crown and rake,,mm,,,M
+M09,Tube sections every 50 mm,,mm,,,M
+M10,Crank length Q-factor chainline,,mm,,,M
+M11,Cassette teeth chain model and wear,,,,,M
+M12,Stem bar and spacer dimensions,,mm,,,M
+M13,Seatpost and saddle dimensions,,mm,,,M
+M14,Tyre wheel dimensions and markings,,mm,,,M
+M15,Clearance with safety margin,,mm,,,M
+M16,Whole bike and component masses,,g,,,M
+M17,Cable routing and lengths,,mm,,,M
+M18,Bottle bosses and cages,,mm,,,M

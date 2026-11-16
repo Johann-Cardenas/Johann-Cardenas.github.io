@@ -1,0 +1,18 @@
+name: Road Bike Project checks
+on:
+  push:
+    paths: ['e-labs/road-bike/**', '.github/workflows/road-bike-checks.yml']
+  pull_request:
+    paths: ['e-labs/road-bike/**', '.github/workflows/road-bike-checks.yml']
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python3 e-labs/road-bike/tools/validate_site.py
+      - run: node --test e-labs/road-bike/tests/*.test.js

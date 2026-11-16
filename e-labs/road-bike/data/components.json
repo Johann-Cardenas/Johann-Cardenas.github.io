@@ -1,0 +1,734 @@
+{
+  "schema": "synapse-components/1",
+  "slots": [
+    {
+      "id": "frameset",
+      "label": "Frameset",
+      "optional": false
+    },
+    {
+      "id": "wheels",
+      "label": "Wheels",
+      "optional": false
+    },
+    {
+      "id": "tires",
+      "label": "Tires",
+      "optional": false
+    },
+    {
+      "id": "crankset",
+      "label": "Crankset",
+      "optional": false
+    },
+    {
+      "id": "cassette",
+      "label": "Cassette",
+      "optional": false
+    },
+    {
+      "id": "rear_derailleur",
+      "label": "Rear Derailleur",
+      "optional": false
+    },
+    {
+      "id": "front_derailleur",
+      "label": "Front Derailleur",
+      "optional": false
+    },
+    {
+      "id": "chain",
+      "label": "Chain",
+      "optional": false
+    },
+    {
+      "id": "brakes",
+      "label": "Brakes",
+      "optional": false
+    },
+    {
+      "id": "stem",
+      "label": "Stem",
+      "optional": false
+    },
+    {
+      "id": "handlebar",
+      "label": "Handlebar",
+      "optional": false
+    },
+    {
+      "id": "shifters",
+      "label": "Shifters",
+      "optional": false
+    },
+    {
+      "id": "tape",
+      "label": "Tape",
+      "optional": false
+    },
+    {
+      "id": "seatpost",
+      "label": "Seatpost",
+      "optional": false
+    },
+    {
+      "id": "saddle",
+      "label": "Saddle",
+      "optional": false
+    },
+    {
+      "id": "pedals",
+      "label": "Pedals",
+      "optional": false
+    },
+    {
+      "id": "cages",
+      "label": "Cages",
+      "optional": true
+    },
+    {
+      "id": "light",
+      "label": "Light",
+      "optional": true
+    },
+    {
+      "id": "aerobar",
+      "label": "Aerobar",
+      "optional": true
+    }
+  ],
+  "default_config": {
+    "frameset": "frameset_synapse_carbon_51_red",
+    "wheels": "wheels_shimano_rs10",
+    "tires": "tires_installed_23c",
+    "crankset": "crank_fsa_gossamer_bb30_50_34",
+    "cassette": "cassette_cs5700_11_28",
+    "rear_derailleur": "rd_5700_ss",
+    "front_derailleur": "fd_5700",
+    "chain": "chain_installed_10s",
+    "brakes": "brakes_br5700",
+    "stem": "stem_installed",
+    "handlebar": "bar_installed",
+    "shifters": "levers_st5700",
+    "tape": "tape_installed",
+    "seatpost": "seatpost_installed",
+    "saddle": "saddle_serfas_155",
+    "pedals": "pedals_spdsl",
+    "cages": "cages_installed",
+    "light": "light_evo1300"
+  },
+  "components": [
+    {
+      "id": "frameset_synapse_carbon_51_red",
+      "slot": "frameset",
+      "name": "Cannondale Synapse Carbon 51 \u00b7 white/red",
+      "status": "installed",
+      "confidence": "C",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {
+        "brake_type": "rim",
+        "front_axle": "QR100",
+        "rear_axle": "QR130",
+        "bb_standard": "BB30-68",
+        "fd_mount": "braze-on",
+        "steerer_mm": 28.6,
+        "seatpost_d_mm": null,
+        "tire_max_mm": null,
+        "brake_reach_mm": null
+      },
+      "requires": [],
+      "notes": "Model year provisional: seller 2011; likely MY2012. Interfaces inferred from generation pending measurement.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "wheels_shimano_rs10",
+      "slot": "wheels",
+      "name": "Shimano WH-RS10 \u00b7 24 mm alloy",
+      "status": "installed",
+      "confidence": "S",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": 1900,
+      "mass_source": "Used-market reference, pair without QR; verify M14/M16",
+      "price_usd": null,
+      "provides": {
+        "freehub": "HG-8/9/10",
+        "rim_internal_mm": 15,
+        "brake_track": "alloy"
+      },
+      "requires": [
+        {
+          "key": "brake_type",
+          "op": "eq",
+          "value": "rim"
+        },
+        {
+          "key": "front_axle",
+          "op": "eq",
+          "value": "QR100"
+        },
+        {
+          "key": "rear_axle",
+          "op": "eq",
+          "value": "QR130"
+        }
+      ],
+      "notes": "",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "wheels_superteam_alloy_track",
+      "slot": "wheels",
+      "name": "Superteam carbon \u00b7 alloy brake track",
+      "status": "candidate",
+      "confidence": "M",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {
+        "freehub": "HG-8/9/10",
+        "rim_internal_mm": null,
+        "brake_track": "alloy"
+      },
+      "requires": [
+        {
+          "key": "brake_type",
+          "op": "eq",
+          "value": "rim"
+        },
+        {
+          "key": "front_axle",
+          "op": "eq",
+          "value": "QR100"
+        },
+        {
+          "key": "rear_axle",
+          "op": "eq",
+          "value": "QR130"
+        }
+      ],
+      "notes": "Candidate concept; exact model, dimensions and interfaces require verification.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "tires_installed_23c",
+      "slot": "tires",
+      "name": "Installed 700 \u00d7 23c tyres",
+      "status": "installed",
+      "confidence": "C",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {
+        "tire_width_mm": 23
+      },
+      "requires": [
+        {
+          "key": "tire_max_mm",
+          "op": "gte",
+          "value": 23
+        }
+      ],
+      "notes": "Brand unverified; likely Vittoria Zaffiro Pro. Inspect recorded rear sidewall damage.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "tires_gp5000_as_tr_25",
+      "slot": "tires",
+      "name": "Continental GP5000 AS TR \u00b7 700 \u00d7 25",
+      "status": "candidate",
+      "confidence": "S",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {
+        "tire_width_mm": 25
+      },
+      "requires": [
+        {
+          "key": "tire_max_mm",
+          "op": "gte",
+          "value": 25,
+          "msg": "Measure safe tyre clearance at crown, calipers and chainstays (M15)."
+        }
+      ],
+      "notes": "",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "crank_fsa_gossamer_bb30_50_34",
+      "slot": "crankset",
+      "name": "FSA Gossamer BB30 \u00b7 50/34",
+      "status": "installed",
+      "confidence": "C",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {
+        "ring_big": 50,
+        "ring_small": 34
+      },
+      "requires": [
+        {
+          "key": "bb_standard",
+          "op": "eq",
+          "value": "BB30-68"
+        }
+      ],
+      "notes": "Crank length to read (M10); non-BB30 reference mass deliberately excluded.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "cassette_cs5700_11_28",
+      "slot": "cassette",
+      "name": "Shimano CS-5700 \u00b7 assumed 11\u201328",
+      "status": "installed",
+      "confidence": "M",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {
+        "cog_min": 11,
+        "cog_max": 28,
+        "cassette_speeds": 10
+      },
+      "requires": [
+        {
+          "key": "freehub",
+          "op": "in",
+          "value": [
+            "HG-8/9/10",
+            "HG-11"
+          ]
+        },
+        {
+          "key": "shifter_speeds",
+          "op": "eq",
+          "value": 10
+        }
+      ],
+      "notes": "Installed range requires tooth count (M11). HG-11 requires 1.85 mm spacer.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "cassette_hg500_11_32",
+      "slot": "cassette",
+      "name": "Shimano CS-HG500-10 \u00b7 11\u201332",
+      "status": "candidate",
+      "confidence": "S",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {
+        "cog_min": 11,
+        "cog_max": 32,
+        "cassette_speeds": 10
+      },
+      "requires": [
+        {
+          "key": "freehub",
+          "op": "in",
+          "value": [
+            "HG-8/9/10",
+            "HG-11"
+          ]
+        },
+        {
+          "key": "shifter_speeds",
+          "op": "eq",
+          "value": 10
+        }
+      ],
+      "notes": "Installed range requires tooth count (M11). HG-11 requires 1.85 mm spacer.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "rd_5700_ss",
+      "slot": "rear_derailleur",
+      "name": "Shimano 105 RD-5700-SS",
+      "status": "installed",
+      "confidence": "C",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": 214,
+      "mass_source": "BikeRadar measured reference",
+      "price_usd": null,
+      "provides": {},
+      "requires": [
+        {
+          "key": "cog_max",
+          "op": "lte",
+          "value": 28,
+          "level": "warn",
+          "msg": "Largest cog exceeds conservative RD-5700-SS 28T rating."
+        },
+        {
+          "key": "capacity_needed",
+          "op": "lte",
+          "value": 33,
+          "level": "warn",
+          "msg": "Required chain-wrap capacity exceeds 33T."
+        },
+        {
+          "key": "shifter_speeds",
+          "op": "eq",
+          "value": 10
+        }
+      ],
+      "notes": "",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "fd_5700",
+      "slot": "front_derailleur",
+      "name": "Shimano 105 FD-5700 \u00b7 braze-on",
+      "status": "installed",
+      "confidence": "S",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": 97,
+      "mass_source": "BikeRadar measured reference",
+      "price_usd": null,
+      "provides": {},
+      "requires": [
+        {
+          "key": "fd_mount",
+          "op": "eq",
+          "value": "braze-on"
+        },
+        {
+          "key": "shifter_speeds",
+          "op": "eq",
+          "value": 10
+        }
+      ],
+      "notes": "",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "chain_installed_10s",
+      "slot": "chain",
+      "name": "Installed 10-speed chain",
+      "status": "installed",
+      "confidence": "M",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {},
+      "requires": [
+        {
+          "key": "cassette_speeds",
+          "op": "eq",
+          "value": 10
+        }
+      ],
+      "notes": "Read plate markings and measure wear M11; no assumed mass.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "brakes_br5700",
+      "slot": "brakes",
+      "name": "Shimano 105 BR-5700 \u00b7 pair",
+      "status": "installed",
+      "confidence": "C",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": 376,
+      "mass_source": "BikeRadar measured reference",
+      "price_usd": null,
+      "provides": {},
+      "requires": [
+        {
+          "key": "brake_type",
+          "op": "eq",
+          "value": "rim"
+        },
+        {
+          "key": "brake_pull",
+          "op": "eq",
+          "value": "road-caliper"
+        },
+        {
+          "key": "brake_reach_mm",
+          "op": "gte",
+          "value": 39
+        }
+      ],
+      "notes": "Verify pad compound, reach and rim wear.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "stem_installed",
+      "slot": "stem",
+      "name": "Installed alloy stem \u00b7 31.8 mm",
+      "status": "installed",
+      "confidence": "M",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {
+        "stem_bar_clamp_mm": 31.8
+      },
+      "requires": [
+        {
+          "key": "steerer_mm",
+          "op": "eq",
+          "value": 28.6
+        }
+      ],
+      "notes": "M12: length, angle, orientation and spacers.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "bar_installed",
+      "slot": "handlebar",
+      "name": "Installed compact drop bar",
+      "status": "installed",
+      "confidence": "M",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {},
+      "requires": [
+        {
+          "key": "stem_bar_clamp_mm",
+          "op": "eq",
+          "value": 31.8
+        }
+      ],
+      "notes": "M12: width, reach, drop and clamp space.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "levers_st5700",
+      "slot": "shifters",
+      "name": "Shimano 105 ST-5700 \u00b7 2 \u00d7 10",
+      "status": "installed",
+      "confidence": "S",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": 484,
+      "mass_source": "BikeRadar measured reference, pair",
+      "price_usd": null,
+      "provides": {
+        "shifter_speeds": 10,
+        "brake_pull": "road-caliper"
+      },
+      "requires": [],
+      "notes": "",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "tape_installed",
+      "slot": "tape",
+      "name": "Installed bar tape",
+      "status": "installed",
+      "confidence": "M",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {},
+      "requires": [],
+      "notes": "",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "seatpost_installed",
+      "slot": "seatpost",
+      "name": "Installed seatpost \u00b7 diameter unverified",
+      "status": "installed",
+      "confidence": "M",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {},
+      "requires": [
+        {
+          "key": "seatpost_d_mm",
+          "op": "eq",
+          "value": 27.2
+        }
+      ],
+      "notes": "M13: read marking; 27.2 mm expected, not confirmed.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "saddle_serfas_155",
+      "slot": "saddle",
+      "name": "Serfas \u00b7 155 mm saddle",
+      "status": "installed",
+      "confidence": "C",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {},
+      "requires": [],
+      "notes": "Model and rail material unverified.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "pedals_spdsl",
+      "slot": "pedals",
+      "name": "Shimano SPD-SL pedals",
+      "status": "installed",
+      "confidence": "L",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {},
+      "requires": [],
+      "notes": "Listing; read model marking.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "cages_installed",
+      "slot": "cages",
+      "name": "Two bottle cages",
+      "status": "installed",
+      "confidence": "C",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {},
+      "requires": [],
+      "notes": "",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "light_evo1300",
+      "slot": "light",
+      "name": "Magicshine EVO 1300 + mount",
+      "status": "installed",
+      "confidence": "C",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {},
+      "requires": [],
+      "notes": "",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    },
+    {
+      "id": "aerobar_redshift_qr",
+      "slot": "aerobar",
+      "name": "Redshift Quick-Release aerobar",
+      "status": "candidate",
+      "confidence": "S",
+      "model": null,
+      "representation": "procedural",
+      "mass_g": null,
+      "mass_source": null,
+      "price_usd": null,
+      "provides": {},
+      "requires": [
+        {
+          "key": "stem_bar_clamp_mm",
+          "op": "eq",
+          "value": 31.8
+        }
+      ],
+      "notes": "Verify uncluttered clamp space beside stem and light mount.",
+      "source": "Project build specification v1.0 (2026-11-16)",
+      "mounts": {
+        "root": "BB_CENTER"
+      }
+    }
+  ]
+}

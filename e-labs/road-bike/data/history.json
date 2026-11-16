@@ -1,0 +1,29 @@
+{
+  "schema": "synapse-history/1",
+  "events": [
+    {
+      "date": null,
+      "title": "Second-hand purchase",
+      "description": "Acquired through eBay. Purchase date to record.",
+      "confidence": "C"
+    },
+    {
+      "date": "2026-10",
+      "title": "529 Garage registration",
+      "description": "Registered through UIUC. Identifiers kept private.",
+      "confidence": "C"
+    },
+    {
+      "date": "2026-10",
+      "title": "Rear tyre inspection required",
+      "description": "Sidewall casing damage noted; replacement status to verify.",
+      "confidence": "M"
+    },
+    {
+      "date": "2026-11",
+      "title": "Front light installed",
+      "description": "Magicshine EVO 1300 on out-front mount.",
+      "confidence": "C"
+    }
+  ]
+}

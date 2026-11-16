@@ -1,0 +1,41 @@
+import json,csv,pathlib
+p=pathlib.Path('e-labs/road-bike'); d=p/'data'
+def save(n,v): (d/n).write_text(json.dumps(v,indent=2)+'\n',encoding='utf-8')
+geometry=dict(schema='synapse-geometry/1',frame='Cannondale Synapse Carbon 51',source='Cannondale MY2012 catalog; provisional values supplied in project specification',source_url='https://issuu.com/cyclelab/docs/cannondale_2012/177',status='Provisional — measurements M01–M08 pending',confidence='S',stack_mm=548,reach_mm=363,head_angle_deg=72,seat_angle_deg=74,head_tube_mm=145,seat_tube_mm=450,chainstay_mm=410,bb_drop_mm=72,fork_rake_mm=50,wheel_radius_mm=334,axes='BB origin; +X forward, +Y up, +Z drive side; millimetres',hardpoints_mm={'BB_CENTER':[0,0,0],'REAR_AXLE':[-403.6,72,0],'FRONT_AXLE':[570.2,72,0],'HT_TOP':[363,548,0],'HT_BOTTOM':[407.8,410.1,0],'ST_TOP':[-124,432.6,0]},discrepancies=['Fork rake: 50 mm in MY2012 catalog versus 45 mm in 2009 manual. Resolve with M01/M08.','Effective top tube: catalog 525 mm versus approximately 520.1 mm from stack/reach and 74° seat angle. Resolve M04/M06.'])
+save('geometry.json',geometry)
+slots=[];parts=[];default={}
+def add(slot,id,name,confidence='M',provides=None,requires=None,mass=None,mass_source=None,candidate=False,notes='',optional=False):
+ if not any(s['id']==slot for s in slots): slots.append(dict(id=slot,label=slot.replace('_',' ').title(),optional=optional))
+ if not candidate: default[slot]=id
+ parts.append(dict(id=id,slot=slot,name=name,status='candidate' if candidate else 'installed',confidence=confidence,model=None,representation='procedural',mass_g=mass,mass_source=mass_source,price_usd=None,provides=provides or {},requires=requires or [],notes=notes,source='Project build specification v1.0 (2026-11-16)',mounts={'root':'BB_CENTER'}))
+def req(k,op,v,**kw): return dict(key=k,op=op,value=v,**kw)
+add('frameset','frameset_synapse_carbon_51_red','Cannondale Synapse Carbon 51 · white/red','C',dict(brake_type='rim',front_axle='QR100',rear_axle='QR130',bb_standard='BB30-68',fd_mount='braze-on',steerer_mm=28.6,seatpost_d_mm=None,tire_max_mm=None,brake_reach_mm=None),notes='Model year provisional: seller 2011; likely MY2012. Interfaces inferred from generation pending measurement.')
+add('wheels','wheels_shimano_rs10','Shimano WH-RS10 · 24 mm alloy','S',dict(freehub='HG-8/9/10',rim_internal_mm=15,brake_track='alloy'),[req('brake_type','eq','rim'),req('front_axle','eq','QR100'),req('rear_axle','eq','QR130')],1900,'Used-market reference, pair without QR; verify M14/M16')
+add('wheels','wheels_superteam_alloy_track','Superteam carbon · alloy brake track','M',dict(freehub='HG-8/9/10',rim_internal_mm=None,brake_track='alloy'),[req('brake_type','eq','rim'),req('front_axle','eq','QR100'),req('rear_axle','eq','QR130')],candidate=True,notes='Candidate concept; exact model, dimensions and interfaces require verification.')
+add('tires','tires_installed_23c','Installed 700 × 23c tyres','C',dict(tire_width_mm=23),[req('tire_max_mm','gte',23)],notes='Brand unverified; likely Vittoria Zaffiro Pro. Inspect recorded rear sidewall damage.')
+add('tires','tires_gp5000_as_tr_25','Continental GP5000 AS TR · 700 × 25','S',dict(tire_width_mm=25),[req('tire_max_mm','gte',25,msg='Measure safe tyre clearance at crown, calipers and chainstays (M15).')],candidate=True)
+add('crankset','crank_fsa_gossamer_bb30_50_34','FSA Gossamer BB30 · 50/34','C',dict(ring_big=50,ring_small=34),[req('bb_standard','eq','BB30-68')],notes='Crank length to read (M10); non-BB30 reference mass deliberately excluded.')
+for id,name,lo,hi,candidate in [('cassette_cs5700_11_28','Shimano CS-5700 · assumed 11–28',11,28,False),('cassette_hg500_11_32','Shimano CS-HG500-10 · 11–32',11,32,True)]:
+ add('cassette',id,name,'S' if candidate else 'M',dict(cog_min=lo,cog_max=hi,cassette_speeds=10),[req('freehub','in',['HG-8/9/10','HG-11']),req('shifter_speeds','eq',10)],candidate=candidate,notes='Installed range requires tooth count (M11). HG-11 requires 1.85 mm spacer.')
+add('rear_derailleur','rd_5700_ss','Shimano 105 RD-5700-SS','C',requires=[req('cog_max','lte',28,level='warn',msg='Largest cog exceeds conservative RD-5700-SS 28T rating.'),req('capacity_needed','lte',33,level='warn',msg='Required chain-wrap capacity exceeds 33T.'),req('shifter_speeds','eq',10)],mass=214,mass_source='BikeRadar measured reference')
+add('front_derailleur','fd_5700','Shimano 105 FD-5700 · braze-on','S',requires=[req('fd_mount','eq','braze-on'),req('shifter_speeds','eq',10)],mass=97,mass_source='BikeRadar measured reference')
+add('chain','chain_installed_10s','Installed 10-speed chain','M',requires=[req('cassette_speeds','eq',10)],notes='Read plate markings and measure wear M11; no assumed mass.')
+add('brakes','brakes_br5700','Shimano 105 BR-5700 · pair','C',requires=[req('brake_type','eq','rim'),req('brake_pull','eq','road-caliper'),req('brake_reach_mm','gte',39)],mass=376,mass_source='BikeRadar measured reference',notes='Verify pad compound, reach and rim wear.')
+add('stem','stem_installed','Installed alloy stem · 31.8 mm','M',dict(stem_bar_clamp_mm=31.8),[req('steerer_mm','eq',28.6)],notes='M12: length, angle, orientation and spacers.')
+add('handlebar','bar_installed','Installed compact drop bar','M',requires=[req('stem_bar_clamp_mm','eq',31.8)],notes='M12: width, reach, drop and clamp space.')
+add('shifters','levers_st5700','Shimano 105 ST-5700 · 2 × 10','S',dict(shifter_speeds=10,brake_pull='road-caliper'),mass=484,mass_source='BikeRadar measured reference, pair')
+add('tape','tape_installed','Installed bar tape','M')
+add('seatpost','seatpost_installed','Installed seatpost · diameter unverified','M',requires=[req('seatpost_d_mm','eq',27.2)],notes='M13: read marking; 27.2 mm expected, not confirmed.')
+add('saddle','saddle_serfas_155','Serfas · 155 mm saddle','C',notes='Model and rail material unverified.')
+add('pedals','pedals_spdsl','Shimano SPD-SL pedals','L',notes='Listing; read model marking.')
+add('cages','cages_installed','Two bottle cages','C',optional=True)
+add('light','light_evo1300','Magicshine EVO 1300 + mount','C',optional=True)
+add('aerobar','aerobar_redshift_qr','Redshift Quick-Release aerobar','S',requires=[req('stem_bar_clamp_mm','eq',31.8)],candidate=True,optional=True,notes='Verify uncluttered clamp space beside stem and light mount.')
+save('components.json',dict(schema='synapse-components/1',slots=slots,default_config=default,components=parts))
+materials=[]
+for id,color,metal,rough in [('paint_white_gloss','#F3F3F0',0,.3),('paint_red_gloss','#C41230',0,.3),('paint_black_gloss','#0F0F10',0,.3),('alu_anodized_black','#1C1C1E',.8,.4),('alu_polished','#D4D6D8',1,.18),('alu_rim_black','#151516',.7,.45),('steel_chain','#8C8F93',1,.35),('steel_spoke_black','#18181A',.6,.4),('rubber_tire','#151515',0,.85),('rubber_pad','#1E1E1E',0,.9),('synthetic_saddle','#121212',0,.55),('bar_tape','#191919',0,.75),('decal_print','#FFFFFF',0,.35)]: materials.append(dict(id=id,base_color=color,metallic=metal,roughness=rough,confidence='S',clearcoat=1 if id.startswith('paint') else 0))
+save('materials.json',dict(schema='synapse-materials/1',status='Placeholder colours; calibration pending',materials=materials))
+save('history.json',dict(schema='synapse-history/1',events=[dict(date=None,title='Second-hand purchase',description='Acquired through eBay. Purchase date to record.',confidence='C'),dict(date='2026-10',title='529 Garage registration',description='Registered through UIUC. Identifiers kept private.',confidence='C'),dict(date='2026-10',title='Rear tyre inspection required',description='Sidewall casing damage noted; replacement status to verify.',confidence='M'),dict(date='2026-11',title='Front light installed',description='Magicshine EVO 1300 on out-front mount.',confidence='C')]))
+save('aero/results.json',dict(schema='synapse-aero/1',status='Not simulated',results=[],notes='No CFD runs exist. No estimates are presented as simulation results.'))
+(d/'cad/bom.csv').write_text('part_number,description,material,mass_g,qty,source,confidence\n',encoding='utf-8')
+(d/'cad/mass_properties.csv').write_text('part_number,mass_g,cog_x_mm,cog_y_mm,cog_z_mm,ixx_kg_m2,iyy_kg_m2,izz_kg_m2,source,confidence\n',encoding='utf-8')
