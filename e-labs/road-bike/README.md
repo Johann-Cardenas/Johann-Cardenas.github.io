@@ -19,3 +19,11 @@ The last command exports `data/cad/design_variables.csv`; `--write` also regener
 CAD BOM/mass CSVs contain headers only until real exports exist. Aero results are empty until actual solver runs and mesh studies exist. No photoreal accuracy, measured fit, structural safety, CFD convergence, Lighthouse score or calibrated paint match is claimed. Detailed GLB hardpoint/material validation is future work; current validation checks files/budgets when model paths are supplied. Keep raw CAD, CFD and identifiers in private storage outside this public repository. `tools/seed_data.py` is initial fixture creation only: rerunning overwrites data.
 
 GitHub Pages uses the repository's existing hosting arrangement. The scoped workflow runs validation and compatibility tests without replacing deployment.
+
+## Visual quality and interaction
+
+Ultra uses up to 3x device pixel ratio (at least 2x supersampling) and device-capped 4096 shadow maps. High and Balanced reduce GPU load. Export produces a 3840-pixel-wide PNG, subject to GPU texture limits. Camera and exploded transitions respect reduced motion; turntable is opt-in. Keyboard: arrow keys orbit, +/- zoom, Home resets, brackets cycle components, Enter selects.
+
+The CAD tab shows the same explicitly labelled procedural proxy. Spec drawings and the aero setup illustration use resolution-independent SVG; the latter is not computed flow. Geometry, paint and component shapes remain provisional.
+
+Visual iteration verified in headless Edge at desktop and 390px mobile sizes: all five tabs load without page errors, mobile has no horizontal overflow, and PNG export completes. Eleven compatibility/state tests and data validation pass. No photoreal accuracy or performance benchmark is claimed.

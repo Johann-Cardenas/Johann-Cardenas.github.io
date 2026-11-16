@@ -2,8 +2,10 @@ import {checkConfig} from './compat.js';
 // Optional slots are removed with slot=none. Invalid URLs return installed configuration.
 export function decodeConfig(hash,catalog){
  const cfg={...catalog.default_config}, slots=new Map(catalog.slots.map(s=>[s.id,s])), parts=new Map(catalog.components.map(p=>[p.id,p]));
+ const seen=new Set();
  const params=new URLSearchParams((hash??'').replace(/^#/,''));
  for(const [slot,id] of params){
+  if(seen.has(slot))return {...catalog.default_config};seen.add(slot);
   const s=slots.get(slot); if(!s)return {...catalog.default_config};
   if(id==='none'&&s.optional){delete cfg[slot];continue;}
   if(parts.get(id)?.slot!==slot)return {...catalog.default_config};cfg[slot]=id;
