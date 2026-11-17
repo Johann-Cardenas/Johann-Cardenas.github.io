@@ -99,7 +99,7 @@
 
 .lp-body {
     display: grid;
-    grid-template-columns: 300px minmax(420px, 1fr) 320px;
+    grid-template-columns: 420px minmax(420px, 1fr) 288px;
     min-height: 640px;
 }
 
@@ -174,6 +174,7 @@
 
 /* ---------- Side panels ---------- */
 .lp-left, .lp-right {
+    min-width: 0;
     background: var(--lp-bg1);
     overflow-y: auto; max-height: 78vh;
 }
@@ -342,7 +343,7 @@
 .lp-gear-params .lp-field { margin: 0; }
 
 /* ---------- Wheels table ---------- */
-.lp-loads-editor { margin-top: 0.1em; }
+.lp-loads-editor { margin-top: 0.1em; overflow-x: auto; }
 .lp-app table.lp-wtable { width: 100%; border-collapse: collapse; }
 .lp-app .lp-wtable th {
     font-size: 0.62em; letter-spacing: 0.04em; text-transform: uppercase;
@@ -357,8 +358,12 @@
     color: var(--lp-accent); white-space: nowrap;
 }
 .lp-app .lp-wtable td input[type="number"] {
+    min-width: 9ch;
+    appearance: textfield;
     padding: 0.28em 0.2em; text-align: right; font-size: 0.74em; border-radius: 5px;
 }
+.lp-app .lp-wtable input::-webkit-inner-spin-button,
+.lp-app .lp-wtable input::-webkit-outer-spin-button { appearance: none; margin: 0; }
 .lp-wdel { min-width: 1.5em; height: 1.6em; font-size: 0.72em; padding: 0; }
 .lp-wfoot {
     font-family: var(--lp-mono); font-size: 0.62em; color: var(--lp-ink3);
@@ -392,7 +397,7 @@
 }
 .lp-check-tool { padding: 0.2em 0.3em; }
 .lp-vp-field {
-    position: absolute; top: 10px; right: 10px; z-index: 5;
+    position: absolute; top: 10px; right: 10px; z-index: 6;
     display: flex; align-items: center; gap: 0.5em;
     background: color-mix(in srgb, var(--lp-bg1) 88%, transparent);
     border: 1px solid var(--lp-line); border-radius: 10px;
@@ -407,7 +412,16 @@
 }
 .lp-vp-field { align-items: stretch; }
 
-#lp-colorbar { position: absolute; right: 12px; top: 64px; z-index: 4; pointer-events: none; }
+.lp-scale-controls {
+    position: absolute; right: 10px; top: 56px; z-index: 5;
+    display: grid; gap: 3px; padding: 7px 9px;
+    background: color-mix(in srgb, var(--lp-bg1) 94%, transparent);
+    border: 1px solid var(--lp-line); border-radius: 8px;
+    font-size: 11px; color: var(--lp-ink2);
+}
+.lp-scale-controls .lp-check { min-height: 24px; }
+#lp-scale-status { font-size: 9px; color: var(--lp-ink3); max-width: 170px; }
+#lp-colorbar { position: absolute; right: 12px; top: 118px; width: 82px; height: 280px; z-index: 4; pointer-events: none; }
 
 /* The two floating control groups sit against opposite edges of the
    VIEWPORT, so what decides whether they collide is the viewport's width
@@ -419,7 +433,8 @@
     /* under the toolbar rather than beside it, and the colorbar under that
        again, so nothing overlaps anything */
     .lp-vp-field { top: 58px; }
-    #lp-colorbar { top: 112px; }
+    .lp-scale-controls { top: 104px; }
+    #lp-colorbar { top: 166px; }
 }
 @container (max-width: 430px) {
     /* narrower than the two can ever be side by side: the field keeps its
@@ -688,14 +703,14 @@
  * mobile URL bar hides.
  */
 @media (max-width: 1280px) {
-    .lp-body { grid-template-columns: 264px minmax(360px, 1fr) 300px; }
+    .lp-body { grid-template-columns: 420px minmax(0, 1fr) 270px; }
     .lp-prof-grid { grid-template-columns: 1fr 1fr; }
 }
 
 /* ---------- Tablet: rail + viewport, right rail below ---------- */
 @media (max-width: 1080px) and (min-width: 720px) {
     .lp-body {
-        grid-template-columns: clamp(240px, 30vw, 300px) minmax(0, 1fr);
+        grid-template-columns: 420px minmax(0, 1fr);
         grid-template-areas:
             "left viewport"
             "right right";

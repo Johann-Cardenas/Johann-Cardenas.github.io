@@ -266,7 +266,13 @@
                                 <div class="lp-fieldpick" id="lp-field"></div>
                                 <input id="lp-alpha" type="range" min="0.15" max="1" step="0.05" value="0.85" title="Contour opacity" />
                             </div>
-                            <canvas id="lp-colorbar" width="82" height="280"></canvas>
+                            <div class="lp-scale-controls">
+                                <label class="lp-check" title="Use the minimum and maximum of the current plane. Unchecked: keep the same global range from critical responses as you move between planes.">
+                                    <input type="checkbox" id="lp-local-scale" /> Local scale
+                                </label>
+                                <span id="lp-scale-status" role="status" title="Global limits use the minimum and maximum of the already computed critical points and fixed depth profiles. They stay fixed between planes. Responses outside those sampled limits use endpoint colors; enable Local scale to inspect them.">Global · critical responses</span>
+                            </div>
+                            <canvas id="lp-colorbar" width="82" height="280" role="img" aria-label="Color scale pending"></canvas>
                             <div class="lp-plan-panel" id="lp-plan-panel">
                                 <div class="lp-plan-head">
                                     <span><i class="fas fa-map"></i> Plan view</span>
@@ -441,6 +447,8 @@
          exists even where a Worker cannot be constructed (file:// origins
          and locked-down browsers both hit that). -->
     <script src="solver.js" defer></script>
+    <script src="contour-scale.js" defer></script>
+    <script src="tire-tread.js" defer></script>
     <script src="app.js" defer></script>
     <script defer>
         document.addEventListener('DOMContentLoaded', function () {

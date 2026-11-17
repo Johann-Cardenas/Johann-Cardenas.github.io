@@ -30,6 +30,16 @@
 })(typeof self !== 'undefined' ? self : this, function () {
     'use strict';
 
+    /* Contour scaling and tire tread live in their own modules, shared with
+     * the CEE 406 port (which imports them as ES modules). Here they are
+     * plain scripts loaded before app.js, or CommonJS under Node. */
+    var LCS = (typeof module === 'object' && module.exports) ? require('./contour-scale.js') : globalThis.LeapsContourScale;
+    var LTT = (typeof module === 'object' && module.exports) ? require('./tire-tread.js') : globalThis.LeapsTireTread;
+    var finiteRange = LCS.finiteRange, rangeKey = LCS.rangeKey, criticalRanges = LCS.criticalRanges,
+        colorPosition = LCS.colorPosition, smoothField = LCS.smoothField;
+    var treadSectors = LTT.treadSectors, tireSurfacePoint = LTT.tireSurfacePoint, treadNormal = LTT.treadNormal,
+        clipTirePolygon = LTT.clipTirePolygon, tireElevation = LTT.tireElevation;
+
     /* =====================================================================
      * NOTATION
      * ---------------------------------------------------------------------
@@ -561,6 +571,32 @@
             h: Math.sqrt(Math.max(R * R - flat * flat, 1)) };
     }
 
+    /* Display bounds must contain the complete gear, independently on each
+     * axis. In particular, tandem spacing has no upper bound tied to the
+     * dual spacing. Keep clearance beyond both the contact and drawn tire. */
+    function gearSceneBounds(box, loads, a, tire, lineX, lineY, ySec) {
+        var x0 = 0, x1 = 0, y0 = 0, y1 = 0;
+        if (loads.length) {
+            x0 = x1 = loads[0].x;
+            y0 = y1 = loads[0].y;
+            loads.forEach(function (w) {
+                x0 = Math.min(x0, w.x); x1 = Math.max(x1, w.x);
+                y0 = Math.min(y0, w.y); y1 = Math.max(y1, w.y);
+            });
+        }
+        var padX = Math.max(3 * a, (tire ? tire.w : 0) + a, lineX + a);
+        var padY = Math.max(4 * a, (tire ? tire.R : 0) + a, lineY + a);
+        var xL = Math.min(box.xL, x0 - padX), xR = Math.max(box.xR, x1 + padX);
+        var yc = y0 / 2 + y1 / 2;
+        var yHalf = Math.max((y1 - y0) / 2 + padY, 0.2 * (xR - xL));
+        return {
+            xL: xL, xR: xR, zMax: box.zMax, df: box.df,
+            zTop: tire ? -(tire.h + tire.R) : 0,
+            y0: Math.min(yc - yHalf, ySec - 60),
+            y1: Math.max(yc + yHalf, ySec + 60)
+        };
+    }
+
     function mulberry32(seed) {
         var t0 = seed >>> 0;
         return function () {
@@ -724,11 +760,12 @@
             settings: {
                 units: 'SI', tol: '1e-6', res: '61x43', autorun: true,
                 showBasin: true, showContour: true, field: 'szz', profField: 'szz',
-                alpha: 0.85, strainAbs: false, solveFor: 'A', view3d: false
+                alpha: 0.85, strainAbs: false, solveFor: 'A', view3d: false, localScale: false
             }
         };
 
         var results = { key: null, user: null, profiles: null, basin: null, grid: null, stats: null, meta: null };
+        var globalScale = { key: null, ranges: null };
         var view = { scale: 0.5, ox: 0, oy: 0 };
         /* The perspective camera. Orthographic, not perspective, because a
          * drawing a reader measures must not foreshorten: parallel is
@@ -872,6 +909,7 @@
             });
             state.points = d.points || [];
             var s = d.settings || {};
+            state.settings.localScale = s.localScale === true;
             for (var k in state.settings) if (s[k] != null) state.settings[k] = s[k];
             if (d.gear) for (var g in gearParams) if (d.gear[g] != null) gearParams[g] = d.gear[g];
             state.layers.forEach(function (L) { L.id = nid(); });
@@ -943,6 +981,7 @@
         function invalidateResults(keep) {
             if (keep) return;
             results = { key: null, user: null, profiles: null, basin: null, grid: null, stats: null, meta: null };
+            contour = null;
             /* A design study is a set of sections around THIS one, so it
                stops being about anything the moment this one changes. It is
                dropped rather than redrawn stale: a curve that still looks
@@ -1386,6 +1425,8 @@
             var myGen = jobGen;
             var main = buildMainJob();
             var grid = buildGridJob(main.box);
+            var scaleKey = rangeKey(main.job, state.settings.res);
+            if (globalScale.key !== scaleKey) globalScale = { key: scaleKey, ranges: null };
 
             var statsMain = '', statsGrid = '';
             function showStats() {
@@ -1465,6 +1506,13 @@
             results.basin = basin;
             results.stats = res.stats;
             results.meta = { aRef: res.aRef, slip: res.slip };
+            // These stations and depth profiles are tied to the loads and
+            // layer interfaces, never the moving plane. Reuse the existing
+            // main solve: a global legend must not add a volume solve.
+            if (!globalScale.ranges) {
+                globalScale.ranges = criticalRanges(res.points, FIELDS);
+                buildContour();
+            }
             renderCards();
             renderLayerTable();
             renderPointsTable();
@@ -2482,7 +2530,7 @@
         function buildContour() {
             contour = null;
             var g = results.grid;
-            if (!g) return;
+            if (!g) { drawColorbar(); return; }
             var f = fieldById(state.settings.field);
             var nx = g.nx, nz = g.nz;
             var vals = new Float64Array(nx * nz);
@@ -2492,32 +2540,31 @@
                 vals[i] = v;
                 if (isFinite(v)) finite.push(v);
             }
-            if (!finite.length) return;
-            finite.sort(function (a, b) { return a - b; });
-            var vmin, vmax, lut;
-            if (f.div) {
-                var m = Math.max(Math.abs(quantile(finite, 0.01)), Math.abs(quantile(finite, 0.99))) || 1;
-                vmin = -m; vmax = m; lut = LUT_DIV;
-            } else {
-                vmin = quantile(finite, 0.01); vmax = quantile(finite, 0.99);
-                if (vmax - vmin < 1e-30) vmax = vmin + 1;
-                lut = LUT_SEQ;
+            var local = finiteRange(finite);
+            var range = state.settings.localScale ? local : globalScale.ranges && globalScale.ranges[f.id];
+            if (!local || !range) { drawColorbar(); return; }
+            var vmin = range.min, vmax = range.max, span = vmax - vmin;
+            var lut = new Uint8Array(256 * 3), baseLut = f.div ? LUT_DIV : LUT_SEQ;
+            for (i = 0; i < 256; i++) {
+                var colorIndex = Math.round(colorPosition(vmin + span * i / 255, range, f.div) * 255) * 3;
+                lut.set(baseLut.slice(colorIndex, colorIndex + 3), i * 3);
             }
             var cnv = doc.createElement('canvas');
-            cnv.width = nx; cnv.height = nz;
+            var raster = smoothField(vals, nx, nz);
+            cnv.width = raster.width; cnv.height = raster.height;
             var ictx = cnv.getContext('2d');
-            var img = ictx.createImageData(nx, nz);
-            for (var j = 0; j < nz; j++) {
-                for (i = 0; i < nx; i++) {
-                    var idx = j * nx + i, v2 = vals[idx];
+            var img = ictx.createImageData(raster.width, raster.height);
+            for (var j = 0; j < raster.height; j++) {
+                for (i = 0; i < raster.width; i++) {
+                    var idx = j * raster.width + i, v2 = raster.values[idx];
                     var o = idx * 4;
                     if (!isFinite(v2)) { img.data[o + 3] = 0; continue; }
-                    var t = clamp((v2 - vmin) / (vmax - vmin), 0, 1);
+                    var t = span ? clamp((v2 - vmin) / span, 0, 1) : 0.5;
                     var li = Math.round(t * 255) * 3;
                     img.data[o] = lut[li]; img.data[o + 1] = lut[li + 1]; img.data[o + 2] = lut[li + 2];
                     /* fade quiet regions so the material shows through and
                      * the stress bulbs carry the visual weight */
-                    var wgt = f.div ? Math.abs(t - 0.5) * 2 : t;
+                    var wgt = f.div ? Math.min(1, Math.abs(v2) / (Math.max(Math.abs(vmin), Math.abs(vmax)) || 1)) : t;
                     img.data[o + 3] = Math.round(255 * (0.08 + 0.92 * Math.pow(wgt, 0.6)));
                 }
             }
@@ -2525,11 +2572,13 @@
 
             /* marching squares iso-lines */
             var NLEV = 9, levels = [];
-            for (var L = 1; L < NLEV; L++) {
+            for (var L = 1; span > 0 && L < NLEV; L++) {
                 var lv = vmin + (vmax - vmin) * L / NLEV;
                 levels.push({ v: lv, segs: marchingSquares(vals, nx, nz, g.xs, g.zs, lv) });
             }
-            contour = { canvas: cnv, vmin: vmin, vmax: vmax, lut: lut, field: f, levels: levels, vals: vals };
+            contour = { canvas: cnv, vmin: vmin, vmax: vmax, lut: lut, field: f, levels: levels, vals: vals,
+                clipped: local.min < vmin - Math.max(Math.abs(vmin), Math.abs(vmax), 1e-30) * 1e-8 ||
+                    local.max > vmax + Math.max(Math.abs(vmin), Math.abs(vmax), 1e-30) * 1e-8 };
             drawColorbar();
         }
 
@@ -2587,59 +2636,51 @@
             var key = mat.tex + '|' + mat.color;
             if (texCache[key]) return texCache[key];
             var c = doc.createElement('canvas');
-            c.width = c.height = 56;
+            c.width = c.height = 128;
             var g = c.getContext('2d');
             var rnd = mulberry32(1234567);
             g.fillStyle = mat.color;
-            g.fillRect(0, 0, 56, 56);
+            g.fillRect(0, 0, 128, 128);
             function shade(hexColor, f) {
                 var r = hex2rgb(hexColor);
                 return 'rgba(' + clamp(r[0] * f, 0, 255) + ',' + clamp(r[1] * f, 0, 255) + ',' + clamp(r[2] * f, 0, 255) + ',';
             }
-            var i, x, y, r;
-            if (mat.tex === 'asphalt') {
-                for (i = 0; i < 90; i++) {
-                    x = rnd() * 56; y = rnd() * 56; r = 0.5 + rnd() * 1.6;
-                    g.fillStyle = shade(mat.color, rnd() < 0.5 ? 0.55 : 1.8) + (0.25 + rnd() * 0.3) + ')';
-                    g.beginPath(); g.arc(x, y, r, 0, 6.3); g.fill();
+            // Baked once per material: fine matrix, angular aggregate and
+            // restrained relief. Wrapping each stone makes the tile seamless.
+            for (var i = 0; i < 1100; i++) {
+                g.fillStyle = shade(mat.color, rnd() < 0.5 ? 0.65 : 1.35) + '0.22)';
+                g.fillRect(rnd() * 128, rnd() * 128, 0.7 + rnd(), 0.7 + rnd());
+            }
+            var spec = AGG[mat.tex] || AGG.soil;
+            var count = mat.tex === 'asphalt' ? 290 : mat.tex === 'soil' ? 180 : 125;
+            for (i = 0; i < count; i++) {
+                var x = rnd() * 128, y = rnd() * 128;
+                var r = (spec.r0 + rnd() * (spec.r1 - spec.r0)) * 0.48;
+                var aspect = 0.45 + rnd() * 0.45, angle = rnd() * Math.PI;
+                var sides = 5 + Math.floor(rnd() * 3), vertices = [];
+                for (var v = 0; v < sides; v++) {
+                    var theta = v / sides * Math.PI * 2, radius = r * (0.7 + rnd() * 0.3);
+                    var vx = radius * Math.cos(theta), vy = radius * Math.sin(theta) * aspect;
+                    vertices.push([vx * Math.cos(angle) - vy * Math.sin(angle), vx * Math.sin(angle) + vy * Math.cos(angle)]);
                 }
-            } else if (mat.tex === 'concrete') {
-                for (i = 0; i < 26; i++) {
-                    x = rnd() * 56; y = rnd() * 56; r = 1.5 + rnd() * 3.4;
-                    g.fillStyle = shade(mat.color, 0.72 + rnd() * 0.2) + '0.5)';
-                    g.beginPath(); g.ellipse(x, y, r, r * (0.6 + rnd() * 0.4), rnd() * 3.1, 0, 6.3); g.fill();
-                }
-                for (i = 0; i < 40; i++) {
-                    g.fillStyle = shade(mat.color, rnd() < 0.5 ? 0.8 : 1.15) + '0.4)';
-                    g.fillRect(rnd() * 56, rnd() * 56, 1, 1);
-                }
-            } else if (mat.tex === 'granular') {
-                for (i = 0; i < 34; i++) {
-                    x = rnd() * 56; y = rnd() * 56; r = 1.4 + rnd() * 2.8;
-                    g.fillStyle = shade(mat.color, 0.75 + rnd() * 0.5) + '0.85)';
-                    g.strokeStyle = shade(mat.color, 0.55) + '0.6)';
-                    g.lineWidth = 0.7;
-                    g.beginPath(); g.ellipse(x, y, r, r * 0.75, rnd() * 3.1, 0, 6.3); g.fill(); g.stroke();
-                }
-            } else if (mat.tex === 'stabilized') {
-                g.strokeStyle = shade(mat.color, 0.7) + '0.35)';
-                g.lineWidth = 1;
-                for (i = -56; i < 112; i += 9) {
-                    g.beginPath(); g.moveTo(i, 0); g.lineTo(i + 56, 56); g.stroke();
-                }
-            } else if (mat.tex === 'rock') {
-                g.strokeStyle = shade(mat.color, 0.6) + '0.4)';
-                g.lineWidth = 1;
-                for (i = -56; i < 112; i += 12) {
-                    g.beginPath(); g.moveTo(i, 0); g.lineTo(i + 56, 56); g.stroke();
-                    g.beginPath(); g.moveTo(i + 56, 0); g.lineTo(i, 56); g.stroke();
-                }
-            } else { /* soil */
-                for (i = 0; i < 46; i++) {
-                    x = rnd() * 56; y = rnd() * 56;
-                    g.fillStyle = shade(mat.color, 0.6 + rnd() * 0.7) + '0.5)';
-                    if (rnd() < 0.6) g.fillRect(x, y, 2 + rnd() * 3, 1);
-                    else { g.beginPath(); g.arc(x, y, 0.9, 0, 6.3); g.fill(); }
+                var tone = spec.lo + rnd() * (spec.hi - spec.lo);
+                for (var dx = -128; dx <= 128; dx += 128) for (var dy = -128; dy <= 128; dy += 128) {
+                    if (x + dx + r < 0 || x + dx - r > 128 || y + dy + r < 0 || y + dy - r > 128) continue;
+                    g.beginPath();
+                    vertices.forEach(function (p, vi) {
+                        if (vi) g.lineTo(x + dx + p[0], y + dy + p[1]);
+                        else g.moveTo(x + dx + p[0], y + dy + p[1]);
+                    });
+                    g.closePath();
+                    g.fillStyle = shade(mat.color, tone) + '0.85)'; g.fill();
+                    g.strokeStyle = shade(mat.color, 0.5) + (spec.edge || 0.12) + ')';
+                    g.lineWidth = 0.65; g.stroke();
+                    if (r > 2) {
+                        g.beginPath();
+                        g.moveTo(x + dx + vertices[0][0], y + dy + vertices[0][1]);
+                        g.lineTo(x + dx + vertices[1][0], y + dy + vertices[1][1]);
+                        g.strokeStyle = shade(mat.color, 1.55) + '0.22)'; g.stroke();
+                    }
                 }
             }
             var pat = ctx.createPattern(c, 'repeat');
@@ -2678,9 +2719,19 @@
         function fitView() {
             if (state.settings.view3d) { fit3(); drawViewport(); return; }
             var box = worldBox();
-            var headroom = 0.22 * box.zMax;
-            var wW = box.xR - box.xL, wH = box.zMax + headroom;
-            var s = Math.min(vpW / wW, vpH / wH) * 0.92;
+            /* The headroom holds the wheel at its true height plus the
+               pressure band and the caption over it, both of which are
+               fixed in pixels, so the scale and the headroom settle
+               together in a couple of passes. */
+            var T = tireGeom(), tireTop = T ? T.h + T.R : 0;
+            var headroom = 0.22 * box.zMax, wW = box.xR - box.xL, wH, s;
+            for (var pass = 0; pass < 3; pass++) {
+                wH = box.zMax + headroom;
+                s = Math.min(vpW / wW, vpH / wH) * 0.92;
+                headroom = Math.max(0.22 * box.zMax, tireTop + 48 / s);
+            }
+            wH = box.zMax + headroom;
+            s = Math.min(vpW / wW, vpH / wH) * 0.92;
             view.scale = s;
             view.ox = vpW / 2;
             view.oy = (vpH - wH * s) / 2 + headroom * s;
@@ -2760,6 +2811,7 @@
             ctx.restore();
         }
 
+        var tireLayer = null;
         function drawLoadSection(G, danger, y0) {
             var cx = G.cx, contactHalf = G.contactHalf;
             var kind = state.loadKind;
@@ -2850,16 +2902,26 @@
              * arrows, because 'uniform' is the assumption every layered-
              * elastic program makes and the one worth showing rather than
              * implying. */
-            /* A cut in the x-z plane runs ACROSS the tread, so what is seen
-             * is the tire's section width against its height, and a real one
-             * is far taller than it is wide. The old cap at 54px drew a
-             * plank as soon as the view was zoomed in at all. Only the
-             * bottom of the wheel is drawn, so this is still a stylization,
-             * but the proportion is now the tire's rather than the cap's. */
-            var tireHalf = Math.max(contactHalf, 10);
-            var tireH = clamp(tireHalf * 1.7, 26, 96);
-            var blockH = clamp(tireHalf * 0.55, 11, 19);
-            var tireBot = y0 - blockH, ty = tireBot - tireH;
+            /* The tire is the 3-D view's tire, seen from this view's camera.
+             * The Section view IS the 3-D camera at azimuth 0 and elevation
+             * 0 - screen x is x, screen down is z - so the wheel here is the
+             * same surface at the same size (tireFit, the loaded flat, four
+             * ribs, three grooves, staggered sipes over both shoulders) lit
+             * by the same rule, light3 and lambert3, from that camera. It
+             * used to be a block drawn to its own proportions, a third as
+             * tall as the wheel it stood for, and a reader moving between
+             * the two views saw two different tires. Where the 3-D view has
+             * no room for a tire neither does this one: the arrows are the
+             * model either way. The block of arrows keeps its place under
+             * the tread, so the wheel stands on the load it applies.
+             *
+             * The 3-D view's section of the wheel - the tread, disc and hub
+             * bands on the cut face - is deliberately not repeated here.
+             * Head-on those bands are a grey slab over the middle of the
+             * tread, which is the one thing this drawing is for. */
+            var T = tireGeom();
+            var blockH = clamp(contactHalf * 0.55, 11, 19);
+            var tireBot = y0 - blockH;
 
             /* the pressure band */
             ctx.fillStyle = rgba('--lp-danger', 0.14);
@@ -2881,44 +2943,86 @@
             }
             ctx.fillStyle = danger;
             roundRect(ctx, cx - contactHalf, y0 - 2, 2 * contactHalf, 4, 1.5); ctx.fill();
+            if (!T) return { top: tireBot };
 
-            /* the tire: tread band, sidewalls, rim */
-            var rad = Math.min(tireHalf * 0.42, 11);
-            var grad = ctx.createLinearGradient(cx - tireHalf, 0, cx + tireHalf, 0);
-            grad.addColorStop(0, '#0e1116');
-            grad.addColorStop(0.22, '#2c323b');
-            grad.addColorStop(0.5, '#4b525d');
-            grad.addColorStop(0.78, '#2c323b');
-            grad.addColorStop(1, '#0e1116');
-            roundRect(ctx, cx - tireHalf, ty, 2 * tireHalf, tireH, rad);
-            ctx.fillStyle = grad; ctx.fill();
-            ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 1; ctx.stroke();
-
-            ctx.save();
-            roundRect(ctx, cx - tireHalf, ty, 2 * tireHalf, tireH, rad); ctx.clip();
-            /* Circumferential grooves, which on a cut across the tread are
-             * the notches in it. No rim: this cut is through the bottom of
-             * the wheel and the rim is above it. */
-            ctx.strokeStyle = 'rgba(0,0,0,0.42)';
-            ctx.lineWidth = Math.max(1.4, tireHalf * 0.055);
-            var grooves = clamp(Math.round(tireHalf / 7), 3, 7);
-            for (var gi = 1; gi < grooves; gi++) {
-                var gx = cx - tireHalf + 2 * tireHalf * gi / grooves;
+            var s2 = view.scale, E = tireElevation(T);
+            var ty = tireBot + E.top * s2, span = tireBot - ty;
+            var L2 = light3(0, 0), dark = '#23262b';
+            function X2(x) { return cx + x * s2; }
+            function Z2(z) { return tireBot + z * s2; }
+            function silhouette() {
                 ctx.beginPath();
-                ctx.moveTo(gx, ty + tireH * 0.72); ctx.lineTo(gx, ty + tireH + 1);
-                ctx.stroke();
+                E.outline.forEach(function (p, i) {
+                    if (i) ctx.lineTo(X2(p[0]), Z2(p[1])); else ctx.moveTo(X2(p[0]), Z2(p[1]));
+                });
+                ctx.closePath();
             }
-            /* the shoulders, where a tire's section turns the corner */
-            var shG = ctx.createLinearGradient(0, ty + tireH * 0.55, 0, ty + tireH);
-            shG.addColorStop(0, 'rgba(0,0,0,0)');
-            shG.addColorStop(1, 'rgba(0,0,0,0.3)');
-            ctx.fillStyle = shG;
-            ctx.fillRect(cx - tireHalf, ty + tireH * 0.55, 2 * tireHalf, tireH * 0.45);
-            ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 1.4;
-            ctx.beginPath();
-            ctx.moveTo(cx - tireHalf + rad, ty + 2.5); ctx.lineTo(cx + tireHalf - rad, ty + 2.5);
-            ctx.stroke();
-            ctx.restore();
+            /* One stop per sector boundary, at the true normal there: the
+               3-D strips are flat-shaded facets, and this is the same light
+               on the same normals with the facets smoothed out. Head-on,
+               that light barely changes from crown to flat, so the tread
+               also darkens as it turns away from the reader (the n_y term):
+               without it a cylinder seen end-on reads as a flat plate. */
+            function ramp(normal, zKey, k) {
+                var g = ctx.createLinearGradient(0, ty, 0, tireBot);
+                E.stops.forEach(function (st) {
+                    var n = st[normal];
+                    g.addColorStop(clamp((Z2(st[zKey]) - ty) / span, 0, 1),
+                        shadeHex(dark, lambert3(n, L2) * k * (0.5 + 0.5 * Math.abs(n[1]))));
+                });
+                return g;
+            }
+            function paintTire() {
+                silhouette();
+                ctx.fillStyle = ramp('center', 'z', 1.12); ctx.fill();
+                ctx.save();
+                silhouette(); ctx.clip();
+                [-1, 1].forEach(function (side) {
+                    var xo = X2(side * T.w), xi = X2(side * 0.8 * T.w);
+                    ctx.fillStyle = ramp(side < 0 ? 'left' : 'right', 'zShoulder', 1);
+                    ctx.fillRect(Math.min(xo, xi), ty, Math.abs(xo - xi), span);
+                });
+                /* the circumferential grooves, which head-on are the channels
+                   running the full height of the tread */
+                if (T.w * s2 > 5) {
+                    ctx.fillStyle = ramp('center', 'z', 0.42);
+                    E.grooves.forEach(function (g) {
+                        ctx.fillRect(X2(g[0]), ty, (g[1] - g[0]) * s2, span);
+                    });
+                }
+                /* the sipes, closing up toward the crown and the flat as the
+                   tread turns away from the reader */
+                var rr2 = T.R * s2;
+                if (rr2 > 24) {
+                    ctx.beginPath();
+                    E.sipes.forEach(function (seg) {
+                        ctx.moveTo(X2(seg[0][0]), Z2(seg[0][1]));
+                        ctx.lineTo(X2(seg[1][0]), Z2(seg[1][1]));
+                    });
+                    ctx.strokeStyle = 'rgba(3,6,10,0.82)';
+                    ctx.lineWidth = clamp(rr2 * 0.012, 0.85, 1.6); ctx.stroke();
+                    ctx.strokeStyle = 'rgba(155,170,185,0.16)'; ctx.lineWidth = 0.5; ctx.stroke();
+                }
+                ctx.restore();
+                silhouette();
+                ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1; ctx.stroke();
+            }
+            /* A wheel off the section plane is faded, and fading each layer
+               on its own lets every groove and sipe show through the tread
+               it is cut into. Paint it whole on a layer and fade that once. */
+            var fade = ctx.globalAlpha;
+            if (fade < 0.999) {
+                var lx = X2(-T.w) - 2, ly = ty - 2;
+                var lw = 2 * T.w * s2 + 4, lh = span + 4;
+                if (!tireLayer) tireLayer = cv.ownerDocument.createElement('canvas');
+                tireLayer.width = Math.max(1, Math.ceil(lw * dpr));
+                tireLayer.height = Math.max(1, Math.ceil(lh * dpr));
+                var main = ctx;
+                ctx = tireLayer.getContext('2d');
+                ctx.setTransform(dpr, 0, 0, dpr, -lx * dpr, -ly * dpr);
+                try { paintTire(); } finally { ctx = main; }
+                ctx.drawImage(tireLayer, lx, ly, tireLayer.width / dpr, tireLayer.height / dpr);
+            } else paintTire();
 
             /* the contact width, dimensioned once so the number in the
                caption has a length on the page to belong to */
@@ -2927,7 +3031,7 @@
                     '2a ' + sig(toDisp('len', 2 * loadA(state.loads[G.wi])), 3) + ' ' + unit('len'),
                     cssVar('--lp-ink2'));
             }
-            return { top: ty, mid: ty + tireH / 2 };
+            return { top: ty, mid: Z2(-T.h) };
         }
 
         /* The interface state, written on the interface. Three words, a
@@ -3140,32 +3244,14 @@
             for (var i = 0; i < ws.length; i++) a = Math.max(a, loadA(ws[i]));
             return tireFit(ws, Math.max(a, 20));
         }
-        function tireTop() {
-            var g = tireGeom();
-            return g ? -(g.h + g.R) : 0;
-        }
-
         function sceneBox() {
-            var box = worldBox();
-            var yc = 0, n = state.loads.length;
-            if (n) {
-                var sy = 0;
-                state.loads.forEach(function (w) { sy += w.y; });
-                yc = sy / n;
-            }
-            var span = box.xR - box.xL;
-            var yExt = 0;
-            state.loads.forEach(function (w) { yExt = Math.max(yExt, Math.abs(w.y - yc)); });
+            var lineX = 0, lineY = 0;
             if (state.loadKind === 'line') {
-                yExt += 0.5 * gearParams.L * Math.abs(Math.sin(gearParams.theta * Math.PI / 180));
+                var th = gearParams.theta * Math.PI / 180;
+                lineX = 0.5 * gearParams.L * Math.abs(Math.cos(th));
+                lineY = 0.5 * gearParams.L * Math.abs(Math.sin(th));
             }
-            var yHalf = clamp(yExt + 4 * maxA(), 0.2 * span, 0.5 * span);
-            return {
-                xL: box.xL, xR: box.xR, zMax: box.zMax, df: box.df,
-                zTop: tireTop(),
-                y0: Math.min(yc - yHalf, state.ySec - 60),
-                y1: Math.max(yc + yHalf, state.ySec + 60)
-            };
+            return gearSceneBounds(worldBox(), state.loads, maxA(), tireGeom(), lineX, lineY, state.ySec);
         }
         /* The projection is affine, which is the whole reason the contour
          * image can be poured onto the cut face with one ctx.transform
@@ -3197,6 +3283,7 @@
             view3.ox = vpW / 2 - sc * (x0 + x1) / 2;
             view3.oy = (vpH - X_RULER_H) / 2 + 6 - sc * (y0 + y1) / 2;
             view3.fitted = true;
+            view3.bounds = sb;
         }
         function poly3(B, pts, fill, stroke, lw) {
             ctx.beginPath();
@@ -3324,8 +3411,17 @@
             var k = lambert3(n, L);
             poly3(B, quad, shadeHex(mat.color, k), null);
             ctx.save();
-            ctx.globalAlpha = uv ? 0.42 : 0.2;
-            poly3(B, quad, texture(mat), null);
+            ctx.globalAlpha = uv ? 0.48 : 0.28;
+            var p0 = P3(B, quad[0][0], quad[0][1], quad[0][2]);
+            var p1 = P3(B, quad[1][0], quad[1][1], quad[1][2]);
+            var p3 = P3(B, quad[3][0], quad[3][1], quad[3][2]);
+            var u = Math.hypot(quad[1][0] - quad[0][0], quad[1][1] - quad[0][1], quad[1][2] - quad[0][2]) / 1.5;
+            var v = Math.hypot(quad[3][0] - quad[0][0], quad[3][1] - quad[0][1], quad[3][2] - quad[0][2]) / 1.5;
+            if (u > 0 && v > 0) {
+                ctx.transform((p1[0] - p0[0]) / u, (p1[1] - p0[1]) / u,
+                    (p3[0] - p0[0]) / v, (p3[1] - p0[1]) / v, p0[0], p0[1]);
+                ctx.fillStyle = texture(mat); ctx.fillRect(0, 0, u, v);
+            }
             ctx.restore();
             if (uv && quality !== 'draft') aggregate3(B, mat, n, L, uv, quad);
             return k;
@@ -3336,7 +3432,7 @@
          * graded aggregate actually looks like: no particle is a circle. */
         function aggregate3(B, mat, n, L, uv, quad) {
             var spec = AGG[mat.tex] || AGG.soil;
-            var pts = aggregateFor(mat.tex, (mat.id || mat.name || 'x').length * 977 + mat.tex.length * 31);
+            var pts = aggregateFor(mat.tex, String(mat.id || mat.name || 'x').length * 977 + mat.tex.length * 31);
             /* how much of the face is on screen decides how many are worth
                drawing: a band two pixels tall gets none */
             var scr = quad.map(function (q) { return P3(B, q[0], q[1], q[2]); });
@@ -3348,19 +3444,35 @@
             var k = lambert3(n, L);
             var sc = view3.scale;
             ctx.save();
+            ctx.beginPath();
+            scr.forEach(function (p, i) { if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); });
+            ctx.closePath(); ctx.clip();
+            var uLen = Math.hypot(quad[1][0] - quad[0][0], quad[1][1] - quad[0][1], quad[1][2] - quad[0][2]) || 1;
+            var vLen = Math.hypot(quad[3][0] - quad[0][0], quad[3][1] - quad[0][1], quad[3][2] - quad[0][2]) || 1;
             for (var i = 0; i < want; i++) {
                 var g = pts[i];
                 var w = uv(g.u, g.v);
                 var c = P3(B, w[0], w[1], w[2]);
                 var rr = g.r * sc;
                 if (rr < 0.55) continue;
-                ctx.fillStyle = shadeHex(mat.color, k * g.k);
+                ctx.fillStyle = shadeHex(mat.color, k * (0.8 + g.k * 0.2));
                 ctx.beginPath();
-                ctx.ellipse(c[0], c[1], rr, rr * g.e, g.rot, 0, 6.3);
+                // Faceted stones lie IN the face rather than screen-space
+                // circles floating across it. The clipping keeps edges clean.
+                for (var vtx = 0; vtx < 7; vtx++) {
+                    var theta = vtx / 7 * Math.PI * 2 + g.rot;
+                    var radius = g.r * (vtx % 2 ? 0.8 : 1);
+                    var du = radius * Math.cos(theta) / uLen;
+                    var dv = radius * Math.sin(theta) * g.e / vLen;
+                    var px = c[0] + du * (scr[1][0] - scr[0][0]) + dv * (scr[3][0] - scr[0][0]);
+                    var py = c[1] + du * (scr[1][1] - scr[0][1]) + dv * (scr[3][1] - scr[0][1]);
+                    if (vtx) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+                }
+                ctx.closePath();
                 ctx.fill();
                 if (spec.edge && rr > 2.2) {
                     ctx.strokeStyle = shadeHex(mat.color, k * 0.5);
-                    ctx.globalAlpha = spec.edge;
+                    ctx.globalAlpha = spec.edge * 0.5;
                     ctx.lineWidth = Math.min(1, rr * 0.18);
                     ctx.stroke();
                     ctx.globalAlpha = 1;
@@ -3386,7 +3498,8 @@
             var R = G.R, halfW = G.w, h = G.h;
             var a = loadA(w);
             var x0 = w.x, y0 = w.y;
-            var N = quality === 'draft' ? 18 : 40;
+            var N = quality === 'draft' ? 24 : 48;
+            var ghostPart = part === 'ghost';
             var dark = '#23262b';
             var scr = view3.scale, rr = R * scr;
             var q = cutY == null ? -2 : clamp((cutY - y0) / R, -2, 2);
@@ -3398,8 +3511,8 @@
              * as the contact it is standing on: the deformation IS the
              * imprint, which is the one place this drawing and the model
              * touch. */
-            function py(t) { return y0 + R * Math.sin(t); }
-            function pz(t) { var z = -h + R * Math.cos(t); return z > 0 ? 0 : z; }
+            function py(t, radius) { return y0 + (radius == null ? R : radius) * Math.sin(t); }
+            function pz(t, radius) { var z = -h + (radius == null ? R : radius) * Math.cos(t); return z > 0 ? 0 : z; }
 
             if (part === 'cut') {
                 if (cutY == null || Math.abs(q) >= 1) return;
@@ -3442,7 +3555,7 @@
             }
 
             /* the shadow, which is what puts the wheel ON the ground */
-            if (quality !== 'draft' && keptY(y0)) {
+            if (!ghostPart && quality !== 'draft' && keptY(y0)) {
                 var c0 = P3(B, x0, y0, 0);
                 ctx.save();
                 ctx.transform(a * 2.1 * B.ex[0], a * 2.1 * B.ex[1],
@@ -3456,7 +3569,7 @@
             }
 
             /* the imprint the model actually applies, under the tire */
-            if (keptY(y0)) {
+            if (!ghostPart && keptY(y0)) {
                 ellipse3(B, x0, y0, a, rgba('--lp-danger', 0.42), null, 0);
                 /* and the dark line of the contact itself, tight to the
                    flat: without it the wheel reads as hovering over its
@@ -3474,45 +3587,66 @@
                 ctx.restore();
             }
 
-            /* ---- the tread, swept around the axle ---- */
-            var GR = [0.26, 0.5, 0.74], GW = 0.055;       /* circumferential grooves */
-            var t0, t1, tm, nrm, k, sinT0, sinT1, i2, gi;
-            for (i2 = 0; i2 < N; i2++) {
-                t0 = i2 / N * 6.283185307; t1 = (i2 + 1) / N * 6.283185307;
-                tm = (t0 + t1) / 2;
-                nrm = [0, Math.sin(tm), Math.cos(tm)];
-                if (nrm[0] * W3[0] + nrm[1] * W3[1] + nrm[2] * W3[2] >= 0) continue;
-                if (!keptY(py(tm))) continue;
-                sinT0 = py(t0); sinT1 = py(t1);
-                k = lambert3(nrm, L);
-                poly3(B, [
-                    [x0 - halfW, sinT0, pz(t0)], [x0 + halfW, sinT0, pz(t0)],
-                    [x0 + halfW, sinT1, pz(t1)], [x0 - halfW, sinT1, pz(t1)]
-                ], shadeHex(dark, k * 1.08), null);
-                /* the grooves, which is what a tread is: without them a
-                   tire is a black doughnut */
-                if (quality !== 'draft' && halfW * scr > 5) {
-                    for (gi = 0; gi < GR.length; gi++) {
-                        var u0 = x0 - halfW + 2 * halfW * (GR[gi] - GW);
-                        var u1 = x0 - halfW + 2 * halfW * (GR[gi] + GW);
-                        poly3(B, [
-                            [u0, sinT0, pz(t0)], [u1, sinT0, pz(t0)],
-                            [u1, sinT1, pz(t1)], [u0, sinT1, pz(t1)]
-                        ], shadeHex(dark, k * 0.6), null);
-                    }
+            /* A continuous tread around the tire, including both shoulders.
+             * Each strip has its own normal: culling a shoulder with the
+             * center band's normal made detail vanish in side-on views. */
+            var sectors = treadSectors(quality === 'draft');
+            function surface(p) {
+                var v = tireSurfacePoint(G, p);
+                return [v[0] + x0, v[1] + y0, v[2]];
+            }
+            function visible(normal) {
+                return normal[0] * W3[0] + normal[1] * W3[1] + normal[2] * W3[2] < -1e-7;
+            }
+            function patch(points, fill) {
+                var polygon = clipTirePolygon(points.map(surface), cutY, keep);
+                if (polygon.length >= 3) poly3(B, polygon, fill, null);
+            }
+            sectors.forEach(function (sector) {
+                var centerNormal = treadNormal(G, sector);
+                var k = lambert3(centerNormal, L);
+                // Paint the far shoulder first and the near one last.
+                var sides = W3[0] > 0 ? [1, 0, -1] : [-1, 0, 1];
+                sides.forEach(function (side) {
+                    var normal = treadNormal(G, sector, side);
+                    if (!visible(normal)) return;
+                    patch(side ? sector.shoulders[side < 0 ? 0 : 1] : sector.center,
+                        shadeHex(dark, lambert3(normal, L) * (side ? 1 : 1.12)));
+                });
+                // Keep the circumferential channels even during an orbit.
+                if (halfW * scr > 5 && visible(centerNormal)) {
+                    sector.grooves.forEach(function (groove) { patch(groove, shadeHex(dark, k * 0.42)); });
                 }
+            });
+            if (quality !== 'draft' && rr > 24) {
+                ctx.beginPath();
+                sectors.forEach(function (sector) {
+                    sector.sipes.forEach(function (sipe) {
+                        for (var j = 1; j < sipe.length; j++) {
+                            var u = (sipe[j - 1][0] + sipe[j][0]) / 2;
+                            if (!visible(treadNormal(G, sector, Math.abs(u) > 0.8 ? Math.sign(u) : 0))) continue;
+                            var a = surface(sipe[j - 1]), b = surface(sipe[j]);
+                            var ka = keptY(a[1]), kb = keptY(b[1]);
+                            if (!ka && !kb) continue;
+                            if (ka !== kb) {
+                                var t = (cutY - a[1]) / (b[1] - a[1]);
+                                var edge = [a[0] + t * (b[0] - a[0]), cutY, a[2] + t * (b[2] - a[2])];
+                                if (!ka) a = edge; else b = edge;
+                            }
+                            var pa = P3(B, a[0], a[1], a[2]), pb = P3(B, b[0], b[1], b[2]);
+                            ctx.moveTo(pa[0], pa[1]); ctx.lineTo(pb[0], pb[1]);
+                        }
+                    });
+                });
+                ctx.strokeStyle = 'rgba(3,6,10,0.82)';
+                ctx.lineWidth = clamp(rr * 0.012, 0.85, 1.6); ctx.stroke();
+                ctx.strokeStyle = 'rgba(155,170,185,0.16)'; ctx.lineWidth = 0.5; ctx.stroke();
             }
 
             /* ---- the sidewall the camera can see ---- */
             var xs = W3[0] > 0 ? x0 - halfW : x0 + halfW;
             var c = P3(B, xs, y0, -h);
-            var a0 = 0, a1 = 6.283185307, whole = true;
-            if (cutY != null && Math.abs(q) <= 1) {
-                var ac = Math.acos(clamp(keep > 0 ? q : -q, -1, 1));
-                a0 = keep > 0 ? -ac : Math.PI - ac;
-                a1 = keep > 0 ? ac : Math.PI + ac;
-                whole = false;
-            }
+            var a0 = 0, a1 = Math.PI * 2, whole = cutY == null;
             function disc(rad, fill, stroke, lw) {
                 ctx.save();
                 ctx.transform(rad * B.ey[0], rad * B.ey[1], rad * B.ez[0], rad * B.ez[1], c[0], c[1]);
@@ -3525,15 +3659,17 @@
             }
             /* the outer sidewall: the profile itself, flat and all */
             function wallPath() {
-                var M = Math.max(N, 28), started = false, i3, t, p;
-                ctx.beginPath();
-                for (i3 = 0; i3 <= M; i3++) {
-                    t = i3 / M * 6.283185307;
-                    if (!keptY(py(t))) { started = false; continue; }
-                    p = P3(B, xs, py(t), pz(t));
-                    if (started) ctx.lineTo(p[0], p[1]);
-                    else { ctx.moveTo(p[0], p[1]); started = true; }
+                var M = Math.max(N, 32), wall = [];
+                for (var i3 = 0; i3 < M; i3++) {
+                    var t = i3 / M * Math.PI * 2;
+                    wall.push([xs, py(t, R * 0.94), pz(t, R * 0.94)]);
                 }
+                wall = clipTirePolygon(wall, cutY, keep);
+                ctx.beginPath();
+                wall.forEach(function (v, i) {
+                    var p = P3(B, v[0], v[1], v[2]);
+                    if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]);
+                });
                 ctx.closePath();
             }
             var kSide = lambert3([W3[0] > 0 ? -1 : 1, 0, 0], L);
@@ -3549,7 +3685,14 @@
             wallPath();
             ctx.fillStyle = sw; ctx.fill();
             ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1; ctx.stroke();
+            // Clip every concentric detail to the same physical cut, rather
+            // than reusing the outer tire's arc angle for smaller rim circles.
+            ctx.save(); wallPath(); ctx.clip();
             if (rr > 10) disc(R * 0.78, null, shadeHex(dark, kSide * 0.65), 1);   /* the bead */
+            if (rr > 30 && quality !== 'draft') {
+                disc(R * 0.88, null, 'rgba(180,195,210,0.12)', 0.8);
+                disc(R * 0.83, null, 'rgba(0,0,0,0.25)', 0.8);
+            }
 
             if (rr > 15) {
                 var rim = ctx.createRadialGradient(
@@ -3558,6 +3701,7 @@
                 rim.addColorStop(0.6, shadeHex('#96a0ac', kSide * 1.02));
                 rim.addColorStop(1, shadeHex('#6d7681', kSide * 0.95));
                 disc(R * 0.62, rim, 'rgba(0,0,0,0.45)', 1);
+                disc(R * 0.59, null, shadeHex('#e1e6eb', kSide), 1.2);
                 disc(R * 0.46, shadeHex('#5f6771', kSide), null, 0);
                 disc(R * 0.16, shadeHex('#c3cad3', kSide * 1.12), 'rgba(0,0,0,0.4)', 1);
                 /* the lugs. Six of them, in the plane of the wheel, which is
@@ -3580,6 +3724,11 @@
                     }
                 }
             }
+
+            ctx.restore();
+            // The ghost carries geometry only: no second shadow, pressure
+            // patch, load tag, or bright contact outline over the result field.
+            if (ghostPart) return;
 
             /* the imprint's own edge, over the flat, so the circle the model
                applies is readable through the wheel standing on it */
@@ -3648,7 +3797,9 @@
 
         function drawScene3D(quality) {
             var sb = sceneBox();
-            if (!view3.fitted) fit3();
+            if (!view3.fitted || ['xL', 'xR', 'y0', 'y1', 'zTop', 'zMax'].some(function (key) {
+                return !view3.bounds || sb[key] !== view3.bounds[key];
+            })) fit3();
             var B = basis3();
             var L3 = light3(view3.az, view3.el);
             var W3 = viewDir3(view3.az, view3.el);
@@ -3683,13 +3834,14 @@
 
             /* ---- the ground grid: this is where x and y get their scale ---- */
             var gstep = niceStep((sb.xR - sb.xL) / 8);
+            var yGstep = niceStep((sb.y1 - sb.y0) / 8);
             ctx.save();
             ctx.globalAlpha = 0.3;
             var gx, gy;
             for (gx = Math.ceil(sb.xL / gstep) * gstep; gx <= sb.xR; gx += gstep) {
                 line3(B, [gx, solidA, 0], [gx, solidB, 0], Math.abs(gx) < 1e-6 ? ink3 : lineC, 1);
             }
-            for (gy = Math.ceil(solidA / gstep) * gstep; gy <= solidB; gy += gstep) {
+            for (gy = Math.ceil(solidA / yGstep) * yGstep; gy <= solidB; gy += yGstep) {
                 line3(B, [sb.xL, gy, 0], [sb.xR, gy, 0], Math.abs(gy) < 1e-6 ? ink3 : lineC, 1);
             }
             ctx.restore();
@@ -3812,7 +3964,7 @@
                 ctx.globalAlpha = Math.min(1, state.settings.alpha * 1.12);
                 ctx.imageSmoothingEnabled = true;
                 ctx.transform(dx * B.ex[0], dx * B.ex[1], dz * B.ez[0], dz * B.ez[1], O[0], O[1]);
-                ctx.drawImage(contour.canvas, 0, 0);
+                ctx.drawImage(contour.canvas, 0, 0, g.nx - 1, g.nz - 1);
                 ctx.restore();
                 ctx.save();
                 ctx.globalAlpha = Math.min(0.45, state.settings.alpha);
@@ -3902,30 +4054,15 @@
                 line3(B, [sb.xL, gy, 0], [sb.xR, gy, 0], lineC, 1);
             }
             ctx.restore();
-            /* and the half of each wheel the cut took away, in phantom */
+            /* The removed tire remains recognizable, but well below the
+             * solid half's contrast. Render it after the pavement so the cut
+             * surface stays readable through it. No duplicate load symbols. */
             if (state.loadKind === 'circle' && G3) {
                 ctx.save();
-                ctx.setLineDash([5, 4]);
-                ctx.globalAlpha = 0.5;
-                ctx.strokeStyle = ink3;
-                ctx.lineWidth = 1.1;
+                ctx.globalAlpha = 0.12;
                 order.forEach(function (o) {
-                    var R = G3.R, aa = loadA(o.w);
-                    var qq = clamp((ySec - o.w.y) / R, -2, 2);
-                    if (Math.abs(qq) >= 1 && (nearIsLow ? o.w.y >= ySec : o.w.y <= ySec)) return;
-                    var cc = P3(B, W3[0] > 0 ? o.w.x - G3.w : o.w.x + G3.w, o.w.y, -G3.h);
-                    var a0 = 0, a1 = 6.283185307;
-                    if (Math.abs(qq) <= 1) {
-                        var ac = Math.acos(clamp(nearIsLow ? -qq : qq, -1, 1));
-                        a0 = nearIsLow ? Math.PI - ac : -ac;
-                        a1 = nearIsLow ? Math.PI + ac : ac;
-                    }
-                    ctx.save();
-                    ctx.transform(R * B.ey[0], R * B.ey[1], R * B.ez[0], R * B.ez[1], cc[0], cc[1]);
-                    ctx.beginPath(); ctx.arc(0, 0, 1, a0, a1);
-                    ctx.restore();
-                    ctx.stroke();
-                    ellipse3(B, o.w.x, o.w.y, aa, null, ink3, 1);
+                    drawTire3(B, o.w, o.wi, L3, W3, quality, ySec,
+                        nearIsLow ? -1 : 1, 'ghost', G3);
                 });
                 ctx.restore();
             } else {
@@ -4025,6 +4162,11 @@
                 ctx.fillStyle = texture(L);
                 ctx.fillRect(xL, yT, xR - xL, yB - yT);
                 ctx.globalAlpha = 1;
+                var relief = ctx.createLinearGradient(0, yT, 0, yB);
+                relief.addColorStop(0, 'rgba(255,255,255,0.1)');
+                relief.addColorStop(0.18, 'rgba(255,255,255,0.015)');
+                relief.addColorStop(1, 'rgba(0,0,0,0.12)');
+                ctx.fillStyle = relief; ctx.fillRect(xL, yT, xR - xL, yB - yT);
             }
 
             /* subgrade fade to void */
@@ -4489,11 +4631,25 @@
         function drawColorbar() {
             var cb = $('lp-colorbar');
             if (!cb) return;
+            var ratio = Math.min(win.devicePixelRatio || 1, 2);
+            if (cb.width !== Math.round(82 * ratio) || cb.height !== Math.round(280 * ratio)) {
+                cb.width = Math.round(82 * ratio); cb.height = Math.round(280 * ratio);
+            }
             var g = cb.getContext('2d');
-            g.clearRect(0, 0, cb.width, cb.height);
+            g.setTransform(ratio, 0, 0, ratio, 0, 0);
+            g.clearRect(0, 0, 82, 280);
+            var status = $('lp-scale-status');
+            status.textContent = state.settings.localScale ? 'Local · current plane' :
+                globalScale.ranges ? 'Global · critical responses' : 'Global · calculating…';
+            if (contour && contour.clipped && !state.settings.localScale) status.textContent += ' · outside range';
+            cb.setAttribute('aria-label', contour ? (state.settings.localScale ? 'Local' : 'Global') + ' scale: ' +
+                sig(toDisp(contour.field.q, contour.vmin), 4) + ' to ' + sig(toDisp(contour.field.q, contour.vmax), 4) +
+                ' ' + unit(contour.field.q) : 'Color scale pending');
             if (!contour || !state.settings.showContour) return;
             var f = contour.field;
-            var x0 = 10, w = 14, y0 = 30, h = cb.height - 56;
+            g.fillStyle = rgba('--lp-bg1', 0.93);
+            roundRect(g, 0, 0, 82, 280, 8); g.fill();
+            var x0 = 10, w = 14, y0 = 30, h = 224;
             for (var i = 0; i < h; i++) {
                 var t = 1 - i / (h - 1);
                 var li = Math.round(t * 255) * 3;
@@ -4511,7 +4667,8 @@
             g.font = '9px ' + monoFont();
             var mid = (contour.vmax + contour.vmin) / 2;
             [[contour.vmax, y0 + 8], [mid, y0 + h / 2 + 3], [contour.vmin, y0 + h - 2]].forEach(function (t2) {
-                g.fillText(sig(toDisp(f.q, t2[0]), 3), x0 + w + 5, t2[1]);
+                var labelValue = Math.abs(t2[0]) < Math.max(Math.abs(contour.vmin), Math.abs(contour.vmax)) * 1e-10 ? 0 : t2[0];
+                g.fillText(sig(toDisp(f.q, labelValue), 3), x0 + w + 5, t2[1]);
                 g.beginPath();
                 g.moveTo(x0 + w, t2[1] - 3); g.lineTo(x0 + w + 3, t2[1] - 3);
                 g.strokeStyle = cssVar('--lp-line'); g.stroke();
@@ -4852,6 +5009,10 @@
                 /* Nothing solves a field nobody is looking at, so turning
                    the overlay back on is what asks for it. */
                 if (state.settings.showContour && !results.grid) scheduleRun();
+            });
+            $('lp-local-scale').addEventListener('change', function (e) {
+                state.settings.localScale = e.target.checked;
+                buildContour(); drawViewport(); saveLocal();
             });
             $('lp-alpha').addEventListener('input', function (e) {
                 state.settings.alpha = parseFloat(e.target.value); drawViewport();
@@ -5850,6 +6011,7 @@
             $('lp-strain-abs').checked = state.settings.strainAbs;
             $('lp-show-basin').checked = state.settings.showBasin;
             $('lp-show-contour').checked = state.settings.showContour;
+            $('lp-local-scale').checked = state.settings.localScale;
             syncViewMode();
             $('lp-alpha').value = state.settings.alpha;
             drawViewport();
@@ -5947,6 +6109,7 @@
         mirrorXPoint: mirrorXPoint,
         viewDir3: viewDir3,
         lambert3: lambert3,
-        tireFit: tireFit
+        tireFit: tireFit,
+        gearSceneBounds: gearSceneBounds
     };
 });
