@@ -1,5 +1,16 @@
 {
   "items": [
+    {
+      "id": "global-scholarships-2026",
+      "title": "How Johann Cardenas, a Peruvian Scholar, Secured a Fully Funded Master's in Civil Engineering at UIUC Through the Fulbright Scholarship",
+      "date": "2026-11-16",
+      "dateDisplay": "Nov 16, 2026",
+      "source": "Global Scholarships",
+      "url": "https://globalscholarships.com/scholarship-posts/johann-cardenas/",
+      "excerpt": "Johann shares his story: from Lima, Peru, the first in his family to attend university, through four years in road construction, to a Fulbright-funded master's at the University of Illinois Urbana-Champaign.",
+      "image": "images/news/global-scholarships-2026.webp",
+      "tags": ["Featured"]
+    },
        {
       "id": "faa-2026",
       "title": "AI prediction models take flight for airfield pavement",
