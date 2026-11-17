@@ -75,7 +75,7 @@ const defs = [
   ['wheels', 'wheels_fulcrum_racing_15c', 'Fulcrum Racing · 622 × 15C alloy', 'installed', 'L', {
     mass_g: 1650, mass_source: 'Racing 5 claim (later C17 generation); the installed 15C rim is older, so approximate',
     provides: { freehub: 'HG-8/9/10', rim_internal_mm: 15, brake_track: 'alloy' }, requires: RIM, url: SRC.racing5,
-    visual: { depth: 24.5, depthRear: 27.5, width: 20.5, spokes: [18, 20], cross: [0, 2], rim: 'alloy_black', hub: 'black', decal: 'RACING', decalColor: '#f4f4f2', decalAccent: '#d0202a', bladed: true },
+    visual: { depth: 24.5, depthRear: 27.5, width: 20.5, spokes: [18, 24], cross: [0, '2:1'], rim: 'alloy_black', hub: 'black', decal: 'RACING', decalColor: '#f4f4f2', decalAccent: '#d0202a', bladed: true },
     perf: { cda_delta_m2: 0 },
     notes: 'Identified from photos: black rim with a white RACING band, ETRTO 622×15C aluminium. Read the model number on the rim (Racing 5 or 7).',
   }],

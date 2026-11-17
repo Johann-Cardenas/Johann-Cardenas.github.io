@@ -314,11 +314,11 @@
     "width": 20.5,
     "spokes": [
      18,
-     20
+     24
     ],
     "cross": [
      0,
-     2
+     "2:1"
     ],
     "rim": "alloy_black",
     "hub": "black",
