@@ -3,6 +3,10 @@
   slices       |U|/U_inf and Cp on the side (z = 0), plan (y = 0.30 m) and wake (x = 0.15 m behind the rear tyre) planes, uint8
   streamlines  RK2 through the time-averaged field from an upstream seed grid; float16 points + uint8 speed
   surface      Cp just off every CAD vertex of the wind-tunnel parts (parts.json order), uint8
+  volume       speed, Cp, |vorticity| and Q on a 16 mm grid round the bike and its wake (tunnel frame,
+               x fastest), uint8 with per-field ranges: scrubbable slices and isosurfaces in the browser
+  profile      time-averaged drag and side force per 16 mm x-slab and drag group (runs with fprof)
+  cases.json   one row per post-processed case, for the yaw sweep
 Run:  python cad/cfd_post.py yaw00_dx8
 """
 
@@ -15,7 +19,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from scipy.ndimage import map_coordinates
+from scipy.ndimage import map_coordinates, gaussian_filter
 
 sys.path.insert(0, str(Path(__file__).parent))
 import wind_tunnel as WT  # noqa: E402
@@ -124,12 +128,61 @@ def main(case_name):
         val = map_coordinates(cp, c, order=1, mode="nearest")
         surf.append({"name": p["name"], "n": len(v), "cp": put(q8(val, *CP_RANGE), 1)})
 
+    # ------------------------------------------------------------------ volume
+    VDX = 0.016
+    vlo = np.array([lo[0] - 1.2, lo[1] - 0.10, lo[2] - 0.30])
+    vhi = np.array([hi[0] + 0.20, hi[1] + 0.15, hi[2] + 0.30])
+    vn = np.maximum(((vhi - vlo) / VDX).astype(int), 2)
+    i0 = np.maximum(np.floor(idx(vlo)).astype(int) - 3, 0)
+    i1 = np.minimum(np.ceil(idx(vhi)).astype(int) + 4, [nx, ny, nz])
+    crop = tuple(slice(a, b) for a, b in zip(i0, i1))
+    uc = u[(slice(None),) + crop] / ulb  # U_inf = 1
+    sol = solid[crop]
+    from scipy.ndimage import binary_dilation
+    near = binary_dilation(sol, iterations=2)
+    g = [np.gradient(uc[a], dx) for a in range(3)]  # g[a][b] = d u_a / d x_b, 1/m with U_inf = 1
+    wx, wy, wz = g[2][1] - g[1][2], g[0][2] - g[2][0], g[1][0] - g[0][1]
+    Uinf = 40 / 3.6
+    wn2 = wx * wx + wy * wy + wz * wz
+    vort = np.sqrt(wn2) * Uinf  # 1/s
+    S2 = sum((0.5 * (g[a][b] + g[b][a])) ** 2 for a in range(3) for b in range(3))
+    Q = 0.5 * (0.5 * wn2 - S2) * Uinf ** 2  # 0.5(|Omega|^2 - |S|^2), 1/s^2
+    del wn2
+    vort[near], Q[near] = 0, 0
+    del g, wx, wy, wz, S2
+    gx, gy, gz = [vlo[a] + (np.arange(vn[a]) + 0.5) * VDX for a in range(3)]
+    Zg, Yg, Xg = np.meshgrid(gz, gy, gx, indexing="ij")  # (nz, ny, nx): x fastest in memory
+    pc = (np.stack([Xg, Yg, Zg], -1).reshape(-1, 3) - origin) / dx - 0.5 - i0
+    def samp(a, sigma=0.7):
+        return map_coordinates(gaussian_filter(a, sigma), pc.T, order=1, mode="nearest").reshape(Zg.shape)
+    vfields = {"speed": (samp(speed[crop]), SPEED_RANGE), "cp": (samp(cp[crop]), CP_RANGE)}
+    vs = samp(vort, 0.9)
+    vfields["vort"] = (vs, (0.0, float(np.percentile(vs[vs > 0], 99.5)) if (vs > 0).any() else 1.0))
+    qs = np.maximum(samp(Q, 1.0), 0)
+    vfields["q"] = (qs, (0.0, float(np.percentile(qs[qs > 0], 99.5)) if (qs > 0).any() else 1.0))
+    vsolid = samp(sol.astype(np.float32), 0) > 0.5
+    volume = {"lo_m": vlo.tolist(), "dx_m": VDX, "n": vn.tolist(), "fields": {}, "solid": put(np.packbits(vsolid.reshape(-1), bitorder="little"), 1)}
+    for k, (a, rng) in vfields.items():
+        volume["fields"][k] = {"range": list(rng), "off": put(q8(a, *rng), 1)}
+    del uc, vort, Q, vfields
+
+    # ------------------------------------------------------------------ drag build-up along the tunnel
+    profile = None
+    if "fprof" in r.files:
+        fp = r["fprof"].astype(np.float64)  # (groups, nx, 3) N, tunnel frame
+        k2 = 2
+        m = fp.shape[1] // k2 * k2
+        fb = fp[:, :m].reshape(fp.shape[0], -1, k2, 3).sum(2)
+        side_b = fb @ R  # back to bike axes per bin for the side force
+        profile = {"x0_m": float(origin[0]), "dx_m": dx * k2, "n": int(fb.shape[1]),
+                   "drag": put((-fb[:, :, 0]).astype(np.float32)), "side": put(side_b[:, :, 2].astype(np.float32))}
+
     hist = r["hist"]
     hist_out = hist[:: max(1, len(hist) // 400), :]
     groups = list(WT.GROUPS)
     out = {"schema": "synapse-cfd/1", "case": case_name, "summary": summary, "validation": VALIDATION,
            "ranges": {"cp": CP_RANGE, "speed": SPEED_RANGE}, "bike_box_m": [lo.tolist(), hi.tolist()], "yaw_R": R.tolist(),
-           "slices": slices, "streamlines": off_pts, "surface": surf, "groups": groups,
+           "slices": slices, "streamlines": off_pts, "surface": surf, "groups": groups, "volume": volume, "profile": profile,
            "history": {"t_s": hist_out[:, 0].tolist(), "drag_N": (-hist_out[:, 1::3][:, :len(groups)].sum(1)).tolist()}}
     while len(blob) % 4:
         blob.append(0)
@@ -138,6 +191,15 @@ def main(case_name):
     dst.mkdir(parents=True, exist_ok=True)
     (dst / f"{case_name}.bin").write_bytes(bytes(blob))
     (dst / f"{case_name}.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
+    cases = []
+    for f in sorted(dst.glob("yaw*_dx*.json")):
+        d = json.loads(f.read_text(encoding="utf-8"))
+        sm = d["summary"]
+        cases.append({"case": d["case"], "yaw_deg": sm["assumptions"]["yaw_deg"], "dx_mm": sm["grid"]["dx_mm"], "CdA_m2": sm["CdA_m2"], "drag_N": sm["drag_N"],
+                      "side_force_N": sm["side_force_N"], "lift_N": sm["lift_N"], "drag_by_group_N": sm["drag_by_group_N"],
+                      "force_by_group_N": sm.get("force_by_group_N"), "profile": bool(d.get("profile"))})
+    cases.sort(key=lambda c: (c["dx_mm"], c["yaw_deg"]))
+    (dst / "cases.json").write_text(json.dumps({"schema": "synapse-cfd-cases/1", "speed_kmh": 40, "cases": cases}, indent=1), encoding="utf-8")
     print(f"{len(off_pts)} streamlines, {len(surf)} surface parts, {len(blob) / 1e6:.2f} MB, CdA {summary['CdA_m2']:.4f}")
 
 

@@ -7,7 +7,7 @@ root (`python -m http.server 8000`) and open `/e-labs/road-bike/`.
 |---|---|
 | Build | Procedural 3D model in the photographed paint; pick parts, paint, tape, fit and pose |
 | CAD | The SolidWorks assembly: 53 parts, each volume- and centroid-checked |
-| Aero | Wind tunnel at 40 km/h: drag by part, surface pressure, animated flow, field planes, ride model |
+| Aero | Wind tunnel at 40 km/h, head-on and in crosswind (yaw): drag by part, surface pressure, animated flow, a cut plane you slide or scan through the flow (speed, pressure, total-pressure loss, vorticity), wake and vortex-core isosurfaces, yaw sweep, drag built up nose to tail, solver convergence, power vs speed |
 | Structure | Abaqus shell model: five ISO 4210-6 load cases and the natural modes; a live beam model beside it |
 | Gearing · Upgrades · Spec | Gear table, interface-checked upgrades, bill of materials |
 
@@ -38,7 +38,7 @@ outside the repo:
 
 ```
 python cad/export.py && python cad/solidworks_build.py
-python cad/wind_tunnel.py --yaw 0 --dx 8 --flows 2.2 --avg 0.8 && python cad/cfd_post.py yaw00_dx8
+for y in 0 5 10 15: python cad/wind_tunnel.py --yaw $y --dx 8 --flows 2.2 --avg 0.8 && python cad/cfd_post.py yaw<yy>_dx8   (~70 min each)
 python cad/fe_prepare.py
 cd %LOCALAPPDATA%\road-bike-cad\build\fe && abaqus cae noGUI=abaqus_frame.py && abaqus job=frame_fe cpus=8 interactive && abaqus python abaqus_extract.py
 python cad/fe_web.py
@@ -48,7 +48,14 @@ python cad/fe_web.py
 
 Lattice Boltzmann D3Q19, regularized BGK with Smagorinsky LES, half-way bounce-back walls and
 momentum-exchange forces per part, numba on the CPU. Standard bike-only assumptions: air at 20 °C,
-40 km/h head-on, free stream (no ground), static wheels; spokes, chain, cables and the rider omitted.
+40 km/h, free stream (no ground), static wheels; spokes, chain, cables and the rider omitted.
+Yaw turns the bike about the vertical axis in the tunnel; side force is reported in the bike frame.
+
+`cad/cfd_post.py` writes, per case: three full-resolution planes, streamlines through the mean
+field, surface Cp at every CAD vertex, a 16 mm volume of speed, Cp, |ω| and the Q criterion round the
+bike and its wake (the browser derives total-pressure loss from it, slices it anywhere and meshes
+isosurfaces with surface nets), and the time-averaged force per 16 mm slab and drag group (drag
+build-up, centre of pressure). `data/cfd/cases.json` indexes the cases for the yaw sweep.
 
 SOLIDWORKS Flow Simulation is installed, but its automation interface on this machine exposes no
 setter for the inflow condition (the parameter export/apply pair drives parametric studies only),
@@ -74,7 +81,7 @@ Edit `tools/build_catalog.mjs`, then `node tools/build_catalog.mjs`; a test fail
 ## Checks
 
 ```
-node --test e-labs/road-bike/tests/*.test.js     # 34 checks: models, catalog, data packs, module syntax
+node --test e-labs/road-bike/tests/*.test.js     # 35 checks: models, catalog, data packs, module syntax
 python e-labs/road-bike/tools/validate_site.py
 python e-labs/road-bike/cad/lbm_check.py 24 9000  # sphere validation of the wind tunnel
 ```

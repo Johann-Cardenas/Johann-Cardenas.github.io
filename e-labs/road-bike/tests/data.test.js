@@ -49,5 +49,26 @@ test('CFD packs (when present): slices, streamlines and surface fields inside th
     const sum = Object.values(s.drag_by_group_N).reduce((a, v) => a + v, 0);
     assert.ok(Math.abs(sum - s.drag_N) < 1e-6 * Math.max(1, s.drag_N), `${f}: groups add up to the total`);
     assert.ok(Math.abs(s.CdA_m2 - 2 * s.drag_N / (1.204 * (40 / 3.6) ** 2)) < 1e-9, `${f}: CdA consistent with drag`);
+    if (doc.volume) {
+      const v = doc.volume, N = v.n[0] * v.n[1] * v.n[2];
+      for (const [k, fl] of Object.entries(v.fields)) assert.ok(fl.off + N <= b.length && fl.range[1] > fl.range[0], `${f} volume.${k}`);
+      assert.ok(v.solid + Math.ceil(N / 8) <= b.length, `${f} volume.solid`);
+    }
+    if (doc.profile) {
+      const p = doc.profile, G = doc.groups.length;
+      for (const k of ['drag', 'side']) assert.ok(p[k] % 4 === 0 && p[k] + G * p.n * 4 <= b.length, `${f} profile.${k}`);
+      const arr = new Float32Array(b.buffer.slice(b.byteOffset + p.drag, b.byteOffset + p.drag + G * p.n * 4));
+      const tot = arr.reduce((a, x) => a + x, 0); // the slabs add up to the reported drag (same averaging window, sampled every step vs every 10th)
+      assert.ok(Math.abs(tot - s.drag_N) < 0.05 * Math.abs(s.drag_N) + 0.5, `${f}: profile ${tot.toFixed(2)} N vs drag ${s.drag_N.toFixed(2)} N`);
+    }
   }
+});
+
+test('CFD case index matches the packs', () => {
+  const dir = new URL('cfd/', D);
+  if (!existsSync(new URL('cases.json', dir))) return;
+  const idx = json('cfd/cases.json');
+  const files = readdirSync(dir).filter((f) => /^yaw\d+_dx[\d.]+\.json$/.test(f)).map((f) => f.replace('.json', ''));
+  assert.deepEqual(idx.cases.map((c) => c.case).sort(), files.sort());
+  for (const c of idx.cases) assert.equal(c.CdA_m2, json(`cfd/${c.case}.json`).summary.CdA_m2, c.case);
 });

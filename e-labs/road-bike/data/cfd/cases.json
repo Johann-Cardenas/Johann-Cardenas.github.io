@@ -1,0 +1,28 @@
+{
+ "schema": "synapse-cfd-cases/1",
+ "speed_kmh": 40,
+ "cases": [
+  {
+   "case": "yaw00_dx8",
+   "yaw_deg": 0.0,
+   "dx_mm": 8.0,
+   "CdA_m2": 0.2556555299508691,
+   "drag_N": 19.00057148523743,
+   "side_force_N": 3.211948194093574,
+   "lift_N": -0.04512746812748425,
+   "drag_by_group_N": {
+    "Frame": -2.9534445190492655,
+    "Fork": 7.993525575600255,
+    "Front wheel": 3.2057778681744686,
+    "Rear wheel": 1.2174351536256005,
+    "Drivetrain": 5.247744212725188,
+    "Cockpit": 1.181291816019864,
+    "Saddle & post": 0.32518200931836444,
+    "Brakes": 0.046410066014206934,
+    "Bottles": 2.736649302808747
+   },
+   "force_by_group_N": null,
+   "profile": false
+  }
+ ]
+}

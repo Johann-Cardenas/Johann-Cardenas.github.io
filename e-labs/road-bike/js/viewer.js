@@ -56,7 +56,7 @@ export function createViewer(canvas, labelLayer, geometry, { onPick = () => {}, 
 
   const overlay = new T.Group(); scene.add(overlay);       // dimensions
   const custom = new T.Group(); scene.add(custom);         // CAD, wind tunnel and Abaqus scenes (labs.js)
-  let animator = null, customPick = null, customFit = null;
+  let animator = null, customPick = null, customFit = null, customStage = null;
   const feGroup = new T.Group(); scene.add(feGroup);       // beam model
   let bike = null, lift = 0, theme = 'light', mode = 'studio', quality = 'high';
   let explodeGoal = 0, explodeNow = 0, isolated = null, selected = null, hovered = null;
@@ -227,8 +227,9 @@ export function createViewer(canvas, labelLayer, geometry, { onPick = () => {}, 
   }
   function syncEdges() { if (!edges || !edges.visible) return; bike.updateMatrixWorld(true); for (const l of edges.children) { l.matrix.copy(l.userData.src.matrixWorld); l.matrixWorld.copy(l.matrix); l.visible = visibleChain(l.userData.src); } }
   function applyTheme() {
-    const dark = theme === 'dark', tech = mode === 'technical' || mode === 'fe';
-    scene.background = new T.Color(dark ? (tech ? 0x15181c : 0x101317) : (tech ? 0xf4f5f7 : 0xe9ecf0));
+    const tunnel = mode === 'custom' && customStage === 'tunnel', dark = theme === 'dark' || tunnel, tech = mode === 'technical' || mode === 'fe';
+    // the wind tunnel always runs on a dark slate stage: pressure colours and streamlines read against it
+    scene.background = new T.Color(tunnel ? (theme === 'dark' ? 0x0d1115 : 0x1a2027) : dark ? (tech ? 0x15181c : 0x101317) : (tech ? 0xf4f5f7 : 0xe9ecf0));
     floor.material.color.set(dark ? 0x2a3038 : 0xffffff); floor.material.opacity = dark ? 0.55 : 1;
     edgeMat.color.set(dark ? 0x0a0c0f : 0x1b1f24);
     clay.color.set(dark ? 0xaab1ba : 0xd9dde2);
@@ -425,10 +426,11 @@ export function createViewer(canvas, labelLayer, geometry, { onPick = () => {}, 
     get info() { return bike?.userData; },
     get lift() { return lift; },
     /** Show a custom scene (CAD, wind tunnel, Abaqus) instead of the bike. animate(dt, t) keeps frames coming. */
-    setCustom(obj, { animate = null, pick = null, fitTo = null } = {}) {
+    setCustom(obj, { animate = null, pick = null, fitTo = null, stage = null } = {}) {
       for (const c of [...custom.children]) { custom.remove(c); }
       if (obj) { obj.position.y = lift; custom.add(obj); }
       animator = animate; customPick = pick; customFit = fitTo;
+      if (customStage !== stage) { customStage = stage; applyTheme(); }
       draw();
     },
     setAO(on) { aoOn = on; draw(); },

@@ -94,6 +94,7 @@ body:not([data-view='build']) .rb-views [data-only~='build'] { display: none; }
 .rb-title { left: 18px; top: 14px; pointer-events: none; display: flex; flex-direction: column; }
 .rb-title b { font-size: 18px; letter-spacing: .02em; font-stretch: 112%; font-weight: 750; }
 .rb-title span { color: var(--ink2); font-size: 12px; }
+body[data-stage='tunnel'] .rb-title b { color: #eef1f4; } body[data-stage='tunnel'] .rb-title span { color: #a9b3be; }
 .rb-views { left: 50%; bottom: 34px; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: calc(100% - 24px);
   background: color-mix(in srgb, var(--bg2) 88%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; box-shadow: var(--shadow); }
 .rb-views button, .rb-views select { font-size: 12px; padding: 4px 8px; }
@@ -239,7 +240,7 @@ svg.chart text { fill: var(--ink2); } svg.chart .ax { stroke: var(--line); } svg
 /* Handhelds: the model fills the screen under one slim header. Nothing is written over it; the
    panel slides in from the right and the view tools pop out beside an icon rail. Sheets start
    closed on every load and are never persisted. */
-@media (max-width: 719.98px), (max-height: 500px) and (orientation: landscape) {
+@media (max-width: 719.98px), (max-width: 1180px) and (pointer: coarse), (max-height: 500px) and (orientation: landscape) {
   :root { --top: 48px; --rail: 44px; }
   #app { grid-template-rows: var(--top) minmax(0, 1fr) auto; }
   .rb-top { grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 6px; padding: 0 6px 0 14px; position: relative; z-index: 40; }

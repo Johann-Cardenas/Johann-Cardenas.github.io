@@ -98,7 +98,8 @@ def main():
     ng = len(GROUPS) + 1
     force = np.zeros((ng, nx + 2, 3), np.float64)
     acc = np.zeros((4, nx + 2, ny + 2, nz + 2), np.float32)
-    n_acc, hist = 0, []
+    fprof = np.zeros((ng - 1, nx, 3), np.float64)  # time-averaged force per lattice x-slab and group (drag build-up, centre of pressure)
+    n_acc, n_prof, hist = 0, 0, []
     k0 = 18.0 * math.sqrt(2.0) * 0.17 ** 2
     fscale = RHO * dx ** 4 / dt ** 2  # lattice force -> N
     t0 = time.time()
@@ -110,6 +111,9 @@ def main():
         fg = force.sum(1) * fscale  # (groups, xyz) in N
         if s % 10 == 0:
             hist.append([s * dt] + fg[1:].reshape(-1).tolist())
+        if s >= avg_from:
+            fprof += force[1:, 1:-1, :]
+            n_prof += 1
         if s >= avg_from and s % 5 == 0:
             lbm.accumulate(f, solid_p, acc)
             n_acc += 1
@@ -138,10 +142,12 @@ def main():
         "drag_N": total, "CdA_m2": 2 * total / (RHO * U * U), "drag_by_group_N": drag,
         "side_force_N": float(gforce_bike[:, 2].sum()), "lift_N": float(gforce[:, 1].sum()),
         "power_W_at_40kmh": total * U,
+        "force_by_group_N": {n: gforce_bike[i].tolist() for i, n in enumerate(names)},  # bike frame [x fwd, y up, z drive side]
     }
+    fprof = fprof * fscale / max(n_prof, 1)
     (case / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
     np.savez_compressed(case / "result.npz", rho=mean[0].astype(np.float16), ux=mean[1].astype(np.float16), uy=mean[2].astype(np.float16),
-                        uz=mean[3].astype(np.float16), solid=solid, part=part.astype(np.uint8), origin=lo_d, dx=dx, ulb=a.ulb, R=R, hist=hist.astype(np.float32))
+                        uz=mean[3].astype(np.float16), solid=solid, part=part.astype(np.uint8), origin=lo_d, dx=dx, ulb=a.ulb, R=R, hist=hist.astype(np.float32), fprof=fprof.astype(np.float32))
     print(json.dumps({k: summary[k] for k in ("drag_N", "CdA_m2", "drag_by_group_N")}, indent=1))
 
 

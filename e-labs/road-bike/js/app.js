@@ -32,7 +32,8 @@ export const slotLabel = (id) => S.catalog.slots.find((s) => s.id === id)?.label
 export const status = (msg) => { $('#status').textContent = msg; $('#sheetStatus').textContent = msg; };
 
 // ---- handheld sheets: one of 'panel' | 'tools' | 'tabs' is open at a time, never persisted ----------
-const HANDHELD = matchMedia('(max-width: 719.98px), (max-height: 500px) and (orientation: landscape)');
+// phones, landscape phones, and touch tablets up to 1180 px: the model gets the whole screen
+const HANDHELD = matchMedia('(max-width: 719.98px), (max-width: 1180px) and (pointer: coarse), (max-height: 500px) and (orientation: landscape)');
 const OPENER = { panel: '#railPanel', tools: '#railTools', tabs: '#tabsBtn' };
 let sheetOpener = null;
 export function setSheet(name = '') {
@@ -89,7 +90,11 @@ export function go(view) {
 // ---- stage --------------------------------------------------------------------------------------
 const toggles = { dims: false, tech: false, spin: false, pedal: false };
 const P = panels.L;
-const panelApi = { redraw: () => S.viewer?.redraw(), render: () => render(), sync: () => syncStage(), groups: {} };
+const panelApi = {
+  redraw: () => S.viewer?.redraw(), render: () => render(), sync: () => syncStage(), groups: {},
+  /** Swap the wind-tunnel case (yaw) and keep the camera where it is. */
+  async reloadAero() { const old = P.aero; P.aero = null; P.aeroMissing = false; render(); await syncStage(); old?.dispose(); },
+};
 async function ensure(kind) {
   const theme = document.documentElement.dataset.theme;
   try {
@@ -97,8 +102,14 @@ async function ensure(kind) {
       [P.cad, P.sw] = await Promise.all([cadScene(theme), fetch('data/cad/solidworks.json').then((r) => (r.ok ? r.json() : null)).catch(() => null)]);
       P.cad.setEdges(P.edges); P.cad.setClay(P.clay);
     } else if (kind === 'aero' && !P.aero && !P.aeroMissing) {
+      if (!P.cases.length) P.cases = await fetch('data/cfd/cases.json').then((r) => (r.ok ? r.json() : { cases: [] })).then((j) => j.cases).catch(() => []);
       try { P.aero = await aeroScene(P.aeroCase, theme); } catch { P.aeroMissing = true; }
-      if (P.aero) { for (const [k, on] of Object.entries(P.show)) P.aero.show(k, on); P.aero.setField(P.field); panelApi.groups = await fetch('data/cfd/groups.json').then((r) => r.json()).catch(() => ({})); }
+      if (P.aero) {
+        for (const [k, v] of Object.entries(P.iso)) P.aero.setIso(k, v);
+        for (const [k, on] of Object.entries(P.show)) P.aero.show(k, on);
+        P.aero.setField(P.field); P.aero.highlight(P.group ? panelApi.groups[P.group] : null); panels.applyCut();
+        if (!Object.keys(panelApi.groups).length) panelApi.groups = await fetch('data/cfd/groups.json').then((r) => r.json()).catch(() => ({}));
+      }
     } else if (kind === 'fe' && !P.fe) {
       P.fe = await feScene(theme); P.fe.setScale(P.scale); P.fe.setCase(P.feCase);
     }
@@ -110,6 +121,7 @@ async function syncStage() {
   const view = S.view, beam = view === 'structure' && P.structMode === 'beam';
   const kind = view === 'cad' ? 'cad' : view === 'aero' ? 'aero' : view === 'structure' && !beam ? 'fe' : null;
   $('#legend').hidden = !beam;
+  document.body.dataset.stage = kind === 'aero' ? 'tunnel' : '';
   if (view !== 'build') hideCard();
   if (kind) {
     await ensure(kind);
@@ -117,7 +129,7 @@ async function syncStage() {
     const sc = { cad: P.cad, aero: P.aero, fe: P.fe }[kind];
     if (sc) {
       v.setMode('custom');
-      v.setCustom(sc.group, { animate: (dt, t) => sc.animate(dt, t), fitTo: sc.bounds || sc.group, pick: kind === 'cad' ? (part, how) => { if (how === 'click') { P.part = P.cad.select(part); render(); } } : null });
+      v.setCustom(sc.group, { animate: (dt, t) => sc.animate(dt, t), fitTo: sc.bounds || sc.group, stage: kind === 'aero' ? 'tunnel' : null, pick: kind === 'cad' ? (part, how) => { if (how === 'click') { P.part = P.cad.select(part); render(); } } : null });
       if (lastScene !== kind) { v.preset('quarter'); lastScene = kind; }
     } else { v.setCustom(null); v.setMode('studio'); lastScene = null; }
     if (kind === 'cad' && P.cad) P.cad.replay();
