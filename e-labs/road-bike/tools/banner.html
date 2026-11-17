@@ -5,23 +5,23 @@
      at x >= 890, y <= 180, where the card paints its status badge. -->
 <html><head><meta charset="utf-8"><title>banner</title>
 <style>
-@font-face { font-family: Inter; src: url('../../../assets/fonts/inter-var.woff2') format('woff2'); font-weight: 100 900; }
-@font-face { font-family: Mono; src: url('../../../assets/fonts/jetbrains-mono-var.woff2') format('woff2'); font-weight: 100 800; }
-html, body { margin: 0; width: 1310px; height: 790px; overflow: hidden; background: #e9ecf0; font-family: Inter, sans-serif; }
+@font-face { font-family: Archivo; src: url('../assets/fonts/archivo.woff2') format('woff2'); font-weight: 100 900; font-stretch: 62% 125%; }
+
+html, body { margin: 0; width: 1310px; height: 790px; overflow: hidden; background: #e9ecf0; font-family: Archivo, sans-serif; }
 #wrap { position: relative; width: 1310px; height: 790px; }
 canvas { position: absolute; inset: 0; width: 1310px; height: 790px; }
 #lab { position: absolute; inset: 0; pointer-events: none; }
 .t { position: absolute; left: 56px; top: 50px; color: #17212b; }
-.t small { display: block; font: 600 15px Mono, monospace; letter-spacing: .16em; color: #0b7675; margin-bottom: 10px; }
-.t b { display: block; font-size: 54px; letter-spacing: -.035em; line-height: 1; }
+.t small { display: block; font: 650 15px Archivo, sans-serif; font-stretch: 120%; letter-spacing: .2em; color: #0b7675; margin-bottom: 10px; }
+.t b { display: block; font-size: 58px; font-weight: 800; font-stretch: 112%; letter-spacing: -.01em; line-height: 1; }
 .t span { display: block; font-size: 19px; color: #4d5b6a; margin-top: 10px; }
-.specs { position: absolute; left: 56px; top: 222px; flex-direction: column; gap: 14px; display: flex; font: 500 14px Mono, monospace; color: #4d5b6a; }
+.specs { position: absolute; left: 56px; top: 222px; flex-direction: column; gap: 14px; display: flex; font: 500 14px Archivo, sans-serif; color: #4d5b6a; }
 .specs div { padding: 0 0 0 12px; border-left: 2px solid #18a9a8; }
-.specs b { display: block; font: 600 22px Mono, monospace; color: #17212b; margin-top: 3px; }
+.specs b { display: block; font: 600 22px Archivo, sans-serif; color: #17212b; margin-top: 3px; }
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
 </head><body><div id="wrap"><canvas id="c"></canvas><div id="lab"></div>
-<div class="t"><small>E-LABS / DIGITAL TWIN</small><b>Synapse Carbon</b><span>Every part modelled, every upgrade checked.</span></div>
+<div class="t"><small>E-LABS / DIGITAL TWIN</small><b>Synapse Carbon</b><span>SolidWorks · CFD · Abaqus</span></div>
 <div class="specs" id="specs"></div></div>
 <script type="module">
 import { createViewer } from '../js/viewer.js';
@@ -37,8 +37,8 @@ try {
   v.camera(1.2, 1.43, 3350, [-300, 570, 0]);
   window.v = v;
   const d = derive(g, { tireWidth: 23, crank: 170 });
-  const parts = cat.components.length, ups = cat.components.filter((p) => p.upgrade).length;
-  document.querySelector('#specs').innerHTML = [['PARTS', parts], ['UPGRADES', ups], ['WHEELBASE', d.wheelbase_mm.toFixed(0) + ' mm'], ['STACK / REACH', `${g.stack_mm} / ${g.reach_mm}`]].map(([k, x]) => `<div>${k}<b>${x}</b></div>`).join('');
+  const [cfd, fe] = await Promise.all(['../data/cfd/yaw00_dx8.json', '../data/fe/frame.json'].map((u) => fetch(u).then((r) => r.json())));
+  document.querySelector('#specs').innerHTML = [['CAD PARTS', '35'], ['CdA · BIKE', cfd.summary.CdA_m2.toFixed(2) + ' m²'], ['FIRST MODE', fe.modes[0].hz.toFixed(0) + ' Hz'], ['STACK / REACH', `${g.stack_mm} / ${g.reach_mm}`]].map(([k, x]) => `<div>${k}<b>${x}</b></div>`).join('');
   await document.fonts.ready;
   setTimeout(() => { window.READY = true; }, 600);
 } catch (e) { window.FAIL = String(e.stack || e); }
