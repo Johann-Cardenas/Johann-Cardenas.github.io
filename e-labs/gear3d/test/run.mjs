@@ -2838,4 +2838,45 @@ test('Airbus derivatives reuse their parent airframes and are marked representat
     assertEqual(new Set(aircraftUnits.map(u=>u.id)).size,aircraftUnits.length,'unique catalog IDs');
 });
 
+group('17. Antonov heavy transports (synced from the CEE 406 port)');
+const antonov = readJson(join(DATA, 'aircraft', 'antonov.json')).units;
+test('Antonov presets keep FAA footprints and loads on separate physical struts', () => {
+    assertEqual(antonov.length, 2, 'An-124 and An-225');
+    for (const u of antonov) {
+        assert(aircraftUnits.some(v => v.id === u.id), `${u.id} is in the library index`);
+        assertEqual(validateUnit(u).errors.length, 0, `${u.id} validates`);
+        const layout = resolveLayout(u);
+        const mains = layout.wheels.filter(w => w.axleId.startsWith('MLG'));
+        assertEqual(layout.wheels.length, u.id === 'an-124' ? 24 : 32, `${u.id} wheel count`);
+        assertEqual(u.gears.filter(g => g.role === 'main').length, u.id === 'an-124' ? 10 : 14, `${u.id} main struts`);
+        assert(u.gears.every(g => g.wheelsAcross === 2 && g.tandemRows === 1), 'no synthetic long bogie beams');
+        const total = u.mtow.value * 9.80665 / 1000;
+        assertClose(layout.wheels.reduce((t, w) => t + w.loadKn, 0), total, 1e-8, 'gross force conserved');
+        assertClose(mains.reduce((t, w) => t + w.loadKn, 0), total * .95, 1e-8, '95% on the mains');
+        assertEqual(JSON.stringify(layout.wheels.filter(w => w.axleId.startsWith('NLG')).map(w => w.y).sort((a, b) => a - b)),
+            JSON.stringify([-1200.15, -400.05, 400.05, 1200.15]), 'nose wheel stations');
+        const patches = computePatches(layout, u);
+        assertEqual(patches.length, layout.wheels.length, 'one patch per wheel');
+        assert(patches.every(p => Number.isFinite(p.patch.area) && p.patch.area > 0), 'finite patches');
+        assertClose(patchTotals(patches).totalLoadKn, total, 1e-8, 'patch load total');
+        assert(existsSync(join(BODIES, `${u.id.toUpperCase()}.glb`)), `${u.id} body is shipped`);
+    }
+});
+test('Antonov limitations remain explicit', () => {
+    const [ruslan, mriya] = antonov;
+    assertEqual(ruslan.wheelbase, 901.5 * 25.4, 'An-124 wheelbase');
+    assertEqual(ruslan.gears[0].tire, '1120x450-19', 'An-124 nose tire');
+    assertEqual(ruslan.gears[2].tire, '1270x510-22', 'An-124 main tire');
+    assert(mriya.assumedFields.some(f => f.startsWith('wheelbase')), 'An-225 wheelbase is declared assumed');
+    assert(mriya.assumedFields.some(f => f.includes('MLG.tire')), 'An-225 main tire is declared assumed');
+    assert(/640000 kg/.test(mriya.notes), 'later 640 t maximum is recorded, not used');
+    assert(antonov.every(u => u.maxTaxiWeight === null), 'taxi weights are unknown, not invented');
+    assert(/'an-124':'AN-124','an-225':'AN-225'/.test(BODY_SOURCE), 'dedicated, non-representative bodies');
+    const manifest = readJson(join(BODIES, 'manifest.json'));
+    for (const id of ['AN-124', 'AN-225']) {
+        assert(manifest[id].width > manifest[id].length, `${id} span stays transverse`);
+        assert(manifest[id].bytes < 1e6, `${id} body stays small`);
+    }
+});
+
 process.exit(summary());

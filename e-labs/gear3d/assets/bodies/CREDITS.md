@@ -202,3 +202,19 @@ body. No new mesh is added and the credits above apply unchanged. Each is
 labelled a representative airframe: fuselage length and nose station match the
 manufacturer, while neo nacelles, sharklets, the A330neo wing and the
 freighter's nose fairing are not modelled.
+
+## Antonov heavy transports
+
+Dedicated GPLv2 FlightGear airframes, with textures and original running gear removed:
+
+| Body | Project and authors | Editable source |
+| --- | --- | --- |
+| AN-124.glb | [FGMEMBERS/An-124](https://github.com/FGMEMBERS/An-124/tree/4633cc1c2a414598c498c7d0bd89d2b3047d539e), Andino, based on the earlier An-225 model; upstream Authors.txt retained | [an124-ac3d-source.zip](sources/an124-ac3d-source.zip) |
+| AN-225.glb | [FGMEMBERS/AN-225-Mrija](https://github.com/FGMEMBERS/AN-225-Mrija/tree/0a6879d2c7777653d5dba1623531ce1f024e2ecd); upstream model readme and author history retained | [an225-ac3d-source.zip](sources/an225-ac3d-source.zip) |
+
+Archives contain original AC3D geometry, setup XML, author records and COPYING.
+Source/model/archive hashes and pinned commits are in
+[scripts/gear3d-body-assets/antonov-sources.json](https://github.com/ictuillinois/CEE-406/blob/main/scripts/gear3d-body-assets/antonov-sources.json).
+Rigid rotation, named-object filtering, triangulation and merging follow the existing
+body pipeline; runtime overlays use uniform length scaling. No texture/livery images
+are redistributed. See the [Antonov review](https://github.com/ictuillinois/CEE-406/blob/main/docs/gear3d-body-review/antonov.md) for engineering assumptions.

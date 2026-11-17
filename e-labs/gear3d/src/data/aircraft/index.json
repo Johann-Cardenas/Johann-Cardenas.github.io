@@ -10,7 +10,8 @@
     "MTOW, taxi weight, tires and pressure refer to the individually documented aircraft configuration.",
     "The 95% main-gear load split is a pavement-design assumption. Body meshes and strut attachments are illustrative, not engineering CAD.",
     "Unknown and generic schematic aircraft do not receive substitute bodies.",
-    "737-600/-700/-900 additions use directly dimensioned Boeing D6-58325-7 Rev C (October 2025) footprints and dedicated variant bodies."
+    "737-600/-700/-900 additions use directly dimensioned Boeing D6-58325-7 Rev C (October 2025) footprints and dedicated variant bodies.",
+    "Antonov entries retain matched FAA pavement reference weights, pressures and main wheel coordinates; provisional nose/airframe fields are explicitly declared, especially for the historical An-225 600 t case."
   ],
   "files": [
     "boeing.json",
@@ -22,7 +23,8 @@
     "boeing-737ng.json",
     "regional-hubs.json",
     "regional-expansion.json",
-    "airbus-derivatives.json"
+    "airbus-derivatives.json",
+    "antonov.json"
   ],
   "$gearCodes": [
     "REMOVED in v1.9. This list was a third hand-maintained copy of the gear",

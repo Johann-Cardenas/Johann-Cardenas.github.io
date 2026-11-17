@@ -570,3 +570,22 @@ the same weight; the footprint pressures are not labelled loaded or unloaded.
 The 95% main-gear split stays an explicit assumption; each unit's notes give
 the manufacturer's own percentage. Bodies are the parent airframes, marked
 representative (DECISIONS D44).
+
+## Antonov heavy transports
+
+`aircraft/antonov.json` adds dedicated An-124 Ruslan and An-225 Mriya FAA
+pavement-reference cases, with 24 and 32 wheels. Main wheel centers, gross mass,
+contact pressure and main allocation come together from FAARFIELD aircraft.xml;
+the source hash and exact coordinates are retained in
+`scripts/gear3d-body-assets/antonov-faarfield.json`. Independent dual-wheel struts
+retain the FAA 5D/7D designations. USACE TSC 13-2 Rev 2 PDF page 34 supplements
+the An-124 wheelbase and nose footprint. An-124 nominal tires follow Antonov's
+qualification agreement DATL-UA/AN-124-2015.
+
+The An-225 uses the older 600 t reference loading case rather than combining
+Antonov's later 640 t maximum with an unmatched pressure. Its wheelbase, shared
+nose footprint and nominal tires remain explicitly provisional in assumedFields.
+Taxi weights are unknown; nose patch pressure inherits the main reference as a
+declared assumption. Dedicated bodies have illustrative attachment/alignment
+values. Per-entry source links and the
+[Antonov review](https://github.com/ictuillinois/CEE-406/blob/main/docs/gear3d-body-review/antonov.md) record the limitations.

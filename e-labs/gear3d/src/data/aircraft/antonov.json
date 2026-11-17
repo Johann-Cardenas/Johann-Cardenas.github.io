@@ -1,0 +1,514 @@
+{
+  "schemaVersion": "1.0",
+  "units": [
+    {
+      "schemaVersion": "1.0",
+      "id": "an-124",
+      "domain": "aircraft",
+      "manufacturer": "Antonov",
+      "model": "An-124 Ruslan (398 t FAA reference)",
+      "gearDesignation": "5D",
+      "mtow": {
+        "value": 397995.22856,
+        "unit": "kg",
+        "basis": "FAA FAARFIELD aircraft.xml, An-124: gross reference weight 397995.22856 kg, main-gear fraction 0.95, contact pressure 1337.5834399999999 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software Reference gross weight used by the pavement model; not a claim about every certified weight variant."
+      },
+      "maxTaxiWeight": null,
+      "percentOnMainGear": 95,
+      "wheelbase": 22898.1,
+      "mainGearTrack": 8001.000155029296,
+      "tirePressure": {
+        "value": 1337.5834399999999,
+        "unit": "kPa",
+        "basis": "FAA FAARFIELD aircraft.xml, An-124: gross reference weight 397995.22856 kg, main-gear fraction 0.95, contact pressure 1337.5834399999999 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software FAA contact-pressure input; loaded/unloaded service inflation convention is unspecified."
+      },
+      "assumedFields": [
+        "percentOnMainGear (FAA pavement-design allocation; not a measured CG)",
+        "nose contact pressure (unit main-gear reference pressure applied to all patches)",
+        "bodyFit.noseOffset (source-mesh alignment)",
+        "bodyFit.attachmentHeights (illustrative strut attachments)"
+      ],
+      "gears": [
+        {
+          "id": "NLG-L",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": -800.1,
+          "dualSpacing": 800.1,
+          "tandemSpacing": null,
+          "tire": "1120x450-19",
+          "source": "USACE Military Aircraft Characteristics TSC 13-2 Rev 2, December 2013, PDF page 34: nose wheel pitch 31.50 in, main-centroid wheelbase 901.50 in. Two dual nose struts reconstruct the four wheel centers. https://transportation.erdc.dren.mil/tsmcx/downloads/Military%20Aircraft%20Characteristics%20TSC%2013-2%20Dec%2013%20Rev%202.pdf"
+        },
+        {
+          "id": "NLG-R",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 800.1,
+          "dualSpacing": 800.1,
+          "tandemSpacing": null,
+          "tire": "1120x450-19",
+          "source": "USACE Military Aircraft Characteristics TSC 13-2 Rev 2, December 2013, PDF page 34: nose wheel pitch 31.50 in, main-centroid wheelbase 901.50 in. Two dual nose struts reconstruct the four wheel centers. https://transportation.erdc.dren.mil/tsmcx/downloads/Military%20Aircraft%20Characteristics%20TSC%2013-2%20Dec%2013%20Rev%202.pdf"
+        },
+        {
+          "id": "MLG-L1",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 19479.26,
+          "y": -4000.500077514648,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-124: gross reference weight 397995.22856 kg, main-gear fraction 0.95, contact pressure 1337.5834399999999 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-L2",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 21188.68,
+          "y": -4000.500077514648,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-124: gross reference weight 397995.22856 kg, main-gear fraction 0.95, contact pressure 1337.5834399999999 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-L3",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 22898.1,
+          "y": -4000.500077514648,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-124: gross reference weight 397995.22856 kg, main-gear fraction 0.95, contact pressure 1337.5834399999999 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-L4",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 24607.519999999997,
+          "y": -4000.500077514648,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-124: gross reference weight 397995.22856 kg, main-gear fraction 0.95, contact pressure 1337.5834399999999 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-L5",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 26316.94,
+          "y": -4000.500077514648,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-124: gross reference weight 397995.22856 kg, main-gear fraction 0.95, contact pressure 1337.5834399999999 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-R1",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 19479.26,
+          "y": 4000.500077514648,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-124: gross reference weight 397995.22856 kg, main-gear fraction 0.95, contact pressure 1337.5834399999999 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-R2",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 21188.68,
+          "y": 4000.500077514648,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-124: gross reference weight 397995.22856 kg, main-gear fraction 0.95, contact pressure 1337.5834399999999 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-R3",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 22898.1,
+          "y": 4000.500077514648,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-124: gross reference weight 397995.22856 kg, main-gear fraction 0.95, contact pressure 1337.5834399999999 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-R4",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 24607.519999999997,
+          "y": 4000.500077514648,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-124: gross reference weight 397995.22856 kg, main-gear fraction 0.95, contact pressure 1337.5834399999999 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-R5",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 26316.94,
+          "y": 4000.500077514648,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-124: gross reference weight 397995.22856 kg, main-gear fraction 0.95, contact pressure 1337.5834399999999 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        }
+      ],
+      "bodyFit": {
+        "length": 69100,
+        "noseOffset": 10160,
+        "tailHeight": 21080,
+        "attachmentHeights": {
+          "nose": 2000,
+          "main": 2600
+        },
+        "source": "Antonov published overall dimensions; nose alignment and attachments are illustrative source-mesh fits. https://www.antonov.com/en/history/an-124-ruslan"
+      },
+      "notes": "FAA pavement reference configuration with independent dual-wheel main struts and two dual nose struts. Main wheel centers, reference gross weight and contact pressure are retained together from FAARFIELD; individual struts share main load equally. The 95% main-gear allocation is a design assumption. Taxi weight is unknown. Nose contact pressure uses the main reference pressure as an explicit modeling assumption. USACE main-centroid wheelbase and nose pitch supplement the FAA main footprint. USACE uses a different weight/pressure case; those load values are not mixed into this entry. Nominal tires follow Antonov qualification-test sizes. Dedicated FlightGear airframe overlay is illustrative, not manufacturer CAD or a kneeling/steering simulation.",
+      "sources": [
+        {
+          "id": "faarfield-aclib",
+          "title": "FAARFIELD aircraft library: An-124",
+          "publisher": "U.S. Federal Aviation Administration",
+          "url": "https://www.faa.gov/airports/engineering/design_software",
+          "note": "FAA FAARFIELD aircraft.xml, An-124: gross reference weight 397995.22856 kg, main-gear fraction 0.95, contact pressure 1337.5834399999999 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "faa-5300-7",
+          "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations",
+          "publisher": "U.S. Federal Aviation Administration",
+          "url": "https://www.faa.gov/documentLibrary/media/Order/5300.7.pdf",
+          "note": "Figure 14; 5D classification. Physical struts are modeled separately without changing the FAA designation."
+        },
+        {
+          "id": "antonov",
+          "title": "Antonov Airlines fleet brochure",
+          "publisher": "Antonov",
+          "url": "https://www.antonov.com/en/file/V5hQc2hGrJGRs?inline=1",
+          "note": "Printed page 9: An-225 shares An-124 nose gear; later 640 t maximum is distinct from the FAA reference case."
+        },
+        {
+          "id": "usace",
+          "title": "Military Aircraft Characteristics TSC 13-2 Rev 2",
+          "publisher": "U.S. Army Corps of Engineers",
+          "url": "https://transportation.erdc.dren.mil/tsmcx/downloads/Military%20Aircraft%20Characteristics%20TSC%2013-2%20Dec%2013%20Rev%202.pdf",
+          "note": "PDF page 34: nose pitch and wheelbase only."
+        },
+        {
+          "id": "antonov-tires",
+          "title": "Antonov tyre qualification-test agreement, Appendix 1, DATL-UA/AN-124-2015",
+          "publisher": "Antonov; reproduced in A. Los dissertation",
+          "url": "https://nau.edu.ua/download/specrada/ДИССЕРТАЦИЯ%20-%20Лось.pdf",
+          "note": "Nose 1120x450-19; main 1270x510-22. An-225 applicability is not independently established."
+        }
+      ]
+    },
+    {
+      "schemaVersion": "1.0",
+      "id": "an-225",
+      "domain": "aircraft",
+      "manufacturer": "Antonov",
+      "model": "An-225 Mriya (600 t FAA reference)",
+      "gearDesignation": "7D",
+      "mtow": {
+        "value": 599988.818,
+        "unit": "kg",
+        "basis": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software Reference gross weight used by the pavement model; not a claim about every certified weight variant."
+      },
+      "maxTaxiWeight": null,
+      "percentOnMainGear": 95,
+      "wheelbase": 29300,
+      "mainGearTrack": 8839.200155029297,
+      "tirePressure": {
+        "value": 1116.95112,
+        "unit": "kPa",
+        "basis": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software FAA contact-pressure input; loaded/unloaded service inflation convention is unspecified."
+      },
+      "assumedFields": [
+        "percentOnMainGear (FAA pavement-design allocation; not a measured CG)",
+        "nose contact pressure (unit main-gear reference pressure applied to all patches)",
+        "bodyFit.noseOffset (source-mesh alignment)",
+        "bodyFit.attachmentHeights (illustrative strut attachments)",
+        "wheelbase (provisional 29300 mm; FAA supplies main gear only)",
+        "NLG.dualSpacing and NLG.y (shared An-124 nose gear)",
+        "MLG.tire and NLG.tire (An-124 nominal tire sizes used for the related An-225)"
+      ],
+      "gears": [
+        {
+          "id": "NLG-L",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": -800.1,
+          "dualSpacing": 800.1,
+          "tandemSpacing": null,
+          "tire": "1120x450-19",
+          "source": "Assumed common An-124 nose-gear spacing (800.1 mm dual pitch; 1600.2 mm strut track). Antonov brochure printed page 9 confirms shared nose gear, but does not dimension its footprint. Wheelbase 29300 mm is a provisional alignment assumption, not FAA main-gear data. https://www.antonov.com/en/file/V5hQc2hGrJGRs?inline=1"
+        },
+        {
+          "id": "NLG-R",
+          "role": "nose",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 0,
+          "y": 800.1,
+          "dualSpacing": 800.1,
+          "tandemSpacing": null,
+          "tire": "1120x450-19",
+          "source": "Assumed common An-124 nose-gear spacing (800.1 mm dual pitch; 1600.2 mm strut track). Antonov brochure printed page 9 confirms shared nose gear, but does not dimension its footprint. Wheelbase 29300 mm is a provisional alignment assumption, not FAA main-gear data. https://www.antonov.com/en/file/V5hQc2hGrJGRs?inline=1"
+        },
+        {
+          "id": "MLG-L1",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 24171.74,
+          "y": -4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-L2",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 25881.16,
+          "y": -4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-L3",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 27590.58,
+          "y": -4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-L4",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 29300,
+          "y": -4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-L5",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 31009.42,
+          "y": -4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-L6",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 32718.84,
+          "y": -4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-L7",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 34428.26,
+          "y": -4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-R1",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 24171.74,
+          "y": 4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-R2",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 25881.16,
+          "y": 4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-R3",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 27590.58,
+          "y": 4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-R4",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 29300,
+          "y": 4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-R5",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 31009.42,
+          "y": 4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-R6",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 32718.84,
+          "y": 4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "MLG-R7",
+          "role": "main",
+          "type": "dual",
+          "wheelsAcross": 2,
+          "tandemRows": 1,
+          "x": 34428.26,
+          "y": 4419.600077514649,
+          "dualSpacing": 1000.7600000000002,
+          "tandemSpacing": null,
+          "tire": "1270x510-22",
+          "source": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        }
+      ],
+      "bodyFit": {
+        "length": 84000,
+        "noseOffset": 10140,
+        "tailHeight": 18100,
+        "attachmentHeights": {
+          "nose": 2000,
+          "main": 2600
+        },
+        "source": "Antonov published overall dimensions; nose alignment and attachments are illustrative source-mesh fits. https://www.antonov.com/en/history/an-225-mriya"
+      },
+      "notes": "FAA pavement reference configuration with independent dual-wheel main struts and two dual nose struts. Main wheel centers, reference gross weight and contact pressure are retained together from FAARFIELD; individual struts share main load equally. The 95% main-gear allocation is a design assumption. Taxi weight is unknown. Nose contact pressure uses the main reference pressure as an explicit modeling assumption. Historical 600 t reference case; Antonov also published a later 640000 kg maximum, which must not be combined silently with this older pressure case. Wheelbase, shared nose footprint and nominal tires are provisional; see assumedFields. Dedicated FlightGear airframe overlay is illustrative, not manufacturer CAD or a kneeling/steering simulation.",
+      "sources": [
+        {
+          "id": "faarfield-aclib",
+          "title": "FAARFIELD aircraft library: An-225",
+          "publisher": "U.S. Federal Aviation Administration",
+          "url": "https://www.faa.gov/airports/engineering/design_software",
+          "note": "FAA FAARFIELD aircraft.xml, An-225: gross reference weight 599988.818 kg, main-gear fraction 0.95, contact pressure 1116.95112 kPa. See archived coordinate register and SHA-256 in scripts/gear3d-body-assets/antonov-faarfield.json. https://www.faa.gov/airports/engineering/design_software"
+        },
+        {
+          "id": "faa-5300-7",
+          "title": "Order 5300.7, Standard Naming Convention for Aircraft Landing Gear Configurations",
+          "publisher": "U.S. Federal Aviation Administration",
+          "url": "https://www.faa.gov/documentLibrary/media/Order/5300.7.pdf",
+          "note": "Figure 15; 7D classification. Physical struts are modeled separately without changing the FAA designation."
+        },
+        {
+          "id": "antonov",
+          "title": "Antonov Airlines fleet brochure",
+          "publisher": "Antonov",
+          "url": "https://www.antonov.com/en/file/V5hQc2hGrJGRs?inline=1",
+          "note": "Printed page 9: An-225 shares An-124 nose gear; later 640 t maximum is distinct from the FAA reference case."
+        }
+      ]
+    }
+  ]
+}
