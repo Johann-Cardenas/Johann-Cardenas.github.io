@@ -1,0 +1,254 @@
+{
+ "revision": "34.4.1",
+ "parts": [
+  {
+   "name": "frame",
+   "bodies": 1,
+   "volume_mm3": 3340813.049657,
+   "volume_rel": 0.001055,
+   "centroid_dmm": 0.074566
+  },
+  {
+   "name": "fork",
+   "bodies": 1,
+   "volume_mm3": 557642.416915,
+   "volume_rel": 0.00028,
+   "centroid_dmm": 0.032934
+  },
+  {
+   "name": "headset_cover",
+   "bodies": 1,
+   "volume_mm3": 13547.165369,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "rim_front",
+   "bodies": 1,
+   "volume_mm3": 633523.040936,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "tyre_front",
+   "bodies": 1,
+   "volume_mm3": 790890.151358,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "hub_front",
+   "bodies": 1,
+   "volume_mm3": 54160.764133,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "spokes_front_left",
+   "bodies": 1,
+   "volume_mm3": 9018.876918,
+   "volume_rel": 0.0,
+   "centroid_dmm": 2.6e-05
+  },
+  {
+   "name": "spokes_front_drive",
+   "bodies": 1,
+   "volume_mm3": 9018.884355,
+   "volume_rel": 7e-06,
+   "centroid_dmm": 9e-05
+  },
+  {
+   "name": "rim_rear",
+   "bodies": 1,
+   "volume_mm3": 714640.3482,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "tyre_rear",
+   "bodies": 1,
+   "volume_mm3": 790890.151357,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "hub_rear",
+   "bodies": 1,
+   "volume_mm3": 110494.741738,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "spokes_rear_left",
+   "bodies": 1,
+   "volume_mm3": 10334.559362,
+   "volume_rel": 0.000299,
+   "centroid_dmm": 0.003113
+  },
+  {
+   "name": "spokes_rear_drive",
+   "bodies": 1,
+   "volume_mm3": 10272.813314,
+   "volume_rel": 0.000155,
+   "centroid_dmm": 0.000585
+  },
+  {
+   "name": "chainring_50",
+   "bodies": 1,
+   "volume_mm3": 55488.498067,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "chainring_34",
+   "bodies": 1,
+   "volume_mm3": 16364.601262,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "crankset",
+   "bodies": 1,
+   "volume_mm3": 275582.365583,
+   "volume_rel": 0.00011,
+   "centroid_dmm": 0.115675
+  },
+  {
+   "name": "pedal_right",
+   "bodies": 1,
+   "volume_mm3": 50512.0,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "pedal_left",
+   "bodies": 1,
+   "volume_mm3": 50512.0,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "cassette",
+   "bodies": 1,
+   "volume_mm3": 97296.580046,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "rear_derailleur_1",
+   "bodies": 1,
+   "volume_mm3": 45076.44971,
+   "volume_rel": 0.000903,
+   "centroid_dmm": 0.032618
+  },
+  {
+   "name": "rear_derailleur_2",
+   "bodies": 1,
+   "volume_mm3": 11327.253867,
+   "volume_rel": 0.018579,
+   "centroid_dmm": 0.240199
+  },
+  {
+   "name": "front_derailleur_1",
+   "bodies": 1,
+   "volume_mm3": 42248.138005,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "front_derailleur_2",
+   "bodies": 1,
+   "volume_mm3": 11494.946044,
+   "volume_rel": 0.032321,
+   "centroid_dmm": 0.176505
+  },
+  {
+   "name": "brake_front",
+   "bodies": 1,
+   "volume_mm3": 9584.889052,
+   "volume_rel": 0.037172,
+   "centroid_dmm": 0.440229
+  },
+  {
+   "name": "brake_rear",
+   "bodies": 1,
+   "volume_mm3": 8696.225076,
+   "volume_rel": 0.045555,
+   "centroid_dmm": 0.426711
+  },
+  {
+   "name": "stem",
+   "bodies": 1,
+   "volume_mm3": 184409.080656,
+   "volume_rel": 0.000648,
+   "centroid_dmm": 0.022643
+  },
+  {
+   "name": "handlebar",
+   "bodies": 1,
+   "volume_mm3": 581223.739143,
+   "volume_rel": 0.006428,
+   "centroid_dmm": 0.270542
+  },
+  {
+   "name": "levers_1",
+   "bodies": 1,
+   "volume_mm3": 88403.860228,
+   "volume_rel": 0.011427,
+   "centroid_dmm": 0.439003
+  },
+  {
+   "name": "levers_2",
+   "bodies": 1,
+   "volume_mm3": 88410.43897,
+   "volume_rel": 0.011503,
+   "centroid_dmm": 0.440406
+  },
+  {
+   "name": "seatpost",
+   "bodies": 1,
+   "volume_mm3": 165192.322825,
+   "volume_rel": 0.000267,
+   "centroid_dmm": 0.031371
+  },
+  {
+   "name": "saddle",
+   "bodies": 1,
+   "volume_mm3": 477192.292718,
+   "volume_rel": 6.1e-05,
+   "centroid_dmm": 0.00058
+  },
+  {
+   "name": "saddle_rails",
+   "bodies": 1,
+   "volume_mm3": 19557.230482,
+   "volume_rel": 0.000206,
+   "centroid_dmm": 0.000731
+  },
+  {
+   "name": "bottle_down",
+   "bodies": 1,
+   "volume_mm3": 776332.511679,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "bottle_seat",
+   "bodies": 1,
+   "volume_mm3": 776332.511679,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "light",
+   "bodies": 1,
+   "volume_mm3": 142523.893421,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  }
+ ],
+ "assemblies": {
+  "synapse.SLDASM": 35,
+  "synapse_aero.SLDASM": 31
+ }
+}

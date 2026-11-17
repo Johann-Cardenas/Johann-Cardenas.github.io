@@ -1,0 +1,931 @@
+{
+ "schema": "synapse-cad/1",
+ "units": "mm",
+ "frame": "BB origin, +X forward, +Y up, +Z drive side",
+ "source": "cad/bike_cad.py (CadQuery B-rep), the same geometry exported to SolidWorks",
+ "offset": [
+  -737.6285400390625,
+  -262.0,
+  -226.36944580078125
+ ],
+ "scale": [
+  0.02505361191626198,
+  0.014323160370177598,
+  0.006908458076747375
+ ],
+ "bytes": 1425116,
+ "parts": [
+  {
+   "name": "frame",
+   "slot": "frameset",
+   "color": [
+    0.94,
+    0.94,
+    0.92
+   ],
+   "aero": true,
+   "fe": true,
+   "pos": [
+    0,
+    9036
+   ],
+   "idx": [
+    54216,
+    43317
+   ],
+   "volume_cm3": 3344.34,
+   "centroid": [
+    113.1,
+    248.1,
+    -0.0
+   ],
+   "note": "Carbon frame, unioned tubes"
+  },
+  {
+   "name": "fork",
+   "slot": "frameset",
+   "color": [
+    0.94,
+    0.94,
+    0.92
+   ],
+   "aero": true,
+   "fe": true,
+   "pos": [
+    227484,
+    3251
+   ],
+   "idx": [
+    246992,
+    14586
+   ],
+   "volume_cm3": 557.8,
+   "centroid": [
+    430.9,
+    352.4,
+    0.0
+   ],
+   "note": "Carbon fork with steerer"
+  },
+  {
+   "name": "headset_cover",
+   "slot": "frameset",
+   "color": [
+    0.12,
+    0.12,
+    0.13
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    305336,
+    459
+   ],
+   "idx": [
+    308092,
+    1404
+   ],
+   "volume_cm3": 13.55,
+   "centroid": [
+    361.2,
+    553.5,
+    -0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "rim_front",
+   "slot": "wheels",
+   "color": [
+    0.12,
+    0.12,
+    0.13
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    313708,
+    1846
+   ],
+   "idx": [
+    324784,
+    5400
+   ],
+   "volume_cm3": 633.52,
+   "centroid": [
+    570.2,
+    72.0,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "tyre_front",
+   "slot": "tires",
+   "color": [
+    0.08,
+    0.08,
+    0.08
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    346384,
+    2146
+   ],
+   "idx": [
+    359260,
+    6264
+   ],
+   "volume_cm3": 790.89,
+   "centroid": [
+    570.2,
+    72.0,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "hub_front",
+   "slot": "wheels",
+   "color": [
+    0.12,
+    0.12,
+    0.13
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    384316,
+    1354
+   ],
+   "idx": [
+    392440,
+    4584
+   ],
+   "volume_cm3": 54.16,
+   "centroid": [
+    570.2,
+    72.0,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "spokes_front_left",
+   "slot": "wheels",
+   "color": [
+    0.62,
+    0.64,
+    0.67
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    410776,
+    1952
+   ],
+   "idx": [
+    422488,
+    5736
+   ],
+   "volume_cm3": 9.02,
+   "centroid": [
+    570.2,
+    72.0,
+    -19.3
+   ],
+   "note": "Spokes are left out of the wind-tunnel model"
+  },
+  {
+   "name": "spokes_front_drive",
+   "slot": "wheels",
+   "color": [
+    0.62,
+    0.64,
+    0.67
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    445432,
+    1968
+   ],
+   "idx": [
+    457240,
+    5784
+   ],
+   "volume_cm3": 9.02,
+   "centroid": [
+    570.2,
+    72.0,
+    19.3
+   ],
+   "note": "Spokes are left out of the wind-tunnel model"
+  },
+  {
+   "name": "rim_rear",
+   "slot": "wheels",
+   "color": [
+    0.12,
+    0.12,
+    0.13
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    480376,
+    1846
+   ],
+   "idx": [
+    491452,
+    5400
+   ],
+   "volume_cm3": 714.64,
+   "centroid": [
+    -403.6,
+    72.0,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "tyre_rear",
+   "slot": "tires",
+   "color": [
+    0.08,
+    0.08,
+    0.08
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    513052,
+    2146
+   ],
+   "idx": [
+    525928,
+    6264
+   ],
+   "volume_cm3": 790.89,
+   "centroid": [
+    -403.6,
+    72.0,
+    -0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "hub_rear",
+   "slot": "wheels",
+   "color": [
+    0.12,
+    0.12,
+    0.13
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    550984,
+    1257
+   ],
+   "idx": [
+    558528,
+    4044
+   ],
+   "volume_cm3": 110.49,
+   "centroid": [
+    -403.6,
+    72.0,
+    4.7
+   ],
+   "note": ""
+  },
+  {
+   "name": "spokes_rear_left",
+   "slot": "wheels",
+   "color": [
+    0.62,
+    0.64,
+    0.67
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    574704,
+    3884
+   ],
+   "idx": [
+    598008,
+    11400
+   ],
+   "volume_cm3": 10.34,
+   "centroid": [
+    -403.6,
+    72.0,
+    -20.4
+   ],
+   "note": "Spokes are left out of the wind-tunnel model"
+  },
+  {
+   "name": "spokes_rear_drive",
+   "slot": "wheels",
+   "color": [
+    0.62,
+    0.64,
+    0.67
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    643608,
+    3956
+   ],
+   "idx": [
+    667344,
+    11586
+   ],
+   "volume_cm3": 10.27,
+   "centroid": [
+    -403.6,
+    72.0,
+    11.3
+   ],
+   "note": "Spokes are left out of the wind-tunnel model"
+  },
+  {
+   "name": "chainring_50",
+   "slot": "crankset",
+   "color": [
+    0.12,
+    0.12,
+    0.13
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    713688,
+    2988
+   ],
+   "idx": [
+    731616,
+    5976
+   ],
+   "volume_cm3": 55.49,
+   "centroid": [
+    0.0,
+    0.0,
+    47.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "chainring_34",
+   "slot": "crankset",
+   "color": [
+    0.12,
+    0.12,
+    0.13
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    755520,
+    2124
+   ],
+   "idx": [
+    768264,
+    4248
+   ],
+   "volume_cm3": 16.36,
+   "centroid": [
+    -0.0,
+    -0.0,
+    40.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "crankset",
+   "slot": "crankset",
+   "color": [
+    0.12,
+    0.12,
+    0.13
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    785256,
+    2628
+   ],
+   "idx": [
+    801024,
+    8496
+   ],
+   "volume_cm3": 275.61,
+   "centroid": [
+    -0.5,
+    0.2,
+    4.9
+   ],
+   "note": "Arms, spider and spindle"
+  },
+  {
+   "name": "pedal_right",
+   "slot": "pedals",
+   "color": [
+    0.1,
+    0.1,
+    0.11
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    835008,
+    42
+   ],
+   "idx": [
+    835260,
+    72
+   ],
+   "volume_cm3": 50.51,
+   "centroid": [
+    149.6,
+    -58.1,
+    41.2
+   ],
+   "note": ""
+  },
+  {
+   "name": "pedal_left",
+   "slot": "pedals",
+   "color": [
+    0.1,
+    0.1,
+    0.11
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    835548,
+    42
+   ],
+   "idx": [
+    835800,
+    72
+   ],
+   "volume_cm3": 50.51,
+   "centroid": [
+    -169.9,
+    58.1,
+    -41.2
+   ],
+   "note": ""
+  },
+  {
+   "name": "cassette",
+   "slot": "cassette",
+   "color": [
+    0.62,
+    0.64,
+    0.67
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    836088,
+    10878
+   ],
+   "idx": [
+    901356,
+    23232
+   ],
+   "volume_cm3": 97.3,
+   "centroid": [
+    -403.6,
+    72.0,
+    39.2
+   ],
+   "note": ""
+  },
+  {
+   "name": "rear_derailleur_1",
+   "slot": "rear_derailleur",
+   "color": [
+    0.07,
+    0.07,
+    0.08
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    994284,
+    528
+   ],
+   "idx": [
+    997452,
+    1800
+   ],
+   "volume_cm3": 45.04,
+   "centroid": [
+    -388.3,
+    -25.0,
+    45.5
+   ],
+   "note": ""
+  },
+  {
+   "name": "rear_derailleur_2",
+   "slot": "rear_derailleur",
+   "color": [
+    0.07,
+    0.07,
+    0.08
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1004652,
+    379
+   ],
+   "idx": [
+    1006928,
+    1146
+   ],
+   "volume_cm3": 11.54,
+   "centroid": [
+    -406.7,
+    34.8,
+    74.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "front_derailleur_1",
+   "slot": "front_derailleur",
+   "color": [
+    0.12,
+    0.12,
+    0.13
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1011512,
+    146
+   ],
+   "idx": [
+    1012388,
+    420
+   ],
+   "volume_cm3": 42.25,
+   "centroid": [
+    -41.5,
+    144.9,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "front_derailleur_2",
+   "slot": "front_derailleur",
+   "color": [
+    0.12,
+    0.12,
+    0.13
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1014068,
+    205
+   ],
+   "idx": [
+    1015300,
+    642
+   ],
+   "volume_cm3": 11.88,
+   "centroid": [
+    -21.9,
+    123.4,
+    36.9
+   ],
+   "note": ""
+  },
+  {
+   "name": "brake_front",
+   "slot": "brakes",
+   "color": [
+    0.07,
+    0.07,
+    0.08
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1017868,
+    1142
+   ],
+   "idx": [
+    1024720,
+    5184
+   ],
+   "volume_cm3": 9.95,
+   "centroid": [
+    454.6,
+    403.4,
+    -10.2
+   ],
+   "note": ""
+  },
+  {
+   "name": "brake_rear",
+   "slot": "brakes",
+   "color": [
+    0.07,
+    0.07,
+    0.08
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1045456,
+    942
+   ],
+   "idx": [
+    1051108,
+    4446
+   ],
+   "volume_cm3": 9.11,
+   "centroid": [
+    -185.7,
+    347.2,
+    11.4
+   ],
+   "note": ""
+  },
+  {
+   "name": "stem",
+   "slot": "stem",
+   "color": [
+    0.07,
+    0.07,
+    0.08
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1068892,
+    750
+   ],
+   "idx": [
+    1073392,
+    2412
+   ],
+   "volume_cm3": 184.29,
+   "centroid": [
+    392.6,
+    607.0,
+    -0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "handlebar",
+   "slot": "handlebar",
+   "color": [
+    0.07,
+    0.07,
+    0.08
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1083040,
+    2564
+   ],
+   "idx": [
+    1098424,
+    11304
+   ],
+   "volume_cm3": 577.51,
+   "centroid": [
+    472.6,
+    583.0,
+    0.3
+   ],
+   "note": "Bar with tape"
+  },
+  {
+   "name": "levers_1",
+   "slot": "shifters",
+   "color": [
+    0.07,
+    0.07,
+    0.08
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1143640,
+    2503
+   ],
+   "idx": [
+    1158660,
+    13638
+   ],
+   "volume_cm3": 87.41,
+   "centroid": [
+    540.4,
+    610.9,
+    -210.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "levers_2",
+   "slot": "shifters",
+   "color": [
+    0.07,
+    0.07,
+    0.08
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1213212,
+    2504
+   ],
+   "idx": [
+    1228236,
+    13644
+   ],
+   "volume_cm3": 87.41,
+   "centroid": [
+    540.4,
+    610.9,
+    210.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "seatpost",
+   "slot": "seatpost",
+   "color": [
+    0.07,
+    0.07,
+    0.08
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1282812,
+    676
+   ],
+   "idx": [
+    1286868,
+    2058
+   ],
+   "volume_cm3": 165.24,
+   "centroid": [
+    -144.4,
+    501.5,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "saddle",
+   "slot": "saddle",
+   "color": [
+    0.1,
+    0.1,
+    0.1
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1295100,
+    547
+   ],
+   "idx": [
+    1298384,
+    2574
+   ],
+   "volume_cm3": 477.16,
+   "centroid": [
+    -222.5,
+    660.8,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "saddle_rails",
+   "slot": "saddle",
+   "color": [
+    0.62,
+    0.64,
+    0.67
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1308680,
+    4826
+   ],
+   "idx": [
+    1337636,
+    13917
+   ],
+   "volume_cm3": 19.55,
+   "centroid": [
+    -189.3,
+    634.0,
+    0.1
+   ],
+   "note": ""
+  },
+  {
+   "name": "bottle_down",
+   "slot": "cages",
+   "color": [
+    0.92,
+    0.93,
+    0.95
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1393304,
+    794
+   ],
+   "idx": [
+    1398068,
+    2424
+   ],
+   "volume_cm3": 776.33,
+   "centroid": [
+    93.3,
+    205.7,
+    -0.0
+   ],
+   "note": "Bottle and cage as one envelope"
+  },
+  {
+   "name": "bottle_seat",
+   "slot": "cages",
+   "color": [
+    0.92,
+    0.93,
+    0.95
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1407764,
+    794
+   ],
+   "idx": [
+    1412528,
+    2424
+   ],
+   "volume_cm3": 776.33,
+   "centroid": [
+    8.1,
+    193.1,
+    -0.0
+   ],
+   "note": "Bottle and cage as one envelope"
+  },
+  {
+   "name": "light",
+   "slot": "light",
+   "color": [
+    0.12,
+    0.12,
+    0.13
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1422224,
+    170
+   ],
+   "idx": [
+    1423244,
+    468
+   ],
+   "volume_cm3": 142.52,
+   "centroid": [
+    539.4,
+    604.7,
+    0.0
+   ],
+   "note": ""
+  }
+ ],
+ "ground_y": -262.0,
+ "wheel_radius_mm": 334
+}
