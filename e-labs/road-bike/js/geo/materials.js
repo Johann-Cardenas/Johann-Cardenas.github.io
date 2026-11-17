@@ -81,61 +81,118 @@ export function makeMaterials(P) {
 const FONT = 'italic 900 {s}px "Arial Black", "Helvetica Neue", Arial, sans-serif';
 const font = (s, f = FONT) => f.replace('{s}', s);
 
-/** Draw text for both sides of a swept tube. Drive side sits at v = 0.25, non-drive at v = 0.75. */
-function bothSides(c, w, h, draw) {
-  c.save(); c.translate(0, h * 0.25); draw(c); c.restore();
-  c.save(); c.translate(w, h * 0.75); c.rotate(Math.PI); draw(c); c.restore();
-}
-
-/** Painted tube material with a per-tube texture. `kind` selects the artwork. */
+/**
+ * Painted tube material with a per-tube texture. `kind` selects the artwork.
+ *
+ * Layout read off the owner's photos (2026-11-16): gloss white base; Cannondale red on the down-tube
+ * belly, the head-tube hood (which runs onto the front of the top tube and the top of the down tube),
+ * the lower half of the chainstays, the wheel-side edge of the seat stays and the bottom-bracket
+ * underside, each edged with a thin black pinstripe; a black band under the rear of the top tube that
+ * carries on down the front of the seat tube; lower-case "cannondale" in black with a grey shadow on
+ * both flanks of the down tube; "SYNAPSE" in thin black outline letters running along the seat tube,
+ * letter tops facing forward on both sides; a red flash and a black trailing edge on the fork.
+ *
+ * Texture space: u (x) runs along the tube, v (y) round the section. Where v = 0 sits differs per
+ * tube (it is the sweep's N axis), so each layout below notes it.
+ */
 export function tubePaint(M, P, kind) {
   const S = M.scheme, decals = P.decals !== false;
   const W = 2048, H = 512;
   const tex = canvasTexture(W, H, (c) => {
     c.fillStyle = S.c1; c.fillRect(0, 0, W, H);
-    const red = (x, y, w, h) => { c.fillStyle = S.c2; c.fillRect(x * W, y * H, w * W, h * H); };
-    const line = (x, y, w, h) => { c.fillStyle = S.c3; c.fillRect(x * W, y * H, w * W, Math.max(h * H, 4)); };
-    // Layout from the owner's photos. v = 0 is the sweep's N axis, 0.25 the drive side, 0.5 the opposite face.
-    if (kind === 'down') {          // red belly (v 0.5), black pinstripes, white top, cannondale on both flanks
-      red(0, 0.34, 1, 0.32); line(0, 0.335, 1, 0.012); line(0, 0.655, 1, 0.012);
-      red(0, 0, 0.13, 1);           // red where it meets the bottom bracket
-      red(0.86, 0.12, 0.14, 0.76);  // and the head-tube hood wrapping round the front
-      if (decals) bothSides(c, W, H, (k) => {
-        k.font = font(138); k.textBaseline = 'middle'; k.textAlign = 'center';
-        k.lineWidth = 7; k.strokeStyle = '#8b9096'; k.strokeText('cannondale', W * 0.50, 4);
-        k.fillStyle = M.inkOnPaint; k.fillText('cannondale', W * 0.50, 4);
-      });
-    } else if (kind === 'top') {    // front third red (the hood), black pinstripe under the full length
-      red(0.64, 0, 0.36, 1); line(0.64, 0, 0.006, 1);
-      red(0.30, 0.40, 0.70, 0.20); line(0, 0.47, 1, 0.06);
-      if (decals) bothSides(c, W, H, (k) => {
-        k.fillStyle = S.c2; k.font = font(70); k.textBaseline = 'middle'; k.textAlign = 'left';
-        k.fillText('SYNAPSE', W * 0.12, 2);
-      });
-    } else if (kind === 'seat') {   // red at the bottom bracket, SYNAPSE along the tube, black at the front top
-      red(0, 0, 0.16, 1); line(0.16, 0, 0.006, 1);
-      line(0.55, 0.47, 0.45, 0.06);
-      if (decals) bothSides(c, W, H, (k) => {
-        k.font = font(96); k.textBaseline = 'middle'; k.textAlign = 'center';
-        k.lineWidth = 5; k.strokeStyle = '#6f757c'; k.strokeText('SYNAPSE', W * 0.60, 2);
-        k.fillStyle = S.c1; k.fillText('SYNAPSE', W * 0.60, 2);
-      });
-    } else if (kind === 'fork_drive' || kind === 'fork_left') { // inner face red, crown and tips red
-      const inner = kind === 'fork_drive' ? 0 : 0.5;
-      red(0, inner - 0.12, 1, 0.24); if (inner === 0) red(0, 0.88, 1, 0.12);
-      red(0.84, 0, 0.16, 1); red(0, 0, 0.08, 1);
-    } else if (kind === 'stay') {   // outer edge red, red toward the dropout
-      red(0, 0.40, 1, 0.20); red(0.74, 0, 0.26, 1); line(0, 0.395, 1, 0.008);
-    } else if (kind === 'chainstay') { // red with SAVE on the flanks
-      red(0, 0, 1, 1); line(0, 0.47, 1, 0.06);
-      if (decals) bothSides(c, W, H, (k) => {
-        k.fillStyle = '#ffffff'; k.font = font(80, '800 {s}px Arial, sans-serif'); k.textBaseline = 'middle'; k.textAlign = 'center';
-        k.fillText('SAVE', W * 0.45, 2);
-      });
-    } else if (kind === 'head') {   // the red hood: everything but the rear face
-      red(0, 0.16, 1, 0.68);
+    /** Filled polygon in (u, v), drawn three times so shapes that cross the v seam wrap. */
+    const poly = (pts, col) => {
+      c.fillStyle = col;
+      for (const off of [-1, 0, 1]) {
+        c.beginPath();
+        pts.forEach(([u, v], i) => (i ? c.lineTo(u * W, (v + off) * H) : c.moveTo(u * W, (v + off) * H)));
+        c.closePath(); c.fill();
+      }
+    };
+    /** Region between two curves v0(u) < v1(u) for u in [u0, u1]; `pin` edges it with a pinstripe. */
+    const band = (u0, u1, v0, v1, col, pin = 0) => {
+      const n = 48, top = [], bot = [];
+      for (let i = 0; i <= n; i++) { const u = u0 + (u1 - u0) * i / n; top.push([u, v0(u)]); bot.push([u, v1(u)]); }
+      if (pin) poly([...top.map(([u, v]) => [u, v - pin]), ...bot.slice().reverse().map(([u, v]) => [u, v + pin])], S.c3);
+      poly([...top, ...bot.reverse()], col);
+    };
+    const k = (x) => () => x;
+    const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+    /** Text on one flank: centred at (u, v), `flip` turns it 180 degrees, stretched to `len` in u. */
+    const text = (str, u, v, flip, len, draw) => {
+      c.save(); c.translate(u * W, v * H); if (flip) c.rotate(Math.PI);
+      const wNat = c.measureText(str).width || 1;
+      c.scale((len * W) / wNat, 1); draw(c, str); c.restore();
+    };
+    const red = S.c2, ink = S.c3, pin = 0.007;
+
+    if (kind === 'down') {
+      // v: 0 top face, 0.25 drive flank, 0.5 belly, 0.75 non-drive. u: 0 at the BB.
+      // Belly red, rising over the flanks into the hood near the head tube (only the top stays white).
+      const lift = (u) => 0.2 * ss(0.80, 0.95, u);
+      band(-0.02, 1.02, (u) => 0.305 - lift(u), (u) => 0.695 + lift(u), red, pin);
+      if (decals) for (const [v, flip] of [[0.185, false], [0.815, true]]) {
+        c.font = font(118, '800 {s}px "Arial Rounded MT Bold", "Arial Black", Arial, sans-serif'); c.textBaseline = 'middle'; c.textAlign = 'center';
+        text('cannondale', 0.52, v, flip, 0.56, (k2, s2) => {
+          k2.fillStyle = '#9ba1a8'; k2.fillText(s2, 3, 9);
+          k2.fillStyle = M.inkOnPaint; k2.fillText(s2, 0, 0);
+        });
+      }
+    } else if (kind === 'top') {
+      // v: 0 top, 0.25 drive, 0.5 underside, 0.75 non-drive. u: 0 at the seat cluster, 1 at the head tube.
+      // Red hood over the front; its edge sweeps back along the top. Black band under the rear half.
+      const edge = (v) => 0.80 + 0.07 * (1 - Math.cos(2 * Math.PI * v)) / 2;
+      const pts = []; for (let i = 0; i <= 64; i++) { const v = i / 64; pts.push([edge(v), v]); }
+      poly([[1.02, 0], ...pts.map(([u, v]) => [u - 0.004, v]), [1.02, 1]], ink);
+      poly([[1.02, 0], ...pts, [1.02, 1]], red);
+      band(-0.02, 0.6, (u) => 0.5 - 0.15 * (1 - ss(0, 0.6, u)), (u) => 0.5 + 0.15 * (1 - ss(0, 0.6, u)), ink);
+    } else if (kind === 'seat') {
+      // v: 0 rear face, 0.25 drive, 0.5 front, 0.75 non-drive. u: 0 at the BB.
+      // The top tube's black band carries on down the front of the seat tube as a tapering wedge.
+      const wedge = (u) => 0.16 * ss(0.62, 0.86, u) * (1 - ss(0.885, 0.9, u));
+      band(0.62, 0.9, (u) => 0.5 - wedge(u), (u) => 0.5 + wedge(u), ink);
+      if (decals) for (const [v, flip] of [[0.25, true], [0.75, false]]) {
+        c.font = font(104, '300 {s}px "Bahnschrift", "Arial Narrow", Arial, sans-serif'); c.textBaseline = 'middle'; c.textAlign = 'center';
+        text('SYNAPSE', 0.63, v, flip, 0.40, (k2, s2) => {
+          k2.lineJoin = 'miter'; k2.lineWidth = 6.5; k2.strokeStyle = ink; k2.strokeText(s2, 0, 0);
+        });
+      }
+    } else if (kind === 'head') {
+      // v: 0 rear (toward the frame), 0.5 front. u: 0 at the bottom. Red over all but the lower third,
+      // and a white strip down the rear face joining the white under the top tube to the down tube.
+      const lowEdge = (v) => { const d = Math.min(v, 1 - v); return 0.02 + 0.34 * ss(0.17, 0.36, d); };
+      const pts = []; for (let i = 0; i <= 64; i++) { const v = i / 64; pts.push([lowEdge(v), v]); }
+      poly([[1.02, 0], ...pts.map(([u, v]) => [u - 0.012, v]), [1.02, 1]], ink);
+      poly([[1.02, 0], ...pts, [1.02, 1]], red);
+      band(-0.02, 0.72, k(-0.085), k(0.085), ink);
+      band(-0.02, 0.70, k(-0.08), k(0.08), S.c1);
+    } else if (kind === 'chainstay') {
+      // v: 0 bottom, 0.25 +Z, 0.5 top, 0.75 -Z. u: 0 at the BB. Lower half red, top white.
+      const rr = (u) => 0.30 - 0.30 * ss(0.80, 0.96, u);
+      band(-0.02, 1.02, (u) => -rr(u), rr, red, pin);
+      if (decals) for (const [v, flip] of [[0.20, true], [0.80, false]]) {
+        c.font = font(46, '800 {s}px Arial, sans-serif'); c.textBaseline = 'middle'; c.textAlign = 'center';
+        text('SAVE', 0.50, v, flip, 0.07, (k2, s2) => { k2.fillStyle = S.c1; k2.fillText(s2, 0, 0); });
+      }
+    } else if (kind === 'stay') {
+      // v: 0 the wheel-side edge, 0.5 the upper edge. u: 0 at the seat cluster. Red along the wheel side.
+      const rr = (u) => 0.24 * ss(0.13, 0.21, u) * (1 - ss(0.70, 0.84, u));
+      band(-0.02, 1.02, (u) => -rr(u), rr, red, pin * 0.8);
+    } else if (kind === 'fork_drive' || kind === 'fork_left') {
+      // v: 0 the -Z face, 0.25 front, 0.5 +Z, 0.75 rear. u: 0 at the crown. Red flash on the outer
+      // face below the crown, black down the trailing edge of the lower blade.
+      const outer = kind === 'fork_drive' ? 0.5 : 0, fr = kind === 'fork_drive' ? 1 : -1; // which way "front" runs in v
+      const q = (u, d) => [u, outer + fr * d];
+      poly([q(0.10, 0.20), q(0.19, 0.20), q(0.36, -0.22), q(0.25, -0.22)], ink);
+      poly([q(0.115, 0.20), q(0.18, 0.20), q(0.345, -0.22), q(0.265, -0.22)], red);
+      band(0.42, 0.96, (u) => 0.75 - 0.06 * ss(0.42, 0.6, u), (u) => 0.75 + 0.06 * ss(0.42, 0.6, u), ink);
+    } else if (kind === 'bb') {
+      // v: 0 front, 0.25 up, 0.5 rear, 0.75 down. The underside is red, carrying the belly through.
+      band(-0.02, 1.02, k(0.56), k(1.04), red, pin);
     }
+    // 'crown': plain white
   });
+  tex.wrapT = T.RepeatWrapping; // v runs round the section; the frame mesh unwraps the seam past 1
   M.textures.push(tex);
   const m = M.paint.clone(); m.color.set(0xffffff); m.map = tex; m.name = 'paint_' + kind;
   return m;
