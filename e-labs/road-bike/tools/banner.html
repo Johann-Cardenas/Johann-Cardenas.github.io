@@ -38,7 +38,7 @@ try {
   window.v = v;
   const d = derive(g, { tireWidth: 23, crank: 170 });
   const [cfd, fe] = await Promise.all(['../data/cfd/yaw00_dx8.json', '../data/fe/frame.json'].map((u) => fetch(u).then((r) => r.json())));
-  document.querySelector('#specs').innerHTML = [['CAD PARTS', '35'], ['CdA · BIKE', cfd.summary.CdA_m2.toFixed(2) + ' m²'], ['FIRST MODE', fe.modes[0].hz.toFixed(0) + ' Hz'], ['STACK / REACH', `${g.stack_mm} / ${g.reach_mm}`]].map(([k, x]) => `<div>${k}<b>${x}</b></div>`).join('');
+  document.querySelector('#specs').innerHTML = [['CAD PARTS', '53'], ['CdA · BIKE', cfd.summary.CdA_m2.toFixed(2) + ' m²'], ['FIRST MODE', fe.modes[0].hz.toFixed(0) + ' Hz'], ['STACK / REACH', `${g.stack_mm} / ${g.reach_mm}`]].map(([k, x]) => `<div>${k}<b>${x}</b></div>`).join('');
   await document.fonts.ready;
   setTimeout(() => { window.READY = true; }, 600);
 } catch (e) { window.FAIL = String(e.stack || e); }
