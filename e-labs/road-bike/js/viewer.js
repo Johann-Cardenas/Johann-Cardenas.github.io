@@ -2,6 +2,10 @@
 // camera is easing, something is animating, or the scene has changed.
 import * as T from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { buildBike } from './geo/bike.js';
 
 const QUALITY = {
@@ -51,6 +55,8 @@ export function createViewer(canvas, labelLayer, geometry, { onPick = () => {}, 
   scene.add(floor, catcher);
 
   const overlay = new T.Group(); scene.add(overlay);       // dimensions
+  const custom = new T.Group(); scene.add(custom);         // CAD, wind tunnel and Abaqus scenes (labs.js)
+  let animator = null, customPick = null, customFit = null;
   const feGroup = new T.Group(); scene.add(feGroup);       // beam model
   let bike = null, lift = 0, theme = 'light', mode = 'studio', quality = 'high';
   let explodeGoal = 0, explodeNow = 0, isolated = null, selected = null, hovered = null;
@@ -132,6 +138,12 @@ export function createViewer(canvas, labelLayer, geometry, { onPick = () => {}, 
   // ---- picking ---------------------------------------------------------------------------------
   const ray = new T.Raycaster();
   function hit(e) {
+    if (mode === 'custom') {
+      if (!customPick) return null;
+      ray.setFromCamera(ndc(e), camera);
+      const h = ray.intersectObject(custom, true).find((x) => visibleChain(x.object) && x.object.userData.pick);
+      return h ? { custom: h.object.userData.pick, point: h.point, slot: null } : null;
+    }
     if (!bike || !bike.visible) return null;
     ray.setFromCamera(ndc(e), camera);
     const h = ray.intersectObject(bike, true).find((x) => visibleChain(x.object));
@@ -142,8 +154,8 @@ export function createViewer(canvas, labelLayer, geometry, { onPick = () => {}, 
   }
   const visibleChain = (o) => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
   let hoverRaf = 0, hoverEvt = null;
-  function hover(e) { hoverEvt = e; if (hoverRaf) return; hoverRaf = requestAnimationFrame(() => { hoverRaf = 0; const h = hit(hoverEvt); setHover(h ? h.slot : null); canvas.style.cursor = h ? 'pointer' : 'grab'; onHover(h, hoverEvt); }); }
-  function click(e) { const h = hit(e); select(h ? h.slot : null); onPick(h ? h.slot : null, h ? h.part : null); }
+  function hover(e) { hoverEvt = e; if (hoverRaf) return; hoverRaf = requestAnimationFrame(() => { hoverRaf = 0; const h = hit(hoverEvt); if (mode !== 'custom') setHover(h ? h.slot : null); else customPick?.(h?.custom ?? null, 'hover'); canvas.style.cursor = h ? 'pointer' : 'grab'; onHover(h, hoverEvt); }); }
+  function click(e) { const h = hit(e); if (mode === 'custom') { customPick?.(h?.custom ?? null, 'click'); return; } select(h ? h.slot : null); onPick(h ? h.slot : null, h ? h.part : null); }
   function meshesOf(slot) { const out = []; if (!bike) return out; for (const h of bike.userData.holders) if (h.userData.slot === slot) h.traverse((o) => { if (o.isMesh && !o.userData.hl) out.push(o); }); return out; }
   function paint(kind, slot) {
     for (const o of hl[kind]) o.parent?.remove(o);
@@ -209,13 +221,13 @@ export function createViewer(canvas, labelLayer, geometry, { onPick = () => {}, 
       scene.add(edges);
     }
     if (edges) edges.visible = tech;
-    bike.visible = mode !== 'fe'; feGroup.visible = mode === 'fe';
+    bike.visible = mode !== 'fe' && mode !== 'custom'; feGroup.visible = mode === 'fe'; custom.visible = mode === 'custom';
     catcher.material.opacity = mode === 'fe' ? 0.08 : theme === 'dark' ? 0.5 : 0.24;
     applyTheme();
   }
   function syncEdges() { if (!edges || !edges.visible) return; bike.updateMatrixWorld(true); for (const l of edges.children) { l.matrix.copy(l.userData.src.matrixWorld); l.matrixWorld.copy(l.matrix); l.visible = visibleChain(l.userData.src); } }
   function applyTheme() {
-    const dark = theme === 'dark', tech = mode !== 'studio';
+    const dark = theme === 'dark', tech = mode === 'technical' || mode === 'fe';
     scene.background = new T.Color(dark ? (tech ? 0x15181c : 0x101317) : (tech ? 0xf4f5f7 : 0xe9ecf0));
     floor.material.color.set(dark ? 0x2a3038 : 0xffffff); floor.material.opacity = dark ? 0.55 : 1;
     edgeMat.color.set(dark ? 0x0a0c0f : 0x1b1f24);
@@ -312,10 +324,10 @@ export function createViewer(canvas, labelLayer, geometry, { onPick = () => {}, 
   const PRESETS = { quarter: [0.95, 1.32], drive: [Math.PI / 2, 1.5], nondrive: [-Math.PI / 2, 1.5], front: [0, 1.45], rear: [Math.PI, 1.45], top: [Math.PI / 2, 0.07], low: [0.75, 1.52] };
   function fit(pad = 1) {
     const box = new T.Box3();
-    const src = mode === 'fe' ? feGroup : bike;
+    const src = mode === 'fe' ? feGroup : mode === 'custom' ? (customFit || custom) : bike;
     if (!src) return;
     src.updateMatrixWorld(true);
-    if (isolated && mode !== 'fe') { for (const h of bike.userData.holders) if (h.visible) box.expandByObject(h); } else box.setFromObject(src);
+    if (isolated && mode === 'studio') { for (const h of bike.userData.holders) if (h.visible) box.expandByObject(h); } else box.setFromObject(src);
     if (box.isEmpty()) return;
     box.getCenter(st.tgt);
     const size = box.getSize(new T.Vector3()), asp = camera.aspect || 1.5;
@@ -342,24 +354,41 @@ export function createViewer(canvas, labelLayer, geometry, { onPick = () => {}, 
     cur.th += (st.th - cur.th) * k; cur.ph += (st.ph - cur.ph) * k; cur.r *= Math.exp((Math.log(st.r) - Math.log(cur.r)) * k); cur.tgt.lerp(st.tgt, k);
     let anim = false;
     if (Math.abs(explodeGoal - explodeNow) > 1e-3) { applyExplode(reduced ? explodeGoal : explodeNow + (explodeGoal - explodeNow) * (1 - Math.exp(-dt * 7))); anim = true; } else if (explodeNow !== explodeGoal) applyExplode(explodeGoal);
-    if (pedalling && bike && mode !== 'fe') { crankDeg = (crankDeg + dt * 75) % 720000; bike.userData.setCrank(crankDeg); anim = true; }
+    if (pedalling && bike && mode === 'studio') { crankDeg = (crankDeg + dt * 75) % 720000; bike.userData.setCrank(crankDeg); anim = true; }
+    if (animator && mode === 'custom' && !reduced) anim = animator(dt, now / 1000) !== false || anim;
     const moving = dragging || turntable || anim || Math.abs(st.th - cur.th) > 1e-4 || Math.abs(st.ph - cur.ph) > 1e-4 || Math.abs(st.r / cur.r - 1) > 1e-4 || cur.tgt.distanceTo(st.tgt) > cur.r * 1e-5 || Math.abs(spinV.th) + Math.abs(spinV.ph) > 1e-4;
     if (real && dt > 0.004) refresh = Math.min(refresh, dt);
     if (moving && real && dt > refresh * 1.6 && ++slowN > 5) slow = true;
     if (!moving) { cur.th = st.th; cur.ph = st.ph; cur.r = st.r; cur.tgt.copy(st.tgt); slowN = 0; }
+    settled = !moving;
     const want = moving && slow ? LQ() : HQ();
     if (Math.abs(renderer.getPixelRatio() - want) > 0.01) { renderer.setPixelRatio(want); renderer.setSize(canvas.clientWidth, canvas.clientHeight, false); }
     render();
     dirty = false;
-    if (moving) draw(); else last = 0;
+    if (moving) draw(); else { last = 0; }
   }
+  // Ambient occlusion is applied only to settled frames: interaction stays fast, the still image gets contact shading.
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const gtao = new GTAOPass(scene, camera, 1, 1);
+  gtao.updateGtaoMaterial({ radius: 60, distanceExponent: 1.4, thickness: 25, scale: 1.0, samples: 16, distanceFallOff: 1.0, screenSpaceRadius: false });
+  gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
+  gtao.blendIntensity = 0.85;
+  composer.addPass(gtao);
+  composer.addPass(new OutputPass());
+  let aoOn = true, settled = false;
   function render() {
+    if (!canvas.clientWidth || !canvas.clientHeight) return; // the stage is hidden on page tabs
     const sp = Math.sin(cur.ph);
     camera.position.set(cur.tgt.x + cur.r * sp * Math.cos(cur.th), cur.tgt.y + cur.r * Math.cos(cur.ph), cur.tgt.z + cur.r * sp * Math.sin(cur.th));
     camera.near = Math.max(5, cur.r / 60); camera.far = cur.r * 14 + 9000; camera.updateProjectionMatrix();
     camera.lookAt(cur.tgt); camera.updateMatrixWorld();
     syncEdges();
-    renderer.render(scene, camera);
+    if (aoOn && settled && quality !== 'balanced') {
+      const w = canvas.clientWidth, h = canvas.clientHeight, pr = renderer.getPixelRatio();
+      composer.setPixelRatio(pr); composer.setSize(w, h);
+      composer.render();
+    } else renderer.render(scene, camera);
     placeLabels();
   }
   function resize() {
@@ -394,6 +423,15 @@ export function createViewer(canvas, labelLayer, geometry, { onPick = () => {}, 
     pedal(on) { pedalling = on && !reduced; draw(); },
     setCrank(deg) { crankDeg = deg; bike?.userData.setCrank(deg); draw(); },
     get info() { return bike?.userData; },
+    get lift() { return lift; },
+    /** Show a custom scene (CAD, wind tunnel, Abaqus) instead of the bike. animate(dt, t) keeps frames coming. */
+    setCustom(obj, { animate = null, pick = null, fitTo = null } = {}) {
+      for (const c of [...custom.children]) { custom.remove(c); }
+      if (obj) { obj.position.y = lift; custom.add(obj); }
+      animator = animate; customPick = pick; customFit = fitTo;
+      draw();
+    },
+    setAO(on) { aoOn = on; draw(); },
     get state() { return { th: st.th, ph: st.ph, r: st.r }; },
     camera: (th, ph, r, tgt) => { st.th = th; st.ph = ph; if (r) st.r = r; if (tgt) st.tgt.set(...tgt); cur.th = st.th; cur.ph = st.ph; cur.r = st.r; cur.tgt.copy(st.tgt); draw(); },
     redraw: draw,

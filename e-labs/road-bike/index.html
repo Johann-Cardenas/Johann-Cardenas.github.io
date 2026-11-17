@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Road Bike Project · E-Labs</title>
-<meta name="description" content="A component-level digital twin of a Cannondale Synapse Carbon: parametric 3D model, interface-checked upgrade planning, gearing, a road power model and a beam finite-element model of the frame.">
-<meta name="theme-color" content="#f3f5f7">
+<title>Synapse · Road Bike Project</title>
+<meta name="description" content="Digital twin of a Cannondale Synapse Carbon: parametric 3D, SolidWorks CAD, a CFD wind tunnel, an Abaqus frame model and interface-checked upgrades.">
+<meta name="theme-color" content="#eef1f4">
 <link rel="icon" href="../../favicon.ico">
+<link rel="preload" href="assets/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script>
   (function () {
@@ -23,64 +24,52 @@
 <body class="RoadBike" data-view="build">
 <div id="app">
   <header class="rb-top">
-    <a class="rb-brand" href="../../E-Labs.html" title="Back to E-Labs">
-      <span class="rb-mark" aria-hidden="true"><svg viewBox="0 0 28 28"><circle cx="7" cy="19" r="5.4"/><circle cx="21" cy="19" r="5.4"/><path d="M7 19l4.5-9h7L21 19M11.500 10 14.500 19 18.500 10M9.800 7h3.600"/></svg></span>
-      <span class="rb-name"><b>Road Bike Project</b><small>Synapse Carbon 51 · digital twin</small></span>
-    </a>
     <nav id="tabs" class="rb-tabs" role="tablist" aria-label="View">
       <button data-v="build" role="tab">Build</button>
-      <button data-v="upgrades" role="tab">Upgrades</button>
+      <button data-v="cad" role="tab">CAD</button>
+      <button data-v="aero" role="tab">Aero</button>
+      <button data-v="structure" role="tab">Structure</button>
       <button data-v="gearing" role="tab">Gearing</button>
-      <button data-v="performance" role="tab">Performance</button>
-      <button data-v="structure" role="tab">Frame FE</button>
-      <button data-v="geometry" role="tab">Geometry &amp; fit</button>
-      <button data-v="spec" role="tab">Spec sheet</button>
+      <button data-v="upgrades" role="tab">Upgrades</button>
+      <button data-v="spec" role="tab">Spec</button>
     </nav>
+    <a class="rb-brand" href="../../E-Labs.html" title="Back to E-Labs"><b>Synapse</b><span>Digital twin</span></a>
     <div class="rb-tools">
-      <span id="evidence" class="rb-evidence" title="Evidence classes used throughout: C confirmed, L listing, S stock reference, M must be measured"><i class="c">C</i><i class="l">L</i><i class="s">S</i><i class="m">M</i></span>
       <button id="themeBtn" class="rb-ico" title="Light / dark" aria-label="Toggle theme"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none"/><path d="M8 2.500a5.500 5.500 0 0 1 0 11z"/></svg></button>
-      <button id="panelBtn" class="rb-ico" title="Show / hide panel" aria-label="Toggle panel"><svg viewBox="0 0 16 16"><rect x="2.500" y="3" width="11" height="10" rx="1.500" fill="none"/><path d="M10 3v10" fill="none"/></svg></button>
+      <button id="panelBtn" class="rb-ico" title="Panel" aria-label="Toggle panel"><svg viewBox="0 0 16 16"><rect x="2.500" y="3" width="11" height="10" rx="1.500" fill="none"/><path d="M10 3v10" fill="none"/></svg></button>
     </div>
   </header>
 
   <main class="rb-main">
     <section id="stage" class="rb-stage" aria-label="3D model">
-      <canvas id="gl" tabindex="0" aria-label="Interactive 3D bicycle. Drag to orbit, right-drag or shift-drag to pan, wheel to zoom, double-click to fit, click a part to inspect it."></canvas>
+      <canvas id="gl" tabindex="0" aria-label="Interactive 3D model. Drag to orbit, right-drag to pan, wheel to zoom, double-click to fit."></canvas>
       <div id="labels" class="rb-labels" aria-hidden="true"></div>
 
-      <div class="rb-ov rb-title">
-        <b id="ttl">Cannondale Synapse Carbon</b>
-        <span id="sub">Installed build</span>
-      </div>
+      <div class="rb-ov rb-title"><b id="ttl">Synapse Carbon</b><span id="sub">Installed build</span></div>
 
       <div class="rb-ov rb-views" role="toolbar" aria-label="Camera and display">
         <div class="rb-seg" id="views">
           <button data-view="quarter" title="Three-quarter (1)">¾</button>
-          <button data-view="drive" title="Drive side (2)">Drive</button>
-          <button data-view="nondrive" title="Non-drive side (3)">Left</button>
+          <button data-view="drive" title="Drive side (2)">Side</button>
           <button data-view="front" title="Front (4)">Front</button>
-          <button data-view="rear" title="Rear (5)">Rear</button>
           <button data-view="top" title="Top (6)">Top</button>
         </div>
         <button data-act="fit" title="Fit (0)">Fit</button>
         <span class="rb-sep"></span>
-        <label class="rb-slider" title="Exploded view">Explode <input id="explode" type="range" min="0" max="100" value="0" aria-label="Exploded view"></label>
-        <button data-tog="dims" aria-pressed="false" title="Dimensions (D)">Dimensions</button>
-        <button data-tog="tech" aria-pressed="false" title="Clay model with edges (E)">Technical</button>
+        <label class="rb-slider" title="Exploded view" data-only="build">Explode <input id="explode" type="range" min="0" max="100" value="0" aria-label="Exploded view"></label>
+        <button data-tog="dims" aria-pressed="false" title="Dimensions (D)" data-only="build">Dims</button>
+        <button data-tog="tech" aria-pressed="false" title="Clay and edges (E)" data-only="build">Clay</button>
+        <button data-tog="pedal" aria-pressed="false" title="Pedal (P)" data-only="build">Pedal</button>
         <button data-tog="spin" aria-pressed="false" title="Turntable (R)">Rotate</button>
-        <button data-tog="pedal" aria-pressed="false" title="Turn the cranks (P)">Pedal</button>
         <span class="rb-sep"></span>
-        <select id="quality" aria-label="Render quality" title="Render quality">
-          <option value="ultra">Ultra</option><option value="high" selected>High</option><option value="balanced">Balanced</option>
-        </select>
-        <button data-act="png" title="Save a 4K PNG (S)">PNG</button>
+        <select id="quality" aria-label="Render quality" title="Render quality"><option value="ultra">Ultra</option><option value="high" selected>High</option><option value="balanced">Fast</option></select>
+        <button data-act="png" title="4K PNG (S)">PNG</button>
       </div>
 
       <aside id="card" class="rb-ov rb-card" hidden></aside>
       <div id="legend" class="rb-ov rb-legend" hidden></div>
       <div id="tip" class="rb-ov rb-tip" hidden></div>
       <div id="loading" class="rb-loading"><span class="rb-spin"></span><span id="loadmsg">Building the model…</span></div>
-      <p class="rb-note" id="stageNote">Illustrative geometry: catalog dimensions and assumed tube sections until the bike is measured.</p>
     </section>
 
     <aside id="panel" class="rb-panel" aria-live="polite"></aside>
@@ -88,11 +77,11 @@
   </main>
 
   <footer class="rb-foot">
-    <span>Personal project. Not affiliated with or endorsed by Cannondale, Shimano, FSA or any other brand shown.</span>
+    <span>Personal project · not affiliated with Cannondale, Shimano, FSA or Vittoria.</span>
     <span id="status" role="status"></span>
   </footer>
 </div>
-<noscript><p style="padding:2rem">This application needs JavaScript. The source data is in the <code>data/</code> folder.</p></noscript>
+<noscript><p style="padding:2rem">This application needs JavaScript.</p></noscript>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

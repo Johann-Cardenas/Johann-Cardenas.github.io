@@ -3,6 +3,8 @@ import { checkConfig, worst } from './compat.js';
 import { decodeConfig, encodeConfig, decodeParams, defaultParams, applyChange, summarize, PARAMS } from './state.js';
 import { PAINT_SCHEMES } from './geo/materials.js';
 import * as views from './views.js';
+import * as panels from './panels.js';
+import { cadScene, aeroScene, feScene, loadPack } from './labs.js';
 
 export const $ = (s, r = document) => r.querySelector(s);
 export const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -15,7 +17,8 @@ export const fmt = {
 };
 export const EVIDENCE = { C: 'Confirmed by owner', L: 'Listing / seller', S: 'Stock or published reference, unverified on this bike', M: 'Must be measured' };
 export const badge = (c) => `<span class="badge ${String(c).toLowerCase()}" title="${esc(EVIDENCE[c] || '')}">${esc(c)}</span>`;
-const LAYOUT = { build: 'stage', structure: 'stage', geometry: 'stage', upgrades: 'page', gearing: 'page', performance: 'page', spec: 'page' };
+const LAYOUT = { build: 'stage', cad: 'stage', aero: 'stage', structure: 'stage', upgrades: 'page', gearing: 'page', spec: 'page' };
+const LEGACY = { performance: 'aero', geometry: 'build' };
 const REBUILD = new Set(['paint', 'c1', 'c2', 'c3', 'decals', 'tape', 'saddle_height_mm', 'saddle_setback_mm', 'spacers_mm', 'stem_length_mm', 'stem_angle_deg', 'bar_width_mm', 'crank_length_mm', 'ring', 'cog', 'steer_deg', 'bottles']);
 
 export const S = {
@@ -33,7 +36,7 @@ let rebuildTimer = 0;
 function writeHash() { history.replaceState(null, '', encodeConfig(S.cfg, S.catalog, S.P, S.geom.fit_defaults, S.view === 'build' ? null : S.view)); }
 export function rebuild3D(now = false) {
   clearTimeout(rebuildTimer);
-  const go = () => { if (!S.viewer) return; S.viewer.setConfig(effCfg(), S.catalog, S.P); if (S.view === 'structure') views.runFE(); };
+  const go = () => { if (!S.viewer) return; S.viewer.setConfig(effCfg(), S.catalog, S.P); if (S.view === 'structure' && panels.L.structMode === 'beam') views.runFE(); };
   if (now) go(); else rebuildTimer = setTimeout(go, 70);
 }
 /** Change one free parameter. `soft` skips re-rendering the panel (a slider being dragged). */
@@ -54,24 +57,55 @@ export function setSlot(slot, id) {
 }
 export function setConfig(cfg, msg) { S.cfg = { ...cfg }; S.showInstalled = false; writeHash(); rebuild3D(true); render(); if (msg) status(msg); }
 export function go(view) {
+  view = LEGACY[view] || view;
   if (!LAYOUT[view]) view = 'build';
   S.view = view; writeHash(); render(); syncStage();
 }
 
 // ---- stage --------------------------------------------------------------------------------------
 const toggles = { dims: false, tech: false, spin: false, pedal: false };
-function syncStage() {
+const P = panels.L;
+const panelApi = { redraw: () => S.viewer?.redraw(), render: () => render(), sync: () => syncStage(), groups: {} };
+async function ensure(kind) {
+  const theme = document.documentElement.dataset.theme;
+  try {
+    if (kind === 'cad' && !P.cad) {
+      [P.cad, P.sw] = await Promise.all([cadScene(theme), fetch('data/cad/solidworks.json').then((r) => (r.ok ? r.json() : null)).catch(() => null)]);
+      P.cad.setEdges(P.edges); P.cad.setClay(P.clay);
+    } else if (kind === 'aero' && !P.aero && !P.aeroMissing) {
+      try { P.aero = await aeroScene(P.aeroCase, theme); } catch { P.aeroMissing = true; }
+      if (P.aero) { for (const [k, on] of Object.entries(P.show)) P.aero.show(k, on); P.aero.setField(P.field); panelApi.groups = await fetch('data/cfd/groups.json').then((r) => r.json()).catch(() => ({})); }
+    } else if (kind === 'fe' && !P.fe) {
+      P.fe = await feScene(theme); P.fe.setScale(P.scale); P.fe.setCase(P.feCase);
+    }
+  } catch (err) { console.error(err); status(`Could not load ${kind} results.`); }
+}
+let lastScene = null;
+async function syncStage() {
   const v = S.viewer; if (!v) return;
-  const fe = S.view === 'structure';
-  v.setMode(fe ? 'fe' : toggles.tech ? 'technical' : 'studio');
-  v.dimensions(!fe && (toggles.dims || S.view === 'geometry'));
-  v.turntable(toggles.spin); v.pedal(toggles.pedal && !fe);
-  $('#legend').hidden = !fe; if (fe) { hideCard(); views.runFE(); v.preset('quarter'); } else if (S.view === 'geometry') v.preset('drive');
-  $('#stageNote').textContent = fe
-    ? 'Beam idealisation with assumed wall thickness and laminate. It ranks load paths; it is not a strength assessment.'
-    : 'Illustrative geometry: catalog dimensions and assumed tube sections until the bike is measured.';
-  $$('.rb-views [data-tog]').forEach((b) => { b.setAttribute('aria-pressed', String(toggles[b.dataset.tog])); b.disabled = fe && b.dataset.tog !== 'spin'; });
-  $('#explode').disabled = fe;
+  const view = S.view, beam = view === 'structure' && P.structMode === 'beam';
+  const kind = view === 'cad' ? 'cad' : view === 'aero' ? 'aero' : view === 'structure' && !beam ? 'fe' : null;
+  $('#legend').hidden = !beam;
+  if (view !== 'build') hideCard();
+  if (kind) {
+    await ensure(kind);
+    if (S.view !== view) return; // the user moved on while it loaded
+    const sc = { cad: P.cad, aero: P.aero, fe: P.fe }[kind];
+    if (sc) {
+      v.setMode('custom');
+      v.setCustom(sc.group, { animate: (dt, t) => sc.animate(dt, t), fitTo: sc.bounds || sc.group, pick: kind === 'cad' ? (part, how) => { if (how === 'click') { P.part = P.cad.select(part); render(); } } : null });
+      if (lastScene !== kind) { v.preset('quarter'); lastScene = kind; }
+    } else { v.setCustom(null); v.setMode('studio'); lastScene = null; }
+    if (kind === 'cad' && P.cad) P.cad.replay();
+  } else {
+    v.setCustom(null); lastScene = null;
+    v.setMode(beam ? 'fe' : toggles.tech ? 'technical' : 'studio');
+    if (beam) { views.runFE(); v.preset('quarter'); }
+  }
+  v.dimensions(view === 'build' && toggles.dims);
+  v.turntable(toggles.spin); v.pedal(toggles.pedal && view === 'build');
+  $$('.rb-views [data-tog]').forEach((b) => b.setAttribute('aria-pressed', String(toggles[b.dataset.tog])));
+  if (LAYOUT[S.view] === 'stage') render();
 }
 function hideCard() { $('#card').hidden = true; S.selected = null; S.viewer?.select(null); }
 function showCard(slot, partName) {
@@ -106,6 +140,7 @@ function optionState(slot, id) {
   const text = { ok: 'Fits', warn: 'Check', info: 'Measure' }[lvl] + (r.also.length ? ' +1' : '');
   return { level: lvl, text, title: (issues.map((i) => i.msg).join(' ') || 'No interface issues.') + also };
 }
+const P0 = (v) => Math.round(v);
 function buildPanel() {
   const cfg = effCfg(), sum = summarize(cfg, S.catalog), issues = checkConfig(cfg, S.parts);
   const hard = issues.filter((i) => i.level !== 'info'), info = issues.filter((i) => i.level === 'info');
@@ -121,10 +156,10 @@ function buildPanel() {
           ${s.optional ? `<label class="opt"><input type="radio" name="${s.id}" value="" ${!cfg[s.id] ? 'checked' : ''} ${ro}><span class="nm">None</span><span></span></label>` : ''}
           ${opts.map((p) => {
             const st = cfg[s.id] === p.id ? { level: worst(issues.filter((i) => i.slot === s.id)), text: 'Selected', title: issues.filter((i) => i.slot === s.id).map((i) => i.msg).join(' ') } : optionState(s.id, p.id);
-            return `<label class="opt ${st.level === 'error' ? 'blocked' : ''}" title="${esc(st.title)}"><input type="radio" name="${s.id}" value="${p.id}" ${cfg[s.id] === p.id ? 'checked' : ''} ${ro}>
+            return `<label class="opt ${st.level === 'error' ? 'blocked' : ''}" title="${esc([p.upgrade?.why, st.title].filter(Boolean).join(' · '))}"><input type="radio" name="${s.id}" value="${p.id}" ${cfg[s.id] === p.id ? 'checked' : ''} ${ro}>
               <span class="nm">${esc(p.name)}</span><span class="st ${st.level}">${esc(st.text)}</span>
               <span class="meta">${badge(p.confidence)}<span>${fmt.g(p.mass_g)}</span><span>${p.price_usd == null ? (p.status === 'installed' ? 'installed' : 'price —') : fmt.usd(p.price_usd)}</span></span>
-              ${p.upgrade && cfg[s.id] !== p.id ? `<span class="why">${esc(p.upgrade.why)}</span>` : ''}</label>`;
+              </label>`;
           }).join('')}</div>`;
       }).join('')}</details>`;
   }).join('');
@@ -152,6 +187,7 @@ function buildPanel() {
       <h3 style="margin-top:12px">Bar tape</h3><div class="swatches">${tapes.map((c) => `<button data-tape="${c}" style="background:${c}" aria-pressed="${P.tape === c}" aria-label="Tape colour ${c}"></button>`).join('')}<input type="color" data-c="tape" value="${P.tape}" aria-label="Custom tape colour"></div>
       <div class="btnrow"><label class="chk"><input type="checkbox" data-b="decals" ${P.decals ? 'checked' : ''}> Decals</label><label class="chk"><input type="checkbox" data-b="bottles" ${P.bottles ? 'checked' : ''}> Bottles</label></div>
     </div></details>
+    <details class="grp" data-g="Fit" ${S.open.has('Fit') ? 'open' : ''}><summary>Fit &amp; geometry<em>${P0(S.P.stem_length_mm)} mm stem</em></summary>${views.panels.geometry()}</details>
     <details class="grp" data-g="Pose" ${S.open.has('Pose') ? 'open' : ''}><summary>Pose<em>${L ? `${L.rings[L.ri]} × ${L.cogs[L.ci]}` : ''}</em></summary><div class="slot">
       <div class="row two"><label>Chainring</label><div class="rb-seg"><button data-ring="big" aria-pressed="${P.ring === 'big'}">${L ? L.rings[0] + 'T' : 'Big'}</button><button data-ring="small" aria-pressed="${P.ring === 'small'}">${L ? L.rings[1] + 'T' : 'Small'}</button></div></div>
       ${slider('cog', 'Sprocket', '', (v) => (L ? `${L.cogs[Math.min(v, L.cogs.length - 1)]}T` : v))}
@@ -168,14 +204,19 @@ export function render() {
   document.body.dataset.view = S.view; document.body.dataset.layout = layout;
   $$('#tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.v === S.view)));
   const sum = summarize(S.cfg, S.catalog);
-  $('#sub').textContent = S.view === 'structure' ? 'Frame beam model' : S.showInstalled || !sum.changedCount ? 'Installed build' : `Proposal · ${sum.changedCount} part${sum.changedCount > 1 ? 's' : ''} changed`;
+  const sub = { cad: 'SolidWorks assembly', aero: 'Wind tunnel · 40 km/h', structure: P.structMode === 'beam' ? 'Beam model' : 'Abaqus shell model' }[S.view];
+  $('#ttl').textContent = S.view === 'build' ? 'Synapse Carbon' : { cad: 'CAD', aero: 'Aerodynamics', structure: 'Structure' }[S.view] ?? 'Synapse Carbon';
+  $('#sub').textContent = sub ?? (S.showInstalled || !sum.changedCount ? 'Installed build' : `Proposal · ${sum.changedCount} part${sum.changedCount > 1 ? 's' : ''} changed`);
   const panel = $('#panel'), page = $('#page'), top = panel.scrollTop;
   page.hidden = layout !== 'page';
   if (layout === 'page') page.innerHTML = `<div class="wrap">${views.pages[S.view]()}</div>`;
   else if (S.view === 'build') buildPanel();
-  else panel.innerHTML = views.panels[S.view]();
+  else if (S.view === 'cad') panel.innerHTML = panels.cadPanel();
+  else if (S.view === 'aero') panel.innerHTML = panels.aeroPanel();
+  else if (S.view === 'structure') panel.innerHTML = panels.structurePanel(views.panels.structure);
+  else panel.innerHTML = '';
   panel.scrollTop = top;
-  if (S.selected && layout === 'stage' && S.view !== 'structure') showCard(S.selected);
+  if (S.selected && S.view === 'build') showCard(S.selected);
 }
 
 // ---- events -------------------------------------------------------------------------------------
@@ -214,6 +255,7 @@ function wire() {
   });
   panel.addEventListener('input', (e) => {
     const t = e.target;
+    if (panels.handleInput(e, panelApi)) return;
     if (t.type === 'range' && t.dataset.p) {
       setParam(t.dataset.p, Number(t.value), { soft: true });
       const out = panel.querySelector(`[data-v="${t.dataset.p}"]`), L = S.viewer?.info?.layout;
@@ -222,6 +264,7 @@ function wire() {
   });
   panel.addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
+    if (panels.handle(e, b, panelApi)) return;
     if (b.dataset.mode) { S.showInstalled = b.dataset.mode === 'installed'; rebuild3D(true); render(); }
     else if (b.dataset.focus) { S.viewer.select(b.dataset.focus); S.viewer.focus(b.dataset.focus); showCard(b.dataset.focus); }
     else if (b.dataset.paint) setParam('paint', b.dataset.paint);
@@ -243,7 +286,7 @@ function load() {
   S.cfg = decodeConfig(location.hash, S.catalog);
   S.P = decodeParams(location.hash, S.geom.fit_defaults);
   const v = new URLSearchParams(location.hash.slice(1)).get('view');
-  S.view = LAYOUT[v] ? v : 'build';
+  S.view = LAYOUT[LEGACY[v] || v] ? (LEGACY[v] || v) : 'build';
 }
 
 async function init() {
@@ -257,8 +300,12 @@ async function init() {
   try {
     const { createViewer } = await import('./viewer.js');
     S.viewer = createViewer($('#gl'), $('#labels'), S.geom, {
-      onPick: (slot, part) => { if (S.view === 'structure') return; if (slot) showCard(slot, part); else { S.viewer.isolate(null); hideCard(); } },
-      onHover: (h, e) => { const tip = $('#tip'); if (!h || S.view === 'structure') { tip.hidden = true; return; } const r = $('#stage').getBoundingClientRect(); tip.hidden = false; tip.style.left = `${e.clientX - r.left}px`; tip.style.top = `${e.clientY - r.top}px`; tip.textContent = `${slotLabel(h.slot)}${h.part ? ' · ' + h.part : ''}`; },
+      onPick: (slot, part) => { if (S.view !== 'build') return; if (slot) showCard(slot, part); else { S.viewer.isolate(null); hideCard(); } },
+      onHover: (h, e) => {
+        const tip = $('#tip'); if (!h || (S.view !== 'build' && !h.custom)) { tip.hidden = true; return; }
+        const r = $('#stage').getBoundingClientRect(); tip.hidden = false; tip.style.left = `${e.clientX - r.left}px`; tip.style.top = `${e.clientY - r.top}px`;
+        tip.textContent = h.custom ? `${(h.custom.name || '').replaceAll('_', ' ')}${h.custom.slot ? ' · ' + h.custom.slot : ''}` : `${slotLabel(h.slot)}${h.part ? ' · ' + h.part : ''}`;
+      },
     });
     S.viewer.setTheme(document.documentElement.dataset.theme);
     S.viewer.setConfig(effCfg(), S.catalog, S.P);

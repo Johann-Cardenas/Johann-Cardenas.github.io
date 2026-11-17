@@ -1,86 +1,80 @@
 # Road Bike Project: Synapse digital twin
 
-A buildless E-Labs app for a Cannondale Synapse Carbon (51 cm, likely MY2012). Serve the
-repository root (`python -m http.server 8000`) and open `/e-labs/road-bike/`.
+A buildless E-Labs app for a Cannondale Synapse Carbon 51 (likely MY2012). Serve the repository
+root (`python -m http.server 8000`) and open `/e-labs/road-bike/`.
 
-## What it does
-
-| Tab | Content |
+| Tab | What it shows |
 |---|---|
-| Build | Parametric 3D model; pick any part from the catalog, paint scheme, bar tape, pose (gear, crank angle, steering). Click a part to inspect it. |
-| Upgrades | Staged bundles and every researched part, each checked against the installed interfaces. |
-| Gearing | Range, steps, chain wrap, chain length, speed per gear, cross-chaining. |
-| Performance | Steady-state power model: speed at a given power, power split, ride times, with every input's source. |
-| Frame FE | 3D beam finite-element model of frame and fork under five load cases; stiffness figures. |
-| Geometry & fit | Catalog geometry, derived trail/wheelbase/ETT, fit sliders, dimensions drawn on the model. |
-| Spec sheet | Bill of materials with evidence classes, CSV export, measurement plan, CAD status, history. |
+| Build | Procedural 3D model in the photographed paint; pick parts, paint, tape, fit and pose |
+| CAD | The SolidWorks assembly: 35 parts, each volume- and centroid-checked |
+| Aero | Wind tunnel at 40 km/h: drag by part, surface pressure, animated flow, field planes, ride model |
+| Structure | Abaqus shell model: five ISO 4210-6 load cases and the natural modes; a live beam model beside it |
+| Gearing · Upgrades · Spec | Gear table, interface-checked upgrades, bill of materials |
 
-State lives in the URL hash: `slot=id` for parts that differ from the installed build,
-`p.key=value` for parameters that differ from their defaults, `view=` for the tab.
+Typography is Archivo (SIL OFL, `assets/fonts/`), as on the GPR-Mount results site.
 
 ## Evidence
 
-Every value carries one of **C** confirmed by owner, **L** listing, **S** stock or published
-reference, **M** must be measured. `null` means unknown and is never counted as zero: an
-unknown mass makes a total or a delta unknown rather than wrong.
+**C** confirmed · **L** listing or owner photo · **S** published reference · **M** must be measured.
+`null` is unknown and never counted as zero.
 
-## Layout
+From the owner's photos (`reference/photos/`, gitignored): Vittoria Rubino Pro 23-622 tyres,
+Fulcrum Racing 622×15C wheels, FSA Gossamer BB30 50/34, Shimano 105 calipers and derailleur,
+Serfas 155 saddle, the paint layout and the side-view tube heights (scaled from the rim).
+
+## Pipeline
 
 ```
-js/geo/        3D builders (mm, BB origin, +X forward, +Y up, +Z drive side)
-  kit.js         sweep / lathe / plate / sprocket tooth form / merge helpers
-  frame.js       frame, fork, headset          wheels.js   rims, lacing, hubs, tyres, QR
-  drivetrain.js  cranks, rings, cassette, chain, derailleurs, pedals
-  brakes.js      dual-pivot calipers           cockpit.js  stem, bar, levers, cables, accessories
-  seat.js        seatpost, saddle, cages       materials.js  PBR materials, paint and decal textures
-  bike.js        assembly and pose
-js/model/      pure functions, tested under Node
-  derived.js     hardpoints, trail, ETT, fit   gearing.js  gear table, chain length
-  physics.js     power model                   perf.js     configuration -> power-model inputs
-  frame-fe.js    beam FE solver and load cases belt.js     chain path through the derailleur
-js/viewer.js   on-demand renderer, picking, explode, dimensions, FE overlay
-js/app.js      state, URL, Build panel       js/views.js  the other tabs
-tools/build_catalog.mjs   catalog source -> data/components.json
-tools/banner.html         E-Labs card banner (1310x790)
-reference/                photo shot list; reference/photos/ is gitignored
+data/geometry.json + data/components.json
+  └─ cad/bike_cad.py         CadQuery B-rep, one geometry source (mm, BB origin, +X fwd, +Y up, +Z drive side)
+      ├─ cad/export.py        STEP per part → build; data/cad/parts.{json,bin} for the web
+      ├─ cad/solidworks_build.py   SolidWorks 2026 parts + synapse.SLDASM / synapse_aero.SLDASM, volume-checked
+      ├─ cad/wind_tunnel.py   LBM-LES wind tunnel (cad/lbm.py, generated cad/lbm_kernel.py) → cad/cfd_post.py → data/cfd/
+      └─ cad/fe_prepare.py    → Abaqus: cad/abaqus_frame.py (CAE) → solve → cad/abaqus_extract.py → cad/fe_web.py → data/fe/
 ```
 
-## How the model is built
+Run with the GPR-Mount Python (CadQuery, pywin32, numba); builds go to `%LOCALAPPDATA%\road-bike-cad\build`,
+outside the repo:
 
-Standard parts follow their standards: sprockets have a 12.7 mm pitch tooth form, rims are
-ETRTO 622, the chain is laid one link at a time along a solved path, and the derailleur cage
-swings to whatever angle takes up exactly the chain's length (big-big plus one link pair).
-Brake reach is solved so the pads sit on the brake track.
+```
+python cad/export.py && python cad/solidworks_build.py
+python cad/wind_tunnel.py --yaw 0 --dx 8 --flows 2.2 --avg 0.8 && python cad/cfd_post.py yaw00_dx8
+python cad/fe_prepare.py
+cd %LOCALAPPDATA%\road-bike-cad\build\fe && abaqus cae noGUI=abaqus_frame.py && abaqus job=frame_fe cpus=8 interactive && abaqus python abaqus_extract.py
+python cad/fe_web.py
+```
 
-The frame is not measured. Hardpoints come from catalog geometry; tube sections in
-`data/geometry.json` (`tubes`) are illustrative, which is also what the FE model uses.
+### Wind tunnel
 
-## Analysis limits
+Lattice Boltzmann D3Q19, regularized BGK with Smagorinsky LES, half-way bounce-back walls and
+momentum-exchange forces per part, numba on the CPU. Standard bike-only assumptions: air at 20 °C,
+40 km/h head-on, free stream (no ground), static wheels; spokes, chain, cables and the rider omitted.
 
-- **Performance**: CdA is a published range by position; Crr is a drum-test figure only where
-  one exists (otherwise a generic value and no gain is claimed); bike mass is assumed 8.8 kg
-  until weighed. No CFD.
-- **Frame FE**: Euler-Bernoulli beams, thin-walled elliptical sections, one isotropic laminate
-  modulus, assumed wall thickness. ISO 4210-6 force magnitudes for orientation only. It ranks
-  load paths; it is not a strength or safety assessment.
+SOLIDWORKS Flow Simulation is installed, but its automation interface on this machine exposes no
+setter for the inflow condition (the parameter export/apply pair drives parametric studies only),
+and Abaqus/CFD is unavailable in CAE 2022–2025. The LBM solver runs on the same CAD geometry.
+
+**Accuracy.** A sphere at Re 5×10⁴ reads Cd 0.60 at 24 cells per diameter and 0.69 at 12, against
+0.47–0.50. The bike's tubes get about 6–8 cells, so absolute drag reads high; differences between
+configurations, the breakdown and the flow structure are the use.
+
+### Frame FE
+
+Abaqus 2025 Standard. The frame and fork CAD solids become their outer skins (S4R/S3R, 5 mm),
+with an equivalent quasi-isotropic CFRP laminate (E 50 GPa) and walls per tube from
+`data/geometry.json`. The fork joins the head tube through kinematic couplings at the bearings;
+loads enter through distributing couplings. Five linear-perturbation load cases (ISO 4210-6
+magnitudes, for orientation) and the natural modes with the axles held. The colour scale tops out at
+the 99th-percentile stress; the local peak sits at a sharp, unfilleted tube junction.
 
 ## Catalog
 
-Edit `tools/build_catalog.mjs`, then `node tools/build_catalog.mjs`. A test fails if
-`data/components.json` drifts from its source. Prices are approximate US street prices
-(November 2026).
+Edit `tools/build_catalog.mjs`, then `node tools/build_catalog.mjs`; a test fails on drift.
 
 ## Checks
 
 ```
-node --test e-labs/road-bike/tests/*.test.js     # 30 checks
+node --test e-labs/road-bike/tests/*.test.js     # 33 checks: models, catalog, data packs
 python e-labs/road-bike/tools/validate_site.py
-python e-labs/road-bike/tools/hardpoints.py      # SolidWorks design-variable CSV
+python e-labs/road-bike/cad/lbm_check.py 24 9000  # sphere validation of the wind tunnel
 ```
-
-## Towards SolidWorks
-
-SolidWorks is scriptable on the workstation (the GPR-Mount builder uses the same COM route).
-A native model needs the reference photos and the M01-M18 measurements first; see
-`reference/README.md` for the shot list and `tools/measurements.csv` for the worksheet.
-Raw CAD, CFD and identifiers stay out of this public repository.
