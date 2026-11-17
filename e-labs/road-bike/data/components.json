@@ -154,8 +154,8 @@
  ],
  "default_config": {
   "frameset": "frameset_synapse_carbon_51_red",
-  "wheels": "wheels_shimano_rs10",
-  "tires": "tires_installed_23c",
+  "wheels": "wheels_fulcrum_racing_15c",
+  "tires": "tires_rubino_pro_23",
   "tubes": "tubes_installed_butyl",
   "crankset": "crank_fsa_gossamer_bb30_50_34",
   "bottom_bracket": "bb_fsa_bb30",
@@ -272,15 +272,15 @@
    }
   },
   {
-   "id": "wheels_shimano_rs10",
+   "id": "wheels_fulcrum_racing_15c",
    "slot": "wheels",
-   "name": "Shimano WH-RS10 · 24 mm alloy",
+   "name": "Fulcrum Racing · 622 × 15C alloy",
    "status": "installed",
-   "confidence": "S",
+   "confidence": "L",
    "model": null,
    "representation": "procedural",
-   "mass_g": 1900,
-   "mass_source": "Used-market reference, pair without QR (road.cc measured 1,845 g); verify M14/M16",
+   "mass_g": 1650,
+   "mass_source": "Racing 5 claim (later C17 generation); the installed 15C rim is older, so approximate",
    "price_usd": null,
    "price_source": null,
    "provides": {
@@ -305,14 +305,15 @@
      "value": "QR130"
     }
    ],
-   "notes": "",
+   "notes": "Identified from photos: black rim with a white RACING band, ETRTO 622×15C aluminium. Read the model number on the rim (Racing 5 or 7).",
    "source": "Project build specification v1.0 (2026-11-16)",
-   "url": "https://road.cc/content/review/21374-shimano-rs10-wheelset",
+   "url": "https://www.bike-components.de/en/Fulcrum/Racing-5-C17-Wheelset-p66668/",
    "visual": {
-    "depth": 24,
-    "width": 20.8,
+    "depth": 24.5,
+    "depthRear": 27.5,
+    "width": 20.5,
     "spokes": [
-     16,
+     18,
      20
     ],
     "cross": [
@@ -321,8 +322,10 @@
     ],
     "rim": "alloy_black",
     "hub": "black",
-    "decal": "SHIMANO  RS10",
-    "decalColor": "#d8dadd"
+    "decal": "RACING",
+    "decalColor": "#f4f4f2",
+    "decalAccent": "#d0202a",
+    "bladed": true
    },
    "perf": {
     "cda_delta_m2": 0
@@ -392,7 +395,7 @@
    },
    "upgrade": {
     "tier": 2,
-    "why": "About 300 g lighter than the RS10 with a stiffer rear wheel and a 17 mm internal rim that supports a 25 mm tyre properly. The long-standing benchmark alloy rim-brake wheel."
+    "why": "About 50 g lighter than the installed Racing with a stiffer rear wheel and a 17 mm internal rim that supports a 25 mm tyre properly. The long-standing benchmark alloy rim-brake wheel."
    },
    "mounts": {
     "root": "BB_CENTER"
@@ -727,9 +730,9 @@
    }
   },
   {
-   "id": "tires_installed_23c",
+   "id": "tires_rubino_pro_23",
    "slot": "tires",
-   "name": "Installed 700 × 23c tyres",
+   "name": "Vittoria Rubino Pro · 700 × 23",
    "status": "installed",
    "confidence": "C",
    "model": null,
@@ -748,17 +751,17 @@
      "value": 23
     }
    ],
-   "notes": "Brand unverified; likely Vittoria Zaffiro Pro. Inspect recorded rear sidewall damage.",
+   "notes": "Read from the sidewall: Rubino Pro 23-622. Inspect the rear sidewall damage noted in October.",
    "source": "Project build specification v1.0 (2026-11-16)",
-   "url": null,
+   "url": "https://www.bicyclerollingresistance.com/road-bike-reviews/compare/vittoria-rubino-pro-g2-vs-vittoria-rubino-pro-g-2016-vs-vittoria-rubino-pro-iii-2014",
    "visual": {
-    "label": "",
+    "label": "Vittoria   RUBINO PRO   23-622",
     "sidewall": "black"
    },
    "perf": {
-    "crr": 0.00546,
-    "crr_basis": "Vittoria Zaffiro Pro G2.0 25 mm at 80 psi (drum test). The installed brand is unverified and the 23 mm size was not tested.",
-    "crr_source": "https://www.bicyclerollingresistance.com/road-bike-reviews/compare/continental-grand-prix-5000-2018-vs-vittoria-zaffiro-pro-g2-2020"
+    "crr": 0.0048,
+    "crr_basis": "Rubino Pro III, 25 mm, 80 psi drum test (0.0048). Later G+ versions tested 0.0055–0.0057.",
+    "crr_source": "https://www.bicyclerollingresistance.com/road-bike-reviews/compare/vittoria-rubino-pro-g2-vs-vittoria-rubino-pro-g-2016-vs-vittoria-rubino-pro-iii-2014"
    },
    "upgrade": null,
    "mounts": {
@@ -1066,7 +1069,7 @@
   {
    "id": "crank_fsa_gossamer_bb30_50_34",
    "slot": "crankset",
-   "name": "FSA Gossamer BB30 · 50/34",
+   "name": "FSA Gossamer BB30 · 50/34 N10, 110 BCD",
    "status": "installed",
    "confidence": "C",
    "model": null,
@@ -2030,7 +2033,7 @@
   {
    "id": "brakes_br5700",
    "slot": "brakes",
-   "name": "Shimano 105 BR-5700 · pair",
+   "name": "Shimano 105 calipers · pair",
    "status": "installed",
    "confidence": "C",
    "model": null,
@@ -2054,7 +2057,7 @@
      "value": "road-caliper"
     }
    ],
-   "notes": "Verify pad compound, reach and rim wear. Tyre rating not confirmed.",
+   "notes": "Shimano 105 confirmed in photos; the hollow “105” logo matches the BR-5800 generation, so read the model code. Mass is the BR-5700 reference.",
    "source": "Project build specification v1.0 (2026-11-16)",
    "url": null,
    "visual": {
@@ -2592,7 +2595,7 @@
   {
    "id": "saddle_serfas_155",
    "slot": "saddle",
-   "name": "Serfas · 155 mm saddle",
+   "name": "Serfas · 155 mm, centre channel",
    "status": "installed",
    "confidence": "C",
    "model": null,
@@ -2603,13 +2606,13 @@
    "price_source": null,
    "provides": {},
    "requires": [],
-   "notes": "Model and rail material unverified.",
+   "notes": "Photo: Serfas 155 with a moulded centre relief channel. Model and rail material unverified.",
    "source": "Project build specification v1.0 (2026-11-16)",
    "url": null,
    "visual": {
     "width": 155,
-    "length": 270,
-    "style": "classic"
+    "length": 262,
+    "style": "channel"
    },
    "perf": {},
    "upgrade": null,

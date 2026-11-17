@@ -17,12 +17,36 @@
   "wheel_radius_mm": 334,
   "axes": "BB origin; +X forward, +Y up, +Z drive side; millimetres",
   "hardpoints_mm": {
-    "BB_CENTER": [0, 0, 0],
-    "REAR_AXLE": [-403.6, 72, 0],
-    "FRONT_AXLE": [570.2, 72, 0],
-    "HT_TOP": [363, 548, 0],
-    "HT_BOTTOM": [407.8, 410.1, 0],
-    "ST_TOP": [-124, 432.6, 0]
+    "BB_CENTER": [
+      0,
+      0,
+      0
+    ],
+    "REAR_AXLE": [
+      -403.6,
+      72,
+      0
+    ],
+    "FRONT_AXLE": [
+      570.2,
+      72,
+      0
+    ],
+    "HT_TOP": [
+      363,
+      548,
+      0
+    ],
+    "HT_BOTTOM": [
+      407.8,
+      410.1,
+      0
+    ],
+    "ST_TOP": [
+      -124,
+      432.6,
+      0
+    ]
   },
   "interfaces": {
     "status": "Standards for this frame generation; confirm on the bike",
@@ -35,16 +59,135 @@
     "chainline_mm": 43.5
   },
   "tubes": {
-    "status": "Illustrative sections chosen to look right. Not measured: replace with M09 and the reference photos.",
-    "confidence": "M",
+    "status": "Side-view heights measured from the owner's photo (scale: 622 mm rim, ±10 %). Lateral widths and walls are still assumptions until M09.",
+    "confidence": "L",
     "note": "Outer semi-axes in mm. a = in the frame plane, across the tube; b = lateral. n = superellipse exponent (2 = ellipse). wall_mm is an assumption used only by the beam model.",
-    "down_tube": { "start": { "a": 25, "b": 25, "n": 2.6 }, "end": { "a": 24, "b": 32, "n": 2.8 }, "wall_mm": 1.2 },
-    "top_tube": { "start": { "a": 16.5, "b": 23, "n": 2.5 }, "end": { "a": 11.5, "b": 17.5, "n": 2.3 }, "wall_mm": 1.0 },
-    "seat_tube": { "start": { "a": 21, "b": 27, "n": 2.5 }, "end": { "a": 17.4, "b": 17.4, "n": 2 }, "wall_mm": 1.2 },
-    "head_tube": { "start": { "a": 26, "b": 26, "n": 2 }, "mid": { "a": 22.5, "b": 22.5, "n": 2 }, "end": { "a": 25, "b": 25, "n": 2 }, "wall_mm": 2.6 },
-    "chainstay": { "start": { "a": 17, "b": 9.5, "n": 2.7 }, "mid": { "a": 9.5, "b": 11.5, "n": 2.5 }, "end": { "a": 8, "b": 6.5, "n": 2.2 }, "wall_mm": 1.6 },
-    "seat_stay": { "start": { "a": 7.5, "b": 9.5, "n": 2.4 }, "mid": { "a": 4.8, "b": 9.5, "n": 2.6 }, "end": { "a": 6.5, "b": 6, "n": 2.2 }, "wall_mm": 1.3 },
-    "fork_blade": { "start": { "a": 12.5, "b": 20, "n": 2.3 }, "mid": { "a": 9, "b": 15, "n": 2.2 }, "end": { "a": 6.5, "b": 9.5, "n": 2.1 }, "wall_mm": 1.8 }
+    "down_tube": {
+      "start": {
+        "a": 31,
+        "b": 30,
+        "n": 2.6
+      },
+      "mid": {
+        "a": 27,
+        "b": 29,
+        "n": 2.7
+      },
+      "end": {
+        "a": 28,
+        "b": 30,
+        "n": 2.6
+      },
+      "wall_mm": 1.2
+    },
+    "top_tube": {
+      "start": {
+        "a": 20,
+        "b": 24,
+        "n": 2.4
+      },
+      "mid": {
+        "a": 11.5,
+        "b": 20,
+        "n": 2.6
+      },
+      "end": {
+        "a": 10,
+        "b": 16.5,
+        "n": 2.4
+      },
+      "wall_mm": 1.0
+    },
+    "seat_tube": {
+      "start": {
+        "a": 27,
+        "b": 27,
+        "n": 2.5
+      },
+      "mid": {
+        "a": 19,
+        "b": 20,
+        "n": 2.3
+      },
+      "end": {
+        "a": 17.4,
+        "b": 17.4,
+        "n": 2
+      },
+      "wall_mm": 1.2
+    },
+    "head_tube": {
+      "start": {
+        "a": 26,
+        "b": 26,
+        "n": 2
+      },
+      "mid": {
+        "a": 22.5,
+        "b": 22.5,
+        "n": 2
+      },
+      "end": {
+        "a": 25,
+        "b": 25,
+        "n": 2
+      },
+      "wall_mm": 2.6
+    },
+    "chainstay": {
+      "start": {
+        "a": 17.5,
+        "b": 10,
+        "n": 2.7
+      },
+      "mid": {
+        "a": 10,
+        "b": 11.5,
+        "n": 2.5
+      },
+      "end": {
+        "a": 8,
+        "b": 6.5,
+        "n": 2.2
+      },
+      "wall_mm": 1.6
+    },
+    "seat_stay": {
+      "start": {
+        "a": 7,
+        "b": 9,
+        "n": 2.4
+      },
+      "mid": {
+        "a": 5.5,
+        "b": 9.5,
+        "n": 2.6
+      },
+      "end": {
+        "a": 6.5,
+        "b": 6,
+        "n": 2.2
+      },
+      "wall_mm": 1.3
+    },
+    "fork_blade": {
+      "start": {
+        "a": 14,
+        "b": 20,
+        "n": 2.3
+      },
+      "mid": {
+        "a": 10,
+        "b": 15,
+        "n": 2.2
+      },
+      "end": {
+        "a": 6.5,
+        "b": 9.5,
+        "n": 2.1
+      },
+      "wall_mm": 1.8
+    }
   },
   "fit_defaults": {
     "status": "Placeholders for display. Rider fit has not been measured (M12, M13).",
@@ -62,5 +205,10 @@
   "discrepancies": [
     "Fork rake: 50 mm in MY2012 catalog versus 45 mm in 2009 manual. Resolve with M01/M08.",
     "Effective top tube: catalog 525 mm versus approximately 520.1 mm from stack/reach and 74° seat angle. Resolve M04/M06."
-  ]
+  ],
+  "paint": {
+    "source": "Owner photos 2026-11-16",
+    "confidence": "C",
+    "note": "Head-tube hood, top-tube front and underside, down-tube belly, chainstays, seat-stay outer edges and fork inner faces are red; the rest white with black pinstripes."
+  }
 }

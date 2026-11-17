@@ -106,11 +106,12 @@ export function buildWheels(B) {
       B.addTo(W, merge([lathe([[rt + 0.4, -h], [RIM_OUTER_R - 0.5, -h]], 160), lathe([[RIM_OUTER_R - 0.5, h], [rt + 0.4, h]], 160)]), M.aluMachined, 'Brake track');
     }
     if (vis.decal && B.P.decals !== false && depth >= 22) {
-      const r1 = rt - 1.2, r0 = Math.max(rn + 2.5, rt - (depth > 35 ? 26 : 9));
+      const r1 = rt - 1.2, r0 = Math.max(rn + 2.5, rt - (depth > 35 ? 26 : 13));
       const zAt = (r) => { const t = (r - rn - 0.6) / (rt - rn - 0.6); return lerp(2.6, width / 2, Math.pow(Math.max(t, 0), depth > 35 ? 0.42 : 0.6)) + 0.08; };
       const rep = depth > 35 ? 3 : 4;
-      B.addTo(W, lathe([[r1, zAt(r1)], [r0, zAt(r0)]], 160), ringText(M, vis.decal, vis.decalColor || '#ffffff', { repeat: rep, mirror: true, size: depth > 35 ? 0.78 : 0.6 }), 'Rim decal', false);
-      B.addTo(W, lathe([[r0, -zAt(r0)], [r1, -zAt(r1)]], 160), ringText(M, vis.decal, vis.decalColor || '#ffffff', { repeat: rep, mirror: true, size: depth > 35 ? 0.78 : 0.6 }), 'Rim decal', false);
+      const opts = { repeat: rep, mirror: true, size: depth > 35 ? 0.78 : 0.74, accent: vis.decalAccent };
+      B.addTo(W, lathe([[r1, zAt(r1)], [r0, zAt(r0)]], 160), ringText(M, vis.decal, vis.decalColor || '#ffffff', opts), 'Rim decal', false);
+      B.addTo(W, lathe([[r0, -zAt(r0)], [r1, -zAt(r1)]], 160), ringText(M, vis.decal, vis.decalColor || '#ffffff', opts), 'Rim decal', false);
     }
 
     // hub

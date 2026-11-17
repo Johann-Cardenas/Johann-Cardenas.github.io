@@ -93,39 +93,47 @@ export function tubePaint(M, P, kind) {
   const W = 2048, H = 512;
   const tex = canvasTexture(W, H, (c) => {
     c.fillStyle = S.c1; c.fillRect(0, 0, W, H);
-    if (kind === 'down') {
-      // accent belly along the underside, feathered into the flanks
-      c.fillStyle = S.c2; c.fillRect(0, H * 0.40, W, H * 0.20);
-      c.fillStyle = S.c3; c.fillRect(0, H * 0.395, W, 5); c.fillRect(0, H * 0.60, W, 5);
+    const red = (x, y, w, h) => { c.fillStyle = S.c2; c.fillRect(x * W, y * H, w * W, h * H); };
+    const line = (x, y, w, h) => { c.fillStyle = S.c3; c.fillRect(x * W, y * H, w * W, Math.max(h * H, 4)); };
+    // Layout from the owner's photos. v = 0 is the sweep's N axis, 0.25 the drive side, 0.5 the opposite face.
+    if (kind === 'down') {          // red belly (v 0.5), black pinstripes, white top, cannondale on both flanks
+      red(0, 0.34, 1, 0.32); line(0, 0.335, 1, 0.012); line(0, 0.655, 1, 0.012);
+      red(0, 0, 0.13, 1);           // red where it meets the bottom bracket
+      red(0.86, 0.12, 0.14, 0.76);  // and the head-tube hood wrapping round the front
       if (decals) bothSides(c, W, H, (k) => {
-        k.fillStyle = M.inkOnPaint; k.font = font(132); k.textBaseline = 'middle'; k.textAlign = 'center';
-        k.fillText('cannondale', W * 0.50, 4);
+        k.font = font(138); k.textBaseline = 'middle'; k.textAlign = 'center';
+        k.lineWidth = 7; k.strokeStyle = '#8b9096'; k.strokeText('cannondale', W * 0.50, 4);
+        k.fillStyle = M.inkOnPaint; k.fillText('cannondale', W * 0.50, 4);
       });
-    } else if (kind === 'top') {
-      c.fillStyle = S.c2; c.fillRect(W * 0.52, 0, W * 0.48, H * 0.085); c.fillRect(W * 0.52, H * 0.915, W * 0.48, H * 0.085);
-      c.fillStyle = S.c3; c.fillRect(W * 0.52 - 8, 0, 8, H * 0.085); c.fillRect(W * 0.52 - 8, H * 0.915, 8, H * 0.085);
+    } else if (kind === 'top') {    // front third red (the hood), black pinstripe under the full length
+      red(0.64, 0, 0.36, 1); line(0.64, 0, 0.006, 1);
+      red(0.30, 0.40, 0.70, 0.20); line(0, 0.47, 1, 0.06);
       if (decals) bothSides(c, W, H, (k) => {
-        k.fillStyle = S.c2; k.font = font(74); k.textBaseline = 'middle'; k.textAlign = 'left';
-        k.fillText('SYNAPSE', W * 0.10, 4);
-        k.fillStyle = M.inkOnPaint; k.font = font(34, '700 {s}px Arial, sans-serif');
-        k.fillText('CARBON', W * 0.10 + 372, 10);
+        k.fillStyle = S.c2; k.font = font(70); k.textBaseline = 'middle'; k.textAlign = 'left';
+        k.fillText('SYNAPSE', W * 0.12, 2);
       });
-    } else if (kind === 'seat') {
-      // rear half in the accent colour over the lower two thirds (v = 0 is the rear face)
-      c.fillStyle = S.c2; c.fillRect(0, 0, W * 0.62, H * 0.16); c.fillRect(0, H * 0.84, W * 0.62, H * 0.16);
-      c.fillStyle = S.c3; c.fillRect(W * 0.62, 0, 10, H * 0.16); c.fillRect(W * 0.62, H * 0.84, 10, H * 0.16);
-    } else if (kind === 'fork') {
-      // inner faces and tips in the accent colour
-      c.fillStyle = S.c2; c.fillRect(W * 0.80, 0, W * 0.20, H);
-      c.fillStyle = S.c3; c.fillRect(W * 0.80 - 10, 0, 10, H);
-    } else if (kind === 'stay') {
-      c.fillStyle = S.c2; c.fillRect(W * 0.72, 0, W * 0.28, H);
-      c.fillStyle = S.c3; c.fillRect(W * 0.72 - 8, 0, 8, H);
-    } else if (kind === 'chainstay') {
-      c.fillStyle = S.c3; c.fillRect(W * 0.0, 0, W * 0.30, H);
-      c.fillStyle = S.c2; c.fillRect(W * 0.30, 0, 10, H);
-    } else if (kind === 'head') {
-      c.fillStyle = S.c2; c.fillRect(0, H * 0.36, W, H * 0.28); // front face (v = 0.5 for an upward path)
+    } else if (kind === 'seat') {   // red at the bottom bracket, SYNAPSE along the tube, black at the front top
+      red(0, 0, 0.16, 1); line(0.16, 0, 0.006, 1);
+      line(0.55, 0.47, 0.45, 0.06);
+      if (decals) bothSides(c, W, H, (k) => {
+        k.font = font(96); k.textBaseline = 'middle'; k.textAlign = 'center';
+        k.lineWidth = 5; k.strokeStyle = '#6f757c'; k.strokeText('SYNAPSE', W * 0.60, 2);
+        k.fillStyle = S.c1; k.fillText('SYNAPSE', W * 0.60, 2);
+      });
+    } else if (kind === 'fork_drive' || kind === 'fork_left') { // inner face red, crown and tips red
+      const inner = kind === 'fork_drive' ? 0 : 0.5;
+      red(0, inner - 0.12, 1, 0.24); if (inner === 0) red(0, 0.88, 1, 0.12);
+      red(0.84, 0, 0.16, 1); red(0, 0, 0.08, 1);
+    } else if (kind === 'stay') {   // outer edge red, red toward the dropout
+      red(0, 0.40, 1, 0.20); red(0.74, 0, 0.26, 1); line(0, 0.395, 1, 0.008);
+    } else if (kind === 'chainstay') { // red with SAVE on the flanks
+      red(0, 0, 1, 1); line(0, 0.47, 1, 0.06);
+      if (decals) bothSides(c, W, H, (k) => {
+        k.fillStyle = '#ffffff'; k.font = font(80, '800 {s}px Arial, sans-serif'); k.textBaseline = 'middle'; k.textAlign = 'center';
+        k.fillText('SAVE', W * 0.45, 2);
+      });
+    } else if (kind === 'head') {   // the red hood: everything but the rear face
+      red(0, 0.16, 1, 0.68);
     }
   });
   M.textures.push(tex);
@@ -134,14 +142,22 @@ export function tubePaint(M, P, kind) {
 }
 
 /** Text ring for a lathe band (rim decal). `mirror` flips it for the opposite face of the wheel. */
-export function ringText(M, text, color, { repeat = 3, mirror = false, size = 0.62, font: f = '900 {s}px Arial, sans-serif', bg = null } = {}) {
+export function ringText(M, text, color, { repeat = 3, mirror = false, size = 0.62, font: f = '900 {s}px Arial, sans-serif', bg = null, accent = null } = {}) {
   const W = 4096, H = 128;
   const tex = canvasTexture(W, H, (c) => {
     c.clearRect(0, 0, W, H);
     if (bg) { c.fillStyle = bg; c.fillRect(0, 0, W, H); }
     if (mirror) { c.translate(W, 0); c.scale(-1, 1); }
     c.fillStyle = color; c.font = font(Math.round(H * size), f); c.textBaseline = 'middle'; c.textAlign = 'center';
-    for (let i = 0; i < repeat; i++) c.fillText(text, (i + 0.5) * W / repeat, H / 2 + 2);
+    for (let i = 0; i < repeat; i++) {
+      const x = (i + 0.5) * W / repeat;
+      if (accent) { // the white band the lettering sits in, with a red block after it
+        const tw = c.measureText(text).width;
+        c.fillStyle = color; c.fillRect(x - tw * 0.62, H * 0.12, tw * 1.24, H * 0.76);
+        c.fillStyle = accent; c.fillRect(x + tw * 0.66, H * 0.12, tw * 0.22, H * 0.76);
+        c.fillStyle = '#111214'; c.fillText(text, x, H / 2 + 2); c.fillStyle = color;
+      } else c.fillText(text, x, H / 2 + 2);
+    }
   });
   M.textures.push(tex);
   return new T.MeshStandardMaterial({ map: tex, transparent: !bg, alphaTest: bg ? 0 : 0.35, roughness: 0.5, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });

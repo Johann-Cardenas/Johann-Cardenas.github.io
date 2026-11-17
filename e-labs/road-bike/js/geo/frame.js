@@ -40,7 +40,7 @@ export function buildFrame(B) {
 
   // bottom-bracket shell (BB30: 68 mm wide, 42 mm bore)
   const w = geom.interfaces.bb_shell_width_mm / 2, bore = geom.interfaces.bb_bore_mm / 2;
-  B.add(slot, lathe([[bore, -w], [bore + 5.5, -w], [bore + 8, -w + 4], [bore + 9, 0], [bore + 8, w - 4], [bore + 5.5, w], [bore, w]], 56), M.paint, { name: 'Bottom-bracket shell' });
+  B.add(slot, lathe([[bore, -w], [bore + 5.5, -w], [bore + 8, -w + 4], [bore + 9, 0], [bore + 8, w - 4], [bore + 5.5, w], [bore, w]], 56), M.paintAccent, { name: 'Bottom-bracket shell' });
   B.add(slot, lathe([[bore - 0.4, -w - 0.2], [bore - 0.4, w + 0.2]], 40), M.hole, { name: 'Bottom-bracket bore', shadow: false });
 
   // ---- rear triangle -------------------------------------------------------------------------
@@ -103,7 +103,7 @@ export function buildFork(B) {
   const L = B.derived.axle_to_crown_mm, rake = geom.fork_rake_mm;
   const at = (d, f, z) => hb.clone().addScaledVector(up, -d).addScaledVector(fwd, f).setZ(z);
   const bend = (d) => rake * Math.max(0, (d - 90) / (L - 90)) ** 2.1;
-  const paint = tubePaint(M, P, 'fork');
+  const paints = { 1: tubePaint(M, P, 'fork_drive'), '-1': tubePaint(M, P, 'fork_left') };
   const dEnd = L - 17;
   for (const s of [-1, 1]) {
     const pts = [at(9, 0, 0), at(11, 0, s * 16), at(19, 0, s * 34), at(34, 0, s * 46), at(60, 0, s * 51)];
@@ -112,7 +112,7 @@ export function buildFork(B) {
     B.add(slot, sweep(spline(pts, 64), (u) => {
       const k = smooth(u / 0.16); // crown shoulder -> blade
       return { a: lerp(15, pick(tb.fork_blade, u, 'a'), k), b: lerp(23, pick(tb.fork_blade, u, 'b'), k), n: lerp(2.6, pick(tb.fork_blade, u, 'n'), k) };
-    }, { seg: 28, side: fwd, transport: true, capRound: true }), paint, { steer, name: 'Fork blade' });
+    }, { seg: 28, side: fwd, transport: true, capRound: true }), paints[s], { steer, name: 'Fork blade' });
     // dropout
     const tip = at(dEnd, bend(dEnd), 0), len = tip.distanceTo(fa);
     const sh = linkShape(len, 7.5, 10.5, 0.85); sh.holes.push(circlePath(len, 0, 4.7));
@@ -120,7 +120,7 @@ export function buildFork(B) {
     B.add(slot, place(g, V(tip.x, tip.y, s * (geom.interfaces.front_oln_mm / 2 + 2.75))), M.aluBlack, { steer, name: 'Fork dropout' });
   }
   // crown, crown race and steerer
-  B.add(slot, sweep([hb.clone().addScaledVector(up, 1), hb.clone().addScaledVector(up, -6), hb.clone().addScaledVector(up, -22)], (u) => ({ a: lerp(26, 20, u), b: lerp(26, 24, u), n: 2.3 }), { seg: 36, side: fwd }), M.paint, { steer, name: 'Fork crown' });
+  B.add(slot, sweep([hb.clone().addScaledVector(up, 1), hb.clone().addScaledVector(up, -6), hb.clone().addScaledVector(up, -22)], (u) => ({ a: lerp(26, 20, u), b: lerp(26, 24, u), n: 2.3 }), { seg: 36, side: fwd }), M.paintAccent, { steer, name: 'Fork crown' });
   const top = ht.clone().addScaledVector(up, 15 + P.spacers_mm + 40 + 1);
   B.add(slot, rod(hb, top, geom.interfaces.steerer_mm / 2, geom.interfaces.steerer_mm / 2, 28), M.carbonMatte, { steer, name: 'Steerer' });
   // headset top cover

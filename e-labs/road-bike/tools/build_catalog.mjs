@@ -14,7 +14,6 @@ const SRC = {
   brr_gp5000: 'https://www.bicyclerollingresistance.com/road-bike-reviews/compare/continental-grand-prix-5000-2018-vs-vittoria-zaffiro-pro-g2-2020',
   brr_next: 'https://bicyclerollingresistance.com/road-bike-reviews/compare/continental-grand-prix-5000-s-tr-vs-pirelli-p-zero-velo-race-tlr-vs-vittoria-corsa-next-tlr',
   bikeradar_rim: 'https://www.bikeradar.com/advice/buyers-guides/best-rim-brake-bike-wheelsets',
-  roadcc_rs10: 'https://road.cc/content/review/21374-shimano-rs10-wheelset',
   zonda: 'https://www.bike-components.de/en/Campagnolo/Zonda-C17-Wheelset-2017-Model-p49927/',
   rd5701: 'https://www.bike-components.de/en/Shimano/105-RD-5701-10-speed-Rear-Derailleur-p32530/',
   rd_forum: 'https://forum.bikeradar.com/discussion/13036544/5700-v-5701-rear-mech',
@@ -26,6 +25,8 @@ const SRC = {
   hg500_34: 'https://www.canyon.com/en-be/gear/bike-parts/spare-and-wear-parts/spare-wear-parts/shimano-cs-hg500-10-speed-cassette-11-34/10009559.html',
   gossamer: 'https://www.competitivecyclist.com/fsa-gossamer-pro-bb30-compact-crankset',
   synapse2012: 'https://www.bikeroar.com/products/cannondale/synapse-carbon-women-s-5-105-2012/specs',
+  brr_rubino: 'https://www.bicyclerollingresistance.com/road-bike-reviews/compare/vittoria-rubino-pro-g2-vs-vittoria-rubino-pro-g-2016-vs-vittoria-rubino-pro-iii-2014',
+  racing5: 'https://www.bike-components.de/en/Fulcrum/Racing-5-C17-Wheelset-p66668/',
 };
 
 export const slots = [
@@ -71,18 +72,19 @@ const defs = [
   }],
 
   // ---------------------------------------------------------------- wheels
-  ['wheels', 'wheels_shimano_rs10', 'Shimano WH-RS10 · 24 mm alloy', 'installed', 'S', {
-    mass_g: 1900, mass_source: 'Used-market reference, pair without QR (road.cc measured 1,845 g); verify M14/M16',
-    provides: { freehub: 'HG-8/9/10', rim_internal_mm: 15, brake_track: 'alloy' }, requires: RIM, url: SRC.roadcc_rs10,
-    visual: { depth: 24, width: 20.8, spokes: [16, 20], cross: [0, 2], rim: 'alloy_black', hub: 'black', decal: 'SHIMANO  RS10', decalColor: '#d8dadd' },
+  ['wheels', 'wheels_fulcrum_racing_15c', 'Fulcrum Racing · 622 × 15C alloy', 'installed', 'L', {
+    mass_g: 1650, mass_source: 'Racing 5 claim (later C17 generation); the installed 15C rim is older, so approximate',
+    provides: { freehub: 'HG-8/9/10', rim_internal_mm: 15, brake_track: 'alloy' }, requires: RIM, url: SRC.racing5,
+    visual: { depth: 24.5, depthRear: 27.5, width: 20.5, spokes: [18, 20], cross: [0, 2], rim: 'alloy_black', hub: 'black', decal: 'RACING', decalColor: '#f4f4f2', decalAccent: '#d0202a', bladed: true },
     perf: { cda_delta_m2: 0 },
+    notes: 'Identified from photos: black rim with a white RACING band, ETRTO 622×15C aluminium. Read the model number on the rim (Racing 5 or 7).',
   }],
   ['wheels', 'wheels_zonda_c17', 'Campagnolo Zonda C17 · alloy, HG freehub', 'candidate', 'S', {
     mass_g: 1596, mass_source: 'Manufacturer claim, pair (one retailer lists 1,540 g)', price_usd: 520, url: SRC.zonda,
     provides: { freehub: 'HG-11', rim_internal_mm: 17, brake_track: 'alloy' }, requires: RIM,
     visual: { depth: 26, depthRear: 30, width: 22.5, spokes: [16, 21], cross: [0, 'g3'], rim: 'alloy_black', hub: 'black', decal: 'ZONDA', decalColor: '#f2f2f2', bladed: true },
     perf: { cda_delta_m2: null },
-    upgrade: { tier: 2, why: 'About 300 g lighter than the RS10 with a stiffer rear wheel and a 17 mm internal rim that supports a 25 mm tyre properly. The long-standing benchmark alloy rim-brake wheel.' },
+    upgrade: { tier: 2, why: 'About 50 g lighter than the installed Racing with a stiffer rear wheel and a 17 mm internal rim that supports a 25 mm tyre properly. The long-standing benchmark alloy rim-brake wheel.' },
     notes: 'Order the Shimano HG freehub version. ' + CASS_NOTE,
   }],
   ['wheels', 'wheels_fulcrum_racing3', 'Fulcrum Racing 3 C17 · alloy', 'candidate', 'S', {
@@ -126,11 +128,11 @@ const defs = [
   }],
 
   // ---------------------------------------------------------------- tyres
-  ['tires', 'tires_installed_23c', 'Installed 700 × 23c tyres', 'installed', 'C', {
-    provides: { tire_width_mm: 23 }, requires: [req('tire_max_mm', 'gte', 23)],
-    visual: { label: '', sidewall: 'black' },
-    perf: { crr: 0.00546, crr_basis: 'Vittoria Zaffiro Pro G2.0 25 mm at 80 psi (drum test). The installed brand is unverified and the 23 mm size was not tested.', crr_source: SRC.brr_gp5000 },
-    notes: 'Brand unverified; likely Vittoria Zaffiro Pro. Inspect recorded rear sidewall damage.',
+  ['tires', 'tires_rubino_pro_23', 'Vittoria Rubino Pro · 700 × 23', 'installed', 'C', {
+    provides: { tire_width_mm: 23 }, requires: [req('tire_max_mm', 'gte', 23)], url: SRC.brr_rubino,
+    visual: { label: 'Vittoria   RUBINO PRO   23-622', sidewall: 'black' },
+    perf: { crr: 0.0048, crr_basis: 'Rubino Pro III, 25 mm, 80 psi drum test (0.0048). Later G+ versions tested 0.0055–0.0057.', crr_source: SRC.brr_rubino },
+    notes: 'Read from the sidewall: Rubino Pro 23-622. Inspect the rear sidewall damage noted in October.',
   }],
   ['tires', 'tires_gp5000_25', 'Continental Grand Prix 5000 · 700 × 25', 'candidate', 'S', {
     mass_g: 442, mass_source: 'Bicycle Rolling Resistance measured 221 g each', price_usd: 140, url: SRC.brr_gp5000,
@@ -183,7 +185,7 @@ const defs = [
   }],
 
   // ---------------------------------------------------------------- crankset / BB
-  ['crankset', 'crank_fsa_gossamer_bb30_50_34', 'FSA Gossamer BB30 · 50/34', 'installed', 'C', {
+  ['crankset', 'crank_fsa_gossamer_bb30_50_34', 'FSA Gossamer BB30 · 50/34 N10, 110 BCD', 'installed', 'C', {
     provides: { ring_big: 50, ring_small: 34, crank_spindle: 'BB30' }, requires: [req('bb_spindle', 'eq', 'BB30')], url: SRC.gossamer,
     visual: { style: 'gossamer', arm: '#17181a', ring: '#1b1c1f', accent: '#d9d9d6', label: 'FSA' },
     notes: 'Crank length to read (M10). Listings disagree on mass (751 g and 808 g), so no reference mass is used.',
@@ -314,10 +316,10 @@ const defs = [
   }],
 
   // ---------------------------------------------------------------- braking
-  ['brakes', 'brakes_br5700', 'Shimano 105 BR-5700 · pair', 'installed', 'C', {
+  ['brakes', 'brakes_br5700', 'Shimano 105 calipers · pair', 'installed', 'C', {
     mass_g: 376, mass_source: 'Manufacturer reference, pair', provides: { caliper_tire_max_mm: null },
     requires: [req('brake_type', 'eq', 'rim'), req('brake_pull', 'eq', 'road-caliper')], visual: { style: '5700', color: '#1b1c1f' },
-    notes: 'Verify pad compound, reach and rim wear. Tyre rating not confirmed.',
+    notes: 'Shimano 105 confirmed in photos; the hollow “105” logo matches the BR-5800 generation, so read the model code. Mass is the BR-5700 reference.',
   }],
   ['brakes', 'brakes_br_r7000', 'Shimano 105 BR-R7000 · pair', 'candidate', 'S', {
     mass_g: 379, mass_source: 'Shimano listed average, pair', price_usd: 110, url: SRC.br_r7000, provides: { caliper_tire_max_mm: 28 },
@@ -385,7 +387,7 @@ const defs = [
     mass_g: 228, mass_source: 'Manufacturer claim, 330 mm; verify', price_usd: 100, requires: [req('seatpost_d_mm', 'eq', 27.2)], visual: { style: 'thomson', color: '#1a1b1e' },
     upgrade: { tier: 5, why: 'A clamp that holds its angle and never creaks.' },
   }],
-  ['saddle', 'saddle_serfas_155', 'Serfas · 155 mm saddle', 'installed', 'C', { visual: { width: 155, length: 270, style: 'classic' }, notes: 'Model and rail material unverified.' }],
+  ['saddle', 'saddle_serfas_155', 'Serfas · 155 mm, centre channel', 'installed', 'C', { visual: { width: 155, length: 262, style: 'channel' }, notes: 'Photo: Serfas 155 with a moulded centre relief channel. Model and rail material unverified.' }],
   ['saddle', 'saddle_power_comp_155', 'Specialized Power Comp · 155 mm', 'candidate', 'S', {
     mass_g: 241, mass_source: 'Manufacturer claim; verify', price_usd: 140, visual: { width: 155, length: 240, style: 'short' },
     upgrade: { tier: 4, why: 'Short-nose shape with a full cut-out, in the same 155 mm width. Saddles are personal: test before buying.' },
@@ -419,7 +421,7 @@ const defs = [
 ];
 
 export const default_config = {
-  frameset: 'frameset_synapse_carbon_51_red', wheels: 'wheels_shimano_rs10', tires: 'tires_installed_23c', tubes: 'tubes_installed_butyl',
+  frameset: 'frameset_synapse_carbon_51_red', wheels: 'wheels_fulcrum_racing_15c', tires: 'tires_rubino_pro_23', tubes: 'tubes_installed_butyl',
   crankset: 'crank_fsa_gossamer_bb30_50_34', bottom_bracket: 'bb_fsa_bb30', cassette: 'cassette_cs5700_11_28', rear_derailleur: 'rd_5700_ss',
   front_derailleur: 'fd_5700', chain: 'chain_installed_10s', shifters: 'levers_st5700', cables: 'cables_installed', brakes: 'brakes_br5700',
   brake_pads: 'pads_installed', stem: 'stem_installed', handlebar: 'bar_installed', tape: 'tape_installed', seatpost: 'seatpost_installed',

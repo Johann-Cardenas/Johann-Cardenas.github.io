@@ -34,6 +34,7 @@ export function buildSeat(B) {
   const last = st[st.length - 1]; path.push(V(S.x + 12 + last[0] * Lg, S.y - 7 + last[2] * 0.9 - 2, 0)); secs.push({ a: 6, b: last[1] * Wd, n: 2.25 });
   const shell = sweep(path, (u, i) => secs[i], { seg: 34, capRound: true });
   B.add('saddle', shell, M.saddle, { name: 'Saddle' });
+  if (sv.style === 'channel') B.add('saddle', plate(roundRect(Lg * 0.62, 13, 6.5), 1.2).rotateX(-Math.PI / 2).translate(S.x + 12 + Lg * 0.06, S.y - 0.9, 0), M.plasticGloss, { name: 'Centre channel', shadow: false });
   if (short) B.add('saddle', plate(roundRect(Lg * 0.46, 15, 7.5), 2).rotateX(-Math.PI / 2).translate(S.x + 12 + Lg * 0.02, S.y - 0.6, 0), M.hole, { name: 'Pressure-relief cut-out', shadow: false });
   const rails = [];
   for (const s of [-1, 1]) rails.push(sweep(spline([V(S.x + 12 - Lg * 0.34, S.y - 20, s * Wd * 0.55), V(clampC.x - 46, railY, s * 22), V(clampC.x + 46, railY, s * 22), V(S.x + 12 + Lg * 0.40, S.y - 14, s * 9)], 30), 3.5, { seg: 10 }));
