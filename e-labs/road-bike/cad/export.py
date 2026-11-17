@@ -42,7 +42,7 @@ def main():
     lo = np.array([1e9] * 3); hi = -lo
     meshes = []
     for p in parts:
-        v, t = tessellate(p.solid)
+        v, t = tessellate(p.solid, *p.extra.get("tess", (0.3, 0.35)))  # fine detail (chain) can ask for a coarser mesh
         meshes.append((p, v, t))
         lo, hi = np.minimum(lo, v.min(0)), np.maximum(hi, v.max(0))
     scale = (hi - lo) / 65534.0
@@ -64,7 +64,7 @@ def main():
         solid.exportStep(str(step))
         manifest.append({"name": p.name, "slot": p.slot, "color": list(p.color), "aero": p.aero, "fe": p.fe, "step": str(step),
                          "volume_mm3": vol, "centroid_mm": [c.x, c.y, c.z], "bbox_mm": [bb.xmin, bb.ymin, bb.zmin, bb.xmax, bb.ymax, bb.zmax]})
-        print(f"  {p.name:18s} {len(t):7d} tris  {vol / 1000:8.1f} cm3", flush=True)
+        print(f"  {p.name:22s} {len(t):7d} tris  {vol / 1000:8.1f} cm3", flush=True)
 
     (web_dir / "parts.bin").write_bytes(bytes(blob))
     doc = {"schema": "synapse-cad/1", "units": "mm", "frame": "BB origin, +X forward, +Y up, +Z drive side",

@@ -1979,158 +1979,183 @@
  "surface": [
   {
    "name": "frame",
-   "n": 9036,
+   "n": 9937,
    "cp": 1404940
+  },
+  {
+   "name": "seatpost_clamp",
+   "n": 770,
+   "cp": 1414877
   },
   {
    "name": "fork",
    "n": 3251,
-   "cp": 1413976
+   "cp": 1415647
   },
   {
    "name": "headset_cover",
    "n": 459,
-   "cp": 1417227
+   "cp": 1418898
   },
   {
    "name": "rim_front",
    "n": 1846,
-   "cp": 1417686
+   "cp": 1419357
   },
   {
    "name": "tyre_front",
    "n": 2146,
-   "cp": 1419532
+   "cp": 1421203
   },
   {
    "name": "hub_front",
-   "n": 1354,
-   "cp": 1421678
+   "n": 1778,
+   "cp": 1423349
   },
   {
    "name": "rim_rear",
    "n": 1846,
-   "cp": 1423032
+   "cp": 1425127
   },
   {
    "name": "tyre_rear",
    "n": 2146,
-   "cp": 1424878
+   "cp": 1426973
   },
   {
    "name": "hub_rear",
-   "n": 1257,
-   "cp": 1427024
+   "n": 1571,
+   "cp": 1429119
   },
   {
    "name": "chainring_50",
-   "n": 2988,
-   "cp": 1428281
+   "n": 5124,
+   "cp": 1430690
   },
   {
    "name": "chainring_34",
-   "n": 2124,
-   "cp": 1431269
+   "n": 2820,
+   "cp": 1435814
   },
   {
    "name": "crankset",
-   "n": 2628,
-   "cp": 1433393
+   "n": 2701,
+   "cp": 1438634
   },
   {
    "name": "pedal_right",
    "n": 42,
-   "cp": 1436021
+   "cp": 1441335
   },
   {
    "name": "pedal_left",
    "n": 42,
-   "cp": 1436063
+   "cp": 1441377
   },
   {
    "name": "cassette",
-   "n": 10878,
-   "cp": 1436105
+   "n": 16592,
+   "cp": 1441419
   },
   {
-   "name": "rear_derailleur_1",
-   "n": 528,
-   "cp": 1446983
+   "name": "rear_derailleur",
+   "n": 3961,
+   "cp": 1458011
   },
   {
-   "name": "rear_derailleur_2",
-   "n": 379,
-   "cp": 1447511
-  },
-  {
-   "name": "front_derailleur_1",
-   "n": 146,
-   "cp": 1447890
-  },
-  {
-   "name": "front_derailleur_2",
-   "n": 205,
-   "cp": 1448036
+   "name": "front_derailleur",
+   "n": 1501,
+   "cp": 1461972
   },
   {
    "name": "brake_front",
-   "n": 1142,
-   "cp": 1448241
+   "n": 3214,
+   "cp": 1463473
   },
   {
    "name": "brake_rear",
-   "n": 942,
-   "cp": 1449383
+   "n": 3394,
+   "cp": 1466687
   },
   {
    "name": "stem",
    "n": 750,
-   "cp": 1450325
+   "cp": 1470081
   },
   {
    "name": "handlebar",
    "n": 2564,
-   "cp": 1451075
+   "cp": 1470831
   },
   {
    "name": "levers_1",
    "n": 2503,
-   "cp": 1453639
+   "cp": 1473395
   },
   {
    "name": "levers_2",
    "n": 2504,
-   "cp": 1456142
+   "cp": 1475898
   },
   {
    "name": "seatpost",
    "n": 676,
-   "cp": 1458646
+   "cp": 1478402
   },
   {
    "name": "saddle",
    "n": 547,
-   "cp": 1459322
+   "cp": 1479078
   },
   {
    "name": "saddle_rails",
    "n": 4826,
-   "cp": 1459869
+   "cp": 1479625
+  },
+  {
+   "name": "bottle_down_cage",
+   "n": 5001,
+   "cp": 1484451
   },
   {
    "name": "bottle_down",
    "n": 794,
-   "cp": 1464695
+   "cp": 1489452
+  },
+  {
+   "name": "bottle_down_cap",
+   "n": 369,
+   "cp": 1490246
+  },
+  {
+   "name": "bottle_seat_cage",
+   "n": 5001,
+   "cp": 1490615
   },
   {
    "name": "bottle_seat",
    "n": 794,
-   "cp": 1465489
+   "cp": 1495616
+  },
+  {
+   "name": "bottle_seat_cap",
+   "n": 369,
+   "cp": 1496410
+  },
+  {
+   "name": "light_mount",
+   "n": 1772,
+   "cp": 1496779
   },
   {
    "name": "light",
-   "n": 170,
-   "cp": 1466283
+   "n": 608,
+   "cp": 1498551
+  },
+  {
+   "name": "light_lens",
+   "n": 24,
+   "cp": 1499159
   }
  ],
  "groups": [
@@ -3262,5 +3287,5 @@
    20.021297454833984
   ]
  },
- "bytes": 1466456
+ "bytes": 1499184
 }

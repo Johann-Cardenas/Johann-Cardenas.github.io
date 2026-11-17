@@ -200,7 +200,7 @@ function specPage() {
           <tr><td>Hardpoints, angles</td><td>${badge('S')} catalog</td></tr>
           <tr><td>Tube heights, paint, components</td><td>${badge('L')} owner photos</td></tr>
           <tr><td>Tube widths, walls, laminate</td><td>${badge('M')} assumed</td></tr>
-          <tr><td>SolidWorks assembly</td><td>${badge('C')} 35 parts, volume-checked</td></tr>
+          <tr><td>SolidWorks assembly</td><td>${badge('C')} 53 parts, volume-checked</td></tr>
           <tr><td>Wind tunnel</td><td>${badge('C')} LBM-LES, 40 km/h</td></tr>
           <tr><td>Frame FE</td><td>${badge('C')} Abaqus shells, 5 cases + modes</td></tr>
         </tbody></table></article>

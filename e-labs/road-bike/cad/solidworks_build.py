@@ -18,6 +18,7 @@ import os
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
 BUILD = Path(os.environ.get("ROADBIKE_BUILD", Path(os.environ["LOCALAPPDATA"]) / "road-bike-cad" / "build"))
 SW = {
     "type_library": "C:/Program Files/SOLIDWORKS Corp/SOLIDWORKS/sldworks.tlb",
@@ -126,7 +127,7 @@ def main():
         for rec in manifest["parts"]:
             r = b.part(rec, out)
             report.append(r)
-            print(f"  {r['name']:18s} bodies={r['bodies']} dV={r['volume_rel'] * 100:.3f}% dCG={r['centroid_dmm']:.3f} mm", flush=True)
+            print(f"  {r['name']:22s} bodies={r['bodies']} dV={r['volume_rel'] * 100:.3f}% dCG={r['centroid_dmm']:.3f} mm", flush=True)
     finally:
         b.app.DocumentVisible(True, 1)
     whole = [r["path"] for r in report]
@@ -135,6 +136,9 @@ def main():
     b.app.CloseDoc("synapse.SLDASM")
     b.assembly(aero, out / "synapse_aero.SLDASM")
     (BUILD / "solidworks_validation.json").write_text(json.dumps({"revision": b.app.RevisionNumber(), "parts": report}, indent=1), encoding="utf-8")
+    # the website's copy (CAD tab and tests/data.test.js): same records without the local paths
+    web = {"revision": b.app.RevisionNumber(), "parts": [{k: (round(v, 6) if isinstance(v, float) else v) for k, v in r.items() if k != "path"} for r in report]}
+    (ROOT / "data" / "cad" / "solidworks.json").write_text(json.dumps(web, indent=1), encoding="utf-8")
     print(f"{len(report)} parts; assemblies: synapse.SLDASM ({len(whole)}), synapse_aero.SLDASM ({len(aero)})")
 
 

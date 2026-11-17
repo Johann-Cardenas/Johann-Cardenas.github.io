@@ -4,16 +4,23 @@
   {
    "name": "frame",
    "bodies": 1,
-   "volume_mm3": 3340813.049657,
-   "volume_rel": 0.001055,
-   "centroid_dmm": 0.074566
+   "volume_mm3": 3325639.228328,
+   "volume_rel": 0.000115,
+   "centroid_dmm": 0.199884
+  },
+  {
+   "name": "seatpost_clamp",
+   "bodies": 1,
+   "volume_mm3": 10766.369549,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
   },
   {
    "name": "fork",
    "bodies": 1,
-   "volume_mm3": 557642.416915,
+   "volume_mm3": 557642.28938,
    "volume_rel": 0.00028,
-   "centroid_dmm": 0.032934
+   "centroid_dmm": 0.032929
   },
   {
    "name": "headset_cover",
@@ -39,23 +46,30 @@
   {
    "name": "hub_front",
    "bodies": 1,
-   "volume_mm3": 54160.764133,
+   "volume_mm3": 54405.263817,
    "volume_rel": 0.0,
    "centroid_dmm": 0.0
   },
   {
    "name": "spokes_front_left",
    "bodies": 1,
-   "volume_mm3": 9018.876918,
+   "volume_mm3": 10706.840035,
    "volume_rel": 0.0,
-   "centroid_dmm": 2.6e-05
+   "centroid_dmm": 0.0
   },
   {
    "name": "spokes_front_drive",
    "bodies": 1,
-   "volume_mm3": 9018.884355,
-   "volume_rel": 7e-06,
-   "centroid_dmm": 9e-05
+   "volume_mm3": 10706.840036,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "qr_front",
+   "bodies": 1,
+   "volume_mm3": 10650.411241,
+   "volume_rel": 0.000876,
+   "centroid_dmm": 0.078894
   },
   {
    "name": "rim_rear",
@@ -74,44 +88,93 @@
   {
    "name": "hub_rear",
    "bodies": 1,
-   "volume_mm3": 110494.741738,
+   "volume_mm3": 108216.59174,
    "volume_rel": 0.0,
    "centroid_dmm": 0.0
   },
   {
    "name": "spokes_rear_left",
    "bodies": 1,
-   "volume_mm3": 10334.559362,
-   "volume_rel": 0.000299,
-   "centroid_dmm": 0.003113
+   "volume_mm3": 13872.339294,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
   },
   {
    "name": "spokes_rear_drive",
    "bodies": 1,
-   "volume_mm3": 10272.813314,
-   "volume_rel": 0.000155,
-   "centroid_dmm": 0.000585
+   "volume_mm3": 13804.38983,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "qr_rear",
+   "bodies": 1,
+   "volume_mm3": 11337.814729,
+   "volume_rel": 0.000325,
+   "centroid_dmm": 0.071449
   },
   {
    "name": "chainring_50",
    "bodies": 1,
-   "volume_mm3": 55488.498067,
+   "volume_mm3": 40815.137609,
    "volume_rel": 0.0,
    "centroid_dmm": 0.0
   },
   {
    "name": "chainring_34",
    "bodies": 1,
-   "volume_mm3": 16364.601262,
+   "volume_mm3": 16068.245648,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "chainring_bolt_1",
+   "bodies": 1,
+   "volume_mm3": 1659.496211,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "chainring_bolt_2",
+   "bodies": 1,
+   "volume_mm3": 1659.496211,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "chainring_bolt_3",
+   "bodies": 1,
+   "volume_mm3": 1659.496211,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "chainring_bolt_4",
+   "bodies": 1,
+   "volume_mm3": 1659.496211,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "chainring_bolt_5",
+   "bodies": 1,
+   "volume_mm3": 1659.496211,
    "volume_rel": 0.0,
    "centroid_dmm": 0.0
   },
   {
    "name": "crankset",
    "bodies": 1,
-   "volume_mm3": 275582.365583,
-   "volume_rel": 0.00011,
-   "centroid_dmm": 0.115675
+   "volume_mm3": 260058.852608,
+   "volume_rel": 0.006433,
+   "centroid_dmm": 0.071981
+  },
+  {
+   "name": "bottom_bracket",
+   "bodies": 1,
+   "volume_mm3": 27989.956915,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
   },
   {
    "name": "pedal_right",
@@ -130,51 +193,44 @@
   {
    "name": "cassette",
    "bodies": 1,
-   "volume_mm3": 97296.580046,
+   "volume_mm3": 65460.687625,
    "volume_rel": 0.0,
    "centroid_dmm": 0.0
   },
   {
-   "name": "rear_derailleur_1",
+   "name": "rear_derailleur",
    "bodies": 1,
-   "volume_mm3": 45076.44971,
-   "volume_rel": 0.000903,
-   "centroid_dmm": 0.032618
+   "volume_mm3": 34842.159373,
+   "volume_rel": 0.001896,
+   "centroid_dmm": 0.031632
   },
   {
-   "name": "rear_derailleur_2",
+   "name": "chain",
    "bodies": 1,
-   "volume_mm3": 11327.253867,
-   "volume_rel": 0.018579,
-   "centroid_dmm": 0.240199
-  },
-  {
-   "name": "front_derailleur_1",
-   "bodies": 1,
-   "volume_mm3": 42248.138005,
+   "volume_mm3": 38542.496951,
    "volume_rel": 0.0,
    "centroid_dmm": 0.0
   },
   {
-   "name": "front_derailleur_2",
+   "name": "front_derailleur",
    "bodies": 1,
-   "volume_mm3": 11494.946044,
-   "volume_rel": 0.032321,
-   "centroid_dmm": 0.176505
+   "volume_mm3": 16509.820548,
+   "volume_rel": 0.002724,
+   "centroid_dmm": 0.068433
   },
   {
    "name": "brake_front",
    "bodies": 1,
-   "volume_mm3": 9584.889052,
-   "volume_rel": 0.037172,
-   "centroid_dmm": 0.440229
+   "volume_mm3": 25481.627893,
+   "volume_rel": 0.000376,
+   "centroid_dmm": 0.101144
   },
   {
    "name": "brake_rear",
    "bodies": 1,
-   "volume_mm3": 8696.225076,
-   "volume_rel": 0.045555,
-   "centroid_dmm": 0.426711
+   "volume_mm3": 25722.096461,
+   "volume_rel": 0.000272,
+   "centroid_dmm": 0.103774
   },
   {
    "name": "stem",
@@ -226,29 +282,95 @@
    "centroid_dmm": 0.000731
   },
   {
+   "name": "bottle_down_cage",
+   "bodies": 1,
+   "volume_mm3": 22310.158206,
+   "volume_rel": 0.000172,
+   "centroid_dmm": 0.002321
+  },
+  {
+   "name": "bottle_down_bolt_1",
+   "bodies": 1,
+   "volume_mm3": 356.840943,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "bottle_down_bolt_2",
+   "bodies": 1,
+   "volume_mm3": 356.840943,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
    "name": "bottle_down",
    "bodies": 1,
-   "volume_mm3": 776332.511679,
+   "volume_mm3": 762723.136074,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "bottle_down_cap",
+   "bodies": 1,
+   "volume_mm3": 15964.519442,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "bottle_seat_cage",
+   "bodies": 1,
+   "volume_mm3": 22310.172635,
+   "volume_rel": 0.000173,
+   "centroid_dmm": 0.002211
+  },
+  {
+   "name": "bottle_seat_bolt_1",
+   "bodies": 1,
+   "volume_mm3": 356.840943,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "bottle_seat_bolt_2",
+   "bodies": 1,
+   "volume_mm3": 356.840943,
    "volume_rel": 0.0,
    "centroid_dmm": 0.0
   },
   {
    "name": "bottle_seat",
    "bodies": 1,
-   "volume_mm3": 776332.511679,
+   "volume_mm3": 762723.136074,
    "volume_rel": 0.0,
    "centroid_dmm": 0.0
   },
   {
+   "name": "bottle_seat_cap",
+   "bodies": 1,
+   "volume_mm3": 15964.519442,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "light_mount",
+   "bodies": 1,
+   "volume_mm3": 25425.076608,
+   "volume_rel": 0.00285,
+   "centroid_dmm": 0.033212
+  },
+  {
    "name": "light",
    "bodies": 1,
-   "volume_mm3": 142523.893421,
+   "volume_mm3": 131057.10537,
+   "volume_rel": 0.0,
+   "centroid_dmm": 0.0
+  },
+  {
+   "name": "light_lens",
+   "bodies": 1,
+   "volume_mm3": 2880.0,
    "volume_rel": 0.0,
    "centroid_dmm": 0.0
   }
- ],
- "assemblies": {
-  "synapse.SLDASM": 35,
-  "synapse_aero.SLDASM": 31
- }
+ ]
 }
