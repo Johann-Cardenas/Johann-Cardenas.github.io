@@ -16,3 +16,4 @@ jobs:
           node-version: '22'
       - run: python3 e-labs/road-bike/tools/validate_site.py
       - run: node --test e-labs/road-bike/tests/*.test.js
+      - run: node e-labs/road-bike/tools/build_catalog.mjs && git diff --exit-code e-labs/road-bike/data/components.json
