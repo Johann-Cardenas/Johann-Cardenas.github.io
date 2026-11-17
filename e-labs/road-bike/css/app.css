@@ -129,7 +129,10 @@ body:not([data-view='build']) .rb-views [data-only~='build'] { display: none; }
 .rb-legend b { display: block; margin-bottom: 6px; font-size: 11px; }
 
 /* ---- panel ---- */
-.rb-panel { background: var(--bg2); border-left: 1px solid var(--line); overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
+.rb-panel { background: var(--bg2); border-left: 1px solid var(--line); min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.rb-panelbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* handheld-only chrome: the drawer header, the icon rail, the view menu button and the scrim */
+.rb-sheethead, .rb-rail, .rb-scrim, .RoadBike .rb-tabsbtn { display: none; }
 .sec { padding: 14px 16px; border-bottom: 1px solid var(--line2); }
 .sec > h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink3); font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 .sec > h2 em { font-style: normal; text-transform: none; letter-spacing: 0; color: var(--ink2); margin-left: auto; font-weight: 500; }
@@ -186,8 +189,9 @@ label.chk input { accent-color: var(--accent); }
 .intro { max-width: 760px; margin-bottom: 18px; }
 .intro h1 { font-size: 24px; letter-spacing: -.02em; margin-bottom: 4px; }
 .intro p { color: var(--ink2); font-size: 14px; }
-.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-.grid.wide { grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+.grid.wide { grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); }
+.grid > div:has(> table) { min-width: 0; overflow-x: auto; }
 .cardx { background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; min-width: 0; }
 .cardx > h2 { font-size: 15px; letter-spacing: -.01em; margin-bottom: 2px; }
 .cardx > h2 + p { color: var(--ink2); font-size: 12.5px; margin-bottom: 12px; }
@@ -227,32 +231,96 @@ svg.chart text { fill: var(--ink2); } svg.chart .ax { stroke: var(--line); } svg
 @media (max-width: 1180px) {
   :root { --panel: 340px; }
 }
-@media (max-width: 1320px) and (min-width: 720px) {
+@media (max-width: 1500px) and (min-width: 720px) {
   .rb-top { grid-template-columns: minmax(0, 1fr) auto; }
   .rb-brand { display: none; }
   .rb-tools { grid-column: 2; }
 }
+/* Handhelds: the model fills the screen under one slim header. Nothing is written over it; the
+   panel slides in from the right and the view tools pop out beside an icon rail. Sheets start
+   closed on every load and are never persisted. */
 @media (max-width: 719.98px), (max-height: 500px) and (orientation: landscape) {
-  body.RoadBike { overflow: auto; }
-  #app { height: auto; min-height: 100vh; min-height: 100dvh; grid-template-rows: auto auto auto; }
-  .rb-top { grid-template-columns: 1fr auto; padding: 8px 12px 0; position: sticky; top: 0; z-index: 10; row-gap: 4px; }
-  .rb-brand { grid-column: 1; justify-self: start; font-size: 13px; }
-  .rb-tools { grid-column: 2; }
-  .rb-tabs { grid-column: 1 / -1; grid-row: 2; height: 38px; gap: 18px; }
-  .rb-main { display: block; }
-  .rb-stage { height: 56vh; height: 56dvh; min-height: 300px; }
-  .rb-panel { border-left: 0; border-top: 1px solid var(--line); overflow: visible; }
-  .rb-page { overflow: visible; }
-  .rb-views { bottom: 8px; padding: 5px; gap: 4px; }
-  .rb-note { display: none; }
-  .rb-title b { font-size: 15px; }
-  .rb-card { left: 8px; right: 8px; width: auto; top: auto; bottom: 8px; max-height: 60%; z-index: 4; }
-  .rb-foot { flex-direction: column; gap: 2px; }
+  :root { --top: 48px; --rail: 44px; }
+  #app { grid-template-rows: var(--top) minmax(0, 1fr) auto; }
+  .rb-top { grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 6px; padding: 0 6px 0 14px; position: relative; z-index: 40; }
+  .rb-brand { display: flex; grid-column: 1; justify-self: start; font-size: 12px; }
+  .rb-brand b { padding-right: 0; letter-spacing: .26em; }
+  .rb-brand span { display: none; }
+  .rb-tools { grid-column: 3; gap: 2px; }
+  #panelBtn { display: none; }
+  .RoadBike .rb-tabsbtn { display: inline-flex; grid-column: 2; justify-self: end; align-self: center; align-items: center; gap: 6px; border-color: transparent; background: none; padding: 0 8px 0 10px; height: 36px;
+    font-stretch: 112%; text-transform: uppercase; font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--ink); }
+  .RoadBike .rb-tabsbtn:hover { background: var(--bg3); }
+  .rb-tabsbtn svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.6; transition: transform .15s; }
+  body[data-sheet='tabs'] .rb-tabsbtn svg { transform: rotate(180deg); }
+  .RoadBike .rb-tabsbtn[aria-expanded='true'] { background: var(--bg3); }
+  /* the tab strip becomes the view menu */
+  .rb-tabs { display: none; position: absolute; top: calc(100% + 6px); right: 8px; min-width: 210px; flex-direction: column; gap: 0; padding: 6px; overflow: visible;
+    background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); z-index: 41; }
+  body[data-sheet='tabs'] .rb-tabs { display: flex; }
+  .RoadBike .rb-tabs button { text-align: left; padding: 0 12px; min-height: 42px; border-bottom: 0; border-left: 2px solid transparent; border-radius: 0 6px 6px 0; }
+  .RoadBike .rb-tabs button:hover { background: var(--bg3); }
+  .RoadBike .rb-tabs button[aria-selected='true'] { border-left-color: var(--accent); background: var(--accent-bg); color: var(--accent-ink); }
+  .RoadBike .rb-tabs button[data-v='gearing'] { margin-top: 6px; position: relative; }
+  .RoadBike .rb-tabs button[data-v='gearing']::before { content: ''; position: absolute; left: 0; right: 0; top: -4px; border-top: 1px solid var(--line2); }
+
+  .rb-main { grid-template-columns: minmax(0, 1fr); }
+  /* no text over the model */
+  .rb-title, .rb-stage > .rb-legend, .rb-tip, .rb-note, .vlabel.load { display: none !important; }
+  /* the icon rail */
+  .rb-rail { display: flex; position: absolute; z-index: 3; right: 10px; top: 10px; flex-direction: column; gap: 4px; padding: 4px; border-radius: 12px;
+    background: color-mix(in srgb, var(--bg2) 86%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .RoadBike .rb-rail .rb-ico { width: var(--rail); height: var(--rail); border-radius: 9px; color: var(--ink2); }
+  .RoadBike .rb-rail .rb-ico[aria-expanded='true'] { background: var(--accent-bg); color: var(--accent-ink); }
+  .rb-rail svg, .rb-sheethead svg { width: 18px; height: 18px; stroke-width: 1.4; }
+  /* view tools: a compact popover to the left of the rail */
+  .rb-views { display: none; left: auto; right: calc(var(--rail) + 28px); top: 10px; bottom: auto; transform: none; width: min(264px, calc(100% - var(--rail) - 44px));
+    max-height: calc(100% - 20px); overflow-y: auto; justify-content: flex-start; gap: 6px; padding: 8px; }
+  body[data-sheet='tools'] .rb-views { display: flex; }
+  .rb-views .rb-sep { display: none; }
+  .rb-views #views { display: flex; flex: 1 1 100%; }
+  .rb-views #views button { flex: 1; padding-inline: 4px; }
+  .rb-views .rb-slider { flex: 1 1 100%; }
+  .rb-views .rb-slider input { width: auto; flex: 1; }
+  .rb-views [data-act='fit'] { display: none; }
+  .rb-views [data-tog], .rb-views [data-act], .rb-views #quality { flex: 1 1 calc(33% - 6px); min-width: 0; }
+  .RoadBike .rb-tabsbtn:hover, .RoadBike .rb-rail .rb-ico:hover { border-color: transparent; }
+  /* the panel as a drawer from the right */
+  .rb-panel { position: fixed; z-index: 30; top: var(--top); right: 0; bottom: 0; width: min(380px, 88vw); border-left: 1px solid var(--line); box-shadow: var(--shadow);
+    transform: translateX(100%); visibility: hidden; transition: transform .22s cubic-bezier(.2, .8, .2, 1), visibility 0s linear .22s; }
+  body[data-panel='off'] .rb-panel { display: flex; }
+  body[data-sheet='panel'] .rb-panel { transform: none; visibility: visible; transition: transform .22s cubic-bezier(.2, .8, .2, 1), visibility 0s; }
+  .rb-sheethead { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 16px; border-bottom: 1px solid var(--line); min-height: 52px; flex: none; }
+  .rb-sheethead > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .rb-sheethead b { font-stretch: 112%; text-transform: uppercase; font-size: 11px; font-weight: 750; letter-spacing: .14em; }
+  .rb-sheetstatus { font-size: 11.5px; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rb-sheetstatus:empty { display: none; }
+  .RoadBike .rb-sheethead .rb-ico { width: 40px; height: 40px; color: var(--ink2); }
+  .rb-panel > .rb-legend { position: static; flex: none; margin: 10px 16px 0; box-shadow: none; align-self: flex-start; }
+  .rb-scrim { position: fixed; z-index: 25; inset: var(--top) 0 0 0; background: rgba(15, 19, 23, .28); }
+  body[data-sheet='panel'] .rb-scrim, body[data-sheet='tabs'] .rb-scrim { display: block; }
+  body[data-sheet='tabs'] .rb-scrim { background: transparent; }
+  /* part card: a sheet along the bottom, clear of the rail */
+  .rb-card { left: 8px; right: 8px; width: auto; top: auto; bottom: 8px; max-height: 55%; z-index: 4; }
+  /* pages scroll inside the main area; the footer is only shown with them */
+  .rb-page { padding: 16px 14px 28px; }
+  .intro h1 { font-size: 20px; }
+  .intro p { font-size: 13px; }
+  .cardx { padding: 14px; }
+  .toolbar label { flex: 1 1 100%; }
+  .toolbar input[type='search'] { min-width: 0; width: 100%; }
+  .tablewrap > table { min-width: 560px; }
+  .rb-foot { display: none; }
+  body[data-layout='page'] .rb-foot { display: block; padding: 4px 14px; font-size: 10.5px; }
+  body[data-layout='page'] .rb-foot #status { display: none; }
   .row { grid-template-columns: 100px minmax(0, 1fr) 58px; }
-  body[data-panel='off'] .rb-stage { height: 78vh; height: 78dvh; }
 }
 @media (max-height: 500px) and (orientation: landscape) {
-  .rb-stage { height: 82vh; height: 82dvh; }
+  :root { --top: 44px; --rail: 40px; }
+  .rb-rail { top: 8px; right: 8px; gap: 2px; padding: 3px; }
+  .rb-panel { width: min(380px, 62vw); }
+  .rb-views { top: 8px; max-height: calc(100% - 16px); width: min(300px, calc(100% - var(--rail) - 44px)); }
+  .rb-card { left: auto; right: calc(var(--rail) + 24px); top: 8px; bottom: 8px; width: min(320px, 55vw); max-height: none; }
 }
 @media (pointer: coarse) {
   .RoadBike button, .RoadBike select { min-height: 40px; }

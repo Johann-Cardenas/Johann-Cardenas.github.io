@@ -24,6 +24,7 @@
 <body class="RoadBike" data-view="build">
 <div id="app">
   <header class="rb-top">
+    <button id="tabsBtn" class="rb-tabsbtn" aria-haspopup="true" aria-expanded="false" aria-controls="tabs" title="Views"><span id="tabsCur">Build</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none"/></svg></button>
     <nav id="tabs" class="rb-tabs" role="tablist" aria-label="View">
       <button data-v="build" role="tab">Build</button>
       <button data-v="cad" role="tab">CAD</button>
@@ -47,7 +48,7 @@
 
       <div class="rb-ov rb-title"><b id="ttl">Synapse Carbon</b><span id="sub">Installed build</span></div>
 
-      <div class="rb-ov rb-views" role="toolbar" aria-label="Camera and display">
+      <div id="viewtools" class="rb-ov rb-views" role="toolbar" aria-label="Camera and display">
         <div class="rb-seg" id="views">
           <button data-view="quarter" title="Three-quarter (1)">¾</button>
           <button data-view="drive" title="Drive side (2)">Side</button>
@@ -66,14 +67,24 @@
         <button data-act="png" title="4K PNG (S)">PNG</button>
       </div>
 
+      <div class="rb-rail" role="toolbar" aria-label="Panels" aria-orientation="vertical">
+        <button id="railPanel" class="rb-ico" data-sheet="panel" aria-label="Open panel" title="Panel" aria-expanded="false" aria-controls="drawer"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11" fill="none"/><circle cx="5.5" cy="4.5" r="1.4"/><circle cx="10.5" cy="8" r="1.4"/><circle cx="7" cy="11.5" r="1.4"/></svg></button>
+        <button id="railTools" class="rb-ico" data-sheet="tools" aria-label="View tools" title="View tools" aria-expanded="false" aria-controls="viewtools"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8l5.5 3.1v6.2L8 14.2 2.5 11.1V4.9z M2.5 4.9L8 8l5.5-3.1M8 8v6.2" fill="none"/></svg></button>
+        <button id="railFit" class="rb-ico" aria-label="Fit to view" title="Fit"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10" fill="none"/></svg></button>
+      </div>
+
       <aside id="card" class="rb-ov rb-card" hidden></aside>
       <div id="legend" class="rb-ov rb-legend" hidden></div>
       <div id="tip" class="rb-ov rb-tip" hidden></div>
       <div id="loading" class="rb-loading"><span class="rb-spin"></span><span id="loadmsg">Building the model…</span></div>
     </section>
 
-    <aside id="panel" class="rb-panel" aria-live="polite"></aside>
+    <aside id="drawer" class="rb-panel" aria-label="Panel">
+      <header class="rb-sheethead"><div><b id="sheetTitle">Build</b><span id="sheetStatus" class="rb-sheetstatus" role="status"></span></div><button id="sheetClose" class="rb-ico" aria-label="Close panel" title="Close"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none"/></svg></button></header>
+      <div id="panel" class="rb-panelbody" aria-live="polite"></div>
+    </aside>
     <section id="page" class="rb-page" hidden></section>
+    <div id="scrim" class="rb-scrim"></div>
   </main>
 
   <footer class="rb-foot">

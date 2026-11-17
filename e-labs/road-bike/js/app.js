@@ -29,7 +29,31 @@ export const S = {
 };
 export const effCfg = () => (S.showInstalled ? S.catalog.default_config : S.cfg);
 export const slotLabel = (id) => S.catalog.slots.find((s) => s.id === id)?.label ?? id;
-export const status = (msg) => { $('#status').textContent = msg; };
+export const status = (msg) => { $('#status').textContent = msg; $('#sheetStatus').textContent = msg; };
+
+// ---- handheld sheets: one of 'panel' | 'tools' | 'tabs' is open at a time, never persisted ----------
+const HANDHELD = matchMedia('(max-width: 719.98px), (max-height: 500px) and (orientation: landscape)');
+const OPENER = { panel: '#railPanel', tools: '#railTools', tabs: '#tabsBtn' };
+let sheetOpener = null;
+export function setSheet(name = '') {
+  const prev = document.body.dataset.sheet || '';
+  if (name === prev) return;
+  if (name) document.body.dataset.sheet = name; else delete document.body.dataset.sheet;
+  for (const [k, sel] of Object.entries(OPENER)) $(sel)?.setAttribute('aria-expanded', String(k === name));
+  if (name) {
+    sheetOpener = $(OPENER[name]);
+    if (name === 'panel') $('#sheetClose').focus({ preventScroll: true });
+  } else if (prev && sheetOpener && (document.activeElement === document.body || $(prev === 'panel' ? '#drawer' : prev === 'tools' ? '#viewtools' : '#tabs').contains(document.activeElement))) {
+    sheetOpener.focus({ preventScroll: true });
+  }
+}
+const toggleSheet = (name) => setSheet(document.body.dataset.sheet === name ? '' : name);
+/** On handhelds the stress legend reads from the drawer, not over the model. */
+function placeLegend() {
+  const lg = $('#legend'), drawer = $('#drawer');
+  if (HANDHELD.matches) { if (lg.parentElement !== drawer) drawer.insertBefore(lg, $('#panel')); }
+  else if (lg.parentElement !== $('#stage')) $('#card').before(lg);
+}
 
 // ---- state changes ------------------------------------------------------------------------------
 let rebuildTimer = 0;
@@ -59,7 +83,7 @@ export function setConfig(cfg, msg) { S.cfg = { ...cfg }; S.showInstalled = fals
 export function go(view) {
   view = LEGACY[view] || view;
   if (!LAYOUT[view]) view = 'build';
-  S.view = view; writeHash(); render(); syncStage();
+  S.view = view; setSheet(''); writeHash(); render(); syncStage();
 }
 
 // ---- stage --------------------------------------------------------------------------------------
@@ -128,7 +152,7 @@ function showCard(slot, partName) {
   el.querySelector('[data-x]').onclick = () => { S.viewer.isolate(null); hideCard(); };
   el.querySelector('[data-iso]').onclick = (e) => { const on = e.currentTarget.getAttribute('aria-pressed') !== 'true'; e.currentTarget.setAttribute('aria-pressed', String(on)); S.viewer.isolate(on ? slot : null); };
   el.querySelector('[data-focus]').onclick = () => S.viewer.focus(slot);
-  el.querySelector('[data-opts]').onclick = () => { const g = S.catalog.slots.find((s) => s.id === slot)?.group; if (g) S.open.add(g); if (S.view !== 'build') go('build'); else render(); requestAnimationFrame(() => $(`[data-slot="${slot}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })); };
+  el.querySelector('[data-opts]').onclick = () => { const g = S.catalog.slots.find((s) => s.id === slot)?.group; if (g) S.open.add(g); if (S.view !== 'build') go('build'); else render(); if (HANDHELD.matches) setSheet('panel'); requestAnimationFrame(() => $(`[data-slot="${slot}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })); };
 }
 
 // ---- build panel --------------------------------------------------------------------------------
@@ -203,6 +227,8 @@ export function render() {
   const layout = LAYOUT[S.view];
   document.body.dataset.view = S.view; document.body.dataset.layout = layout;
   $$('#tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.v === S.view)));
+  const tabName = $(`#tabs [data-v="${S.view}"]`)?.textContent ?? '';
+  $('#tabsCur').textContent = tabName; $('#sheetTitle').textContent = tabName;
   const sum = summarize(S.cfg, S.catalog);
   const sub = { cad: 'SolidWorks assembly', aero: 'Wind tunnel · 40 km/h', structure: P.structMode === 'beam' ? 'Beam model' : 'Abaqus shell model' }[S.view];
   $('#ttl').textContent = S.view === 'build' ? 'Synapse Carbon' : { cad: 'CAD', aero: 'Aerodynamics', structure: 'Structure' }[S.view] ?? 'Synapse Carbon';
@@ -224,6 +250,17 @@ function wire() {
   $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) go(b.dataset.v); });
   $('#themeBtn').onclick = () => { const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = t; try { localStorage.setItem('roadbike-theme', t); localStorage.setItem('theme-preference', t); } catch { /* private mode */ } S.viewer?.setTheme(t); if (LAYOUT[S.view] === 'page') render(); };
   $('#panelBtn').onclick = () => { document.body.dataset.panel = document.body.dataset.panel === 'off' ? 'on' : 'off'; };
+  $('#tabsBtn').onclick = () => toggleSheet('tabs');
+  $('.rb-rail').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.sheet) toggleSheet(b.dataset.sheet);
+    else if (b.id === 'railFit') S.viewer?.fit();
+  });
+  $('#sheetClose').onclick = () => setSheet('');
+  $('#scrim').addEventListener('click', () => setSheet(''));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.body.dataset.sheet) { setSheet(''); e.stopPropagation(); } });
+  HANDHELD.addEventListener('change', () => { setSheet(''); placeLegend(); });
+  placeLegend();
   const bar = $('.rb-views');
   bar.addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b || !S.viewer) return;
