@@ -370,17 +370,13 @@ export function buildPedals(B) {
   for (const s of [1, -1]) {
     const G = B.pivot('pedals', B.hp.bb, { key: s > 0 ? 'pedalR' : 'pedalL' });
     G.userData.crankLen = len; G.userData.sign = s; G.userData.z = s * 74;
-    const body = new T.Shape(); // plan outline: x fore-aft, y lateral (outboard +)
-    body.moveTo(34, 10); body.quadraticCurveTo(38, 38, 22, 62); body.lineTo(-30, 66); body.quadraticCurveTo(-46, 66, -50, 52);
-    body.lineTo(-52, 14); body.quadraticCurveTo(-50, 4, -38, 4); body.lineTo(26, 4); body.quadraticCurveTo(33, 4, 34, 10);
-    const bg = plate(body, 11, { bevel: 1.4 }); bg.rotateX(Math.PI / 2); bg.translate(0, -3, 0);
-    if (s < 0) bg.scale(1, 1, -1), flip(bg);
-    B.addTo(G, bg, vis.carbon ? M.carbon : M.plasticGloss, 'Pedal body');
-    const pl = plate(roundRect(46, 40, 4, -4, 34), 1.2); pl.rotateX(Math.PI / 2); pl.translate(0, 3.4, 0); if (s < 0) pl.scale(1, 1, -1), flip(pl);
-    B.addTo(G, pl, M.steel, 'Wear plate');
-    const claw = plate(roundRect(14, 48, 3, -46, 34), 9, { bevel: 1 }); claw.rotateX(Math.PI / 2); claw.translate(0, 2, 0); if (s < 0) claw.scale(1, 1, -1), flip(claw);
-    B.addTo(G, claw, M.aluBlack, 'Binding');
-    B.addTo(G, rod(V(0, 0, 0), V(0, 0, s * 52), 6.5, 4.5, 18), M.steel, 'Pedal axle');
+    const P = spdsl(), mir = (g) => { g = g.clone(); if (s < 0) { g.scale(1, 1, -1); flip(g); } return g; };
+    B.addTo(G, mir(P.body), vis.carbon ? M.carbon : M.plasticGloss, 'Pedal body');
+    B.addTo(G, mir(P.plate), M.aluSilver, 'Wear plate');
+    B.addTo(G, mir(P.binding), M.aluBlack, 'Binding');
+    B.addTo(G, mir(P.screw), M.bolt, 'Tension screw');
+    B.addTo(G, mir(P.axle), M.steel, 'Pedal axle');
+    B.addTo(G, mir(P.cap), M.aluDark, 'Pedal end cap');
     if (vis.style === 'assioma') {
       B.addTo(G, rod(V(0, 0, s * 1), V(0, 0, s * 20), 13.5, 13.5, 28), M.plasticGloss, 'Power sensor');
       B.addTo(G, rod(V(0, 0, s * 20), V(0, 0, s * 20.6), 9, 9, 24), M.lensRed, 'Sensor LED ring');
@@ -390,6 +386,52 @@ export function buildPedals(B) {
   }
   return out;
 }
+/**
+ * Shimano SPD-SL road pedal, drive side (outboard +z), x forward, y up, axle centre at the origin.
+ * Wide platform with the stainless wear plate on top, a keel that wraps the axle housing and sweeps
+ * up into the nose, the front cleat hook, the spring-loaded rear binding with its tension screw,
+ * and the spindle with its bearing collar and outboard end cap. Built once and shared.
+ */
+let SPDSL = null;
+function spdsl() {
+  if (SPDSL) return SPDSL;
+  const top = 12.5;
+  // plan outline (x, lateral): broad rounded nose, straight outboard edge, notch clear of the crank
+  const plan = new T.Shape();
+  plan.moveTo(-30, 18); plan.lineTo(12, 11); plan.quadraticCurveTo(39, 11, 40, 37); plan.quadraticCurveTo(39, 63, 16, 64);
+  plan.lineTo(-30, 57); plan.quadraticCurveTo(-36, 56, -36, 50); plan.lineTo(-36, 24); plan.quadraticCurveTo(-36, 18, -30, 18);
+  plan.holes.push(roundRect(10, 22, 4, -22, 39)); // window ahead of the binding
+  const onTop = (shape, y0, y1, o = {}) => { const g = plate(shape, y1 - y0, o); g.rotateX(Math.PI / 2); g.translate(0, y1, 0); return g; };
+  const across = (shape, z0, z1, o = {}) => { const g = plate(shape, z1 - z0, o); g.translate(0, 0, z0); return g; };
+  // side profile of the keel: housing round the axle, underside sweeping up into the nose and the binding
+  const keel = new T.Shape();
+  keel.moveTo(37, 7); keel.quadraticCurveTo(33, 1, 20, -3); keel.quadraticCurveTo(11, -11.5, 0, -11.5);
+  keel.quadraticCurveTo(-12, -11.5, -19, -5); keel.lineTo(-29, 3); keel.lineTo(-29, 7); keel.closePath();
+  const hook = new T.Shape(); // front cleat hook, a raised lip with a lip folded back over the cleat
+  hook.moveTo(26, 0); hook.lineTo(36, 0); hook.quadraticCurveTo(39, 0, 38.5, 3); hook.lineTo(37, 4.2); hook.lineTo(24, 4.2); hook.lineTo(24, 3); hook.lineTo(27, 2.6); hook.closePath();
+  const hookG = across(hook, 21, 57, { bevel: 0.6 }); hookG.translate(0, top - 0.4, 0);
+  const body = merge([
+    onTop(plan, top - 6, top, { bevel: 1.5, curve: 12 }),
+    across(keel, 22, 56, { bevel: 3, curve: 10 }),
+    hookG,
+    place(lathe([[6.4, 6], [10.5, 12], [11, 17], [0.01, 17]], 32), V()), // housing boss on the inboard face
+  ]);
+  // wear plate: stainless, front half of the platform
+  const wp = new T.Shape();
+  wp.moveTo(-8, 22); wp.lineTo(17, 22); wp.quadraticCurveTo(24, 22, 24, 30); wp.lineTo(24, 48); wp.quadraticCurveTo(24, 56, 17, 56); wp.lineTo(-8, 56); wp.closePath();
+  const plateG = onTop(wp, top - 0.2, top + 0.9, { bevel: 0.3 });
+  // rear binding: claw rising behind the platform with its lip over the cleat's tail, spring barrel below
+  const claw = new T.Shape();
+  claw.moveTo(-43, 2); claw.lineTo(-32, 2); claw.lineTo(-32, top); claw.lineTo(-27, top + 1); claw.lineTo(-27, top + 3.4);
+  claw.lineTo(-37, top + 3.8); claw.quadraticCurveTo(-44, top + 3, -44, 8); claw.closePath();
+  const binding = merge([across(claw, 20, 58, { bevel: 0.8 }), rod(V(-35, 1, 19), V(-35, 1, 59), 3.6, 3.6, 18)]);
+  const screw = place(boltHead(5.2, 2.6), V(-44.6, 6, 39), V(-1, 0, 0));
+  // spindle: exposed steel from the crank to the bearing collar, end cap on the outboard face
+  const axle = merge([lathe([[0.01, 0], [7.4, 0], [7.4, 1.2], [6.2, 2], [6.2, 6.4], [0.01, 6.4]], 28)]);
+  const cap = lathe([[0.01, 61], [8.6, 61], [8.6, 64.5], [7.6, 66], [0.01, 66]], 6);
+  return (SPDSL = { body, plate: plateG, binding, screw, axle, cap });
+}
+
 /** Reverse the triangle winding after a mirror so the faces still point outward. */
 function flip(g) {
   const n = g.index ? g.index.count : g.attributes.position.count, idx = [];
@@ -578,30 +620,80 @@ function arcBand(r0, r1, a0, a1, n = 26) {
   s.closePath();
   return s;
 }
+/** Geometry built in a local frame (x, y, z) laid onto the world axes ex, ey, ez at origin o. */
+function orient(g, ex, ey, ez, o) {
+  g.applyMatrix4(new T.Matrix4().makeBasis(ex, ey, ez).setPosition(o));
+  return g;
+}
+
+// FD-5700 in the black finish the rest of the group has: anodised outer plate printed SHIMANO 105,
+// polished steel inner plate, black body on the seat-tube braze-on tab, parallelogram links,
+// a cable-anchor arm pulled from below, and the two limit screws on top of the body.
 export function buildFrontDerailleur(B, L) {
-  const { M } = B, slot = 'front_derailleur';
-  const cageMat = M.aluSilver.clone(); cageMat.color.set('#aeb2b7'); cageMat.roughness = 0.3; cageMat.name = 'fd_cage';
-  const body = M.aluBlack.clone(); body.roughness = 0.34; body.metalness = 0.5; body.name = 'fd_body';
-  const Rt = tipRadius(L.rings[0]), z = L.ringZ[L.ri], a0 = rad(76), a1 = rad(114);
-  // FD-5700: alloy outer plate, tallest at the tail; steel inner plate
-  const outerS = new T.Shape(), n = 30, rOut = (a) => Rt + lerp(10.5, 17, smooth((a - a0) / (a1 - a0)));
-  for (let i = 0; i <= n; i++) { const a = lerp(a0, a1, i / n), r = rOut(a); if (i) outerS.lineTo(r * Math.cos(a), r * Math.sin(a)); else outerS.moveTo(r * Math.cos(a), r * Math.sin(a)); }
-  for (let i = n; i >= 0; i--) { const a = lerp(a0, a1, i / n); outerS.lineTo((Rt + 1.5) * Math.cos(a), (Rt + 1.5) * Math.sin(a)); }
+  const { M } = B, slot = 'front_derailleur', Z = V(0, 0, 1);
+  const black = M.aluBlack.clone(); black.color.set('#16171a'); black.roughness = 0.3; black.metalness = 0.55; black.name = 'fd_black';
+  const inner = M.steel.clone(); inner.roughness = 0.22; inner.name = 'fd_inner';
+  const Rt = tipRadius(L.rings[0]), z = L.ringZ[L.ri];
+  const zo = z + 6.2, zi = z - 6.4, a0 = rad(73), a1 = rad(117), r0 = Rt + 2.5;
+  const topR = (a) => Rt + lerp(13, 25, smooth((a - a0) / (a1 - a0)));
+  const pol = (r, a) => [r * Math.cos(a), r * Math.sin(a)];
+  // outer plate: a band over the big ring, deepest at the tail, both ends rounded
+  const outerS = new T.Shape(), n = 40;
+  outerS.moveTo(...pol(r0, a0));
+  for (let i = 0; i <= n; i++) { const a = lerp(a0, a1, i / n); if (i === 0) continue; outerS.lineTo(...pol(r0, a)); }
+  const cap = (a, rFrom, rTo, dir) => { // half-round end from radius rFrom to rTo at angle a, bulging along the tangent (dir +1 = toward the tail)
+    const c = (rFrom + rTo) / 2, h = (rTo - rFrom) / 2, hb = Math.abs(h), u = [Math.cos(a), Math.sin(a)], v = [-Math.sin(a) * dir, Math.cos(a) * dir];
+    for (let k = 1; k < 12; k++) { const t = -Math.PI / 2 + (k / 12) * Math.PI; outerS.lineTo(c * u[0] + h * Math.sin(t) * u[0] + hb * Math.cos(t) * v[0], c * u[1] + h * Math.sin(t) * u[1] + hb * Math.cos(t) * v[1]); }
+  };
+  cap(a1, r0, topR(a1), 1);
+  for (let i = n; i >= 0; i--) outerS.lineTo(...pol(topR(lerp(a0, a1, i / n)), lerp(a0, a1, i / n)));
+  cap(a0, topR(a0), r0, -1); // nose: from the top edge back down to the start
   outerS.closePath();
-  B.add(slot, place(plate(outerS, 1.8, { bevel: 0.4 }), V(0, 0, z + 6.3)), cageMat, { name: 'Outer cage plate' });
-  const geos = [place(plate(arcBand(Rt - 13, Rt + 13, a0 + rad(2), a1 - rad(1)), 1.4, { bevel: 0.3 }), V(0, 0, z - 6.2))];
-  // bridges at the tail and the nose close the cage over the chain
-  for (const a of [a0 + rad(1.5), a1 - rad(1.5)]) geos.push(rod(V((Rt + 11) * Math.cos(a), (Rt + 11) * Math.sin(a), z - 6.2), V((Rt + 11) * Math.cos(a), (Rt + 11) * Math.sin(a), z + 6.3), 2.2));
-  B.add(slot, merge(geos), M.steel, { name: 'Inner cage plate' });
-  // body on the braze-on tab, and the two links down to the cage
-  const sA = B.frameAxes.sAxis, mount = B.hp.bb.clone().addScaledVector(sA, Rt + 46), fr = B.frameAxes.sFront;
-  const bodyC = mount.clone().addScaledVector(fr, 4).setZ(28);
-  const bg = plate(roundRect(26, 32, 7), 18, { bevel: 2 }); bg.rotateZ(Math.atan2(sA.y, sA.x) - Math.PI / 2);
-  B.add(slot, place(bg, bodyC), body, { name: 'Derailleur body' });
-  const armTop = bodyC.clone().addScaledVector(sA, -8), am = rad(99), armBot = V((Rt + 14) * Math.cos(am), (Rt + 14) * Math.sin(am), 0);
-  B.add(slot, sweep([armTop.clone().setZ(35), armBot.clone().setZ(z + 7.6)], { a: 8, b: 2.8, n: 4 }, { seg: 14, capRound: true }), body, { name: 'Outer link' });
-  B.add(slot, sweep([armTop.clone().addScaledVector(fr, -6).setZ(22), armBot.clone().addScaledVector(fr, -4).setZ(z - 6.2)], { a: 5, b: 2.4, n: 3 }, { seg: 12, capRound: true }), M.aluDark, { name: 'Inner link' });
-  B.add(slot, merge([place(lathe([[0.01, 0], [2.8, 0], [2.8, 0.8], [2.1, 1.3], [0.01, 1.3]], 16), armTop.clone().setZ(37.6)), place(lathe([[0.01, 0], [2.6, 0], [2.6, 0.8], [2, 1.2], [0.01, 1.2]], 16), armBot.clone().setZ(z + 10.2))]), M.aluSilver, { name: 'Link pins' });
-  B.add(slot, sweep([mount.clone().addScaledVector(sA, -16).setZ(0), mount.clone().addScaledVector(sA, 16).setZ(0)], { a: 20, b: 20.5, n: 2 }, { seg: 28, cap: false }), M.aluBlack, { name: 'Braze-on tab' });
-  B.fdCable = { clamp: bodyC.clone().addScaledVector(sA, 16).setZ(16) };
+  const outer = B.add(slot, place(plate(outerS, 1.9, { bevel: 0.5, curve: 4 }), V(0, 0, zo)), black, { name: 'Outer cage plate' });
+  // SHIMANO 105 on the outer face, reading front to back as seen from the drive side
+  const aD = lerp(a0, a1, 0.5), rD = (r0 + topR(aD)) / 2 - 0.5, print = new T.PlaneGeometry(30, 15);
+  print.rotateZ(aD - Math.PI / 2); print.translate(...pol(rD, aD), zo + 1.95);
+  B.add(slot, print, decalMat(rdGraphic(), { metal: 0.3, rough: 0.4 }), { name: 'Outer plate print', shadow: false });
+  // steel inner plate reaches below the tooth tips to lift the chain; bridges close the cage at nose and tail
+  const geos = [place(plate(arcBand(Rt - 11, Rt + 13, a0 + rad(3), a1 - rad(4)), 1.4, { bevel: 0.3 }), V(0, 0, zi - 1.4))];
+  for (const [a, r] of [[a1 + rad(1.5), (r0 + topR(a1)) / 2], [a0 + rad(1), Rt + 9.5]]) {
+    const p = V(...pol(r, a), 0);
+    geos.push(sweep([p.clone().setZ(zi - 0.6), p.clone().setZ(zo + 0.6)], { a: 2.6, b: 4.2, n: 3 }, { seg: 14, side: V(Math.cos(a), Math.sin(a), 0) }));
+  }
+  B.add(slot, merge(geos), inner, { name: 'Inner cage plate' });
+
+  // braze-on tab on the front of the seat tube, found on the frame mesh itself
+  const sA = B.frameAxes.sAxis, fr = B.frameAxes.sFront; // sA x Z = fr, so (sA, Z, fr) is a right-handed frame
+  const mount = B.hp.bb.clone().addScaledVector(sA, Rt + 44).setZ(0);
+  const tube = outer.parent?.children.find((c) => c.isMesh && c.userData?.part === 'Seat tube');
+  let S = mount.clone().addScaledVector(fr, 19);
+  if (tube) {
+    const rc = new T.Raycaster(mount.clone().addScaledVector(fr, 200), fr.clone().negate());
+    const probe = new T.Mesh(tube.geometry, new T.MeshBasicMaterial({ side: T.DoubleSide }));
+    const hit = rc.intersectObject(probe, false)[0]; if (hit) S = hit.point.setZ(0);
+  }
+  const at = (u, f, zz) => S.clone().addScaledVector(sA, u).addScaledVector(fr, f).setZ(zz); // u up the tube, f forward of its face
+  B.add(slot, orient(plate(roundRect(40, 15, 7), 3.2, { bevel: 0.8 }), sA, Z, fr, at(0, -1.2, 0)), black, { name: 'Braze-on tab' });
+  // body: mounting ear on the tab, block running outboard to the links, knuckle carrying the link pins
+  const bodyG = [
+    orient(plate(roundRect(24, 18, 6), 7, { bevel: 1.5 }), sA, Z, fr, at(-2, 2, 0)),
+    orient(plate(roundRect(22, 20, 6), 11, { bevel: 2 }), sA, Z, fr, at(-6, 3, 15)),
+    rod(at(-15, 9.5, 22), at(-15, 9.5, 34), 6.5, 6.5, 24),
+  ];
+  B.add(slot, merge(bodyG), black, { name: 'Derailleur body' });
+  B.add(slot, place(boltHead(8.6, 3.6), at(-2, 9.2, 0), fr), M.bolt, { name: 'Mounting bolt' });
+  // high and low limit screws on top of the body
+  B.add(slot, merge([10, 20].map((zz) => place(boltHead(4.2, 2.2), at(6.8, 8.5, zz), sA))), M.aluSilver, { name: 'Limit screws' });
+  // parallelogram: wide outer link to the top of the outer plate, narrower inner link to the inner plate
+  const am = rad(97), cageTopO = V(...pol(topR(am) - 3, am), zo + 1.2), cageTopI = V(...pol(Rt + 11, am + rad(3)), zi - 1);
+  const pO = at(-15, 9.5, 34), pI = at(-16, 5, 12);
+  B.add(slot, sweep(spline([pO, pO.clone().lerp(cageTopO, 0.5).addScaledVector(Z, 2.5), cageTopO], 16), { a: 2.5, b: 9, n: 3.2 }, { seg: 16, side: fr, capRound: true }), black, { name: 'Outer link' });
+  B.add(slot, sweep(spline([pI, pI.clone().lerp(cageTopI, 0.5), cageTopI], 14), { a: 2, b: 6, n: 3 }, { seg: 14, side: fr, capRound: true }), inner, { name: 'Inner link' });
+  const pin = (p, r) => place(lathe([[0.01, 0], [r, 0], [r, 1], [r - 0.6, 1.6], [0.01, 1.6]], 16), p);
+  B.add(slot, merge([pin(pO.clone().setZ(pO.z + 2.4), 3), pin(cageTopO.clone().setZ(cageTopO.z + 2.4), 2.8)]), M.aluSilver, { name: 'Link pins' });
+  // cable-anchor arm off the back of the outer link, cable pulled up from under the bottom bracket
+  const armRoot = pO.clone().lerp(cageTopO, 0.3), anchor = armRoot.clone().addScaledVector(fr, -20).addScaledVector(sA, -3).setZ(armRoot.z - 1);
+  B.add(slot, sweep([armRoot, anchor], { a: 2.6, b: 4.5, n: 3 }, { seg: 14, side: sA, capRound: true }), black, { name: 'Cable arm' });
+  B.add(slot, merge([place(boltHead(6.5, 2.6), anchor.clone().setZ(anchor.z + 2.4), Z), place(plate(roundRect(9, 7, 2), 1.2), anchor.clone().setZ(anchor.z + 2.4), Z, Math.atan2(fr.y, fr.x))]), M.bolt, { name: 'Cable anchor bolt' });
+  B.fdCable = { clamp: anchor.clone() };
 }

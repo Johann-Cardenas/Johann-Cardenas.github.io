@@ -122,10 +122,12 @@ function rplate(w, h, r, depth, bevel) {
 export function buildCages(B) {
   if (!B.cfg.cages) return;
   const { M, hp } = B, FA = B.frameAxes, vis = B.part('cages')?.visual ?? {};
-  const mat = M.plastic.clone(); mat.color.set(vis.color || '#17181a'); mat.name = 'cage';
-  // translucent smoke bottles with dark sport caps, as in the owner's photos
-  const bottleM = M.bottle.clone(); bottleM.color.set(0x8a9198); bottleM.transmission = 0.55; bottleM.roughness = 0.3; bottleM.thickness = 1.5; bottleM.name = 'bottle_smoke';
-  const capM = M.plastic.clone(); capM.color.set(0x2b2d31); capM.name = 'bottle_cap';
+  // glossy black alloy-tube cages, as in the owner's photos
+  const mat = M.aluBlack.clone(); mat.color.set(vis.color || '#121315'); mat.roughness = 0.24; mat.metalness = 0.6; mat.name = 'cage';
+  // dark smoke insulated bottles with black collars and grey valves (owner's photos)
+  const bottleM = M.bottle.clone(); bottleM.color.set(0x3c4249); bottleM.transmission = 0.3; bottleM.roughness = 0.28; bottleM.thickness = 2; bottleM.name = 'bottle_smoke';
+  const capM = M.plastic.clone(); capM.color.set(0x16171a); capM.name = 'bottle_cap';
+  const valveM = M.plastic.clone(); valveM.color.set(0x9a9fa6); valveM.roughness = 0.5; valveM.name = 'bottle_valve';
   const surf = tubeSurface(B);
   const tubes = [
     { bosses: B.bosses.seat, dir: FA.sAxis, out: FA.sFront, part: 'Seat tube', fb: () => 21 },
@@ -135,8 +137,8 @@ export function buildCages(B) {
   const R = 37, prof = [[0.01, 0], [R - 5, 0], [R - 1.2, 1.5], [R, 6], [R, 104], [R - 2.6, 113], [R - 2.6, 128], [R, 137], [R, 160], [R - 4, 178], [R - 13, 194], [21, 202], [21, 207], [0.01, 207]];
   const rAt = (h) => { for (let i = 1; i < prof.length; i++) if (h <= prof[i][1]) { const [r0, h0] = prof[i - 1], [r1, h1] = prof[i]; return lerp(r0, r1, (h - h0) / Math.max(h1 - h0, 1e-6)); } return 21; };
   const hb = 34; // bottle base below the lower boss
-  const ROD = { a: 1.7, b: 2.9, n: 2.6 }; // moulded rod: radial half-thickness, axial half-width
-  const tSp = 3.2, ax = tSp + R + 0.4; // spine thickness, bottle axis offset from the tube
+  const ROD = { a: 2.9, b: 2.9, n: 2 }; // 5.8 mm round alloy tube
+  const zr = 7, nR = ROD.a + 0.3, ax = 2 * nR + 0.3 + R; // spine rails either side of the bolts; bottle axis offset from the tube
   // cage frame on a tube: where the bosses (slid `sh` mm up the tube) meet its surface, measured on
   // the frame mesh itself, with the spine lifted wherever the tube is proud of the line between them
   const cageFrame = (t, sh) => {
@@ -174,38 +176,37 @@ export function buildCages(B) {
     // point on a cylinder of radius r about the bottle axis, at height h (cage frame) and angle phi from the spine
     const W = (h, phi, r) => L(h, ax - r * Math.cos(phi), r * Math.sin(phi));
     const onBottle = (h, phi, gap = 0) => W(h, phi, rAt(h + hb) + ROD.a + gap);
-    const fh = span + 22; // the retaining hook crosses the front in the bottle's waist
-    const wingH = (phi) => lerp(span + 4, fh, smooth((Math.abs(phi) - rad(16)) / (Math.PI - rad(16))));
-    const g = [];
-    // spine: flat backbone on the tube with the two bolt slots
-    g.push(sweep([L(-hb - 1.5, tSp / 2), L(span + 12, tSp / 2)], { a: tSp / 2, b: 8.5, n: 4 }, { seg: 16, side: AX.z, capRound: true }));
-    // base tab: turns out from the spine under the bottle's base
-    g.push(sweep(spline([L(-hb + 4, 1.6), L(-hb - 1.4, 3.5), L(-hb - 1.6, 14), L(-hb - 1.6, 24)], 24), { a: 1.6, b: 7, n: 3.2 }, { seg: 14, side: AX.z, capRound: true }));
+    // Classic bent alloy-tube cage. One closed loop: down the two spine rails, out under the bottle's
+    // base as the foot, up the front as the tongue, and across the top of the tongue into the bottle's
+    // waist so it holds the bottle down. Two side arms leave the top of the spine, wrap the bottle at
+    // the waist and drop to meet the tongue.
+    const r = ROD.a, hf = -hb - r - 0.4, pT = Math.PI - 0.27, hT = 118 - hb, top = span + 14;
+    const side = (s) => [
+      L(top - 5, nR, s * zr), L(span / 2, nR, s * zr), L(-hb + 12, nR, s * zr),
+      L(-hb + 1, nR + 1.2, s * (zr + 0.8)), L(hf + 0.6, nR + 7, s * (zr + 2.4)),
+      L(hf, ax - 10, s * 10.4), L(hf, ax + R - 14, s * 10.4), L(hf + 1.6, ax + R - 4, s * 10.4),
+      onBottle(-hb + 7, s * pT), onBottle(-hb + 30, s * pT), onBottle(hT - 34, s * pT), onBottle(hT - 10, s * pT),
+      onBottle(hT - 1, s * (Math.PI - 0.12)),
+    ];
+    const loop = [...side(1), onBottle(hT + 0.5, Math.PI), ...side(-1).reverse(), L(top - 1.5, nR, -4), L(top, nR, 0), L(top - 1.5, nR, 4)];
+    const g = [sweep(spline(loop, 220, { closed: true }), ROD, { seg: 12, side: e1, transport: true, cap: false })];
     for (const s of [-1, 1]) {
-      // lower hoop: leaves the spine low down and wraps round to the side of the bottle
-      const lo = [L(-hb + 10, tSp - 0.5, s * 6)];
-      for (let i = 0; i <= 6; i++) { const f = i / 6; lo.push(onBottle(-hb + lerp(12, 24, f), s * lerp(rad(22), rad(112), f))); }
-      g.push(sweep(spline(lo, 30), ROD, { seg: 10, side: e1, transport: true, capRound: true }));
-      // side rail joining the lower hoop to the upper wing
-      g.push(sweep(spline([0, 0.33, 0.66, 1].map((f) => onBottle(lerp(-hb + 24, wingH(rad(116)), f), s * lerp(rad(112), rad(116), f))), 20), ROD, { seg: 10, side: e1, transport: true, capRound: true }));
+      const arm = [L(span - 4, nR, s * zr), L(span + 8, nR + 3, s * (zr + 5)), onBottle(hT - 10, s * rad(48)), onBottle(hT - 4, s * rad(86)),
+        onBottle(hT - 8, s * rad(122)), onBottle(hT - 28, s * rad(148)), onBottle(hT - 50, s * (pT - 0.04))];
+      g.push(sweep(spline(arm, 80), ROD, { seg: 12, side: e1, transport: true, capRound: true }));
     }
-    // upper wing and retaining hook: one moulded loop from the spine, round both sides, across the front,
-    // set into the bottle's waist so it holds the bottle down
-    const top = [];
-    for (let i = 1; i < 24; i++) {
-      const f = i / 24, phi = f < 0.5 ? -lerp(rad(16), Math.PI, f / 0.5) : lerp(Math.PI, rad(16), (f - 0.5) / 0.5);
-      top.push(onBottle(wingH(phi), phi));
-    }
-    const upper = sweep(spline([L(span + 2, tSp - 0.5, -7), ...top, L(span + 2, tSp - 0.5, 7)], 64), ROD, { seg: 10, side: e1, transport: true, capRound: true });
-    g.push(upper);
+    // flattened backbone between the rails where the bolts go through
+    g.push(sweep([L(-10, 1.1), L(span + 10, 1.1)], { a: 1.1, b: 9.6, n: 4 }, { seg: 16, side: AX.z, capRound: true }));
     B.add('cages', merge(g), mat, { name: 'Bottle cage' });
-    // M5 cap screws in the spine's slots (heads recessed so the bottle sits flush)
-    B.add('cages', merge([0, span].map((h) => place(boltHead(8.4, 2.4), L(h, 1.2), e2))), M.bolt, { name: 'Cage bolts' });
+    // M5 cap screws through the backbone
+    B.add('cages', merge([0, span].map((h) => place(boltHead(7.6, 2.6), L(h, 2.2), e2))), M.bolt, { name: 'Cage bolts' });
     if (B.P.bottles) {
       const base = L(-hb, ax), axis = e1.clone();
       B.add('cages', place(lathe(prof, 44), base, axis), bottleM, { name: 'Bottle' });
-      const cap = [[0.01, 205], [22.4, 205], [23, 207], [23, 219], [21.5, 221], [11, 222], [10, 224], [10, 232], [7, 235], [0.01, 235]];
-      B.add('cages', place(lathe(cap, 32), base, axis), capM, { name: 'Bottle cap' });
+      const collar = [[0.01, 205], [22.4, 205], [23, 207], [23, 219], [21.5, 221], [12, 222], [0.01, 222]];
+      B.add('cages', place(lathe(collar, 32), base, axis), capM, { name: 'Bottle cap' });
+      const valve = [[0.01, 221], [11, 221], [11, 224], [9.6, 225], [9.6, 232], [6.8, 235.5], [0.01, 235.5]];
+      B.add('cages', place(lathe(valve, 28), base, axis), valveM, { name: 'Bottle valve' });
     }
   }
 }
