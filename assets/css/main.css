@@ -2739,6 +2739,9 @@ body.Publications .pub-article .pub-section:first-of-type {
 .gradient-noun[data-app="stride-lab"] {
 	background-image: linear-gradient(90deg, #22d3d1, #34d399, #f0a44a, #22d3d1);
 }
+.gradient-noun[data-app="road-bike"] {
+	background-image: linear-gradient(90deg, #22d3d1, #f3f3f0, #c41230, #22d3d1);
+}
 
 .app-card .status-badge {
 	position: absolute;

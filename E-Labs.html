@@ -117,7 +117,37 @@
 							<!-- Apps Grid -->
 							<div class="apps-grid">
 
-								<div class="app-card"><div class="content"><h3>Road Bike Project</h3><p class="description">A digital twin of my Cannondale Synapse Carbon. Explore a component-level 3D build, compare upgrades, check interfaces, and follow the measurement, CAD and aerodynamics project.</p><div class="tags"><span class="tag">3D Configurator</span><span class="tag">Compatibility</span><span class="tag">Digital Twin</span></div><a href="e-labs/road-bike/index.html" class="launch-btn">Launch App</a></div></div>
+								<!-- Road Bike Project App Card -->
+								<div class="app-card" data-animation="road-bike">
+									<div class="app-card__animated-bg">
+										<canvas class="app-card__canvas" aria-hidden="true"></canvas>
+										<img class="app-card__banner" src="images/e-labs/E-Labs_Road-Bike.png" alt="Parametric 3D model of a white and red Cannondale Synapse Carbon road bike" loading="lazy" decoding="async" width="1310" height="790" />
+										<span class="status-badge public">Public</span>
+										<div class="app-card__hover-text">
+											<span class="verb">Plan &amp; Analyse</span>
+											<span class="gradient-noun" data-app="road-bike">Bike Upgrades</span>
+										</div>
+									</div>
+									<div class="content">
+										<h3>Road Bike Project</h3>
+										<p class="description">
+											A component-level digital twin of my Cannondale Synapse Carbon:
+											a parametric 3D model, 65 researched parts checked against the
+											frame’s real interfaces, gearing and power models, and a beam
+											finite-element model of the frame.
+										</p>
+										<div class="tags">
+											<span class="tag">3D Configurator</span>
+											<span class="tag">Compatibility</span>
+											<span class="tag">Gearing &amp; Power</span>
+											<span class="tag">Frame FE</span>
+										</div>
+										<a href="e-labs/road-bike/index.html" class="launch-btn">
+											<i class="fas fa-rocket"></i> Launch App
+										</a>
+									</div>
+								</div>
+
                                 <!-- Gear3D App Card -->
 								<div class="app-card" data-animation="gear3d">
 									<div class="app-card__animated-bg">
