@@ -1,0 +1,43 @@
+{
+ "Frame": [
+  "frame",
+  "headset_cover"
+ ],
+ "Fork": [
+  "fork"
+ ],
+ "Front wheel": [
+  "rim_front",
+  "tyre_front",
+  "hub_front"
+ ],
+ "Rear wheel": [
+  "rim_rear",
+  "tyre_rear",
+  "hub_rear"
+ ],
+ "Drivetrain": [
+  "crankset",
+  "chainring_",
+  "cassette",
+  "rear_derailleur",
+  "front_derailleur",
+  "pedal_"
+ ],
+ "Cockpit": [
+  "stem",
+  "handlebar",
+  "levers",
+  "light"
+ ],
+ "Saddle & post": [
+  "saddle",
+  "seatpost"
+ ],
+ "Brakes": [
+  "brake_"
+ ],
+ "Bottles": [
+  "bottle_"
+ ]
+}
