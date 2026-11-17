@@ -199,6 +199,12 @@ ASCE2025, ATLAS, Datathon2024, Fulbright, Graduation, ISAP2024, TRB2022-2026, Vi
 ACRP_FEM (password-protected), EV_Trucks, FAA_Data, MS_Thesis
 
 ### E-Labs apps (`e-labs/`)
+- **Road Bike Project** (`e-labs/road-bike/`) — Component-level digital twin of the owner's Cannondale Synapse Carbon 51 (rim brake, QR, BB30, Shimano 105 5700 10-speed), public. Buildless; Three.js r0.187 via import map. Tabs: Build (parametric 3D + part picker), Upgrades, Gearing, Performance, Frame FE, Geometry & fit, Spec sheet. See its README.
+  - **Evidence classes everywhere** (C confirmed / L listing / S reference / M measure). `null` is unknown and never zero: an unknown mass makes the total or delta unknown. Keep it that way.
+  - **`data/components.json` is generated** from `tools/build_catalog.mjs` (65 parts, 25 slots, 5 bundles, with sources and approx. Nov-2026 prices). Edit the generator, rerun it; `tests/catalog.test.js` fails on drift. Compatibility is `provides`/`requires` interfaces (`js/compat.js`); `applyChange` in `state.js` pulls in the single companion part that repairs a broken interface (e.g. 24 mm crank → BB30-to-Shimano BB). Shifter cable pull is an interface: Tiagra 4700 is deliberately blocked with ST-5700.
+  - **3D is procedural, in mm** (`js/geo/*`): real 12.7 mm sprocket tooth forms, a link-by-link chain on a solved belt path, derailleur cage angle solved from chain length, caliper reach solved to the brake track. Frame hardpoints are catalog geometry; **tube sections are illustrative** until measured. `js/model/*` is pure and Node-tested (beam FE checked against closed forms, equilibrium per load case).
+  - `npm test`-style: `node --test e-labs/road-bike/tests/*.test.js` (30 checks). Card banner: `tools/banner.html` rendered at 1310x790 → `images/e-labs/E-Labs_Road-Bike.png`.
+  - `reference/photos/` is gitignored (serial numbers). SolidWorks modelling is blocked on those photos and measurements M01–M18.
 - **QR Studio** (`e-labs/qr-studio/`) — Designed QR code generator, public. App **v1.0**. Four plain `<script>` files, no bundler and no runtime dependency: `qrcode.js` (UMD encoder) + `render.js` (styling/layout) + `app.js` (UI) + `styles.css`.
   - **The encoder is ours, to ISO/IEC 18004** — segment encoding, Reed-Solomon over GF(256) (0x11D, narrow-sense, roots a^0..a^(n-1)), block interleaving, function patterns, mask selection by penalty score, BCH format/version info. Block geometry follows Nayuki's formulation (two short tables + derived short/long split) rather than transcribing ~500 magic numbers.
   - **Testing is two-layer, and both layers matter.** `test/test-qr.cjs` (397 checks, `node test/test-qr.cjs`) carries an *independent decoder* — it reads format info back out of the matrix, unmasks, walks the zigzag, de-interleaves, checks every Reed-Solomon syndrome is zero, and parses the payload; round-trips 4 ECLs x 17 payloads plus 250 random ones plus all 8 masks. `test/scan-harness.html` (open in a browser) renders styled codes through the real pipeline and decodes the *pixels* with jsQR at five sizes — the Node suite cannot tell you a styled code stopped scanning.
@@ -242,7 +248,7 @@ Which DOM placeholders each page uses (determines which JSON files `components.j
 All pages have hardcoded `<nav>` in HTML — no page uses `#nav-placeholder`.
 
 ## Navigation & Site Map
-- **Top nav**: Home | Projects (dropdown→4) | Publications | Resume | Blog | News | E-Labs (dropdown→9: Gear3D, QR Studio, Stride Lab, LEAPS, Cross-Section Studio, Finite-Elemented, Frontier, AirCrafter, Asphera)
+- **Top nav**: Home | Projects (dropdown→4) | Publications | Resume | Blog | News | E-Labs (dropdown→9 + Road Bike card: Gear3D, QR Studio, Stride Lab, LEAPS, Cross-Section Studio, Finite-Elemented, Frontier, AirCrafter, Asphera)
 - All pages share: hardcoded `<nav>` in HTML + dynamic footer via `#footer-placeholder`
 - Subdirectory pages (`blog/`, `projects/`, `e-labs/`) use `../` relative paths for assets
 
