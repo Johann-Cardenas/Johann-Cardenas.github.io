@@ -37,3 +37,6 @@ __pycache__/
 
 # Logs
 *.log
+
+# Road Bike Project: private reference photos (may show serial numbers)
+e-labs/road-bike/reference/photos/*

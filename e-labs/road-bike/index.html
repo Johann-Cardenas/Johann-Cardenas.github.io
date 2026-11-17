@@ -1,1 +1,98 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Road Bike Project · E-Labs</title><link rel="stylesheet" href="css/site.css"><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script></head><body><header class="topbar"><a class="brand" href="../../E-Labs.html">E-LABS <span>/ Road Bike Project</span></a><nav aria-label="Sections"><a href="index.html" aria-current="page">Configurator</a><a href="spec.html">Spec sheet</a><a href="cad.html">SolidWorks</a><a href="aero.html">Aero & structure</a><a href="history.html">History</a></nav></header><main class="studio"><section class="stage" aria-label="Bicycle viewer"><div class="stage-heading"><p class="eyebrow">SYNAPSE / DIGITAL TWIN</p><h1>Synapse<span class="title-dot">.</span></h1><p>Carbon · 51 cm · Shimano 105</p><span class="badge">Provisional geometry · procedural model</span></div><canvas id="viewport" tabindex="0" aria-label="3D bicycle. Use camera controls below for keyboard navigation."></canvas><div class="render-tools"><span class="studio-live">STUDIO / LIVE 3D</span><label>Render quality <select id="quality"><option value="ultra">Ultra</option><option value="high">High</option><option value="balanced">Balanced</option></select></label><button id="turntable" aria-pressed="false">Turntable</button></div><div class="view-tools"><label>Camera <select id="camera"><option value="drive">Drive side</option><option value="non-drive">Non-drive side</option><option value="front">Front</option><option value="rear">Rear</option><option value="three-quarter" selected>¾ front</option><option value="top">Top</option></select></label><button id="explode" aria-pressed="false">Explode</button><button id="geometry" aria-pressed="false">Geometry</button><button id="png">Export 4K PNG</button></div><p class="stage-caption">Drag to orbit · Scroll to zoom · Select a component to inspect</p></section><aside class="panel"><div class="panel-heading"><p class="eyebrow">BUILD WORKSPACE</p><h2>Make it yours.</h2><div class="segmented"><button id="proposal" aria-pressed="true">Proposal</button><button id="installed" aria-pressed="false">Installed</button></div></div><div id="options"></div><section class="summary card"><h2>Build summary</h2><div id="totals"></div><div id="issues" aria-live="polite"></div><button id="share">Copy build link</button><button id="reset">Reset proposal</button><p id="status" role="status">Loading bicycle…</p></section></aside></main><footer>Personal project; not affiliated with or endorsed by Cannondale, Shimano, FSA or other brands shown.</footer><script type="module" src="js/main.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Road Bike Project · E-Labs</title>
+<meta name="description" content="A component-level digital twin of a Cannondale Synapse Carbon: parametric 3D model, interface-checked upgrade planning, gearing, a road power model and a beam finite-element model of the frame.">
+<meta name="theme-color" content="#f3f5f7">
+<link rel="icon" href="../../favicon.ico">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('roadbike-theme') || localStorage.getItem('theme-preference');
+      if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.dataset.theme = t;
+    } catch (e) { document.documentElement.dataset.theme = 'light'; }
+  })();
+</script>
+<link rel="stylesheet" href="css/app.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
+</head>
+<body class="RoadBike" data-view="build">
+<div id="app">
+  <header class="rb-top">
+    <a class="rb-brand" href="../../E-Labs.html" title="Back to E-Labs">
+      <span class="rb-mark" aria-hidden="true"><svg viewBox="0 0 28 28"><circle cx="7" cy="19" r="5.4"/><circle cx="21" cy="19" r="5.4"/><path d="M7 19l4.5-9h7L21 19M11.500 10 14.500 19 18.500 10M9.800 7h3.600"/></svg></span>
+      <span class="rb-name"><b>Road Bike Project</b><small>Synapse Carbon 51 · digital twin</small></span>
+    </a>
+    <nav id="tabs" class="rb-tabs" role="tablist" aria-label="View">
+      <button data-v="build" role="tab">Build</button>
+      <button data-v="upgrades" role="tab">Upgrades</button>
+      <button data-v="gearing" role="tab">Gearing</button>
+      <button data-v="performance" role="tab">Performance</button>
+      <button data-v="structure" role="tab">Frame FE</button>
+      <button data-v="geometry" role="tab">Geometry &amp; fit</button>
+      <button data-v="spec" role="tab">Spec sheet</button>
+    </nav>
+    <div class="rb-tools">
+      <span id="evidence" class="rb-evidence" title="Evidence classes used throughout: C confirmed, L listing, S stock reference, M must be measured"><i class="c">C</i><i class="l">L</i><i class="s">S</i><i class="m">M</i></span>
+      <button id="themeBtn" class="rb-ico" title="Light / dark" aria-label="Toggle theme"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none"/><path d="M8 2.500a5.500 5.500 0 0 1 0 11z"/></svg></button>
+      <button id="panelBtn" class="rb-ico" title="Show / hide panel" aria-label="Toggle panel"><svg viewBox="0 0 16 16"><rect x="2.500" y="3" width="11" height="10" rx="1.500" fill="none"/><path d="M10 3v10" fill="none"/></svg></button>
+    </div>
+  </header>
+
+  <main class="rb-main">
+    <section id="stage" class="rb-stage" aria-label="3D model">
+      <canvas id="gl" tabindex="0" aria-label="Interactive 3D bicycle. Drag to orbit, right-drag or shift-drag to pan, wheel to zoom, double-click to fit, click a part to inspect it."></canvas>
+      <div id="labels" class="rb-labels" aria-hidden="true"></div>
+
+      <div class="rb-ov rb-title">
+        <b id="ttl">Cannondale Synapse Carbon</b>
+        <span id="sub">Installed build</span>
+      </div>
+
+      <div class="rb-ov rb-views" role="toolbar" aria-label="Camera and display">
+        <div class="rb-seg" id="views">
+          <button data-view="quarter" title="Three-quarter (1)">¾</button>
+          <button data-view="drive" title="Drive side (2)">Drive</button>
+          <button data-view="nondrive" title="Non-drive side (3)">Left</button>
+          <button data-view="front" title="Front (4)">Front</button>
+          <button data-view="rear" title="Rear (5)">Rear</button>
+          <button data-view="top" title="Top (6)">Top</button>
+        </div>
+        <button data-act="fit" title="Fit (0)">Fit</button>
+        <span class="rb-sep"></span>
+        <label class="rb-slider" title="Exploded view">Explode <input id="explode" type="range" min="0" max="100" value="0" aria-label="Exploded view"></label>
+        <button data-tog="dims" aria-pressed="false" title="Dimensions (D)">Dimensions</button>
+        <button data-tog="tech" aria-pressed="false" title="Clay model with edges (E)">Technical</button>
+        <button data-tog="spin" aria-pressed="false" title="Turntable (R)">Rotate</button>
+        <button data-tog="pedal" aria-pressed="false" title="Turn the cranks (P)">Pedal</button>
+        <span class="rb-sep"></span>
+        <select id="quality" aria-label="Render quality" title="Render quality">
+          <option value="ultra">Ultra</option><option value="high" selected>High</option><option value="balanced">Balanced</option>
+        </select>
+        <button data-act="png" title="Save a 4K PNG (S)">PNG</button>
+      </div>
+
+      <aside id="card" class="rb-ov rb-card" hidden></aside>
+      <div id="legend" class="rb-ov rb-legend" hidden></div>
+      <div id="tip" class="rb-ov rb-tip" hidden></div>
+      <div id="loading" class="rb-loading"><span class="rb-spin"></span><span id="loadmsg">Building the model…</span></div>
+      <p class="rb-note" id="stageNote">Illustrative geometry: catalog dimensions and assumed tube sections until the bike is measured.</p>
+    </section>
+
+    <aside id="panel" class="rb-panel" aria-live="polite"></aside>
+    <section id="page" class="rb-page" hidden></section>
+  </main>
+
+  <footer class="rb-foot">
+    <span>Personal project. Not affiliated with or endorsed by Cannondale, Shimano, FSA or any other brand shown.</span>
+    <span id="status" role="status"></span>
+  </footer>
+</div>
+<noscript><p style="padding:2rem">This application needs JavaScript. The source data is in the <code>data/</code> folder.</p></noscript>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

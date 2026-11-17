@@ -1,29 +1,86 @@
-# Road Bike Project — Synapse digital twin
+# Road Bike Project: Synapse digital twin
 
-Buildless E-Labs application. Serve the repository using `python -m http.server 8000`, then open `/e-labs/road-bike/`. This is the provisional Phase 1 implementation; geometry, component identity and reference masses are not measured validation.
+A buildless E-Labs app for a Cannondale Synapse Carbon (51 cm, likely MY2012). Serve the
+repository root (`python -m http.server 8000`) and open `/e-labs/road-bike/`.
 
-Data lives in `data/geometry.json` and `data/components.json`. Null means unknown, never zero. C = confirmed by owner, L = listing, S = stock/reference, M = measurement required. Confidence applies to the identity unless a field notes otherwise. No serial, registration ID or Shield code is included.
+## What it does
 
-Checks from repository root:
+| Tab | Content |
+|---|---|
+| Build | Parametric 3D model; pick any part from the catalog, paint scheme, bar tape, pose (gear, crank angle, steering). Click a part to inspect it. |
+| Upgrades | Staged bundles and every researched part, each checked against the installed interfaces. |
+| Gearing | Range, steps, chain wrap, chain length, speed per gear, cross-chaining. |
+| Performance | Steady-state power model: speed at a given power, power split, ride times, with every input's source. |
+| Frame FE | 3D beam finite-element model of frame and fork under five load cases; stiffness figures. |
+| Geometry & fit | Catalog geometry, derived trail/wheelbase/ETT, fit sliders, dimensions drawn on the model. |
+| Spec sheet | Bill of materials with evidence classes, CSV export, measurement plan, CAD status, history. |
+
+State lives in the URL hash: `slot=id` for parts that differ from the installed build,
+`p.key=value` for parameters that differ from their defaults, `view=` for the tab.
+
+## Evidence
+
+Every value carries one of **C** confirmed by owner, **L** listing, **S** stock or published
+reference, **M** must be measured. `null` means unknown and is never counted as zero: an
+unknown mass makes a total or a delta unknown rather than wrong.
+
+## Layout
 
 ```
-node --test e-labs/road-bike/tests/*.test.js
+js/geo/        3D builders (mm, BB origin, +X forward, +Y up, +Z drive side)
+  kit.js         sweep / lathe / plate / sprocket tooth form / merge helpers
+  frame.js       frame, fork, headset          wheels.js   rims, lacing, hubs, tyres, QR
+  drivetrain.js  cranks, rings, cassette, chain, derailleurs, pedals
+  brakes.js      dual-pivot calipers           cockpit.js  stem, bar, levers, cables, accessories
+  seat.js        seatpost, saddle, cages       materials.js  PBR materials, paint and decal textures
+  bike.js        assembly and pose
+js/model/      pure functions, tested under Node
+  derived.js     hardpoints, trail, ETT, fit   gearing.js  gear table, chain length
+  physics.js     power model                   perf.js     configuration -> power-model inputs
+  frame-fe.js    beam FE solver and load cases belt.js     chain path through the derailleur
+js/viewer.js   on-demand renderer, picking, explode, dimensions, FE overlay
+js/app.js      state, URL, Build panel       js/views.js  the other tabs
+tools/build_catalog.mjs   catalog source -> data/components.json
+tools/banner.html         E-Labs card banner (1310x790)
+reference/                photo shot list; reference/photos/ is gitignored
+```
+
+## How the model is built
+
+Standard parts follow their standards: sprockets have a 12.7 mm pitch tooth form, rims are
+ETRTO 622, the chain is laid one link at a time along a solved path, and the derailleur cage
+swings to whatever angle takes up exactly the chain's length (big-big plus one link pair).
+Brake reach is solved so the pads sit on the brake track.
+
+The frame is not measured. Hardpoints come from catalog geometry; tube sections in
+`data/geometry.json` (`tubes`) are illustrative, which is also what the FE model uses.
+
+## Analysis limits
+
+- **Performance**: CdA is a published range by position; Crr is a drum-test figure only where
+  one exists (otherwise a generic value and no gain is claimed); bike mass is assumed 8.8 kg
+  until weighed. No CFD.
+- **Frame FE**: Euler-Bernoulli beams, thin-walled elliptical sections, one isotropic laminate
+  modulus, assumed wall thickness. ISO 4210-6 force magnitudes for orientation only. It ranks
+  load paths; it is not a strength or safety assessment.
+
+## Catalog
+
+Edit `tools/build_catalog.mjs`, then `node tools/build_catalog.mjs`. A test fails if
+`data/components.json` drifts from its source. Prices are approximate US street prices
+(November 2026).
+
+## Checks
+
+```
+node --test e-labs/road-bike/tests/*.test.js     # 30 checks
 python e-labs/road-bike/tools/validate_site.py
-python e-labs/road-bike/tools/hardpoints.py
+python e-labs/road-bike/tools/hardpoints.py      # SolidWorks design-variable CSV
 ```
 
-The last command exports `data/cad/design_variables.csv`; `--write` also regenerates hardpoints. Record measurements in `tools/measurements.csv`, review them, and update geometry inputs before regeneration. CAD uses millimetres with the BB origin, +X forward, +Y up, +Z drive side. Web geometry uses metres.
+## Towards SolidWorks
 
-`decodeConfig(hash,catalog)` merges installed required slots, validates slot membership and physical compatibility, and accepts `none` for optional slots. `encodeConfig(cfg,catalog)` preserves optional removals. `summarize` returns knownMass_g, unknownMassCount, totalMass_g, deltaMass_g, deltaPrice_usd, gearMin, gearMax, deltaCdA_m2 and changedCount. Unknown totals/deltas are null. No simulation is inferred.
-
-CAD BOM/mass CSVs contain headers only until real exports exist. Aero results are empty until actual solver runs and mesh studies exist. No photoreal accuracy, measured fit, structural safety, CFD convergence, Lighthouse score or calibrated paint match is claimed. Detailed GLB hardpoint/material validation is future work; current validation checks files/budgets when model paths are supplied. Keep raw CAD, CFD and identifiers in private storage outside this public repository. `tools/seed_data.py` is initial fixture creation only: rerunning overwrites data.
-
-GitHub Pages uses the repository's existing hosting arrangement. The scoped workflow runs validation and compatibility tests without replacing deployment.
-
-## Visual quality and interaction
-
-Ultra uses up to 3x device pixel ratio (at least 2x supersampling) and device-capped 4096 shadow maps. High and Balanced reduce GPU load. Export produces a 3840-pixel-wide PNG, subject to GPU texture limits. Camera and exploded transitions respect reduced motion; turntable is opt-in. Keyboard: arrow keys orbit, +/- zoom, Home resets, brackets cycle components, Enter selects.
-
-The CAD tab shows the same explicitly labelled procedural proxy. Spec drawings and the aero setup illustration use resolution-independent SVG; the latter is not computed flow. Geometry, paint and component shapes remain provisional.
-
-Visual iteration verified in headless Edge at desktop and 390px mobile sizes: all five tabs load without page errors, mobile has no horizontal overflow, and PNG export completes. Eleven compatibility/state tests and data validation pass. No photoreal accuracy or performance benchmark is claimed.
+SolidWorks is scriptable on the workstation (the GPR-Mount builder uses the same COM route).
+A native model needs the reference photos and the M01-M18 measurements first; see
+`reference/README.md` for the shot list and `tools/measurements.csv` for the worksheet.
+Raw CAD, CFD and identifiers stay out of this public repository.
