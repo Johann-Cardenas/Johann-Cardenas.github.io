@@ -1122,6 +1122,8 @@
     var type = card.getAttribute('data-animation');
     // These two miniatures now use the same Three.js scenes as the full labs.
     if ((type === 'finite-elemented' || type === 'frontier') && window.LabScene) return;
+    // AirCrafter and Asphera draw a 3D miniature (e-labs-miniatures.js) when WebGL is there.
+    if (card.getAttribute('data-mini') === '3d') return;
     var engine = engines[type];
     if (!engine) return;
 
