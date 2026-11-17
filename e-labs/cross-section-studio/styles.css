@@ -167,6 +167,42 @@
 
 .xs-toolbar .xs-spacer { flex: 1; }
 
+/* Units: a segmented pair rather than two buttons, because the two are one
+   choice and only one of them can be true. Colors carry !important against
+   main.css's global button rules (see the NOTE below). */
+.xs-app .xs-units {
+    display: inline-flex;
+    border: 1px solid var(--xs-border-strong);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: help;
+}
+
+.xs-app .xs-unit-btn {
+    appearance: none;
+    height: auto;
+    padding: 0.42rem 0.7rem;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: var(--xs-bg) !important;
+    color: var(--xs-text-secondary) !important;
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0;
+    text-transform: none;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.xs-app .xs-unit-btn + .xs-unit-btn { border-left: 1px solid var(--xs-border-strong); }
+.xs-app .xs-unit-btn:hover { color: var(--xs-primary) !important; }
+.xs-app .xs-unit-btn.is-active { background: var(--xs-primary) !important; color: #fff !important; font-weight: 600; }
+[data-theme="dark"] .xs-app .xs-unit-btn.is-active { color: #0f1a2e !important; }
+.xs-app .xs-unit-btn:focus-visible { outline: 2px solid var(--xs-primary); outline-offset: -2px; }
+@media (pointer: coarse) { .xs-app .xs-unit-btn { min-height: 44px; } }
+
 /* NOTE: main.css ships aggressive global button rules
    (`[data-theme="dark"] button { background: accent }`, `color:#fff !important`)
    — every selector here is scoped under .xs-app and colors carry !important

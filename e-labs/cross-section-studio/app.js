@@ -6,6 +6,9 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import {
+    FIELD_LIMITS, redesignate, toMm, formatLength, unitLabelOf, unitWordOf
+} from './units.js';
 
 (function () {
     'use strict';
@@ -478,6 +481,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     };
 
     const state = {
+        /** Which system the reader is working in. Storage is millimeters
+            regardless; see section 3b. */
+        units: 'mm',
         section: { ...DEFAULTS.section },
         camera: { ...DEFAULTS.camera },
         lighting: { ...DEFAULTS.lighting },
@@ -553,8 +559,51 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     function applyTemplate(tpl) {
         state.layers = tpl.layers.map(l => makeLayer(l[0], l[1], l[2]));
         state.layers.push(makeLayer('Subgrade (infinite)', 'subgrade', 0, { subgrade: true }));
+        // Every table above is written in metric designations, so a template
+        // loaded while English is showing has to be re-designated. The
+        // section geometry is already in the active unit and is left alone.
+        if (state.units === 'in') convertLengths('in', 'layers');
         selectedId = state.layers[0].id;
     }
+
+    /* ========================================================
+       3b. Units
+       ========================================================
+       The arithmetic and the reasoning live in units.js, which imports
+       nothing. What stays here is only the part that needs `state`: reading
+       a stored millimeter length in whatever system is showing, and
+       re-designating every length when the reader changes systems.
+    */
+    const store = (v) => toMm(v, state.units);
+    const fmtLen = (mmValue) => formatLength(mmValue, state.units);
+    const unitLabel = () => unitLabelOf(state.units);
+    const unitWord = () => unitWordOf(state.units);
+
+    /**
+     * Re-express stored lengths as designations in `to`. `what` is 'layers'
+     * when a template has just supplied metric numbers into a section whose
+     * geometry is already in the active unit; converting the section again
+     * would apply the map twice, and the map is not idempotent by design.
+     */
+    function convertLengths(to, what) {
+        if (what === 'all') {
+            const s = state.section;
+            s.width = redesignate(s.width, to);
+            s.length = redesignate(s.length, to);
+            s.recessX = redesignate(s.recessX, to);
+            s.recessZ = redesignate(s.recessZ, to);
+            s.subgradeDisplay = redesignate(s.subgradeDisplay, to);
+        }
+        state.layers.forEach(l => { l.thickness = redesignate(l.thickness, to); });
+    }
+
+    function applyFieldLimits(input, kind) {
+        const [lo, hi, step] = FIELD_LIMITS[kind][state.units];
+        input.min = String(lo); input.max = String(hi); input.step = String(step);
+    }
+
+    /** The unit choice outlives the tab. */
+    const UNITS_KEY = 'xs-units';
 
     /* ========================================================
        4. Three.js scene
@@ -1047,6 +1096,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         return {
             app: 'cross-section-studio', version: 1,
             savedAt: new Date().toISOString(),
+            units: state.units,
             meta: { ...state.meta },
             section: { ...state.section },
             camera: { ...state.camera },
@@ -1066,6 +1116,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (!data || data.app !== 'cross-section-studio' || !Array.isArray(data.layers)) {
             toast('Not a valid .pavement.json project'); return;
         }
+        // A project written before this field existed is metric. If it does
+        // not match what the reader is working in, it is re-designated.
+        const fileUnits = data.units === 'in' ? 'in' : 'mm';
         Object.assign(state.section, data.section || {});
         Object.assign(state.camera, data.camera || {});
         Object.assign(state.lighting, data.lighting || {});
@@ -1079,7 +1132,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (!state.layers.some(l => l.subgrade)) {
             state.layers.push(makeLayer('Subgrade (infinite)', 'subgrade', 0, { subgrade: true }));
         }
+        if (fileUnits !== state.units) convertLengths(state.units, 'all');
         selectedId = state.layers[0].id;
+        syncUnitsUi();
         syncAllInputs();
         rebuildSection();
         applyBackground();
@@ -1097,7 +1152,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     function snapshot() {
         return JSON.stringify({
-            section: state.section, layers: state.layers,
+            units: state.units, section: state.section, layers: state.layers,
             lighting: state.lighting, background: state.background
         });
     }
@@ -1114,11 +1169,13 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     function restore(snap) {
         const d = JSON.parse(snap);
+        state.units = d.units === 'in' ? 'in' : 'mm';
         Object.assign(state.section, d.section);
         Object.assign(state.lighting, d.lighting);
         Object.assign(state.background, d.background);
         state.layers = d.layers;
         if (!state.layers.some(l => l.id === selectedId)) selectedId = state.layers[0] && state.layers[0].id;
+        syncUnitsUi();
         syncAllInputs();
         rebuildSection();
         applyBackground();
@@ -1139,7 +1196,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
        ======================================================== */
     const $ = id => document.getElementById(id);
     const ui = {
-        template: $('xs-template'), undo: $('xs-undo'), redo: $('xs-redo'),
+        template: $('xs-template'), unitsSi: $('xs-units-si'), unitsEn: $('xs-units-en'), undo: $('xs-undo'), redo: $('xs-redo'),
         open: $('xs-open'), save: $('xs-save'), fileInput: $('xs-file-input'),
         reset: $('xs-reset'), export: $('xs-export'),
         copy: $('xs-copy'), copyBg: $('xs-copy-bg'), copyAlpha: $('xs-copy-alpha'),
@@ -1185,16 +1242,53 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     function updateHud() {
         const s = state.section;
-        ui.hud.textContent = `W ${s.width} × L ${s.length} × D ${sceneInfo.totalDepth} mm`;
+        ui.hud.textContent =
+            `W ${fmtLen(s.width)} × L ${fmtLen(s.length)} × D ${fmtLen(sceneInfo.totalDepth)} ${unitLabel()}`;
         const engDepth = state.layers.reduce((a, l) => a + (l.subgrade ? 0 : l.thickness), 0);
-        ui.layersTotal.textContent = `Σ ${engDepth} mm above subgrade`;
+        ui.layersTotal.textContent = `Σ ${fmtLen(engDepth)} ${unitLabel()} above subgrade`;
+    }
+
+    /**
+     * Everything that says "mm" or "in", and every field's own limits: a
+     * thickness spinner stepping by 5 in a field showing 3 would jump to 8.
+     */
+    function syncUnitsUi() {
+        const english = state.units === 'in';
+        for (const [btn, on] of [[ui.unitsSi, !english], [ui.unitsEn, english]]) {
+            btn.classList.toggle('is-active', on);
+            btn.setAttribute('aria-pressed', String(on));
+        }
+        document.querySelectorAll('[data-xs-unit]').forEach(n => { n.textContent = unitLabel(); });
+        applyFieldLimits(ui.secWidth, 'plan');
+        applyFieldLimits(ui.secLength, 'plan');
+        applyFieldLimits(ui.secRecessX, 'recess');
+        applyFieldLimits(ui.secRecessZ, 'recess');
+        applyFieldLimits(ui.secSubgrade, 'subgrade');
+    }
+
+    /**
+     * Switch systems: re-designate every length, then redraw. The stored
+     * millimeters really change (a 75-mm layer becomes a 3-in one, which is
+     * 76.2), so the figure and the export have to follow the panel.
+     */
+    function setUnits(next) {
+        if (next === state.units) return;
+        state.units = next;
+        convertLengths(next, 'all');
+        try { localStorage.setItem(UNITS_KEY, next); } catch { /* private mode */ }
+        syncUnitsUi();
+        syncAllInputs();
+        rebuildSection();
+        renderLayerRows();
+        pushHistory();
+        toast(next === 'in' ? 'English units: inches' : 'SI units: millimeters');
     }
 
     function syncAllInputs() {
         const s = state.section, c = state.camera, L = state.lighting, b = state.background;
-        ui.secWidth.value = s.width; ui.secLength.value = s.length;
-        ui.secRecessX.value = s.recessX; ui.secRecessZ.value = s.recessZ;
-        ui.secSubgrade.value = s.subgradeDisplay;
+        ui.secWidth.value = fmtLen(s.width); ui.secLength.value = fmtLen(s.length);
+        ui.secRecessX.value = fmtLen(s.recessX); ui.secRecessZ.value = fmtLen(s.recessZ);
+        ui.secSubgrade.value = fmtLen(s.subgradeDisplay);
         ui.camProj.value = c.mode; ui.camAz.value = c.azimuth; ui.camEl.value = c.elevation; ui.camFov.value = c.fov;
         ui.camFov.disabled = c.mode !== 'persp';
         ui.lightPreset.value = L.preset; ui.lightKey.value = L.key; ui.lightAmb.value = L.ambient;
@@ -1215,6 +1309,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     }
 
     function renderLayerRows() {
+        const thickLimits = FIELD_LIMITS.thickness[state.units];
         ui.layerRows.innerHTML = '';
         state.layers.forEach((layer, idx) => {
             if (idx > 0) {
@@ -1254,8 +1349,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
                 </div>
                 <div class="xs-layer-thick">
                     ${layer.subgrade
-                        ? `<i class="fas fa-infinity" title="Infinite — display thickness set in Section Geometry"></i> <span>${state.section.subgradeDisplay} mm*</span>`
-                        : `<input type="number" class="xs-num" data-act="thickness" value="${layer.thickness}" min="5" max="3000" step="5" ${lockAttr}> mm`}
+                        ? `<i class="fas fa-infinity" title="Infinite — display thickness set in Section Geometry"></i> <span>${fmtLen(state.section.subgradeDisplay)} ${unitLabel()}*</span>`
+                        : `<input type="number" class="xs-num" aria-label="Layer thickness in ${unitWord()}" data-act="thickness" value="${fmtLen(layer.thickness)}" min="${thickLimits[0]}" max="${thickLimits[1]}" step="${thickLimits[2]}" ${lockAttr}> ${unitLabel()}`}
                 </div>
                 <div class="xs-layer-actions">
                     <button class="xs-icon-btn ${layer.visible ? 'is-active' : ''}" data-act="visible" title="${layer.visible ? 'Hide layer' : 'Show layer'}"><i class="fas fa-eye${layer.visible ? '' : '-slash'}"></i></button>
@@ -1330,7 +1425,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         if (act === 'rename') { layer.name = e.target.value.trim() || layer.name; }
         else if (act === 'thickness') {
             const v = parseFloat(e.target.value);
-            if (v > 0) layer.thickness = v;
+            if (v > 0) layer.thickness = store(v);
         }
         else if (act === 'material') {
             layer.material = e.target.value;
@@ -1461,8 +1556,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     function bindSectionInput(input, key) {
         input.addEventListener('change', () => {
             const v = parseFloat(input.value);
-            if (isNaN(v)) { input.value = state.section[key]; return; }
-            state.section[key] = v;
+            if (isNaN(v)) { input.value = fmtLen(state.section[key]); return; }
+            state.section[key] = store(v);
             rebuildSection();
             renderLayerRows();
             pushHistory();
@@ -1636,6 +1731,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         ui.fileInput.value = '';
     });
 
+    ui.unitsSi.addEventListener('click', () => setUnits('mm'));
+    ui.unitsEn.addEventListener('click', () => setUnits('in'));
+
     ui.reset.addEventListener('click', () => {
         if (!confirm('Reset the section, camera and lighting to defaults?')) return;
         Object.assign(state.section, DEFAULTS.section);
@@ -1643,6 +1741,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         Object.assign(state.lighting, DEFAULTS.lighting);
         Object.assign(state.background, DEFAULTS.background);
         state.layers = defaultLayers();
+        // DEFAULTS are metric designations; the reader's unit survives a reset.
+        if (state.units === 'in') convertLengths('in', 'all');
         selectedId = state.layers[0].id;
         syncAllInputs();
         rebuildSection();
@@ -1683,7 +1783,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     state.layers = defaultLayers();
     selectedId = state.layers[0].id;
 
+    /* Adopt the remembered unit before the first draw, so an English reader
+       never sees a frame of millimeters. */
+    try {
+        if (localStorage.getItem(UNITS_KEY) === 'in') {
+            state.units = 'in';
+            convertLengths('in', 'all');
+        }
+    } catch { /* private mode, or storage disabled: SI is the default */ }
+
     buildMaterialGrid();
+    syncUnitsUi();
     syncAllInputs();
     resize();
     rebuildSection();

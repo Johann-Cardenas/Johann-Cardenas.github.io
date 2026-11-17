@@ -115,6 +115,10 @@
                         <select id="xs-template" class="xs-select" title="Section templates" aria-label="Section templates">
                             <option value="" disabled selected>Templates…</option>
                         </select>
+                        <div class="xs-units" role="group" aria-label="Units" title="Which system every thickness and dimension is given in. Switching re-rounds them to the designation the other system uses, the way a specification does: a 75 mm lift is a 3 in lift, 100 mm is 4 in, 150 mm is 6 in. The figure is then drawn at exactly that size.">
+                            <button type="button" id="xs-units-si" class="xs-unit-btn is-active" aria-pressed="true">SI (mm)</button>
+                            <button type="button" id="xs-units-en" class="xs-unit-btn" aria-pressed="false">English (in)</button>
+                        </div>
                         <span class="xs-tool-sep"></span>
                         <button id="xs-undo" class="xs-btn" title="Undo (Ctrl+Z)"><i class="fas fa-undo"></i></button>
                         <button id="xs-redo" class="xs-btn" title="Redo (Ctrl+Y)"><i class="fas fa-redo"></i></button>
@@ -136,27 +140,27 @@
                                 <div class="xs-field">
                                     <label for="xs-sec-width">Width</label>
                                     <input type="number" id="xs-sec-width" class="xs-num" min="500" max="20000" step="50">
-                                    <span class="xs-unit">mm</span>
+                                    <span class="xs-unit" data-xs-unit>mm</span>
                                 </div>
                                 <div class="xs-field">
                                     <label for="xs-sec-length">Length</label>
                                     <input type="number" id="xs-sec-length" class="xs-num" min="500" max="20000" step="50">
-                                    <span class="xs-unit">mm</span>
+                                    <span class="xs-unit" data-xs-unit>mm</span>
                                 </div>
                                 <div class="xs-field">
                                     <label for="xs-sec-recess-x">Step (length)</label>
                                     <input type="number" id="xs-sec-recess-x" class="xs-num" min="0" max="2000" step="25">
-                                    <span class="xs-unit">mm</span>
+                                    <span class="xs-unit" data-xs-unit>mm</span>
                                 </div>
                                 <div class="xs-field">
                                     <label for="xs-sec-recess-z">Step (width)</label>
                                     <input type="number" id="xs-sec-recess-z" class="xs-num" min="0" max="2000" step="25">
-                                    <span class="xs-unit">mm</span>
+                                    <span class="xs-unit" data-xs-unit>mm</span>
                                 </div>
                                 <div class="xs-field">
                                     <label for="xs-sec-subgrade">Subgrade display</label>
                                     <input type="number" id="xs-sec-subgrade" class="xs-num" min="50" max="2000" step="25">
-                                    <span class="xs-unit">mm</span>
+                                    <span class="xs-unit" data-xs-unit>mm</span>
                                 </div>
                                 <p class="xs-field-note">Layer heights are to scale. Subgrade thickness is for display only.</p>
                             </div>
