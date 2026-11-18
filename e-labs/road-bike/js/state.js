@@ -9,6 +9,12 @@ export const PARAMS = {
   c1: { type: 'color', def: '#f3f3f0' }, c2: { type: 'color', def: '#c41230' }, c3: { type: 'color', def: '#111214' },
   decals: { type: 'bool', def: true },
   tape: { type: 'color', def: '#161618' },
+  tape_style: { type: 'enum', options: ['wrap', 'perforated', 'cork', 'gel'], def: 'wrap' },
+  frame_finish: { type: 'enum', options: ['gloss', 'satin', 'matte'], def: 'gloss' },
+  // per-component finishes: 'auto' keeps the catalog part's own look
+  ...Object.fromEntries(['f_crank', 'f_ring', 'f_pedal', 'f_chain', 'f_rd', 'f_stem', 'f_bar', 'f_spacer', 'f_hood', 'f_plug', 'f_caliper', 'f_pad', 'f_housing',
+    'f_post', 'f_saddle', 'f_rim', 'f_hub', 'f_spoke', 'f_nipple', 'f_cage', 'f_bottle', 'f_skewer'].map((k) => [k, { type: 'finish', def: 'auto' }])),
+  f_wall: { type: 'enum', options: ['auto', 'black', 'tan', 'cream'], def: 'auto' },
   // fit
   saddle_height_mm: { type: 'num', min: 600, max: 800, step: 1 }, saddle_setback_mm: { type: 'num', min: -20, max: 40, step: 1 },
   spacers_mm: { type: 'num', min: 0, max: 40, step: 5 }, stem_length_mm: { type: 'num', min: 70, max: 130, step: 10 },
@@ -37,6 +43,7 @@ function coerce(spec, raw) {
   if (spec.type === 'bool') return raw === '1' ? true : raw === '0' ? false : undefined;
   if (spec.type === 'enum') return spec.options.includes(raw) ? raw : undefined;
   if (spec.type === 'color') return /^#[0-9a-f]{6}$/i.test(raw) ? raw.toLowerCase() : undefined;
+  if (spec.type === 'finish') return raw === 'auto' || /^#[0-9a-f]{6}$/i.test(raw) ? raw.toLowerCase() : undefined;
   const v = Number(raw);
   return Number.isFinite(v) && v >= spec.min && v <= spec.max ? v : undefined;
 }

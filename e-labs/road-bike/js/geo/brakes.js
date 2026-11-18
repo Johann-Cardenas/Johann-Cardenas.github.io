@@ -44,7 +44,7 @@ export function buildCaliper(B, mount, axle, { steer, cableSide }) {
   const xp = B.rimWidth / 2 + 7.5;
   const kM = k + 3.5, kC = k - 4.5;              // main arm in front, secondary arm behind
   const name = bp?.name || '', logo = /ultegra/i.test(name) ? 'ULTEGRA' : '105';
-  const color = vis.color || '#1b1c1f';
+  const color = B.P.f_caliper && B.P.f_caliper !== 'auto' ? B.P.f_caliper : vis.color || '#1b1c1f';
   const xform = (list) => { for (const g of list) g.applyMatrix4(basis); return list; };
 
   // ---- main arm: cable-anchor boss -> over the centre bolt -> down the far side to its pad
@@ -104,7 +104,7 @@ export function buildCaliper(B, mount, axle, { steer, cableSide }) {
   const hg = merge(xform(holders)), pg = merge(xform(pads)), ng = merge(xform(nuts));
   B.add('brakes', hg, armMat, { steer, name: 'Pad holders' });
   B.add('brakes', ng, M.chrome, { steer, name: 'Pad fixing nuts' });
-  const padMat = M.rubber.clone(); padMat.color.set(padVis.color || '#1c1c1c'); padMat.name = 'pad';
+  const padMat = M.rubber.clone(); padMat.color.set(B.P.f_pad && B.P.f_pad !== 'auto' ? B.P.f_pad : padVis.color || '#1c1c1c'); padMat.name = 'pad';
   B.add('brake_pads', pg, padMat, { steer, name: 'Brake pads' });
   // where the housing ends, in world coordinates
   return { adjuster: L(bx, bTop, bz).applyMatrix4(basis), reach };

@@ -5,9 +5,9 @@ root (`python -m http.server 8000`) and open `/e-labs/road-bike/`.
 
 | Tab | What it shows |
 |---|---|
-| Build | Procedural 3D model in the photographed paint; pick parts, paint, tape, fit and pose |
+| Build | Procedural 3D model in the photographed paint; pick parts, paint, tape colour and style, gloss/satin/matte frame, a colour for every component (22 finishes plus tyre sidewalls), fit and pose |
 | CAD | The SolidWorks assembly: 53 parts, each volume- and centroid-checked |
-| Aero | Wind tunnel at 40 km/h, head-on and in crosswind (yaw): drag by part, surface pressure, animated flow, a cut plane you slide or scan through the flow (speed, pressure, total-pressure loss, vorticity), wake and vortex-core isosurfaces, yaw sweep, drag built up nose to tail, solver convergence, power vs speed |
+| Aero | Wind tunnel at 40 km/h, head-on and in crosswind (yaw): drag by part, surface pressure, animated flow, a cut plane you slide or scan through the flow (speed, pressure, total-pressure loss, vorticity), wake and vortex-core isosurfaces, an unsteady playback of instantaneous snapshots, a bike that rolls and pedals in the selected gear, an on-stage colour key, yaw sweep, drag built up nose to tail, solver convergence, power vs speed |
 | Structure | Abaqus shell model: five ISO 4210-6 load cases and the natural modes; a live beam model beside it |
 | Gearing · Upgrades · Spec | Gear table, interface-checked upgrades, bill of materials |
 
@@ -39,6 +39,7 @@ outside the repo:
 ```
 python cad/export.py && python cad/solidworks_build.py
 for y in 0 5 10 15: python cad/wind_tunnel.py --yaw $y --dx 8 --flows 2.2 --avg 0.8 && python cad/cfd_post.py yaw<yy>_dx8   (~70 min each)
+python cad/wind_tunnel.py --yaw 0 --dx 8 --flows 2.2 --avg 0.5 --snaps 120 --snap-every 20 --tag snap && python cad/cfd_post.py yaw00_dx8 --unsteady yaw00_dx8_snap
 python cad/fe_prepare.py
 cd %LOCALAPPDATA%\road-bike-cad\build\fe && abaqus cae noGUI=abaqus_frame.py && abaqus job=frame_fe cpus=8 interactive && abaqus python abaqus_extract.py
 python cad/fe_web.py
@@ -57,9 +58,31 @@ bike and its wake (the browser derives total-pressure loss from it, slices it an
 isosurfaces with surface nets), and the time-averaged force per 16 mm slab and drag group (drag
 build-up, centre of pressure). `data/cfd/cases.json` indexes the cases for the yaw sweep.
 
+**Unsteady wake.** `wind_tunnel.py --snaps N` saves N instantaneous snapshots at the end of a run: the
+Q criterion on the 16 mm flow volume and the spanwise vorticity on the centre plane at full
+resolution. `cfd_post.py <case> --unsteady <snap case>` packs them as `<case>_unsteady.*` (Q sparse:
+varint index deltas + uint8 above 15 % of its 99.5th percentile; ω_z signed uint8, block-averaged to 16 mm) and links the pack
+from the case. The browser meshes one vortex surface per frame in the background and plays them in
+order with the centre plane.
+
+**What the browser shows.** Surface Cp on a CFD rainbow over −0.5…+0.5 (the 5th–95th percentile of
+the skin is −0.35…+0.30; stagnation saturates), smoothed over the mesh. Particles ride the mean-flow
+streamlines at the local speed (time of flight ds/|u|), as comets whose tails are spaced in time, so
+the wake shows as slow, short streaks. Playback runs at 5.5 % of real time; the wake and vortex
+surfaces carry bands that move downstream on the same clock, and the wheels and cranks turn on it
+too (40 km/h, selected gear) with the rim and tyre Cp held where it is in the tunnel. The tunnel ran
+with the wheels still; the rolling is illustration.
+
 SOLIDWORKS Flow Simulation is installed, but its automation interface on this machine exposes no
 setter for the inflow condition (the parameter export/apply pair drives parametric studies only),
 and Abaqus/CFD is unavailable in CAE 2022–2025. The LBM solver runs on the same CAD geometry.
+
+**Force averaging.** The wall force on some parts (frame, bottles) alternates from one lattice step to
+the next. Runs before 2026-11-17 recorded forces every 10th step, i.e. always the same phase, and
+reported drag 2-3× too high (19.0 N / CdA 0.256 at 0°). Forces now come from the mean over every step
+(`wind_tunnel.py` writes 10-step block means to the history); `cfd_post.py` rebuilds older runs from
+their per-slab profile, which was always summed every step. Corrected: CdA 0.104 m² at 0°, 0.130 at
+5°, 0.188 at 10°.
 
 **Accuracy.** A sphere at Re 5×10⁴ reads Cd 0.60 at 24 cells per diameter and 0.69 at 12, against
 0.47–0.50. The bike's tubes get about 6–8 cells, so absolute drag reads high; differences between
@@ -71,7 +94,9 @@ Abaqus 2025 Standard. The frame and fork CAD solids become their outer skins (S4
 with an equivalent quasi-isotropic CFRP laminate (E 50 GPa) and walls per tube from
 `data/geometry.json`. The fork joins the head tube through kinematic couplings at the bearings;
 loads enter through distributing couplings. Five linear-perturbation load cases (ISO 4210-6
-magnitudes, for orientation) and the natural modes with the axles held. The colour scale tops out at
+magnitudes, for orientation) and the natural modes with the axles held. The mesh is built from the
+current one-piece filleted frame (re-run 2026-11-17; the earlier mesh came from the 35-part CAD, whose
+seat tube stopped short of the top tube and moved on its own). The colour scale tops out at
 the 99th-percentile stress; the local peak sits at a sharp, unfilleted tube junction.
 
 ## Catalog

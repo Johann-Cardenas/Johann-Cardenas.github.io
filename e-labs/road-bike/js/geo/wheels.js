@@ -7,6 +7,7 @@
 // knurled lock ring and black cap. Tyre: Vittoria Rubino Pro 23-622, black, file-tread diamonds on
 // the shoulders, white sidewall print. Both wheels are quick release, lever on the non-drive side.
 import * as T from 'three';
+import { finish } from './materials.js';
 import { V, AX, lathe, rod, sweep, spline, merge, plate, polarShape, rad, lerp, smooth, canvasTexture } from './kit.js';
 
 export const BSD_R = 311;          // ETRTO 622 bead seat radius
@@ -71,7 +72,7 @@ function band(c, W, H, top, bottom, flipH, draw) {
 const LABEL_A = [100, 131], LABEL_PHI = 2.0, LABEL_W = 4096, LABEL_H = 192;
 
 function tyreMaterials(M, tv) {
-  const wall = tv.sidewall === 'tan' ? '#b48a55' : '#151515';
+  const wall = { tan: '#b48a55', cream: '#e6dcc4' }[tv.sidewall] ?? '#151515';
   // colour only varies across the section: wall, black tread, bead
   const tex = canvasTexture(4, 512, (c, w, H) => {
     c.fillStyle = wall; c.fillRect(0, 0, w, H);
@@ -331,21 +332,26 @@ function quickRelease(B, origin, half, dropT, dir, steer, label) {
   const at = (s, off) => V(d.x * s, d.y * s, -zo - off);
   const path = spline([at(2, 18.6), at(12, 18.8), at(26, 17.6), at(42, 15.2), at(56, 13), at(64, 12.4)], 30);
   const blade = sweep(path, (u) => ({ a: lerp(8.4, 5.6, smooth(u * 1.6)) + 1.4 * smooth((u - 0.72) / 0.28), b: lerp(2.6, 1.9, u), n: 3 }), { seg: 18, side: AX.z, capRound: true });
-  B.addTo(grp, merge([head, blade]), M.plasticGloss, `${label} QR lever`);
+  B.addTo(grp, merge([head, blade]), finish(M.plasticGloss, B.P.f_skewer, { name: 'qr_lever' }), `${label} QR lever`);
   B.addTo(grp, rod(pinAx.clone().multiplyScalar(-14.9).setZ(zc - 1.5), pinAx.clone().multiplyScalar(14.9).setZ(zc - 1.5), 2.2, 2.2, 14), M.chrome, `${label} QR cam pin`);
 }
 
 // ---- wheels ------------------------------------------------------------------------------------
 
 export function buildWheels(B) {
-  const { M, hp } = B, wp = B.part('wheels'), vis = wp?.visual ?? {}, tv = B.part('tires')?.visual ?? {};
+  const { M, hp } = B, wp = B.part('wheels'), vis = wp?.visual ?? {};
+  let tv = B.part('tires')?.visual ?? {};
   const tireW = B.tireW, R = B.R, width = vis.width ?? 20.8;
   const carbon = vis.rim === 'carbon', track = vis.track ?? 'alloy';
-  const rimMat = carbon ? M.carbon : M.aluBlack.clone();
+  let rimMat = carbon ? M.carbon : M.aluBlack.clone();
   if (!carbon) { rimMat.roughness = 0.38; rimMat.metalness = 0.55; rimMat.color.set(0x161719); rimMat.name = 'rim_anodised'; }
-  const hubMat = vis.hub === 'silver' ? M.aluSilver : M.aluBlack;
-  const spokeMat = vis.hub === 'silver' ? M.steel : M.plasticGloss.clone();
+  rimMat = finish(rimMat, B.P.f_rim, { name: 'rim' });
+  const hubMat = finish(vis.hub === 'silver' ? M.aluSilver : M.aluBlack, B.P.f_hub, { name: 'hub' });
+  let spokeMat = vis.hub === 'silver' ? M.steel : M.plasticGloss.clone();
   if (spokeMat !== M.steel) { spokeMat.color.set(0x121315); spokeMat.roughness = 0.35; spokeMat.metalness = 0.4; spokeMat.name = 'spoke_black'; }
+  spokeMat = finish(spokeMat, B.P.f_spoke, { name: 'spoke' });
+  const nippleMat = finish(M.aluSilver, B.P.f_nipple, { name: 'nipple' });
+  if (B.P.f_wall && B.P.f_wall !== 'auto') tv = { ...tv, sidewall: B.P.f_wall };
   const tireMat = tyreMaterials(M, tv), trackMat = track === 'alloy' ? trackMaterial(M) : null;
   const photo = PHOTO_LACING[wp?.id] || {};
   // non-drive strip runs bead -> crown (glyph tops at v = 1), drive strip crown -> bead, mirrored
@@ -393,7 +399,7 @@ export function buildWheels(B) {
     const [blades, ends] = spokeMesh(spokes, spokeMat, vis.bladed);
     W.add(tag(blades, 'wheels', `${label} spokes`), tag(ends, 'wheels', `${label} spokes`));
     W.add(tag(spokeHeads(spokes, hubMat), 'wheels', `${label} spoke heads`));
-    const nip = new T.InstancedMesh(merge([new T.CylinderGeometry(1.85, 1.85, 9, 8), new T.CylinderGeometry(2.4, 2.4, 1.2, 12).translate(0, 4.2, 0)]), M.aluSilver, spokes.length), mt = new T.Matrix4(), q = new T.Quaternion();
+    const nip = new T.InstancedMesh(merge([new T.CylinderGeometry(1.85, 1.85, 9, 8), new T.CylinderGeometry(2.4, 2.4, 1.2, 12).translate(0, 4.2, 0)]), nippleMat, spokes.length), mt = new T.Matrix4(), q = new T.Quaternion();
     spokes.forEach((s, i) => {
       const dd = s.rim.clone().sub(s.hub).normalize();
       q.setFromUnitVectors(AX.y, dd);

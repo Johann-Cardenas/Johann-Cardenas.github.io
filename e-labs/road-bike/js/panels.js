@@ -1,13 +1,13 @@
 // Side panels for the result scenes: CAD, Aero (wind tunnel) and Structure (Abaqus / live beam).
 // Words are kept to labels and numbers; explanations live in title tooltips.
 import { S, esc, fmt, status } from './app.js';
-import { rampCSS, FIELD_RAMP } from './labs.js';
+import { rampCSS, FIELD_RAMP, SURFACE_CP } from './labs.js';
 import { setup, evaluate, POSITIONS } from './model/perf.js';
 import { lineChart } from './charts.js';
 
 export const L = { cad: null, aero: null, fe: null, sw: null, aeroCase: 'yaw00_dx8', aeroMissing: false, structMode: 'shell', feCase: 'pedalling', feMode: -1,
-  show: { surface: true, particles: true, lines: true, side: false, plan: false, wake: false, wakeIso: false, vortex: false }, field: 'speed', group: null, part: null, clay: false, edges: true, explode: 0, scale: 25, playing: true,
-  cases: [], cut: 'off', cutT: { x: 0.45, y: 0.5, z: 0.5 }, cutAt: null, scan: false, iso: { wakeIso: 0.5, vortex: 0.2 } };
+  show: { surface: true, particles: true, lines: true, side: false, plan: false, wake: false, wakeIso: false, vortex: false, unsteady: false, rolling: true }, uCores: true, uSheet: true, uLevel: 0.3, field: 'speed', group: null, part: null, clay: false, edges: true, explode: 0, scale: 25, playing: true,
+  cases: [], cut: 'off', cutT: { x: 0.45, y: 0.5, z: 0.5 }, cutAt: null, scan: false, iso: { wakeIso: 0.65, vortex: 0.35 } };
 
 const kpi = (label, value, sub = '', cls = '', tip = '') => `<div class="kpi ${cls}" ${tip ? `title="${esc(tip)}"` : ''}><span>${label}</span><b>${value}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
 const chip = (attr, on, label, tip = '') => `<button ${attr} aria-pressed="${on}" ${tip ? `title="${esc(tip)}"` : ''}>${label}</button>`;
@@ -69,11 +69,14 @@ export function aeroPanel() {
     ${kpi('Of total drag', `${Math.round(bikeShare * 100)} %`, `with a rider on the ${POSITIONS[P.position]?.label.toLowerCase() ?? 'hoods'}`, '', 'Bike CdA from the tunnel divided by a typical rider-plus-bike CdA for the chosen position.')}
   </div></div>
   <div class="sec"><h2>Show</h2>
-    <div class="chips">${chip('data-ash="surface"', L.show.surface, 'Surface Cp')}${chip('data-ash="particles"', L.show.particles, 'Flow')}${chip('data-ash="lines"', L.show.lines, 'Streamlines')}
-    ${vol ? chip('data-ash="wakeIso"', L.show.wakeIso, 'Wake', 'Envelope of the slow air behind the bike') + chip('data-ash="vortex"', L.show.vortex, 'Vortices', 'Vortex cores (Q criterion), coloured by pressure: blue is suction') : chip('data-ash="side"', L.show.side, 'Side plane') + chip('data-ash="plan"', L.show.plan, 'Plan plane') + chip('data-ash="wake"', L.show.wake, 'Wake plane')}</div>
+    <div class="chips">${chip('data-ash="surface"', L.show.surface, 'Surface Cp')}${chip('data-ash="particles"', L.show.particles, 'Flow')}${chip('data-ash="lines"', L.show.lines, 'Streamlines')}${chip('data-ash="rolling"', L.show.rolling, 'Rolling', 'Wheels and cranks turn as if riding at 40 km/h in the selected gear, on the same slowed clock as the air. The tunnel ran with the wheels still, so the motion is illustrative.')}
+    ${vol ? chip('data-ash="wakeIso"', L.show.wakeIso, 'Wake', 'Envelope of the slow air behind the bike (time-averaged)') + chip('data-ash="vortex"', L.show.vortex, 'Vortices', 'Time-averaged vortex cores (Q criterion), coloured by how fast they spin') : chip('data-ash="side"', L.show.side, 'Side plane') + chip('data-ash="plan"', L.show.plan, 'Plan plane') + chip('data-ash="wake"', L.show.wake, 'Wake plane')}
+    ${a.hasUnsteady ? chip('data-ash="unsteady"', L.show.unsteady, 'Unsteady ▸', 'Instantaneous snapshots from the end of the run, played in order: the wake as it actually sheds, not its average') : ''}</div>
     ${vol && L.show.wakeIso ? `<div class="row"><label for="awk" title="The surface where air has slowed to this fraction of the free stream">Wake at</label><input id="awk" type="range" data-aiso="wakeIso" min="0.4" max="0.95" step="0.05" value="${L.iso.wakeIso}"><span class="val">${Math.round(L.iso.wakeIso * 100)} % U∞</span></div>` : ''}
     ${vol && L.show.vortex ? `<div class="row"><label for="avx" title="Q criterion level, as a share of its 99.5th percentile">Vortex level</label><input id="avx" type="range" data-aiso="vortex" min="0.02" max="0.4" step="0.01" value="${L.iso.vortex}"><span class="val">${Math.round(L.iso.vortex * 100)} %</span></div>` : ''}
-    ${L.show.surface ? `<div style="margin-top:6px">${legend('cp', '−1.6', '1.0', 'surface Cp')}</div>` : ''}
+    ${a.hasUnsteady && L.show.unsteady ? `<div class="chips" style="margin-top:6px">${chip('data-auns="cores"', L.uCores, 'Vortex cores', 'Instantaneous Q-criterion surfaces')}${chip('data-auns="sheet"', L.uSheet, 'Centre plane', 'Spanwise vorticity on the bike centre plane: red spins one way, blue the other')}</div>
+    ${L.uCores ? `<div class="row"><label for="aul" title="Q criterion level, as a share of the snapshots' 99.5th percentile">Core level</label><input id="aul" type="range" data-auns-level min="0.16" max="0.7" step="0.02" value="${L.uLevel}"><span class="val">${Math.round(L.uLevel * 100)} %</span></div>` : ''}
+    ${(() => { const i = a.unsteady.info(); return i ? `<p class="foot">${i.frames} snapshots · ${(i.span_s * 1000).toFixed(0)} ms of flow · played ${Math.round(1 / 0.055)}× slower</p>` : ''; })()}` : ''}
   </div>
   ${vol ? `<div class="sec"><h2>Cut plane<em id="acpos">${cutPos}</em></h2>
     <div class="rb-seg" style="display:flex">${chip('data-acut="off"', L.cut === 'off', 'Off')}${['x', 'y', 'z'].map((k) => chip(`data-acut="${k}"`, L.cut === k, cutLabel[k], { x: 'Across the flow, slides from the nose into the wake', y: 'Horizontal, slides from the ground up', z: 'Vertical along the bike, slides side to side' }[k])).join('')}</div>
@@ -133,7 +136,7 @@ function aeroCharts(a, cases, U) {
     const pts = h.t_s.map((t, i) => [t, h.drag_N[i]]).filter((p) => p[0] > h.t_s[h.t_s.length - 1] * 0.12);
     const avgFrom = h.t_s[h.t_s.length - 1] * (1 - s.grid.averaged_steps / s.grid.steps);
     out.push(chartSec('Solver convergence', 'N', lineChart({ series: [{ pts, color: 'var(--ink3)' }, { pts: [[avgFrom, s.drag_N], [h.t_s[h.t_s.length - 1], s.drag_N]], color: 'var(--accent)' }], xLabel: 's of air time', yLabel: 'drag N', w: 360, h: 170, yMin: Math.floor(Math.min(...pts.map((p) => p[1])) * 0.9), yMax: Math.ceil(Math.max(...pts.map((p) => p[1])) * 1.05) }),
-      keyRow([['var(--ink3)', 'instantaneous'], ['var(--accent)', 'mean over the averaging window']]), `${s.grid.flow_throughs} flow-throughs; the reported drag is the mean of the last ${Math.round(s.grid.averaged_steps / s.grid.steps * 100)} %.`));
+      keyRow([['var(--ink3)', 'instantaneous'], ['var(--accent)', 'mean over the averaging window']]), `${s.grid.flow_throughs} flow-throughs; the reported drag is the mean of every step in the last ${Math.round(s.grid.averaged_steps / s.grid.steps * 100)} %.${h.note ? ' ' + h.note : ''}`));
   }
   return out.join('');
 }
@@ -164,6 +167,20 @@ export function structurePanel(beamPanel) {
     <p class="foot" title="${esc(`${lam.note} Walls per tube from data/geometry.json. Loads use ISO 4210-6 magnitudes for orientation; this is not that test and not a safety assessment.`)}">Abaqus 2025 · CFRP walls 1.0–3.0 mm · ISO 4210-6 loads · <abbr>assumptions</abbr></p></div>`;
 }
 
+/** The colour key that sits on the stage (phones included). */
+export function aeroKey() {
+  const a = L.aero; if (!a) return '';
+  const row = (name, ramp, ticks, unit) => `<div class="k"><b>${name}<em>${unit}</em></b><div class="kbar" style="background:${rampCSS(ramp)}"></div><div class="kt">${ticks.map((t) => `<span>${t}</span>`).join('')}</div></div>`;
+  const out = [];
+  const [c0, c1] = SURFACE_CP, f = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1);
+  if (L.show.surface) out.push(row('Surface pressure', 'cfd', [`≤${f(c0)}`, '0', `≥${f(c1)}`], 'Cp'));
+  if (L.show.particles || L.show.lines) out.push(row('Air speed', 'flow', ['0', '1', '1.5'], '|U| / U∞'));
+  if (L.show.unsteady && L.uSheet && a.hasUnsteady) out.push(row('Spin, centre plane', 'swirl', ['cw', '0', 'ccw'], 'ω<sub>z</sub>'));
+  else if ((L.show.vortex || (L.show.unsteady && L.uCores)) && a.volume) out.push(row('Vortex cores', 'vort', ['slow', '', 'fast'], 'spin'));
+  if (L.cut !== 'off' && a.volume) { const LEG = { speed: ['Cut: speed', '|U| / U∞'], cp: ['Cut: pressure', 'Cp'], loss: ['Cut: loss', '1 − Cp₀'], vort: ['Cut: vorticity', '1/s'] }[L.field]; const r = a.volume.F[L.field]?.range ?? [0, 1]; out.push(row(LEG[0], FIELD_RAMP[L.field], [r[0].toFixed(L.field === 'vort' ? 0 : 1).replace('-', '−'), '', r[1].toFixed(L.field === 'vort' ? 0 : 1)], LEG[1])); }
+  return out.join('');
+}
+
 // ---- events --------------------------------------------------------------------------------------
 export function handle(e, b, api) {
   const d = b?.dataset ?? e.target.dataset;
@@ -171,7 +188,10 @@ export function handle(e, b, api) {
   if (d.cadt) { L[d.cadt] = !L[d.cadt]; if (d.cadt === 'clay') L.cad?.setClay(L.clay); else L.cad?.setEdges(L.edges); api.redraw(); api.render(); return true; }
   if (d.cadp) { const p = L.cad?.doc.parts.find((x) => x.name === d.cadp); L.part = L.cad?.select(p) ?? null; api.redraw(); api.render(); return true; }
   if (d.grp) { L.group = L.group === d.grp ? null : d.grp; L.aero?.highlight(L.group ? api.groups[L.group] : null); api.redraw(); api.render(); return true; }
+  if (d.ash === 'unsteady') { L.show.unsteady = !L.show.unsteady; applyUnsteady().then(() => { api.redraw(); api.render(); }); api.render(); return true; }
+  if (d.ash === 'rolling') { L.show.rolling = !L.show.rolling; L.aero?.setRolling(L.show.rolling, api.gearRatio()); api.redraw(); api.render(); return true; }
   if (d.ash) { L.show[d.ash] = !L.show[d.ash]; L.aero?.show(d.ash, L.show[d.ash]); api.redraw(); api.render(); return true; }
+  if (d.auns) { if (d.auns === 'cores') L.uCores = !L.uCores; else L.uSheet = !L.uSheet; applyUnsteady(); api.redraw(); api.render(); return true; }
   if (d.afield) { L.field = d.afield; L.aero?.setField(L.field); api.redraw(); api.render(); return true; }
   if (d.ayaw) { if (d.ayaw !== L.aeroCase) { L.aeroCase = d.ayaw; api.reloadAero(); } return true; }
   if (d.acut) { L.cut = d.acut; if (L.cut === 'off') L.scan = false; applyCut(); api.redraw(); api.render(); return true; }
@@ -192,6 +212,15 @@ export function applyCut() {
   if (scanning) L.cutAt = null;
   a.setScan(scanning, (t) => { L.cutT[L.cut] = t; const el = document.getElementById('acp'); if (el) el.value = t; });
 }
+/** Unsteady playback replaces the time-averaged vortex surface while it runs. */
+export async function applyUnsteady() {
+  const a = L.aero; if (!a?.hasUnsteady) return;
+  const on = L.show.unsteady;
+  a.unsteady.setParts(L.uCores, L.uSheet);
+  if (on && a.unsteady.level !== L.uLevel && a.unsteady.ready) a.unsteady.setLevel(L.uLevel); else a.unsteady.level = L.uLevel;
+  a.show('vortex', on ? false : L.show.vortex);
+  await a.unsteady.setOn(on);
+}
 let isoTimer = 0;
 export function handleInput(e, api) {
   const t = e.target;
@@ -203,6 +232,7 @@ export function handleInput(e, api) {
     api.redraw(); return true;
   }
   if (t.dataset.aiso) { const k = t.dataset.aiso, v = Number(t.value); L.iso[k] = v; t.nextElementSibling.textContent = k === 'wakeIso' ? `${Math.round(v * 100)} % U∞` : `${Math.round(v * 100)} %`; clearTimeout(isoTimer); isoTimer = setTimeout(() => { L.aero?.setIso(k, v); api.redraw(); }, 120); return true; }
+  if (t.hasAttribute('data-auns-level')) { L.uLevel = Number(t.value); t.nextElementSibling.textContent = `${Math.round(L.uLevel * 100)} %`; clearTimeout(isoTimer); isoTimer = setTimeout(() => { L.aero?.unsteady.setLevel(L.uLevel); api.redraw(); }, 150); return true; }
   if (t.dataset.fe2 === 'scale') { L.scale = Number(t.value); L.fe?.setScale(L.scale); t.nextElementSibling.textContent = `×${L.scale}`; api.redraw(); return true; }
   return false;
 }

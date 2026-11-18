@@ -9,6 +9,29 @@ export const PAINT_SCHEMES = {
 };
 export const schemeColors = (P) => (P.paint === 'custom' ? { c1: P.c1, c2: P.c2, c3: P.c3 } : PAINT_SCHEMES[P.paint] || PAINT_SCHEMES.stock);
 
+/**
+ * Component finishes offered in the Build panel. Metals get a polished metallic surface; the rest an
+ * anodised or painted one. 'auto' leaves the part's own catalog colour.
+ */
+export const FINISHES = [
+  { hex: '#17181a', label: 'Black' }, { hex: '#c9ccd0', label: 'Polished silver', metal: true }, { hex: '#6d7178', label: 'Titanium grey', metal: true },
+  { hex: '#c8a24a', label: 'Gold', metal: true }, { hex: '#b06a3b', label: 'Copper', metal: true }, { hex: '#f1f1ee', label: 'White' },
+  { hex: '#c41230', label: 'Red' }, { hex: '#1d4ed8', label: 'Blue' }, { hex: '#18a9a8', label: 'Teal' }, { hex: '#0d7a3e', label: 'Green' }, { hex: '#e8a33a', label: 'Orange' },
+];
+const METAL = new Set(FINISHES.filter((f) => f.metal).map((f) => f.hex));
+/**
+ * Apply a finish to a material: returns `mat` untouched for 'auto', otherwise a clone. `soft` keeps
+ * non-metallic materials (rubber, leather, plastic) non-metallic whatever colour is picked.
+ */
+export function finish(mat, v, { soft = false, name = '' } = {}) {
+  if (!v || v === 'auto') return mat;
+  const m = mat.clone(); m.color.set(v); if (name) m.name = name;
+  if (soft) return m;
+  if (METAL.has(v)) { m.metalness = 1; m.roughness = 0.24; } else { m.metalness = Math.min(m.metalness ?? 0, 0.45); m.roughness = Math.max(0.3, Math.min(m.roughness ?? 0.4, 0.4)); }
+  return m;
+}
+const has = (v) => v && v !== 'auto';
+
 const lum = (hex) => { const c = new T.Color(hex); return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; };
 
 /** Fine twill for bare carbon; used as a roughness/bump map so it only shows in reflections. */
@@ -22,13 +45,23 @@ function carbonWeave() {
     }
   }, { repeat: [24, 6], srgb: false, flipY: true });
 }
-function tapeWrap() {
-  return canvasTexture(64, 64, (c, w, h) => {
+/**
+ * Bar tape relief, one wrap per tile: the overlap ridge of the spiral wrap plus the surface of the
+ * chosen tape (embossed microfibre, perforated, cork granules, or ribbed gel).
+ */
+function tapeWrap(style = 'wrap') {
+  return canvasTexture(128, 128, (c, w, h) => {
     c.fillStyle = '#808080'; c.fillRect(0, 0, w, h);
-    c.strokeStyle = '#3c3c3c'; c.lineWidth = 5;
-    for (let i = -2; i < 4; i++) { c.beginPath(); c.moveTo(i * 32, 0); c.lineTo(i * 32 + 22, h); c.stroke(); }
-    c.fillStyle = 'rgba(255,255,255,.10)';
-    for (let i = 0; i < 90; i++) c.fillRect((i * 37) % w, (i * 53) % h, 2, 2);
+    if (style === 'cork') for (let i = 0; i < 900; i++) { c.fillStyle = i % 3 ? 'rgba(0,0,0,.22)' : 'rgba(255,255,255,.18)'; const r = 1 + (i * 7 % 3); c.beginPath(); c.arc((i * 37) % w, (i * 53 + (i >> 4)) % h, r, 0, 6.3); c.fill(); }
+    else if (style === 'perforated') { c.fillStyle = 'rgba(0,0,0,.55)'; for (let y = 6; y < h; y += 12) for (let x = ((y / 12) % 2) * 6 + 3; x < w; x += 12) { c.beginPath(); c.arc(x, y, 2.2, 0, 6.3); c.fill(); } }
+    else if (style === 'gel') { c.strokeStyle = 'rgba(255,255,255,.28)'; c.lineWidth = 3; for (let y = 4; y < h; y += 9) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y + 30); c.stroke(); } }
+    else { c.fillStyle = 'rgba(255,255,255,.10)'; for (let i = 0; i < 360; i++) c.fillRect((i * 37) % w, (i * 53) % h, 2, 2); }
+    // overlap ridge: each turn laps about a third of the previous one
+    const g = c.createLinearGradient(0, 0, w, 0);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.62, 'rgba(0,0,0,0)'); g.addColorStop(0.7, 'rgba(255,255,255,.35)'); g.addColorStop(0.76, 'rgba(0,0,0,.6)'); g.addColorStop(0.84, 'rgba(0,0,0,0)');
+    c.save(); c.setTransform(1, 0, -0.68, 1, 0, 0);
+    for (let k = -1; k < 3; k++) { c.save(); c.translate(k * w, 0); c.fillStyle = g; c.fillRect(0, 0, w, h); c.restore(); }
+    c.restore();
   }, { repeat: [26, 1], srgb: false, flipY: true });
 }
 function treadTex() {
@@ -41,13 +74,14 @@ function treadTex() {
 
 export function makeMaterials(P) {
   const S = schemeColors(P);
-  const weave = carbonWeave(), wrap = tapeWrap(), tread = treadTex();
+  const weave = carbonWeave(), wrap = tapeWrap(P.tape_style), tread = treadTex();
+  const ff = { gloss: [0.32, 0.06, 1], satin: [0.45, 0.3, 0.7], matte: [0.62, 0.6, 0.15] }[P.frame_finish] || [0.32, 0.06, 1];
   const phys = (o) => new T.MeshPhysicalMaterial(o), std = (o) => new T.MeshStandardMaterial(o);
   const M = {
     scheme: S, textures: [weave, wrap, tread],
-    paint: phys({ color: S.c1, roughness: 0.32, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.06 }),
-    paintAccent: phys({ color: S.c2, roughness: 0.32, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.06 }),
-    paintDark: phys({ color: S.c3, roughness: 0.34, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08 }),
+    paint: phys({ color: S.c1, roughness: ff[0], metalness: 0, clearcoat: ff[2], clearcoatRoughness: ff[1] }),
+    paintAccent: phys({ color: S.c2, roughness: ff[0], metalness: 0, clearcoat: ff[2], clearcoatRoughness: ff[1] }),
+    paintDark: phys({ color: S.c3, roughness: ff[0] + 0.02, metalness: 0, clearcoat: ff[2], clearcoatRoughness: ff[1] + 0.02 }),
     carbon: phys({ color: 0x141517, roughness: 0.42, metalness: 0.1, clearcoat: 0.9, clearcoatRoughness: 0.18, roughnessMap: weave, bumpMap: weave, bumpScale: 0.25 }),
     carbonMatte: std({ color: 0x18191b, roughness: 0.62, metalness: 0.05, bumpMap: weave, bumpScale: 0.2 }),
     aluBlack: std({ color: 0x1b1c1f, roughness: 0.42, metalness: 0.75 }),
@@ -61,11 +95,11 @@ export function makeMaterials(P) {
     plastic: std({ color: 0x161719, roughness: 0.58, metalness: 0 }),
     plasticGloss: std({ color: 0x101113, roughness: 0.28, metalness: 0 }),
     rubber: std({ color: 0x141414, roughness: 0.88, metalness: 0 }),
-    hood: std({ color: 0x1a1a1c, roughness: 0.78, metalness: 0 }),
+    hood: std({ color: has(P.f_hood) ? P.f_hood : 0x1a1a1c, roughness: 0.78, metalness: 0, bumpMap: tread, bumpScale: 0.15 }),
     tire: std({ color: 0xffffff, roughness: 0.9, metalness: 0, bumpMap: tread, bumpScale: 0.3 }),
-    saddle: std({ color: 0x131314, roughness: 0.62, metalness: 0 }),
-    tape: std({ color: P.tape || '#161618', roughness: 0.82, metalness: 0, bumpMap: wrap, bumpScale: 0.9 }),
-    housing: std({ color: 0x131315, roughness: 0.55, metalness: 0 }),
+    saddle: std({ color: has(P.f_saddle) ? P.f_saddle : 0x131314, roughness: 0.62, metalness: 0 }),
+    tape: std({ color: P.tape || '#161618', roughness: P.tape_style === 'gel' ? 0.6 : 0.82, metalness: 0, bumpMap: wrap, bumpScale: P.tape_style === 'cork' ? 1.4 : 0.9 }),
+    housing: std({ color: has(P.f_housing) ? P.f_housing : 0x131315, roughness: 0.4, metalness: 0 }),
     lens: phys({ color: 0xffffff, roughness: 0.08, metalness: 0, transmission: 0.6, thickness: 4, emissive: 0xfff4d6, emissiveIntensity: 0.25 }),
     lensRed: phys({ color: 0xd01818, roughness: 0.12, metalness: 0, emissive: 0xb00000, emissiveIntensity: 0.6 }),
     screen: std({ color: 0x0c1014, roughness: 0.12, metalness: 0.2, emissive: 0x16323a, emissiveIntensity: 0.6 }),

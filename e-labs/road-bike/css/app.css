@@ -128,6 +128,26 @@ body[data-stage='tunnel'] .rb-title b { color: #eef1f4; } body[data-stage='tunne
 .rb-legend .lrow { display: flex; gap: 8px; height: 150px; }
 .rb-legend .ticks { display: flex; flex-direction: column; justify-content: space-between; font-family: var(--mono); color: var(--ink2); }
 .rb-legend b { display: block; margin-bottom: 6px; font-size: 11px; }
+/* wind-tunnel colour key: always on the stage, phones included, so the colours can be read without the panel */
+.rb-akey { left: 18px; top: 64px; width: 196px; display: flex; flex-direction: column; gap: 7px; padding: 9px 11px 8px; pointer-events: none; color: #dfe5ea;
+  background: rgba(13, 17, 21, .62); backdrop-filter: blur(6px); border: 1px solid rgba(255, 255, 255, .09); border-radius: 9px; font-size: 10.5px; }
+.rb-akey[hidden] { display: none; }
+.rb-akey .k b { display: flex; justify-content: space-between; font-weight: 600; font-size: 10.5px; letter-spacing: .02em; color: #f2f5f7; }
+.rb-akey .k b em { font-style: normal; font-weight: 400; color: #9aa6b2; }
+.rb-akey .kbar { height: 7px; border-radius: 3px; margin: 3px 0 2px; }
+.rb-akey .kt { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9.5px; color: #aab4be; }
+.rb-akey .kt span:nth-child(2) { color: #7f8b97; }
+
+/* component colours */
+.finrow { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; color: var(--ink2); }
+.finrow .fins { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.RoadBike .fin { width: 18px; height: 18px; min-height: 0; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: var(--c) !important; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); }
+.RoadBike .fin.metal { background: radial-gradient(circle at 35% 30%, #fff 0, var(--c) 45%, color-mix(in srgb, var(--c) 60%, #000) 100%) !important; }
+.RoadBike .fin.auto { background: var(--bg2) !important; color: var(--ink2) !important; font: 700 9px/1 var(--mono); }
+.RoadBike .fin[aria-pressed='true'] { outline: 2px solid var(--accent); outline-offset: 1px; }
+.finrow input[type='color'] { width: 22px; height: 20px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: none; }
+.finrow .rb-seg button { font-size: 11.5px; padding: 3px 8px; }
+@media (pointer: coarse) { .RoadBike .fin { width: 26px; height: 26px; } .finrow { grid-template-columns: 1fr; gap: 4px; } }
 
 /* ---- panel ---- */
 .rb-panel { background: var(--bg2); border-left: 1px solid var(--line); min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
@@ -268,6 +288,8 @@ svg.chart text { fill: var(--ink2); } svg.chart .ax { stroke: var(--line); } svg
   .rb-main { grid-template-columns: minmax(0, 1fr); }
   /* no text over the model */
   .rb-title, .rb-stage > .rb-legend, .rb-tip, .rb-note, .vlabel.load { display: none !important; }
+  .rb-akey { left: 8px; top: 8px; width: 148px; gap: 5px; padding: 7px 9px 6px; }
+  .rb-akey .kt { font-size: 9px; }
   /* the icon rail */
   .rb-rail { display: flex; position: absolute; z-index: 3; right: 10px; top: 10px; flex-direction: column; gap: 4px; padding: 4px; border-radius: 12px;
     background: color-mix(in srgb, var(--bg2) 86%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--line); box-shadow: var(--shadow); }

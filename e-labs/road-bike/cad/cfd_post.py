@@ -7,7 +7,9 @@
                x fastest), uint8 with per-field ranges: scrubbable slices and isosurfaces in the browser
   profile      time-averaged drag and side force per 16 mm x-slab and drag group (runs with fprof)
   cases.json   one row per post-processed case, for the yaw sweep
-Run:  python cad/cfd_post.py yaw00_dx8
+  unsteady     (optional) <case>_unsteady.*: instantaneous Q per snapshot on the volume grid, sparse
+               (varint index deltas + uint8), and spanwise vorticity on the centre plane, uint8 signed
+Run:  python cad/cfd_post.py yaw00_dx8 [--unsteady yaw00_dx8_snap]
 """
 
 from __future__ import annotations
@@ -129,10 +131,8 @@ def main(case_name):
         surf.append({"name": p["name"], "n": len(v), "cp": put(q8(val, *CP_RANGE), 1)})
 
     # ------------------------------------------------------------------ volume
-    VDX = 0.016
-    vlo = np.array([lo[0] - 1.2, lo[1] - 0.10, lo[2] - 0.30])
-    vhi = np.array([hi[0] + 0.20, hi[1] + 0.15, hi[2] + 0.30])
-    vn = np.maximum(((vhi - vlo) / VDX).astype(int), 2)
+    VDX = WT.VOL_DX
+    vlo, vhi, vn = WT.volume_grid(lo, hi)
     i0 = np.maximum(np.floor(idx(vlo)).astype(int) - 3, 0)
     i1 = np.minimum(np.ceil(idx(vhi)).astype(int) + 4, [nx, ny, nz])
     crop = tuple(slice(a, b) for a, b in zip(i0, i1))
@@ -178,21 +178,50 @@ def main(case_name):
                    "drag": put((-fb[:, :, 0]).astype(np.float32)), "side": put(side_b[:, :, 2].astype(np.float32))}
 
     hist = r["hist"]
+    note = None
+    if "fprof" in r.files and summary.get("force_average") != "every step of the window":
+        # Runs before 2026-11-17 took the forces from every 10th step only, and some parts' wall force
+        # alternates step to step, so those numbers read one phase. The slab profile was summed over every
+        # step: rebuild the forces from it, and shift the history by the window offset so it sits on them.
+        fp = r["fprof"].astype(np.float64)  # (groups, nx, 3) N, tunnel frame, mean over every window step
+        g = fp.sum(1)
+        Rm = np.asarray(R)
+        gb = g @ Rm
+        names = list(WT.GROUPS)
+        Uinf = 40 / 3.6
+        old = summary["drag_N"]
+        summary["drag_by_group_N"] = {n: float(-g[i, 0]) for i, n in enumerate(names)}
+        summary["drag_N"] = float(-g[:, 0].sum())
+        summary["CdA_m2"] = 2 * summary["drag_N"] / (WT.RHO * Uinf ** 2)
+        summary["side_force_N"] = float(gb[:, 2].sum())
+        summary["lift_N"] = float(g[:, 1].sum())
+        summary["power_W_at_40kmh"] = summary["drag_N"] * Uinf
+        summary["force_by_group_N"] = {n: gb[i].tolist() for i, n in enumerate(names)}
+        summary["force_average"] = "every step of the window (rebuilt from the slab profile)"
+        hist = hist.copy()
+        win = hist[:, 0] >= hist[-1, 0] * (1 - summary["grid"]["averaged_steps"] / summary["grid"]["steps"])
+        shift = (-g[:, 0]) - (-hist[win, 1::3][:, :len(names)].mean(0))
+        hist[:, 1::3][:, :len(names)] -= shift  # drag is -Fx
+        note = f"Recorded every 10th step; shifted by the window offset ({old - summary['drag_N']:+.1f} N) to the every-step mean."
+        print(f"forces rebuilt from the slab profile: drag {old:.2f} -> {summary['drag_N']:.2f} N")
     hist_out = hist[:: max(1, len(hist) // 400), :]
     groups = list(WT.GROUPS)
     out = {"schema": "synapse-cfd/1", "case": case_name, "summary": summary, "validation": VALIDATION,
            "ranges": {"cp": CP_RANGE, "speed": SPEED_RANGE}, "bike_box_m": [lo.tolist(), hi.tolist()], "yaw_R": R.tolist(),
            "slices": slices, "streamlines": off_pts, "surface": surf, "groups": groups, "volume": volume, "profile": profile,
-           "history": {"t_s": hist_out[:, 0].tolist(), "drag_N": (-hist_out[:, 1::3][:, :len(groups)].sum(1)).tolist()}}
+           "history": {"t_s": hist_out[:, 0].tolist(), "drag_N": (-hist_out[:, 1::3][:, :len(groups)].sum(1)).tolist(), "note": note}}
     while len(blob) % 4:
         blob.append(0)
     out["bytes"] = len(blob)
     dst = ROOT / "data" / "cfd"
     dst.mkdir(parents=True, exist_ok=True)
+    old = dst / f"{case_name}.json"
+    if old.exists() and (dst / f"{case_name}_unsteady.json").exists():  # keep the link to an existing snapshot pack
+        out["unsteady"] = json.loads(old.read_text(encoding="utf-8")).get("unsteady")
     (dst / f"{case_name}.bin").write_bytes(bytes(blob))
     (dst / f"{case_name}.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
     cases = []
-    for f in sorted(dst.glob("yaw*_dx*.json")):
+    for f in sorted(p for p in dst.glob("yaw*_dx*.json") if not p.stem.endswith("_unsteady")):
         d = json.loads(f.read_text(encoding="utf-8"))
         sm = d["summary"]
         cases.append({"case": d["case"], "yaw_deg": sm["assumptions"]["yaw_deg"], "dx_mm": sm["grid"]["dx_mm"], "CdA_m2": sm["CdA_m2"], "drag_N": sm["drag_N"],
@@ -203,5 +232,90 @@ def main(case_name):
     print(f"{len(off_pts)} streamlines, {len(surf)} surface parts, {len(blob) / 1e6:.2f} MB, CdA {summary['CdA_m2']:.4f}")
 
 
+def varint_deltas(idx):
+    """Ascending indices -> LEB128 varints of their differences (the first from -1)."""
+    d = np.diff(np.concatenate([[-1], idx])).astype(np.uint64)
+    out = bytearray()
+    for v in d.tolist():
+        while v >= 128:
+            out.append((v & 127) | 128)
+            v >>= 7
+        out.append(v)
+    return bytes(out)
+
+
+def unsteady(case_name, snap_name, frames_max=120, floor=0.15, plane_step=2):
+    """Pack the snapshot run for playback. Q is scaled by the 99.5th percentile of its positive values away
+    from the walls over all frames; cells under `floor` of that are dropped (the browser slider starts there)."""
+    dst = ROOT / "data" / "cfd"
+    main_json = dst / f"{case_name}.json"
+    doc = json.loads(main_json.read_text(encoding="utf-8"))
+    vol = doc["volume"]
+    mbuf = (dst / f"{case_name}.bin").read_bytes()
+    nx, ny, nz = vol["n"]
+    N = nx * ny * nz
+    sb = np.frombuffer(mbuf, np.uint8, (N + 7) // 8, vol["solid"])
+    solid = np.unpackbits(sb, bitorder="little")[:N].astype(bool).reshape(nz, ny, nx)
+    from scipy.ndimage import binary_dilation
+    near = binary_dilation(solid, iterations=2)
+    r = np.load(WT.OUT / snap_name / "snaps.npz")
+    U = float(r["Uinf"])
+    q = r["q"][:frames_max].astype(np.float32) * U * U  # 1/s^2
+    assert q.shape[1:] == (nz, ny, nx), (q.shape, (nz, ny, nx))
+    q[:, near] = 0
+    pos = q[q > 0]
+    qmax = float(np.percentile(pos, 99.5))
+    wz = r["wz"][:frames_max].astype(np.float32) * U  # 1/s
+    sp = r["speed"][:frames_max].astype(np.float32)
+    k = plane_step  # block-average the centre plane (8 mm lattice) to keep the pack small
+    hh, ww = wz.shape[1] // k * k, wz.shape[2] // k * k
+    blk = lambda a: a[:, :hh, :ww].reshape(a.shape[0], hh // k, k, ww // k, k).mean((2, 4))
+    wz, sp = blk(wz), blk(sp)
+    wmax = float(np.percentile(np.abs(wz), 99.0))
+    blob = bytearray()
+
+    def put(b, align=1):
+        while len(blob) % align:
+            blob.append(0)
+        off = len(blob)
+        blob.extend(b)
+        return off
+
+    vframes = []
+    for f in q:
+        q8 = np.clip(np.round(f.reshape(-1) / qmax * 255), 0, 255).astype(np.uint8)
+        idx = np.flatnonzero(q8 >= int(floor * 255))
+        body = varint_deltas(idx) + q8[idx].tobytes()
+        vframes.append({"off": put(body), "count": int(len(idx)), "bytes": len(body)})
+    dx, crop_lo = float(r["dx"]) * k, r["crop_lo"] - float(r["dx"]) / 2 + float(r["dx"]) * k / 2
+    h, w = wz.shape[1:]
+    pframes = []
+    for f, s in zip(wz, sp):
+        v = np.clip(np.round(127.5 + 127 * np.clip(f / wmax, -1, 1)), 1, 255).astype(np.uint8)
+        v[s < 1e-6] = 0  # solid cells carry no velocity
+        pframes.append(put(v.tobytes()))
+    t = r["t"][:frames_max]
+    meta = {"schema": "synapse-cfd-unsteady/1", "case": case_name, "source": snap_name, "frames": int(len(q)), "dt_s": float(np.median(np.diff(t))),
+            "volume": {"lo_m": vol["lo_m"], "dx_m": vol["dx_m"], "n": vol["n"], "q_range_per_s2": [0.0, qmax], "floor": floor, "frames": vframes},
+            "plane": {"name": "centre", "axis": "z", "at_m": 0.0, "w": int(w), "h": int(h), "box": [crop_lo[0] - dx / 2, crop_lo[1] - dx / 2, crop_lo[0] - dx / 2 + w * dx, crop_lo[1] - dx / 2 + h * dx],
+                      "wz_range_per_s": [-wmax, wmax], "frames": pframes},
+            "note": "Instantaneous fields from the end of a separate run of the same case (same grid and inflow); the mean fields come from the main run."}
+    while len(blob) % 4:
+        blob.append(0)
+    meta["bytes"] = len(blob)
+    name = f"{case_name}_unsteady"
+    (dst / f"{name}.bin").write_bytes(bytes(blob))
+    (dst / f"{name}.json").write_text(json.dumps(meta, indent=1), encoding="utf-8")
+    doc["unsteady"] = name
+    main_json.write_text(json.dumps(doc, indent=1), encoding="utf-8")
+    print(f"{len(q)} frames, {meta['dt_s'] * 1000:.2f} ms apart, Q99.5 {qmax:.0f} 1/s2, |wz|99 {wmax:.0f} 1/s, "
+          f"{np.mean([f['count'] for f in vframes]):.0f} cells/frame, {len(blob) / 1e6:.2f} MB")
+
+
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "yaw00_dx8")
+    args = sys.argv[1:]
+    if "--unsteady" in args:
+        k = args.index("--unsteady")
+        unsteady(args[0] if k > 0 else "yaw00_dx8", args[k + 1])
+    else:
+        main(args[0] if args else "yaw00_dx8")

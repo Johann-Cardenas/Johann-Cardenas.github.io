@@ -9,6 +9,7 @@
 // five-bolt spider with the drive arm between two arms; black rings with machined silver window
 // bevels and white print; Shimano 105 5700 rear derailleur with a black body and silver outer cage.
 import * as T from 'three';
+import { finish } from './materials.js';
 import { V, lathe, plate, rod, sweep, spline, merge, place, rad, lerp, smooth, linkShape, circlePath, sprocketShape, pitchRadius, tipRadius, beltPath, PITCH, ROLLER, boltHead, roundRect, canvasTexture } from './kit.js';
 import { chainLinks } from '../model/gearing.js';
 
@@ -280,8 +281,9 @@ export function buildCrankset(B, L) {
   const { M } = B, part = B.part('crankset'), vis = part?.visual ?? {}, bbv = B.part('bottom_bracket')?.visual ?? {};
   const style = CRANK_STYLE[vis.style] ? vis.style : 'gossamer', S = CRANK_STYLE[style];
   const len = B.P.crank_length_mm, G = B.pivot('crankset', B.hp.bb, { key: 'crank' });
-  const armMat = M.aluBlack.clone(); armMat.color.set(vis.arm || '#17181a'); armMat.roughness = 0.34; armMat.metalness = 0.55; armMat.name = 'crank_arm';
-  const ringMat = M.aluBlack.clone(); ringMat.color.set(vis.ring || '#1b1c1f'); ringMat.roughness = 0.4; ringMat.metalness = 0.5; ringMat.name = 'ring';
+  let armMat = M.aluBlack.clone(); armMat.color.set(vis.arm || '#17181a'); armMat.roughness = 0.34; armMat.metalness = 0.55; armMat.name = 'crank_arm';
+  let ringMat = M.aluBlack.clone(); ringMat.color.set(vis.ring || '#1b1c1f'); ringMat.roughness = 0.4; ringMat.metalness = 0.5; ringMat.name = 'ring';
+  armMat = finish(armMat, B.P.f_crank); ringMat = finish(ringMat, B.P.f_ring);
   const bevelMat = M.aluSilver.clone(); bevelMat.color.set('#d2d5d9'); bevelMat.roughness = 0.22; bevelMat.name = 'ring_bevel';
   const accent = vis.accent || '#d9d9d6', bolts = S.bolts.map(rad), [zBig, zSmall] = L.ringZ;
 
@@ -371,7 +373,7 @@ export function buildPedals(B) {
     const G = B.pivot('pedals', B.hp.bb, { key: s > 0 ? 'pedalR' : 'pedalL' });
     G.userData.crankLen = len; G.userData.sign = s; G.userData.z = s * 74;
     const P = spdsl(), mir = (g) => { g = g.clone(); if (s < 0) { g.scale(1, 1, -1); flip(g); } return g; };
-    B.addTo(G, mir(P.body), vis.carbon ? M.carbon : M.plasticGloss, 'Pedal body');
+    B.addTo(G, mir(P.body), finish(vis.carbon ? M.carbon : M.plasticGloss, B.P.f_pedal, { name: 'pedal_body' }), 'Pedal body');
     B.addTo(G, mir(P.plate), M.aluSilver, 'Wear plate');
     B.addTo(G, mir(P.binding), M.aluBlack, 'Binding');
     B.addTo(G, mir(P.screw), M.bolt, 'Tension screw');
@@ -480,8 +482,9 @@ export function buildCassette(B, L) {
 // ---- chain ---------------------------------------------------------------------------------------
 export function buildChain(B, L) {
   const { M } = B, vis = B.part('chain')?.visual ?? {}, n = L.links;
-  const outerMat = M.steel.clone(); outerMat.color.set(vis.plate || '#8f9398'); outerMat.roughness = 0.32; outerMat.name = 'chain_outer';
-  const innerMat = M.steel.clone(); innerMat.color.set(vis.inner || '#7c8085').multiplyScalar(0.5); innerMat.roughness = 0.45; innerMat.name = 'chain_inner';
+  const fc = B.P.f_chain && B.P.f_chain !== 'auto' ? B.P.f_chain : null;
+  const outerMat = M.steel.clone(); outerMat.color.set(fc || vis.plate || '#8f9398'); outerMat.roughness = 0.32; outerMat.name = 'chain_outer';
+  const innerMat = M.steel.clone(); innerMat.color.set(fc || vis.inner || '#7c8085').multiplyScalar(0.5); innerMat.roughness = 0.45; innerMat.name = 'chain_inner';
   const rollerMat = innerMat.clone(); rollerMat.color.multiplyScalar(0.85); rollerMat.name = 'chain_roller';
   // 10-speed plates: outer plates waisted harder than the inner ones; 0.8 mm stock
   const outerG = plate(linkShape(PITCH, 3.85, 3.85, 0.66), 0.8, { bevel: 0.14 });
@@ -545,7 +548,7 @@ function rdGraphic() {
 export function buildRearDerailleur(B, L) {
   const { M } = B, slot = 'rear_derailleur', vis = B.part(slot)?.visual ?? {};
   const mtb = vis.style === 'mtb';
-  const body = M.aluBlack.clone(); body.color.set(vis.color || '#1a1b1e'); body.roughness = 0.34; body.metalness = 0.5; body.name = 'rd_body';
+  let body = M.aluBlack.clone(); body.color.set(vis.color || '#1a1b1e'); body.roughness = 0.34; body.metalness = 0.5; body.name = 'rd_body'; body = finish(body, B.P.f_rd);
   const cageMat = M.aluSilver.clone(); cageMat.color.set(mtb ? '#2f3237' : '#8d9298'); cageMat.roughness = 0.46; cageMat.name = 'rd_cage';
   const zc = L.cogZ[L.ci], g = L.guide, t = L.tension, hang = B.hanger;
   const zH = B.geom.interfaces.rear_oln_mm / 2 + 5;

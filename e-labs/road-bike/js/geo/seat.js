@@ -1,5 +1,6 @@
 // Seatpost, saddle, bottle cages and bottles, rear light.
 import * as T from 'three';
+import { finish } from './materials.js';
 import { V, AX, sweep, spline, rod, lathe, plate, merge, place, lerp, smooth, rad, boltHead, roundRect } from './kit.js';
 
 export function buildSeat(B) {
@@ -8,7 +9,7 @@ export function buildSeat(B) {
   const railY = S.y - 50, clampC = V(S.x + 6, railY, 0);
   // post: up the seat-tube axis to just under the clamp, then a short head to the cradle
   const tTop = (railY - 14 - hp.bb.y) / sA.y, top = hp.bb.clone().addScaledVector(sA, tTop), low = hp.st.clone().addScaledVector(sA, -70);
-  const postMat = (pv.style === 'leaf' ? M.carbon : M.aluBlack).clone(); postMat.color.set(pv.color || '#17181a'); postMat.name = 'seatpost';
+  let postMat = (pv.style === 'leaf' ? M.carbon : M.aluBlack).clone(); postMat.color.set(pv.color || '#17181a'); postMat.name = 'seatpost'; postMat = finish(postMat, B.P.f_post);
   const post = [rod(low, top, 13.6, 13.6, 32)];
   post.push(sweep([top.clone().addScaledVector(sA, -6), top.clone().lerp(clampC, 0.55).add(V(0, 2, 0)), clampC.clone().add(V(0, -3, 0))], (u) => ({ a: lerp(13.6, 9, u), b: lerp(13.6, 15, u), n: 2.6 }), { seg: 24, capRound: true }));
   B._fixedGroup = B.add('seatpost', merge(post), postMat, { name: 'Seatpost' }).parent; // for surface probes in buildCages
@@ -123,9 +124,9 @@ export function buildCages(B) {
   if (!B.cfg.cages) return;
   const { M, hp } = B, FA = B.frameAxes, vis = B.part('cages')?.visual ?? {};
   // glossy black alloy-tube cages, as in the owner's photos
-  const mat = M.aluBlack.clone(); mat.color.set(vis.color || '#121315'); mat.roughness = 0.24; mat.metalness = 0.6; mat.name = 'cage';
+  let mat = M.aluBlack.clone(); mat.color.set(vis.color || '#121315'); mat.roughness = 0.24; mat.metalness = 0.6; mat.name = 'cage'; mat = finish(mat, B.P.f_cage);
   // dark smoke insulated bottles with black collars and grey valves (owner's photos)
-  const bottleM = M.bottle.clone(); bottleM.color.set(0x3c4249); bottleM.transmission = 0.3; bottleM.roughness = 0.28; bottleM.thickness = 2; bottleM.name = 'bottle_smoke';
+  const bottleM = M.bottle.clone(); bottleM.color.set(B.P.f_bottle && B.P.f_bottle !== 'auto' ? B.P.f_bottle : 0x3c4249); bottleM.transmission = 0.3; bottleM.roughness = 0.28; bottleM.thickness = 2; bottleM.name = 'bottle_smoke';
   const capM = M.plastic.clone(); capM.color.set(0x16171a); capM.name = 'bottle_cap';
   const valveM = M.plastic.clone(); valveM.color.set(0x9a9fa6); valveM.roughness = 0.5; valveM.name = 'bottle_valve';
   const surf = tubeSurface(B);

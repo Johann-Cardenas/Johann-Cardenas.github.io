@@ -1,6 +1,7 @@
 // Cockpit: spacers, stem, compact drop bar, tape, STI levers, cables, and what clamps to the bar.
 // Everything here turns with the fork, except the frame end of each cable.
 import * as T from 'three';
+import { finish } from './materials.js';
 import { V, AX, sweep, spline, rod, lathe, plate, merge, place, lerp, smooth, rad, boltHead, roundRect, filletPath, circlePath, canvasTexture } from './kit.js';
 
 export function buildCockpit(B) {
@@ -12,8 +13,8 @@ export function buildCockpit(B) {
   const sp = [];
   let h = 15;
   for (let left = P.spacers_mm; left > 0.5;) { const t = left >= 10 ? 10 : 5; sp.push(place(lathe([[14.4, 0.25], [17, 0.25], [17.6, 0.9], [17.6, t - 0.9], [17, t - 0.25], [14.4, t - 0.25]], 36), hp.ht.clone().addScaledVector(up, h), up)); h += t; left -= t; }
-  if (sp.length) B.add('stem', merge(sp), M.carbon, { steer, name: 'Headset spacers' });
-  const stemMat = M.aluBlack.clone(); stemMat.color.set(stemVis.color || '#17181a'); stemMat.name = 'stem';
+  if (sp.length) B.add('stem', merge(sp), finish(M.carbon, P.f_spacer, { name: 'spacer' }), { steer, name: 'Headset spacers' });
+  let stemMat = M.aluBlack.clone(); stemMat.color.set(stemVis.color || '#17181a'); stemMat.name = 'stem'; stemMat = finish(stemMat, P.f_stem);
   const clamp = place(lathe([[14.4, -20], [19, -20], [19.8, -18.5], [19.8, 18.5], [19, 20], [14.4, 20]], 40), base, up);
   const ext = sweep([base.clone().addScaledVector(dir, 12), base.clone().addScaledVector(dir, P.stem_length_mm * 0.5), C.clone().addScaledVector(dir, -14)], (u) => ({ a: lerp(15.5, 16.5, u), b: lerp(16, 17.5, u), n: 2.9 }), { seg: 28 });
   const barClamp = place(lathe([[16, -20], [20.5, -20], [21.2, -18.5], [21.2, 18.5], [20.5, 20], [16, 20]], 40), C);
@@ -29,7 +30,7 @@ export function buildCockpit(B) {
 
   // ---- handlebar ------------------------------------------------------------------------------
   const W = P.bar_width_mm / 2, reach = B.geom.fit_defaults.bar_reach_mm, drop = B.geom.fit_defaults.bar_drop_mm;
-  const barMat = barVis.carbon ? M.carbon : M.aluBlack;
+  const barMat = finish(barVis.carbon ? M.carbon : M.aluBlack, P.f_bar, { name: 'handlebar' });
   // centre -> tops -> ramp -> hook -> drop end  (x forward, y up, z lateral)
   const shape = (s) => [[0, 0, 0], [0, 0, W - 46], [3, 0, W - 22], [20, -1.5, W - 5], [46, -4.5, W], [reach - 4, -8, W], [reach + 11, -27, W], [reach + 9, -58, W],
     [reach - 9, -(drop - 33), W], [reach - 40, -(drop - 9), W], [reach - 76, -drop, W], [reach - 112, -drop - 1, W]].map(([x, y, z]) => V(C.x + x, C.y + y, s * z));
@@ -44,7 +45,7 @@ export function buildCockpit(B) {
     const thick = (B.part('tape')?.visual?.thick ?? 2) + 11.9;
     B.add('tape', sweep(tp, thick, { seg: 20, side: AX.y, transport: true, cap: false }), M.tape, { steer, name: 'Bar tape' });
     const end = path[path.length - 1], tan = end.clone().sub(path[path.length - 2]).normalize();
-    B.add('tape', place(lathe([[0.01, 0], [thick, 0], [thick + 0.6, 1.5], [thick - 1, 4], [0.01, 4.6]], 24), end, tan), M.plastic, { steer, name: 'Bar-end plug' });
+    B.add('tape', place(lathe([[0.01, 0], [thick, 0], [thick + 0.6, 1.5], [thick - 1, 4], [0.01, 4.6]], 24), end, tan), finish(M.plastic, P.f_plug, { name: 'plug' }), { steer, name: 'Bar-end plug' });
     B.add('tape', sweep([path[i0].clone(), path[i0 + 1].clone()], thick + 0.5, { seg: 20, side: AX.y, cap: false }), M.plasticGloss, { steer, name: 'Finishing tape' });
   }
 

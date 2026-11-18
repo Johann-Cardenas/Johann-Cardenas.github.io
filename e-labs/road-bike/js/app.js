@@ -1,7 +1,7 @@
 // Application controller: state, URL, the 3D stage and the Build panel.
 import { checkConfig, worst } from './compat.js';
 import { decodeConfig, encodeConfig, decodeParams, defaultParams, applyChange, summarize, PARAMS } from './state.js';
-import { PAINT_SCHEMES } from './geo/materials.js';
+import { PAINT_SCHEMES, FINISHES } from './geo/materials.js';
 import * as views from './views.js';
 import * as panels from './panels.js';
 import { cadScene, aeroScene, feScene, loadPack } from './labs.js';
@@ -19,7 +19,7 @@ export const EVIDENCE = { C: 'Confirmed by owner', L: 'Listing / seller', S: 'St
 export const badge = (c) => `<span class="badge ${String(c).toLowerCase()}" title="${esc(EVIDENCE[c] || '')}">${esc(c)}</span>`;
 const LAYOUT = { build: 'stage', cad: 'stage', aero: 'stage', structure: 'stage', upgrades: 'page', gearing: 'page', spec: 'page' };
 const LEGACY = { performance: 'aero', geometry: 'build' };
-const REBUILD = new Set(['paint', 'c1', 'c2', 'c3', 'decals', 'tape', 'saddle_height_mm', 'saddle_setback_mm', 'spacers_mm', 'stem_length_mm', 'stem_angle_deg', 'bar_width_mm', 'crank_length_mm', 'ring', 'cog', 'steer_deg', 'bottles']);
+const REBUILD = new Set(['paint', 'c1', 'c2', 'c3', 'decals', 'tape', 'saddle_height_mm', 'saddle_setback_mm', 'spacers_mm', 'stem_length_mm', 'stem_angle_deg', 'bar_width_mm', 'crank_length_mm', 'ring', 'cog', 'steer_deg', 'bottles', 'tape_style', 'frame_finish', ...Object.keys(PARAMS).filter((k) => k.startsWith('f_'))]);
 
 export const S = {
   geom: null, catalog: null, parts: null, history: null, measurements: [],
@@ -92,6 +92,7 @@ const toggles = { dims: false, tech: false, spin: false, pedal: false };
 const P = panels.L;
 const panelApi = {
   redraw: () => S.viewer?.redraw(), render: () => render(), sync: () => syncStage(), groups: {},
+  gearRatio: () => { const L = S.viewer?.info?.layout; return L ? L.rings[L.ri] / L.cogs[L.ci] : 0; },
   /** Swap the wind-tunnel case (yaw) and keep the camera where it is. */
   async reloadAero() { const old = P.aero; P.aero = null; P.aeroMissing = false; render(); await syncStage(); old?.dispose(); },
 };
@@ -107,7 +108,8 @@ async function ensure(kind) {
       if (P.aero) {
         for (const [k, v] of Object.entries(P.iso)) P.aero.setIso(k, v);
         for (const [k, on] of Object.entries(P.show)) P.aero.show(k, on);
-        P.aero.setField(P.field); P.aero.highlight(P.group ? panelApi.groups[P.group] : null); panels.applyCut();
+        P.aero.setRolling(P.show.rolling, panelApi.gearRatio());
+        P.aero.setField(P.field); P.aero.highlight(P.group ? panelApi.groups[P.group] : null); panels.applyCut(); panels.applyUnsteady();
         if (!Object.keys(panelApi.groups).length) panelApi.groups = await fetch('data/cfd/groups.json').then((r) => r.json()).catch(() => ({}));
       }
     } else if (kind === 'fe' && !P.fe) {
@@ -122,6 +124,7 @@ async function syncStage() {
   const kind = view === 'cad' ? 'cad' : view === 'aero' ? 'aero' : view === 'structure' && !beam ? 'fe' : null;
   $('#legend').hidden = !beam;
   document.body.dataset.stage = kind === 'aero' ? 'tunnel' : '';
+  if (kind !== 'aero') $('#akey').hidden = true;
   if (view !== 'build') hideCard();
   if (kind) {
     await ensure(kind);
@@ -177,6 +180,17 @@ function optionState(slot, id) {
   return { level: lvl, text, title: (issues.map((i) => i.msg).join(' ') || 'No interface issues.') + also };
 }
 const P0 = (v) => Math.round(v);
+// Component colours in the Build panel: [param, label], grouped as on the bike
+const FIN_GROUPS = [
+  ['Drivetrain', [['f_crank', 'Crank arms'], ['f_ring', 'Chainrings'], ['f_chain', 'Chain'], ['f_rd', 'Rear derailleur'], ['f_pedal', 'Pedals']]],
+  ['Cockpit', [['f_stem', 'Stem'], ['f_bar', 'Handlebar'], ['f_spacer', 'Headset spacers'], ['f_hood', 'Lever hoods'], ['f_plug', 'Bar-end plugs'], ['f_housing', 'Cable housing']]],
+  ['Brakes', [['f_caliper', 'Calipers'], ['f_pad', 'Brake pads']]],
+  ['Seat', [['f_post', 'Seatpost'], ['f_saddle', 'Saddle']]],
+  ['Wheels', [['f_rim', 'Rims'], ['f_hub', 'Hubs'], ['f_spoke', 'Spokes'], ['f_nipple', 'Nipples'], ['f_skewer', 'QR levers']]],
+  ['Bottles', [['f_cage', 'Cages'], ['f_bottle', 'Bottles']]],
+];
+const FIN_KEYS = FIN_GROUPS.flatMap(([, k]) => k);
+const finRow = (k, label, v) => `<div class="finrow"><span>${label}</span><div class="fins"><button class="fin auto" data-fin="${k}" data-val="auto" aria-pressed="${v === 'auto'}" title="Stock">S</button>${FINISHES.map((f) => `<button class="fin${f.metal ? ' metal' : ''}" data-fin="${k}" data-val="${f.hex}" style="--c:${f.hex}" aria-pressed="${v === f.hex}" title="${f.label}" aria-label="${label}: ${f.label}"></button>`).join('')}<input type="color" data-finc="${k}" value="${v === 'auto' ? '#17181a' : v}" aria-label="${label}: custom colour" title="Custom"></div></div>`;
 function buildPanel() {
   const cfg = effCfg(), sum = summarize(cfg, S.catalog), issues = checkConfig(cfg, S.parts);
   const hard = issues.filter((i) => i.level !== 'info'), info = issues.filter((i) => i.level === 'info');
@@ -221,7 +235,14 @@ function buildPanel() {
       <h3>Scheme</h3><div class="swatches">${Object.entries(PAINT_SCHEMES).map(([k, v]) => scheme(k, v)).join('')}<button class="scheme" data-paint="custom" aria-pressed="${P.paint === 'custom'}">Custom</button></div>
       ${P.paint === 'custom' ? `<div class="row two" style="margin-top:8px"><label>Colours</label><span class="swatches"><input type="color" data-c="c1" value="${P.c1}" aria-label="Primary"><input type="color" data-c="c2" value="${P.c2}" aria-label="Accent"><input type="color" data-c="c3" value="${P.c3}" aria-label="Detail"></span></div>` : ''}
       <h3 style="margin-top:12px">Bar tape</h3><div class="swatches">${tapes.map((c) => `<button data-tape="${c}" style="background:${c}" aria-pressed="${P.tape === c}" aria-label="Tape colour ${c}"></button>`).join('')}<input type="color" data-c="tape" value="${P.tape}" aria-label="Custom tape colour"></div>
+      <div class="row two" style="margin-top:8px"><label>Tape</label><div class="rb-seg">${[['wrap', 'Microfibre'], ['perforated', 'Perforated'], ['cork', 'Cork'], ['gel', 'Gel']].map(([k, l]) => `<button data-pset="tape_style" data-val="${k}" aria-pressed="${P.tape_style === k}">${l}</button>`).join('')}</div></div>
+      <div class="row two"><label>Frame</label><div class="rb-seg">${['gloss', 'satin', 'matte'].map((k) => `<button data-pset="frame_finish" data-val="${k}" aria-pressed="${P.frame_finish === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div></div>
       <div class="btnrow"><label class="chk"><input type="checkbox" data-b="decals" ${P.decals ? 'checked' : ''}> Decals</label><label class="chk"><input type="checkbox" data-b="bottles" ${P.bottles ? 'checked' : ''}> Bottles</label></div>
+    </div></details>
+    <details class="grp" data-g="Parts finish" ${S.open.has('Parts finish') ? 'open' : ''}><summary>Component colours<em>${FIN_KEYS.filter(([k]) => P[k] !== 'auto').length || 'stock'}${FIN_KEYS.some(([k]) => P[k] !== 'auto') ? ' changed' : ''}</em></summary><div class="slot">
+      ${FIN_GROUPS.map(([g, keys]) => `<h3>${g}</h3>${keys.map(([k, label]) => finRow(k, label, P[k])).join('')}`).join('')}
+      <h3>Tyres</h3><div class="finrow"><span>Sidewalls</span><div class="rb-seg">${['auto', 'black', 'tan', 'cream'].map((k) => `<button data-pset="f_wall" data-val="${k}" aria-pressed="${P.f_wall === k}">${k === 'auto' ? 'Stock' : k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div></div>
+      <div class="btnrow"><button data-act="finreset" ${FIN_KEYS.some(([k]) => P[k] !== 'auto') || P.f_wall !== 'auto' ? '' : 'disabled'}>All stock colours</button></div>
     </div></details>
     <details class="grp" data-g="Fit" ${S.open.has('Fit') ? 'open' : ''}><summary>Fit &amp; geometry<em>${P0(S.P.stem_length_mm)} mm stem</em></summary>${views.panels.geometry()}</details>
     <details class="grp" data-g="Pose" ${S.open.has('Pose') ? 'open' : ''}><summary>Pose<em>${L ? `${L.rings[L.ri]} × ${L.cogs[L.ci]}` : ''}</em></summary><div class="slot">
@@ -254,6 +275,8 @@ export function render() {
   else if (S.view === 'structure') panel.innerHTML = panels.structurePanel(views.panels.structure);
   else panel.innerHTML = '';
   panel.scrollTop = top;
+  const key = $('#akey'), keyOn = S.view === 'aero' && !!P.aero;
+  key.hidden = !keyOn; if (keyOn) key.innerHTML = panels.aeroKey();
   if (S.selected && S.view === 'build') showCard(S.selected);
 }
 
@@ -298,6 +321,7 @@ function wire() {
     const t = e.target;
     if (t.type === 'radio' && t.name && S.view === 'build') { setSlot(t.name, t.value); if (t.value) { S.viewer.select(t.name); } }
     else if (t.dataset.b) setParam(t.dataset.b, t.checked);
+    else if (t.dataset.finc) setParam(t.dataset.finc, t.value);
     else if (t.dataset.c) { if (t.dataset.c !== 'tape') S.P.paint = 'custom'; setParam(t.dataset.c, t.value); }
     else if (t.dataset.p) { setParam(t.dataset.p, Number(t.value)); }
     else views.onChange?.(e);
@@ -318,6 +342,9 @@ function wire() {
     else if (b.dataset.focus) { S.viewer.select(b.dataset.focus); S.viewer.focus(b.dataset.focus); showCard(b.dataset.focus); }
     else if (b.dataset.paint) setParam('paint', b.dataset.paint);
     else if (b.dataset.tape) setParam('tape', b.dataset.tape);
+    else if (b.dataset.fin) setParam(b.dataset.fin, b.dataset.val);
+    else if (b.dataset.pset) setParam(b.dataset.pset, b.dataset.val);
+    else if (b.dataset.act === 'finreset') { for (const [k] of FIN_KEYS) S.P[k] = 'auto'; S.P.f_wall = 'auto'; setParam('f_wall', 'auto'); writeHash(); rebuild3D(true); render(); }
     else if (b.dataset.ring) setParam('ring', b.dataset.ring);
     else if (b.dataset.act === 'share') navigator.clipboard?.writeText(location.href).then(() => status('Build link copied.'), () => status('Copy the link from the address bar.'));
     else if (b.dataset.act === 'reset') setConfig(S.catalog.default_config, 'Back to the installed build.');
