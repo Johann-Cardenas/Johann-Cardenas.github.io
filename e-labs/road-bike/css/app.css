@@ -140,7 +140,7 @@ body[data-stage='tunnel'] .rb-title b { color: #eef1f4; } body[data-stage='tunne
 .study th, .study td { padding: 3px 5px; border-bottom: 1px solid var(--line2); text-align: right; font-family: var(--mono); }
 .study th:first-child, .study td:first-child { text-align: left; font-family: var(--sans); color: var(--ink2); }
 .study thead th { font-family: var(--sans); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 600; border-bottom: 1px solid var(--line); }
-.study td.good { color: var(--ok); font-weight: 600; } .study td.bad { color: var(--err); }
+.study td { white-space: nowrap; } .study td.good { color: var(--ok); font-weight: 600; } .study td.bad { color: var(--err); }
 .study tr.tot td { border-top: 1px solid var(--line); font-weight: 650; }
 .gain { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
 .gain div { background: var(--bg3); border: 1px solid var(--line2); border-radius: 8px; padding: 7px 8px; }

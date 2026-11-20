@@ -5,7 +5,7 @@ root (`python -m http.server 8000`) and open `/e-labs/road-bike/`.
 
 | Tab | What it shows |
 |---|---|
-| Build | Procedural 3D model in the photographed paint; pick parts, paint, tape colour and style, gloss/satin/matte frame, a colour for every component (22 finishes plus tyre sidewalls), fit and pose |
+| Build | Procedural 3D model in the photographed paint; click a part for its spec sheet (beside the installed part, copyable as rows for a spreadsheet); pick parts, paint, tape colour and style, gloss/satin/matte frame, a colour for every component (22 finishes plus tyre sidewalls), fit and pose |
 | CAD | The SolidWorks assembly: 53 parts, each volume- and centroid-checked |
 | Aero | Wind tunnel at 40 km/h, head-on and in crosswind (yaw): drag by part, surface pressure, animated flow, a cut plane you slide or scan through the flow (speed, pressure, total-pressure loss, vorticity), wake and vortex-core isosurfaces, an unsteady playback of instantaneous snapshots, a bike that rolls and pedals in the selected gear, an on-stage colour key, yaw sweep, drag built up nose to tail, solver convergence, power vs speed |
 | Structure | Abaqus shell model: five ISO 4210-6 load cases and the natural modes; a live beam model beside it |
@@ -44,6 +44,28 @@ python cad/fe_prepare.py
 cd %LOCALAPPDATA%\road-bike-cad\build\fe && abaqus cae noGUI=abaqus_frame.py && abaqus job=frame_fe cpus=8 interactive && abaqus python abaqus_extract.py
 python cad/fe_web.py
 ```
+
+### Variant builds and the upgrade study
+
+`cad/export.py --variant <name> --set slot=id ...` builds the CAD with other catalog parts and writes
+`data/cad/variants/<name>/parts.*` (STEP into the build folder's `variants/<name>/`); it refuses `--set`
+without `--variant`, so the installed pack is never overwritten. `wind_tunnel.py --cad <pack> --tag <name>
+--label "<text>"` runs that pack, and `cfd_post.py` records the pack in the case, so the Aero tab loads the
+right geometry for the surface Cp. The Aero panel offers one chip per build in the tunnel.
+
+```
+python cad/export.py --variant st28 --set wheels=wheels_superteam_50c --set tires=tires_gp5000_as_tr_28
+for y in 0 10 5 15: python cad/wind_tunnel.py --yaw $y --dx 8 --flows 2.2 --avg 0.8 --cad data/cad/variants/st28/parts --tag st28 --label "Superteam 50 + GP5000 AS TR 28" && python cad/cfd_post.py yaw<yy>_dx8_st28
+```
+
+**Upgrade study** (`js/model/study.js`, shown at the top of the Aero panel): pairs installed and
+variant cases at the same yaw and lattice, averages ΔCdA over an assumed time-at-yaw (35/35/20/10 % at
+0/5/10/15°), scales it by 0.70–1.00 (centre 0.85) for the tunnel's resolution bias (sphere check), adds
+it to the rider-plus-bike CdA of the chosen position and runs the road power model with each build's
+Crr. GP5000 AS TR Crr are Bicycle Rolling Resistance tubeless drum figures; on a bike with butyl tubes
+(the Superteam rims are tube-only) `perf.setup` adds 0.0006. Repeatability: two independent runs of
+the installed build at 0° differ by 0.041 N (0.5 %). The Rubino Pro and Fulcrum are unweighed, so the
+flat-road result holds mass equal and the panel gives the climbing cost per 100 g instead.
 
 ### Wind tunnel
 
@@ -106,7 +128,7 @@ Edit `tools/build_catalog.mjs`, then `node tools/build_catalog.mjs`; a test fail
 ## Checks
 
 ```
-node --test e-labs/road-bike/tests/*.test.js     # 35 checks: models, catalog, data packs, module syntax
+node --test e-labs/road-bike/tests/*.test.js     # 40 checks: models, catalog, data packs, module syntax
 python e-labs/road-bike/tools/validate_site.py
 python e-labs/road-bike/cad/lbm_check.py 24 9000  # sphere validation of the wind tunnel
 ```

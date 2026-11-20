@@ -234,7 +234,9 @@ function smoothOnMesh(v, idx, passes) {
 }
 
 export async function aeroScene(caseName, theme) {
-  const [[cfd, buf], [cad, cbuf]] = await Promise.all([loadPack('data/cfd/' + caseName), loadPack('data/cad/parts')]);
+  // each case carries the CAD pack it was run on (a variant build has its own rims and tyres)
+  const [cfd, buf] = await loadPack('data/cfd/' + caseName);
+  const [cad, cbuf] = await loadPack(cfd.cad || 'data/cad/parts');
   const group = new T.Group(), R = new T.Matrix4();
   const r = cfd.yaw_R; // rows of the yaw rotation (bike -> tunnel); the scene shows the bike frame, so flows are rotated back
   R.set(r[0][0], r[1][0], r[2][0], 0, r[0][1], r[1][1], r[2][1], 0, r[0][2], r[1][2], r[2][2], 0, 0, 0, 0, 1);

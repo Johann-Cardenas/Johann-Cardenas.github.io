@@ -62,7 +62,8 @@ def main(case_name):
         return off
 
     # ------------------------------------------------------------------ slices
-    meshes = WT.load_cad()
+    pack = summary.get("cad_pack", "data/cad/parts")
+    meshes = WT.load_cad(pack)
     allv = np.vstack([m[1] for m in meshes]) @ R.T
     lo, hi = allv.min(0), allv.max(0)
     slices = []
@@ -111,8 +112,8 @@ def main(case_name):
         off_pts.append({"n": len(l), "pts": put(l.astype(np.float16), 2), "speed": put(q8(s, *SPEED_RANGE), 1)})
 
     # ------------------------------------------------------------------ surface Cp at the CAD vertices
-    doc = json.loads((ROOT / "data/cad/parts.json").read_text(encoding="utf-8"))
-    cad = (ROOT / "data/cad/parts.bin").read_bytes()
+    doc = json.loads((ROOT / (pack + ".json")).read_text(encoding="utf-8"))
+    cad = (ROOT / (pack + ".bin")).read_bytes()
     off, sc = np.array(doc["offset"]), np.array(doc["scale"])
     surf = []
     for p in doc["parts"]:
@@ -206,7 +207,12 @@ def main(case_name):
         print(f"forces rebuilt from the slab profile: drag {old:.2f} -> {summary['drag_N']:.2f} N")
     hist_out = hist[:: max(1, len(hist) // 400), :]
     groups = list(WT.GROUPS)
-    out = {"schema": "synapse-cfd/1", "case": case_name, "summary": summary, "validation": VALIDATION,
+    # statistical uncertainty of the mean drag: 8 batch means over the averaging window
+    win_u = hist[:, 0] >= hist[-1, 0] * (1 - summary["grid"]["averaged_steps"] / summary["grid"]["steps"])
+    bm = np.array([b.mean() for b in np.array_split(-hist[win_u, 1::3][:, :len(groups)].sum(1), 8)])
+    uncertainty = {"drag_se_N": float(bm.std(ddof=1) / np.sqrt(len(bm))), "method": "standard error of 8 batch means over the averaging window",
+                   "repeatability_N": 0.041, "repeatability_note": "Two independent runs of the installed build at 0 deg (yaw00_dx8 and yaw00_dx8_snap) differ by 0.041 N (0.5 %)."}
+    out = {"schema": "synapse-cfd/1", "case": case_name, "cad": pack, "config": summary.get("config_label", "Installed build"), "uncertainty": uncertainty, "summary": summary, "validation": VALIDATION,
            "ranges": {"cp": CP_RANGE, "speed": SPEED_RANGE}, "bike_box_m": [lo.tolist(), hi.tolist()], "yaw_R": R.tolist(),
            "slices": slices, "streamlines": off_pts, "surface": surf, "groups": groups, "volume": volume, "profile": profile,
            "history": {"t_s": hist_out[:, 0].tolist(), "drag_N": (-hist_out[:, 1::3][:, :len(groups)].sum(1)).tolist(), "note": note}}
@@ -226,7 +232,8 @@ def main(case_name):
         sm = d["summary"]
         cases.append({"case": d["case"], "yaw_deg": sm["assumptions"]["yaw_deg"], "dx_mm": sm["grid"]["dx_mm"], "CdA_m2": sm["CdA_m2"], "drag_N": sm["drag_N"],
                       "side_force_N": sm["side_force_N"], "lift_N": sm["lift_N"], "drag_by_group_N": sm["drag_by_group_N"],
-                      "force_by_group_N": sm.get("force_by_group_N"), "profile": bool(d.get("profile"))})
+                      "force_by_group_N": sm.get("force_by_group_N"), "profile": bool(d.get("profile")),
+                      "cad": d.get("cad", "data/cad/parts"), "config": d.get("config", "Installed build"), "uncertainty": d.get("uncertainty")})
     cases.sort(key=lambda c: (c["dx_mm"], c["yaw_deg"]))
     (dst / "cases.json").write_text(json.dumps({"schema": "synapse-cfd-cases/1", "speed_kmh": 40, "cases": cases}, indent=1), encoding="utf-8")
     print(f"{len(off_pts)} streamlines, {len(surf)} surface parts, {len(blob) / 1e6:.2f} MB, CdA {summary['CdA_m2']:.4f}")

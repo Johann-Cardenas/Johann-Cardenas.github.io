@@ -63,9 +63,9 @@ def q_criterion(u, dx):
     return 0.5 * (0.5 * wn2 - S2), np.sqrt(wn2), wz
 
 
-def load_cad():
-    doc = json.loads((ROOT / "data/cad/parts.json").read_text(encoding="utf-8"))
-    blob = (ROOT / "data/cad/parts.bin").read_bytes()
+def load_cad(pack="data/cad/parts"):
+    doc = json.loads((ROOT / (pack + ".json")).read_text(encoding="utf-8"))
+    blob = (ROOT / (pack + ".bin")).read_bytes()
     off, sc = np.array(doc["offset"]), np.array(doc["scale"])
     meshes = []
     for p in doc["parts"]:
@@ -88,12 +88,14 @@ def main():
     ap.add_argument("--snaps", type=int, default=0, help="instantaneous snapshots at the end of the run (Q volume + side plane)")
     ap.add_argument("--snap-every", type=int, default=25, help="steps between snapshots")
     ap.add_argument("--tag", default="", help="suffix for the case folder")
+    ap.add_argument("--cad", default="data/cad/parts", help="CAD pack (repo-relative, no extension), e.g. data/cad/variants/st28/parts")
+    ap.add_argument("--label", default="", help="configuration label shown with the case")
     a = ap.parse_args()
     dx = a.dx / 1000.0
     case = OUT / (f"yaw{int(round(a.yaw)):02d}_dx{a.dx:g}" + (f"_{a.tag}" if a.tag else ""))
     case.mkdir(parents=True, exist_ok=True)
 
-    meshes = load_cad()
+    meshes = load_cad(a.cad)
     yaw = math.radians(a.yaw)
     R = np.array([[math.cos(yaw), 0, math.sin(yaw)], [0, 1, 0], [-math.sin(yaw), 0, math.cos(yaw)]])  # bike turned about +Y
     meshes = [(g, v @ R.T, t, n) for g, v, t, n in meshes]
@@ -197,6 +199,7 @@ def main():
         "power_W_at_40kmh": total * U,
         "force_by_group_N": {n: gforce_bike[i].tolist() for i, n in enumerate(names)},  # bike frame [x fwd, y up, z drive side]
         "force_average": "every step of the window",
+        "cad_pack": a.cad, "config_label": a.label or ("Installed build" if a.cad == "data/cad/parts" else a.cad),
     }
     fprof = fprof * fscale / max(n_prof, 1)
     (case / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")

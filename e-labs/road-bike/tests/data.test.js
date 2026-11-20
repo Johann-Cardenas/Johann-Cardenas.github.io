@@ -68,7 +68,12 @@ test('CFD case index matches the packs', () => {
   const dir = new URL('cfd/', D);
   if (!existsSync(new URL('cases.json', dir))) return;
   const idx = json('cfd/cases.json');
-  const files = readdirSync(dir).filter((f) => /^yaw\d+_dx[\d.]+\.json$/.test(f)).map((f) => f.replace('.json', ''));
+  // installed-build cases (yaw00_dx8) and tagged variant builds (yaw00_dx8_st28); unsteady packs are not cases
+  const files = readdirSync(dir).filter((f) => /^yaw\d+_dx[\d.]+(_[a-z0-9]+)?\.json$/.test(f) && !f.endsWith('_unsteady.json')).map((f) => f.replace('.json', ''));
   assert.deepEqual(idx.cases.map((c) => c.case).sort(), files.sort());
-  for (const c of idx.cases) assert.equal(c.CdA_m2, json(`cfd/${c.case}.json`).summary.CdA_m2, c.case);
+  for (const c of idx.cases) {
+    assert.equal(c.CdA_m2, json(`cfd/${c.case}.json`).summary.CdA_m2, c.case);
+    const pack = c.cad || 'data/cad/parts'; // each case names the CAD it ran on, and that pack must ship
+    assert.ok(existsSync(new URL('../' + pack + '.json', D)) && existsSync(new URL('../' + pack + '.bin', D)), `${c.case}: ${pack}`);
+  }
 });

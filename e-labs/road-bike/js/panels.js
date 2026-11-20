@@ -3,6 +3,7 @@
 import { S, esc, fmt, status } from './app.js';
 import { rampCSS, FIELD_RAMP, SURFACE_CP } from './labs.js';
 import { setup, evaluate, POSITIONS } from './model/perf.js';
+import { BASE_CAD, pairCases, weightedDelta, roadGains, climbPer100g, YAW_WEIGHTS, YAW_BASIS, RESOLUTION } from './model/study.js';
 import { lineChart } from './charts.js';
 
 export const L = { cad: null, aero: null, fe: null, sw: null, aeroCase: 'yaw00_dx8', aeroMissing: false, structMode: 'shell', feCase: 'pedalling', feMode: -1,
@@ -54,13 +55,17 @@ export function aeroPanel() {
   const P = S.P, su = setup(S.catalog.default_config, S.catalog, P), ev = evaluate(su, P);
   const bikeShare = s.CdA_m2 / POSITIONS[P.position === 'aero' ? 'drops' : P.position].cda;
   const v = a.cfd.validation, yaw = s.assumptions.yaw_deg, vol = a.volume, U = s.assumptions.speed_kmh / 3.6;
-  const cases = L.cases.filter((c, i, all) => c.dx_mm === s.grid.dx_mm && all.findIndex((o) => o.yaw_deg === c.yaw_deg && o.dx_mm === c.dx_mm) === i);
+  const cad = a.cfd.cad || BASE_CAD, cfgOf = (c) => c.cad || BASE_CAD;
+  const cases = L.cases.filter((c, i, all) => c.dx_mm === s.grid.dx_mm && cfgOf(c) === cad && all.findIndex((o) => o.yaw_deg === c.yaw_deg && o.dx_mm === c.dx_mm && cfgOf(o) === cad) === i);
+  const configs = [...new Map(L.cases.filter((c) => c.dx_mm === s.grid.dx_mm).map((c) => [cfgOf(c), c.config || 'Installed build'])).entries()];
   const F = vol?.F, fieldRange = (f) => (F?.[f] ? F[f].range : { speed: [0, 1.5], cp: [-1.6, 1] }[f]);
   const LEG = { speed: ['|U| / U∞', 1], cp: ['Cp', 1], loss: ['total-pressure loss', 1], vort: ['|ω| 1/s', 0] };
   const fr = fieldRange(L.field), fl = LEG[L.field];
   const cutLabel = { x: 'Across', y: 'Plan', z: 'Side' };
   const cutPos = cutText(a);
   return `
+  ${configs.length > 1 ? `<div class="sec"><h2>Build in the tunnel</h2><div class="rb-seg" style="display:flex">${configs.map(([k, label]) => chip(`data-acfg="${esc(k)}"`, k === cad, k === BASE_CAD ? 'Installed' : esc(label.replace('GP5000 ', '')), k === BASE_CAD ? 'Fulcrum Racing 15C on Rubino Pro 23, as photographed' : esc(label))).join('')}</div></div>` : ''}
+  ${studySection(a)}
   ${cases.length > 1 ? `<div class="sec"><h2>Crosswind<em>yaw</em></h2><div class="rb-seg" style="display:flex">${cases.map((c) => chip(`data-ayaw="${esc(c.case)}"`, c.case === L.aeroCase, `${c.yaw_deg}°`, `Wind ${c.yaw_deg}° off the nose, from the drive side`)).join('')}</div></div>` : ''}
   <div class="sec"><div class="kpis">
     ${kpi('CdA, bike', `${s.CdA_m2.toFixed(3)} m²`, `no rider · ${yaw}° yaw`, 'big', 'Drag area of the bike alone. See the footnote on accuracy.')}
@@ -106,8 +111,10 @@ function aeroCharts(a, cases, U) {
   if (cases.length > 1) {
     const pts = cases.map((c) => [c.yaw_deg, c.CdA_m2]), side = cases.map((c) => [c.yaw_deg, c.side_force_N]);
     const cur = cases.find((c) => c.case === L.aeroCase);
-    out.push(chartSec('Drag area vs wind angle', 'm²', lineChart({ series: [{ pts, color: 'var(--accent)' }], marks: cases.map((c) => ({ x: c.yaw_deg, y: c.CdA_m2, color: c === cur ? 'var(--accent)' : 'var(--ink3)', label: c === cur ? c.CdA_m2.toFixed(3) : '' })), xLabel: 'yaw °', yLabel: 'CdA m²', w: 360, h: 190, xMin: 0, yMin: Math.floor(Math.min(...pts.map((p) => p[1])) * 0.9 * 100) / 100 }),
-      '', 'Drag area of the bike in the direction of travel, as the wind swings off the nose.'));
+    const cad = a.cfd.cad || BASE_CAD, other = [...new Set(L.cases.map((c) => c.cad || BASE_CAD))].filter((k) => k !== cad);
+    const otherPts = other.map((k) => L.cases.filter((c) => (c.cad || BASE_CAD) === k && c.dx_mm === s.grid.dx_mm).sort((x, y) => x.yaw_deg - y.yaw_deg).map((c) => [c.yaw_deg, c.CdA_m2])).filter((q) => q.length);
+    out.push(chartSec('Drag area vs wind angle', 'm²', lineChart({ series: [...otherPts.map((q) => ({ pts: q, color: 'var(--ink3)' })), { pts, color: 'var(--accent)' }], marks: cases.map((c) => ({ x: c.yaw_deg, y: c.CdA_m2, color: c === cur ? 'var(--accent)' : 'var(--ink3)', label: c === cur ? c.CdA_m2.toFixed(3) : '' })), xLabel: 'yaw °', yLabel: 'CdA m²', w: 360, h: 190, xMin: 0, yMin: Math.floor(Math.min(...pts.map((p) => p[1]), ...otherPts.flat().map((p) => p[1])) * 0.9 * 100) / 100 }),
+      otherPts.length ? keyRow([['var(--accent)', cad === BASE_CAD ? 'Installed' : 'Superteam 50 + AS TR 28'], ['var(--ink3)', cad === BASE_CAD ? 'Superteam 50 + AS TR 28' : 'Installed']]) : '', 'Drag area of the bike in the direction of travel, as the wind swings off the nose.'));
     const gk = Object.keys(cases[0].drag_by_group_N).filter((g) => Math.max(...cases.map((c) => Math.abs(c.drag_by_group_N[g]))) > 0.8);
     out.push(chartSec('Drag by part vs wind angle', 'N', lineChart({ series: gk.map((g) => ({ pts: cases.map((c) => [c.yaw_deg, c.drag_by_group_N[g]]), color: GROUP_COL[g] || 'var(--ink3)' })), xLabel: 'yaw °', yLabel: 'drag N', w: 360, h: 200, xMin: 0, yMin: Math.min(0, ...cases.flatMap((c) => gk.map((g) => c.drag_by_group_N[g]))) }),
       keyRow(gk.map((g) => [GROUP_COL[g] || 'var(--ink3)', g]))));
@@ -139,6 +146,45 @@ function aeroCharts(a, cases, U) {
       keyRow([['var(--ink3)', 'instantaneous'], ['var(--accent)', 'mean over the averaging window']]), `${s.grid.flow_throughs} flow-throughs; the reported drag is the mean of every step in the last ${Math.round(s.grid.averaged_steps / s.grid.steps * 100)} %.${h.note ? ' ' + h.note : ''}`));
   }
   return out.join('');
+}
+
+// ---- Upgrade study: installed vs Superteam 50 + GP5000 AS TR 28 ----------------------------------
+const STUDY_CAD = 'data/cad/variants/st28/parts';
+const STUDY_SET = { wheels: 'wheels_superteam_50c', tires: 'tires_gp5000_as_tr_28', brake_pads: 'pads_black_prince' };
+const sgn = (v, d = 0) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(d);
+function studySection(a) {
+  const rows = pairCases(L.cases, STUDY_CAD);
+  if (!rows.length) return '';
+  const P = S.P, wd = weightedDelta(rows), cfg = { ...S.catalog.default_config, ...STUDY_SET };
+  const mid = wd.dCdA * RESOLUTION.mid, g = roadGains(S.catalog, P, cfg, mid), gLo = roadGains(S.catalog, P, cfg, wd.dCdA * RESOLUTION.hi), gHi = roadGains(S.catalog, P, cfg, wd.dCdA * RESOLUTION.lo);
+  const gAero = roadGains(S.catalog, P, S.catalog.default_config, mid), gRoll = roadGains(S.catalog, P, cfg, 0);
+  const W = (x) => `${sgn(x, 1)} W`, at = g.at.find((r) => r.kmh === 32) || g.at[0];
+  const range = (f) => { const v = [f(gLo), f(gHi)].map(Math.abs).sort((x, y) => x - y); return `${v[0].toFixed(0)}–${v[1].toFixed(0)}`; };
+  const wheelD = (r) => (r.groups['Front wheel'] ?? 0) + (r.groups['Rear wheel'] ?? 0);
+  const se = rows.find((r) => r.se)?.se;
+  const perG = climbPer100g(S.catalog, P);
+  const tip = `${YAW_BASIS} ${RESOLUTION.basis} Rolling: ${g.crrBasis ?? ''} Position CdA ${g.cdaBase.toFixed(3)} m² (${g.position}). ${g.notes.join(' ')}`;
+  return `<div class="sec"><h2 title="${esc('Same tunnel, lattice and inflow; only the wheels and tyres change. The installed build runs on Fulcrum Racing 15C rims with Rubino Pro 23 tyres; the upgrade on Superteam 50 mm carbon rims with GP5000 AS TR 28 tyres.')}">Upgrade study<em>Superteam 50 + AS TR 28</em></h2>
+    <div class="gain" title="${esc(tip)}">
+      <div><span>Speed at ${P.power_w} W</span><b class="${g.kmhUp < g.kmhBase ? 'bad' : ''}">${sgn(g.kmhUp - g.kmhBase, 2)}</b><small>km/h · ${g.kmhBase.toFixed(1)} → ${g.kmhUp.toFixed(1)}</small></div>
+      <div><span>${g.km} km at ${P.power_w} W</span><b class="${g.dt_s > 0 ? 'bad' : ''}">${sgn(g.dt_s, 0)} s</b><small>${range((x) => -x.dt_s)} s ${g.dt_s < 0 ? 'saved' : 'lost'}</small></div>
+      <div><span>Power at ${at.kmh} km/h</span><b class="${at.saved_W < 0 ? 'bad' : ''}">${sgn(-at.saved_W, 1)} W</b><small>${sgn(-at.aero_W, 1)} air · ${sgn(-at.rolling_W, 1)} rolling</small></div>
+    </div>
+    <table class="study" style="margin-top:8px"><thead><tr><th>Yaw</th><th>CdA inst.</th><th>CdA up.</th><th>Δ</th><th title="Front + rear wheel groups. Between builds the per-part split moves by several newtons (frame and drivetrain trade force across their shared wake); only the total and the wheel groups, which sit in clean air at the front, are read as results.">Δ wheels N</th><th title="Change in sideways force on the bike (magnitude): what a gust makes you steer against. Deep rims add sail area.">Δ side N</th></tr></thead><tbody>
+      ${rows.map((r) => `<tr><td>${r.yaw}°<small class="muted"> ${Math.round((YAW_WEIGHTS[r.yaw] ?? 0) * 100)} %</small></td><td>${r.base.CdA_m2.toFixed(4)}</td><td>${r.up.CdA_m2.toFixed(4)}</td><td class="${r.dCdA < 0 ? 'good' : 'bad'}" title="${sgn(r.dCdA * 1e4, 0)}e-4 m²">${sgn(r.dCdA / r.base.CdA_m2 * 100, 1)} %</td><td class="${wheelD(r) < 0 ? 'good' : 'bad'}">${sgn(wheelD(r), 2)}</td><td class="${Math.abs(r.up.side_force_N) > Math.abs(r.base.side_force_N) + 0.5 ? 'bad' : ''}">${sgn(Math.abs(r.up.side_force_N) - Math.abs(r.base.side_force_N), 1)}</td></tr>`).join('')}
+      <tr class="tot"><td title="${esc(YAW_BASIS)}">Weighted</td><td></td><td></td><td class="${wd.dCdA < 0 ? 'good' : 'bad'}">${sgn(wd.dCdA * 1e4, 0)}<small>e-4 m²</small></td><td>${wd.coverage < 0.999 ? `<small class="muted">${Math.round(wd.coverage * 100)} % of time</small>` : ''}</td><td></td></tr>
+    </tbody></table>
+    <table class="study" style="margin-top:8px"><thead><tr><th>Speed</th><th>Installed W</th><th>Upgrade W</th><th>Air</th><th>Rolling</th></tr></thead><tbody>
+      ${g.at.map((r) => `<tr><td>${r.kmh} km/h</td><td>${r.base_W.toFixed(0)}</td><td>${r.up_W.toFixed(0)}</td><td class="${r.aero_W > 0 ? 'good' : 'bad'}">${W(-r.aero_W)}</td><td class="${r.rolling_W > 0 ? 'good' : 'bad'}">${W(-r.rolling_W)}</td></tr>`).join('')}
+    </tbody></table>
+    <div class="kpis" style="margin-top:8px">
+      ${kpi('Aero only', `${sgn(gAero.kmhUp - gAero.kmhBase, 2)} km/h`, 'wheels + tyre shape', '', 'Speed change from the tunnel ΔCdA alone (centre of the resolution band), rolling resistance unchanged.')}
+      ${kpi('Tyres only', `${sgn(gRoll.kmhUp - gRoll.kmhBase, 2)} km/h`, `Crr ${g.crrBase.toFixed(4)} → ${g.crrUp.toFixed(4)}`, '', 'Speed change from rolling resistance alone: Rubino Pro (butyl tube, drum) against GP5000 AS TR 28 (tubeless drum figure plus the butyl-tube penalty, since the Superteam rims are tube-only).')}
+      ${kpi('Climb cost', `${perG.toFixed(1)} s`, 'per 100 g · 5 km at 6 %', '', g.massKnown ? `Mass change of the proposal ${Math.round(g.deltaMass_g)} g.` : 'The Rubino Pro and Fulcrum are not weighed, so the mass change is unknown and the flat-road numbers hold mass equal. The Superteam listing claims 1,560–1,760 g against ~1,650 g for the Racing; the 28 mm tyres add ~230 g over typical 23 mm tyres.')}
+      ${kpi('Tunnel noise', se ? `±${(2 * se / (0.5 * 1.204 * (40 / 3.6) ** 2) * 1e4).toFixed(0)}e-4` : '±0.5 %', 'm² CdA, 2σ', '', 'Two-sigma from batch means of the averaging window; two independent runs of the installed build agreed within 0.041 N (0.5 %).')}
+    </div>
+    <p class="foot" title="${esc(tip)}">Tunnel Δ × ${RESOLUTION.mid} for resolution (band ${RESOLUTION.lo}–${RESOLUTION.hi}) · ${g.position.toLowerCase()} CdA ${g.cdaBase.toFixed(3)} m² · ${P.rider_kg + P.kit_kg} kg rider · static wheels, no spokes · <abbr>basis</abbr></p>
+  </div>`;
 }
 
 // ---- Structure -----------------------------------------------------------------------------------
@@ -194,6 +240,13 @@ export function handle(e, b, api) {
   if (d.auns) { if (d.auns === 'cores') L.uCores = !L.uCores; else L.uSheet = !L.uSheet; applyUnsteady(); api.redraw(); api.render(); return true; }
   if (d.afield) { L.field = d.afield; L.aero?.setField(L.field); api.redraw(); api.render(); return true; }
   if (d.ayaw) { if (d.ayaw !== L.aeroCase) { L.aeroCase = d.ayaw; api.reloadAero(); } return true; }
+  if (d.acfg) {
+    const yaw = L.aero?.cfd.summary.assumptions.yaw_deg ?? 0, inCfg = L.cases.filter((c) => (c.cad || BASE_CAD) === d.acfg);
+    const to = inCfg.find((c) => c.yaw_deg === yaw) || inCfg.sort((x, y) => Math.abs(x.yaw_deg - yaw) - Math.abs(y.yaw_deg - yaw))[0];
+    if (to && to.case !== L.aeroCase) { L.aeroCase = to.case; api.reloadAero(); }
+    return true;
+  }
+  if (d.study) { L.studyOpen = !L.studyOpen; api.render(); return true; }
   if (d.acut) { L.cut = d.acut; if (L.cut === 'off') L.scan = false; applyCut(); api.redraw(); api.render(); return true; }
   if (b?.hasAttribute('data-ascan')) { L.scan = !L.scan; applyCut(); api.redraw(); api.render(); return true; }
   if (d.smode) { L.structMode = d.smode; api.sync(); return true; }
