@@ -173,7 +173,7 @@ export function buildBarAccessories(B) {
     B.add('light', merge(ad), M.plastic, { steer, name: 'Light adapter' });
     buildEvo1300(B, V(H.x + 8, abY - 4 - 4.2, 0));
   }
-  if (B.cfg.computer) buildEdge540(B, V(H.x - 4, topY + 4.2, 0));
+  if (B.cfg.computer) buildEdge(B, V(H.x - 4, topY + 4.2, 0), B.part('computer')?.visual ?? {});
 }
 
 /** Annular Garmin quarter-turn female cradle, floor at `at`, opening toward `dirY` (+1 up, -1 down). */
@@ -249,40 +249,77 @@ B.add('light', bez, M.plasticGloss, { steer, name: 'Lens bezel' });
   B.add('light', flap, M.rubber, { steer, name: 'USB-C cover' });
 }
 
-/** Garmin Edge 540: 85.1 x 51.0 x 20.3 mm, 2.6 in (246 x 322) display, seven buttons. `base` = centre of the back. */
-function buildEdge540(B, base) {
-  const { M } = B, steer = true, L = 85.1, W = 51, D = 20.3;
-  const c = V(base.x, base.y + D / 2, 0);
-  const body = rplate(L, W, 9, D, 3); body.rotateX(Math.PI / 2); body.translate(c.x, c.y, 0);
-  B.add('computer', body, M.plasticGloss, { steer, name: 'Computer' });
-  B.add('computer', merge(garminTab(V(base.x + 4, base.y, 0), -1)), M.plastic, { steer, name: 'Computer mount tab' });
-  // display: 40 x 53 mm active area behind a flush glass, top of the screen facing forward
-  const glass = plate(roundRect(L - 8, W - 6, 6), 0.8); glass.rotateX(Math.PI / 2); glass.translate(c.x + 1, c.y + D / 2 + 0.1, 0);
+// Garmin Edge units, from the catalog visual (mm): L along the bike, W across, D thick, active screen [w, h].
+// Portrait screens: the top of the display faces forward. `base` = the cradle under the unit's back.
+const EDGE = {
+  edge540: { L: 85.1, W: 51, D: 20.3, screen: [40.1, 52.5], r: 9, glassInset: [8, 6], screenAt: 8, buttons: 'edge540', tabAt: 4 },
+  edge1050: { L: 118.5, W: 60.2, D: 16.3, screen: [45.7, 76.2], r: 8, glassInset: [5, 4], screenAt: 7, buttons: 'edge1050', tabAt: 0, ahead: 12 },
+};
+function buildEdge(B, base, vis) {
+  const { M } = B, steer = true, e = { ...(EDGE[vis.model] || EDGE.edge540) };
+  if (Number.isFinite(vis.w)) { e.W = vis.w; e.L = vis.h; e.D = vis.t; }
+  if (Array.isArray(vis.screen)) e.screen = vis.screen;
+  const { L, W, D } = e, [sw, sh] = e.screen, big = vis.model === 'edge1050';
+  const c = V(base.x + (e.ahead || 0), base.y + D / 2, 0);
+  const body = rplate(L, W, e.r, D, 3); body.rotateX(Math.PI / 2); body.translate(c.x, c.y, 0);
+  B.add('computer', body, M.plasticGloss, { steer, name: big ? 'Edge 1050 body' : 'Computer' });
+  if (big) { // the silicone case: a bumper band round the edge
+    const band = rplate(L + 1.6, W + 1.6, e.r + 0.8, D * 0.5, 0.8); band.rotateX(Math.PI / 2); band.translate(c.x, c.y - D * 0.1, 0);
+    B.add('computer', band, M.rubber, { steer, name: 'Silicone case' });
+  }
+  B.add('computer', merge(garminTab(V(base.x + e.tabAt, base.y, 0), -1)), M.plastic, { steer, name: 'Computer mount tab' });
+  const glass = plate(roundRect(L - e.glassInset[0], W - e.glassInset[1], Math.max(e.r - 3, 2)), 0.8); glass.rotateX(Math.PI / 2); glass.translate(c.x, c.y + D / 2 + 0.1, 0);
   B.add('computer', glass, M.plasticGloss, { steer, name: 'Screen glass' });
-  const scr = new T.PlaneGeometry(53, 40); scr.rotateX(-Math.PI / 2); scr.rotateY(-Math.PI / 2); scr.translate(c.x + 9, c.y + D / 2 + 0.6, 0);
-  B.add('computer', scr, screenMaterial(M), { steer, name: 'Screen', shadow: false });
-  // buttons: two on the left flank, three on the right, lap and start/stop on the rider's edge
+  // plane x -> across the bike, plane y -> forward: the drawing's top is the far edge of the screen
+  const scr = new T.PlaneGeometry(sw, sh); scr.rotateX(-Math.PI / 2); scr.rotateY(-Math.PI / 2); scr.translate(c.x + e.screenAt, c.y + D / 2 + 0.6, 0);
+  B.add('computer', scr, screenMaterial(M, big ? 'map' : 'data'), { steer, name: 'Screen', shadow: false });
   const btn = [];
-  const side = (x, s) => { const b = plate(roundRect(9, 3.5, 1.6), 1.6); b.translate(c.x + x, c.y, s * (W / 2 + 0.3)); btn.push(b); };
-  side(26, -1); side(8, -1); side(24, 1); side(8, 1); side(-8, 1);
-  for (const z of [-12, 12]) { const b = plate(roundRect(10, 3.5, 1.6), 1.6); b.rotateY(Math.PI / 2); b.translate(c.x - L / 2 - 0.3, c.y, z); btn.push(b); }
+  const side = (x, s, len = 9) => { const b = plate(roundRect(len, 3.5, 1.6), 1.6); b.translate(c.x + x, c.y, s * (W / 2 + 0.3 + (big ? 0.8 : 0))); btn.push(b); };
+  const edge = (z, len = 10) => { const b = plate(roundRect(len, 3.5, 1.6), 1.6); b.rotateY(Math.PI / 2); b.translate(c.x - L / 2 - 0.3 - (big ? 0.8 : 0), c.y, z); btn.push(b); };
+  if (big) { side(L / 2 - 16, -1, 10); edge(-14, 12); edge(14, 12); } // power on the left flank; lap and start/stop on the rider's edge
+  else { side(26, -1); side(8, -1); side(24, 1); side(8, 1); side(-8, 1); edge(-12); edge(12); }
   B.add('computer', merge(btn), M.rubber, { steer, name: 'Computer buttons' });
+  if (big) { // wordmark on the chin below the screen
+    const chin = new T.PlaneGeometry(22, 4.2); chin.rotateX(-Math.PI / 2); chin.rotateY(-Math.PI / 2); chin.translate(c.x - L / 2 + 8.5, c.y + D / 2 + 0.95, 0);
+    B.add('computer', chin, wordmark(), { steer, name: 'Garmin wordmark', shadow: false });
+  }
 }
 
-let screenTex = null;
-function screenMaterial(M) {
-  if (!screenTex) {
-    screenTex = canvasTexture(318, 240, (g, w, h) => {
+let markTex = null;
+function wordmark() {
+  if (!markTex) markTex = canvasTexture(256, 48, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = '#d9dde0'; g.font = 'bold 34px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('GARMIN', w / 2, h / 2 + 2); }, { flipY: true });
+  return new T.MeshStandardMaterial({ map: markTex, transparent: true, alphaTest: 0.3, roughness: 0.5, polygonOffset: true, polygonOffsetFactor: -2, name: 'garmin_mark' });
+}
+
+const screenTex = {};
+/** Portrait screen art: 'data' (four fields) or 'map' (Edge 1050 style: map with the route, then three fields). */
+function screenMaterial(M, kind = 'data') {
+  if (!screenTex[kind]) {
+    const W = kind === 'map' ? 300 : 246, H = kind === 'map' ? 500 : 322;
+    screenTex[kind] = canvasTexture(W, H, (g, w, h) => {
       g.fillStyle = '#0d1114'; g.fillRect(0, 0, w, h);
-      g.fillStyle = '#e8edf0'; g.strokeStyle = '#3a454c'; g.lineWidth = 2;
-      g.font = 'bold 15px Arial'; g.fillText('14:32', 8, 17); g.fillRect(w - 34, 6, 24, 11);
-      g.beginPath(); g.moveTo(0, 24); g.lineTo(w, 24); g.moveTo(0, 118); g.lineTo(w, 118); g.moveTo(w / 2, 118); g.lineTo(w / 2, h); g.stroke();
-      g.font = '13px Arial'; g.fillStyle = '#8fa0aa'; g.fillText('SPEED  km/h', 10, 42); g.fillText('POWER  W', 10, 136); g.fillText('TIME', w / 2 + 10, 136);
-      g.fillStyle = '#ffffff'; g.font = 'bold 64px Arial'; g.fillText('32.4', 70, 106);
-      g.font = 'bold 42px Arial'; g.fillText('212', 18, 190); g.font = 'bold 34px Arial'; g.fillText('1:24', w / 2 + 18, 188);
-      g.fillStyle = '#18a9a8'; g.fillRect(10, 210, 140, 12); g.fillStyle = '#c41230'; g.fillRect(w / 2 + 10, 210, 60, 12);
+      g.fillStyle = '#e8edf0'; g.font = 'bold ' + Math.round(w * 0.06) + 'px Arial'; g.textBaseline = 'alphabetic';
+      g.fillText('14:32', 8, w * 0.07); g.fillRect(w - 34, 6, 24, 11); g.fillStyle = '#18a9a8'; g.fillRect(w - 33, 7, 17, 9);
+      let y = w * 0.1;
+      if (kind === 'map') { // a map tile: blocks, two roads, the route, the rider arrow
+        const mh = h * 0.44;
+        g.fillStyle = '#e9e4d8'; g.fillRect(0, y, w, mh);
+        g.fillStyle = '#cfe3c2'; g.fillRect(w * 0.55, y + mh * 0.08, w * 0.4, mh * 0.35); g.fillStyle = '#bcd6ee'; g.fillRect(0, y + mh * 0.7, w * 0.32, mh * 0.3);
+        g.strokeStyle = '#ffffff'; g.lineWidth = 9; g.beginPath(); g.moveTo(0, y + mh * 0.55); g.lineTo(w, y + mh * 0.4); g.moveTo(w * 0.38, y); g.lineTo(w * 0.46, y + mh); g.stroke();
+        g.strokeStyle = '#18a9a8'; g.lineWidth = 6; g.beginPath(); g.moveTo(w * 0.46, y + mh); g.lineTo(w * 0.43, y + mh * 0.5); g.quadraticCurveTo(w * 0.6, y + mh * 0.3, w * 0.75, y + mh * 0.1); g.lineTo(w * 0.9, y); g.stroke();
+        g.fillStyle = '#c41230'; g.beginPath(); g.moveTo(w * 0.45, y + mh * 0.62); g.lineTo(w * 0.40, y + mh * 0.78); g.lineTo(w * 0.45, y + mh * 0.74); g.lineTo(w * 0.50, y + mh * 0.78); g.closePath(); g.fill();
+        y += mh;
+      }
+      const fields = kind === 'map' ? [['SPEED km/h', '36.2'], ['POWER W', '212'], ['TIME', '1:24:10']] : [['SPEED km/h', '32.4'], ['POWER W', '212'], ['CADENCE', '90'], ['TIME', '1:24']];
+      const fh = (h - y) / fields.length;
+      fields.forEach(([lab, val], k) => {
+        const y0 = y + k * fh;
+        g.strokeStyle = '#3a454c'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, y0); g.lineTo(w, y0); g.stroke();
+        g.fillStyle = '#8fa0aa'; g.font = Math.round(w * 0.05) + 'px Arial'; g.fillText(lab, 10, y0 + w * 0.07);
+        g.fillStyle = '#ffffff'; g.font = 'bold ' + Math.round(Math.min(fh * 0.58, w * 0.2)) + 'px Arial'; g.textAlign = 'center'; g.fillText(val, w / 2, y0 + fh * 0.86); g.textAlign = 'left';
+      });
     }, { flipY: true });
   }
-  const m = M.screen.clone(); m.map = screenTex; m.emissiveMap = screenTex; m.emissive.set(0xffffff); m.emissiveIntensity = 0.55; m.color.set(0xffffff); m.name = 'edge_screen';
+  const m = M.screen.clone(), t = screenTex[kind]; m.map = t; m.emissiveMap = t; m.emissive.set(0xffffff); m.emissiveIntensity = 0.55; m.color.set(0xffffff); m.name = 'edge_screen';
   return m;
 }

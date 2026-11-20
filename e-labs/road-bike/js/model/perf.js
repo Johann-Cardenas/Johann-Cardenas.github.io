@@ -22,6 +22,11 @@ export function setup(cfg, catalog, P) {
   let crr = tire?.perf?.crr, crrBasis = tire?.perf?.crr_basis ?? null;
   if (!Number.isFinite(crr)) { crr = GENERIC_CRR; crrBasis = 'No drum-test figure for this tyre; a generic clincher value is used, so no rolling-resistance gain is claimed.'; notes.push(crrBasis); }
   if (Number.isFinite(tube?.perf?.crr_factor)) crr *= tube.perf.crr_factor;
+  // A tubeless drum figure on a bike that runs inner tubes: add the tube's loss (butyl here).
+  if (tire?.perf?.crr_setup === 'tubeless' && Number.isFinite(tire?.perf?.crr) && Number.isFinite(tube?.perf?.crr_add_tubeless)) {
+    crr += tube.perf.crr_add_tubeless;
+    crrBasis = `${crrBasis} Plus ${tube.perf.crr_add_tubeless} for the butyl tube.`;
+  }
   let pos = P.position;
   if (pos === 'aero' && !cfg.aerobar) { pos = 'drops'; notes.push('No aerobar fitted: the drops position is used.'); }
   const cda = POSITIONS[pos].cda;

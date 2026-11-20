@@ -67,5 +67,5 @@ test('parameters round-trip through the URL; defaults are not written; bad value
 test('purchase cost counts every new part and is null if any price is unknown', () => {
   const s = summarize({ ...c.default_config, tires: 'tires_gp5000_25', chain: 'chain_cn6701' }, c);
   assert.equal(s.cost_usd, 140 + 35);
-  assert.equal(summarize({ ...c.default_config, wheels: 'wheels_superteam_alloy_track' }, c).cost_usd, null);
+  assert.equal(summarize({ ...c.default_config, wheels: 'wheels_hunt_50_carbon' }, c).cost_usd, null);
 });

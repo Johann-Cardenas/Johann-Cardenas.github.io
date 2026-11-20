@@ -123,6 +123,31 @@ body[data-stage='tunnel'] .rb-title b { color: #eef1f4; } body[data-stage='tunne
 .rb-card h4 { font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink3); margin: 12px 0 2px; }
 .rb-card p.note { font-size: 12px; color: var(--ink2); margin-top: 8px; }
 .rb-card footer { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.rb-card { width: 318px; }
+/* spec sheet: label | this part | installed part, monospace numbers, better/worse tinted */
+.spec { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11.5px; table-layout: fixed; }
+.spec th, .spec td { padding: 3px 4px; border-bottom: 1px solid var(--line2); vertical-align: top; overflow-wrap: anywhere; }
+.RoadBike .spec th, .RoadBike .study th { position: static; white-space: normal; background: none; }
+.RoadBike .spec tbody th { text-align: left; font-weight: 500; color: var(--ink2); width: 46%; text-transform: none; letter-spacing: 0; font-size: 11.5px; }
+.spec th small, .spec td small { color: var(--ink3); font-size: 10px; margin-left: 2px; }
+.spec td { font-family: var(--mono); text-align: right; color: var(--ink); }
+.spec thead th { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink3); text-align: right; font-weight: 600; border-bottom: 1px solid var(--line); }
+.spec tr > td:nth-child(3) { color: var(--ink3); }
+.spec td.better { color: var(--ok); font-weight: 600; } .spec td.worse { color: var(--err); }
+.spec tbody tr:hover { background: var(--bg3); }
+/* upgrade study (Aero panel) */
+.study { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 4px; }
+.study th, .study td { padding: 3px 5px; border-bottom: 1px solid var(--line2); text-align: right; font-family: var(--mono); }
+.study th:first-child, .study td:first-child { text-align: left; font-family: var(--sans); color: var(--ink2); }
+.study thead th { font-family: var(--sans); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); font-weight: 600; border-bottom: 1px solid var(--line); }
+.study td.good { color: var(--ok); font-weight: 600; } .study td.bad { color: var(--err); }
+.study tr.tot td { border-top: 1px solid var(--line); font-weight: 650; }
+.gain { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+.gain div { background: var(--bg3); border: 1px solid var(--line2); border-radius: 8px; padding: 7px 8px; }
+.gain span { display: block; font-size: 10.5px; color: var(--ink3); }
+.gain b { display: block; font: 650 17px/1.2 var(--mono); color: var(--ok); }
+.gain b.bad { color: var(--err); }
+.gain small { display: block; font-size: 10.5px; color: var(--ink2); }
 .rb-legend { left: 18px; top: 74px; background: var(--bg2); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; box-shadow: var(--shadow); font-size: 11.5px; }
 .rb-legend .bar { width: 14px; height: 150px; border-radius: 3px; background: linear-gradient(to top, #30479a, #298cb8, #33b89e, #9ed161, #f7c740, #ed732b, #c72424); }
 .rb-legend .lrow { display: flex; gap: 8px; height: 150px; }

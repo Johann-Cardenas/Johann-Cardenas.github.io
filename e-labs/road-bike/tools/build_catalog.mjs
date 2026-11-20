@@ -27,6 +27,41 @@ const SRC = {
   synapse2012: 'https://www.bikeroar.com/products/cannondale/synapse-carbon-women-s-5-105-2012/specs',
   brr_rubino: 'https://www.bicyclerollingresistance.com/road-bike-reviews/compare/vittoria-rubino-pro-g2-vs-vittoria-rubino-pro-g-2016-vs-vittoria-rubino-pro-iii-2014',
   racing5: 'https://www.bike-components.de/en/Fulcrum/Racing-5-C17-Wheelset-p66668/',
+  brr_astr: 'https://www.bicyclerollingresistance.com/road-bike-reviews/compare/continental-grand-prix-5000-as-tr-vs-continental-grand-prix-5000-as-tr-28',
+  amz_astr_black: 'https://www.amazon.com/gp/product/B0BYPFVQQT',
+  amz_astr_cream: 'https://www.amazon.com/gp/product/B0BYNP67DX',
+  amz_superteam: 'https://www.amazon.com/gp/product/B01KQ48OF2',
+  superteam_review: 'https://completetri.com/superteam-road-bike-wheelset-review/',
+  amz_edge1050: 'https://www.amazon.com/gp/product/B0HNTKKBBH',
+  edge1050: 'https://the5krunner.com/specs/garmin/edge-1050/',
+};
+
+// GP5000 AS TR: Bicycle Rolling Resistance tested the black 25 and 28 tubeless (20 ml sealant, 29 km/h,
+// 42.5 kg per tyre, widths on an 18 mm rim). Continental's claims and the cream weights from the UK
+// importer; the cream skin was not drum-tested and shares the casing, so its Crr is the black figure.
+const ASTR = { tpi: '220 (BikeRadar: 110)', compound: 'BlackChili', breaker: 'Vectran, bead to bead', tubeless: 'Ready; tubes fine',
+  spec_source: 'Bicycle Rolling Resistance (tested, tubeless) · Continental claims via retailers' };
+const astr = (w, cream) => {
+  const t25 = w === 25;
+  return {
+    mass_g: cream ? (t25 ? 610 : 680) : (t25 ? 564 : 690),
+    mass_source: cream ? `Continental claim ${t25 ? 305 : 340} g each (UK importer), pair; not weighed by BRR` : `Bicycle Rolling Resistance measured ${t25 ? 282 : 345} g each (claim ${t25 ? 300 : 335} g), pair`,
+    price_usd: 170, price_source: 'Approximate Amazon price for a pair, 2026-11; verify', url: cream ? SRC.amz_astr_cream : SRC.amz_astr_black,
+    provides: { tire_width_mm: w },
+    requires: t25 ? [req('tire_max_mm', 'gte', 26, { msg: 'Measures 26 mm on an 18 mm rim. Measure clearance at the fork crown, calipers and chainstays (M15).' })]
+      : [req('tire_max_mm', 'gte', 29, { msg: 'Measures 29 mm on an 18 mm rim: at or beyond what rim-brake frames of this generation clear. Measure before buying (M15).' }),
+        req('caliper_tire_max_mm', 'gte', 28, { level: 'warn', msg: 'The selected calipers are not rated for a 28 mm tyre.' })],
+    visual: { label: `Continental  GRAND PRIX 5000  AS TR  ${w}-622`, sidewall: cream ? 'cream' : 'black', tread: 'lasergrip', brand: 'conti' },
+    perf: { crr: t25 ? 0.00378 : 0.00366, crr_setup: 'tubeless', crr_source: SRC.brr_astr,
+      crr_basis: `Drum test, ${t25 ? '80 psi' : '72 psi'}, tubeless with 20 ml sealant, ${t25 ? 12.6 : 12.2} W per tyre at 29 km/h and 42.5 kg${cream ? '; black/cream skin assumed equal to the tested black tyre' : ''}.` },
+    specs: { ...ASTR, width_mm: w, measured_mm: t25 ? 26 : 29, mass_each_g: cream ? (t25 ? 305 : 340) : (t25 ? 282 : 345), rr_w: t25 ? 12.6 : 12.2,
+      tread_mm: t25 ? 2.5 : 2.7, puncture: t25 ? 43 : 46, wet_grip: t25 ? 77 : 82, pressure: t25 ? '73–109 psi' : '73–94 psi',
+      sidewall: cream ? 'cream' : 'black' },
+    upgrade: { tier: t25 ? 1 : 3, why: t25
+      ? 'All-season GP5000: a Vectran belt bead to bead, the best wet grip in the range and a fifth less rolling resistance than the Rubino it replaces.'
+      : 'The comfort pick: lower pressure, more grip and slightly lower rolling resistance than the 25, if and only if the frame and calipers clear 29 mm.' },
+    notes: (cream ? 'Black/Cream skin. ' : '') + 'Drum figures are tubeless; with a butyl tube the analysis adds 0.0006 to Crr.',
+  };
 };
 
 export const slots = [
@@ -111,12 +146,17 @@ const defs = [
     upgrade: { tier: 2, why: 'Wide rim, extra spokes and sealed bearings for year-round riding. The 19 mm internal width makes a 25 mm tyre measure close to 27 mm, so check frame clearance first.' },
     notes: CASS_NOTE,
   }],
-  ['wheels', 'wheels_superteam_alloy_track', 'Superteam carbon · alloy brake track', 'candidate', 'M', {
-    provides: { freehub: 'HG-8/9/10', rim_internal_mm: null, brake_track: 'alloy' }, requires: RIM,
-    visual: { depth: 50, width: 23, spokes: [20, 24], cross: [0, 2], rim: 'carbon', track: 'alloy', hub: 'black', decal: 'SUPERTEAM', decalColor: '#ffffff', bladed: true },
-    perf: { cda_delta_m2: null },
-    upgrade: { tier: 4, why: 'Deep section at a low price while keeping the alloy brake track, so the existing pads and wet-weather braking are unchanged.' },
-    notes: 'Candidate concept; exact model, dimensions and interfaces require verification.',
+  ['wheels', 'wheels_superteam_50c', 'Superteam 50 mm carbon clincher · 700c, rim brake', 'candidate', 'L', {
+    mass_g: 1760, mass_source: 'Listing for this ASIN, pair; other Superteam 50 mm listings claim 1,560 ± 30 g. Weigh on delivery (M16).',
+    price_usd: 360, price_source: 'Approximate Amazon price, 2026-11; verify', url: SRC.amz_superteam,
+    provides: { freehub: 'HG-11', rim_internal_mm: null, brake_track: 'carbon' }, requires: RIM,
+    visual: { depth: 50, width: 23, spokes: [20, 24], cross: [0, 2], rim: 'carbon', weave: '3k', finish: 'matte', track: 'carbon', hub: 'black', decal: 'SUPERTEAM', decalColor: '#f4f4f2', decalStyle: 'superteam', smallPrint: ['CARBON CLINCHER', '700C  50MM'], bladed: true, straightPull: true },
+    perf: { cda_delta_m2: null, cda_basis: 'Wind-tunnel study in the Aero tab (cases with the _st28 suffix)' },
+    specs: { depth_mm: '50 / 50', width_ext_mm: 23, width_int_mm: null, material: 'Carbon, 3K matte', brake_track: 'carbon (12-ply)',
+      spokes: '20 / 24', lacing: 'radial / 2-cross', spoke_type: 'bladed, straight-pull', hubs: 'R13, sealed', freehub: 'HG 8–11 s',
+      tubeless: 'No, tubes only', spec_source: 'Amazon listing and retailer copies of it; CompleteTri review' },
+    upgrade: { tier: 4, why: 'A 50 mm aero rim for a third of the price of a branded set. The tunnel study in the Aero tab measures what it is worth on this bike.' },
+    notes: 'Listings describe a 12-layer carbon brake track, so selecting it also fits carbon-specific pads; if the delivered set has an alloy track the installed pads stay. Reviews report heavier, more flexible wheels than branded carbon, bearing noise in rain and tubes pinched at the valve hole. ' + CASS_NOTE,
   }],
   ['wheels', 'wheels_hunt_50_carbon', 'Hunt 50 Carbon Wide Aero · carbon brake track', 'candidate', 'S', {
     mass_g: 1537, mass_source: 'Cycling Weekly listing, pair (2018 test)', price_usd: null,
@@ -141,12 +181,10 @@ const defs = [
     perf: { crr: 0.00363, crr_basis: 'Measured at 80 psi on a drum, 25 mm, butyl tube', crr_source: SRC.brr_gp5000 },
     upgrade: { tier: 1, why: 'The largest gain per dollar on this bike. Rolling resistance drops by a third against a training tyre, grip improves, and it replaces a rear tyre with a damaged sidewall.' },
   }],
-  ['tires', 'tires_gp5000_as_tr_25', 'Continental GP5000 AS TR · 700 × 25', 'candidate', 'S', {
-    price_usd: 170, provides: { tire_width_mm: 25 },
-    requires: [req('tire_max_mm', 'gte', 25, { msg: 'Measure safe tyre clearance at crown, calipers and chainstays (M15).' })],
-    visual: { label: 'Continental  GP5000 AS TR', sidewall: 'black' }, perf: { crr: null },
-    upgrade: { tier: 1, why: 'All-season version with more puncture protection and wet grip. The better pick if most riding is commuting or shoulder-season.' },
-  }],
+  ['tires', 'tires_gp5000_as_tr_25', 'Continental GP5000 AS TR · 700 × 25 · black', 'candidate', 'L', astr(25, false)],
+  ['tires', 'tires_gp5000_as_tr_25_cream', 'Continental GP5000 AS TR · 700 × 25 · black/cream', 'candidate', 'L', astr(25, true)],
+  ['tires', 'tires_gp5000_as_tr_28', 'Continental GP5000 AS TR · 700 × 28 · black', 'candidate', 'L', astr(28, false)],
+  ['tires', 'tires_gp5000_as_tr_28_cream', 'Continental GP5000 AS TR · 700 × 28 · black/cream', 'candidate', 'L', astr(28, true)],
   ['tires', 'tires_power_cup_25', 'Michelin Power Cup · 700 × 25', 'candidate', 'S', {
     mass_g: 430, mass_source: 'Manufacturer claim 215 g each; verify', price_usd: 130, provides: { tire_width_mm: 25 },
     requires: [req('tire_max_mm', 'gte', 25, { msg: 'Measure safe tyre clearance (M15).' })],
@@ -169,7 +207,7 @@ const defs = [
 
   // ---------------------------------------------------------------- tubes
   ['tubes', 'tubes_installed_butyl', 'Installed inner tubes · assumed butyl', 'installed', 'M', {
-    notes: 'Material and size unverified.', visual: {}, perf: { crr_factor: 1 },
+    notes: 'Material and size unverified.', visual: {}, perf: { crr_factor: 1, crr_add_tubeless: 0.0006, crr_add_basis: 'Butyl tube vs tubeless on the same tyre: about 2 W per tyre at the BRR drum conditions (29 km/h, 42.5 kg), i.e. Crr +0.0006. Approximate.' },
   }],
   ['tubes', 'tubes_tpu', 'TPU inner tubes (Tubolito / RideNow class)', 'candidate', 'S', {
     mass_g: 80, mass_source: 'Typical 36–40 g each; weigh', price_usd: 40,
@@ -418,6 +456,15 @@ const defs = [
     mass_g: 80, mass_source: 'Manufacturer claim', price_usd: 350, visual: {},
     upgrade: { tier: 4, why: 'Shares the out-front mount with the EVO 1300 and displays the radar and power meter.' },
   }],
+  ['computer', 'computer_edge1050', 'Garmin Edge 1050 · silicone case bundle', 'candidate', 'L', {
+    mass_g: 161, mass_source: 'Garmin claim, unit only (the case adds a few grams)', price_usd: 700, price_source: 'Approximate Amazon bundle price, 2026-11; verify', url: SRC.amz_edge1050,
+    visual: { model: 'edge1050', w: 60.2, h: 118.5, t: 16.3, screen: [45.7, 76.2] },
+    specs: { screen: '3.5 in colour touch', resolution: '480 × 800', size_mm: '60.2 × 118.5 × 16.3', battery_h: '20 (60 saver)', gnss: 'Multi-band GNSS',
+      sensors: 'ANT+, BLE, Wi-Fi', water: 'IPX7', mount: 'quarter-turn, out-front', extras: 'speaker, bell, hazard alerts',
+      spec_source: 'Garmin launch figures (the5krunner spec sheet)' },
+    upgrade: { tier: 4, why: 'The large-screen Edge: maps readable at speed, shows the radar and power meter, and its battery covers any day ride.' },
+    notes: 'Larger and 28 g heavier than the Edge 1040. Sits on the out-front mount above the light.',
+  }],
 ];
 
 export const default_config = {
@@ -437,9 +484,11 @@ export const bundles = [
   { id: 'climb', title: 'Climbing gears', summary: 'An 11–32 cassette with the medium-cage derailleur that supports it.',
     set: { cassette: 'cassette_hg500_11_32', rear_derailleur: 'rd_5701_gs', chain: 'chain_cn6701' } },
   { id: 'data', title: 'Power and data', summary: 'Measure the engine. Turns the estimates in this app into numbers.',
-    set: { pedals: 'pedals_assioma_duo', computer: 'computer_edge540' } },
+    set: { pedals: 'pedals_assioma_duo', computer: 'computer_edge1050' } },
   { id: 'aero', title: 'Flat-road speed', summary: 'Position first, then wheels.',
-    set: { aerobar: 'aerobar_redshift_qr', tires: 'tires_gp5000_25', tubes: 'tubes_tpu', wheels: 'wheels_superteam_alloy_track' } },
+    set: { aerobar: 'aerobar_redshift_qr', tires: 'tires_gp5000_25', tubes: 'tubes_tpu', wheels: 'wheels_superteam_50c', brake_pads: 'pads_black_prince' } },
+  { id: 'st28', title: 'Superteam 50 + GP5000 AS TR 28', summary: 'The wind-tunnel study: 50 mm carbon wheels on 28 mm all-season tyres, with the carbon pads they need and the Edge 1050.',
+    set: { wheels: 'wheels_superteam_50c', tires: 'tires_gp5000_as_tr_28', brake_pads: 'pads_black_prince', computer: 'computer_edge1050' } },
 ];
 
 export function buildCatalog() {
@@ -449,7 +498,7 @@ export function buildCatalog() {
     price_usd: f.price_usd ?? null, price_source: f.price_usd == null ? null : (f.price_source ?? 'Approximate US street price, 2026-11; verify'),
     provides: f.provides ?? {}, requires: f.requires ?? [], notes: f.notes ?? '',
     source: status === 'installed' ? SPEC : 'Upgrade research 2026-11-16', url: f.url ?? null,
-    visual: f.visual ?? {}, perf: f.perf ?? {}, upgrade: f.upgrade ?? null, mounts: { root: 'BB_CENTER' },
+    visual: f.visual ?? {}, perf: f.perf ?? {}, specs: f.specs ?? {}, upgrade: f.upgrade ?? null, mounts: { root: 'BB_CENTER' },
   }));
   return { schema: 'synapse-components/2', slots, default_config, bundles, components };
 }

@@ -5,6 +5,7 @@ import { PAINT_SCHEMES, FINISHES } from './geo/materials.js';
 import * as views from './views.js';
 import * as panels from './panels.js';
 import { cadScene, aeroScene, feScene, loadPack } from './labs.js';
+import { specRows, specTSV } from './specs.js';
 
 export const $ = (s, r = document) => r.querySelector(s);
 export const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -152,18 +153,22 @@ function showCard(slot, partName) {
   if (!p) { hideCard(); return; }
   S.selected = slot;
   const issues = checkConfig(effCfg(), S.parts).filter((i) => i.slot === slot);
-  const kv = (o) => Object.entries(o).map(([k, v]) => `<dt>${esc(k.replaceAll('_', ' '))}</dt><dd>${v == null ? '<span class="muted">not measured</span>' : esc(Array.isArray(v) ? v.join(' / ') : v)}</dd>`).join('');
+  const inst = S.parts.get(S.catalog.default_config[slot]) ?? null, sheet = specRows(p, inst);
+  const cell = (v, u) => (v == null ? '<span class="muted" title="Not published or not measured. Never counted as zero.">—</span>' : esc(typeof v === 'number' ? (Math.abs(v) < 0.1 && v !== 0 ? v.toFixed(5).replace(/0+$/, '') : v.toLocaleString('en-US')) : v));
+  const specHTML = sheet.rows.length ? `<table class="spec">${sheet.compare ? `<thead><tr><th></th><th>This</th><th title="${esc(inst.name)}">Installed</th></tr></thead>` : ''}<tbody>${sheet.rows.map((r) =>
+    `<tr><th>${esc(r.label)}${r.unit && r.unit !== 'USD' ? ` <small>${esc(r.unit)}</small>` : ''}</th><td class="${r.cmp}">${r.key === 'price' && r.a != null ? fmt.usd(r.a) : cell(r.a, r.unit)}</td>${sheet.compare ? `<td>${r.key === 'price' && r.b != null ? fmt.usd(r.b) : cell(r.b, r.unit)}</td>` : ''}</tr>`).join('')}</tbody></table>
+    ${sheet.source ? `<p class="foot">${esc(sheet.source)}</p>` : ''}` : '';
   el.innerHTML = `
     <header><b>${esc(p.name)}</b><button data-x title="Close" aria-label="Close">×</button></header>
-    <p class="sub">${esc(slotLabel(slot))} · ${p.status === 'installed' ? 'installed' : 'proposed'} ${badge(p.confidence)}</p>
+    <p class="sub">${esc(slotLabel(slot))} · ${p.status === 'installed' ? 'installed' : 'proposed'} ${badge(p.confidence)}${partName ? ` · <span class="muted">${esc(partName)}</span>` : ''}</p>
     <div class="cmass"><b>${Number.isFinite(p.mass_g) ? Math.round(p.mass_g).toLocaleString('en-US') : '—'}</b><span>g</span><i>${esc(p.mass_source || 'Not weighed. No reference mass is assumed.')}</i></div>
-    <dl>${partName ? `<dt>picked</dt><dd>${esc(partName)}</dd>` : ''}<dt>price</dt><dd>${p.price_usd == null ? '—' : fmt.usd(p.price_usd) + ' approx.'}</dd></dl>
-    ${Object.keys(p.provides || {}).length ? `<h4>Interfaces</h4><dl>${kv(p.provides)}</dl>` : ''}
+    ${specHTML}
     ${issues.map((i) => `<div class="issue ${i.level}">${esc(i.msg)}</div>`).join('')}
     ${p.notes ? `<p class="note">${esc(p.notes)}</p>` : ''}
     ${p.upgrade ? `<h4>Why consider it</h4><p class="note" style="margin-top:2px">${esc(p.upgrade.why)}</p>` : ''}
-    <footer><button data-iso aria-pressed="false">Isolate</button><button data-focus>Zoom to</button><button data-opts>Options</button>${p.url ? `<a class="small" style="align-self:center;margin-left:auto" href="${esc(p.url)}" target="_blank" rel="noopener">Source</a>` : ''}</footer>`;
+    <footer><button data-iso aria-pressed="false">Isolate</button><button data-focus>Zoom to</button><button data-opts>Options</button>${sheet.rows.length ? '<button data-tsv title="Copy the spec sheet as tab-separated rows, ready to paste into a spreadsheet">Copy</button>' : ''}${p.url ? `<a class="small" style="align-self:center;margin-left:auto" href="${esc(p.url)}" target="_blank" rel="noopener">Source</a>` : ''}</footer>`;
   el.hidden = false;
+  el.querySelector('[data-tsv]')?.addEventListener('click', () => navigator.clipboard?.writeText(specTSV(p, inst, sheet)).then(() => status('Spec sheet copied.'), () => status('Clipboard unavailable.')));
   el.querySelector('[data-x]').onclick = () => { S.viewer.isolate(null); hideCard(); };
   el.querySelector('[data-iso]').onclick = (e) => { const on = e.currentTarget.getAttribute('aria-pressed') !== 'true'; e.currentTarget.setAttribute('aria-pressed', String(on)); S.viewer.isolate(on ? slot : null); };
   el.querySelector('[data-focus]').onclick = () => S.viewer.focus(slot);

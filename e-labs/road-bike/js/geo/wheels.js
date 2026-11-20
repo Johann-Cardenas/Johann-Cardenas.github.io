@@ -6,6 +6,11 @@
 // Aluminium Alloy" print; black bladed straight-pull spokes, silver nipples, Presta valve with a
 // knurled lock ring and black cap. Tyre: Vittoria Rubino Pro 23-622, black, file-tread diamonds on
 // the shoulders, white sidewall print. Both wheels are quick release, lever on the non-drive side.
+//
+// Superteam 50 (catalog `wheels_superteam_50c`): 50 mm matte 3K carbon rim, 23 mm wide, a sanded
+// resin brake track, white SUPERTEAM lettering with the CARBON CLINCHER / 700C 50MM print, 20 radial
+// and 24 two-cross bladed straight-pull spokes. GP5000 AS TR: upright Continental print, the model
+// name boxed, and the Lasergrip micro-texture on the shoulders (chevrons, slick centre).
 import * as T from 'three';
 import { finish } from './materials.js';
 import { V, AX, lathe, rod, sweep, spline, merge, plate, polarShape, rad, lerp, smooth, canvasTexture } from './kit.js';
@@ -80,8 +85,18 @@ function tyreMaterials(M, tv) {
     c.fillStyle = '#121212'; c.fillRect(0, t0, w, t1 - t0);
     c.fillStyle = '#0b0b0b'; c.fillRect(0, 0, w, H * 0.035); c.fillRect(0, H * 0.965, w, H * 0.035);
   }, {});
-  // file tread: rows of small raised diamonds over the shoulders, a plain strip on the crown
-  const bump = canvasTexture(512, 512, (c, w, h) => {
+  // file tread: rows of small raised diamonds over the shoulders, a plain strip on the crown;
+  // GP5000 Lasergrip: fine chevron grooves over the shoulders, mirrored about a slick centre band
+  const bump = tv.tread === 'lasergrip' ? canvasTexture(512, 512, (c, w, h) => {
+    c.fillStyle = '#7a7a7a'; c.fillRect(0, 0, w, h);
+    const v0 = tireV(-82) * h, v1 = tireV(82) * h, c0 = tireV(-16) * h, c1 = tireV(16) * h;
+    c.strokeStyle = '#4c4c4c'; c.lineWidth = 2.2;
+    for (const [a, b, s] of [[v0, c0, 1], [c1, v1, -1]]) {
+      for (let x = -40; x < w + 40; x += 9) { c.beginPath(); c.moveTo(x, a); c.lineTo(x + s * (b - a) * 0.55, b); c.stroke(); }
+    }
+    c.fillStyle = '#7a7a7a'; c.fillRect(0, c0, w, c1 - c0);
+    c.fillStyle = '#6a6a6a'; c.fillRect(0, (c0 + c1) / 2 - 0.5, w, 1);
+  }, { srgb: false, aniso: 8 }) : canvasTexture(512, 512, (c, w, h) => {
     c.fillStyle = '#5a5a5a'; c.fillRect(0, 0, w, h);
     const v0 = tireV(-80) * h, v1 = tireV(80) * h, c0 = tireV(-7) * h, c1 = tireV(7) * h;
     const dx = 32, dy = 13;
@@ -96,9 +111,9 @@ function tyreMaterials(M, tv) {
     }
     c.fillStyle = '#6c6c6c'; c.fillRect(0, (c0 + c1) / 2 - 1, w, 2);
   }, { srgb: false, aniso: 8 });
-  bump.wrapS = T.RepeatWrapping; bump.wrapT = T.ClampToEdgeWrapping; bump.repeat.set(64, 1);
+  bump.wrapS = T.RepeatWrapping; bump.wrapT = T.ClampToEdgeWrapping; bump.repeat.set(tv.tread === 'lasergrip' ? 96 : 64, 1);
   M.textures.push(tex, bump);
-  const m = new T.MeshStandardMaterial({ color: 0xffffff, map: tex, roughness: 0.86, metalness: 0, bumpMap: bump, bumpScale: 1.6 });
+  const m = new T.MeshStandardMaterial({ color: 0xffffff, map: tex, roughness: tv.tread === 'lasergrip' ? 0.8 : 0.86, metalness: 0, bumpMap: bump, bumpScale: tv.tread === 'lasergrip' ? 0.9 : 1.6 });
   m.name = 'tire_tex';
   return m;
 }
@@ -112,10 +127,11 @@ function tyreMaterials(M, tv) {
 function tyreLabel(M, tv, tireW, flipH, top) {
   const parts = String(tv.label || '').split(/\s{2,}/).map((s) => s.trim()).filter(Boolean);
   if (!parts.length) return null;
-  const ink = tv.sidewall === 'tan' ? '#151515' : '#ecebe6';
+  const ink = tv.sidewall === 'tan' || tv.sidewall === 'cream' ? '#151515' : '#ecebe6';
   const sizeA = parts.find((s) => /\d{2}-622/.test(s)) || `${Math.round(tireW)}-622`;
   const words = parts.filter((s) => s !== sizeA), brand = words[0] || '', model = words.slice(1).join(' ');
   const W = LABEL_W, H = LABEL_H, K = 0.21;
+  if (tv.brand === 'conti') return contiLabel(M, ink, words, sizeA, tireW, flipH, top);
   const tex = canvasTexture(W, H, (c) => {
     c.clearRect(0, 0, W, H);
     band(c, W, H, top, 1 - top, flipH, (k, h) => {
@@ -138,6 +154,42 @@ function tyreLabel(M, tv, tireW, flipH, top) {
       k.font = `400 ${Math.round(h * 0.3)}px Arial, sans-serif`;
       k.save(); k.translate(x, 0); k.scale(K * 1.1, 1); k.fillText(sizeA, 0, h * 0.30); k.fillText(`700x${Math.round(tireW)}c`, 0, h * 0.66); k.restore();
       k.fillRect(200, h * 0.9, x + 200, 7);                        // the rule under the print
+    });
+  }, {});
+  M.textures.push(tex);
+  return new T.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.3, roughness: 0.7, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, name: 'tire_print' });
+}
+
+/**
+ * Continental print: the wordmark upright and heavy, a short rule, GRAND PRIX 5000 in condensed
+ * capitals, the variant (AS TR) reversed out of an inked box, then the size and BlackChili / Vectran.
+ */
+function contiLabel(M, ink, words, sizeA, tireW, flipH, top) {
+  const W = LABEL_W, H = LABEL_H, K = 0.21, brand = words[0] || 'Continental', model = words[1] || '', variant = words.slice(2).join(' ');
+  const tex = canvasTexture(W, H, (c) => {
+    c.clearRect(0, 0, W, H);
+    band(c, W, H, top, 1 - top, flipH, (k, h) => {
+      k.textBaseline = 'middle'; k.fillStyle = ink; k.strokeStyle = ink; k.textAlign = 'left';
+      let x = 220;
+      k.font = `900 ${Math.round(h * 0.56)}px "Arial Black", Arial, sans-serif`;
+      k.save(); k.translate(x, h * 0.5); k.scale(K * 1.05, 1); k.fillText(brand, 0, 0); const bw = k.measureText(brand).width * K * 1.05; k.restore();
+      x += bw + 60; k.fillRect(x, h * 0.2, 5, h * 0.6); x += 55;
+      k.font = `700 ${Math.round(h * 0.5)}px "Arial Narrow", Arial, sans-serif`;
+      k.save(); k.translate(x, h * 0.5); k.scale(K * 1.25, 1); k.fillText(model, 0, 0); const mw = k.measureText(model).width * K * 1.25; k.restore();
+      x += mw + 40;
+      if (variant) { // reversed-out box
+        k.font = `900 ${Math.round(h * 0.4)}px Arial, sans-serif`;
+        k.save(); k.scale(K * 1.2, 1); const vw = k.measureText(variant).width; k.restore();
+        const bwid = vw * K * 1.2 + 44;
+        k.fillRect(x, h * 0.2, bwid, h * 0.6);
+        k.save(); k.globalCompositeOperation = 'destination-out'; k.translate(x + 22, h * 0.52); k.scale(K * 1.2, 1); k.fillText(variant, 0, 0); k.restore();
+        x += bwid + 120;
+      }
+      k.font = `400 ${Math.round(h * 0.28)}px Arial, sans-serif`;
+      k.save(); k.translate(x, 0); k.scale(K * 1.1, 1); k.fillText(sizeA, 0, h * 0.3); k.fillText(`700x${Math.round(tireW)}C`, 0, h * 0.66); const sw = k.measureText('700x28C').width * K * 1.1; k.restore();
+      x += sw + 140;
+      k.font = `italic 700 ${Math.round(h * 0.3)}px Arial, sans-serif`;
+      k.save(); k.translate(x, 0); k.scale(K * 1.1, 1); k.fillText('BlackChili', 0, h * 0.3); k.font = `400 ${Math.round(h * 0.26)}px Arial, sans-serif`; k.fillText('VECTRAN BREAKER', 0, h * 0.66); k.restore();
     });
   }, {});
   M.textures.push(tex);
@@ -173,11 +225,14 @@ function rimDecal(M, vis, depth, { flipH, flipV }) {
         k.fillStyle = color; k.textBaseline = 'middle'; k.textAlign = 'left';
         // One canvas px is ~0.46 mm along the rim and ~0.08 mm across it: glyphs drawn at their
         // natural aspect come out ~6x extended, which is about what the Fulcrum lettering is.
+        const small = vis.smallPrint || ['ETRTO 622x15C', 'Aluminium Alloy'], st = vis.decalStyle === 'superteam';
         k.font = `500 ${Math.round(h * 0.22)}px Arial, sans-serif`;
-        k.save(); k.scale(0.24, 1); k.fillText('ETRTO 622x15C', 0, -h * 0.13); k.fillText('Aluminium Alloy', 0, h * 0.15); k.restore();
-        const wx = 90, sx = 0.95;
-        k.font = `italic 900 ${Math.round(h * 0.98)}px "Arial Black", Arial, sans-serif`;
-        k.save(); k.translate(wx, h * 0.04); k.scale(sx, 1); k.transform(1, 0, -0.14, 1, 0, 0);
+        k.save(); k.scale(0.24, 1); k.fillText(small[0], 0, -h * 0.13); k.fillText(small[1] || '', 0, h * 0.15); k.restore();
+        const wx = st ? 110 : 90, sx = st ? 0.62 : 0.95;
+        // Superteam: upright, wide-tracked capitals with a hairline above and below
+        k.font = st ? `700 ${Math.round(h * 0.8)}px "Arial Black", Arial, sans-serif` : `italic 900 ${Math.round(h * 0.98)}px "Arial Black", Arial, sans-serif`;
+        if (st) { k.save(); k.translate(wx, 0); k.scale(sx, 1); const ww = k.measureText(text).width; k.restore(); k.fillRect(wx, -h * 0.44, ww * sx, h * 0.03); k.fillRect(wx, h * 0.41, ww * sx, h * 0.03); }
+        k.save(); k.translate(wx, h * 0.04); k.scale(sx, 1); if (!st) k.transform(1, 0, -0.14, 1, 0, 0);
         k.fillText(text, 0, 0);
         const tw = k.measureText(text).width * sx; k.restore();
         if (accent) { // red slanted blades after the word, and a thin red underline
@@ -195,6 +250,32 @@ function rimDecal(M, vis, depth, { flipH, flipV }) {
   }, {});
   M.textures.push(tex);
   return new T.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.35, roughness: 0.45, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, name: 'rim_decal' });
+}
+
+/** Matte 3K carbon (plain weave of 3,000-filament tows) as colour + roughness + bump, tiled round the rim. */
+function carbon3k(M, matte) {
+  const tile = canvasTexture(128, 128, (c, w, h) => {
+    const n = 8, s = w / n;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const warp = (x + y) % 2 === 0, g = c.createLinearGradient(x * s, y * s, warp ? (x + 1) * s : x * s, warp ? y * s : (y + 1) * s);
+      g.addColorStop(0, '#1a1b1d'); g.addColorStop(0.5, warp ? '#2e3033' : '#26282b'); g.addColorStop(1, '#1a1b1d');
+      c.fillStyle = g; c.fillRect(x * s, y * s, s, s);
+      c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(x * s, y * s, s, 1); c.fillRect(x * s, y * s, 1, s);
+    }
+  }, { flipY: true });
+  tile.wrapS = tile.wrapT = T.RepeatWrapping; tile.repeat.set(220, 14); tile.anisotropy = 8;
+  M.textures.push(tile);
+  return new T.MeshPhysicalMaterial({ color: 0xffffff, map: tile, roughnessMap: tile, bumpMap: tile, bumpScale: 0.12, roughness: matte ? 0.62 : 0.32, metalness: 0.05,
+    clearcoat: matte ? 0.15 : 0.85, clearcoatRoughness: matte ? 0.6 : 0.15, name: 'rim_carbon_3k' });
+}
+
+/** Carbon brake track: sanded resin, lighter and rougher than the rim body, fine circumferential scuffs. */
+function carbonTrackMaterial(M) {
+  const tex = canvasTexture(4, 256, (c, w, h) => {
+    for (let y = 0; y < h; y++) { const g = 150 + Math.round(30 * Math.sin(y * 2.3) * Math.sin(y * 0.41) + (y * 53 % 13) * 3); c.fillStyle = `rgb(${g},${g},${g})`; c.fillRect(0, y, w, 1); }
+  }, { srgb: false, aniso: 4 });
+  M.textures.push(tex);
+  return new T.MeshStandardMaterial({ color: 0x2b2c2f, roughness: 0.85, roughnessMap: tex, bumpMap: tex, bumpScale: 0.08, metalness: 0.05, name: 'brake_track_carbon' });
 }
 
 /** Machined brake track: concentric lathe marks as a roughness/bump map. */
@@ -343,7 +424,7 @@ export function buildWheels(B) {
   let tv = B.part('tires')?.visual ?? {};
   const tireW = B.tireW, R = B.R, width = vis.width ?? 20.8;
   const carbon = vis.rim === 'carbon', track = vis.track ?? 'alloy';
-  let rimMat = carbon ? M.carbon : M.aluBlack.clone();
+  let rimMat = carbon ? (vis.weave === '3k' ? carbon3k(M, vis.finish === 'matte') : M.carbon) : M.aluBlack.clone();
   if (!carbon) { rimMat.roughness = 0.38; rimMat.metalness = 0.55; rimMat.color.set(0x161719); rimMat.name = 'rim_anodised'; }
   rimMat = finish(rimMat, B.P.f_rim, { name: 'rim' });
   const hubMat = finish(vis.hub === 'silver' ? M.aluSilver : M.aluBlack, B.P.f_hub, { name: 'hub' });
@@ -352,7 +433,7 @@ export function buildWheels(B) {
   spokeMat = finish(spokeMat, B.P.f_spoke, { name: 'spoke' });
   const nippleMat = finish(M.aluSilver, B.P.f_nipple, { name: 'nipple' });
   if (B.P.f_wall && B.P.f_wall !== 'auto') tv = { ...tv, sidewall: B.P.f_wall };
-  const tireMat = tyreMaterials(M, tv), trackMat = track === 'alloy' ? trackMaterial(M) : null;
+  const tireMat = tyreMaterials(M, tv), trackMat = track === 'alloy' ? trackMaterial(M) : carbon && vis.weave === '3k' ? carbonTrackMaterial(M) : null;
   const photo = PHOTO_LACING[wp?.id] || {};
   // non-drive strip runs bead -> crown (glyph tops at v = 1), drive strip crown -> bead, mirrored
   const labelMats = [tyreLabel(M, tv, tireW, false, 1), tyreLabel(M, tv, tireW, true, 0)];
