@@ -77,7 +77,8 @@ function band(c, W, H, top, bottom, flipH, draw) {
 const LABEL_A = [100, 131], LABEL_PHI = 2.0, LABEL_W = 4096, LABEL_H = 192;
 
 function tyreMaterials(M, tv) {
-  const wall = { tan: '#b48a55', cream: '#e6dcc4' }[tv.sidewall] ?? '#151515';
+  // Conti Black/Cream skin is a yellowish cream; drawn warmer than it looks so it survives ACES tone mapping
+  const wall = { tan: '#b48a55', cream: '#d3b97c' }[tv.sidewall] ?? '#151515';
   // colour only varies across the section: wall, black tread, bead
   const tex = canvasTexture(4, 512, (c, w, H) => {
     c.fillStyle = wall; c.fillRect(0, 0, w, H);
