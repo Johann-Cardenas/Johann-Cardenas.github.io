@@ -157,7 +157,7 @@ export function spokeModel(vis, { U = 40 / 3.6, yaw = 0, tireW = 23, rho = 1.204
  * yaw-weighted tunnel CdA over the angles both builds have, the spoke model at the same angles, and the
  * road result at the rider's inputs (tunnel differences scaled by RESOLUTION.mid; the spoke model is not).
  */
-export function matrixStudy(cases, catalog, P, { kmh = 40, protocol = 'standard' } = {}) {
+export function matrixStudy(cases, catalog, P, { kmh = 40, protocol = 'standard', yaws: only = null } = {}) {
   const parts = new Map(catalog.components.map((p) => [p.id, p]));
   const std = cases.filter((c) => (c.protocol ?? 'static') === protocol);
   const of = (m) => std.filter((c) => c.cad === m.cad).sort((a, b) => a.yaw_deg - b.yaw_deg);
@@ -165,12 +165,13 @@ export function matrixStudy(cases, catalog, P, { kmh = 40, protocol = 'standard'
   if (!baseCases.length) return null;
   const rows = [];
   for (const m of MATRIX) {
-    const mc = of(m), yaws = mc.map((c) => c.yaw_deg).filter((y) => baseCases.some((b) => b.yaw_deg === y));
+    const mc = of(m), yaws = mc.map((c) => c.yaw_deg).filter((y) => baseCases.some((b) => b.yaw_deg === y) && (!only || only.includes(y)));
     if (!yaws.length) { rows.push({ ...m, missing: true }); continue; }
     const w = barryWeights(yaws, kmh), at = (list, y) => list.find((c) => c.yaw_deg === y);
     const vis = parts.get(m.wheels).visual, bvis = parts.get(base.wheels).visual;
-    let cda = 0, bcda = 0, sp = 0, bsp = 0, side = 0, bside = 0;
+    let cda = 0, bcda = 0, sp = 0, bsp = 0, side = 0, bside = 0, var2 = 0;
     for (const y of yaws) {
+      if (m.key !== MATRIX_BASE) var2 += w[y] ** 2 * ((at(mc, y).uncertainty?.drag_se_N ?? 0) ** 2 + (at(baseCases, y).uncertainty?.drag_se_N ?? 0) ** 2);
       cda += w[y] * at(mc, y).CdA_m2; bcda += w[y] * at(baseCases, y).CdA_m2;
       side += w[y] * Math.abs(at(mc, y).side_force_N); bside += w[y] * Math.abs(at(baseCases, y).side_force_N);
       sp += w[y] * spokeModel(vis, { yaw: y, tireW: m.tyre }).cda_m2; bsp += w[y] * spokeModel(bvis, { yaw: y, tireW: base.tyre }).cda_m2;
@@ -180,7 +181,57 @@ export function matrixStudy(cases, catalog, P, { kmh = 40, protocol = 'standard'
     const g = roadGains(catalog, P, cfg, dCdA), gAir = roadGains(catalog, P, catalog.default_config, dCdA);
     let price = 0;
     for (const k of ['wheels', 'tires', 'brake_pads']) if (cfg[k] !== catalog.default_config[k]) price += parts.get(cfg[k])?.price_usd ?? NaN;
-    rows.push({ ...m, yaws, weights: w, cda, dTunnel, dSpokes, dCdA, side, dSide: side - bside, cases: mc, gain: g, kmhAir: gAir.kmhUp - gAir.kmhBase, price });
+    // two standard errors of the weighted tunnel difference (batch means, yaws independent), as it reaches dCdA
+    const se2 = 2 * Math.sqrt(var2) / Q_TUNNEL * RESOLUTION.mid;
+    rows.push({ ...m, yaws, weights: w, cda, dTunnel, dSpokes, dCdA, se2, side, dSide: side - bside, cases: mc, gain: g, kmhAir: gAir.kmhUp - gAir.kmhBase, price });
   }
   return { rows, base: baseCases, kmh };
 }
+
+// ---- the matrix as a grid: what has been run, and each cell against the installed build -------------
+
+/** The full sweep: −15° to +15° in 5° steps. */
+export const MATRIX_YAWS = [-15, -10, -5, 0, 5, 10, 15];
+/** Dynamic pressure at the tunnel speed (40 km/h, 20 °C), Pa: turns a force into a drag area. */
+export const Q_TUNNEL = 0.5 * 1.204 * (40 / 3.6) ** 2;
+/** Two independent runs of the installed build at 0° differ by this much drag (N). */
+export const REPEAT_N = 0.041;
+
+/**
+ * Smallest drag-area difference (m²) the tunnel can tell apart for a pair of cases: two standard errors
+ * of the pair (batch means over each averaging window), never less than the run-to-run repeatability.
+ */
+export function deltaNoise(a, b, q = Q_TUNNEL) {
+  const se = Math.hypot(a?.uncertainty?.drag_se_N ?? 0, b?.uncertainty?.drag_se_N ?? 0);
+  return Math.max(2 * se, REPEAT_N) / q;
+}
+
+/**
+ * Build × yaw grid of the standard-protocol matrix. Every cell holds its case (or null while it waits in
+ * the queue) and, where the installed build ran at the same yaw, the difference to it. Yaws are the
+ * standard sweep plus any other angle that was run. `common` lists the yaws that every build with any
+ * result shares with the installed build: the only fair basis for ranking while the matrix fills in.
+ */
+export function matrixGrid(cases, { protocol = 'standard', builds = MATRIX, base = MATRIX_BASE } = {}) {
+  const std = cases.filter((c) => (c.protocol ?? 'static') === protocol);
+  const yaws = [...new Set([...MATRIX_YAWS, ...std.filter((c) => builds.some((m) => m.cad === c.cad)).map((c) => c.yaw_deg)])].sort((a, b) => a - b);
+  const at = (m, y) => std.find((c) => c.cad === m.cad && c.yaw_deg === y) ?? null;
+  const bm = builds.find((m) => m.key === base);
+  const rows = builds.map((m) => {
+    const cells = yaws.map((y) => {
+      const c = at(m, y), b = bm ? at(bm, y) : null;
+      if (!c) return { yaw: y, case: null };
+      const dCdA = b && m.key !== base ? c.CdA_m2 - b.CdA_m2 : null;
+      return { yaw: y, case: c, CdA: c.CdA_m2, dCdA, noise: dCdA == null ? null : deltaNoise(c, b), dSide: dCdA == null ? null : Math.abs(c.side_force_N) - Math.abs(b.side_force_N) };
+    });
+    return { ...m, cells, done: cells.filter((x) => x.case).length };
+  });
+  const started = rows.filter((r) => r.done);
+  const baseRow = rows.find((r) => r.key === base);
+  const common = baseRow ? yaws.filter((y, i) => baseRow.cells[i].case && started.every((r) => r.cells[i].case)) : [];
+  const done = rows.reduce((n, r) => n + r.done, 0), total = builds.length * MATRIX_YAWS.length;
+  return { yaws, rows, common, done, total, builds: started.length, complete: done >= total };
+}
+
+/** Watts at `kmh` for a drag-area change (bike alone, no drivetrain loss). */
+export const wattsOf = (dCdA, kmh = 40, rho = 1.204) => 0.5 * rho * dCdA * (kmh / 3.6) ** 3;

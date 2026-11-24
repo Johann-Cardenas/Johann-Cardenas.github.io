@@ -7,8 +7,11 @@ const nice = (lo, hi, n = 5) => {
   return out;
 };
 
-/** series: [{pts: [[x, y], ...], color, dash, label}], marks: [{x, y, color, label}] */
-export function lineChart({ series, marks = [], xLabel = '', yLabel = '', w = 640, h = 300, xMin, xMax, yMin = 0, yMax }) {
+/**
+ * series: [{pts: [[x, y], ...], color, dash, width}], marks: [{x, y, color, label, r}],
+ * bands: [{y0, y1}] shaded horizontal bands (e.g. a noise floor), zero: draw the y = 0 line.
+ */
+export function lineChart({ series, marks = [], bands = [], zero = false, xLabel = '', yLabel = '', w = 640, h = 300, xMin, xMax, yMin = 0, yMax }) {
   const m = { l: 48, r: 14, t: 12, b: 36 }, all = series.flatMap((s) => s.pts);
   xMin ??= Math.min(...all.map((p) => p[0])); xMax ??= Math.max(...all.map((p) => p[0]));
   yMax ??= Math.max(...all.map((p) => p[1])) * 1.05;
@@ -17,12 +20,14 @@ export function lineChart({ series, marks = [], xLabel = '', yLabel = '', w = 64
   for (const v of nice(yMin, yMax)) s += `<line class="grid" x1="${m.l}" x2="${w - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l - 6}" y="${Y(v) + 3.5}" text-anchor="end">${v}</text>`;
   for (const v of nice(xMin, xMax, 8)) s += `<line class="grid" x1="${X(v)}" x2="${X(v)}" y1="${m.t}" y2="${h - m.b}"/><text x="${X(v)}" y="${h - m.b + 14}" text-anchor="middle">${v}</text>`;
   s += `<line class="ax" x1="${m.l}" x2="${w - m.r}" y1="${h - m.b}" y2="${h - m.b}"/><line class="ax" x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${h - m.b}"/>`;
+  for (const b of bands) { const y0 = Y(Math.min(yMax, Math.max(yMin, b.y1))), y1 = Y(Math.min(yMax, Math.max(yMin, b.y0))); s += `<rect class="band" x="${m.l}" y="${y0}" width="${w - m.l - m.r}" height="${Math.max(0, y1 - y0)}"/>`; }
+  if (zero && yMin < 0 && yMax > 0) s += `<line class="zero" x1="${m.l}" x2="${w - m.r}" y1="${Y(0)}" y2="${Y(0)}"/>`;
   s += `<text x="${(m.l + w - m.r) / 2}" y="${h - 4}" text-anchor="middle">${esc(xLabel)}</text><text transform="translate(12 ${(m.t + h - m.b) / 2}) rotate(-90)" text-anchor="middle">${esc(yLabel)}</text>`;
   for (const sr of series) {
     const d = sr.pts.filter((p) => p[1] <= yMax && p[1] >= yMin).map((p, i) => `${i ? 'L' : 'M'}${X(p[0]).toFixed(1)} ${Y(p[1]).toFixed(1)}`).join('');
-    s += `<path d="${d}" fill="none" stroke="${sr.color}" stroke-width="2" ${sr.dash ? `stroke-dasharray="${sr.dash}"` : ''} stroke-linejoin="round"/>`;
+    s += `<path d="${d}" fill="none" stroke="${sr.color}" stroke-width="${sr.width ?? 2}" ${sr.dash ? `stroke-dasharray="${sr.dash}"` : ''} stroke-linejoin="round"/>`;
   }
-  for (const k of marks) s += `<circle cx="${X(k.x)}" cy="${Y(k.y)}" r="4" fill="${k.color}" stroke="var(--bg2)" stroke-width="1.5"/>${k.label ? `<text x="${X(k.x) + 7}" y="${Y(k.y) - 7}" style="fill:var(--ink)">${esc(k.label)}</text>` : ''}`;
+  for (const k of marks) s += `<circle cx="${X(k.x)}" cy="${Y(k.y)}" r="${k.r ?? 4}" fill="${k.color}" stroke="var(--bg2)" stroke-width="1.5"/>${k.label ? `<text x="${X(k.x) + 7}" y="${Y(k.y) - 7}" style="fill:var(--ink)">${esc(k.label)}</text>` : ''}`;
   return s + '</svg>';
 }
 

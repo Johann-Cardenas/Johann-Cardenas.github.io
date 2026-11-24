@@ -91,11 +91,30 @@ export function go(view) {
 // ---- stage --------------------------------------------------------------------------------------
 const toggles = { dims: false, tech: false, spin: false, pedal: false };
 const P = panels.L;
+let reloading = false;
 const panelApi = {
   redraw: () => S.viewer?.redraw(), render: () => render(), sync: () => syncStage(), groups: {},
   gearRatio: () => { const L = S.viewer?.info?.layout; return L ? L.rings[L.ri] / L.cogs[L.ci] : 0; },
-  /** Swap the wind-tunnel case (yaw) and keep the camera where it is. */
-  async reloadAero() { const old = P.aero; P.aero = null; P.aeroMissing = false; render(); await syncStage(); old?.dispose(); },
+  /**
+   * Swap the wind-tunnel case (build or yaw) and keep the camera where it is. The case on the stage stays
+   * there, and in the panel, until the next one is ready; clicks made while it loads queue the latest.
+   */
+  async reloadAero() {
+    if (reloading) return;
+    reloading = true;
+    try {
+      for (;;) {
+        const want = P.aeroCase;
+        if (P.aero) { if (P.prev && P.prev !== P.aero) P.prev.dispose(); P.prev = P.aero; }
+        P.aero = null; P.aeroMissing = false; render();
+        await syncStage();
+        if (P.aeroCase === want) break;
+      }
+    } finally {
+      if (P.prev && P.prev !== P.aero) P.prev.dispose();
+      P.prev = null; reloading = false; render();
+    }
+  },
 };
 async function ensure(kind) {
   const theme = document.documentElement.dataset.theme;
@@ -106,13 +125,14 @@ async function ensure(kind) {
     } else if (kind === 'aero' && !P.aero && !P.aeroMissing) {
       if (!P.cases.length) P.cases = await fetch('data/cfd/cases.json').then((r) => (r.ok ? r.json() : { cases: [] })).then((j) => j.cases).catch(() => []);
       // open on the standard protocol (spinning wheels, moving ground) once the installed build has it
-      if (P.aeroCase === 'yaw00_dx8' && P.cases.some((c) => c.case === 'yaw00_dx8_fu23')) P.aeroCase = 'yaw00_dx8_fu23';
+      if (P.aeroCase === 'yaw00_dx8') P.aeroCase = panels.defaultAeroCase() ?? P.aeroCase;
       try { P.aero = await aeroScene(P.aeroCase, theme); } catch { P.aeroMissing = true; }
       if (P.aero) {
         for (const [k, v] of Object.entries(P.iso)) P.aero.setIso(k, v);
         for (const [k, on] of Object.entries(P.show)) P.aero.show(k, on);
         P.aero.setRolling(P.show.rolling, panelApi.gearRatio());
         P.aero.setField(P.field); P.aero.highlight(P.group ? panelApi.groups[P.group] : null); panels.applyCut(); panels.applyUnsteady();
+        panels.prefetchCompare();
         if (!Object.keys(panelApi.groups).length) panelApi.groups = await fetch('data/cfd/groups.json').then((r) => r.json()).catch(() => ({}));
       }
     } else if (kind === 'fe' && !P.fe) {
@@ -282,7 +302,7 @@ export function render() {
   else if (S.view === 'structure') panel.innerHTML = panels.structurePanel(views.panels.structure);
   else panel.innerHTML = '';
   panel.scrollTop = top;
-  const key = $('#akey'), keyOn = S.view === 'aero' && !!P.aero;
+  const key = $('#akey'), keyOn = S.view === 'aero' && !!(P.aero || P.prev);
   key.hidden = !keyOn; if (keyOn) key.innerHTML = panels.aeroKey();
   if (S.selected && S.view === 'build') showCard(S.selected);
 }
@@ -323,9 +343,10 @@ function wire() {
   });
 
   const panel = $('#panel');
-  panel.addEventListener('toggle', (e) => { const g = e.target.dataset?.g; if (!g) return; if (e.target.open) S.open.add(g); else S.open.delete(g); }, true);
+  panel.addEventListener('toggle', (e) => { if (e.target.hasAttribute?.('data-amethod')) P.mxMethod = e.target.open; const g = e.target.dataset?.g; if (!g) return; if (e.target.open) S.open.add(g); else S.open.delete(g); }, true);
   panel.addEventListener('change', (e) => {
     const t = e.target;
+    if (panels.handleChange(e, panelApi)) return;
     if (t.type === 'radio' && t.name && S.view === 'build') { setSlot(t.name, t.value); if (t.value) { S.viewer.select(t.name); } }
     else if (t.dataset.b) setParam(t.dataset.b, t.checked);
     else if (t.dataset.finc) setParam(t.dataset.finc, t.value);
