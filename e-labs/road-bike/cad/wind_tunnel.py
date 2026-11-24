@@ -73,6 +73,36 @@ def cad_doc(pack="data/cad/parts"):
     return json.loads((ROOT / (pack + ".json")).read_text(encoding="utf-8"))
 
 
+def reference_force(solid, part, nparts):
+    """Momentum exchange of the rest state (rho 1, u 0) on every part, per padded x index, lattice units.
+
+    A body wholly in fluid feels none: the reference pressure cancels around it. A wheel standing on the
+    moving ground does: its contact patch is covered by ground cells, so the reference pressure (about
+    4.9 kPa at 8 mm) pushes it into the road with no balancing force - about 22 N a wheel. The kernel adds
+    c_o (f_o + f_i) per wall link; at rest that is 2 w_i c_o, which is subtracted every step.
+    """
+    C = [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1), (1, 1, 0), (-1, -1, 0), (1, -1, 0), (-1, 1, 0),
+         (1, 0, 1), (-1, 0, -1), (1, 0, -1), (-1, 0, 1), (0, 1, 1), (0, -1, -1), (0, 1, -1), (0, -1, 1)]
+    NX = solid.shape[0]
+    fluid = solid == 0
+    inner = np.zeros(solid.shape, bool)
+    inner[1:-1, 1:-1, 1:-1] = True
+    fluid &= inner
+    ref = np.zeros((nparts, NX, 3))
+    for c in C:
+        w = 1 / 18 if sum(map(abs, c)) == 1 else 1 / 36
+        m = fluid & (np.roll(solid, c, axis=(0, 1, 2)) != 0)  # wall at x - c: population c bounces back into the cell
+        if not m.any():
+            continue
+        xs = np.nonzero(m)[0]
+        ps = np.roll(part, c, axis=(0, 1, 2))[m].astype(np.int64)
+        cnt = np.bincount(ps * NX + xs, minlength=nparts * NX).reshape(nparts, NX)
+        for k in range(3):
+            if c[k]:
+                ref[:, :, k] += -2.0 * w * c[k] * cnt  # c_o = -c
+    return ref
+
+
 def case_name(yaw, dx, tag=""):
     y = int(round(yaw))
     return f"yaw{'m' if y < 0 else ''}{abs(y):02d}_dx{dx:g}" + (f"_{tag}" if tag else "")
@@ -224,6 +254,8 @@ def main():
     lbm.init(f, solid_p, a.ulb)
     g = f.copy()
     force = np.zeros((ng + 1, nx + 2, 3), np.float64)
+    fref = reference_force(solid_p, part_p, ng + 1)
+    print("reference force removed (N, x y z): " + ", ".join(f"{n} {np.round(fref[i + 1].sum(0) * RHO * dx ** 4 / dt ** 2, 2).tolist()}" for i, n in enumerate(list(GROUPS)) if np.abs(fref[i + 1]).sum()), flush=True)
     gacc = np.zeros(3)  # mean force on the moving ground over the window (should stay near zero)
     acc = np.zeros((4, nx + 2, ny + 2, nz + 2), np.float32)
     fprof = np.zeros((ng - 1, nx, 3), np.float64)  # time-averaged force per lattice x-slab and group (drag build-up, centre of pressure)
@@ -251,6 +283,7 @@ def main():
         force[:] = 0
         K.ghosts(f, a.ulb)
         K.step(f, g, solid_p, part_p, tau0, k0, force, mw)
+        force -= fref
         f, g = g, f
         fg = force.sum(1) * fscale  # (groups, xyz) in N
         # The wall force on some parts alternates from one step to the next (a period-2 lattice mode), so
@@ -311,7 +344,7 @@ def main():
     total = sum(drag.values())
     summary = {
         "method": "Lattice Boltzmann D3Q19, regularized BGK + Smagorinsky LES (Cs 0.17), half-way bounce-back walls, momentum-exchange forces",
-        "assumptions": {"air_density": RHO, "kinematic_viscosity": NU, "speed_kmh": 40, "yaw_deg": a.yaw, "ground": "moving at road speed, 2-cell contact plinth" if spin else "none (free stream)", "wheels": "spinning at road speed" if spin else "static", "protocol": "standard" if spin else "static", "voxel_cleanup": {"moving_wall_slivers_filled": nfill, "sealed_pocket_cells_filled": npocket},
+        "assumptions": {"air_density": RHO, "kinematic_viscosity": NU, "speed_kmh": 40, "yaw_deg": a.yaw, "ground": "moving at road speed, 2-cell contact plinth" if spin else "none (free stream)", "wheels": "spinning at road speed" if spin else "static", "protocol": "standard" if spin else "static", "reference_pressure": "rest-state momentum exchange subtracted per part (contact patches)", "voxel_cleanup": {"moving_wall_slivers_filled": nfill, "sealed_pocket_cells_filled": npocket},
                         "omitted": "spokes, chain, cables, bolts, rider", "turbulence": "LES, laminar inflow"},
         "grid": {"dx_mm": a.dx, "cells": [nx, ny, nz], "cells_total": nx * ny * nz, "solid_cells": int(solid.sum()), "domain_m": [lo_d.tolist(), hi_d.tolist()],
                  "lattice_speed": a.ulb, "dt_s": dt, "steps": steps, "averaged_steps": int(window.sum() * 10), "flow_throughs": a.flows, "wall_time_s": time.time() - t0},
