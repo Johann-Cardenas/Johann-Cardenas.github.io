@@ -425,7 +425,7 @@ svg.chart text { fill: var(--ink2); } svg.chart .ax { stroke: var(--line); } svg
 .RoadBike .mxgrid thead button.on, .RoadBike .mxgrid tbody th button.on { color: var(--accent-ink); background: var(--accent-bg); }
 .RoadBike .mxgrid tbody th button { text-align: left; padding-left: 3px; font-family: var(--sans); font-size: 11.5px; color: var(--ink); display: flex; align-items: center; gap: 4px; }
 .mxgrid sup { font-size: 8.5px; color: var(--ink3); text-transform: uppercase; letter-spacing: .04em; }
-.mxgrid .dot, .study .dot, .abtag .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
+.mxgrid .dot, .study .dot, .abtag .dot, .pwbars .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
 .RoadBike .mxgrid tr.mxg th { text-align: left; font-size: 10px; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: .07em; padding: 6px 0 1px 3px; }
 .RoadBike .mxgrid .mxc { background: var(--bg3); color: var(--ink); }
 .RoadBike .mxgrid .mxc.lo { background: color-mix(in srgb, var(--accent) var(--k), var(--bg2)); color: var(--ink); }
@@ -472,3 +472,14 @@ svg.chart .band { fill: var(--ink3); opacity: .14; } svg.chart .zero { stroke: v
 .rb-akey .kcap { font-size: 11px; font-weight: 650; color: #f2f5f7; letter-spacing: .01em; padding-bottom: 6px; border-bottom: 1px solid rgba(255, 255, 255, .1); line-height: 1.35; }
 .rb-akey .kcap small { display: block; font-weight: 400; font-size: 10px; color: #9aa6b2; }
 @media (pointer: coarse) { .RoadBike .mxgrid button { min-height: 32px; line-height: 30px; } .RoadBike .mxseg button { min-height: 30px; } }
+
+/* power ranking: the headline comparison, one bar per build */
+.pwbars { margin-top: 10px; }
+.pwbars > div { grid-template-columns: minmax(0, 132px) minmax(0, 1fr) 62px; }
+.pwbars > div > span:first-child { display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pwbars > div.click { cursor: pointer; border-radius: 6px; }
+.pwbars > div.click:hover, .pwbars > div.sel { background: var(--bg3); }
+.pwbars > div.dim { opacity: .55; }
+.pwbars b { font-size: 12.5px; }
+.mxrank td.pwcol { font-weight: 650; }
+.gain b.tie { color: var(--ink); }

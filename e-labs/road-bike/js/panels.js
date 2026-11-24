@@ -6,7 +6,7 @@ import { setup, evaluate, POSITIONS } from './model/perf.js';
 import { BASE_CAD, pairCases, weightedDelta, roadGains, climbPer100g, YAW_WEIGHTS, YAW_BASIS, RESOLUTION, MATRIX, MATRIX_BASE, MATRIX_YAWS, matrixStudy, matrixGrid, deltaNoise, wattsOf, Q_TUNNEL, REPEAT_N, BARRY_BASIS, SPOKE } from './model/study.js';
 import { lineChart } from './charts.js';
 
-export const L = { cad: null, aero: null, prev: null, fe: null, sw: null, aeroCase: 'yaw00_dx8', aeroMissing: false, mxMetric: 'd', mxChart: 'delta', mxMethod: false, compare: null, structMode: 'shell', feCase: 'pedalling', feMode: -1,
+export const L = { cad: null, aero: null, prev: null, fe: null, sw: null, aeroCase: 'yaw00_dx8', aeroMissing: false, mxMetric: 'w', mxChart: 'delta', mxMethod: false, compare: null, structMode: 'shell', feCase: 'pedalling', feMode: -1,
   show: { surface: true, particles: true, lines: true, side: false, plan: false, wake: false, wakeIso: false, vortex: false, unsteady: false, rolling: true }, uCores: true, uSheet: true, uLevel: 0.3, field: 'speed', group: null, part: null, clay: false, edges: true, explode: 0, scale: 25, playing: true,
   cases: [], cut: 'off', cutT: { x: 0.45, y: 0.5, z: 0.5 }, cutAt: null, scan: false, iso: { wakeIso: 0.65, vortex: 0.35 } };
 
@@ -175,7 +175,7 @@ export function aeroCaption() {
 }
 const METRIC = {
   d: { label: 'ΔCdA', unit: 'cm²', tip: 'Drag area against Fulcrum · 23 at the same yaw, as the tunnel reads it (1 cm² = 10⁻⁴ m²).', of: (c) => cm2(c.dCdA), noise: (c) => cm2(c.noise), f: (v) => sgn(v, 0) },
-  w: { label: 'Watts', unit: 'W at 40 km/h', tip: 'The drag-area difference as power at 40 km/h, bike alone: ½ ρ ΔCdA v³.', of: (c) => wattsOf(c.dCdA), noise: (c) => wattsOf(c.noise), f: (v) => sgn(v, 1) },
+  w: { label: 'Air W', unit: 'air W at 40 km/h', tip: 'Power difference from air alone at 40 km/h, as the tunnel reads it at this yaw: ½ ρ ΔCdA v³. Rolling is added in the power ranking above.', of: (c) => wattsOf(c.dCdA), noise: (c) => wattsOf(c.noise), f: (v) => sgn(v, 1) },
   cda: { label: 'CdA', unit: 'm²', tip: 'Drag area of each build, bike alone.', of: (c) => c.CdA, f: (v) => v.toFixed(3) },
 };
 
@@ -209,7 +209,10 @@ function matrixSection(a) {
   const common = G.common, st = common.length ? matrixStudy(L.cases, S.catalog, P, { yaws: common }) : null;
   const rows = st?.rows ?? [], done = rows.filter((r) => !r.missing);
   const W = (x) => `${sgn(-x, 1)}`;
-  const best = done.filter((r) => r.key !== MATRIX_BASE).sort((x, y) => x.gain.dt_s - y.gain.dt_s)[0];
+  const at40 = (r) => r.gain.at.find((x) => x.kmh === 40) ?? r.gain.at.at(-1);
+  // ranked on the power each build needs at 40 km/h against the installed one (air + rolling): the headline figure
+  const ranked = done.filter((r) => r.key !== MATRIX_BASE).sort((x, y) => at40(y).saved_W - at40(x).saved_W);
+  const best = ranked[0];
   const pos = POSITIONS[P.position === 'aero' ? 'drops' : P.position].label.toLowerCase();
   const tip = `${PROTO_TIP} ${BARRY_BASIS} ${RESOLUTION.basis} ${SPOKE.basis} Rolling from the catalog Crr (tubeless drum figures plus the butyl-tube penalty). ${P.power_w} W, ${pos}, flat, mass held equal.`;
   const yawList = (ys) => { const pm = ys.filter((y) => y > 0 && ys.includes(-y)); return ys.filter((y) => !(y < 0 && pm.includes(-y))).map((y) => (pm.includes(y) ? '±' + y + '°' : deg(y))).join(', '); };
@@ -219,19 +222,33 @@ function matrixSection(a) {
   const prog = `<div class="mxprog" title="${esc(`${G.done} of ${G.total} tunnel runs (6 builds × 7 yaws), about 50 minutes each. Builds are ranked on the yaws every started build shares with the installed one.`)}">
       <div class="mxbar" role="progressbar" aria-valuemin="0" aria-valuemax="${G.total}" aria-valuenow="${G.done}" aria-label="Tunnel runs completed"><i style="width:${(G.done / G.total * 100).toFixed(1)}%"></i></div>
       <span>${G.complete ? 'Matrix complete' : `${G.done} of ${G.total} runs`}<em>${G.builds} of ${MATRIX.length} builds · ${common.length} of ${MATRIX_YAWS.length} yaws ranked</em></span></div>`;
-  const a40 = best?.gain.at.find((x) => x.kmh === 40) ?? best?.gain.at.at(-1);
-  const head = best ? `<p class="mxhead" title="${esc(tip)}"><b>${esc(best.wheelset)} + ${best.tyre} mm</b> is the fastest build${G.complete ? '' : ' so far'}: <b class="${best.gain.dt_s < 0 ? 'good' : 'bad'}">${sgn(best.gain.dt_s, 0)} s</b> over 40 km at ${P.power_w} W.</p>
-    <div class="gain" title="${esc(tip)}">
+  const a40 = best ? at40(best) : null;
+  const pwTip = `Power the bike needs at 40 km/h against the installed Fulcrum + 23, air plus rolling resistance; negative needs less. ${tip}`;
+  const tie = best && best.se2 && Math.abs(wattsOf(best.dCdA)) < wattsOf(best.se2) && Math.abs(a40.rolling_W) < 0.05;
+  const head = best ? `<p class="mxhead" title="${esc(pwTip)}">${tie
+      ? `<b>${esc(best.wheelset)} + ${best.tyre} mm</b> is level with the installed build${G.complete ? '' : ' so far'}: <b>${W(a40.saved_W)} W</b> at 40 km/h, inside the tunnel's ±${wattsOf(best.se2).toFixed(1)} W noise.`
+      : `<b>${esc(best.wheelset)} + ${best.tyre} mm</b> ${a40.saved_W >= 0 ? 'needs the least power' : 'comes closest'}${G.complete ? '' : ' so far'}: <b class="${a40.saved_W < 0 ? 'bad' : 'good'}">${W(a40.saved_W)} W</b> at 40 km/h against the installed build.`}</p>
+    <div class="gain" title="${esc(pwTip)}">
+      <div><span>Power at 40 km/h</span><b class="${tie ? 'tie' : a40.saved_W < 0 ? 'bad' : ''}">${W(a40.saved_W)} W</b><small>${W(a40.aero_W)} air · ${W(a40.rolling_W)} roll${best.se2 ? ` · ±${wattsOf(best.se2).toFixed(1)} (2σ)` : ''}</small></div>
       <div><span>Speed at ${P.power_w} W</span><b class="${best.gain.kmhUp < best.gain.kmhBase ? 'bad' : ''}">${sgn(best.gain.kmhUp - best.gain.kmhBase, 2)}</b><small>km/h · ${pos}</small></div>
-      <div><span>Drag area</span><b class="${best.dCdA > 0 ? 'bad' : ''}">${sgn(cm2(best.dCdA), 0)}</b><small title="Effective: tunnel × ${RESOLUTION.mid} plus spokes. ± is two standard errors of the weighted tunnel difference.">cm²${best.se2 ? ` · ±${cm2(best.se2).toFixed(0)} (2σ)` : ' effective'}</small></div>
-      <div><span>At ${a40.kmh} km/h</span><b class="${a40.saved_W < 0 ? 'bad' : ''}">${W(a40.saved_W)} W</b><small>${W(a40.aero_W)} air · ${W(a40.rolling_W)} roll</small></div>
-    </div>`
+      <div><span>40 km at ${P.power_w} W</span><b class="${best.gain.dt_s > 0 ? 'bad' : ''}">${sgn(best.gain.dt_s, 0)} s</b><small>${sgn(cm2(best.dCdA), 0)} cm² drag area</small></div>
+    </div>
+    <div class="dbars pwbars" title="${esc(pwTip)}">${(() => {
+      const list = G.rows.filter((r) => r.key !== MATRIX_BASE).map((g) => ({ g, r: ranked.find((x) => x.key === g.key) })).sort((x, y) => (x.r ? 0 : 1) - (y.r ? 0 : 1) || (x.r && y.r ? at40(y.r).saved_W - at40(x.r).saved_W : 0));
+      const m = Math.max(1, ...list.filter((x) => x.r).map((x) => Math.abs(at40(x.r).saved_W)));
+      return list.map(({ g, r }) => {
+        if (!r) return `<div class="dim"><span><i class="dot" style="background:${MCOL[g.key]}"></i>${esc(g.label)}</span><span class="dtrack"></span><b class="muted" title="${esc(g.done ? 'Not yet at every ranked yaw' : 'In the tunnel queue')}">·</b></div>`;
+        const a = at40(r), v = -a.saved_W, quiet = r.se2 && Math.abs(wattsOf(r.dCdA)) < wattsOf(r.se2) && Math.abs(a.rolling_W) < 0.05;
+        return `<div data-acfg="${esc(r.cad)}" class="click${r.cad === cur ? ' sel' : ''}" title="${esc(`${r.label}: ${W(a.saved_W)} W at 40 km/h (${W(a.aero_W)} air, ${W(a.rolling_W)} rolling) · show in the tunnel`)}"><span><i class="dot" style="background:${MCOL[r.key]}"></i>${esc(r.label)}</span><span class="dtrack"><i class="${v < 0 ? 'lo' : 'hi'}${quiet ? ' quiet' : ''}" style="${v < 0 ? 'right:50%' : 'left:50%'};width:${(Math.abs(v) / m * 50).toFixed(1)}%"></i></span><b class="${quiet ? '' : v < 0 ? 'good' : 'bad'}">${sgn(v, 1)} W</b></div>`;
+      }).join('');
+    })()}</div>
+    <p class="foot">W at 40 km/h vs Fulcrum + 23 · air + rolling · <span class="mxkey lo"></span>less power <span class="mxkey hi"></span>more · tap a build to load it</p>`
     : `<p class="mxhead muted">${G.rows.find((r) => r.key === MATRIX_BASE)?.done ? 'The installed build is in. The other builds are in the tunnel queue; the comparison appears with the first of them.' : 'Waiting for the installed build (Fulcrum · 23), the reference for every comparison.'}</p>`;
   const top = `<div class="sec mx"><h2 title="${esc(tip)}">Wheels × tyres<em>vs installed · Fulcrum + 23</em></h2>${prog}${head}
     ${best ? `<p class="foot">Yaw-weighted on ${basisTxt} · tunnel Δ × ${RESOLUTION.mid} + spokes · rolling from Crr · <abbr title="${esc(tip)}">basis</abbr></p>` : ''}</div>`;
 
   // the grid: builds down, yaws across; click a cell to put it in the tunnel
-  const M = METRIC[L.mxMetric] ?? METRIC.d, isD = L.mxMetric !== 'cda';
+  const M = METRIC[L.mxMetric] ?? METRIC.w, isD = L.mxMetric !== 'cda';
   const vals = G.rows.flatMap((r) => r.cells.filter((c) => c.case && c.dCdA != null).map((c) => Math.abs(M.of(c))));
   const span = isD ? Math.max(1e-9, ...vals) : 0;
   const cdas = G.rows.flatMap((r) => r.cells.filter((c) => c.case).map((c) => c.CdA)), lo = Math.min(...cdas), hi = Math.max(...cdas);
@@ -250,7 +267,7 @@ function matrixSection(a) {
   };
   const curM = buildOf(cur), curRow = G.rows.find((r) => r.cad === cur);
   const groups = [...new Set(MATRIX.map((m) => m.wheelset))];
-  const grid = `<div class="sec"><h2 title="${esc(M.tip)}">By yaw<em><span class="rb-seg mxseg">${Object.entries(METRIC).map(([k, m]) => chip(`data-amx="${k}"`, (L.mxMetric ?? 'd') === k, m.label, m.tip)).join('')}</span></em></h2>
+  const grid = `<div class="sec"><h2 title="${esc(M.tip)}">By yaw<em><span class="rb-seg mxseg">${Object.entries(METRIC).map(([k, m]) => chip(`data-amx="${k}"`, (L.mxMetric ?? 'w') === k, m.label, m.tip)).join('')}</span></em></h2>
     <table class="mxgrid"><thead><tr><th></th>${G.yaws.map((y) => `<th><button data-ayawto="${y}" ${curRow?.cells[G.yaws.indexOf(y)].case ? '' : 'disabled'} class="${y === curYaw ? 'on' : ''}" title="Show ${esc(curM?.label ?? 'this build')} at ${deg(y)}">${deg(y)}</button></th>`).join('')}</tr></thead>
     ${groups.map((gname) => `<tbody><tr class="mxg"><th colspan="${G.yaws.length + 1}">${esc(gname)}</th></tr>${G.rows.filter((r) => r.wheelset === gname).map((r) => `<tr><th><button data-acfg="${esc(r.cad)}" class="${r.cad === cur ? 'on' : ''}" title="${esc(`Show ${r.label} at ${deg(curYaw)}${r.key === MATRIX_BASE ? ' · installed, the reference' : ''}`)}"><i class="dot" style="background:${MCOL[r.key]}"></i>${r.tyre}</button></th>${r.cells.map((c) => cell(r, c)).join('')}</tr>`).join('')}</tbody>`).join('')}
     </table>
@@ -297,11 +314,11 @@ function matrixSection(a) {
 
   // the road result, on the shared yaws
   const table = st ? `<div class="sec"><h2 title="${esc(tip)}">On the road<em>${P.power_w} W · ${esc(pos)} · ${basisTxt}</em></h2>
-    <table class="study mxrank"><thead><tr><th>Build</th><th title="Yaw-weighted tunnel CdA (bike only)">CdA</th><th title="Change in effective CdA, cm²: tunnel × ${RESOLUTION.mid} plus the spoke model">Δ cm²</th><th title="Power change at 40 km/h from air">Air W</th><th title="Power change at 40 km/h from rolling resistance">Roll W</th><th title="Time over 40 km at ${P.power_w} W">40 km</th><th title="Parts to buy (wheels, tyres, pads)">$</th></tr></thead><tbody>
-      ${rows.map((r) => r.missing ? `<tr class="dim"><td><i class="dot" style="background:${MCOL[r.key]}"></i> ${esc(r.label)}</td><td colspan="6" class="muted" style="text-align:center">${G.rows.find((x) => x.key === r.key).done ? 'not yet at every ranked yaw' : 'in the tunnel queue'}</td></tr>` : (() => {
+    <table class="study mxrank"><thead><tr><th>Build</th><th title="Yaw-weighted tunnel CdA (bike only)">CdA</th><th title="Power difference at 40 km/h, air plus rolling; negative needs less">Power W</th><th title="Power change at 40 km/h from air">Air W</th><th title="Power change at 40 km/h from rolling resistance">Roll W</th><th title="Time over 40 km at ${P.power_w} W">40 km</th><th title="Parts to buy (wheels, tyres, pads)">$</th></tr></thead><tbody>
+      ${[...rows].sort((x, y) => (x.missing ? 1 : 0) - (y.missing ? 1 : 0) || (x.key === MATRIX_BASE ? -1 : y.key === MATRIX_BASE ? 1 : 0) || (x.missing || y.missing ? 0 : at40(y).saved_W - at40(x).saved_W)).map((r) => r.missing ? `<tr class="dim"><td><i class="dot" style="background:${MCOL[r.key]}"></i> ${esc(r.label)}</td><td colspan="6" class="muted" style="text-align:center">${G.rows.find((x) => x.key === r.key).done ? 'not yet at every ranked yaw' : 'in the tunnel queue'}</td></tr>` : (() => {
         const a40r = r.gain.at.find((x) => x.kmh === 40), base = r.key === MATRIX_BASE;
         return `<tr data-acfg="${esc(r.cad)}" class="click${r.cad === cur ? ' sel' : ''}" title="Show ${esc(r.label)} in the tunnel"><td><i class="dot" style="background:${MCOL[r.key]}"></i> ${esc(r.label)}</td><td>${r.cda.toFixed(4)}</td>
-          <td class="${base ? '' : r.dCdA < 0 ? 'good' : 'bad'}">${base ? '—' : sgn(cm2(r.dCdA), 0)}</td><td class="${base ? '' : a40r.aero_W > 0 ? 'good' : 'bad'}">${base ? '—' : W(a40r.aero_W)}</td><td class="${base ? '' : a40r.rolling_W > 0 ? 'good' : 'bad'}">${base ? '—' : W(a40r.rolling_W)}</td>
+          <td class="pwcol ${base ? '' : a40r.saved_W > 0 ? 'good' : 'bad'}">${base ? '—' : W(a40r.saved_W)}</td><td class="${base ? '' : a40r.aero_W > 0 ? 'good' : 'bad'}">${base ? '—' : W(a40r.aero_W)}</td><td class="${base ? '' : a40r.rolling_W > 0 ? 'good' : 'bad'}">${base ? '—' : W(a40r.rolling_W)}</td>
           <td class="${base ? '' : r.gain.dt_s < 0 ? 'good' : 'bad'}">${base ? '—' : sgn(r.gain.dt_s, 0) + ' s'}</td><td>${base ? '—' : Number.isFinite(r.price) ? fmt.usd(r.price) : '—'}</td></tr>`;
       })()).join('')}
     </tbody></table>
