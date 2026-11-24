@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { pairCases, weightedDelta, roadGains, YAW_WEIGHTS, barryWeights, spokeModel, matrixStudy, MATRIX } from '../js/model/study.js';
+import { pairCases, weightedDelta, roadGains, YAW_WEIGHTS, barryWeights, spokeModel, matrixStudy, MATRIX, matrixGrid, MATRIX_YAWS, deltaNoise, Q_TUNNEL, REPEAT_N, wattsOf } from '../js/model/study.js';
 import { defaultParams } from '../js/state.js';
 
 const c = JSON.parse(readFileSync(new URL('../data/components.json', import.meta.url), 'utf8'));
@@ -55,4 +55,33 @@ test('matrix study weights every build against Fulcrum + 23 on the angles both h
   assert.ok(r.st28.dSpokes < 0); // shorter spokes on the deep rim
   assert.ok(r.st28.gain.kmhUp > r.st28.gain.kmhBase);
   assert.equal(r.st28.price, 360 + 170 + 60);
+  // restricted to a yaw set, every build is weighted over exactly those angles
+  const only = matrixStudy(cases, c, P, { yaws: [0] });
+  assert.deepEqual(only.rows.find((x) => x.key === 'st28').yaws, [0]);
+  assert.ok(Math.abs(only.rows.find((x) => x.key === 'st28').dTunnel + 0.002) < 1e-12);
+});
+
+test('matrix grid: cells, deltas at the same yaw, the shared yaws and progress', () => {
+  const se = { drag_se_N: 0.1 };
+  const mk = (key, yaw, CdA, extra = {}) => ({ case: key + yaw, yaw_deg: yaw, dx_mm: 8, CdA_m2: CdA, drag_N: CdA * Q_TUNNEL, side_force_N: -yaw, protocol: 'standard', cad: MATRIX.find((m) => m.key === key).cad, uncertainty: se, ...extra });
+  const cases = [mk('fu23', 0, 0.110), mk('fu23', 5, 0.130), mk('fu23', -5, 0.131), mk('st28', 0, 0.105), mk('st28', 5, 0.124), mk('fu25', 0, 0.1102),
+    mk('st28', -5, 0.12, { protocol: 'static' })]; // a static case is never a matrix cell
+  const g = matrixGrid(cases);
+  assert.deepEqual(g.yaws, MATRIX_YAWS);
+  assert.equal(g.total, 42); assert.equal(g.done, 6); assert.equal(g.builds, 3); assert.equal(g.complete, false);
+  assert.deepEqual(g.common, [0]); // fu25 has only 0 deg so far
+  const row = (k) => g.rows.find((r) => r.key === k), cell = (k, y) => row(k).cells[g.yaws.indexOf(y)];
+  assert.equal(row('st23').done, 0);
+  assert.equal(cell('st28', -5).case, null);
+  assert.ok(Math.abs(cell('st28', 5).dCdA + 0.006) < 1e-12);
+  assert.equal(cell('fu23', 0).dCdA, null); // the baseline is not compared with itself
+  // noise: two batch-mean errors of the pair, never below the run-to-run repeatability
+  assert.ok(Math.abs(cell('st28', 0).noise - 2 * Math.hypot(0.1, 0.1) / Q_TUNNEL) < 1e-15);
+  assert.ok(Math.abs(deltaNoise({}, {}) - REPEAT_N / Q_TUNNEL) < 1e-15);
+  assert.ok(Math.abs(cell('fu25', 0).dCdA) < cell('fu25', 0).noise); // 0.2 cm2 is inside the noise
+  // an off-sweep angle that was run gets its own column
+  assert.deepEqual(matrixGrid([...cases, mk('fu23', 20, 0.2)]).yaws, [...MATRIX_YAWS, 20]);
+  // without the installed build there is nothing to share
+  assert.deepEqual(matrixGrid(cases.filter((x) => !x.case.startsWith('fu23'))).common, []);
+  assert.ok(Math.abs(wattsOf(0.001) - 0.5 * 1.204 * 0.001 * (40 / 3.6) ** 3) < 1e-12);
 });
