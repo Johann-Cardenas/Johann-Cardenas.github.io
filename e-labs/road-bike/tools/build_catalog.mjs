@@ -168,11 +168,11 @@ const defs = [
   }],
 
   // ---------------------------------------------------------------- tyres
-  ['tires', 'tires_rubino_pro_23', 'Vittoria Rubino Pro · 700 × 23', 'installed', 'C', {
+  ['tires', 'tires_rubino_pro_23', 'Vittoria Rubino Pro · 700 × 23', 'candidate', 'C', {
     provides: { tire_width_mm: 23 }, requires: [req('tire_max_mm', 'gte', 23)], url: SRC.brr_rubino,
     visual: { label: 'Vittoria   RUBINO PRO   23-622', sidewall: 'black' },
     perf: { crr: 0.0048, crr_basis: 'Rubino Pro III, 25 mm, 80 psi drum test (0.0048). Later G+ versions tested 0.0055–0.0057.', crr_source: SRC.brr_rubino },
-    notes: 'Read from the sidewall: Rubino Pro 23-622. Inspect the rear sidewall damage noted in October.',
+    notes: 'Previous tyre, replaced by the Corsa N.EXT 26 in 2026-11. Still the tyre of the wind-tunnel reference build (Fulcrum + 23) and of the photographs. Read from the sidewall: Rubino Pro 23-622.',
   }],
   ['tires', 'tires_gp5000_25', 'Continental Grand Prix 5000 · 700 × 25', 'candidate', 'S', {
     mass_g: 442, mass_source: 'Bicycle Rolling Resistance measured 221 g each', price_usd: 140, url: SRC.brr_gp5000,
@@ -191,11 +191,15 @@ const defs = [
     visual: { label: 'MICHELIN  POWER CUP', sidewall: 'tan' }, perf: { crr: null },
     upgrade: { tier: 1, why: 'Fast clincher available with a classic tan sidewall.' },
   }],
-  ['tires', 'tires_corsa_next_26', 'Vittoria Corsa N.EXT TLR · 700 × 26', 'candidate', 'S', {
-    mass_g: 570, mass_source: 'Specified 285 g each (Bicycle Rolling Resistance)', price_usd: 140, url: SRC.brr_next, provides: { tire_width_mm: 26 },
+  ['tires', 'tires_corsa_next_26', 'Vittoria Corsa N.EXT G2.0 · 700 × 26', 'installed', 'C', {
+    mass_g: 536, mass_source: 'Bicycle Rolling Resistance measured 268 g each (claim 285 g), pair', url: SRC.brr_next, provides: { tire_width_mm: 26 },
     requires: [req('tire_max_mm', 'gte', 26, { msg: 'Measure safe tyre clearance (M15).' })],
-    visual: { label: 'Vittoria  CORSA N.EXT', sidewall: 'black' }, perf: { crr: null },
-    upgrade: { tier: 1, why: 'Nylon-casing race tyre that tolerates rough roads. Tubeless-ready, usable with tubes on the current rims.' },
+    visual: { label: 'Vittoria   CORSA N.EXT   26-622', sidewall: 'black' },
+    perf: { crr: 0.00438, crr_setup: 'tubeless', crr_source: SRC.brr_next,
+      crr_basis: 'Drum test, 80 psi, tubeless with 20 ml sealant, 14.6 W per tyre at 29 km/h and 42.5 kg (26-622, measured 26 mm).' },
+    specs: { compound: 'Graphene 2.0 + silica', casing: 'Nylon', tubeless: 'Ready; tubes fine', width_mm: 26, measured_mm: 26, mass_each_g: 268, rr_w: 14.6,
+      spec_source: 'Bicycle Rolling Resistance (tested, tubeless, 2022-09)' },
+    notes: 'Fitted 2026-11, replacing the Rubino Pro 23. Runs on the butyl tubes, so the analysis adds 0.0006 to the tubeless drum Crr.',
   }],
   ['tires', 'tires_gp5000_28', 'Continental Grand Prix 5000 · 700 × 28', 'candidate', 'S', {
     mass_g: 470, mass_source: 'Manufacturer claim 235 g each; verify', price_usd: 140, provides: { tire_width_mm: 28 },
@@ -456,23 +460,22 @@ const defs = [
     mass_g: 80, mass_source: 'Manufacturer claim', price_usd: 350, visual: {},
     upgrade: { tier: 4, why: 'Shares the out-front mount with the EVO 1300 and displays the radar and power meter.' },
   }],
-  ['computer', 'computer_edge1050', 'Garmin Edge 1050 · silicone case bundle', 'candidate', 'L', {
-    mass_g: 161, mass_source: 'Garmin claim, unit only (the case adds a few grams)', price_usd: 700, price_source: 'Approximate Amazon bundle price, 2026-11; verify', url: SRC.amz_edge1050,
+  ['computer', 'computer_edge1050', 'Garmin Edge 1050 · silicone case bundle', 'installed', 'C', {
+    mass_g: 161, mass_source: 'Garmin claim, unit only (the case adds a few grams)', url: SRC.amz_edge1050,
     visual: { model: 'edge1050', w: 60.2, h: 118.5, t: 16.3, screen: [45.7, 76.2] },
     specs: { screen: '3.5 in colour touch', resolution: '480 × 800', size_mm: '60.2 × 118.5 × 16.3', battery_h: '20 (60 saver)', gnss: 'Multi-band GNSS',
       sensors: 'ANT+, BLE, Wi-Fi', water: 'IPX7', mount: 'quarter-turn, out-front', extras: 'speaker, bell, hazard alerts',
       spec_source: 'Garmin launch figures (the5krunner spec sheet)' },
-    upgrade: { tier: 4, why: 'The large-screen Edge: maps readable at speed, shows the radar and power meter, and its battery covers any day ride.' },
-    notes: 'Larger and 28 g heavier than the Edge 1040. Sits on the out-front mount above the light.',
+    notes: 'Acquired 2026-11. Larger and 28 g heavier than the Edge 1040. Sits on the out-front mount above the light.',
   }],
 ];
 
 export const default_config = {
-  frameset: 'frameset_synapse_carbon_51_red', wheels: 'wheels_fulcrum_racing_15c', tires: 'tires_rubino_pro_23', tubes: 'tubes_installed_butyl',
+  frameset: 'frameset_synapse_carbon_51_red', wheels: 'wheels_fulcrum_racing_15c', tires: 'tires_corsa_next_26', tubes: 'tubes_installed_butyl',
   crankset: 'crank_fsa_gossamer_bb30_50_34', bottom_bracket: 'bb_fsa_bb30', cassette: 'cassette_cs5700_11_28', rear_derailleur: 'rd_5700_ss',
   front_derailleur: 'fd_5700', chain: 'chain_installed_10s', shifters: 'levers_st5700', cables: 'cables_installed', brakes: 'brakes_br5700',
   brake_pads: 'pads_installed', stem: 'stem_installed', handlebar: 'bar_installed', tape: 'tape_installed', seatpost: 'seatpost_installed',
-  saddle: 'saddle_serfas_155', pedals: 'pedals_spdsl', cages: 'cages_installed', light: 'light_evo1300',
+  saddle: 'saddle_serfas_155', pedals: 'pedals_spdsl', cages: 'cages_installed', light: 'light_evo1300', computer: 'computer_edge1050',
 };
 
 /** Staged upgrade plans. Each is applied on top of the installed build. */
@@ -483,12 +486,12 @@ export const bundles = [
     set: { tires: 'tires_gp5000_25', tubes: 'tubes_tpu', brake_pads: 'pads_swissstop_bxp', chain: 'chain_cn6701', cables: 'cables_polymer', tape: 'tape_lizard_dsp', wheels: 'wheels_zonda_c17', rear_light: 'rear_light_varia' } },
   { id: 'climb', title: 'Climbing gears', summary: 'An 11–32 cassette with the medium-cage derailleur that supports it.',
     set: { cassette: 'cassette_hg500_11_32', rear_derailleur: 'rd_5701_gs', chain: 'chain_cn6701' } },
-  { id: 'data', title: 'Power and data', summary: 'Measure the engine. Turns the estimates in this app into numbers.',
-    set: { pedals: 'pedals_assioma_duo', computer: 'computer_edge1050' } },
+  { id: 'data', title: 'Power and data', summary: 'Measure the engine: power pedals for the Edge 1050 already on the bike. Turns the estimates in this app into numbers.',
+    set: { pedals: 'pedals_assioma_duo' } },
   { id: 'aero', title: 'Flat-road speed', summary: 'Position first, then wheels.',
     set: { aerobar: 'aerobar_redshift_qr', tires: 'tires_gp5000_25', tubes: 'tubes_tpu', wheels: 'wheels_superteam_50c', brake_pads: 'pads_black_prince' } },
-  { id: 'st28', title: 'Superteam 50 + GP5000 AS TR 28', summary: 'The wind-tunnel study: 50 mm carbon wheels on 28 mm all-season tyres, with the carbon pads they need and the Edge 1050.',
-    set: { wheels: 'wheels_superteam_50c', tires: 'tires_gp5000_as_tr_28', brake_pads: 'pads_black_prince', computer: 'computer_edge1050' } },
+  { id: 'st28', title: 'Superteam 50 + GP5000 AS TR 28', summary: 'The wind-tunnel study: 50 mm carbon wheels on 28 mm all-season tyres, with the carbon pads they need.',
+    set: { wheels: 'wheels_superteam_50c', tires: 'tires_gp5000_as_tr_28', brake_pads: 'pads_black_prince' } },
 ];
 
 export function buildCatalog() {

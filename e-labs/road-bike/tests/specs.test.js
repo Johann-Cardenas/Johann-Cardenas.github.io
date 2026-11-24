@@ -29,7 +29,10 @@ test('Superteam wheels pull in carbon pads; the Edge 1050 is a computer', () => 
 });
 
 test('spec sheet compares with the installed part and keeps unknowns unknown', () => {
-  const sh = specRows(parts.get('tires_gp5000_as_tr_28'), parts.get(c.default_config.tires));
+  const now = specRows(parts.get('tires_gp5000_as_tr_28'), parts.get(c.default_config.tires));
+  assert.equal(now.rows.find((r) => r.key === 'crr').b, 0.00438); // installed Corsa N.EXT 26, tubeless drum
+  // against the previous Rubino Pro, whose mass was never weighed
+  const sh = specRows(parts.get('tires_gp5000_as_tr_28'), parts.get('tires_rubino_pro_23'));
   assert.ok(sh.compare);
   const crr = sh.rows.find((r) => r.key === 'crr');
   assert.equal(crr.a, 0.00366); assert.equal(crr.b, 0.0048); assert.equal(crr.cmp, 'better');

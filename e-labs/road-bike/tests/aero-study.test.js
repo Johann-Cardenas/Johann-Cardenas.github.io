@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { pairCases, weightedDelta, roadGains, YAW_WEIGHTS, barryWeights, spokeModel, matrixStudy, MATRIX, matrixGrid, MATRIX_YAWS, deltaNoise, Q_TUNNEL, REPEAT_N, wattsOf } from '../js/model/study.js';
+import { pairCases, weightedDelta, roadGains, YAW_WEIGHTS, barryWeights, spokeModel, matrixStudy, MATRIX, matrixGrid, referenceConfig, MATRIX_YAWS, deltaNoise, Q_TUNNEL, REPEAT_N, wattsOf } from '../js/model/study.js';
 import { defaultParams } from '../js/state.js';
 
 const c = JSON.parse(readFileSync(new URL('../data/components.json', import.meta.url), 'utf8'));
@@ -84,4 +84,16 @@ test('matrix grid: cells, deltas at the same yaw, the shared yaws and progress',
   // without the installed build there is nothing to share
   assert.deepEqual(matrixGrid(cases.filter((x) => !x.case.startsWith('fu23'))).common, []);
   assert.ok(Math.abs(wattsOf(0.001) - 0.5 * 1.204 * 0.001 * (40 / 3.6) ** 3) < 1e-12);
+});
+
+test('matrix road gains use the tunnel reference build, not whatever tyre is fitted now', () => {
+  const ref = referenceConfig(c);
+  assert.equal(ref.tires, 'tires_rubino_pro_23');
+  assert.notEqual(c.default_config.tires, ref.tires); // the real bike has moved on to the Corsa N.EXT
+  const mk = (key, CdA) => ({ case: key, yaw_deg: 0, dx_mm: 8, CdA_m2: CdA, drag_N: CdA * 74.3, side_force_N: 0, protocol: 'standard', cad: MATRIX.find((m) => m.key === key).cad, drag_by_group_N: {} });
+  const st = matrixStudy([mk('fu23', 0.126), mk('st23', 0.126)], c, P);
+  const at40 = (k) => st.rows.find((r) => r.key === k).gain.at.find((x) => x.kmh === 40);
+  // same Rubino tyres as the reference: no rolling difference, and the reference row is exactly zero
+  assert.ok(Math.abs(at40('fu23').saved_W) < 1e-9);
+  assert.ok(Math.abs(at40('st23').rolling_W) < 0.5); // only the carbon-wheel mass differs
 });

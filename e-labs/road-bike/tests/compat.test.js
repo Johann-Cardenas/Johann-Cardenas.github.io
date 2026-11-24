@@ -31,8 +31,10 @@ test('URL refuses physical errors but retains warnings and unresolved measuremen
  assert.deepEqual(decodeConfig('#frameset=none',c),c.default_config);
 });
 test('proposal deltas do not fabricate unknown mass or price',()=>{
- const cfg={...c.default_config,tires:'tires_gp5000_28'};const s=summarize(cfg,c);
+ // the previous Rubino Pro has no known mass or price: going back to it must not invent either
+ const cfg={...c.default_config,tires:'tires_rubino_pro_23'};const s=summarize(cfg,c);
  assert.equal(s.deltaMass_g,null);assert.equal(s.deltaPrice_usd,null);
+ assert.equal(summarize({...c.default_config,tires:'tires_gp5000_28'},c).deltaMass_g,470-536);
  const gears=summarize({...c.default_config,cassette:'cassette_hg500_11_32'},c);
  assert.equal(gears.gearMin,34/32);assert.equal(gears.gearMax,50/11);
 });

@@ -50,10 +50,10 @@ export function weightedDelta(rows, weights = YAW_WEIGHTS) {
  * to the variant (rider + bike CdA from the position table). Returns the speed at P.power_w, time over
  * `km`, and the watts saved at a few speeds split into aero and rolling.
  */
-export function roadGains(catalog, P, upCfg, dCdA, { km = 40, speeds = [25, 32, 40] } = {}) {
+export function roadGains(catalog, P, upCfg, dCdA, { km = 40, speeds = [25, 32, 40], baseCfg = catalog.default_config } = {}) {
   const pos = P.position === 'aero' ? 'drops' : P.position;
   const PP = { ...P, position: pos };
-  const b = setup(catalog.default_config, catalog, PP), u = setup(upCfg, catalog, PP);
+  const b = setup(baseCfg, catalog, PP), u = setup(upCfg, catalog, PP);
   u.cda = b.cda + dCdA;
   const eb = evaluate(b, P), eu = evaluate(u, P);
   const o = (su) => ({ cda: su.cda, crr: su.crr, mass: su.mass, rho: su.rho, eta: su.eta, grade: su.grade });
@@ -91,6 +91,15 @@ export const MATRIX_BASE = 'fu23';
 /** Catalog configuration of a matrix build: carbon rims bring carbon pads with them. */
 export function matrixConfig(m, catalog) {
   return { ...catalog.default_config, wheels: m.wheels, tires: m.tires, ...(m.wheels === 'wheels_superteam_50c' ? { brake_pads: 'pads_black_prince' } : {}) };
+}
+
+/**
+ * The build the tunnel compares against: Fulcrum Racing 15C on Rubino Pro 23, as photographed and as
+ * run in the wind tunnel, with every other part as fitted now. Tunnel ΔCdA and rolling ΔCrr are both
+ * taken against it, so a tyre change on the real bike does not mix two baselines.
+ */
+export function referenceConfig(catalog) {
+  return matrixConfig(MATRIX.find((m) => m.key === MATRIX_BASE), catalog);
 }
 
 // erf, Abramowitz-Stegun 7.1.26 (|error| < 1.5e-7)
@@ -161,7 +170,7 @@ export function matrixStudy(cases, catalog, P, { kmh = 40, protocol = 'standard'
   const parts = new Map(catalog.components.map((p) => [p.id, p]));
   const std = cases.filter((c) => (c.protocol ?? 'static') === protocol);
   const of = (m) => std.filter((c) => c.cad === m.cad).sort((a, b) => a.yaw_deg - b.yaw_deg);
-  const base = MATRIX.find((m) => m.key === MATRIX_BASE), baseCases = of(base);
+  const base = MATRIX.find((m) => m.key === MATRIX_BASE), baseCases = of(base), ref = referenceConfig(catalog);
   if (!baseCases.length) return null;
   const rows = [];
   for (const m of MATRIX) {
@@ -178,9 +187,9 @@ export function matrixStudy(cases, catalog, P, { kmh = 40, protocol = 'standard'
     }
     const dTunnel = cda - bcda, dSpokes = sp - bsp, dCdA = dTunnel * RESOLUTION.mid + dSpokes;
     const cfg = matrixConfig(m, catalog);
-    const g = roadGains(catalog, P, cfg, dCdA), gAir = roadGains(catalog, P, catalog.default_config, dCdA);
+    const g = roadGains(catalog, P, cfg, dCdA, { baseCfg: ref }), gAir = roadGains(catalog, P, ref, dCdA, { baseCfg: ref });
     let price = 0;
-    for (const k of ['wheels', 'tires', 'brake_pads']) if (cfg[k] !== catalog.default_config[k]) price += parts.get(cfg[k])?.price_usd ?? NaN;
+    for (const k of ['wheels', 'tires', 'brake_pads']) if (cfg[k] !== ref[k]) price += parts.get(cfg[k])?.price_usd ?? NaN;
     // two standard errors of the weighted tunnel difference (batch means, yaws independent), as it reaches dCdA
     const se2 = 2 * Math.sqrt(var2) / Q_TUNNEL * RESOLUTION.mid;
     rows.push({ ...m, yaws, weights: w, cda, dTunnel, dSpokes, dCdA, se2, side, dSide: side - bside, cases: mc, gain: g, kmhAir: gAir.kmhUp - gAir.kmhBase, price });

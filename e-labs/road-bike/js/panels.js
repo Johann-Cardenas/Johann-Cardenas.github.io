@@ -3,7 +3,7 @@
 import { S, esc, fmt, status } from './app.js';
 import { rampCSS, FIELD_RAMP, SURFACE_CP, VOL_REF, loadPack } from './labs.js';
 import { setup, evaluate, POSITIONS } from './model/perf.js';
-import { BASE_CAD, pairCases, weightedDelta, roadGains, climbPer100g, YAW_WEIGHTS, YAW_BASIS, RESOLUTION, MATRIX, MATRIX_BASE, MATRIX_YAWS, matrixStudy, matrixGrid, deltaNoise, wattsOf, Q_TUNNEL, REPEAT_N, BARRY_BASIS, SPOKE } from './model/study.js';
+import { BASE_CAD, pairCases, weightedDelta, roadGains, climbPer100g, YAW_WEIGHTS, YAW_BASIS, RESOLUTION, MATRIX, MATRIX_BASE, MATRIX_YAWS, matrixStudy, matrixGrid, referenceConfig, deltaNoise, wattsOf, Q_TUNNEL, REPEAT_N, BARRY_BASIS, SPOKE } from './model/study.js';
 import { lineChart } from './charts.js';
 
 export const L = { cad: null, aero: null, prev: null, fe: null, sw: null, aeroCase: 'yaw00_dx8', aeroMissing: false, mxMetric: 'w', mxChart: 'delta', mxMethod: false, compare: null, structMode: 'shell', feCase: 'pedalling', feMode: -1,
@@ -59,7 +59,7 @@ export function aeroPanel() {
   const v = a.cfd.validation, yaw = s.assumptions.yaw_deg, vol = a.volume, U = s.assumptions.speed_kmh / 3.6;
   const cad = a.cfd.cad || BASE_CAD, cfgOf = (c) => c.cad || BASE_CAD, pr = s.assumptions.protocol || 'static';
   const cases = L.cases.filter((c, i, all) => c.dx_mm === s.grid.dx_mm && cfgOf(c) === cad && proto(c) === pr && all.findIndex((o) => o.yaw_deg === c.yaw_deg && o.dx_mm === c.dx_mm && cfgOf(o) === cad && proto(o) === pr) === i);
-  const configs = [...new Map(L.cases.filter((c) => c.dx_mm === s.grid.dx_mm && proto(c) === pr).map((c) => [cfgOf(c), c.config || 'Installed build'])).entries()]
+  const configs = [...new Map(L.cases.filter((c) => c.dx_mm === s.grid.dx_mm && proto(c) === pr).map((c) => [cfgOf(c), refLabel(c.config)])).entries()]
     .sort((x, y) => mIdx(x[0]) - mIdx(y[0]));
   const protos = [...new Set(L.cases.map(proto))];
   const F = vol?.F, fieldRange = (f) => (F?.[f] ? F[f].range : { speed: [0, 1.5], cp: [-1.6, 1] }[f]);
@@ -71,7 +71,7 @@ export function aeroPanel() {
   return `
   ${protos.length > 1 ? `<div class="sec"><h2 title="${esc(PROTO_TIP)}">Protocol</h2><div class="rb-seg" style="display:flex">${chip('data-aproto="standard"', pr === 'standard', 'Spinning · ground', PROTO_TIP)}${chip('data-aproto="static"', pr === 'static', 'Static (earlier)', 'The first runs: free stream with no ground and the wheels still. Kept for comparison.')}</div></div>` : ''}
   ${loading}
-  ${configs.length > 1 && pr !== 'standard' ? `<div class="sec"><h2>Build in the tunnel</h2><div class="chips">${configs.map(([k, label]) => chip(`data-acfg="${esc(k)}"`, k === cad, k === BASE_CAD ? 'Installed' : esc(MATRIX.find((m) => m.cad === k)?.label ?? label.replace('GP5000 ', '')), k === BASE_CAD ? 'Fulcrum Racing 15C on Rubino Pro 23, as photographed' : esc(label))).join('')}</div></div>` : ''}
+  ${configs.length > 1 && pr !== 'standard' ? `<div class="sec"><h2>Build in the tunnel</h2><div class="chips">${configs.map(([k, label]) => chip(`data-acfg="${esc(k)}"`, k === cad, k === BASE_CAD ? 'Reference' : esc(MATRIX.find((m) => m.cad === k)?.label ?? label.replace('GP5000 ', '')), k === BASE_CAD ? 'Fulcrum Racing 15C on Rubino Pro 23, as photographed' : esc(label))).join('')}</div></div>` : ''}
   ${mx ? mx.lead : studySection(a)}
   ${cases.length > 1 && !mx ? `<div class="sec"><h2>Crosswind<em>yaw</em></h2><div class="rb-seg" style="display:flex">${cases.map((c) => chip(`data-ayaw="${esc(c.case)}"`, c.case === L.aeroCase, `${String(c.yaw_deg).replace('-', '−')}°`, `Wind ${Math.abs(c.yaw_deg)}° off the nose, from the ${c.yaw_deg < 0 ? 'left' : 'drive'} side`)).join('')}</div></div>` : ''}
   <div class="sec"><div class="kpis">
@@ -170,7 +170,7 @@ const BASE_M = MATRIX.find((m) => m.key === MATRIX_BASE);
 export function aeroCaption() {
   const a = L.aero ?? L.prev, s = a?.cfd.summary; if (!s) return '';
   const m = s.assumptions.protocol === 'standard' ? buildOf(a.cfd.cad) : null, y = s.assumptions.yaw_deg;
-  const who = m ? `${m.wheelset} · ${m.tyre} mm` : (a.cfd.config || 'Installed build');
+  const who = m ? `${m.wheelset} · ${m.tyre} mm` : refLabel(a.cfd.config);
   return { who, when: `${y ? deg(y) + ' yaw' : 'head-on'} · ${s.assumptions.protocol === 'standard' ? 'spinning wheels' : 'static wheels'}` };
 }
 const METRIC = {
@@ -210,7 +210,7 @@ function matrixSection(a) {
   const rows = st?.rows ?? [], done = rows.filter((r) => !r.missing);
   const W = (x) => `${sgn(-x, 1)}`;
   const at40 = (r) => r.gain.at.find((x) => x.kmh === 40) ?? r.gain.at.at(-1);
-  // ranked on the power each build needs at 40 km/h against the installed one (air + rolling): the headline figure
+  // ranked on the power each build needs at 40 km/h against the reference build (air + rolling): the headline figure
   const ranked = done.filter((r) => r.key !== MATRIX_BASE).sort((x, y) => at40(y).saved_W - at40(x).saved_W);
   const best = ranked[0];
   const pos = POSITIONS[P.position === 'aero' ? 'drops' : P.position].label.toLowerCase();
@@ -223,11 +223,11 @@ function matrixSection(a) {
       <div class="mxbar" role="progressbar" aria-valuemin="0" aria-valuemax="${G.total}" aria-valuenow="${G.done}" aria-label="Tunnel runs completed"><i style="width:${(G.done / G.total * 100).toFixed(1)}%"></i></div>
       <span>${G.complete ? 'Matrix complete' : `${G.done} of ${G.total} runs`}<em>${G.builds} of ${MATRIX.length} builds · ${common.length} of ${MATRIX_YAWS.length} yaws ranked</em></span></div>`;
   const a40 = best ? at40(best) : null;
-  const pwTip = `Power the bike needs at 40 km/h against the installed Fulcrum + 23, air plus rolling resistance; negative needs less. ${tip}`;
+  const pwTip = `Power the bike needs at 40 km/h against the reference build (Fulcrum + Rubino Pro 23, as run in the tunnel), air plus rolling resistance; negative needs less. ${tip}`;
   const tie = best && best.se2 && Math.abs(wattsOf(best.dCdA)) < wattsOf(best.se2) && Math.abs(a40.rolling_W) < 0.05;
   const head = best ? `<p class="mxhead" title="${esc(pwTip)}">${tie
-      ? `<b>${esc(best.wheelset)} + ${best.tyre} mm</b> is level with the installed build${G.complete ? '' : ' so far'}: <b>${W(a40.saved_W)} W</b> at 40 km/h, inside the tunnel's ±${wattsOf(best.se2).toFixed(1)} W noise.`
-      : `<b>${esc(best.wheelset)} + ${best.tyre} mm</b> ${a40.saved_W >= 0 ? 'needs the least power' : 'comes closest'}${G.complete ? '' : ' so far'}: <b class="${a40.saved_W < 0 ? 'bad' : 'good'}">${W(a40.saved_W)} W</b> at 40 km/h against the installed build.`}</p>
+      ? `<b>${esc(best.wheelset)} + ${best.tyre} mm</b> is level with the reference build${G.complete ? '' : ' so far'}: <b>${W(a40.saved_W)} W</b> at 40 km/h, inside the tunnel's ±${wattsOf(best.se2).toFixed(1)} W noise.`
+      : `<b>${esc(best.wheelset)} + ${best.tyre} mm</b> ${a40.saved_W >= 0 ? 'needs the least power' : 'comes closest'}${G.complete ? '' : ' so far'}: <b class="${a40.saved_W < 0 ? 'bad' : 'good'}">${W(a40.saved_W)} W</b> at 40 km/h against the reference build.`}</p>
     <div class="gain" title="${esc(pwTip)}">
       <div><span>Power at 40 km/h</span><b class="${tie ? 'tie' : a40.saved_W < 0 ? 'bad' : ''}">${W(a40.saved_W)} W</b><small>${W(a40.aero_W)} air · ${W(a40.rolling_W)} roll${best.se2 ? ` · ±${wattsOf(best.se2).toFixed(1)} (2σ)` : ''}</small></div>
       <div><span>Speed at ${P.power_w} W</span><b class="${best.gain.kmhUp < best.gain.kmhBase ? 'bad' : ''}">${sgn(best.gain.kmhUp - best.gain.kmhBase, 2)}</b><small>km/h · ${pos}</small></div>
@@ -242,9 +242,9 @@ function matrixSection(a) {
         return `<div data-acfg="${esc(r.cad)}" class="click${r.cad === cur ? ' sel' : ''}" title="${esc(`${r.label}: ${W(a.saved_W)} W at 40 km/h (${W(a.aero_W)} air, ${W(a.rolling_W)} rolling) · show in the tunnel`)}"><span><i class="dot" style="background:${MCOL[r.key]}"></i>${esc(r.label)}</span><span class="dtrack"><i class="${v < 0 ? 'lo' : 'hi'}${quiet ? ' quiet' : ''}" style="${v < 0 ? 'right:50%' : 'left:50%'};width:${(Math.abs(v) / m * 50).toFixed(1)}%"></i></span><b class="${quiet ? '' : v < 0 ? 'good' : 'bad'}">${sgn(v, 1)} W</b></div>`;
       }).join('');
     })()}</div>
-    <p class="foot">W at 40 km/h vs Fulcrum + 23 · air + rolling · <span class="mxkey lo"></span>less power <span class="mxkey hi"></span>more · tap a build to load it</p>`
-    : `<p class="mxhead muted">${G.rows.find((r) => r.key === MATRIX_BASE)?.done ? 'The installed build is in. The other builds are in the tunnel queue; the comparison appears with the first of them.' : 'Waiting for the installed build (Fulcrum · 23), the reference for every comparison.'}</p>`;
-  const top = `<div class="sec mx"><h2 title="${esc(tip)}">Wheels × tyres<em>vs installed · Fulcrum + 23</em></h2>${prog}${head}
+    <p class="foot">W at 40 km/h vs Fulcrum + Rubino 23 · air + rolling · <span class="mxkey lo"></span>less power <span class="mxkey hi"></span>more · tap a build to load it</p>`
+    : `<p class="mxhead muted">${G.rows.find((r) => r.key === MATRIX_BASE)?.done ? 'The reference build is in. The other builds are in the tunnel queue; the comparison appears with the first of them.' : 'Waiting for the reference build (Fulcrum + Rubino Pro 23), the baseline for every comparison.'}</p>`;
+  const top = `<div class="sec mx"><h2 title="${esc(tip)}">Wheels × tyres<em>vs reference · Fulcrum + Rubino 23</em></h2>${prog}${head}
     ${best ? `<p class="foot">Yaw-weighted on ${basisTxt} · tunnel Δ × ${RESOLUTION.mid} + spokes · rolling from Crr · <abbr title="${esc(tip)}">basis</abbr></p>` : ''}</div>`;
 
   // the grid: builds down, yaws across; click a cell to put it in the tunnel
@@ -269,7 +269,7 @@ function matrixSection(a) {
   const groups = [...new Set(MATRIX.map((m) => m.wheelset))];
   const grid = `<div class="sec"><h2 title="${esc(M.tip)}">By yaw<em><span class="rb-seg mxseg">${Object.entries(METRIC).map(([k, m]) => chip(`data-amx="${k}"`, (L.mxMetric ?? 'w') === k, m.label, m.tip)).join('')}</span></em></h2>
     <table class="mxgrid"><thead><tr><th></th>${G.yaws.map((y) => `<th><button data-ayawto="${y}" ${curRow?.cells[G.yaws.indexOf(y)].case ? '' : 'disabled'} class="${y === curYaw ? 'on' : ''}" title="Show ${esc(curM?.label ?? 'this build')} at ${deg(y)}">${deg(y)}</button></th>`).join('')}</tr></thead>
-    ${groups.map((gname) => `<tbody><tr class="mxg"><th colspan="${G.yaws.length + 1}">${esc(gname)}</th></tr>${G.rows.filter((r) => r.wheelset === gname).map((r) => `<tr><th><button data-acfg="${esc(r.cad)}" class="${r.cad === cur ? 'on' : ''}" title="${esc(`Show ${r.label} at ${deg(curYaw)}${r.key === MATRIX_BASE ? ' · installed, the reference' : ''}`)}"><i class="dot" style="background:${MCOL[r.key]}"></i>${r.tyre}</button></th>${r.cells.map((c) => cell(r, c)).join('')}</tr>`).join('')}</tbody>`).join('')}
+    ${groups.map((gname) => `<tbody><tr class="mxg"><th colspan="${G.yaws.length + 1}">${esc(gname)}</th></tr>${G.rows.filter((r) => r.wheelset === gname).map((r) => `<tr><th><button data-acfg="${esc(r.cad)}" class="${r.cad === cur ? 'on' : ''}" title="${esc(`Show ${r.label} at ${deg(curYaw)}${r.key === MATRIX_BASE ? ' · the reference build, as run in the tunnel' : ''}`)}"><i class="dot" style="background:${MCOL[r.key]}"></i>${r.tyre}</button></th>${r.cells.map((c) => cell(r, c)).join('')}</tr>`).join('')}</tbody>`).join('')}
     </table>
     <p class="foot">${isD ? `${esc(M.unit)} vs Fulcrum + 23 at the same yaw, tunnel as run · <span class="mxkey lo"></span>less drag <span class="mxkey hi"></span>more · bold beyond 2σ, pale below` : 'm², bike alone'} · <span class="mxq">·</span> queued · tap a cell to load it</p></div>`;
 
@@ -289,12 +289,12 @@ function matrixSection(a) {
     }
     ab = `<div class="sec"><h2 title="Flip the tunnel between two builds at the same yaw. Camera, cut plane, fields and colour scales stay as they are, so the flow can be compared directly.">Compare<em>at ${deg(curYaw)}</em></h2>
       <div class="abrow"><span class="abtag" title="On the stage"><b>A</b><i class="dot" style="background:${MCOL[A.key]}"></i>${esc(A.label)}</span>
-        <label class="abtag"><b>B</b><i class="dot" style="background:${MCOL[B.key === A.key ? others[0].key : B.key]}"></i><select data-acmp aria-label="Build to compare with">${others.map((m) => `<option value="${esc(m.cad)}" ${m.key === B.key ? 'selected' : ''}>${esc(m.label)}${m.key === MATRIX_BASE ? ' (installed)' : ''}</option>`).join('')}</select></label>
+        <label class="abtag"><b>B</b><i class="dot" style="background:${MCOL[B.key === A.key ? others[0].key : B.key]}"></i><select data-acmp aria-label="Build to compare with">${others.map((m) => `<option value="${esc(m.cad)}" ${m.key === B.key ? 'selected' : ''}>${esc(m.label)}${m.key === MATRIX_BASE ? ' (reference)' : ''}</option>`).join('')}</select></label>
         <button class="primary abflip" data-aflip ${cb && A.key !== B.key ? '' : 'disabled'} title="${cb ? `Put ${esc(B.label)} in the tunnel; press again to come back` : `${esc(B.label)} has not run at ${deg(curYaw)} yet`}">A ⇄ B</button></div>
       ${diff || (cb ? '' : `<p class="foot">${esc(B.label)} has not run at ${deg(curYaw)} yet.</p>`)}</div>`;
   }
 
-  // the sweep: every build against the installed one, yaw by yaw
+  // the sweep: every build against the reference one, yaw by yaw
   const chartD = (L.mxChart ?? 'delta') === 'delta';
   const series = G.rows.filter((r) => r.done && (!chartD || r.key !== MATRIX_BASE)).map((r) => ({
     pts: r.cells.filter((c) => c.case && (!chartD || c.dCdA != null)).map((c) => [c.yaw, chartD ? cm2(c.dCdA) : c.CdA]),
@@ -306,10 +306,10 @@ function matrixSection(a) {
   if (series.length) {
     const yLo = chartD ? Math.min(-nz, ...allPts) : Math.min(...allPts), yHi = chartD ? Math.max(nz, ...allPts) : Math.max(...allPts), pad = (yHi - yLo) * 0.12 || 1;
     const marks = series.flatMap((s) => s.key && buildOf(cur)?.key === s.key ? s.pts.map(([x, y]) => ({ x, y, color: s.color, r: x === curYaw ? 4.5 : 2.5 })) : []);
-    chart = `<div class="sec"><h2 title="${chartD ? 'Drag-area difference to the installed build at each yaw, as the tunnel reads it. The band is the run-to-run repeatability (±0.041 N).' : 'Drag area of the bike alone against the wind angle.'}">Yaw sweep<em><span class="rb-seg mxseg">${chip('data-amxc="delta"', chartD, 'Δ vs installed')}${chip('data-amxc="cda"', !chartD, 'CdA')}</span></em></h2>
+    chart = `<div class="sec"><h2 title="${chartD ? 'Drag-area difference to the reference build at each yaw, as the tunnel reads it. The band is the run-to-run repeatability (±0.041 N).' : 'Drag area of the bike alone against the wind angle.'}">Yaw sweep<em><span class="rb-seg mxseg">${chip('data-amxc="delta"', chartD, 'Δ vs installed')}${chip('data-amxc="cda"', !chartD, 'CdA')}</span></em></h2>
       ${lineChart({ series, marks, bands: chartD ? [{ y0: -nz, y1: nz }] : [], zero: chartD, xLabel: 'yaw °', yLabel: chartD ? 'ΔCdA cm²' : 'CdA m²', w: 360, h: 210, xMin: Math.min(-15, ...G.yaws), xMax: Math.max(15, ...G.yaws), yMin: chartD ? Math.floor(yLo - pad) : Math.floor((yLo - pad) * 100) / 100, yMax: chartD ? Math.ceil(yHi + pad) : Math.ceil((yHi + pad) * 100) / 100 })}
       <div class="legendrow">${G.rows.filter((r) => r.done && (!chartD || r.key !== MATRIX_BASE)).map((r) => `<span><i class="${r.wheelset.startsWith('Fulcrum') ? 'dash' : ''}" style="--c:${MCOL[r.key]};background:${MCOL[r.key]}"></i>${esc(r.label)}${r.done < MATRIX_YAWS.length ? `<small> ${r.done}/7</small>` : ''}</span>`).join('')}</div>
-      ${chartD ? '<p class="foot">Below zero: less drag than the installed build · band: run-to-run repeatability</p>' : ''}</div>`;
+      ${chartD ? '<p class="foot">Below zero: less drag than the reference build · band: run-to-run repeatability</p>' : ''}</div>`;
   }
 
   // the road result, on the shared yaws
@@ -337,23 +337,25 @@ function matrixSection(a) {
   return { lead: top + grid + ab, more: chart + table + method };
 }
 
-// ---- Upgrade study: installed vs Superteam 50 + GP5000 AS TR 28 ----------------------------------
+// ---- Upgrade study: reference vs Superteam 50 + GP5000 AS TR 28 ----------------------------------
 const STUDY_CAD = 'data/cad/variants/st28/parts';
 const STUDY_SET = { wheels: 'wheels_superteam_50c', tires: 'tires_gp5000_as_tr_28', brake_pads: 'pads_black_prince' };
+/** Tunnel packs of the photographed build carry 'Installed build'; since the tyre change that is the reference. */
+const refLabel = (cfg) => (!cfg || cfg === 'Installed build' ? 'Reference build · Rubino Pro 23' : cfg);
 const sgn = (v, d = 0) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(d);
 function studySection(a) {
   const rows = pairCases(L.cases, STUDY_CAD, { protocol: 'static' });
   if (!rows.length) return '';
-  const P = S.P, wd = weightedDelta(rows), cfg = { ...S.catalog.default_config, ...STUDY_SET };
-  const mid = wd.dCdA * RESOLUTION.mid, g = roadGains(S.catalog, P, cfg, mid), gLo = roadGains(S.catalog, P, cfg, wd.dCdA * RESOLUTION.hi), gHi = roadGains(S.catalog, P, cfg, wd.dCdA * RESOLUTION.lo);
-  const gAero = roadGains(S.catalog, P, S.catalog.default_config, mid), gRoll = roadGains(S.catalog, P, cfg, 0);
+  const P = S.P, wd = weightedDelta(rows), ref = referenceConfig(S.catalog), cfg = { ...ref, ...STUDY_SET }, o = { baseCfg: ref };
+  const mid = wd.dCdA * RESOLUTION.mid, g = roadGains(S.catalog, P, cfg, mid, o), gLo = roadGains(S.catalog, P, cfg, wd.dCdA * RESOLUTION.hi, o), gHi = roadGains(S.catalog, P, cfg, wd.dCdA * RESOLUTION.lo, o);
+  const gAero = roadGains(S.catalog, P, ref, mid, o), gRoll = roadGains(S.catalog, P, cfg, 0, o);
   const W = (x) => `${sgn(x, 1)} W`, at = g.at.find((r) => r.kmh === 32) || g.at[0];
   const range = (f) => { const v = [f(gLo), f(gHi)].map(Math.abs).sort((x, y) => x - y); return `${v[0].toFixed(0)}–${v[1].toFixed(0)}`; };
   const wheelD = (r) => (r.groups['Front wheel'] ?? 0) + (r.groups['Rear wheel'] ?? 0);
   const se = rows.find((r) => r.se)?.se;
   const perG = climbPer100g(S.catalog, P);
   const tip = `${YAW_BASIS} ${RESOLUTION.basis} Rolling: ${g.crrBasis ?? ''} Position CdA ${g.cdaBase.toFixed(3)} m² (${g.position}). ${g.notes.join(' ')}`;
-  return `<div class="sec"><h2 title="${esc('Same tunnel, lattice and inflow; only the wheels and tyres change. The installed build runs on Fulcrum Racing 15C rims with Rubino Pro 23 tyres; the upgrade on Superteam 50 mm carbon rims with GP5000 AS TR 28 tyres.')}">Upgrade study<em>Superteam 50 + AS TR 28</em></h2>
+  return `<div class="sec"><h2 title="${esc('Same tunnel, lattice and inflow; only the wheels and tyres change. The reference build runs on Fulcrum Racing 15C rims with Rubino Pro 23 tyres; the upgrade on Superteam 50 mm carbon rims with GP5000 AS TR 28 tyres.')}">Upgrade study<em>Superteam 50 + AS TR 28</em></h2>
     <div class="gain" title="${esc(tip)}">
       <div><span>Speed at ${P.power_w} W</span><b class="${g.kmhUp < g.kmhBase ? 'bad' : ''}">${sgn(g.kmhUp - g.kmhBase, 2)}</b><small>km/h · ${g.kmhBase.toFixed(1)} → ${g.kmhUp.toFixed(1)}</small></div>
       <div><span>${g.km} km at ${P.power_w} W</span><b class="${g.dt_s > 0 ? 'bad' : ''}">${sgn(g.dt_s, 0)} s</b><small>${range((x) => -x.dt_s)} s ${g.dt_s < 0 ? 'saved' : 'lost'}</small></div>
@@ -363,7 +365,7 @@ function studySection(a) {
       ${rows.map((r) => `<tr><td>${r.yaw}°<small class="muted"> ${Math.round((YAW_WEIGHTS[r.yaw] ?? 0) * 100)} %</small></td><td>${r.base.CdA_m2.toFixed(4)}</td><td>${r.up.CdA_m2.toFixed(4)}</td><td class="${r.dCdA < 0 ? 'good' : 'bad'}" title="${sgn(r.dCdA * 1e4, 0)}e-4 m²">${sgn(r.dCdA / r.base.CdA_m2 * 100, 1)} %</td><td class="${wheelD(r) < 0 ? 'good' : 'bad'}">${sgn(wheelD(r), 2)}</td><td class="${Math.abs(r.up.side_force_N) > Math.abs(r.base.side_force_N) + 0.5 ? 'bad' : ''}">${sgn(Math.abs(r.up.side_force_N) - Math.abs(r.base.side_force_N), 1)}</td></tr>`).join('')}
       <tr class="tot"><td title="${esc(YAW_BASIS)}">Weighted</td><td></td><td></td><td class="${wd.dCdA < 0 ? 'good' : 'bad'}">${sgn(wd.dCdA * 1e4, 0)}<small>e-4 m²</small></td><td>${wd.coverage < 0.999 ? `<small class="muted">${Math.round(wd.coverage * 100)} % of time</small>` : ''}</td><td></td></tr>
     </tbody></table>
-    <table class="study" style="margin-top:8px"><thead><tr><th>Speed</th><th>Installed W</th><th>Upgrade W</th><th>Air</th><th>Rolling</th></tr></thead><tbody>
+    <table class="study" style="margin-top:8px"><thead><tr><th>Speed</th><th>Reference W</th><th>Upgrade W</th><th>Air</th><th>Rolling</th></tr></thead><tbody>
       ${g.at.map((r) => `<tr><td>${r.kmh} km/h</td><td>${r.base_W.toFixed(0)}</td><td>${r.up_W.toFixed(0)}</td><td class="${r.aero_W > 0 ? 'good' : 'bad'}">${W(-r.aero_W)}</td><td class="${r.rolling_W > 0 ? 'good' : 'bad'}">${W(-r.rolling_W)}</td></tr>`).join('')}
     </tbody></table>
     <div class="kpis" style="margin-top:8px">
