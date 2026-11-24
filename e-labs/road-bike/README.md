@@ -90,6 +90,26 @@ The matrix is two wheelsets (Fulcrum Racing 15C, Superteam 50) × three tyre wid
 seven yaws: CAD packs `data/cad/variants/{fu,st}{23,25,28}`, cases `yaw[m]NN_dx8_<key>` (`m` = negative
 yaw). `matrixStudy` compares every build with Fulcrum + 23 (the installed bike) on the yaws both have.
 
+**Matrix panel** (Aero, spinning · ground). It is built to fill in while the queue runs (~50 min a case):
+
+- `matrixGrid` (`js/model/study.js`) lays the cases out build × yaw, marks queued cells, and finds the
+  *shared* yaws: those every started build has in common with the installed one. The headline and the
+  road table rank on those only, so a build is never helped or hurt by which angles happen to be done.
+  A progress bar gives runs in, builds started and yaws ranked.
+- The grid shows ΔCdA (cm²), watts at 40 km/h or CdA per cell. A difference below the run-to-run
+  repeatability (0.041 N) is grey; below two batch-means standard errors of the pair (`deltaNoise`) it
+  is pale, beyond them bold. Clicking a cell, a row label or a yaw heading puts that case on the stage.
+- **Compare** flips the stage between the build shown and a second one at the same yaw (A ⇄ B) and
+  shows the drag difference for the wheels, the rest of the bike and the total. The camera, the cut
+  plane and the fields stay put; the other case's pack is prefetched so the flip is quick.
+- Colour scales are shared: surface Cp, speed and pressure already had fixed ranges, and on the
+  standard protocol vorticity and the vortex-surface level (Q) are re-expressed on one range
+  (`VOL_REF` in `js/labs.js`), so the same colour or level means the same in every case.
+- The case on the stage stays (and the panel keeps its scroll) until the next one has loaded; case
+  packs are cached least-recently-used (six kept), and a missing case is retried on the next request.
+- *Yaw sweep* plots every build against the installed one with the repeatability band; *Method &
+  uncertainty* states the protocol, lattice, noise, resolution bias, spoke model and what is left out.
+
 ### Wind tunnel
 
 Lattice Boltzmann D3Q19, regularized BGK with Smagorinsky LES, half-way bounce-back walls and

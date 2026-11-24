@@ -1,12 +1,12 @@
 // Side panels for the result scenes: CAD, Aero (wind tunnel) and Structure (Abaqus / live beam).
 // Words are kept to labels and numbers; explanations live in title tooltips.
 import { S, esc, fmt, status } from './app.js';
-import { rampCSS, FIELD_RAMP, SURFACE_CP } from './labs.js';
+import { rampCSS, FIELD_RAMP, SURFACE_CP, VOL_REF, loadPack } from './labs.js';
 import { setup, evaluate, POSITIONS } from './model/perf.js';
-import { BASE_CAD, pairCases, weightedDelta, roadGains, climbPer100g, YAW_WEIGHTS, YAW_BASIS, RESOLUTION, MATRIX, matrixStudy, BARRY_BASIS, SPOKE } from './model/study.js';
+import { BASE_CAD, pairCases, weightedDelta, roadGains, climbPer100g, YAW_WEIGHTS, YAW_BASIS, RESOLUTION, MATRIX, MATRIX_BASE, MATRIX_YAWS, matrixStudy, matrixGrid, deltaNoise, wattsOf, Q_TUNNEL, REPEAT_N, BARRY_BASIS, SPOKE } from './model/study.js';
 import { lineChart } from './charts.js';
 
-export const L = { cad: null, aero: null, fe: null, sw: null, aeroCase: 'yaw00_dx8', aeroMissing: false, structMode: 'shell', feCase: 'pedalling', feMode: -1,
+export const L = { cad: null, aero: null, prev: null, fe: null, sw: null, aeroCase: 'yaw00_dx8', aeroMissing: false, mxMetric: 'd', mxChart: 'delta', mxMethod: false, compare: null, structMode: 'shell', feCase: 'pedalling', feMode: -1,
   show: { surface: true, particles: true, lines: true, side: false, plan: false, wake: false, wakeIso: false, vortex: false, unsteady: false, rolling: true }, uCores: true, uSheet: true, uLevel: 0.3, field: 'speed', group: null, part: null, clay: false, edges: true, explode: 0, scale: 25, playing: true,
   cases: [], cut: 'off', cutT: { x: 0.45, y: 0.5, z: 0.5 }, cutAt: null, scan: false, iso: { wakeIso: 0.65, vortex: 0.35 } };
 
@@ -48,8 +48,10 @@ export function cadPanel() {
 // ---- Aero ----------------------------------------------------------------------------------------
 export function aeroPanel() {
   if (L.aeroMissing) return `<div class="pending"><span class="rb-spin"></span><b>Wind tunnel running</b><span class="small muted">Results appear here when the solver finishes.</span></div>`;
-  const a = L.aero;
+  const a = L.aero ?? L.prev; // while another case loads, the last one stays on the stage and in the panel
   if (!a) return '<div class="pending"><span class="rb-spin"></span>Loading wind tunnel…</div>';
+  const next = !L.aero && L.cases.find((c) => c.case === L.aeroCase);
+  const loading = next ? `<div class="mxload" role="status"><span class="rb-spin"></span>Loading ${esc(buildOf(next.cad)?.label ?? next.config ?? next.case)} at ${deg(next.yaw_deg)}…</div>` : '';
   const s = a.cfd.summary, d = s.drag_by_group_N, max = Math.max(...Object.values(d));
   const order = Object.entries(d).sort((x, y) => y[1] - x[1]);
   const P = S.P, su = setup(S.catalog.default_config, S.catalog, P), ev = evaluate(su, P);
@@ -65,11 +67,13 @@ export function aeroPanel() {
   const fr = fieldRange(L.field), fl = LEG[L.field];
   const cutLabel = { x: 'Across', y: 'Plan', z: 'Side' };
   const cutPos = cutText(a);
+  const mx = pr === 'standard' ? matrixSection(a) : null;
   return `
   ${protos.length > 1 ? `<div class="sec"><h2 title="${esc(PROTO_TIP)}">Protocol</h2><div class="rb-seg" style="display:flex">${chip('data-aproto="standard"', pr === 'standard', 'Spinning · ground', PROTO_TIP)}${chip('data-aproto="static"', pr === 'static', 'Static (earlier)', 'The first runs: free stream with no ground and the wheels still. Kept for comparison.')}</div></div>` : ''}
-  ${configs.length > 1 ? `<div class="sec"><h2>Build in the tunnel</h2><div class="chips">${configs.map(([k, label]) => chip(`data-acfg="${esc(k)}"`, k === cad, k === BASE_CAD ? 'Installed' : esc(MATRIX.find((m) => m.cad === k)?.label ?? label.replace('GP5000 ', '')), k === BASE_CAD ? 'Fulcrum Racing 15C on Rubino Pro 23, as photographed' : esc(label))).join('')}</div></div>` : ''}
-  ${pr === 'standard' ? matrixSection(a) : studySection(a)}
-  ${cases.length > 1 ? `<div class="sec"><h2>Crosswind<em>yaw</em></h2><div class="rb-seg" style="display:flex">${cases.map((c) => chip(`data-ayaw="${esc(c.case)}"`, c.case === L.aeroCase, `${String(c.yaw_deg).replace('-', '−')}°`, `Wind ${Math.abs(c.yaw_deg)}° off the nose, from the ${c.yaw_deg < 0 ? 'left' : 'drive'} side`)).join('')}</div></div>` : ''}
+  ${loading}
+  ${configs.length > 1 && pr !== 'standard' ? `<div class="sec"><h2>Build in the tunnel</h2><div class="chips">${configs.map(([k, label]) => chip(`data-acfg="${esc(k)}"`, k === cad, k === BASE_CAD ? 'Installed' : esc(MATRIX.find((m) => m.cad === k)?.label ?? label.replace('GP5000 ', '')), k === BASE_CAD ? 'Fulcrum Racing 15C on Rubino Pro 23, as photographed' : esc(label))).join('')}</div></div>` : ''}
+  ${mx ? mx.lead : studySection(a)}
+  ${cases.length > 1 && !mx ? `<div class="sec"><h2>Crosswind<em>yaw</em></h2><div class="rb-seg" style="display:flex">${cases.map((c) => chip(`data-ayaw="${esc(c.case)}"`, c.case === L.aeroCase, `${String(c.yaw_deg).replace('-', '−')}°`, `Wind ${Math.abs(c.yaw_deg)}° off the nose, from the ${c.yaw_deg < 0 ? 'left' : 'drive'} side`)).join('')}</div></div>` : ''}
   <div class="sec"><div class="kpis">
     ${kpi('CdA, bike', `${s.CdA_m2.toFixed(3)} m²`, `no rider · ${yaw}° yaw`, 'big', 'Drag area of the bike alone. See the footnote on accuracy.')}
     ${kpi('Drag', `${s.drag_N.toFixed(1)} N`, '40 km/h', 'big')}
@@ -77,11 +81,11 @@ export function aeroPanel() {
     ${kpi('Of total drag', `${Math.round(bikeShare * 100)} %`, `with a rider on the ${POSITIONS[P.position]?.label.toLowerCase() ?? 'hoods'}`, '', 'Bike CdA from the tunnel divided by a typical rider-plus-bike CdA for the chosen position.')}
   </div></div>
   <div class="sec"><h2>Show</h2>
-    <div class="chips">${chip('data-ash="surface"', L.show.surface, 'Surface Cp')}${chip('data-ash="particles"', L.show.particles, 'Flow')}${chip('data-ash="lines"', L.show.lines, 'Streamlines')}${chip('data-ash="rolling"', L.show.rolling, 'Rolling', 'Wheels and cranks turn as if riding at 40 km/h in the selected gear, on the same slowed clock as the air. The tunnel ran with the wheels still, so the motion is illustrative.')}
+    <div class="chips">${chip('data-ash="surface"', L.show.surface, 'Surface Cp')}${chip('data-ash="particles"', L.show.particles, 'Flow')}${chip('data-ash="lines"', L.show.lines, 'Streamlines')}${chip('data-ash="rolling"', L.show.rolling, 'Rolling', pr === 'standard' ? 'Wheels and cranks turn at 40 km/h in the selected gear, on the same slowed clock as the air. The tunnel spun the wheels at road speed; the cranks are illustration.' : 'Wheels and cranks turn as if riding at 40 km/h in the selected gear, on the same slowed clock as the air. The tunnel ran with the wheels still, so the motion is illustrative.')}
     ${vol ? chip('data-ash="wakeIso"', L.show.wakeIso, 'Wake', 'Envelope of the slow air behind the bike (time-averaged)') + chip('data-ash="vortex"', L.show.vortex, 'Vortices', 'Time-averaged vortex cores (Q criterion), coloured by how fast they spin') : chip('data-ash="side"', L.show.side, 'Side plane') + chip('data-ash="plan"', L.show.plan, 'Plan plane') + chip('data-ash="wake"', L.show.wake, 'Wake plane')}
     ${a.hasUnsteady ? chip('data-ash="unsteady"', L.show.unsteady, 'Unsteady ▸', 'Instantaneous snapshots from the end of the run, played in order: the wake as it actually sheds, not its average') : ''}</div>
     ${vol && L.show.wakeIso ? `<div class="row"><label for="awk" title="The surface where air has slowed to this fraction of the free stream">Wake at</label><input id="awk" type="range" data-aiso="wakeIso" min="0.4" max="0.95" step="0.05" value="${L.iso.wakeIso}"><span class="val">${Math.round(L.iso.wakeIso * 100)} % U∞</span></div>` : ''}
-    ${vol && L.show.vortex ? `<div class="row"><label for="avx" title="Q criterion level, as a share of its 99.5th percentile">Vortex level</label><input id="avx" type="range" data-aiso="vortex" min="0.02" max="0.4" step="0.01" value="${L.iso.vortex}"><span class="val">${Math.round(L.iso.vortex * 100)} %</span></div>` : ''}
+    ${vol && L.show.vortex ? `<div class="row"><label for="avx" title="${esc(pr === 'standard' ? `Q criterion level, as a share of ${VOL_REF.q.toLocaleString('en-US')} 1/s², the same for every build and yaw` : 'Q criterion level, as a share of its 99.5th percentile')}">Vortex level</label><input id="avx" type="range" data-aiso="vortex" min="0.02" max="0.4" step="0.01" value="${L.iso.vortex}"><span class="val">${Math.round(L.iso.vortex * 100)} %</span></div>` : ''}
     ${a.hasUnsteady && L.show.unsteady ? `<div class="chips" style="margin-top:6px">${chip('data-auns="cores"', L.uCores, 'Vortex cores', 'Instantaneous Q-criterion surfaces')}${chip('data-auns="sheet"', L.uSheet, 'Centre plane', 'Spanwise vorticity on the bike centre plane: red spins one way, blue the other')}</div>
     ${L.uCores ? `<div class="row"><label for="aul" title="Q criterion level, as a share of the snapshots' 99.5th percentile">Core level</label><input id="aul" type="range" data-auns-level min="0.16" max="0.7" step="0.02" value="${L.uLevel}"><span class="val">${Math.round(L.uLevel * 100)} %</span></div>` : ''}
     ${(() => { const i = a.unsteady.info(); return i ? `<p class="foot">${i.frames} snapshots · ${(i.span_s * 1000).toFixed(0)} ms of flow · played ${Math.round(1 / 0.055)}× slower</p>` : ''; })()}` : ''}
@@ -92,6 +96,7 @@ export function aeroPanel() {
     <div class="rb-seg" style="display:flex;margin-top:6px">${chip('data-afield="speed"', L.field === 'speed', 'Speed')}${chip('data-afield="cp"', L.field === 'cp', 'Pressure')}${chip('data-afield="loss"', L.field === 'loss', 'Loss', 'Total-pressure loss, 1 − Cp₀: energy taken out of the air')}${chip('data-afield="vort"', L.field === 'vort', 'Vorticity', 'How fast the air is spinning')}</div>
     <div style="margin-top:8px">${legend(FIELD_RAMP[L.field], fr[0].toFixed(fl[1]).replace('-', '−'), fr[1].toFixed(fl[1]), fl[0])}</div>` : ''}
   </div>` : ''}
+  ${mx ? mx.more : ''}
   <div class="sec"><h2>Drag by part<em>N at 40 km/h</em></h2><div class="bars">${order.map(([g, val]) =>
     `<div class="barrow ${L.group === g ? 'on' : ''}" data-grp="${esc(g)}" title="${val < 0 ? 'Net suction: sits in the wake of the parts ahead of it (coarse-grid result)' : (val / s.drag_N * 100).toFixed(0) + ' % of the bike’s drag'}"><span>${esc(g)}</span><i style="width:${Math.max(0, val / max * 100).toFixed(1)}%"></i><b>${val.toFixed(1)}</b></div>`).join('')}</div></div>
   ${aeroCharts(a, cases, U)}
@@ -100,7 +105,7 @@ export function aeroPanel() {
     <div class="row"><label for="apw">Power</label><input id="apw" type="range" data-p="power_w" data-u=" W" min="50" max="500" step="5" value="${P.power_w}"><span class="val">${P.power_w} W</span></div>
     <div class="kpis" style="margin-top:6px">${kpi('Speed', `${ev.kmh.toFixed(1)} km/h`, 'flat, no wind')}${kpi('Air takes', `${Math.round(ev.split.aero / P.power_w * 100)} %`, 'of your power')}</div>
     <p class="foot" title="${esc(`${s.method}. ${s.grid.cells_total.toLocaleString('en-US')} cells at ${s.grid.dx_mm} mm, ${s.grid.flow_throughs} flow-throughs. Sphere check (Re ${v.sphere_Re}): Cd ${v.Cd_24_cells_per_D} at 24 cells/D and ${v.Cd_12_cells_per_D} at 12 cells/D against ${v.reference_Cd}. ${v.note}`)}">
-      LBM-LES · ${s.grid.dx_mm} mm · air 20 °C · 40 km/h · no ground · static wheels · no spokes · <abbr>accuracy</abbr></p>
+      LBM-LES · ${s.grid.dx_mm} mm · air 20 °C · 40 km/h · ${pr === 'standard' ? 'moving ground · spinning wheels · spokes modelled' : 'no ground · static wheels · no spokes'} · <abbr>accuracy</abbr></p>
   </div>`;
 }
 
@@ -116,7 +121,7 @@ function aeroCharts(a, cases, U) {
     const cur = cases.find((c) => c.case === L.aeroCase);
     const cad = a.cfd.cad || BASE_CAD, pr = s.assumptions.protocol || 'static', other = [...new Set(L.cases.filter((c) => proto(c) === pr).map((c) => c.cad || BASE_CAD))].filter((k) => k !== cad);
     const otherPts = other.map((k) => L.cases.filter((c) => (c.cad || BASE_CAD) === k && c.dx_mm === s.grid.dx_mm && proto(c) === pr).sort((x, y) => x.yaw_deg - y.yaw_deg).map((c) => [c.yaw_deg, c.CdA_m2])).filter((q) => q.length);
-    out.push(chartSec('Drag area vs wind angle', 'm²', lineChart({ series: [...otherPts.map((q) => ({ pts: q, color: 'var(--ink3)' })), { pts, color: 'var(--accent)' }], marks: cases.map((c) => ({ x: c.yaw_deg, y: c.CdA_m2, color: c === cur ? 'var(--accent)' : 'var(--ink3)', label: c === cur ? c.CdA_m2.toFixed(3) : '' })), xLabel: 'yaw °', yLabel: 'CdA m²', w: 360, h: 190, xMin: Math.min(0, ...pts.map((p) => p[0])), yMin: Math.floor(Math.min(...pts.map((p) => p[1]), ...otherPts.flat().map((p) => p[1])) * 0.9 * 100) / 100 }),
+    if ((s.assumptions.protocol || 'static') !== 'standard') out.push(chartSec('Drag area vs wind angle', 'm²', lineChart({ series: [...otherPts.map((q) => ({ pts: q, color: 'var(--ink3)' })), { pts, color: 'var(--accent)' }], marks: cases.map((c) => ({ x: c.yaw_deg, y: c.CdA_m2, color: c === cur ? 'var(--accent)' : 'var(--ink3)', label: c === cur ? c.CdA_m2.toFixed(3) : '' })), xLabel: 'yaw °', yLabel: 'CdA m²', w: 360, h: 190, xMin: Math.min(0, ...pts.map((p) => p[0])), yMin: Math.floor(Math.min(...pts.map((p) => p[1]), ...otherPts.flat().map((p) => p[1])) * 0.9 * 100) / 100 }),
       otherPts.length ? keyRow([['var(--accent)', 'this build'], ['var(--ink3)', 'other builds']]) : '', 'Drag area of the bike in the direction of travel, as the wind swings off the nose.'));
     const gk = Object.keys(cases[0].drag_by_group_N).filter((g) => Math.max(...cases.map((c) => Math.abs(c.drag_by_group_N[g]))) > 0.8);
     out.push(chartSec('Drag by part vs wind angle', 'N', lineChart({ series: gk.map((g) => ({ pts: cases.map((c) => [c.yaw_deg, c.drag_by_group_N[g]]), color: GROUP_COL[g] || 'var(--ink3)' })), xLabel: 'yaw °', yLabel: 'drag N', w: 360, h: 200, xMin: 0, yMin: Math.min(0, ...cases.flatMap((c) => gk.map((g) => c.drag_by_group_N[g]))) }),
@@ -155,35 +160,164 @@ function aeroCharts(a, cases, U) {
 const proto = (c) => c.protocol || 'static';
 const mIdx = (cad) => { const i = MATRIX.findIndex((m) => m.cad === cad); return i < 0 ? -1 : i; };
 const PROTO_TIP = 'After common wind-tunnel practice for wheels and bikes: bike with no rider, wheels spun at road speed (U cos yaw) on a ground moving at the same speed, yaw −15…+15° in 5° steps, CdA at 40 km/h, yaw-weighted after Barry (2018). Spokes do not resolve at 8 mm and are added by a blade-element model.';
-const MCOL = { fu23: '#7b8794', fu25: '#56616d', fu28: '#2f3a45', st23: '#7fd6d5', st25: '#18a9a8', st28: '#0b6f6e' };
+// slate for the Fulcrum, teal for the Superteam; darker with the wider tyre
+const MCOL = Object.fromEntries(MATRIX.map((m) => [m.key, `var(--mx-${m.key})`])); // css/app.css, per theme
+const deg = (y) => `${String(y).replace('-', '−')}°`;
+const cm2 = (x) => x * 1e4; // 1 cm² = 1e-4 m²
+const buildOf = (cad) => MATRIX.find((m) => m.cad === cad) ?? null;
+const BASE_M = MATRIX.find((m) => m.key === MATRIX_BASE);
+/** Wheelset, tyre and yaw of the case on the stage, for the colour key (shown on phones too). */
+export function aeroCaption() {
+  const a = L.aero ?? L.prev, s = a?.cfd.summary; if (!s) return '';
+  const m = s.assumptions.protocol === 'standard' ? buildOf(a.cfd.cad) : null, y = s.assumptions.yaw_deg;
+  const who = m ? `${m.wheelset} · ${m.tyre} mm` : (a.cfd.config || 'Installed build');
+  return { who, when: `${y ? deg(y) + ' yaw' : 'head-on'} · ${s.assumptions.protocol === 'standard' ? 'spinning wheels' : 'static wheels'}` };
+}
+const METRIC = {
+  d: { label: 'ΔCdA', unit: 'cm²', tip: 'Drag area against Fulcrum · 23 at the same yaw, as the tunnel reads it (1 cm² = 10⁻⁴ m²).', of: (c) => cm2(c.dCdA), noise: (c) => cm2(c.noise), f: (v) => sgn(v, 0) },
+  w: { label: 'Watts', unit: 'W at 40 km/h', tip: 'The drag-area difference as power at 40 km/h, bike alone: ½ ρ ΔCdA v³.', of: (c) => wattsOf(c.dCdA), noise: (c) => wattsOf(c.noise), f: (v) => sgn(v, 1) },
+  cda: { label: 'CdA', unit: 'm²', tip: 'Drag area of each build, bike alone.', of: (c) => c.CdA, f: (v) => v.toFixed(3) },
+};
+
+/**
+ * The build to flip to from `cad` at `yaw`: the one chosen, else the installed build, else (from the
+ * installed build) the last matrix build that has run at this yaw.
+ */
+function compareCad(cad, yaw) {
+  if (L.compare && L.compare !== cad && buildOf(L.compare)) return L.compare;
+  if (cad !== BASE_M.cad) return BASE_M.cad;
+  const ran = (m) => L.cases.some((c) => c.cad === m.cad && proto(c) === 'standard' && c.yaw_deg === yaw);
+  return ([...MATRIX].reverse().find((m) => m.cad !== cad && ran(m)) ?? MATRIX.at(-1)).cad;
+}
+/** The case to open the tunnel on: the installed build head-on under the standard protocol once it exists. */
+export function defaultAeroCase() {
+  const std = L.cases.filter((c) => c.cad === BASE_M.cad && proto(c) === 'standard').sort((x, y) => Math.abs(x.yaw_deg) - Math.abs(y.yaw_deg) || y.yaw_deg - x.yaw_deg);
+  return std[0]?.case ?? null;
+}
+/** Fetch the compare build's pack at this yaw in the background, so A ⇄ B flips without a wait. */
+export function prefetchCompare() {
+  const a = L.aero; if (!a || navigator.connection?.saveData) return;
+  const yaw = a.cfd.summary.assumptions.yaw_deg, B = compareCad(a.cfd.cad, yaw);
+  const c = L.cases.find((x) => x.cad === B && proto(x) === 'standard' && x.yaw_deg === yaw);
+  if (c) setTimeout(() => loadPack('data/cfd/' + c.case).then(([j]) => loadPack(j.cad || BASE_CAD)).catch(() => {}), 1200);
+}
+
 function matrixSection(a) {
-  const P = S.P, st = matrixStudy(L.cases, S.catalog, P);
-  if (!st) return '';
-  const rows = st.rows, done = rows.filter((r) => !r.missing), cur = a.cfd.cad;
-  const allYaws = [...new Set(L.cases.filter((c) => proto(c) === 'standard').map((c) => c.yaw_deg))].sort((x, y) => x - y);
+  const P = S.P, G = matrixGrid(L.cases);
+  if (!G.builds) return { lead: '', more: '' };
+  const cur = a.cfd.cad, curYaw = a.cfd.summary.assumptions.yaw_deg;
+  const common = G.common, st = common.length ? matrixStudy(L.cases, S.catalog, P, { yaws: common }) : null;
+  const rows = st?.rows ?? [], done = rows.filter((r) => !r.missing);
   const W = (x) => `${sgn(-x, 1)}`;
-  const w0 = done[0]?.weights ?? {};
-  const series = done.map((r) => ({ pts: r.cases.map((c) => [c.yaw_deg, c.CdA_m2]), color: MCOL[r.key], dash: r.wheelset.startsWith('Fulcrum') ? '5 3' : '' }));
-  const best = done.filter((r) => r.key !== 'fu23').sort((x, y) => x.gain.dt_s - y.gain.dt_s)[0];
-  const tip = `${PROTO_TIP} ${BARRY_BASIS} ${RESOLUTION.basis} ${SPOKE.basis} Rolling from the catalog Crr (tubeless drum figures plus the butyl-tube penalty). ${P.power_w} W, ${POSITIONS[P.position === 'aero' ? 'drops' : P.position].label.toLowerCase()}, flat, mass held equal.`;
-  return `<div class="sec"><h2 title="${esc(tip)}">Wheels × tyres<em>vs Fulcrum · 23 (installed)</em></h2>
-    ${best ? `<div class="gain" title="${esc(tip)}">
-      <div><span>Fastest: ${esc(best.label)}</span><b>${sgn(best.gain.kmhUp - best.gain.kmhBase, 2)}</b><small>km/h at ${P.power_w} W</small></div>
-      <div><span>40 km</span><b class="${best.gain.dt_s > 0 ? 'bad' : ''}">${sgn(best.gain.dt_s, 0)} s</b><small>${best.yaws.length} yaw${best.yaws.length > 1 ? 's' : ''} weighted</small></div>
-      <div><span>At 32 km/h</span><b>${W(best.gain.at.find((x) => x.kmh === 32).saved_W)} W</b><small>${W(best.gain.at.find((x) => x.kmh === 32).aero_W)} air · ${W(best.gain.at.find((x) => x.kmh === 32).rolling_W)} roll</small></div>
-    </div>` : ''}
-    <table class="study" style="margin-top:8px"><thead><tr><th>Build</th><th title="Yaw-weighted tunnel CdA (bike only)">CdA</th><th title="Change in effective CdA: tunnel × ${RESOLUTION.mid} plus the spoke model">Δ</th><th title="Power change at 32 km/h from air">Air</th><th title="Power change at 32 km/h from rolling resistance">Roll</th><th title="Time over 40 km at ${P.power_w} W">40 km</th><th title="Parts to buy (wheels, tyres, pads)">$</th></tr></thead><tbody>
-      ${rows.map((r) => r.missing ? `<tr><td><i class="dot" style="background:${MCOL[r.key]}"></i> ${esc(r.label)}</td><td colspan="6" class="muted" style="text-align:center">in the tunnel queue</td></tr>` : (() => {
-        const a32 = r.gain.at.find((x) => x.kmh === 32), base = r.key === 'fu23';
-        return `<tr data-acfg="${esc(r.cad)}" style="cursor:pointer${r.cad === cur ? ';background:var(--accent-bg)' : ''}" title="Show ${esc(r.label)} in the tunnel"><td><i class="dot" style="background:${MCOL[r.key]}"></i> ${esc(r.label)}</td><td>${r.cda.toFixed(4)}</td>
-          <td class="${base ? '' : r.dCdA < 0 ? 'good' : 'bad'}">${base ? '—' : sgn(r.dCdA * 1e4, 0)}</td><td class="${base ? '' : a32.aero_W > 0 ? 'good' : 'bad'}">${base ? '—' : W(a32.aero_W)}</td><td class="${base ? '' : a32.rolling_W > 0 ? 'good' : 'bad'}">${base ? '—' : W(a32.rolling_W)}</td>
+  const best = done.filter((r) => r.key !== MATRIX_BASE).sort((x, y) => x.gain.dt_s - y.gain.dt_s)[0];
+  const pos = POSITIONS[P.position === 'aero' ? 'drops' : P.position].label.toLowerCase();
+  const tip = `${PROTO_TIP} ${BARRY_BASIS} ${RESOLUTION.basis} ${SPOKE.basis} Rolling from the catalog Crr (tubeless drum figures plus the butyl-tube penalty). ${P.power_w} W, ${pos}, flat, mass held equal.`;
+  const yawList = (ys) => { const pm = ys.filter((y) => y > 0 && ys.includes(-y)); return ys.filter((y) => !(y < 0 && pm.includes(-y))).map((y) => (pm.includes(y) ? '±' + y + '°' : deg(y))).join(', '); };
+  const common7 = common.length === MATRIX_YAWS.length && G.builds === MATRIX.length;
+  const basisTxt = common.length ? `${common7 ? 'the full sweep' : yawList(common)}` : '';
+  // progress: runs in, and what the ranking rests on
+  const prog = `<div class="mxprog" title="${esc(`${G.done} of ${G.total} tunnel runs (6 builds × 7 yaws), about 50 minutes each. Builds are ranked on the yaws every started build shares with the installed one.`)}">
+      <div class="mxbar" role="progressbar" aria-valuemin="0" aria-valuemax="${G.total}" aria-valuenow="${G.done}" aria-label="Tunnel runs completed"><i style="width:${(G.done / G.total * 100).toFixed(1)}%"></i></div>
+      <span>${G.complete ? 'Matrix complete' : `${G.done} of ${G.total} runs`}<em>${G.builds} of ${MATRIX.length} builds · ${common.length} of ${MATRIX_YAWS.length} yaws ranked</em></span></div>`;
+  const a40 = best?.gain.at.find((x) => x.kmh === 40) ?? best?.gain.at.at(-1);
+  const head = best ? `<p class="mxhead" title="${esc(tip)}"><b>${esc(best.wheelset)} + ${best.tyre} mm</b> is the fastest build${G.complete ? '' : ' so far'}: <b class="${best.gain.dt_s < 0 ? 'good' : 'bad'}">${sgn(best.gain.dt_s, 0)} s</b> over 40 km at ${P.power_w} W.</p>
+    <div class="gain" title="${esc(tip)}">
+      <div><span>Speed at ${P.power_w} W</span><b class="${best.gain.kmhUp < best.gain.kmhBase ? 'bad' : ''}">${sgn(best.gain.kmhUp - best.gain.kmhBase, 2)}</b><small>km/h · ${pos}</small></div>
+      <div><span>Drag area</span><b class="${best.dCdA > 0 ? 'bad' : ''}">${sgn(cm2(best.dCdA), 0)}</b><small title="Effective: tunnel × ${RESOLUTION.mid} plus spokes. ± is two standard errors of the weighted tunnel difference.">cm²${best.se2 ? ` · ±${cm2(best.se2).toFixed(0)} (2σ)` : ' effective'}</small></div>
+      <div><span>At ${a40.kmh} km/h</span><b class="${a40.saved_W < 0 ? 'bad' : ''}">${W(a40.saved_W)} W</b><small>${W(a40.aero_W)} air · ${W(a40.rolling_W)} roll</small></div>
+    </div>`
+    : `<p class="mxhead muted">${G.rows.find((r) => r.key === MATRIX_BASE)?.done ? 'The installed build is in. The other builds are in the tunnel queue; the comparison appears with the first of them.' : 'Waiting for the installed build (Fulcrum · 23), the reference for every comparison.'}</p>`;
+  const top = `<div class="sec mx"><h2 title="${esc(tip)}">Wheels × tyres<em>vs installed · Fulcrum + 23</em></h2>${prog}${head}
+    ${best ? `<p class="foot">Yaw-weighted on ${basisTxt} · tunnel Δ × ${RESOLUTION.mid} + spokes · rolling from Crr · <abbr title="${esc(tip)}">basis</abbr></p>` : ''}</div>`;
+
+  // the grid: builds down, yaws across; click a cell to put it in the tunnel
+  const M = METRIC[L.mxMetric] ?? METRIC.d, isD = L.mxMetric !== 'cda';
+  const vals = G.rows.flatMap((r) => r.cells.filter((c) => c.case && c.dCdA != null).map((c) => Math.abs(M.of(c))));
+  const span = isD ? Math.max(1e-9, ...vals) : 0;
+  const cdas = G.rows.flatMap((r) => r.cells.filter((c) => c.case).map((c) => c.CdA)), lo = Math.min(...cdas), hi = Math.max(...cdas);
+  const cell = (r, c) => {
+    const here = c.case && c.case.cad === cur && c.yaw === curYaw;
+    if (!c.case) return `<td><span class="mxq" title="${esc(`${r.label} at ${deg(c.yaw)}: in the tunnel queue`)}">·</span></td>`;
+    let txt, style = '', cls = '', t = `${r.label} at ${deg(c.yaw)}: CdA ${c.CdA.toFixed(4)} m²`;
+    if (isD && c.dCdA == null) { txt = c.CdA.toFixed(3); cls = 'ref'; t += r.key === MATRIX_BASE ? ' (reference)' : ' · no reference at this yaw yet'; }
+    else if (isD) {
+      const v = M.of(c), a2 = Math.abs(c.dCdA), k = Math.min(1, Math.abs(v) / span), floor = REPEAT_N / Q_TUNNEL;
+      txt = M.f(v); t += ` · Δ ${sgn(cm2(c.dCdA), 1)} cm² (${sgn(wattsOf(c.dCdA), 1)} W at 40 km/h) · 2σ ±${cm2(c.noise).toFixed(0)} cm²`;
+      if (a2 < floor) { cls = 'quiet'; t += ' · inside run-to-run repeatability'; }
+      else { const sure = a2 >= c.noise; style = `--k:${Math.round(sure ? 22 + 42 * k : 8 + 12 * k)}%`; cls = (v < 0 ? 'lo' : 'hi') + (sure ? ' sure' : ''); if (!sure) t += ' · below 2σ'; }
+    } else { txt = M.f(c.CdA); style = `--k:${Math.round(8 + 40 * ((c.CdA - lo) / Math.max(1e-9, hi - lo)))}%`; cls = 'abs'; }
+    return `<td><button class="mxc ${cls}${here ? ' cur' : ''}" style="${style}" data-acase="${esc(c.case.case)}" title="${esc(t + (here ? ' · in the tunnel' : ' · show in the tunnel'))}" ${here ? 'aria-current="true"' : ''}>${txt}</button></td>`;
+  };
+  const curM = buildOf(cur), curRow = G.rows.find((r) => r.cad === cur);
+  const groups = [...new Set(MATRIX.map((m) => m.wheelset))];
+  const grid = `<div class="sec"><h2 title="${esc(M.tip)}">By yaw<em><span class="rb-seg mxseg">${Object.entries(METRIC).map(([k, m]) => chip(`data-amx="${k}"`, (L.mxMetric ?? 'd') === k, m.label, m.tip)).join('')}</span></em></h2>
+    <table class="mxgrid"><thead><tr><th></th>${G.yaws.map((y) => `<th><button data-ayawto="${y}" ${curRow?.cells[G.yaws.indexOf(y)].case ? '' : 'disabled'} class="${y === curYaw ? 'on' : ''}" title="Show ${esc(curM?.label ?? 'this build')} at ${deg(y)}">${deg(y)}</button></th>`).join('')}</tr></thead>
+    ${groups.map((gname) => `<tbody><tr class="mxg"><th colspan="${G.yaws.length + 1}">${esc(gname)}</th></tr>${G.rows.filter((r) => r.wheelset === gname).map((r) => `<tr><th><button data-acfg="${esc(r.cad)}" class="${r.cad === cur ? 'on' : ''}" title="${esc(`Show ${r.label} at ${deg(curYaw)}${r.key === MATRIX_BASE ? ' · installed, the reference' : ''}`)}"><i class="dot" style="background:${MCOL[r.key]}"></i>${r.tyre}</button></th>${r.cells.map((c) => cell(r, c)).join('')}</tr>`).join('')}</tbody>`).join('')}
+    </table>
+    <p class="foot">${isD ? `${esc(M.unit)} vs Fulcrum + 23 at the same yaw, tunnel as run · <span class="mxkey lo"></span>less drag <span class="mxkey hi"></span>more · bold beyond 2σ, pale below` : 'm², bike alone'} · <span class="mxq">·</span> queued · tap a cell to load it</p></div>`;
+
+  // A/B: the build on the stage against another at the same yaw
+  const B = buildOf(compareCad(cur, curYaw)), A = curM;
+  let ab = '';
+  if (A) {
+    const ca = L.cases.find((c) => c.cad === A.cad && proto(c) === 'standard' && c.yaw_deg === curYaw);
+    const cb = L.cases.find((c) => c.cad === B.cad && proto(c) === 'standard' && c.yaw_deg === curYaw);
+    const others = MATRIX.filter((m) => m.key !== A.key);
+    const parts = (c) => { const g = c.drag_by_group_N ?? {}, fw = g['Front wheel'] ?? 0, rw = g['Rear wheel'] ?? 0; return { 'Front wheel': fw, 'Rear wheel': rw, 'Rest of bike': c.drag_N - fw - rw, Total: c.drag_N }; };
+    let diff = '';
+    if (ca && cb && A.key !== B.key) {
+      const pa = parts(ca), pb = parts(cb), keys = Object.keys(pa), d = keys.map((k) => pa[k] - pb[k]), m = Math.max(0.05, ...d.map(Math.abs)), noiseN = deltaNoise(ca, cb) * Q_TUNNEL;
+      diff = `<div class="dbars" title="${esc(`Drag of ${A.label} minus ${B.label} at ${deg(curYaw)}, N at 40 km/h. Between builds the per-part split moves by several newtons (frame and drivetrain trade force across their shared wake), so read the wheels and the total; ±${noiseN.toFixed(2)} N is within the tunnel's noise.`)}">${keys.map((k, i) => `<div class="${k === 'Total' ? 'tot' : ''}"><span>${k}</span><span class="dtrack"><i class="${d[i] < 0 ? 'lo' : 'hi'}${Math.abs(d[i]) < noiseN ? ' quiet' : ''}" style="${d[i] < 0 ? 'right:50%' : 'left:50%'};width:${(Math.abs(d[i]) / m * 50).toFixed(1)}%"></i></span><b class="${Math.abs(d[i]) < noiseN ? '' : d[i] < 0 ? 'good' : 'bad'}">${sgn(d[i], 2)}</b></div>`).join('')}</div>
+        <p class="foot">N at 40 km/h, ${esc(A.label)} − ${esc(B.label)} · side force ${sgn(Math.abs(ca.side_force_N) - Math.abs(cb.side_force_N), 1)} N</p>`;
+    }
+    ab = `<div class="sec"><h2 title="Flip the tunnel between two builds at the same yaw. Camera, cut plane, fields and colour scales stay as they are, so the flow can be compared directly.">Compare<em>at ${deg(curYaw)}</em></h2>
+      <div class="abrow"><span class="abtag" title="On the stage"><b>A</b><i class="dot" style="background:${MCOL[A.key]}"></i>${esc(A.label)}</span>
+        <label class="abtag"><b>B</b><i class="dot" style="background:${MCOL[B.key === A.key ? others[0].key : B.key]}"></i><select data-acmp aria-label="Build to compare with">${others.map((m) => `<option value="${esc(m.cad)}" ${m.key === B.key ? 'selected' : ''}>${esc(m.label)}${m.key === MATRIX_BASE ? ' (installed)' : ''}</option>`).join('')}</select></label>
+        <button class="primary abflip" data-aflip ${cb && A.key !== B.key ? '' : 'disabled'} title="${cb ? `Put ${esc(B.label)} in the tunnel; press again to come back` : `${esc(B.label)} has not run at ${deg(curYaw)} yet`}">A ⇄ B</button></div>
+      ${diff || (cb ? '' : `<p class="foot">${esc(B.label)} has not run at ${deg(curYaw)} yet.</p>`)}</div>`;
+  }
+
+  // the sweep: every build against the installed one, yaw by yaw
+  const chartD = (L.mxChart ?? 'delta') === 'delta';
+  const series = G.rows.filter((r) => r.done && (!chartD || r.key !== MATRIX_BASE)).map((r) => ({
+    pts: r.cells.filter((c) => c.case && (!chartD || c.dCdA != null)).map((c) => [c.yaw, chartD ? cm2(c.dCdA) : c.CdA]),
+    color: MCOL[r.key], dash: r.wheelset.startsWith('Fulcrum') ? '5 3' : '', width: r.cad === cur ? 3 : 1.6, key: r.key,
+  })).filter((s) => s.pts.length).sort((x, y) => x.width - y.width);
+  const allPts = series.flatMap((s) => s.pts.map((p) => p[1]));
+  const nz = chartD ? cm2(REPEAT_N / Q_TUNNEL) : 0;
+  let chart = '';
+  if (series.length) {
+    const yLo = chartD ? Math.min(-nz, ...allPts) : Math.min(...allPts), yHi = chartD ? Math.max(nz, ...allPts) : Math.max(...allPts), pad = (yHi - yLo) * 0.12 || 1;
+    const marks = series.flatMap((s) => s.key && buildOf(cur)?.key === s.key ? s.pts.map(([x, y]) => ({ x, y, color: s.color, r: x === curYaw ? 4.5 : 2.5 })) : []);
+    chart = `<div class="sec"><h2 title="${chartD ? 'Drag-area difference to the installed build at each yaw, as the tunnel reads it. The band is the run-to-run repeatability (±0.041 N).' : 'Drag area of the bike alone against the wind angle.'}">Yaw sweep<em><span class="rb-seg mxseg">${chip('data-amxc="delta"', chartD, 'Δ vs installed')}${chip('data-amxc="cda"', !chartD, 'CdA')}</span></em></h2>
+      ${lineChart({ series, marks, bands: chartD ? [{ y0: -nz, y1: nz }] : [], zero: chartD, xLabel: 'yaw °', yLabel: chartD ? 'ΔCdA cm²' : 'CdA m²', w: 360, h: 210, xMin: Math.min(-15, ...G.yaws), xMax: Math.max(15, ...G.yaws), yMin: chartD ? Math.floor(yLo - pad) : Math.floor((yLo - pad) * 100) / 100, yMax: chartD ? Math.ceil(yHi + pad) : Math.ceil((yHi + pad) * 100) / 100 })}
+      <div class="legendrow">${G.rows.filter((r) => r.done && (!chartD || r.key !== MATRIX_BASE)).map((r) => `<span><i class="${r.wheelset.startsWith('Fulcrum') ? 'dash' : ''}" style="--c:${MCOL[r.key]};background:${MCOL[r.key]}"></i>${esc(r.label)}${r.done < MATRIX_YAWS.length ? `<small> ${r.done}/7</small>` : ''}</span>`).join('')}</div>
+      ${chartD ? '<p class="foot">Below zero: less drag than the installed build · band: run-to-run repeatability</p>' : ''}</div>`;
+  }
+
+  // the road result, on the shared yaws
+  const table = st ? `<div class="sec"><h2 title="${esc(tip)}">On the road<em>${P.power_w} W · ${esc(pos)} · ${basisTxt}</em></h2>
+    <table class="study mxrank"><thead><tr><th>Build</th><th title="Yaw-weighted tunnel CdA (bike only)">CdA</th><th title="Change in effective CdA, cm²: tunnel × ${RESOLUTION.mid} plus the spoke model">Δ cm²</th><th title="Power change at 40 km/h from air">Air W</th><th title="Power change at 40 km/h from rolling resistance">Roll W</th><th title="Time over 40 km at ${P.power_w} W">40 km</th><th title="Parts to buy (wheels, tyres, pads)">$</th></tr></thead><tbody>
+      ${rows.map((r) => r.missing ? `<tr class="dim"><td><i class="dot" style="background:${MCOL[r.key]}"></i> ${esc(r.label)}</td><td colspan="6" class="muted" style="text-align:center">${G.rows.find((x) => x.key === r.key).done ? 'not yet at every ranked yaw' : 'in the tunnel queue'}</td></tr>` : (() => {
+        const a40r = r.gain.at.find((x) => x.kmh === 40), base = r.key === MATRIX_BASE;
+        return `<tr data-acfg="${esc(r.cad)}" class="click${r.cad === cur ? ' sel' : ''}" title="Show ${esc(r.label)} in the tunnel"><td><i class="dot" style="background:${MCOL[r.key]}"></i> ${esc(r.label)}</td><td>${r.cda.toFixed(4)}</td>
+          <td class="${base ? '' : r.dCdA < 0 ? 'good' : 'bad'}">${base ? '—' : sgn(cm2(r.dCdA), 0)}</td><td class="${base ? '' : a40r.aero_W > 0 ? 'good' : 'bad'}">${base ? '—' : W(a40r.aero_W)}</td><td class="${base ? '' : a40r.rolling_W > 0 ? 'good' : 'bad'}">${base ? '—' : W(a40r.rolling_W)}</td>
           <td class="${base ? '' : r.gain.dt_s < 0 ? 'good' : 'bad'}">${base ? '—' : sgn(r.gain.dt_s, 0) + ' s'}</td><td>${base ? '—' : Number.isFinite(r.price) ? fmt.usd(r.price) : '—'}</td></tr>`;
       })()).join('')}
     </tbody></table>
-    ${series.length ? `<div style="margin-top:8px">${lineChart({ series, xLabel: 'yaw °', yLabel: 'CdA m²', w: 360, h: 200, xMin: Math.min(0, ...allYaws), xMax: Math.max(15, ...allYaws), yMin: Math.floor(Math.min(...series.flatMap((x) => x.pts.map((p) => p[1]))) * 0.9 * 100) / 100 })}</div>
-      ${keyRow(done.map((r) => [MCOL[r.key], r.label]))}` : ''}
-    <p class="foot" title="${esc(tip)}">Δ in 1e-4 m² · W at 32 km/h · yaw weights ${Object.entries(w0).sort((x, y) => x[0] - y[0]).map(([y, v]) => `${y}° ${Math.round(v * 100)} %`).join(', ')} · ${done.length} of 6 builds · <abbr>basis</abbr></p>
-  </div>`;
+    <p class="foot">Yaw weights ${Object.entries(done[0]?.weights ?? {}).sort((x, y) => x[0] - y[0]).map(([y, v]) => `${deg(+y)} ${Math.round(v * 100)} %`).join(', ')} · mass held equal · <abbr title="${esc(tip)}">basis</abbr></p></div>` : '';
+
+  // method and uncertainty, in words
+  const sg = a.cfd.summary.grid, rep = cm2(REPEAT_N / Q_TUNNEL), ns = G.rows.flatMap((r) => r.cells.filter((c) => c.noise != null).map((c) => c.noise)).sort((x, y) => x - y), noiseTyp = ns.length ? ns[ns.length >> 1] : REPEAT_N / Q_TUNNEL;
+  const method = `<details class="sec mxmeth" ${L.mxMethod ? 'open' : ''} data-amethod><summary>Method &amp; uncertainty</summary><dl>
+    <dt>Protocol</dt><dd>Bike without rider at 40 km/h, air 20 °C. Wheels spin at road speed on a ground moving with them, as in a bike wind tunnel. Yaw −15° to +15° in 5° steps.</dd>
+    <dt>Solver</dt><dd>Lattice Boltzmann D3Q19 with LES on an ${sg.dx_mm} mm lattice (${(sg.cells_total / 1e6).toFixed(0)} M cells, ${sg.flow_throughs} flow-throughs). Rims are about three cells wide, tubes six to eight.</dd>
+    <dt>Noise</dt><dd>Two runs of the same build differed by ${REPEAT_N} N (${rep.toFixed(1)} cm² CdA, 0.5 %); a difference smaller than that is grey. The batch means of each averaging window give a wider, more cautious 2σ of about ±${cm2(noiseTyp).toFixed(0)} cm² for a single-yaw difference: cells beyond it are bold, those inside it pale. Averaging over yaws narrows it (the ± on the headline).</dd>
+    <dt>Bias</dt><dd>A sphere at 12–24 cells per diameter reads Cd 0.60–0.69 against 0.47–0.50, so absolute drag reads high. Differences are scaled by ${RESOLUTION.mid} (${RESOLUTION.lo}–${RESOLUTION.hi}) before they reach the road model.</dd>
+    <dt>Spokes</dt><dd>Too thin for the lattice; added for every build by a blade-element model (drag and the power to turn them).</dd>
+    <dt>Road</dt><dd>Tunnel CdA averaged with Barry (2018) time-at-yaw weights, added to a rider in the chosen position; rolling from catalog Crr. Ranked only on the yaws every started build shares.</dd>
+    <dt>Not modelled</dt><dd>Rider, chain, cables. Lift is not meaningful with the tyres on the ground.</dd></dl></details>`;
+  return { lead: top + grid + ab, more: chart + table + method };
 }
 
 // ---- Upgrade study: installed vs Superteam 50 + GP5000 AS TR 28 ----------------------------------
@@ -253,9 +387,10 @@ export function structurePanel(beamPanel) {
 
 /** The colour key that sits on the stage (phones included). */
 export function aeroKey() {
-  const a = L.aero; if (!a) return '';
+  const a = L.aero ?? L.prev; if (!a) return '';
   const row = (name, ramp, ticks, unit) => `<div class="k"><b>${name}<em>${unit}</em></b><div class="kbar" style="background:${rampCSS(ramp)}"></div><div class="kt">${ticks.map((t) => `<span>${t}</span>`).join('')}</div></div>`;
-  const out = [];
+  const out = [], cap = aeroCaption();
+  if (cap) out.push(`<div class="kcap">${esc(cap.who)}<small>${esc(cap.when)}</small></div>`);
   const [c0, c1] = SURFACE_CP, f = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1);
   if (L.show.surface) out.push(row('Surface pressure', 'cfd', [`≤${f(c0)}`, '0', `≥${f(c1)}`], 'Cp'));
   if (L.show.particles || L.show.lines) out.push(row('Air speed', 'flow', ['0', '1', '1.5'], '|U| / U∞'));
@@ -279,20 +414,36 @@ export function handle(e, b, api) {
   if (d.afield) { L.field = d.afield; L.aero?.setField(L.field); api.redraw(); api.render(); return true; }
   if (d.ayaw) { if (d.ayaw !== L.aeroCase) { L.aeroCase = d.ayaw; api.reloadAero(); } return true; }
   if (d.aproto) {
-    const yaw = L.aero?.cfd.summary.assumptions.yaw_deg ?? 0, inP = L.cases.filter((c) => proto(c) === d.aproto);
-    const pref = d.aproto === 'standard' ? MATRIX[0].cad : BASE_CAD, pool = inP.filter((c) => (c.cad || BASE_CAD) === pref).length ? inP.filter((c) => (c.cad || BASE_CAD) === pref) : inP;
+    const yaw = (L.aero ?? L.prev)?.cfd.summary.assumptions.yaw_deg ?? 0, inP = L.cases.filter((c) => proto(c) === d.aproto);
+    const pref = d.aproto === 'standard' ? BASE_M.cad : BASE_CAD, pool = inP.filter((c) => (c.cad || BASE_CAD) === pref).length ? inP.filter((c) => (c.cad || BASE_CAD) === pref) : inP;
     const to = pool.find((c) => c.yaw_deg === yaw) || pool[0];
     if (to && to.case !== L.aeroCase) { L.aeroCase = to.case; api.reloadAero(); }
     return true;
   }
   if (d.acfg) {
-    const pr = L.aero?.cfd.summary.assumptions.protocol || 'static';
-    const yaw = L.aero?.cfd.summary.assumptions.yaw_deg ?? 0, inCfg = L.cases.filter((c) => (c.cad || BASE_CAD) === d.acfg && proto(c) === pr);
+    const pr = (L.aero ?? L.prev)?.cfd.summary.assumptions.protocol || 'static';
+    const yaw = (L.aero ?? L.prev)?.cfd.summary.assumptions.yaw_deg ?? 0, inCfg = L.cases.filter((c) => (c.cad || BASE_CAD) === d.acfg && proto(c) === pr);
     const to = inCfg.find((c) => c.yaw_deg === yaw) || inCfg.sort((x, y) => Math.abs(x.yaw_deg - yaw) - Math.abs(y.yaw_deg - yaw))[0];
     if (to && to.case !== L.aeroCase) { L.aeroCase = to.case; api.reloadAero(); }
     return true;
   }
   if (d.study) { L.studyOpen = !L.studyOpen; api.render(); return true; }
+  if (d.acase) { if (d.acase !== L.aeroCase) { L.aeroCase = d.acase; api.reloadAero(); } return true; }
+  if (d.ayawto != null && b?.hasAttribute('data-ayawto')) {
+    const a = L.aero ?? L.prev, cad = a?.cfd.cad || BASE_CAD, pr = a?.cfd.summary.assumptions.protocol || 'static';
+    const to = L.cases.find((c) => (c.cad || BASE_CAD) === cad && proto(c) === pr && c.yaw_deg === Number(d.ayawto));
+    if (to && to.case !== L.aeroCase) { L.aeroCase = to.case; api.reloadAero(); }
+    return true;
+  }
+  if (d.amx) { L.mxMetric = d.amx; api.render(); return true; }
+  if (d.amxc) { L.mxChart = d.amxc; api.render(); return true; }
+  if (b?.hasAttribute('data-aflip')) {
+    const a = L.aero ?? L.prev; if (!a) return true;
+    const A = a.cfd.cad, yaw = a.cfd.summary.assumptions.yaw_deg, B = compareCad(A, yaw);
+    const to = L.cases.find((c) => c.cad === B && proto(c) === 'standard' && c.yaw_deg === yaw);
+    if (to) { L.compare = A; L.aeroCase = to.case; api.reloadAero(); }
+    return true;
+  }
   if (d.acut) { L.cut = d.acut; if (L.cut === 'off') L.scan = false; applyCut(); api.redraw(); api.render(); return true; }
   if (b?.hasAttribute('data-ascan')) { L.scan = !L.scan; applyCut(); api.redraw(); api.render(); return true; }
   if (d.smode) { L.structMode = d.smode; api.sync(); return true; }
@@ -319,6 +470,11 @@ export async function applyUnsteady() {
   if (on && a.unsteady.level !== L.uLevel && a.unsteady.ready) a.unsteady.setLevel(L.uLevel); else a.unsteady.level = L.uLevel;
   a.show('vortex', on ? false : L.show.vortex);
   await a.unsteady.setOn(on);
+}
+export function handleChange(e, api) {
+  const t = e.target;
+  if (t.hasAttribute?.('data-acmp')) { L.compare = t.value; api.render(); prefetchCompare(); return true; }
+  return false;
 }
 let isoTimer = 0;
 export function handleInput(e, api) {

@@ -2,12 +2,18 @@
 // the wind tunnel (LBM-LES) and the Abaqus shell model. All geometry is in millimetres, bike frame.
 import * as T from 'three';
 
-const cache = new Map();
+// Packs are cached by path. Wind-tunnel cases (~5 MB each, 42 in the matrix) are kept least-recently-used
+// so flipping between builds is instant without holding every case; a failed fetch is forgotten, so a
+// case that lands later (the matrix fills in over days) loads on the next try.
+const cache = new Map(), CFD_KEEP = 6;
 export async function loadPack(base) {
-  if (cache.has(base)) return cache.get(base);
+  if (cache.has(base)) { const p = cache.get(base); cache.delete(base); cache.set(base, p); return p; }
   const p = Promise.all([fetch(base + '.json').then((r) => { if (!r.ok) throw new Error(base + '.json'); return r.json(); }),
     fetch(base + '.bin').then((r) => { if (!r.ok) throw new Error(base + '.bin'); return r.arrayBuffer(); })]);
   cache.set(base, p);
+  p.catch(() => { if (cache.get(base) === p) cache.delete(base); });
+  const cfd = [...cache.keys()].filter((k) => k.startsWith('data/cfd/'));
+  for (const k of cfd.slice(0, Math.max(0, cfd.length - CFD_KEEP))) cache.delete(k);
   return p;
 }
 
@@ -120,11 +126,23 @@ function sliceTexture(bytes, w, h, ramp, solid) {
   return t;
 }
 
+/**
+ * Shared scales for the standard-protocol matrix. Each case quantises vorticity and the Q criterion over its
+ * own range (up to its 99.5th percentile), which moves from build to build; re-expressed on one range, a
+ * cut-plane colour and a vortex-surface level mean the same thing in every case, so A/B flips compare.
+ */
+export const VOL_REF = { vort: 300, q: 5500 };
 /** The 16 mm flow volume (tunnel frame, mm): uint8 fields with ranges, solid bits, derived total-pressure loss. */
 function volumeOf(cfd, buf) {
   const v = cfd.volume; if (!v) return null;
   const [nx, ny, nz] = v.n, N = nx * ny * nz, F = {};
   for (const [k, f] of Object.entries(v.fields)) F[k] = { q: new Uint8Array(buf, f.off, N), range: f.range };
+  if (cfd.summary?.assumptions?.protocol === 'standard') for (const [k, top] of Object.entries(VOL_REF)) {
+    const f = F[k]; if (!f || !(f.range[1] > f.range[0])) continue;
+    const [r0, r1] = f.range, q = new Uint8Array(N), s = (r1 - r0) / top, o = r0 / top * 255;
+    for (let i = 0; i < N; i++) q[i] = Math.min(255, Math.max(0, Math.round(o + f.q[i] * s)));
+    F[k] = { q, range: [0, top] };
+  }
   const sb = new Uint8Array(buf, v.solid, Math.ceil(N / 8));
   const solid = new Uint8Array(N); for (let i = 0; i < N; i++) solid[i] = (sb[i >> 3] >> (i & 7)) & 1;
   if (F.cp && F.speed) { // total-pressure loss 1 - Cp0, Cp0 = Cp + (|U|/U_inf)^2 of the mean flow

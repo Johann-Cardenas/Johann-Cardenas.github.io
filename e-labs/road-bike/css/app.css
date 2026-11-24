@@ -12,6 +12,8 @@
   --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 6px 20px rgba(16, 24, 40, .07);
   --r: 8px; --sans: 'Archivo', 'Segoe UI', system-ui, sans-serif; --mono: 'Archivo', 'Segoe UI', system-ui, sans-serif;
   --top: 56px; --panel: 392px;
+  /* matrix builds: slate for the Fulcrum, teal for the Superteam, darker with the wider tyre */
+  --mx-fu23: #94a0ad; --mx-fu25: #66727f; --mx-fu28: #3c4753; --mx-st23: #7fd6d5; --mx-st25: #18a9a8; --mx-st28: #0b6f6e;
 }
 :root[data-theme='dark'] {
   --bg: #0f1317; --bg2: #171c22; --bg3: #1c222a; --ink: #e7ecf1; --ink2: #a9b4c0; --ink3: #7c8794;
@@ -19,6 +21,7 @@
   --ok: #4cc38a; --warn: #e0a84b; --warn-bg: #2e2515; --err: #ef7c6e; --err-bg: #331a17; --info: #9fb2c4; --info-bg: #1b232c;
   --c: #4cc38a; --l: #77a5ea; --s: #b29be0; --m: #e0a84b;
   --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+  --mx-fu23: #c3ccd5; --mx-fu25: #97a4b1; --mx-fu28: #6f7d8b; --mx-st23: #a3e9e8; --mx-st25: #22d3d1; --mx-st28: #139e9c;
 }
 
 * { box-sizing: border-box; }
@@ -154,7 +157,7 @@ body[data-stage='tunnel'] .rb-title b { color: #eef1f4; } body[data-stage='tunne
 .rb-legend .ticks { display: flex; flex-direction: column; justify-content: space-between; font-family: var(--mono); color: var(--ink2); }
 .rb-legend b { display: block; margin-bottom: 6px; font-size: 11px; }
 /* wind-tunnel colour key: always on the stage, phones included, so the colours can be read without the panel */
-.rb-akey { left: 18px; top: 64px; width: 196px; display: flex; flex-direction: column; gap: 7px; padding: 9px 11px 8px; pointer-events: none; color: #dfe5ea;
+.rb-akey { left: 18px; top: 76px; width: 204px; display: flex; flex-direction: column; gap: 7px; padding: 9px 11px 8px; pointer-events: none; color: #dfe5ea;
   background: rgba(13, 17, 21, .62); backdrop-filter: blur(6px); border: 1px solid rgba(255, 255, 255, .09); border-radius: 9px; font-size: 10.5px; }
 .rb-akey[hidden] { display: none; }
 .rb-akey .k b { display: flex; justify-content: space-between; font-weight: 600; font-size: 10.5px; letter-spacing: .02em; color: #f2f5f7; }
@@ -399,3 +402,73 @@ svg.chart text { fill: var(--ink2); } svg.chart .ax { stroke: var(--line); } svg
 .plist button:hover, .plist button.on { background: var(--accent-bg) !important; color: var(--accent-ink); }
 .plist small { color: var(--ink3); }
 .pending { display: grid; place-items: center; gap: 10px; padding: 40px 16px; text-align: center; color: var(--ink2); }
+
+/* ---- wheels x tyres matrix (Aero panel) ---- */
+.mxload { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 7px 16px; font-size: 12px; color: var(--accent-ink);
+  background: color-mix(in srgb, var(--accent-bg) 92%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line2); }
+.mxload .rb-spin { width: 13px; height: 13px; border-width: 1.5px; }
+.mxprog { display: grid; gap: 5px; margin-bottom: 10px; }
+.mxbar { height: 4px; border-radius: 2px; background: var(--line2); overflow: hidden; }
+.mxbar i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+.mxprog span { display: flex; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--ink2); flex-wrap: wrap; }
+.mxprog em { font-style: normal; color: var(--ink3); }
+.mxhead { font-size: 13.5px; line-height: 1.45; color: var(--ink2); margin-bottom: 2px; }
+.mxhead b { color: var(--ink); font-weight: 650; }
+.mxhead b.good { color: var(--ok); } .mxhead b.bad { color: var(--err); }
+.mx .gain b { font-size: 16px; }
+.RoadBike .mxseg button { font-size: 11px; padding: 2px 8px; letter-spacing: 0; }
+.mxgrid { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 2px; font-size: 10.5px; margin: 0 -2px; }
+.RoadBike .mxgrid th, .RoadBike .mxgrid td { padding: 0; border: 0; position: static; background: none; text-align: center; vertical-align: middle; letter-spacing: 0; text-transform: none; }
+.mxgrid thead th:first-child, .mxgrid tbody th { width: 44px; }
+.RoadBike .mxgrid button { width: 100%; min-height: 0; padding: 0; border: 1px solid transparent; border-radius: 4px; background: none; font: 500 10.5px/24px var(--mono); color: var(--ink2); white-space: nowrap; overflow: hidden; }
+.RoadBike .mxgrid thead button { color: var(--ink3); font-weight: 600; }
+.RoadBike .mxgrid thead button.on, .RoadBike .mxgrid tbody th button.on { color: var(--accent-ink); background: var(--accent-bg); }
+.RoadBike .mxgrid tbody th button { text-align: left; padding-left: 3px; font-family: var(--sans); font-size: 11.5px; color: var(--ink); display: flex; align-items: center; gap: 4px; }
+.mxgrid sup { font-size: 8.5px; color: var(--ink3); text-transform: uppercase; letter-spacing: .04em; }
+.mxgrid .dot, .study .dot, .abtag .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
+.RoadBike .mxgrid tr.mxg th { text-align: left; font-size: 10px; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: .07em; padding: 6px 0 1px 3px; }
+.RoadBike .mxgrid .mxc { background: var(--bg3); color: var(--ink); }
+.RoadBike .mxgrid .mxc.lo { background: color-mix(in srgb, var(--accent) var(--k), var(--bg2)); color: var(--ink); }
+.RoadBike .mxgrid .mxc.hi { background: color-mix(in srgb, var(--err) var(--k), var(--bg2)); color: var(--ink); }
+.RoadBike .mxgrid .mxc.abs { background: color-mix(in srgb, var(--info) var(--k), var(--bg2)); }
+.RoadBike .mxgrid .mxc.quiet { color: var(--ink3); }
+.RoadBike .mxgrid .mxc.sure { font-weight: 650; }
+.legendrow i.dash { background: repeating-linear-gradient(90deg, var(--c) 0 4px, transparent 4px 6px) !important; }
+.legendrow small { color: var(--ink3); font-size: 10.5px; }
+.RoadBike .mxgrid .mxc.ref { color: var(--ink2); font-weight: 400; }
+.RoadBike .mxgrid .mxc:hover { border-color: var(--ink3); }
+.RoadBike .mxgrid .mxc.cur { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); font-weight: 700; }
+.mxq { display: inline-block; color: var(--ink3); font: 700 13px/24px var(--mono); }
+.mxgrid td .mxq { width: 100%; border: 1px dashed var(--line); border-radius: 4px; line-height: 22px; }
+.mxkey { display: inline-block; width: 9px; height: 9px; border-radius: 2px; vertical-align: -1px; margin: 0 3px 0 2px; }
+.mxkey.lo { background: color-mix(in srgb, var(--accent) 55%, var(--bg2)); } .mxkey.hi { background: color-mix(in srgb, var(--err) 55%, var(--bg2)); }
+.foot .mxq { line-height: 1; font-size: 12px; }
+.abrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px; align-items: stretch; }
+.abtag { display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; font-size: 12px; color: var(--ink2); border: 1px solid var(--line2); background: var(--bg3); border-radius: 6px; padding: 3px 8px; min-height: 30px; }
+.abtag > b { font: 700 10px/1 var(--mono); color: var(--ink3); }
+.RoadBike .abtag select { border: 0; background: none; padding: 0; font-size: 12px; color: var(--ink); min-width: 0; flex: 1; cursor: pointer; }
+.RoadBike .abrow button[data-aflip] { padding: 4px 12px; white-space: nowrap; }
+.dbars { display: grid; gap: 4px; margin-top: 10px; font-size: 12px; }
+.dbars > div { display: grid; grid-template-columns: 92px minmax(0, 1fr) 52px; gap: 8px; align-items: center; color: var(--ink2); }
+.dbars > div.tot { color: var(--ink); font-weight: 600; border-top: 1px solid var(--line2); padding-top: 4px; }
+.dtrack { position: relative; height: 9px; background: linear-gradient(var(--line), var(--line)) 50% 0 / 1px 100% no-repeat; }
+.dtrack i { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.dtrack i.lo { background: var(--accent); } .dtrack i.hi { background: var(--err); opacity: .75; } .dtrack i.quiet { background: var(--ink3); opacity: .45; }
+.dbars b { text-align: right; font-family: var(--mono); font-weight: 600; }
+.dbars b.good { color: var(--ok); } .dbars b.bad { color: var(--err); }
+details.mxmeth > summary { cursor: pointer; list-style: none; font-size: 10.5px; text-transform: uppercase; letter-spacing: .14em; font-stretch: 118%; color: var(--ink3); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+details.mxmeth > summary::-webkit-details-marker { display: none; }
+details.mxmeth > summary::after { content: ''; margin-left: auto; width: 6px; height: 6px; border-right: 1.5px solid var(--ink3); border-bottom: 1.5px solid var(--ink3); transform: rotate(45deg); transition: transform .15s; }
+details.mxmeth[open] > summary::after { transform: rotate(-135deg); }
+.mxmeth dl { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 6px 10px; margin: 10px 0 0; font-size: 12px; }
+.mxmeth dt { color: var(--ink3); font-weight: 600; }
+.mxmeth dd { margin: 0; color: var(--ink2); line-height: 1.45; }
+.study tr.click { cursor: pointer; } .study tr.click:hover td { background: var(--bg3); } .study tr.sel td { background: var(--accent-bg); }
+.study tr.dim td { color: var(--ink3); }
+.mxrank { table-layout: auto; }
+@media (max-width: 719.98px) { .abrow { grid-template-columns: auto minmax(0, 1fr); } .RoadBike .abrow .abflip { grid-column: 1 / -1; } }
+@media (max-width: 719.98px) { .mxrank th:last-child, .mxrank td:last-child { display: none; } .mxrank th, .mxrank td { padding: 3px 3px; } }
+svg.chart .band { fill: var(--ink3); opacity: .14; } svg.chart .zero { stroke: var(--ink3); stroke-width: 1; }
+.rb-akey .kcap { font-size: 11px; font-weight: 650; color: #f2f5f7; letter-spacing: .01em; padding-bottom: 6px; border-bottom: 1px solid rgba(255, 255, 255, .1); line-height: 1.35; }
+.rb-akey .kcap small { display: block; font-weight: 400; font-size: 10px; color: #9aa6b2; }
+@media (pointer: coarse) { .RoadBike .mxgrid button { min-height: 32px; line-height: 30px; } .RoadBike .mxseg button { min-height: 30px; } }
