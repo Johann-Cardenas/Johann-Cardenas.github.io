@@ -152,6 +152,160 @@
    "protocol": "standard"
   },
   {
+   "case": "yaw00_dx8_fu25",
+   "yaw_deg": 0.0,
+   "dx_mm": 8.0,
+   "CdA_m2": 0.13347095638864664,
+   "drag_N": 9.91969330197102,
+   "side_force_N": -1.0761814416369668,
+   "lift_N": 0.8422221974315842,
+   "drag_by_group_N": {
+    "Frame": 1.6062682000021937,
+    "Fork": 1.3039542905845254,
+    "Front wheel": 2.8575994169464773,
+    "Rear wheel": 1.2340617577670312,
+    "Drivetrain": 0.7062599060095849,
+    "Cockpit": 1.942868184582118,
+    "Saddle & post": 0.3885242335908951,
+    "Brakes": -0.1130060388226305,
+    "Bottles": -0.0068366486891758785
+   },
+   "force_by_group_N": {
+    "Frame": [
+     -1.6062682000021937,
+     0.6229172237890672,
+     -0.47299823337763774
+    ],
+    "Fork": [
+     -1.3039542905845254,
+     -0.23175442282076764,
+     -0.10016642267364993
+    ],
+    "Front wheel": [
+     -2.8575994169464773,
+     -0.22766266832567517,
+     0.21362077699349288
+    ],
+    "Rear wheel": [
+     -1.2340617577670312,
+     0.11457947986972983,
+     -0.263358028186091
+    ],
+    "Drivetrain": [
+     -0.7062599060095849,
+     -0.08043704521961509,
+     -0.14072852148061024
+    ],
+    "Cockpit": [
+     -1.942868184582118,
+     0.5647772130857501,
+     -0.13056491518251334
+    ],
+    "Saddle & post": [
+     -0.3885242335908951,
+     -0.024008630902174116,
+     -0.06745939336895372
+    ],
+    "Brakes": [
+     0.1130060388226305,
+     0.03666093786336222,
+     -0.0404271248867171
+    ],
+    "Bottles": [
+     0.0068366486891758785,
+     0.06715011009190691,
+     -0.07409957947428661
+    ]
+   },
+   "profile": true,
+   "cad": "data/cad/variants/fu25/parts",
+   "config": "Fulcrum Racing 15C + 25 mm",
+   "uncertainty": {
+    "drag_se_N": 0.30301845521831733,
+    "method": "standard error of 8 batch means over the averaging window",
+    "repeatability_N": 0.041,
+    "repeatability_note": "Two independent runs of the installed build at 0 deg (yaw00_dx8 and yaw00_dx8_snap) differ by 0.041 N (0.5 %)."
+   },
+   "protocol": "standard"
+  },
+  {
+   "case": "yaw00_dx8_fu28",
+   "yaw_deg": 0.0,
+   "dx_mm": 8.0,
+   "CdA_m2": 0.14489520047454824,
+   "drag_N": 10.768754405639262,
+   "side_force_N": 0.6777228114450974,
+   "lift_N": 0.6778168680214027,
+   "drag_by_group_N": {
+    "Frame": 1.5494822204618635,
+    "Fork": 1.2063578719681793,
+    "Front wheel": 3.3448426753664804,
+    "Rear wheel": 1.7266825471332439,
+    "Drivetrain": 0.4132378249190773,
+    "Cockpit": 2.238201901463289,
+    "Saddle & post": 0.4572883202313727,
+    "Brakes": -0.1516129606091175,
+    "Bottles": -0.015725995295125896
+   },
+   "force_by_group_N": {
+    "Frame": [
+     -1.5494822204618635,
+     0.41596915385417244,
+     0.08192059488758995
+    ],
+    "Fork": [
+     -1.2063578719681793,
+     -0.2606103554905814,
+     0.08172289106119478
+    ],
+    "Front wheel": [
+     -3.3448426753664804,
+     -0.1366704501022407,
+     -0.024741519899967937
+    ],
+    "Rear wheel": [
+     -1.7266825471332439,
+     0.26134721806811423,
+     0.4606683598237501
+    ],
+    "Drivetrain": [
+     -0.4132378249190773,
+     -0.030102863621662933,
+     0.040378595318161785
+    ],
+    "Cockpit": [
+     -2.238201901463289,
+     0.3716464227429628,
+     -0.0019518815264105756
+    ],
+    "Saddle & post": [
+     -0.4572883202313727,
+     -0.06893049017641208,
+     0.06290898603987458
+    ],
+    "Brakes": [
+     0.1516129606091175,
+     0.03848249997144817,
+     -0.006180479567941473
+    ],
+    "Bottles": [
+     0.015725995295125896,
+     0.08668573277560224,
+     -0.01700273469115376
+    ]
+   },
+   "profile": true,
+   "cad": "data/cad/variants/fu28/parts",
+   "config": "Fulcrum Racing 15C + 28 mm",
+   "uncertainty": {
+    "drag_se_N": 0.48389138164830375,
+    "method": "standard error of 8 batch means over the averaging window",
+    "repeatability_N": 0.041,
+    "repeatability_note": "Two independent runs of the installed build at 0 deg (yaw00_dx8 and yaw00_dx8_snap) differ by 0.041 N (0.5 %)."
+   },
+   "protocol": "standard"
+  },
+  {
    "case": "yaw00_dx8_st23",
    "yaw_deg": 0.0,
    "dx_mm": 8.0,
@@ -222,6 +376,83 @@
    "config": "Superteam 50 + 23 mm",
    "uncertainty": {
     "drag_se_N": 0.3646783462856638,
+    "method": "standard error of 8 batch means over the averaging window",
+    "repeatability_N": 0.041,
+    "repeatability_note": "Two independent runs of the installed build at 0 deg (yaw00_dx8 and yaw00_dx8_snap) differ by 0.041 N (0.5 %)."
+   },
+   "protocol": "standard"
+  },
+  {
+   "case": "yaw00_dx8_st25",
+   "yaw_deg": 0.0,
+   "dx_mm": 8.0,
+   "CdA_m2": 0.15067114935067807,
+   "drag_N": 11.198028630754097,
+   "side_force_N": 0.3019855762291269,
+   "lift_N": 1.8310695862283954,
+   "drag_by_group_N": {
+    "Frame": 1.7281953816148994,
+    "Fork": 1.3328600897630798,
+    "Front wheel": 3.1996358565813448,
+    "Rear wheel": 1.3817541055820544,
+    "Drivetrain": 0.8456070247588574,
+    "Cockpit": 2.2656143929869765,
+    "Saddle & post": 0.48107124097799553,
+    "Brakes": -0.12808881001019579,
+    "Bottles": 0.09137934849908491
+   },
+   "force_by_group_N": {
+    "Frame": [
+     -1.7281953816148994,
+     0.5319536762677761,
+     -0.10869386439342335
+    ],
+    "Fork": [
+     -1.3328600897630798,
+     -0.38280668526300965,
+     0.01375779827036115
+    ],
+    "Front wheel": [
+     -3.1996358565813448,
+     0.21282002045261605,
+     0.3256884910608841
+    ],
+    "Rear wheel": [
+     -1.3817541055820544,
+     0.5943019902255853,
+     0.12415998617620351
+    ],
+    "Drivetrain": [
+     -0.8456070247588574,
+     -0.08596278903432117,
+     0.05308912868532298
+    ],
+    "Cockpit": [
+     -2.2656143929869765,
+     0.7089734794087039,
+     -0.011167809418730473
+    ],
+    "Saddle & post": [
+     -0.48107124097799553,
+     -0.03447470253151039,
+     -0.05860324056136366
+    ],
+    "Brakes": [
+     0.12808881001019579,
+     0.039294931591999815,
+     -0.027940758434193202
+    ],
+    "Bottles": [
+     -0.09137934849908491,
+     0.24696966511055551,
+     -0.008304155155934124
+    ]
+   },
+   "profile": true,
+   "cad": "data/cad/variants/st25/parts",
+   "config": "Superteam 50 + 25 mm",
+   "uncertainty": {
+    "drag_se_N": 0.427044133845295,
     "method": "standard error of 8 batch means over the averaging window",
     "repeatability_N": 0.041,
     "repeatability_note": "Two independent runs of the installed build at 0 deg (yaw00_dx8 and yaw00_dx8_snap) differ by 0.041 N (0.5 %)."
@@ -304,6 +535,83 @@
     "repeatability_note": "Two independent runs of the installed build at 0 deg (yaw00_dx8 and yaw00_dx8_snap) differ by 0.041 N (0.5 %)."
    },
    "protocol": "static"
+  },
+  {
+   "case": "yaw00_dx8_st28std",
+   "yaw_deg": 0.0,
+   "dx_mm": 8.0,
+   "CdA_m2": 0.12442979393583495,
+   "drag_N": 9.247745178934892,
+   "side_force_N": 0.5142712881977678,
+   "lift_N": 0.2612244937203549,
+   "drag_by_group_N": {
+    "Frame": 1.4172835808716675,
+    "Fork": 1.1746022215481196,
+    "Front wheel": 2.8610249609277743,
+    "Rear wheel": 1.332036812137968,
+    "Drivetrain": 0.3428207705001347,
+    "Cockpit": 2.091006807010252,
+    "Saddle & post": 0.2677992132116131,
+    "Brakes": -0.18932004727447324,
+    "Bottles": -0.04950913999816466
+   },
+   "force_by_group_N": {
+    "Frame": [
+     -1.4172835808716675,
+     0.6289735588710461,
+     0.04471401357973429
+    ],
+    "Fork": [
+     -1.1746022215481196,
+     -0.04814912201607743,
+     0.07851751991912856
+    ],
+    "Front wheel": [
+     -2.8610249609277743,
+     -0.5634280043882712,
+     -0.1029295365438189
+    ],
+    "Rear wheel": [
+     -1.332036812137968,
+     0.045266579124046205,
+     0.5096331943300744
+    ],
+    "Drivetrain": [
+     -0.3428207705001347,
+     -0.07408995915745899,
+     -0.09528731171150112
+    ],
+    "Cockpit": [
+     -2.091006807010252,
+     0.32312787380666663,
+     -0.014010575513791796
+    ],
+    "Saddle & post": [
+     -0.2677992132116131,
+     -0.010320942240743624,
+     0.07399257402868938
+    ],
+    "Brakes": [
+     0.18932004727447324,
+     0.010973352435734177,
+     0.018419460155122518
+    ],
+    "Bottles": [
+     0.04950913999816466,
+     -0.05112884271458691,
+     0.0012219499541304586
+    ]
+   },
+   "profile": true,
+   "cad": "data/cad/variants/st28/parts",
+   "config": "Superteam 50 + 28 mm",
+   "uncertainty": {
+    "drag_se_N": 0.13950972481016755,
+    "method": "standard error of 8 batch means over the averaging window",
+    "repeatability_N": 0.041,
+    "repeatability_note": "Two independent runs of the installed build at 0 deg (yaw00_dx8 and yaw00_dx8_snap) differ by 0.041 N (0.5 %)."
+   },
+   "protocol": "standard"
   },
   {
    "case": "yaw05_dx8",
