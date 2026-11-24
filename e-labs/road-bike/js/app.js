@@ -105,6 +105,8 @@ async function ensure(kind) {
       P.cad.setEdges(P.edges); P.cad.setClay(P.clay);
     } else if (kind === 'aero' && !P.aero && !P.aeroMissing) {
       if (!P.cases.length) P.cases = await fetch('data/cfd/cases.json').then((r) => (r.ok ? r.json() : { cases: [] })).then((j) => j.cases).catch(() => []);
+      // open on the standard protocol (spinning wheels, moving ground) once the installed build has it
+      if (P.aeroCase === 'yaw00_dx8' && P.cases.some((c) => c.case === 'yaw00_dx8_fu23')) P.aeroCase = 'yaw00_dx8_fu23';
       try { P.aero = await aeroScene(P.aeroCase, theme); } catch { P.aeroMissing = true; }
       if (P.aero) {
         for (const [k, v] of Object.entries(P.iso)) P.aero.setIso(k, v);
@@ -341,7 +343,7 @@ function wire() {
     } else views.onInput?.(e);
   });
   panel.addEventListener('click', (e) => {
-    const b = e.target.closest('button'); if (!b) return;
+    const b = e.target.closest('button, tr[data-acfg]'); if (!b) return;
     if (panels.handle(e, b, panelApi)) return;
     if (b.dataset.mode) { S.showInstalled = b.dataset.mode === 'installed'; rebuild3D(true); render(); }
     else if (b.dataset.focus) { S.viewer.select(b.dataset.focus); S.viewer.focus(b.dataset.focus); showCard(b.dataset.focus); }

@@ -226,6 +226,12 @@ def main(case_name):
         out["unsteady"] = json.loads(old.read_text(encoding="utf-8")).get("unsteady")
     (dst / f"{case_name}.bin").write_bytes(bytes(blob))
     (dst / f"{case_name}.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
+    write_index(dst)
+    print(f"{len(off_pts)} streamlines, {len(surf)} surface parts, {len(blob) / 1e6:.2f} MB, CdA {summary['CdA_m2']:.4f}")
+
+
+def write_index(dst):
+    """Rebuild cases.json from the case packs present in dst."""
     cases = []
     for f in sorted(p for p in dst.glob("yaw*_dx*.json") if not p.stem.endswith("_unsteady")):
         d = json.loads(f.read_text(encoding="utf-8"))
@@ -233,10 +239,10 @@ def main(case_name):
         cases.append({"case": d["case"], "yaw_deg": sm["assumptions"]["yaw_deg"], "dx_mm": sm["grid"]["dx_mm"], "CdA_m2": sm["CdA_m2"], "drag_N": sm["drag_N"],
                       "side_force_N": sm["side_force_N"], "lift_N": sm["lift_N"], "drag_by_group_N": sm["drag_by_group_N"],
                       "force_by_group_N": sm.get("force_by_group_N"), "profile": bool(d.get("profile")),
-                      "cad": d.get("cad", "data/cad/parts"), "config": d.get("config", "Installed build"), "uncertainty": d.get("uncertainty")})
+                      "cad": d.get("cad", "data/cad/parts"), "config": d.get("config", "Installed build"), "uncertainty": d.get("uncertainty"),
+                      "protocol": sm["assumptions"].get("protocol", "static")})
     cases.sort(key=lambda c: (c["dx_mm"], c["yaw_deg"]))
     (dst / "cases.json").write_text(json.dumps({"schema": "synapse-cfd-cases/1", "speed_kmh": 40, "cases": cases}, indent=1), encoding="utf-8")
-    print(f"{len(off_pts)} streamlines, {len(surf)} surface parts, {len(blob) / 1e6:.2f} MB, CdA {summary['CdA_m2']:.4f}")
 
 
 def varint_deltas(idx):
@@ -321,6 +327,9 @@ def unsteady(case_name, snap_name, frames_max=120, floor=0.15, plane_step=2):
 
 if __name__ == "__main__":
     args = sys.argv[1:]
+    if args == ["--index"]:  # only rebuild cases.json from the packs on disk
+        write_index(ROOT / "data" / "cfd")
+        sys.exit(0)
     if "--unsteady" in args:
         k = args.index("--unsteady")
         unsteady(args[0] if k > 0 else "yaw00_dx8", args[k + 1])

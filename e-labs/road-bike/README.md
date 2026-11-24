@@ -67,6 +67,29 @@ Crr. GP5000 AS TR Crr are Bicycle Rolling Resistance tubeless drum figures; on a
 the installed build at 0° differ by 0.041 N (0.5 %). The Rubino Pro and Fulcrum are unweighed, so the
 flat-road result holds mass equal and the panel gives the climbing cost per 100 g instead.
 
+### Standard protocol (2026-11-20)
+
+Bike-tunnel practice (e.g. Silverstone/Cyclingnews wheel tests): the bike with no rider, wheels spun at
+road speed, a yaw sweep from −15° to +15° in 5° steps, CdA reported at 30/40/50 km/h and averaged with
+yaw weights after Barry (2018). The tunnel now does the same by default:
+
+- **Spinning wheels**: wheel cells are moving walls (Ladd bounce-back, `cad/lbm_gen.py`) turning about
+  each axle at U cos(yaw) / R, so the contact patch matches the road.
+- **Moving ground**: a floor under the tyres moving along the bike's heading at the same speed; the
+  domain stops three cells into it (≈25 % fewer cells, ~52 min per case). Its force has its own row and
+  never enters the bike's drag. Bike *lift* is not meaningful here: the contact patches have no air
+  under them, so ambient pressure presses the bike down.
+- **Spokes**: 1–2 mm spokes do not resolve at 8 mm, so `spokeModel` in `js/model/study.js` adds them by
+  blade element (drag plus the power to keep them turning) for every build alike.
+- **Yaw weights**: Barry's 30 mph figures (70 % of time below 10°, 90 % below 16°) fit a half-normal with
+  σ 9.7°; σ is scaled to the test speed (11.7° at 40 km/h) and each angle takes its ±2.5° bin.
+- `--static` reproduces the first runs (no ground, still wheels). Cases record `protocol`, and the
+  Aero panel switches between them.
+
+The matrix is two wheelsets (Fulcrum Racing 15C, Superteam 50) × three tyre widths (23, 25, 28) ×
+seven yaws: CAD packs `data/cad/variants/{fu,st}{23,25,28}`, cases `yaw[m]NN_dx8_<key>` (`m` = negative
+yaw). `matrixStudy` compares every build with Fulcrum + 23 (the installed bike) on the yaws both have.
+
 ### Wind tunnel
 
 Lattice Boltzmann D3Q19, regularized BGK with Smagorinsky LES, half-way bounce-back walls and
@@ -128,7 +151,7 @@ Edit `tools/build_catalog.mjs`, then `node tools/build_catalog.mjs`; a test fail
 ## Checks
 
 ```
-node --test e-labs/road-bike/tests/*.test.js     # 40 checks: models, catalog, data packs, module syntax
+node --test e-labs/road-bike/tests/*.test.js     # 43 checks: models, catalog, data packs, module syntax
 python e-labs/road-bike/tools/validate_site.py
 python e-labs/road-bike/cad/lbm_check.py 24 9000  # sphere validation of the wind tunnel
 ```

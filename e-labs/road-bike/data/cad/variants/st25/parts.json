@@ -1,0 +1,1424 @@
+{
+ "schema": "synapse-cad/1",
+ "units": "mm",
+ "frame": "BB origin, +X forward, +Y up, +Z drive side",
+ "source": "cad/bike_cad.py (CadQuery B-rep), the same geometry exported to SolidWorks",
+ "offset": [
+  -739.6285400390625,
+  -264.0,
+  -226.36944580078125
+ ],
+ "scale": [
+  0.025114648935213972,
+  0.014353678879653596,
+  0.006908458076747375
+ ],
+ "bytes": 3144872,
+ "parts": [
+  {
+   "name": "frame",
+   "slot": "frameset",
+   "color": [
+    0.953,
+    0.953,
+    0.941
+   ],
+   "aero": true,
+   "fe": true,
+   "pos": [
+    0,
+    9937
+   ],
+   "idx": [
+    59624,
+    46872
+   ],
+   "volume_cm3": 3326.02,
+   "centroid": [
+    114.7,
+    247.2,
+    0.0
+   ],
+   "note": "Carbon monocoque: tubes fused and filleted into one solid"
+  },
+  {
+   "name": "seatpost_clamp",
+   "slot": "frameset",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    247112,
+    770
+   ],
+   "idx": [
+    251732,
+    2244
+   ],
+   "volume_cm3": 10.77,
+   "centroid": [
+    -128.5,
+    426.1,
+    -0.0
+   ],
+   "note": "Seat clamp collar"
+  },
+  {
+   "name": "fork",
+   "slot": "frameset",
+   "color": [
+    0.953,
+    0.953,
+    0.941
+   ],
+   "aero": true,
+   "fe": true,
+   "pos": [
+    260708,
+    3251
+   ],
+   "idx": [
+    280216,
+    14586
+   ],
+   "volume_cm3": 557.8,
+   "centroid": [
+    430.9,
+    352.4,
+    0.0
+   ],
+   "note": "Carbon fork with steerer, one filleted solid"
+  },
+  {
+   "name": "headset_cover",
+   "slot": "frameset",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    338560,
+    459
+   ],
+   "idx": [
+    341316,
+    1404
+   ],
+   "volume_cm3": 13.55,
+   "centroid": [
+    361.2,
+    553.5,
+    -0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "rim_front",
+   "slot": "wheels",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    346932,
+    1846
+   ],
+   "idx": [
+    358008,
+    5400
+   ],
+   "volume_cm3": 1437.98,
+   "centroid": [
+    570.2,
+    72.0,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "tyre_front",
+   "slot": "tires",
+   "color": [
+    0.078,
+    0.078,
+    0.078
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    379608,
+    2146
+   ],
+   "idx": [
+    392484,
+    6264
+   ],
+   "volume_cm3": 947.16,
+   "centroid": [
+    570.2,
+    72.0,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "hub_front",
+   "slot": "wheels",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    417540,
+    1778
+   ],
+   "idx": [
+    428208,
+    5832
+   ],
+   "volume_cm3": 54.41,
+   "centroid": [
+    570.2,
+    72.0,
+    0.0
+   ],
+   "note": "Hub shell, flanges and hollow axle"
+  },
+  {
+   "name": "spokes_front_left",
+   "slot": "wheels",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    451536,
+    1834
+   ],
+   "idx": [
+    462540,
+    4824
+   ],
+   "volume_cm3": 10.89,
+   "centroid": [
+    570.2,
+    72.0,
+    -17.2
+   ],
+   "note": "Bladed spokes and nipples; left out of the wind-tunnel model"
+  },
+  {
+   "name": "spokes_front_drive",
+   "slot": "wheels",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    481836,
+    1816
+   ],
+   "idx": [
+    492732,
+    4776
+   ],
+   "volume_cm3": 10.89,
+   "centroid": [
+    570.2,
+    72.0,
+    17.2
+   ],
+   "note": "Bladed spokes and nipples; left out of the wind-tunnel model"
+  },
+  {
+   "name": "qr_front",
+   "slot": "wheels",
+   "color": [
+    0.788,
+    0.8,
+    0.816
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    511836,
+    1519
+   ],
+   "idx": [
+    520952,
+    5190
+   ],
+   "volume_cm3": 10.66,
+   "centroid": [
+    567.9,
+    79.1,
+    -17.8
+   ],
+   "note": "Quick-release skewer: lever, cam, rod and nut"
+  },
+  {
+   "name": "rim_rear",
+   "slot": "wheels",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    541712,
+    1846
+   ],
+   "idx": [
+    552788,
+    5400
+   ],
+   "volume_cm3": 1437.98,
+   "centroid": [
+    -403.6,
+    72.0,
+    -0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "tyre_rear",
+   "slot": "tires",
+   "color": [
+    0.078,
+    0.078,
+    0.078
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    574388,
+    2146
+   ],
+   "idx": [
+    587264,
+    6264
+   ],
+   "volume_cm3": 947.16,
+   "centroid": [
+    -403.6,
+    72.0,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "hub_rear",
+   "slot": "wheels",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    612320,
+    1571
+   ],
+   "idx": [
+    621748,
+    5076
+   ],
+   "volume_cm3": 108.22,
+   "centroid": [
+    -403.6,
+    72.0,
+    4.9
+   ],
+   "note": "Hub shell, flanges and hollow axle"
+  },
+  {
+   "name": "spokes_rear_left",
+   "slot": "wheels",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    642052,
+    3358
+   ],
+   "idx": [
+    662200,
+    7758
+   ],
+   "volume_cm3": 13.26,
+   "centroid": [
+    -403.6,
+    72.0,
+    -18.0
+   ],
+   "note": "Bladed spokes and nipples; left out of the wind-tunnel model"
+  },
+  {
+   "name": "spokes_rear_drive",
+   "slot": "wheels",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    693232,
+    3404
+   ],
+   "idx": [
+    713656,
+    7968
+   ],
+   "volume_cm3": 13.19,
+   "centroid": [
+    -403.6,
+    72.0,
+    10.0
+   ],
+   "note": "Bladed spokes and nipples; left out of the wind-tunnel model"
+  },
+  {
+   "name": "qr_rear",
+   "slot": "wheels",
+   "color": [
+    0.788,
+    0.8,
+    0.816
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    745528,
+    1504
+   ],
+   "idx": [
+    754552,
+    5124
+   ],
+   "volume_cm3": 11.34,
+   "centroid": [
+    -397.0,
+    74.3,
+    -19.4
+   ],
+   "note": "Quick-release skewer: lever, cam, rod and nut"
+  },
+  {
+   "name": "chainring_50",
+   "slot": "crankset",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    775048,
+    5124
+   ],
+   "idx": [
+    805792,
+    10368
+   ],
+   "volume_cm3": 40.82,
+   "centroid": [
+    0.0,
+    0.0,
+    47.0
+   ],
+   "note": "110 BCD outer ring with five pockets"
+  },
+  {
+   "name": "chainring_34",
+   "slot": "crankset",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    847264,
+    2820
+   ],
+   "idx": [
+    864184,
+    5700
+   ],
+   "volume_cm3": 16.07,
+   "centroid": [
+    -0.0,
+    -0.0,
+    40.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "chainring_bolt_1",
+   "slot": "crankset",
+   "color": [
+    0.616,
+    0.635,
+    0.659
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    886984,
+    456
+   ],
+   "idx": [
+    889720,
+    1344
+   ],
+   "volume_cm3": 1.66,
+   "centroid": [
+    51.7,
+    -18.8,
+    46.1
+   ],
+   "note": ""
+  },
+  {
+   "name": "chainring_bolt_2",
+   "slot": "crankset",
+   "color": [
+    0.616,
+    0.635,
+    0.659
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    895096,
+    456
+   ],
+   "idx": [
+    897832,
+    1344
+   ],
+   "volume_cm3": 1.66,
+   "centroid": [
+    33.9,
+    43.3,
+    46.1
+   ],
+   "note": ""
+  },
+  {
+   "name": "chainring_bolt_3",
+   "slot": "crankset",
+   "color": [
+    0.616,
+    0.635,
+    0.659
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    903208,
+    456
+   ],
+   "idx": [
+    905944,
+    1344
+   ],
+   "volume_cm3": 1.66,
+   "centroid": [
+    -30.8,
+    45.6,
+    46.1
+   ],
+   "note": ""
+  },
+  {
+   "name": "chainring_bolt_4",
+   "slot": "crankset",
+   "color": [
+    0.616,
+    0.635,
+    0.659
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    911320,
+    456
+   ],
+   "idx": [
+    914056,
+    1344
+   ],
+   "volume_cm3": 1.66,
+   "centroid": [
+    -52.9,
+    -15.2,
+    46.1
+   ],
+   "note": ""
+  },
+  {
+   "name": "chainring_bolt_5",
+   "slot": "crankset",
+   "color": [
+    0.616,
+    0.635,
+    0.659
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    919432,
+    456
+   ],
+   "idx": [
+    922168,
+    1344
+   ],
+   "volume_cm3": 1.66,
+   "centroid": [
+    -1.9,
+    -55.0,
+    46.1
+   ],
+   "note": ""
+  },
+  {
+   "name": "crankset",
+   "slot": "crankset",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    927544,
+    2701
+   ],
+   "idx": [
+    943752,
+    8970
+   ],
+   "volume_cm3": 261.74,
+   "centroid": [
+    -0.1,
+    0.0,
+    6.2
+   ],
+   "note": "FSA Gossamer: arms, five-arm spider, BB30 spindle"
+  },
+  {
+   "name": "bottom_bracket",
+   "slot": "bottom_bracket",
+   "color": [
+    0.067,
+    0.071,
+    0.078
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    979632,
+    876
+   ],
+   "idx": [
+    984888,
+    2592
+   ],
+   "volume_cm3": 27.99,
+   "centroid": [
+    -0.0,
+    0.0,
+    -0.0
+   ],
+   "note": "BB30 bearings and sleeve"
+  },
+  {
+   "name": "pedal_right",
+   "slot": "pedals",
+   "color": [
+    0.086,
+    0.09,
+    0.098
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    995256,
+    42
+   ],
+   "idx": [
+    995508,
+    72
+   ],
+   "volume_cm3": 50.51,
+   "centroid": [
+    149.6,
+    -58.1,
+    41.2
+   ],
+   "note": ""
+  },
+  {
+   "name": "pedal_left",
+   "slot": "pedals",
+   "color": [
+    0.086,
+    0.09,
+    0.098
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    995796,
+    42
+   ],
+   "idx": [
+    996048,
+    72
+   ],
+   "volume_cm3": 50.51,
+   "centroid": [
+    -169.9,
+    58.1,
+    -41.2
+   ],
+   "note": ""
+  },
+  {
+   "name": "cassette",
+   "slot": "cassette",
+   "color": [
+    0.561,
+    0.576,
+    0.6
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    996336,
+    16592
+   ],
+   "idx": [
+    1095888,
+    37104
+   ],
+   "volume_cm3": 65.46,
+   "centroid": [
+    -403.6,
+    72.0,
+    36.5
+   ],
+   "note": ""
+  },
+  {
+   "name": "rear_derailleur",
+   "slot": "rear_derailleur",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    1244304,
+    3961
+   ],
+   "idx": [
+    1268072,
+    10002
+   ],
+   "volume_cm3": 34.91,
+   "centroid": [
+    -399.2,
+    5.4,
+    58.2
+   ],
+   "note": "With the derailleur hanger"
+  },
+  {
+   "name": "chain",
+   "slot": "chain",
+   "color": [
+    0.561,
+    0.576,
+    0.596
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    1308080,
+    70368
+   ],
+   "idx": [
+    1730288,
+    161160
+   ],
+   "volume_cm3": 38.54,
+   "centroid": [
+    -172.0,
+    8.3,
+    46.3
+   ],
+   "note": "106 links on 50 x 15"
+  },
+  {
+   "name": "front_derailleur",
+   "slot": "front_derailleur",
+   "color": [
+    0.788,
+    0.8,
+    0.816
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2374928,
+    1501
+   ],
+   "idx": [
+    2383936,
+    4716
+   ],
+   "volume_cm3": 16.46,
+   "centroid": [
+    -19.9,
+    121.8,
+    41.9
+   ],
+   "note": "Braze-on mount, linkage and cage"
+  },
+  {
+   "name": "brake_front",
+   "slot": "brakes",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2402800,
+    3455
+   ],
+   "idx": [
+    2423532,
+    13134
+   ],
+   "volume_cm3": 25.66,
+   "centroid": [
+    459.6,
+    391.7,
+    0.7
+   ],
+   "note": "Dual-pivot caliper with pads"
+  },
+  {
+   "name": "brake_rear",
+   "slot": "brakes",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2476068,
+    3389
+   ],
+   "idx": [
+    2496404,
+    12756
+   ],
+   "volume_cm3": 25.91,
+   "centroid": [
+    -193.6,
+    338.1,
+    -0.7
+   ],
+   "note": "Dual-pivot caliper with pads"
+  },
+  {
+   "name": "stem",
+   "slot": "stem",
+   "color": [
+    0.067,
+    0.071,
+    0.078
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2547428,
+    750
+   ],
+   "idx": [
+    2551928,
+    2412
+   ],
+   "volume_cm3": 184.29,
+   "centroid": [
+    392.6,
+    607.0,
+    -0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "handlebar",
+   "slot": "handlebar",
+   "color": [
+    0.067,
+    0.071,
+    0.078
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2561576,
+    2564
+   ],
+   "idx": [
+    2576960,
+    11304
+   ],
+   "volume_cm3": 577.51,
+   "centroid": [
+    472.6,
+    583.0,
+    0.3
+   ],
+   "note": "Bar with tape"
+  },
+  {
+   "name": "levers_1",
+   "slot": "shifters",
+   "color": [
+    0.067,
+    0.071,
+    0.078
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2622176,
+    2503
+   ],
+   "idx": [
+    2637196,
+    13638
+   ],
+   "volume_cm3": 87.41,
+   "centroid": [
+    540.4,
+    610.9,
+    -210.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "levers_2",
+   "slot": "shifters",
+   "color": [
+    0.067,
+    0.071,
+    0.078
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2691748,
+    2504
+   ],
+   "idx": [
+    2706772,
+    13644
+   ],
+   "volume_cm3": 87.41,
+   "centroid": [
+    540.4,
+    610.9,
+    210.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "seatpost",
+   "slot": "seatpost",
+   "color": [
+    0.067,
+    0.071,
+    0.078
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2761348,
+    676
+   ],
+   "idx": [
+    2765404,
+    2058
+   ],
+   "volume_cm3": 165.24,
+   "centroid": [
+    -144.4,
+    501.5,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "saddle",
+   "slot": "saddle",
+   "color": [
+    0.1,
+    0.1,
+    0.1
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2773636,
+    547
+   ],
+   "idx": [
+    2776920,
+    2574
+   ],
+   "volume_cm3": 477.16,
+   "centroid": [
+    -222.5,
+    660.8,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "saddle_rails",
+   "slot": "saddle",
+   "color": [
+    0.561,
+    0.576,
+    0.6
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2787216,
+    4826
+   ],
+   "idx": [
+    2816172,
+    13917
+   ],
+   "volume_cm3": 19.55,
+   "centroid": [
+    -189.3,
+    634.0,
+    0.1
+   ],
+   "note": ""
+  },
+  {
+   "name": "bottle_down_cage",
+   "slot": "cages",
+   "color": [
+    0.09,
+    0.094,
+    0.102
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2871840,
+    5001
+   ],
+   "idx": [
+    2901848,
+    13203
+   ],
+   "volume_cm3": 22.31,
+   "centroid": [
+    88.3,
+    172.2,
+    0.1
+   ],
+   "note": "Bottle cage, back strip on the frame"
+  },
+  {
+   "name": "bottle_down_bolt_1",
+   "slot": "cages",
+   "color": [
+    0.553,
+    0.569,
+    0.592
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    2954660,
+    292
+   ],
+   "idx": [
+    2956412,
+    852
+   ],
+   "volume_cm3": 0.36,
+   "centroid": [
+    79.7,
+    130.1,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "bottle_down_bolt_2",
+   "slot": "cages",
+   "color": [
+    0.553,
+    0.569,
+    0.592
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    2959820,
+    292
+   ],
+   "idx": [
+    2961572,
+    852
+   ],
+   "volume_cm3": 0.36,
+   "centroid": [
+    124.1,
+    176.2,
+    -0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "bottle_down",
+   "slot": "cages",
+   "color": [
+    0.949,
+    0.957,
+    0.965
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2964980,
+    794
+   ],
+   "idx": [
+    2969744,
+    2424
+   ],
+   "volume_cm3": 762.72,
+   "centroid": [
+    92.6,
+    205.8,
+    0.0
+   ],
+   "note": "Bottle"
+  },
+  {
+   "name": "bottle_down_cap",
+   "slot": "cages",
+   "color": [
+    0.086,
+    0.09,
+    0.098
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2979440,
+    369
+   ],
+   "idx": [
+    2981656,
+    1236
+   ],
+   "volume_cm3": 15.96,
+   "centroid": [
+    168.1,
+    284.2,
+    -0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "bottle_seat_cage",
+   "slot": "cages",
+   "color": [
+    0.09,
+    0.094,
+    0.102
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    2986600,
+    5001
+   ],
+   "idx": [
+    3016608,
+    13203
+   ],
+   "volume_cm3": 22.31,
+   "centroid": [
+    0.8,
+    161.9,
+    -0.1
+   ],
+   "note": "Bottle cage, back strip on the frame"
+  },
+  {
+   "name": "bottle_seat_bolt_1",
+   "slot": "cages",
+   "color": [
+    0.553,
+    0.569,
+    0.592
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    3069420,
+    292
+   ],
+   "idx": [
+    3071172,
+    852
+   ],
+   "volume_cm3": 0.36,
+   "centroid": [
+    -9.4,
+    120.1,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "bottle_seat_bolt_2",
+   "slot": "cages",
+   "color": [
+    0.553,
+    0.569,
+    0.592
+   ],
+   "aero": false,
+   "fe": false,
+   "pos": [
+    3074580,
+    292
+   ],
+   "idx": [
+    3076332,
+    852
+   ],
+   "volume_cm3": 0.36,
+   "centroid": [
+    -29.9,
+    180.8,
+    0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "bottle_seat",
+   "slot": "cages",
+   "color": [
+    0.949,
+    0.957,
+    0.965
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    3079740,
+    794
+   ],
+   "idx": [
+    3084504,
+    2424
+   ],
+   "volume_cm3": 762.72,
+   "centroid": [
+    11.2,
+    194.1,
+    -0.0
+   ],
+   "note": "Bottle"
+  },
+  {
+   "name": "bottle_seat_cap",
+   "slot": "cages",
+   "color": [
+    0.086,
+    0.09,
+    0.098
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    3094200,
+    369
+   ],
+   "idx": [
+    3096416,
+    1236
+   ],
+   "volume_cm3": 15.96,
+   "centroid": [
+    -23.6,
+    297.2,
+    -0.0
+   ],
+   "note": ""
+  },
+  {
+   "name": "light_mount",
+   "slot": "light",
+   "color": [
+    0.106,
+    0.11,
+    0.122
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    3101360,
+    1772
+   ],
+   "idx": [
+    3111992,
+    5676
+   ],
+   "volume_cm3": 25.5,
+   "centroid": [
+    492.6,
+    626.6,
+    14.4
+   ],
+   "note": "Out-front bar mount with clevis"
+  },
+  {
+   "name": "light",
+   "slot": "light",
+   "color": [
+    0.165,
+    0.173,
+    0.188
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    3134696,
+    608
+   ],
+   "idx": [
+    3138344,
+    1560
+   ],
+   "volume_cm3": 131.06,
+   "centroid": [
+    540.2,
+    598.0,
+    -0.0
+   ],
+   "note": "Magicshine head, hangs from the mount on its tongue"
+  },
+  {
+   "name": "light_lens",
+   "slot": "light",
+   "color": [
+    0.925,
+    0.914,
+    0.875
+   ],
+   "aero": true,
+   "fe": false,
+   "pos": [
+    3144584,
+    24
+   ],
+   "idx": [
+    3144728,
+    36
+   ],
+   "volume_cm3": 2.88,
+   "centroid": [
+    591.3,
+    598.1,
+    0.0
+   ],
+   "note": ""
+  }
+ ],
+ "ground_y": -264.0,
+ "wheel_radius_mm": 336,
+ "config": {
+  "frameset": "frameset_synapse_carbon_51_red",
+  "wheels": "wheels_superteam_50c",
+  "tires": "tires_gp5000_as_tr_25",
+  "tubes": "tubes_installed_butyl",
+  "crankset": "crank_fsa_gossamer_bb30_50_34",
+  "bottom_bracket": "bb_fsa_bb30",
+  "cassette": "cassette_cs5700_11_28",
+  "rear_derailleur": "rd_5700_ss",
+  "front_derailleur": "fd_5700",
+  "chain": "chain_installed_10s",
+  "shifters": "levers_st5700",
+  "cables": "cables_installed",
+  "brakes": "brakes_br5700",
+  "brake_pads": "pads_installed",
+  "stem": "stem_installed",
+  "handlebar": "bar_installed",
+  "tape": "tape_installed",
+  "seatpost": "seatpost_installed",
+  "saddle": "saddle_serfas_155",
+  "pedals": "pedals_spdsl",
+  "cages": "cages_installed",
+  "light": "light_evo1300"
+ },
+ "variant": "st25"
+}

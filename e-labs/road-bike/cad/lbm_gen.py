@@ -2,6 +2,11 @@
 
 The domain carries one ghost layer on every face; boundary conditions are applied to the
 ghosts before each step (see lbm_kernel.ghosts), so the interior loop has no bounds checks.
+
+Moving walls (Ladd): a wall cell of part p moves with u_w = v0 + omega x (r - c), from mw[p] =
+[flag, cx, cy, cz, wx, wy, wz, v0x, v0y, v0z] in padded lattice units, evaluated at the link
+midpoint. The bounced population gains 6 w_i (c_i . u_w) (rho_0 = 1), and the momentum handed to
+the wall is c_o (f_o + f_i). Spinning wheels and a moving ground use it; flag 0 is a still wall.
 Run once after editing:  python cad/lbm_gen.py
 """
 
@@ -44,7 +49,7 @@ def main():
     a("")
     a("")
     a("@nb.njit(parallel=True, fastmath=True, cache=True)")
-    a("def step(f, g, solid, part, tau0, k0, force):")
+    a("def step(f, g, solid, part, tau0, k0, force, mw):")
     a("    nx, ny, nz = solid.shape")
     a("    for x in nb.prange(1, nx - 1):")
     a("        for y in range(1, ny - 1):")
@@ -60,11 +65,20 @@ def main():
         o = OPP[i]
         ocx, ocy, ocz = C[o]
         a(f"                if solid[{sx}, {sy}, {sz}]:")
-        a(f"                    f{i} = f[{o}, x, y, z]")
+        a(f"                    v = f[{o}, x, y, z]")
         a(f"                    p = part[{sx}, {sy}, {sz}]")
+        a("                    if mw[p, 0] != 0.0:")
+        a(f"                        rx = x - {0.5 * cx!r} - mw[p, 1]")
+        a(f"                        ry = y - {0.5 * cy!r} - mw[p, 2]")
+        a(f"                        rz = z - {0.5 * cz!r} - mw[p, 3]")
+        uw = {0: "mw[p, 7] + mw[p, 5] * rz - mw[p, 6] * ry", 1: "mw[p, 8] + mw[p, 6] * rx - mw[p, 4] * rz", 2: "mw[p, 9] + mw[p, 4] * ry - mw[p, 5] * rx"}
+        dot = " + ".join(f"({'' if c == 1 else '-'}({uw[k]}))" for k, c in enumerate((cx, cy, cz)) if c)
+        a(f"                        f{i} = v + {6 * W[i]!r} * ({dot})")
+        a("                    else:")
+        a(f"                        f{i} = v")
         for k, comp in enumerate((ocx, ocy, ocz)):
             if comp:
-                a(f"                    force[p, x, {k}] += {2 * comp}.0 * f{i}")
+                a(f"                    force[p, x, {k}] += {comp}.0 * (v + f{i})")
         a("                else:")
         a(f"                    f{i} = f[{i}, {sx}, {sy}, {sz}]")
     a(f"                rho = {' + '.join(names)}")

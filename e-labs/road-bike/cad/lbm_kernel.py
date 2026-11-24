@@ -5,7 +5,7 @@ import numpy as np
 
 
 @nb.njit(parallel=True, fastmath=True, cache=True)
-def step(f, g, solid, part, tau0, k0, force):
+def step(f, g, solid, part, tau0, k0, force, mw):
     nx, ny, nz = solid.shape
     for x in nb.prange(1, nx - 1):
         for y in range(1, ny - 1):
@@ -14,123 +14,249 @@ def step(f, g, solid, part, tau0, k0, force):
                     continue
                 f0 = f[0, x, y, z]
                 if solid[x - 1, y, z]:
-                    f1 = f[2, x, y, z]
+                    v = f[2, x, y, z]
                     p = part[x - 1, y, z]
-                    force[p, x, 0] += -2.0 * f1
+                    if mw[p, 0] != 0.0:
+                        rx = x - 0.5 - mw[p, 1]
+                        ry = y - 0.0 - mw[p, 2]
+                        rz = z - 0.0 - mw[p, 3]
+                        f1 = v + 0.3333333333333333 * (((mw[p, 7] + mw[p, 5] * rz - mw[p, 6] * ry)))
+                    else:
+                        f1 = v
+                    force[p, x, 0] += -1.0 * (v + f1)
                 else:
                     f1 = f[1, x - 1, y, z]
                 if solid[x + 1, y, z]:
-                    f2 = f[1, x, y, z]
+                    v = f[1, x, y, z]
                     p = part[x + 1, y, z]
-                    force[p, x, 0] += 2.0 * f2
+                    if mw[p, 0] != 0.0:
+                        rx = x - -0.5 - mw[p, 1]
+                        ry = y - 0.0 - mw[p, 2]
+                        rz = z - 0.0 - mw[p, 3]
+                        f2 = v + 0.3333333333333333 * ((-(mw[p, 7] + mw[p, 5] * rz - mw[p, 6] * ry)))
+                    else:
+                        f2 = v
+                    force[p, x, 0] += 1.0 * (v + f2)
                 else:
                     f2 = f[2, x + 1, y, z]
                 if solid[x, y - 1, z]:
-                    f3 = f[4, x, y, z]
+                    v = f[4, x, y, z]
                     p = part[x, y - 1, z]
-                    force[p, x, 1] += -2.0 * f3
+                    if mw[p, 0] != 0.0:
+                        rx = x - 0.0 - mw[p, 1]
+                        ry = y - 0.5 - mw[p, 2]
+                        rz = z - 0.0 - mw[p, 3]
+                        f3 = v + 0.3333333333333333 * (((mw[p, 8] + mw[p, 6] * rx - mw[p, 4] * rz)))
+                    else:
+                        f3 = v
+                    force[p, x, 1] += -1.0 * (v + f3)
                 else:
                     f3 = f[3, x, y - 1, z]
                 if solid[x, y + 1, z]:
-                    f4 = f[3, x, y, z]
+                    v = f[3, x, y, z]
                     p = part[x, y + 1, z]
-                    force[p, x, 1] += 2.0 * f4
+                    if mw[p, 0] != 0.0:
+                        rx = x - 0.0 - mw[p, 1]
+                        ry = y - -0.5 - mw[p, 2]
+                        rz = z - 0.0 - mw[p, 3]
+                        f4 = v + 0.3333333333333333 * ((-(mw[p, 8] + mw[p, 6] * rx - mw[p, 4] * rz)))
+                    else:
+                        f4 = v
+                    force[p, x, 1] += 1.0 * (v + f4)
                 else:
                     f4 = f[4, x, y + 1, z]
                 if solid[x, y, z - 1]:
-                    f5 = f[6, x, y, z]
+                    v = f[6, x, y, z]
                     p = part[x, y, z - 1]
-                    force[p, x, 2] += -2.0 * f5
+                    if mw[p, 0] != 0.0:
+                        rx = x - 0.0 - mw[p, 1]
+                        ry = y - 0.0 - mw[p, 2]
+                        rz = z - 0.5 - mw[p, 3]
+                        f5 = v + 0.3333333333333333 * (((mw[p, 9] + mw[p, 4] * ry - mw[p, 5] * rx)))
+                    else:
+                        f5 = v
+                    force[p, x, 2] += -1.0 * (v + f5)
                 else:
                     f5 = f[5, x, y, z - 1]
                 if solid[x, y, z + 1]:
-                    f6 = f[5, x, y, z]
+                    v = f[5, x, y, z]
                     p = part[x, y, z + 1]
-                    force[p, x, 2] += 2.0 * f6
+                    if mw[p, 0] != 0.0:
+                        rx = x - 0.0 - mw[p, 1]
+                        ry = y - 0.0 - mw[p, 2]
+                        rz = z - -0.5 - mw[p, 3]
+                        f6 = v + 0.3333333333333333 * ((-(mw[p, 9] + mw[p, 4] * ry - mw[p, 5] * rx)))
+                    else:
+                        f6 = v
+                    force[p, x, 2] += 1.0 * (v + f6)
                 else:
                     f6 = f[6, x, y, z + 1]
                 if solid[x - 1, y - 1, z]:
-                    f7 = f[8, x, y, z]
+                    v = f[8, x, y, z]
                     p = part[x - 1, y - 1, z]
-                    force[p, x, 0] += -2.0 * f7
-                    force[p, x, 1] += -2.0 * f7
+                    if mw[p, 0] != 0.0:
+                        rx = x - 0.5 - mw[p, 1]
+                        ry = y - 0.5 - mw[p, 2]
+                        rz = z - 0.0 - mw[p, 3]
+                        f7 = v + 0.16666666666666666 * (((mw[p, 7] + mw[p, 5] * rz - mw[p, 6] * ry)) + ((mw[p, 8] + mw[p, 6] * rx - mw[p, 4] * rz)))
+                    else:
+                        f7 = v
+                    force[p, x, 0] += -1.0 * (v + f7)
+                    force[p, x, 1] += -1.0 * (v + f7)
                 else:
                     f7 = f[7, x - 1, y - 1, z]
                 if solid[x + 1, y + 1, z]:
-                    f8 = f[7, x, y, z]
+                    v = f[7, x, y, z]
                     p = part[x + 1, y + 1, z]
-                    force[p, x, 0] += 2.0 * f8
-                    force[p, x, 1] += 2.0 * f8
+                    if mw[p, 0] != 0.0:
+                        rx = x - -0.5 - mw[p, 1]
+                        ry = y - -0.5 - mw[p, 2]
+                        rz = z - 0.0 - mw[p, 3]
+                        f8 = v + 0.16666666666666666 * ((-(mw[p, 7] + mw[p, 5] * rz - mw[p, 6] * ry)) + (-(mw[p, 8] + mw[p, 6] * rx - mw[p, 4] * rz)))
+                    else:
+                        f8 = v
+                    force[p, x, 0] += 1.0 * (v + f8)
+                    force[p, x, 1] += 1.0 * (v + f8)
                 else:
                     f8 = f[8, x + 1, y + 1, z]
                 if solid[x - 1, y + 1, z]:
-                    f9 = f[10, x, y, z]
+                    v = f[10, x, y, z]
                     p = part[x - 1, y + 1, z]
-                    force[p, x, 0] += -2.0 * f9
-                    force[p, x, 1] += 2.0 * f9
+                    if mw[p, 0] != 0.0:
+                        rx = x - 0.5 - mw[p, 1]
+                        ry = y - -0.5 - mw[p, 2]
+                        rz = z - 0.0 - mw[p, 3]
+                        f9 = v + 0.16666666666666666 * (((mw[p, 7] + mw[p, 5] * rz - mw[p, 6] * ry)) + (-(mw[p, 8] + mw[p, 6] * rx - mw[p, 4] * rz)))
+                    else:
+                        f9 = v
+                    force[p, x, 0] += -1.0 * (v + f9)
+                    force[p, x, 1] += 1.0 * (v + f9)
                 else:
                     f9 = f[9, x - 1, y + 1, z]
                 if solid[x + 1, y - 1, z]:
-                    f10 = f[9, x, y, z]
+                    v = f[9, x, y, z]
                     p = part[x + 1, y - 1, z]
-                    force[p, x, 0] += 2.0 * f10
-                    force[p, x, 1] += -2.0 * f10
+                    if mw[p, 0] != 0.0:
+                        rx = x - -0.5 - mw[p, 1]
+                        ry = y - 0.5 - mw[p, 2]
+                        rz = z - 0.0 - mw[p, 3]
+                        f10 = v + 0.16666666666666666 * ((-(mw[p, 7] + mw[p, 5] * rz - mw[p, 6] * ry)) + ((mw[p, 8] + mw[p, 6] * rx - mw[p, 4] * rz)))
+                    else:
+                        f10 = v
+                    force[p, x, 0] += 1.0 * (v + f10)
+                    force[p, x, 1] += -1.0 * (v + f10)
                 else:
                     f10 = f[10, x + 1, y - 1, z]
                 if solid[x - 1, y, z - 1]:
-                    f11 = f[12, x, y, z]
+                    v = f[12, x, y, z]
                     p = part[x - 1, y, z - 1]
-                    force[p, x, 0] += -2.0 * f11
-                    force[p, x, 2] += -2.0 * f11
+                    if mw[p, 0] != 0.0:
+                        rx = x - 0.5 - mw[p, 1]
+                        ry = y - 0.0 - mw[p, 2]
+                        rz = z - 0.5 - mw[p, 3]
+                        f11 = v + 0.16666666666666666 * (((mw[p, 7] + mw[p, 5] * rz - mw[p, 6] * ry)) + ((mw[p, 9] + mw[p, 4] * ry - mw[p, 5] * rx)))
+                    else:
+                        f11 = v
+                    force[p, x, 0] += -1.0 * (v + f11)
+                    force[p, x, 2] += -1.0 * (v + f11)
                 else:
                     f11 = f[11, x - 1, y, z - 1]
                 if solid[x + 1, y, z + 1]:
-                    f12 = f[11, x, y, z]
+                    v = f[11, x, y, z]
                     p = part[x + 1, y, z + 1]
-                    force[p, x, 0] += 2.0 * f12
-                    force[p, x, 2] += 2.0 * f12
+                    if mw[p, 0] != 0.0:
+                        rx = x - -0.5 - mw[p, 1]
+                        ry = y - 0.0 - mw[p, 2]
+                        rz = z - -0.5 - mw[p, 3]
+                        f12 = v + 0.16666666666666666 * ((-(mw[p, 7] + mw[p, 5] * rz - mw[p, 6] * ry)) + (-(mw[p, 9] + mw[p, 4] * ry - mw[p, 5] * rx)))
+                    else:
+                        f12 = v
+                    force[p, x, 0] += 1.0 * (v + f12)
+                    force[p, x, 2] += 1.0 * (v + f12)
                 else:
                     f12 = f[12, x + 1, y, z + 1]
                 if solid[x - 1, y, z + 1]:
-                    f13 = f[14, x, y, z]
+                    v = f[14, x, y, z]
                     p = part[x - 1, y, z + 1]
-                    force[p, x, 0] += -2.0 * f13
-                    force[p, x, 2] += 2.0 * f13
+                    if mw[p, 0] != 0.0:
+                        rx = x - 0.5 - mw[p, 1]
+                        ry = y - 0.0 - mw[p, 2]
+                        rz = z - -0.5 - mw[p, 3]
+                        f13 = v + 0.16666666666666666 * (((mw[p, 7] + mw[p, 5] * rz - mw[p, 6] * ry)) + (-(mw[p, 9] + mw[p, 4] * ry - mw[p, 5] * rx)))
+                    else:
+                        f13 = v
+                    force[p, x, 0] += -1.0 * (v + f13)
+                    force[p, x, 2] += 1.0 * (v + f13)
                 else:
                     f13 = f[13, x - 1, y, z + 1]
                 if solid[x + 1, y, z - 1]:
-                    f14 = f[13, x, y, z]
+                    v = f[13, x, y, z]
                     p = part[x + 1, y, z - 1]
-                    force[p, x, 0] += 2.0 * f14
-                    force[p, x, 2] += -2.0 * f14
+                    if mw[p, 0] != 0.0:
+                        rx = x - -0.5 - mw[p, 1]
+                        ry = y - 0.0 - mw[p, 2]
+                        rz = z - 0.5 - mw[p, 3]
+                        f14 = v + 0.16666666666666666 * ((-(mw[p, 7] + mw[p, 5] * rz - mw[p, 6] * ry)) + ((mw[p, 9] + mw[p, 4] * ry - mw[p, 5] * rx)))
+                    else:
+                        f14 = v
+                    force[p, x, 0] += 1.0 * (v + f14)
+                    force[p, x, 2] += -1.0 * (v + f14)
                 else:
                     f14 = f[14, x + 1, y, z - 1]
                 if solid[x, y - 1, z - 1]:
-                    f15 = f[16, x, y, z]
+                    v = f[16, x, y, z]
                     p = part[x, y - 1, z - 1]
-                    force[p, x, 1] += -2.0 * f15
-                    force[p, x, 2] += -2.0 * f15
+                    if mw[p, 0] != 0.0:
+                        rx = x - 0.0 - mw[p, 1]
+                        ry = y - 0.5 - mw[p, 2]
+                        rz = z - 0.5 - mw[p, 3]
+                        f15 = v + 0.16666666666666666 * (((mw[p, 8] + mw[p, 6] * rx - mw[p, 4] * rz)) + ((mw[p, 9] + mw[p, 4] * ry - mw[p, 5] * rx)))
+                    else:
+                        f15 = v
+                    force[p, x, 1] += -1.0 * (v + f15)
+                    force[p, x, 2] += -1.0 * (v + f15)
                 else:
                     f15 = f[15, x, y - 1, z - 1]
                 if solid[x, y + 1, z + 1]:
-                    f16 = f[15, x, y, z]
+                    v = f[15, x, y, z]
                     p = part[x, y + 1, z + 1]
-                    force[p, x, 1] += 2.0 * f16
-                    force[p, x, 2] += 2.0 * f16
+                    if mw[p, 0] != 0.0:
+                        rx = x - 0.0 - mw[p, 1]
+                        ry = y - -0.5 - mw[p, 2]
+                        rz = z - -0.5 - mw[p, 3]
+                        f16 = v + 0.16666666666666666 * ((-(mw[p, 8] + mw[p, 6] * rx - mw[p, 4] * rz)) + (-(mw[p, 9] + mw[p, 4] * ry - mw[p, 5] * rx)))
+                    else:
+                        f16 = v
+                    force[p, x, 1] += 1.0 * (v + f16)
+                    force[p, x, 2] += 1.0 * (v + f16)
                 else:
                     f16 = f[16, x, y + 1, z + 1]
                 if solid[x, y - 1, z + 1]:
-                    f17 = f[18, x, y, z]
+                    v = f[18, x, y, z]
                     p = part[x, y - 1, z + 1]
-                    force[p, x, 1] += -2.0 * f17
-                    force[p, x, 2] += 2.0 * f17
+                    if mw[p, 0] != 0.0:
+                        rx = x - 0.0 - mw[p, 1]
+                        ry = y - 0.5 - mw[p, 2]
+                        rz = z - -0.5 - mw[p, 3]
+                        f17 = v + 0.16666666666666666 * (((mw[p, 8] + mw[p, 6] * rx - mw[p, 4] * rz)) + (-(mw[p, 9] + mw[p, 4] * ry - mw[p, 5] * rx)))
+                    else:
+                        f17 = v
+                    force[p, x, 1] += -1.0 * (v + f17)
+                    force[p, x, 2] += 1.0 * (v + f17)
                 else:
                     f17 = f[17, x, y - 1, z + 1]
                 if solid[x, y + 1, z - 1]:
-                    f18 = f[17, x, y, z]
+                    v = f[17, x, y, z]
                     p = part[x, y + 1, z - 1]
-                    force[p, x, 1] += 2.0 * f18
-                    force[p, x, 2] += -2.0 * f18
+                    if mw[p, 0] != 0.0:
+                        rx = x - 0.0 - mw[p, 1]
+                        ry = y - -0.5 - mw[p, 2]
+                        rz = z - 0.5 - mw[p, 3]
+                        f18 = v + 0.16666666666666666 * ((-(mw[p, 8] + mw[p, 6] * rx - mw[p, 4] * rz)) + ((mw[p, 9] + mw[p, 4] * ry - mw[p, 5] * rx)))
+                    else:
+                        f18 = v
+                    force[p, x, 1] += 1.0 * (v + f18)
+                    force[p, x, 2] += -1.0 * (v + f18)
                 else:
                     f18 = f[18, x, y + 1, z - 1]
                 rho = f0 + f1 + f2 + f3 + f4 + f5 + f6 + f7 + f8 + f9 + f10 + f11 + f12 + f13 + f14 + f15 + f16 + f17 + f18

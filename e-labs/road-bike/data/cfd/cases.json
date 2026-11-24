@@ -71,7 +71,8 @@
    "profile": true,
    "cad": "data/cad/parts",
    "config": "Installed build",
-   "uncertainty": null
+   "uncertainty": null,
+   "protocol": "static"
   },
   {
    "case": "yaw00_dx8_st28",
@@ -147,7 +148,8 @@
     "method": "standard error of 8 batch means over the averaging window",
     "repeatability_N": 0.041,
     "repeatability_note": "Two independent runs of the installed build at 0 deg (yaw00_dx8 and yaw00_dx8_snap) differ by 0.041 N (0.5 %)."
-   }
+   },
+   "protocol": "static"
   },
   {
    "case": "yaw05_dx8",
@@ -218,7 +220,8 @@
    "profile": true,
    "cad": "data/cad/parts",
    "config": "Installed build",
-   "uncertainty": null
+   "uncertainty": null,
+   "protocol": "static"
   },
   {
    "case": "yaw05_dx8_st28",
@@ -294,7 +297,8 @@
     "method": "standard error of 8 batch means over the averaging window",
     "repeatability_N": 0.041,
     "repeatability_note": "Two independent runs of the installed build at 0 deg (yaw00_dx8 and yaw00_dx8_snap) differ by 0.041 N (0.5 %)."
-   }
+   },
+   "protocol": "static"
   },
   {
    "case": "yaw10_dx8",
@@ -365,7 +369,8 @@
    "profile": true,
    "cad": "data/cad/parts",
    "config": "Installed build",
-   "uncertainty": null
+   "uncertainty": null,
+   "protocol": "static"
   },
   {
    "case": "yaw10_dx8_st28",
@@ -441,7 +446,8 @@
     "method": "standard error of 8 batch means over the averaging window",
     "repeatability_N": 0.041,
     "repeatability_note": "Two independent runs of the installed build at 0 deg (yaw00_dx8 and yaw00_dx8_snap) differ by 0.041 N (0.5 %)."
-   }
+   },
+   "protocol": "static"
   },
   {
    "case": "yaw15_dx8",
@@ -517,7 +523,8 @@
     "method": "standard error of 8 batch means over the averaging window",
     "repeatability_N": 0.041,
     "repeatability_note": "Two independent runs of the installed build at 0 deg (yaw00_dx8 and yaw00_dx8_snap) differ by 0.041 N (0.5 %)."
-   }
+   },
+   "protocol": "static"
   },
   {
    "case": "yaw15_dx8_st28",
@@ -593,7 +600,8 @@
     "method": "standard error of 8 batch means over the averaging window",
     "repeatability_N": 0.041,
     "repeatability_note": "Two independent runs of the installed build at 0 deg (yaw00_dx8 and yaw00_dx8_snap) differ by 0.041 N (0.5 %)."
-   }
+   },
+   "protocol": "static"
   }
  ]
 }

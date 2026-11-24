@@ -22,9 +22,10 @@ export const YAW_BASIS = 'Assumed time at yaw for 30–40 km/h with a 10–15 km
  */
 export const RESOLUTION = { lo: 0.70, mid: 0.85, hi: 1.0, basis: 'Tunnel bias from the sphere check: a 0.49 Cd reads 0.60 at 24 cells per diameter and 0.69 at 12, so measured differences are scaled by 0.70–1.00 (centre 0.85).' };
 
-/** Pair the baseline and variant cases by yaw (same lattice spacing). */
-export function pairCases(cases, variantCad) {
-  const base = cases.filter((c) => (c.cad ?? BASE_CAD) === BASE_CAD), up = cases.filter((c) => c.cad === variantCad);
+const proto = (c) => c.protocol ?? 'static';
+/** Pair a baseline and a variant by yaw (same lattice spacing and protocol). */
+export function pairCases(cases, variantCad, { baseCad = BASE_CAD, protocol = 'static' } = {}) {
+  const base = cases.filter((c) => (c.cad ?? BASE_CAD) === baseCad && proto(c) === protocol), up = cases.filter((c) => c.cad === variantCad && proto(c) === protocol);
   const rows = [];
   for (const u of up) {
     const b = base.find((c) => c.yaw_deg === u.yaw_deg && c.dx_mm === u.dx_mm);
@@ -73,4 +74,113 @@ export function climbPer100g(catalog, P, { grade = 6, km = 5 } = {}) {
   const su = setup(catalog.default_config, catalog, { ...P, grade_pct: grade });
   const t = (m) => km * 1000 / evaluate({ ...su, mass: m }, P).v;
   return t(su.mass + 0.1) - t(su.mass);
+}
+
+// ---- the standard-protocol matrix: two wheelsets x three tyre widths -------------------------------
+
+export const MATRIX = [
+  { key: 'fu23', wheels: 'wheels_fulcrum_racing_15c', tires: 'tires_rubino_pro_23', label: 'Fulcrum · 23', wheelset: 'Fulcrum Racing 15C', tyre: 23 },
+  { key: 'fu25', wheels: 'wheels_fulcrum_racing_15c', tires: 'tires_gp5000_as_tr_25', label: 'Fulcrum · 25', wheelset: 'Fulcrum Racing 15C', tyre: 25 },
+  { key: 'fu28', wheels: 'wheels_fulcrum_racing_15c', tires: 'tires_gp5000_as_tr_28', label: 'Fulcrum · 28', wheelset: 'Fulcrum Racing 15C', tyre: 28 },
+  { key: 'st23', wheels: 'wheels_superteam_50c', tires: 'tires_rubino_pro_23', label: 'Superteam · 23', wheelset: 'Superteam 50', tyre: 23 },
+  { key: 'st25', wheels: 'wheels_superteam_50c', tires: 'tires_gp5000_as_tr_25', label: 'Superteam · 25', wheelset: 'Superteam 50', tyre: 25 },
+  { key: 'st28', wheels: 'wheels_superteam_50c', tires: 'tires_gp5000_as_tr_28', label: 'Superteam · 28', wheelset: 'Superteam 50', tyre: 28 },
+].map((m) => ({ ...m, cad: 'data/cad/variants/' + m.key + '/parts' }));
+export const MATRIX_BASE = 'fu23';
+
+/** Catalog configuration of a matrix build: carbon rims bring carbon pads with them. */
+export function matrixConfig(m, catalog) {
+  return { ...catalog.default_config, wheels: m.wheels, tires: m.tires, ...(m.wheels === 'wheels_superteam_50c' ? { brake_pads: 'pads_black_prince' } : {}) };
+}
+
+// erf, Abramowitz-Stegun 7.1.26 (|error| < 1.5e-7)
+function erf(x) {
+  const t = 1 / (1 + 0.3275911 * Math.abs(x));
+  const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+  return x >= 0 ? y : -y;
+}
+/**
+ * Time at yaw after Barry (2018): at 30 mph, 70 % of riding is below 10° and 90 % below 16°. Both fit a
+ * half-normal |yaw| with sigma 9.7°; yaw grows as the rider slows, so sigma scales with 48.3 / speed.
+ * Each tested angle takes the probability of its ±2.5° bin; beyond the sweep is dropped and the rest
+ * renormalised. A sweep with only one side folds the other side onto it.
+ */
+export const BARRY_BASIS = 'Barry (2018): at 30 mph riders spend 70 % of the time below 10° yaw and 90 % below 16°, which a half-normal with σ 9.7° matches; σ is scaled to the test speed (11.7° at 40 km/h). Each angle takes its ±2.5° bin; the tail past the sweep is dropped.';
+export function barryWeights(yaws, kmh = 40) {
+  const sig = 9.7 * 48.28 / kmh, P = (a) => erf(a / (sig * Math.SQRT2)); // P(|yaw| < a)
+  const signed = yaws.some((y) => y < 0), w = {};
+  for (const y of yaws) {
+    const a = Math.abs(y), band = a === 0 ? P(2.5) : P(a + 2.5) - P(a - 2.5);
+    w[y] = a === 0 ? band : signed ? band / 2 : band;
+  }
+  const tot = Object.values(w).reduce((s, v) => s + v, 0);
+  for (const y of yaws) w[y] /= tot;
+  return w;
+}
+
+/**
+ * Spokes, by blade element. 1-2 mm spokes do not resolve on an 8 mm lattice, so the tunnel leaves them
+ * out and this adds them back for every build alike. Each spoke is radial from the hub flange to the
+ * rim bed; at every station the air relative to the spinning spoke splits into the in-plane part (the
+ * blade's edge, or the round spoke) and the crossflow from yaw (the blade's flat). Returns the drag
+ * along the apparent wind and the power it takes to keep the spokes turning.
+ */
+export const SPOKE = { roundD: 2.0e-3, roundCd: 1.1, bladeT: 0.9e-3, bladeEdgeCd: 0.6, bladeW: 2.3e-3, bladeFlatCd: 1.2, hubR: 0.02,
+  basis: 'Blade element over radial spokes: round 2.0 mm Cd 1.1; bladed 0.9 × 2.3 mm, Cd 0.6 on the edge (in-plane flow) and 1.2 on the flat (crossflow). Cylinder and flat-plate values from the literature; an estimate, not a measurement.' };
+export function spokeModel(vis, { U = 40 / 3.6, yaw = 0, tireW = 23, rho = 1.204 } = {}) {
+  const b = Math.abs(yaw) * Math.PI / 180, Rw = (311 + tireW) / 1000, Vg = U * Math.cos(b), om = -Vg / Rw;
+  const air = [-U * Math.cos(b), 0, U * Math.sin(b)], wdir = air.map((x) => x / U);
+  const kT = vis.bladed ? SPOKE.bladeEdgeCd * SPOKE.bladeT : SPOKE.roundCd * SPOKE.roundD;
+  const kZ = vis.bladed ? SPOKE.bladeFlatCd * SPOKE.bladeW : SPOKE.roundCd * SPOKE.roundD;
+  let drag = 0, rot = 0;
+  const spokes = vis.spokes ?? [20, 24];
+  for (const w of [0, 1]) {
+    const n = spokes[w], depth = (w && vis.depthRear) || vis.depth || 24, rRim = (316.5 - depth) / 1000, N = 24, dl = (rRim - SPOKE.hubR) / N;
+    for (let ph = 0; ph < 4; ph++) for (let k = 0; k < n; k++) {
+      const th = 2 * Math.PI * (k + ph / 4) / n, c = Math.cos(th), s = Math.sin(th);
+      for (let j = 0; j < N; j++) {
+        const r = SPOKE.hubR + (j + 0.5) * dl, vs = [-om * r * s, om * r * c, 0];
+        const rel = [air[0] - vs[0], air[1] - vs[1], air[2] - vs[2]];
+        const vt = -rel[0] * s + rel[1] * c, vz = rel[2];
+        const ft = 0.5 * rho * kT * vt * Math.abs(vt) * dl, F = [ft * -s, ft * c, 0.5 * rho * kZ * vz * Math.abs(vz) * dl];
+        drag += (F[0] * wdir[0] + F[1] * wdir[1] + F[2] * wdir[2]) / 4;
+        rot -= (F[0] * vs[0] + F[1] * vs[1]) / 4;
+      }
+    }
+  }
+  const q = 0.5 * rho * U * U;
+  return { drag_N: drag, rot_W: rot, cda_m2: drag / q + rot / (q * U) };
+}
+
+/**
+ * The whole matrix against the installed build (Fulcrum + 23), standard protocol only. For every build:
+ * yaw-weighted tunnel CdA over the angles both builds have, the spoke model at the same angles, and the
+ * road result at the rider's inputs (tunnel differences scaled by RESOLUTION.mid; the spoke model is not).
+ */
+export function matrixStudy(cases, catalog, P, { kmh = 40, protocol = 'standard' } = {}) {
+  const parts = new Map(catalog.components.map((p) => [p.id, p]));
+  const std = cases.filter((c) => (c.protocol ?? 'static') === protocol);
+  const of = (m) => std.filter((c) => c.cad === m.cad).sort((a, b) => a.yaw_deg - b.yaw_deg);
+  const base = MATRIX.find((m) => m.key === MATRIX_BASE), baseCases = of(base);
+  if (!baseCases.length) return null;
+  const rows = [];
+  for (const m of MATRIX) {
+    const mc = of(m), yaws = mc.map((c) => c.yaw_deg).filter((y) => baseCases.some((b) => b.yaw_deg === y));
+    if (!yaws.length) { rows.push({ ...m, missing: true }); continue; }
+    const w = barryWeights(yaws, kmh), at = (list, y) => list.find((c) => c.yaw_deg === y);
+    const vis = parts.get(m.wheels).visual, bvis = parts.get(base.wheels).visual;
+    let cda = 0, bcda = 0, sp = 0, bsp = 0, side = 0, bside = 0;
+    for (const y of yaws) {
+      cda += w[y] * at(mc, y).CdA_m2; bcda += w[y] * at(baseCases, y).CdA_m2;
+      side += w[y] * Math.abs(at(mc, y).side_force_N); bside += w[y] * Math.abs(at(baseCases, y).side_force_N);
+      sp += w[y] * spokeModel(vis, { yaw: y, tireW: m.tyre }).cda_m2; bsp += w[y] * spokeModel(bvis, { yaw: y, tireW: base.tyre }).cda_m2;
+    }
+    const dTunnel = cda - bcda, dSpokes = sp - bsp, dCdA = dTunnel * RESOLUTION.mid + dSpokes;
+    const cfg = matrixConfig(m, catalog);
+    const g = roadGains(catalog, P, cfg, dCdA), gAir = roadGains(catalog, P, catalog.default_config, dCdA);
+    let price = 0;
+    for (const k of ['wheels', 'tires', 'brake_pads']) if (cfg[k] !== catalog.default_config[k]) price += parts.get(cfg[k])?.price_usd ?? NaN;
+    rows.push({ ...m, yaws, weights: w, cda, dTunnel, dSpokes, dCdA, side, dSide: side - bside, cases: mc, gain: g, kmhAir: gAir.kmhUp - gAir.kmhBase, price });
+  }
+  return { rows, base: baseCases, kmh };
 }

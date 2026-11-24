@@ -11,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 import lbm  # noqa: E402
 import lbm_kernel as K  # noqa: E402
 
+MW = np.zeros((2, 10))  # still walls
+
 
 def sphere_mesh(r, n=48):
     th = np.linspace(0, math.pi, n + 1)
@@ -45,13 +47,13 @@ def main(D_cells=24, steps=4000, nthreads=None):
     hist = []
     k0 = 18.0 * math.sqrt(2.0) * 0.17 ** 2
     t0 = time.time()
-    K.ghosts(f, uin); K.step(f, g, solid, part, tau0, k0, force); f, g = g, f
+    K.ghosts(f, uin); K.step(f, g, solid, part, tau0, k0, force, MW); f, g = g, f
     tc = time.time() - t0
     t0 = time.time()
     for s in range(1, steps):
         force[:] = 0
         K.ghosts(f, uin)
-        K.step(f, g, solid, part, tau0, k0, force)
+        K.step(f, g, solid, part, tau0, k0, force, MW)
         f, g = g, f
         hist.append(force[1, :, 0].sum())
     el = time.time() - t0
